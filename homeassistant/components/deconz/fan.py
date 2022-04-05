@@ -13,7 +13,7 @@ from pydeconz.light import (
     Fan,
 )
 
-from homeassistant.components.fan import DOMAIN, SUPPORT_SET_SPEED, FanEntity
+from homeassistant.components.fan import DOMAIN, FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -78,7 +78,7 @@ class DeconzFan(DeconzDevice, FanEntity):
     TYPE = DOMAIN
     _device: Fan
 
-    _attr_supported_features = SUPPORT_SET_SPEED
+    _attr_supported_features = FanEntityFeature.SET_SPEED
 
     def __init__(self, device: Fan, gateway: DeconzGateway) -> None:
         """Set up fan."""
