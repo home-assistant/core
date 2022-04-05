@@ -535,6 +535,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/keyboard_remote/ @bendavid @lanrat
 /homeassistant/components/kmtronic/ @dgomes
 /tests/components/kmtronic/ @dgomes
+/homeassistant/components/knovvu/ @mrterdll
 /homeassistant/components/knx/ @Julius2342 @farmio @marvin-w
 /tests/components/knx/ @Julius2342 @farmio @marvin-w
 /homeassistant/components/kodi/ @OnFreund @cgtobi
