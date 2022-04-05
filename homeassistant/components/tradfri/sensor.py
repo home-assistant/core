@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-import logging
 from typing import Any, cast
 
 from pytradfri.command import Command
@@ -28,16 +27,14 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .base_class import TradfriBaseEntity
 from .const import (
-    ATTR_FILTER_LIFE_REMAINING,
     CONF_GATEWAY_ID,
     COORDINATOR,
     COORDINATOR_LIST,
     DOMAIN,
     KEY_API,
+    LOGGER,
 )
 from .coordinator import TradfriDeviceDataUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -91,7 +88,7 @@ SENSOR_DESCRIPTIONS_FAN: tuple[TradfriSensorEntityDescription, ...] = (
         value=_get_air_quality,
     ),
     TradfriSensorEntityDescription(
-        key=ATTR_FILTER_LIFE_REMAINING,
+        key="filter_life_remaining",
         name="filter time left",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=TIME_HOURS,
@@ -116,14 +113,14 @@ def _migrate_old_unique_ids(hass: HomeAssistant, old_unique_id: str, key: str) -
     try:
         ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
     except ValueError:
-        _LOGGER.warning(
+        LOGGER.warning(
             "Skip migration of id [%s] to [%s] because it already exists",
             old_unique_id,
             new_unique_id,
         )
         return
 
-    _LOGGER.debug(
+    LOGGER.debug(
         "Migrating unique_id from [%s] to [%s]",
         old_unique_id,
         new_unique_id,
