@@ -384,4 +384,4 @@ def entity_selector_without_own_entities(
     final_selector_config = entity_selector_config.copy()
     final_selector_config["exclude_entities"] = entity_ids
 
-    return selector.selector(selector.SelectorType.ENTITY, final_selector_config)
+    return selector.EntitySelector(final_selector_config)

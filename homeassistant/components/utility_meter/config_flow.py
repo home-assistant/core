@@ -58,8 +58,7 @@ def _validate_config(data: Any) -> Any:
 
 OPTIONS_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_SOURCE_SENSOR): selector.selector(
-            selector.SelectorType.ENTITY,
+        vol.Required(CONF_SOURCE_SENSOR): selector.EntitySelector(
             selector.EntitySelectorConfig(domain="sensor"),
         ),
     }
@@ -67,17 +66,14 @@ OPTIONS_SCHEMA = vol.Schema(
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_NAME): selector.selector(selector.SelectorType.TEXT),
-        vol.Required(CONF_SOURCE_SENSOR): selector.selector(
-            selector.SelectorType.ENTITY,
+        vol.Required(CONF_NAME): selector.TextSelector(),
+        vol.Required(CONF_SOURCE_SENSOR): selector.EntitySelector(
             selector.EntitySelectorConfig(domain="sensor"),
         ),
-        vol.Required(CONF_METER_TYPE): selector.selector(
-            selector.SelectorType.SELECT,
+        vol.Required(CONF_METER_TYPE): selector.SelectSelector(
             selector.SelectSelectorConfig(options=METER_TYPES),
         ),
-        vol.Required(CONF_METER_OFFSET, default=0): selector.selector(
-            selector.SelectorType.NUMBER,
+        vol.Required(CONF_METER_OFFSET, default=0): selector.NumberSelector(
             selector.NumberSelectorConfig(
                 min=0,
                 max=28,
@@ -85,16 +81,15 @@ CONFIG_SCHEMA = vol.Schema(
                 unit_of_measurement="days",
             ),
         ),
-        vol.Required(CONF_TARIFFS, default=[]): selector.selector(
-            selector.SelectorType.SELECT,
+        vol.Required(CONF_TARIFFS, default=[]): selector.SelectSelector(
             selector.SelectSelectorConfig(options=[], custom_value=True, multiple=True),
         ),
-        vol.Required(CONF_METER_NET_CONSUMPTION, default=False): selector.selector(
-            selector.SelectorType.BOOLEAN
-        ),
-        vol.Required(CONF_METER_DELTA_VALUES, default=False): selector.selector(
-            selector.SelectorType.BOOLEAN
-        ),
+        vol.Required(
+            CONF_METER_NET_CONSUMPTION, default=False
+        ): selector.BooleanSelector(),
+        vol.Required(
+            CONF_METER_DELTA_VALUES, default=False
+        ): selector.BooleanSelector(),
     }
 )
 

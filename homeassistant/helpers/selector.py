@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Sequence
-from typing import Any, Literal, TypedDict, cast, overload
+from typing import Any, TypedDict, cast
 
 import voluptuous as vol
 
@@ -14,33 +14,6 @@ from homeassistant.util import decorator
 from . import config_validation as cv
 
 SELECTORS: decorator.Registry[str, type[Selector]] = decorator.Registry()
-
-
-class SelectorType(StrEnum):
-    """Enum to represent all selector types."""
-
-    ACTION = "action"
-    ADDON = "addon"
-    AREA = "area"
-    ATTRIBUTE = "attribute"
-    BOOLEAN = "boolean"
-    COLOR_RGB = "color_rgb"
-    COLOR_TEMP = "color_temp"
-    DATE = "date"
-    DATETIME = "datetime"
-    DEVICE = "device"
-    DURATION = "duration"
-    ENTITY = "entity"
-    ICON = "icon"
-    LOCATION = "location"
-    MEDIA = "media"
-    NUMBER = "number"
-    OBJECT = "object"
-    SELECT = "select"
-    TARGET = "target"
-    TEXT = "text"
-    THEME = "theme"
-    TIME = "time"
 
 
 def _get_selector_class(config: Any) -> type[Selector]:
@@ -73,178 +46,7 @@ def validate_selector(config: Any) -> dict:
     }
 
 
-@overload
-def selector(
-    selector_type: Literal[SelectorType.ACTION],
-    config: ActionSelectorConfig | None = None,
-) -> ActionSelector:
-    """Instantiate an action selector."""
-
-
-@overload
-def selector(
-    selector_type: Literal[SelectorType.ADDON],
-    config: AddonSelectorConfig | None = None,
-) -> AddonSelector:
-    """Instantiate an addon selector."""
-
-
-@overload
-def selector(
-    selector_type: Literal[SelectorType.AREA], config: AreaSelectorConfig | None = None
-) -> AreaSelector:
-    """Instantiate an area selector."""
-
-
-# config is always required
-@overload
-def selector(
-    selector_type: Literal[SelectorType.ATTRIBUTE], config: AttributeSelectorConfig
-) -> AttributeSelector:
-    """Instantiate an attribute selector."""
-
-
-@overload
-def selector(
-    selector_type: Literal[SelectorType.BOOLEAN],
-    config: BooleanSelectorConfig | None = None,
-) -> BooleanSelector:
-    """Instantiate a boolean selector."""
-
-
-@overload
-def selector(
-    selector_type: Literal[SelectorType.COLOR_RGB],
-    config: ColorRGBSelectorConfig | None = None,
-) -> ColorRGBSelector:
-    """Instantiate a color_rgb selector."""
-
-
-@overload
-def selector(
-    selector_type: Literal[SelectorType.COLOR_TEMP],
-    config: ColorTempSelectorConfig | None = None,
-) -> ColorTempSelector:
-    """Instantiate a color_temp selector."""
-
-
-@overload
-def selector(
-    selector_type: Literal[SelectorType.DATE], config: DateSelectorConfig | None = None
-) -> DateSelector:
-    """Instantiate a date selector."""
-
-
-@overload
-def selector(
-    selector_type: Literal[SelectorType.DATETIME],
-    config: DateTimeSelectorConfig | None = None,
-) -> DateTimeSelector:
-    """Instantiate a datetime selector."""
-
-
-@overload
-def selector(
-    selector_type: Literal[SelectorType.DEVICE],
-    config: DeviceSelectorConfig | None = None,
-) -> DeviceSelector:
-    """Instantiate a device selector."""
-
-
-@overload
-def selector(
-    selector_type: Literal[SelectorType.DURATION],
-    config: DurationSelectorConfig | None = None,
-) -> DurationSelector:
-    """Instantiate a duration selector."""
-
-
-@overload
-def selector(
-    selector_type: Literal[SelectorType.ENTITY],
-    config: EntitySelectorConfig | None = None,
-) -> EntitySelector:
-    """Instantiate a entity selector."""
-
-
-@overload
-def selector(
-    selector_type: Literal[SelectorType.ICON], config: IconSelectorConfig | None = None
-) -> IconSelector:
-    """Instantiate a icon selector."""
-
-
-@overload
-def selector(
-    selector_type: Literal[SelectorType.LOCATION],
-    config: LocationSelectorConfig | None = None,
-) -> LocationSelector:
-    """Instantiate a location selector."""
-
-
-@overload
-def selector(
-    selector_type: Literal[SelectorType.MEDIA],
-    config: MediaSelectorConfig | None = None,
-) -> MediaSelector:
-    """Instantiate a media selector."""
-
-
-@overload
-def selector(
-    selector_type: Literal[SelectorType.NUMBER],
-    config: NumberSelectorConfig | None = None,
-) -> NumberSelector:
-    """Instantiate a number selector."""
-
-
-@overload
-def selector(
-    selector_type: Literal[SelectorType.OBJECT],
-    config: ObjectSelectorConfig | None = None,
-) -> ObjectSelector:
-    """Instantiate an object selector."""
-
-
-# config is always required
-@overload
-def selector(
-    selector_type: Literal[SelectorType.SELECT], config: SelectSelectorConfig
-) -> SelectSelector:
-    """Instantiate a select selector."""
-
-
-@overload
-def selector(
-    selector_type: Literal[SelectorType.TARGET],
-    config: TargetSelectorConfig | None = None,
-) -> TargetSelector:
-    """Instantiate a target selector."""
-
-
-@overload
-def selector(
-    selector_type: Literal[SelectorType.TEXT], config: TextSelectorConfig | None = None
-) -> TextSelector:
-    """Instantiate a text selector."""
-
-
-@overload
-def selector(
-    selector_type: Literal[SelectorType.THEME],
-    config: ThemeSelectorConfig | None = None,
-) -> ThemeSelector:
-    """Instantiate a theme selector."""
-
-
-@overload
-def selector(
-    selector_type: Literal[SelectorType.TIME], config: TimeSelectorConfig | None = None
-) -> TimeSelector:
-    """Instantiate a time selector."""
-
-
-def selector(selector_type: SelectorType | str, config: dict[str, Any] | None = None) -> Selector:
+def selector(selector_type: str, config: dict[str, Any] | None = None) -> Selector:
     """Instantiate a selector."""
     if (selector_class := SELECTORS.get(selector_type)) is None:
         raise vol.Invalid(f"Unknown selector type {selector_type} found")
@@ -263,7 +65,7 @@ class Selector:
     config: Any
     selector_type: str
 
-    def __init__(self, config: Any) -> None:
+    def __init__(self, config: Any = None) -> None:
         """Instantiate a selector."""
         self.config = self.CONFIG_SCHEMA(config[self.selector_type])
 
@@ -319,11 +121,11 @@ class ActionSelectorConfig(TypedDict):
     """Class to represent an action selector config."""
 
 
-@SELECTORS.register(SelectorType.ACTION)
+@SELECTORS.register("action")
 class ActionSelector(Selector):
     """Selector of an action sequence (script syntax)."""
 
-    selector_type = SelectorType.ACTION
+    selector_type = "action"
 
     CONFIG_SCHEMA = vol.Schema({})
 
@@ -339,11 +141,11 @@ class AddonSelectorConfig(TypedDict, total=False):
     slug: str
 
 
-@SELECTORS.register(SelectorType.ADDON)
+@SELECTORS.register("addon")
 class AddonSelector(Selector):
     """Selector of a add-on."""
 
-    selector_type = SelectorType.ADDON
+    selector_type = "addon"
 
     CONFIG_SCHEMA = vol.Schema(
         {
@@ -366,11 +168,11 @@ class AreaSelectorConfig(TypedDict, total=False):
     multiple: bool
 
 
-@SELECTORS.register(SelectorType.AREA)
+@SELECTORS.register("area")
 class AreaSelector(Selector):
     """Selector of a single or list of areas."""
 
-    selector_type = SelectorType.AREA
+    selector_type = "area"
 
     CONFIG_SCHEMA = vol.Schema(
         {
@@ -396,11 +198,11 @@ class AttributeSelectorConfig(TypedDict):
     entity_id: str
 
 
-@SELECTORS.register(SelectorType.ATTRIBUTE)
+@SELECTORS.register("attribute")
 class AttributeSelector(Selector):
     """Selector for an entity attribute."""
 
-    selector_type = SelectorType.ATTRIBUTE
+    selector_type = "attribute"
 
     CONFIG_SCHEMA = vol.Schema({vol.Required("entity_id"): cv.entity_id})
 
@@ -414,11 +216,11 @@ class BooleanSelectorConfig(TypedDict):
     """Class to represent a boolean selector config."""
 
 
-@SELECTORS.register(SelectorType.BOOLEAN)
+@SELECTORS.register("boolean")
 class BooleanSelector(Selector):
     """Selector of a boolean value."""
 
-    selector_type = SelectorType.BOOLEAN
+    selector_type = "boolean"
 
     CONFIG_SCHEMA = vol.Schema({})
 
@@ -432,11 +234,11 @@ class ColorRGBSelectorConfig(TypedDict):
     """Class to represent a color RGB selector config."""
 
 
-@SELECTORS.register(SelectorType.COLOR_RGB)
+@SELECTORS.register("color_rgb")
 class ColorRGBSelector(Selector):
     """Selector of an RGB color value."""
 
-    selector_type = SelectorType.COLOR_RGB
+    selector_type = "color_rgb"
 
     CONFIG_SCHEMA = vol.Schema({})
 
@@ -453,11 +255,11 @@ class ColorTempSelectorConfig(TypedDict, total=False):
     min_mireds: int
 
 
-@SELECTORS.register(SelectorType.COLOR_TEMP)
+@SELECTORS.register("color_temp")
 class ColorTempSelector(Selector):
     """Selector of an color temperature."""
 
-    selector_type = SelectorType.COLOR_TEMP
+    selector_type = "color_temp"
 
     CONFIG_SCHEMA = vol.Schema(
         {
@@ -482,11 +284,11 @@ class DateSelectorConfig(TypedDict):
     """Class to represent a date selector config."""
 
 
-@SELECTORS.register(SelectorType.DATE)
+@SELECTORS.register("date")
 class DateSelector(Selector):
     """Selector of a date."""
 
-    selector_type = SelectorType.DATE
+    selector_type = "date"
 
     CONFIG_SCHEMA = vol.Schema({})
 
@@ -500,11 +302,11 @@ class DateTimeSelectorConfig(TypedDict):
     """Class to represent a date time selector config."""
 
 
-@SELECTORS.register(SelectorType.DATETIME)
+@SELECTORS.register("datetime")
 class DateTimeSelector(Selector):
     """Selector of a datetime."""
 
-    selector_type = SelectorType.DATETIME
+    selector_type = "datetime"
 
     CONFIG_SCHEMA = vol.Schema({})
 
@@ -524,11 +326,11 @@ class DeviceSelectorConfig(TypedDict, total=False):
     multiple: bool
 
 
-@SELECTORS.register(SelectorType.DEVICE)
+@SELECTORS.register("device")
 class DeviceSelector(Selector):
     """Selector of a single or list of devices."""
 
-    selector_type = SelectorType.DEVICE
+    selector_type = "device"
 
     CONFIG_SCHEMA = SINGLE_DEVICE_SELECTOR_CONFIG_SCHEMA.extend(
         {vol.Optional("multiple", default=False): cv.boolean}
@@ -550,11 +352,11 @@ class DurationSelectorConfig(TypedDict, total=False):
     enable_day: bool
 
 
-@SELECTORS.register(SelectorType.DURATION)
+@SELECTORS.register("duration")
 class DurationSelector(Selector):
     """Selector for a duration."""
 
-    selector_type = SelectorType.DURATION
+    selector_type = "duration"
 
     CONFIG_SCHEMA = vol.Schema(
         {
@@ -578,11 +380,11 @@ class EntitySelectorConfig(SingleEntitySelectorConfig, total=False):
     multiple: bool
 
 
-@SELECTORS.register(SelectorType.ENTITY)
+@SELECTORS.register("entity")
 class EntitySelector(Selector):
     """Selector of a single or list of entities."""
 
-    selector_type = SelectorType.ENTITY
+    selector_type = "entity"
 
     CONFIG_SCHEMA = SINGLE_ENTITY_SELECTOR_CONFIG_SCHEMA.extend(
         {
@@ -628,11 +430,11 @@ class IconSelectorConfig(TypedDict, total=False):
     placeholder: str
 
 
-@SELECTORS.register(SelectorType.ICON)
+@SELECTORS.register("icon")
 class IconSelector(Selector):
     """Selector for an icon."""
 
-    selector_type = SelectorType.ICON
+    selector_type = "icon"
 
     CONFIG_SCHEMA = vol.Schema(
         {vol.Optional("placeholder"): str}
@@ -652,11 +454,11 @@ class LocationSelectorConfig(TypedDict, total=False):
     icon: str
 
 
-@SELECTORS.register(SelectorType.LOCATION)
+@SELECTORS.register("location")
 class LocationSelector(Selector):
     """Selector for a location."""
 
-    selector_type = SelectorType.LOCATION
+    selector_type = "location"
 
     CONFIG_SCHEMA = vol.Schema(
         {vol.Optional("radius"): bool, vol.Optional("icon"): str}
@@ -679,11 +481,11 @@ class MediaSelectorConfig(TypedDict):
     """Class to represent a media selector config."""
 
 
-@SELECTORS.register(SelectorType.MEDIA)
+@SELECTORS.register("media")
 class MediaSelector(Selector):
     """Selector for media."""
 
-    selector_type = SelectorType.MEDIA
+    selector_type = "media"
 
     CONFIG_SCHEMA = vol.Schema({})
     DATA_SCHEMA = vol.Schema(
@@ -732,11 +534,11 @@ def has_min_max_if_slider(data: Any) -> Any:
     return data
 
 
-@SELECTORS.register(SelectorType.NUMBER)
+@SELECTORS.register("number")
 class NumberSelector(Selector):
     """Selector of a numeric value."""
 
-    selector_type = SelectorType.NUMBER
+    selector_type = "number"
 
     CONFIG_SCHEMA = vol.All(
         vol.Schema(
@@ -774,11 +576,11 @@ class ObjectSelectorConfig(TypedDict):
     """Class to represent an object selector config."""
 
 
-@SELECTORS.register(SelectorType.OBJECT)
+@SELECTORS.register("object")
 class ObjectSelector(Selector):
     """Selector for an arbitrary object."""
 
-    selector_type = SelectorType.OBJECT
+    selector_type = "object"
 
     CONFIG_SCHEMA = vol.Schema({})
 
@@ -821,11 +623,11 @@ class SelectSelectorConfig(TypedDict, total=False):
     mode: SelectSelectorMode
 
 
-@SELECTORS.register(SelectorType.SELECT)
+@SELECTORS.register("select")
 class SelectSelector(Selector):
     """Selector for an single-choice input select."""
 
-    selector_type = SelectorType.SELECT
+    selector_type = "select"
 
     CONFIG_SCHEMA = vol.Schema(
         {
@@ -863,14 +665,14 @@ class TargetSelectorConfig(TypedDict, total=False):
     device: SingleDeviceSelectorConfig
 
 
-@SELECTORS.register(SelectorType.TARGET)
+@SELECTORS.register("target")
 class TargetSelector(Selector):
     """Selector of a target value (area ID, device ID, entity ID etc).
 
     Value should follow cv.TARGET_SERVICE_FIELDS format.
     """
 
-    selector_type = SelectorType.TARGET
+    selector_type = "target"
 
     CONFIG_SCHEMA = vol.Schema(
         {
@@ -913,11 +715,11 @@ class TextSelectorType(StrEnum):
     WEEK = "week"
 
 
-@SELECTORS.register(SelectorType.TEXT)
+@SELECTORS.register("text")
 class TextSelector(Selector):
     """Selector for a multi-line text string."""
 
-    selector_type = SelectorType.TEXT
+    selector_type = "text"
 
     CONFIG_SCHEMA = vol.Schema(
         {
@@ -939,11 +741,11 @@ class ThemeSelectorConfig(TypedDict):
     """Class to represent a theme selector config."""
 
 
-@SELECTORS.register(SelectorType.THEME)
+@SELECTORS.register("theme")
 class ThemeSelector(Selector):
     """Selector for an theme."""
 
-    selector_type = SelectorType.THEME
+    selector_type = "theme"
 
     CONFIG_SCHEMA = vol.Schema({})
 
@@ -957,11 +759,11 @@ class TimeSelectorConfig(TypedDict):
     """Class to represent a time selector config."""
 
 
-@SELECTORS.register(SelectorType.TIME)
+@SELECTORS.register("time")
 class TimeSelector(Selector):
     """Selector of a time value."""
 
-    selector_type = SelectorType.TIME
+    selector_type = "time"
 
     CONFIG_SCHEMA = vol.Schema({})
 

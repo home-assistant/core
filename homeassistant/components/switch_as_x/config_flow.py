@@ -29,12 +29,10 @@ CONFIG_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
     "user": SchemaFlowFormStep(
         vol.Schema(
             {
-                vol.Required(CONF_ENTITY_ID): selector.selector(
-                    selector.SelectorType.ENTITY,
+                vol.Required(CONF_ENTITY_ID): selector.EntitySelector(
                     selector.EntitySelectorConfig(domain=Platform.SWITCH),
                 ),
-                vol.Required(CONF_TARGET_DOMAIN): selector.selector(
-                    selector.SelectorType.SELECT,
+                vol.Required(CONF_TARGET_DOMAIN): selector.SelectSelector(
                     selector.SelectSelectorConfig(options=TARGET_DOMAIN_OPTIONS),
                 ),
             }

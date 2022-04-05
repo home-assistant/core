@@ -27,16 +27,15 @@ def _validate_mode(data: Any) -> Any:
 
 OPTIONS_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_HYSTERESIS, default=DEFAULT_HYSTERESIS): selector.selector(
-            selector.SelectorType.NUMBER,
+        vol.Required(
+            CONF_HYSTERESIS, default=DEFAULT_HYSTERESIS
+        ): selector.NumberSelector(
             selector.NumberSelectorConfig(mode=selector.NumberSelectorMode.BOX),
         ),
-        vol.Optional(CONF_LOWER): selector.selector(
-            selector.SelectorType.NUMBER,
+        vol.Optional(CONF_LOWER): selector.NumberSelector(
             selector.NumberSelectorConfig(mode=selector.NumberSelectorMode.BOX),
         ),
-        vol.Optional(CONF_UPPER): selector.selector(
-            selector.SelectorType.NUMBER,
+        vol.Optional(CONF_UPPER): selector.NumberSelector(
             selector.NumberSelectorConfig(mode=selector.NumberSelectorMode.BOX),
         ),
     }
@@ -44,9 +43,9 @@ OPTIONS_SCHEMA = vol.Schema(
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_NAME): selector.selector(selector.SelectorType.TEXT),
-        vol.Required(CONF_ENTITY_ID): selector.selector(
-            selector.SelectorType.ENTITY, selector.EntitySelectorConfig(domain="sensor")
+        vol.Required(CONF_NAME): selector.TextSelector(),
+        vol.Required(CONF_ENTITY_ID): selector.EntitySelector(
+            selector.EntitySelectorConfig(domain="sensor")
         ),
     }
 ).extend(OPTIONS_SCHEMA.schema)

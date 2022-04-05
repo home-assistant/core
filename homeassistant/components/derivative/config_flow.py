@@ -49,8 +49,7 @@ TIME_UNITS = [
 
 OPTIONS_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_ROUND_DIGITS, default=2): selector.selector(
-            selector.SelectorType.NUMBER,
+        vol.Required(CONF_ROUND_DIGITS, default=2): selector.NumberSelector(
             selector.NumberSelectorConfig(
                 min=0,
                 max=6,
@@ -58,15 +57,11 @@ OPTIONS_SCHEMA = vol.Schema(
                 unit_of_measurement="decimals",
             ),
         ),
-        vol.Required(CONF_TIME_WINDOW): selector.selector(
-            selector.SelectorType.DURATION
-        ),
-        vol.Required(CONF_UNIT_PREFIX, default="none"): selector.selector(
-            selector.SelectorType.SELECT,
+        vol.Required(CONF_TIME_WINDOW): selector.DurationSelector(),
+        vol.Required(CONF_UNIT_PREFIX, default="none"): selector.SelectSelector(
             selector.SelectSelectorConfig(options=UNIT_PREFIXES),
         ),
-        vol.Required(CONF_UNIT_TIME, default=TIME_HOURS): selector.selector(
-            selector.SelectorType.SELECT,
+        vol.Required(CONF_UNIT_TIME, default=TIME_HOURS): selector.SelectSelector(
             selector.SelectSelectorConfig(options=TIME_UNITS),
         ),
     }
@@ -74,9 +69,8 @@ OPTIONS_SCHEMA = vol.Schema(
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_NAME): selector.selector(selector.SelectorType.TEXT),
-        vol.Required(CONF_SOURCE): selector.selector(
-            selector.SelectorType.ENTITY,
+        vol.Required(CONF_NAME): selector.TextSelector(),
+        vol.Required(CONF_SOURCE): selector.EntitySelector(
             selector.EntitySelectorConfig(domain="sensor"),
         ),
     }
