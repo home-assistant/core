@@ -474,7 +474,7 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
     @property
     def device_class(self):
         """Return the device class of the sensor."""
-        return DEVICE_CLASS_MAP.get(self.unit_of_measurement)
+        return DEVICE_CLASS_MAP.get(self._unit_of_measurement)
 
     @property
     def state_class(self):
