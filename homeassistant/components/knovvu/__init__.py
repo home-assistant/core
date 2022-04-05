@@ -1,9 +1,12 @@
 """Support for the knovvu tts  service."""
-import logging
-import requests
-import json
-import os
 import datetime
+import json
+import logging
+import os
+
+import requests
+
+_LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "knovvu"
 
@@ -22,8 +25,6 @@ CON_AUDIO_PATH = "/local/tts/"
 # Data service
 ATTR_ENTITY_ID = "entity_id"
 ATTR_MESSAGE = "message"
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def setup(hass, config):
@@ -70,8 +71,8 @@ def setup(hass, config):
         )
 
         wav_path = os.path.join(CONF_FILE_PATH, uniq_filename)
-        with open(wav_path, mode="wb") as fw:
-            fw.write(audio_bytes)
+        with open(wav_path, mode="wb") as wav:
+            wav.write(audio_bytes)
 
         # Play audio file with Home Assistant Service
         url_file = base_url + CON_AUDIO_PATH + uniq_filename
