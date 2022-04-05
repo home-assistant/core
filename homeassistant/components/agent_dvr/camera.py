@@ -4,7 +4,7 @@ import logging
 
 from agent import AgentError
 
-from homeassistant.components.camera import SUPPORT_ON_OFF
+from homeassistant.components.camera import CameraEntityFeature
 from homeassistant.components.mjpeg import MjpegCamera, filter_urllib3_logging
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.helpers import entity_platform
@@ -137,7 +137,7 @@ class AgentCamera(MjpegCamera):
     @property
     def supported_features(self) -> int:
         """Return supported features."""
-        return SUPPORT_ON_OFF
+        return CameraEntityFeature.ON_OFF
 
     @property
     def is_on(self) -> bool:
