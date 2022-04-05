@@ -1,4 +1,5 @@
 """Common utilities for VeSync Component."""
+from itertools import chain
 import logging
 from typing import Any
 
@@ -19,11 +20,14 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+_HUMIDIFIER_MODELS = set(
+    chain(*[features["models"] for features in humid_features.values()])
+)
 
 
 def is_humidifier(device_type: str) -> bool:
     """Return true if the device type is a humidifier."""
-    return device_type in humid_features
+    return device_type in _HUMIDIFIER_MODELS
 
 
 async def async_process_devices(hass, manager):

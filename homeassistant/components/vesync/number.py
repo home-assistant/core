@@ -66,6 +66,8 @@ class VeSyncHumidifierNumberEntity(VeSyncBaseEntity, NumberEntity):
 class VeSyncHumidifierMistLevelHA(VeSyncHumidifierNumberEntity):
     """Representation of the mist level of a VeSync humidifier."""
 
+    _attr_step = 1
+
     @property
     def unique_id(self):
         """Return the ID of this device."""
