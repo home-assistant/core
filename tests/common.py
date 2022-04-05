@@ -915,7 +915,7 @@ def init_recorder_component(hass, add_config=None):
 
 async def async_init_recorder_component(hass, add_config=None):
     """Initialize the recorder asynchronously."""
-    config = add_config or {}
+    config = add_config or {recorder.CONF_COMMIT_INTERVAL: 0}
     if recorder.CONF_DB_URL not in config:
         config[recorder.CONF_DB_URL] = "sqlite://"
 

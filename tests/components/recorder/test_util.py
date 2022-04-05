@@ -97,7 +97,7 @@ def test_validate_or_move_away_sqlite_database(hass, tmpdir, caplog):
 
 async def test_last_run_was_recently_clean(hass):
     """Test we can check if the last recorder run was recently clean."""
-    await async_init_recorder_component(hass)
+    await async_init_recorder_component(hass, {recorder.CONF_COMMIT_INTERVAL: 1})
     await hass.async_block_till_done()
 
     cursor = hass.data[DATA_INSTANCE].engine.raw_connection().cursor()
