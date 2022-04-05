@@ -164,6 +164,8 @@ class AmcrestCommandFailed(Exception):
 class AmcrestCam(Camera):
     """An implementation of an Amcrest IP camera."""
 
+    _attr_supported_features = CameraEntityFeature.ON_OFF | CameraEntityFeature.STREAM
+
     def __init__(self, name: str, device: AmcrestDevice, ffmpeg: FFmpegManager) -> None:
         """Initialize an Amcrest camera."""
         super().__init__()
@@ -310,11 +312,6 @@ class AmcrestCam(Camera):
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._api.available
-
-    @property
-    def supported_features(self) -> int:
-        """Return supported features."""
-        return CameraEntityFeature.ON_OFF | CameraEntityFeature.STREAM
 
     # Camera property overrides
 
