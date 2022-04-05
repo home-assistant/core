@@ -82,21 +82,41 @@ class HomeKitLight(HomeKitEntity, LightEntity):
     @property
     def color_mode(self) -> str:
         """Return the color mode of the light."""
-        # Homekit does not allow using CT for lights supporting HS
-        if self.service.has(CharacteristicsTypes.HUE) or self.service.has(
-            CharacteristicsTypes.SATURATION
-        ):
+        if self.service.has(CharacteristicsTypes.HUE):
             return COLOR_MODE_HS
+
+        if self.service.has(CharacteristicsTypes.SATURATION):
+            return COLOR_MODE_HS
+
         if self.service.has(CharacteristicsTypes.COLOR_TEMPERATURE):
             return COLOR_MODE_COLOR_TEMP
+
         if self.service.has(CharacteristicsTypes.BRIGHTNESS):
             return COLOR_MODE_BRIGHTNESS
+
         return COLOR_MODE_ONOFF
 
     @property
     def supported_color_modes(self) -> set[str] | None:
         """Flag supported color modes."""
-        return {self.color_mode}
+        color_modes = set()
+
+        if self.service.has(CharacteristicsTypes.COLOR_TEMPERATURE):
+            color_modes.add(COLOR_MODE_COLOR_TEMP)
+
+        if self.service.has(CharacteristicsTypes.HUE):
+            color_modes.add(COLOR_MODE_HS)
+
+        if self.service.has(CharacteristicsTypes.SATURATION):
+            color_modes.add(COLOR_MODE_HS)
+
+        if not color_modes and self.service.has(CharacteristicsTypes.BRIGHTNESS):
+            color_modes.add(COLOR_MODE_BRIGHTNESS)
+
+        if not color_modes:
+            color_modes.add(COLOR_MODE_ONOFF)
+
+        return color_modes
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the specified light on."""
