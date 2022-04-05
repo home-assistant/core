@@ -238,8 +238,8 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
     def check_for_existing(self, options):
         """Check whether an existing entry is using the same URLs."""
         return any(
-            entry.options[CONF_STILL_IMAGE_URL] == options[CONF_STILL_IMAGE_URL]
-            and entry.options[CONF_STREAM_SOURCE] == options[CONF_STREAM_SOURCE]
+            entry.options.get(CONF_STILL_IMAGE_URL) == options.get(CONF_STILL_IMAGE_URL)
+            and entry.options.get(CONF_STREAM_SOURCE) == options.get(CONF_STREAM_SOURCE)
             for entry in self._async_current_entries()
         )
 
