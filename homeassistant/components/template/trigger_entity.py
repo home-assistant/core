@@ -4,13 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from homeassistant.const import (
-    CONF_DEVICE_CLASS,
-    CONF_ICON,
-    CONF_NAME,
-    CONF_UNIQUE_ID,
-    CONF_UNIT_OF_MEASUREMENT,
-)
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_ICON, CONF_NAME, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template
@@ -88,11 +82,6 @@ class TriggerEntity(CoordinatorEntity[TriggerUpdateCoordinator]):
     def device_class(self):
         """Return device class of the entity."""
         return self._config.get(CONF_DEVICE_CLASS)
-
-    @property
-    def unit_of_measurement(self) -> str | None:
-        """Return unit of measurement."""
-        return self._config.get(CONF_UNIT_OF_MEASUREMENT)
 
     @property
     def icon(self) -> str | None:
