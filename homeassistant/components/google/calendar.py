@@ -39,7 +39,10 @@ from .const import DISCOVER_CALENDAR
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_GOOGLE_SEARCH_PARAMS = {"orderBy": "startTime", "singleEvents": True}
+DEFAULT_GOOGLE_SEARCH_PARAMS = {
+    "orderBy": "startTime",
+    "singleEvents": True,
+}
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
