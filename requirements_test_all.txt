@@ -1002,7 +1002,7 @@ pygatt[GATTTOOL]==4.0.5
 pygti==0.9.2
 
 # homeassistant.components.version
-pyhaversion==22.02.0
+pyhaversion==22.04.0
 
 # homeassistant.components.heos
 pyheos==0.7.2
@@ -1035,7 +1035,7 @@ pyiqvia==2021.11.0
 pyiss==1.0.1
 
 # homeassistant.components.isy994
-pyisy==3.0.5
+pyisy==3.0.6
 
 # homeassistant.components.kaleidescape
 pykaleidescape==1.0.1
