@@ -639,7 +639,9 @@ def _sorted_states_to_dict(
         # in-between only provide the "state" and the
         # "last_changed".
         if not ent_results:
-            ent_results.append(LazyState(next(group), attr_cache))
+            if (first_state := next(group, None)) is None:
+                continue
+            ent_results.append(LazyState(first_state, attr_cache))
 
         prev_state = ent_results[-1]
         assert isinstance(prev_state, LazyState)
