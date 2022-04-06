@@ -675,11 +675,7 @@ class LazyMinimalState(State):
     def __init__(self, row: States) -> None:  # pylint: disable=super-init-not-called
         """Init the lazy minimal state."""
         self._row = row
-
-    @property
-    def state(self) -> str:  # type: ignore[override]
-        """Return the state."""
-        return self._row.state or ""
+        self.state = self._row.state or ""
 
     @property
     def entity_id(self) -> str:  # type: ignore[override]
@@ -714,7 +710,7 @@ class LazyMinimalState(State):
         To be used for JSON serialization.
         """
         return {
-            "state": self._row.state or "",
+            "state": self.state,
             "last_changed": process_timestamp_to_utc_isoformat(self._row.last_changed),
         }
 
