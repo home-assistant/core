@@ -11,6 +11,7 @@ import pytest
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import ssdp
 from homeassistant.components.dlna_dmr.const import (
+    CONF_BROWSE_UNFILTERED,
     CONF_CALLBACK_URL_OVERRIDE,
     CONF_LISTEN_PORT,
     CONF_POLL_AVAILABILITY,
@@ -558,6 +559,7 @@ async def test_options_flow(
         user_input={
             CONF_CALLBACK_URL_OVERRIDE: "Bad url",
             CONF_POLL_AVAILABILITY: False,
+            CONF_BROWSE_UNFILTERED: False,
         },
     )
 
@@ -572,6 +574,7 @@ async def test_options_flow(
             CONF_LISTEN_PORT: 2222,
             CONF_CALLBACK_URL_OVERRIDE: "http://override/callback",
             CONF_POLL_AVAILABILITY: True,
+            CONF_BROWSE_UNFILTERED: True,
         },
     )
 
@@ -580,4 +583,5 @@ async def test_options_flow(
         CONF_LISTEN_PORT: 2222,
         CONF_CALLBACK_URL_OVERRIDE: "http://override/callback",
         CONF_POLL_AVAILABILITY: True,
+        CONF_BROWSE_UNFILTERED: True,
     }

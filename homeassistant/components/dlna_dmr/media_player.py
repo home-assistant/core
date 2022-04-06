@@ -45,6 +45,7 @@ from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
+    CONF_BROWSE_UNFILTERED,
     CONF_CALLBACK_URL_OVERRIDE,
     CONF_LISTEN_PORT,
     CONF_POLL_AVAILABILITY,
@@ -106,6 +107,7 @@ async def async_setup_entry(
         event_callback_url=entry.options.get(CONF_CALLBACK_URL_OVERRIDE),
         poll_availability=entry.options.get(CONF_POLL_AVAILABILITY, False),
         location=entry.data[CONF_URL],
+        browse_unfiltered=entry.options.get(CONF_BROWSE_UNFILTERED, False),
     )
 
     async_add_entities([entity])
@@ -122,6 +124,8 @@ class DlnaDmrEntity(MediaPlayerEntity):
     # Last known URL for the device, used when adding this entity to hass to try
     # to connect before SSDP has rediscovered it, or when SSDP discovery fails.
     location: str
+    # Should the async_browse_media function *not* filter out incompatible media?
+    browse_unfiltered: bool
 
     _device_lock: asyncio.Lock  # Held when connecting or disconnecting the device
     _device: DmrDevice | None = None
@@ -144,6 +148,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
         event_callback_url: str | None,
         poll_availability: bool,
         location: str,
+        browse_unfiltered: bool,
     ) -> None:
         """Initialize DLNA DMR entity."""
         self.udn = udn
@@ -152,6 +157,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
         self._event_addr = EventListenAddr(None, event_port, event_callback_url)
         self.poll_availability = poll_availability
         self.location = location
+        self.browse_unfiltered = browse_unfiltered
         self._device_lock = asyncio.Lock()
 
     async def async_added_to_hass(self) -> None:
@@ -273,6 +279,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
         )
         self.location = entry.data[CONF_URL]
         self.poll_availability = entry.options.get(CONF_POLL_AVAILABILITY, False)
+        self.browse_unfiltered = entry.options.get(CONF_BROWSE_UNFILTERED, False)
 
         new_port = entry.options.get(CONF_LISTEN_PORT) or 0
         new_callback_url = entry.options.get(CONF_CALLBACK_URL_OVERRIDE)
@@ -760,7 +767,10 @@ class DlnaDmrEntity(MediaPlayerEntity):
         # media_content_type is ignored; it's the content_type of the current
         # media_content_id, not the desired content_type of whomever is calling.
 
-        content_filter = self._get_content_filter()
+        if self.browse_unfiltered:
+            content_filter = None
+        else:
+            content_filter = self._get_content_filter()
 
         return await media_source.async_browse_media(
             self.hass, media_content_id, content_filter=content_filter

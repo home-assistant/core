@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 import logging
 from pprint import pformat
-from typing import Any, Optional, cast
+from typing import Any, Optional, Type, cast
 from urllib.parse import urlparse
 
 from async_upnp_client.client import UpnpError
@@ -21,6 +21,7 @@ from homeassistant.exceptions import IntegrationError
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
+    CONF_BROWSE_UNFILTERED,
     CONF_CALLBACK_URL_OVERRIDE,
     CONF_LISTEN_PORT,
     CONF_POLL_AVAILABILITY,
@@ -322,6 +323,7 @@ class DlnaDmrOptionsFlowHandler(config_entries.OptionsFlow):
             options[CONF_LISTEN_PORT] = listen_port
             options[CONF_CALLBACK_URL_OVERRIDE] = callback_url_override
             options[CONF_POLL_AVAILABILITY] = user_input[CONF_POLL_AVAILABILITY]
+            options[CONF_BROWSE_UNFILTERED] = user_input[CONF_BROWSE_UNFILTERED]
 
             # Save if there's no errors, else fall through and show the form again
             if not errors:
@@ -329,9 +331,14 @@ class DlnaDmrOptionsFlowHandler(config_entries.OptionsFlow):
 
         fields = {}
 
-        def _add_with_suggestion(key: str, validator: Callable) -> None:
-            """Add a field to with a suggested, not default, value."""
-            if (suggested_value := options.get(key)) is None:
+        def _add_with_suggestion(key: str, validator: Callable | Type[bool]) -> None:
+            """Add a field to with a suggested value.
+
+            For bools, use the existing value as default, or fallback to False.
+            """
+            if validator is bool:
+                fields[vol.Required(key, default=options.get(key, False))] = validator
+            elif (suggested_value := options.get(key)) is None:
                 fields[vol.Optional(key)] = validator
             else:
                 fields[
@@ -341,12 +348,8 @@ class DlnaDmrOptionsFlowHandler(config_entries.OptionsFlow):
         # listen_port can be blank or 0 for "bind any free port"
         _add_with_suggestion(CONF_LISTEN_PORT, cv.port)
         _add_with_suggestion(CONF_CALLBACK_URL_OVERRIDE, str)
-        fields[
-            vol.Required(
-                CONF_POLL_AVAILABILITY,
-                default=options.get(CONF_POLL_AVAILABILITY, False),
-            )
-        ] = bool
+        _add_with_suggestion(CONF_POLL_AVAILABILITY, bool)
+        _add_with_suggestion(CONF_BROWSE_UNFILTERED, bool)
 
         return self.async_show_form(
             step_id="init",
