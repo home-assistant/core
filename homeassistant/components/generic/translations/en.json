@@ -26,7 +26,6 @@
             "user": {
                 "data": {
                     "authentication": "Authentication",
-                    "content_type": "Content Type",
                     "framerate": "Frame Rate (Hz)",
                     "limit_refetch_to_url_change": "Limit refetch to url change",
                     "password": "Password",
@@ -37,6 +36,12 @@
                     "verify_ssl": "Verify SSL certificate"
                 },
                 "description": "Enter the settings to connect to the camera."
+            },
+            "user2": {
+                "data": {
+                    "content_type": "Content Type"
+                },
+                "description": "Specify the content type for the stream."
             }
         }
     },
@@ -60,7 +65,6 @@
             "init": {
                 "data": {
                     "authentication": "Authentication",
-                    "content_type": "Content Type",
                     "framerate": "Frame Rate (Hz)",
                     "limit_refetch_to_url_change": "Limit refetch to url change",
                     "password": "Password",
@@ -70,6 +74,12 @@
                     "username": "Username",
                     "verify_ssl": "Verify SSL certificate"
                 }
+            },
+            "init2": {
+                "data": {
+                    "content_type": "Content Type"
+                },
+                "description": "Specify the content type for the stream."
             }
         }
     }

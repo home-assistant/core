@@ -205,9 +205,15 @@ async def test_form_only_stream(hass, mock_av_open, fakeimgbytes_jpg):
             result["flow_id"],
             data,
         )
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result2["title"] == "127_0_0_1_testurl_2"
-    assert result2["options"] == {
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        {CONF_CONTENT_TYPE: "image/jpeg"},
+    )
+
+    assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result3["title"] == "127_0_0_1_testurl_2"
+    assert result3["options"] == {
         CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
         CONF_STREAM_SOURCE: "http://127.0.0.1/testurl/2",
         CONF_RTSP_TRANSPORT: "tcp",

@@ -91,12 +91,6 @@ def build_schema(
             CONF_PASSWORD,
             description={"suggested_value": user_input.get(CONF_PASSWORD, "")},
         ): str,
-        vol.Optional(
-            CONF_CONTENT_TYPE,
-            description={
-                "suggested_value": user_input.get(CONF_CONTENT_TYPE, "image/jpeg")
-            },
-        ): str,
         vol.Required(
             CONF_FRAMERATE,
             description={"suggested_value": user_input.get(CONF_FRAMERATE, 2)},
@@ -113,6 +107,20 @@ def build_schema(
             )
         ] = bool
     return vol.Schema(spec)
+
+
+def build_schema2(user_input: dict[str, Any] | MappingProxyType[str, Any]):
+    """Create schema for conditional 2nd page specifying stream content_type."""
+    return vol.Schema(
+        {
+            vol.Required(
+                CONF_CONTENT_TYPE,
+                description={
+                    "suggested_value": user_input.get(CONF_CONTENT_TYPE, "image/jpeg")
+                },
+            ): str,
+        }
+    )
 
 
 def get_image_type(image):
@@ -234,6 +242,11 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    def __init__(self):
+        """Initialize Generic ConfigFlow."""
+        self.cached_user_input: dict[str, Any] = {}
+        self.cached_title = ""
+
     @staticmethod
     def async_get_options_flow(
         config_entry: ConfigEntry,
@@ -270,9 +283,20 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
                 if not errors:
                     user_input[CONF_CONTENT_TYPE] = still_format
                     user_input[CONF_LIMIT_REFETCH_TO_URL_CHANGE] = False
-                    await self.async_set_unique_id(self.flow_id)
-                    return self.async_create_entry(
-                        title=name, data={}, options=user_input
+                    if user_input.get(CONF_STILL_IMAGE_URL):
+                        await self.async_set_unique_id(self.flow_id)
+                        return self.async_create_entry(
+                            title=name, data={}, options=user_input
+                        )
+                    # If user didn't specify a still image URL,
+                    # we can't (yet) autodetect it from the stream.
+                    # Show a conditional 2nd page to ask them the content type.
+                    self.cached_user_input = user_input
+                    self.cached_title = name
+                    return self.async_show_form(
+                        step_id="user2",
+                        data_schema=build_schema2({}),
+                        errors={},
                     )
         else:
             user_input = DEFAULT_DATA.copy()
@@ -281,6 +305,14 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=build_schema(user_input),
             errors=errors,
+        )
+
+    async def async_step_user2(self, user_input: dict[str, Any]) -> FlowResult:
+        """Handle the user's choice for stream content_type."""
+        user_input = self.cached_user_input | user_input
+        await self.async_set_unique_id(self.flow_id)
+        return self.async_create_entry(
+            title=self.cached_title, data={}, options=user_input
         )
 
     async def async_step_import(self, import_config) -> FlowResult:
@@ -314,10 +346,10 @@ class GenericOptionsFlowHandler(OptionsFlow):
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize Generic IP Camera options flow."""
         self.config_entry = config_entry
+        self.cached_user_input: dict[str, Any] = {}
+        self.cached_title = ""
 
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    async def async_step_init(self, user_input: dict[str, Any]) -> FlowResult:
         """Manage Generic IP Camera options."""
         errors: dict[str, str] = {}
 
@@ -327,24 +359,40 @@ class GenericOptionsFlowHandler(OptionsFlow):
             still_url = user_input.get(CONF_STILL_IMAGE_URL)
             stream_url = user_input.get(CONF_STREAM_SOURCE)
             if not errors:
-                return self.async_create_entry(
-                    title=slug_url(still_url) or slug_url(stream_url) or DEFAULT_NAME,
-                    data={
-                        CONF_AUTHENTICATION: user_input.get(CONF_AUTHENTICATION),
-                        CONF_STREAM_SOURCE: user_input.get(CONF_STREAM_SOURCE),
-                        CONF_PASSWORD: user_input.get(CONF_PASSWORD),
-                        CONF_STILL_IMAGE_URL: user_input.get(CONF_STILL_IMAGE_URL),
-                        CONF_CONTENT_TYPE: still_format,
-                        CONF_USERNAME: user_input.get(CONF_USERNAME),
-                        CONF_LIMIT_REFETCH_TO_URL_CHANGE: user_input[
-                            CONF_LIMIT_REFETCH_TO_URL_CHANGE
-                        ],
-                        CONF_FRAMERATE: user_input[CONF_FRAMERATE],
-                        CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
-                    },
+                title = slug_url(still_url) or slug_url(stream_url) or DEFAULT_NAME
+                data = {
+                    CONF_AUTHENTICATION: user_input.get(CONF_AUTHENTICATION),
+                    CONF_STREAM_SOURCE: user_input.get(CONF_STREAM_SOURCE),
+                    CONF_PASSWORD: user_input.get(CONF_PASSWORD),
+                    CONF_STILL_IMAGE_URL: user_input.get(CONF_STILL_IMAGE_URL),
+                    CONF_CONTENT_TYPE: still_format
+                    or self.config_entry.options.get(CONF_CONTENT_TYPE),
+                    CONF_USERNAME: user_input.get(CONF_USERNAME),
+                    CONF_LIMIT_REFETCH_TO_URL_CHANGE: user_input[
+                        CONF_LIMIT_REFETCH_TO_URL_CHANGE
+                    ],
+                    CONF_FRAMERATE: user_input[CONF_FRAMERATE],
+                    CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
+                }
+                if still_url:
+                    return self.async_create_entry(
+                        title=title,
+                        data=data,
+                    )
+                self.cached_title = title
+                self.cached_user_input = data
+                return self.async_show_form(
+                    step_id="init2",
+                    data_schema=build_schema2(self.config_entry.options),
+                    errors=errors,
                 )
         return self.async_show_form(
             step_id="init",
             data_schema=build_schema(user_input or self.config_entry.options, True),
             errors=errors,
         )
+
+    async def async_step_init2(self, user_input: dict[str, Any]) -> FlowResult:
+        """Handle the user's choice for stream content_type."""
+        user_input = self.cached_user_input | user_input
+        return self.async_create_entry(title=self.cached_title, data=user_input)
