@@ -6,7 +6,7 @@ from typing import Any
 
 import somecomfort
 
-from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
@@ -25,12 +25,6 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_OFF,
     PRESET_AWAY,
     PRESET_NONE,
-    SUPPORT_AUX_HEAT,
-    SUPPORT_FAN_MODE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_HUMIDITY,
-    SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 
@@ -121,16 +115,16 @@ class HoneywellUSThermostat(ClimateEntity):
         self._attr_hvac_modes = list(self._hvac_mode_map)
 
         self._attr_supported_features = (
-            SUPPORT_PRESET_MODE
-            | SUPPORT_TARGET_TEMPERATURE
-            | SUPPORT_TARGET_TEMPERATURE_RANGE
+            ClimateEntityFeature.PRESET_MODE
+            | ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         )
 
         if device._data["canControlHumidification"]:
-            self._attr_supported_features |= SUPPORT_TARGET_HUMIDITY
+            self._attr_supported_features |= ClimateEntityFeature.TARGET_HUMIDITY
 
         if device.raw_ui_data["SwitchEmergencyHeatAllowed"]:
-            self._attr_supported_features |= SUPPORT_AUX_HEAT
+            self._attr_supported_features |= ClimateEntityFeature.AUX_HEAT
 
         if not device._data["hasFan"]:
             return
@@ -141,7 +135,7 @@ class HoneywellUSThermostat(ClimateEntity):
 
         self._attr_fan_modes = list(self._fan_mode_map)
 
-        self._attr_supported_features |= SUPPORT_FAN_MODE
+        self._attr_supported_features |= ClimateEntityFeature.FAN_MODE
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

@@ -9,7 +9,7 @@ from homematicip.base.enums import AbsenceType
 from homematicip.device import Switch
 from homematicip.functionalHomes import IndoorClimateHome
 
-from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
@@ -21,8 +21,6 @@ from homeassistant.components.climate.const import (
     PRESET_BOOST,
     PRESET_ECO,
     PRESET_NONE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
@@ -68,6 +66,10 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
     Cool mode is only available for floor heating systems, if basically enabled in the hmip app.
     """
 
+    _attr_supported_features = (
+        ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
+    )
+
     def __init__(self, hap: HomematicipHAP, device: AsyncHeatingGroup) -> None:
         """Initialize heating group."""
         device.modelType = "HmIP-Heating-Group"
@@ -91,11 +93,6 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
     def temperature_unit(self) -> str:
         """Return the unit of measurement."""
         return TEMP_CELSIUS
-
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_PRESET_MODE | SUPPORT_TARGET_TEMPERATURE
 
     @property
     def target_temperature(self) -> float:
