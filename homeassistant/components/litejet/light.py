@@ -5,8 +5,8 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_TRANSITION,
     SUPPORT_BRIGHTNESS,
+    SUPPORT_TRANSITION,
     LightEntity,
-    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -66,7 +66,7 @@ class LiteJetLight(LightEntity):
     @property
     def supported_features(self):
         """Flag supported features."""
-        return SUPPORT_BRIGHTNESS | LightEntityFeature.TRANSITION
+        return SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
 
     @property
     def name(self):
