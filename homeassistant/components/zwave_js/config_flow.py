@@ -667,7 +667,7 @@ class OptionsFlowHandler(BaseZwaveJSFlow, config_entries.OptionsFlow):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            if self.config_entry.unique_id != version_info.home_id:
+            if self.config_entry.unique_id != str(version_info.home_id):
                 return self.async_abort(reason="different_device")
 
             # Make sure we disable any add-on handling
@@ -827,7 +827,7 @@ class OptionsFlowHandler(BaseZwaveJSFlow, config_entries.OptionsFlow):
             except CannotConnect:
                 return await self.async_revert_addon_config(reason="cannot_connect")
 
-        if self.config_entry.unique_id != self.version_info.home_id:
+        if self.config_entry.unique_id != str(self.version_info.home_id):
             return await self.async_revert_addon_config(reason="different_device")
 
         self._async_update_entry(
