@@ -106,6 +106,10 @@ ais_web_zwave2mqtt:
 
 ais_files:
 
+google:
+  client_id: 897873804356-b12fh6aro0akpmn89pipoe4gbbcc5jjr.apps.googleusercontent.com
+  client_secret: iIE9sTKxYo8KTCKH9MJ7m-A9
+
 webhook:
 counter:
 input_boolean:
