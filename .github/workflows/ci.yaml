@@ -840,9 +840,9 @@ jobs:
         uses: actions/download-artifact@v2
       - name: Upload coverage to Codecov (full coverage)
         if: needs.changes.outputs.test_full_suite == 'true'
-        uses: codecov/codecov-action@v2.1.0
+        uses: codecov/codecov-action@v3
         with:
           flags: full-suite
       - name: Upload coverage to Codecov (partial coverage)
         if: needs.changes.outputs.test_full_suite == 'false'
-        uses: codecov/codecov-action@v2.1.0
+        uses: codecov/codecov-action@v3
