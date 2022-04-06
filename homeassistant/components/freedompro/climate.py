@@ -4,13 +4,12 @@ import logging
 
 from pyfreedompro import put_state
 
-from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
-    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, CONF_API_KEY, TEMP_CELSIUS
@@ -72,7 +71,7 @@ class Device(CoordinatorEntity, ClimateEntity):
             model=device["type"],
             name=self.name,
         )
-        self._attr_supported_features = SUPPORT_TARGET_TEMPERATURE
+        self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
         self._attr_current_temperature = 0
         self._attr_target_temperature = 0
         self._attr_hvac_mode = HVAC_MODE_OFF
