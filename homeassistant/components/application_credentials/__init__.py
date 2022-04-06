@@ -165,9 +165,6 @@ async def _async_provide_implementation(
         return []
 
     authorization_server = await platform.async_get_authorization_server(hass)
-    if not authorization_server:
-        return []
-
     storage_collection = hass.data[DOMAIN][DATA_STORAGE]
     credentials = storage_collection.async_client_credentials(domain)
     return [
