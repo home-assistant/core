@@ -331,6 +331,7 @@ class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity, RestoreEntity
             and self._state is None
         ):
             self._state = last_state.state == STATE_ON
+            self.restore_attributes(last_state)
 
             if CONF_AUTO_OFF not in self._config:
                 return
