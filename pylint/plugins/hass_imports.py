@@ -19,6 +19,18 @@ class ObsoleteImportMatch:
 
 
 _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
+    "homeassistant.components.alarm_control_panel": [
+        ObsoleteImportMatch(
+            reason="replaced by AlarmControlPanelEntityFeature enum",
+            constant=re.compile(r"^SUPPORT_(\w*)$"),
+        ),
+    ],
+    "homeassistant.components.alarm_control_panel.const": [
+        ObsoleteImportMatch(
+            reason="replaced by AlarmControlPanelEntityFeature enum",
+            constant=re.compile(r"^SUPPORT_(\w*)$"),
+        ),
+    ],
     "homeassistant.components.binarysensor": [
         ObsoleteImportMatch(
             reason="replaced by BinarySensorDeviceClass enum",
