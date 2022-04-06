@@ -43,6 +43,7 @@ from homeassistant.components.ssdp import (
     ATTR_UPNP_MANUFACTURER,
     ATTR_UPNP_MODEL_NAME,
     ATTR_UPNP_UDN,
+    SsdpServiceInfo,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -522,6 +523,21 @@ async def test_ssdp(hass: HomeAssistant) -> None:
     assert result["data"][CONF_MANUFACTURER] == "Samsung fake_manufacturer"
     assert result["data"][CONF_MODEL] == "fake_model"
     assert result["result"].unique_id == "0d1cef00-00dc-1000-9c80-4844f7b172de"
+
+
+@pytest.mark.parametrize(
+    "data", [MOCK_SSDP_DATA_MAIN_TV_AGENT_ST, MOCK_SSDP_DATA_RENDERING_CONTROL_ST]
+)
+@pytest.mark.usefixtures("remote", "rest_api_failing")
+async def test_ssdp_legacy_not_remote_control_receiver_udn(
+    hass: HomeAssistant, data: SsdpServiceInfo
+) -> None:
+    """Test we abort if the st is not usable for legacy discovery since it will have a different UDN."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_SSDP}, data=data
+    )
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == RESULT_NOT_SUPPORTED
 
 
 @pytest.mark.usefixtures("remote", "rest_api_failing")
