@@ -54,6 +54,8 @@ async def async_setup_entry(
 class TradfriAirPurifierFan(TradfriBaseEntity, FanEntity):
     """The platform class required by Home Assistant."""
 
+    _attr_supported_features = FanEntityFeature.PRESET_MODE | FanEntityFeature.SET_SPEED
+
     def __init__(
         self,
         device_coordinator: TradfriDeviceDataUpdateCoordinator,
@@ -73,11 +75,6 @@ class TradfriAirPurifierFan(TradfriBaseEntity, FanEntity):
     def _refresh(self) -> None:
         """Refresh the device."""
         self._device_data = self.coordinator.data.air_purifier_control.air_purifiers[0]
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return FanEntityFeature.PRESET_MODE + FanEntityFeature.SET_SPEED
 
     @property
     def speed_count(self) -> int:

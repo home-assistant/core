@@ -51,6 +51,8 @@ async def async_setup_entry(
 class TradfriLight(TradfriBaseEntity, LightEntity):
     """The platform class required by Home Assistant."""
 
+    _attr_supported_features = LightEntityFeature.TRANSITION
+
     def __init__(
         self,
         device_coordinator: TradfriDeviceDataUpdateCoordinator,
@@ -69,9 +71,6 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
 
         self._attr_unique_id = f"light-{gateway_id}-{self._device_id}"
         self._hs_color = None
-
-        # Calculate supported features
-        self._attr_supported_features = LightEntityFeature.TRANSITION
 
         # Calculate supported color modes
         self._attr_supported_color_modes = set()
