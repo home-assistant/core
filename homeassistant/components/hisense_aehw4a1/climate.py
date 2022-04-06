@@ -4,7 +4,7 @@ import logging
 from pyaehw4a1.aehw4a1 import AehW4a1
 import pyaehw4a1.exceptions
 
-from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
 from homeassistant.components.climate.const import (
     FAN_AUTO,
     FAN_HIGH,
@@ -19,10 +19,6 @@ from homeassistant.components.climate.const import (
     PRESET_ECO,
     PRESET_NONE,
     PRESET_SLEEP,
-    SUPPORT_FAN_MODE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_SWING_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
     SWING_BOTH,
     SWING_HORIZONTAL,
     SWING_OFF,
@@ -39,13 +35,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import CONF_IP_ADDRESS, DOMAIN
-
-SUPPORT_FLAGS = (
-    SUPPORT_TARGET_TEMPERATURE
-    | SUPPORT_FAN_MODE
-    | SUPPORT_SWING_MODE
-    | SUPPORT_PRESET_MODE
-)
 
 MIN_TEMP_C = 16
 MAX_TEMP_C = 32
@@ -152,6 +141,13 @@ async def async_setup_entry(
 
 class ClimateAehW4a1(ClimateEntity):
     """Representation of a Hisense AEH-W4A1 module for climate device."""
+
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.SWING_MODE
+        | ClimateEntityFeature.PRESET_MODE
+    )
 
     def __init__(self, device):
         """Initialize the climate device."""
@@ -318,11 +314,6 @@ class ClimateAehW4a1(ClimateEntity):
     def target_temperature_step(self):
         """Return the supported step of target temperature."""
         return 1
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_FLAGS
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperatures."""
