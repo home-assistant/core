@@ -1042,7 +1042,7 @@ async def test_addon_running_already_configured(
             "s2_unauthenticated_key": "old987",
         },
         title=TITLE,
-        unique_id="1234",
+        unique_id=1234,
     )
     entry.add_to_hass(hass)
 
