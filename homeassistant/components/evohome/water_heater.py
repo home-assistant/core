@@ -4,9 +4,8 @@ from __future__ import annotations
 import logging
 
 from homeassistant.components.water_heater import (
-    SUPPORT_AWAY_MODE,
-    SUPPORT_OPERATION_MODE,
     WaterHeaterEntity,
+    WaterHeaterEntityFeature,
 )
 from homeassistant.const import PRECISION_TENTHS, PRECISION_WHOLE, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
@@ -61,7 +60,9 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
         self._icon = "mdi:thermometer-lines"
 
         self._precision = PRECISION_TENTHS if evo_broker.client_v1 else PRECISION_WHOLE
-        self._supported_features = SUPPORT_AWAY_MODE | SUPPORT_OPERATION_MODE
+        self._attr_supported_features = (
+            WaterHeaterEntityFeature.AWAY_MODE | WaterHeaterEntityFeature.OPERATION_MODE
+        )
 
     @property
     def current_operation(self) -> str:
