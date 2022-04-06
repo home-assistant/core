@@ -661,18 +661,18 @@ class LazyState(State):
     def __eq__(self, other: Any) -> bool:
         """Return the comparison."""
         return (
-            other.__class__ in [self.__class__, State]
+            other.__class__ in [self.__class__, State, LazyMinimalState]
             and self.entity_id == other.entity_id
             and self.state == other.state
             and self.attributes == other.attributes
         )
 
 
-class LazyMinimalState(LazyState):
+class LazyMinimalState(State):
     """A lazy minimal version of core State."""
 
     def __init__(self, row: States) -> None:  # pylint: disable=super-init-not-called
-        """Init the lazy state."""
+        """Init the lazy minimal state."""
         self._row = row
 
     @property
@@ -685,28 +685,28 @@ class LazyMinimalState(LazyState):
         """Return the entity_id."""
         return self._row.entity_id  # type: ignore[no-any-return]
 
-    @property  # type: ignore[misc]
+    @property
     def attributes(self) -> dict[str, Any]:  # type: ignore[override]
         """State attributes."""
         return json.loads(self._row.shared_attrs or self._row.attributes or "{}")  # type: ignore[no-any-return]
 
-    @property  # type: ignore[misc]
+    @property
     def context(self) -> Context:  # type: ignore[override]
         """State context."""
         return Context(id=None)  # type: ignore[arg-type]
 
-    @property  # type: ignore[misc]
+    @property
     def last_changed(self) -> datetime:  # type: ignore[override]
         """Last changed datetime."""
         return process_timestamp(self._row.last_changed)  # type: ignore[no-any-return]
 
-    @property  # type: ignore[misc]
+    @property
     def last_updated(self) -> datetime:  # type: ignore[override]
         """Last updated datetime."""
         return process_timestamp(self._row.last_updated)  # type: ignore[no-any-return]
 
     def as_dict(self) -> dict[str, Any]:  # type: ignore[override]
-        """Return a dict representation of the LazyState.
+        """Return a dict representation of the LazyMinimalState.
 
         Async friendly.
 
@@ -716,3 +716,12 @@ class LazyMinimalState(LazyState):
             "state": self._row.state or "",
             "last_changed": process_timestamp_to_utc_isoformat(self._row.last_changed),
         }
+
+    def __eq__(self, other: Any) -> bool:
+        """Return the comparison."""
+        return (
+            other.__class__ in (self.__class__, State, LazyState)
+            and self.entity_id == other.entity_id
+            and self.state == other.state
+            and self.attributes == other.attributes
+        )
