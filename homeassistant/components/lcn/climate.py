@@ -8,7 +8,6 @@ import pypck
 from homeassistant.components.climate import (
     DOMAIN as DOMAIN_CLIMATE,
     ClimateEntity,
-    ClimateEntityFeature,
     const,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -70,8 +69,6 @@ async def async_setup_entry(
 class LcnClimate(LcnEntity, ClimateEntity):
     """Representation of a LCN climate device."""
 
-    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
-
     def __init__(
         self, config: ConfigType, entry_id: str, device_connection: DeviceConnectionType
     ) -> None:
@@ -106,6 +103,11 @@ class LcnClimate(LcnEntity, ClimateEntity):
         if not self.device_connection.is_group:
             await self.device_connection.cancel_status_request_handler(self.variable)
             await self.device_connection.cancel_status_request_handler(self.setpoint)
+
+    @property
+    def supported_features(self) -> int:
+        """Return the list of supported features."""
+        return const.SUPPORT_TARGET_TEMPERATURE
 
     @property
     def temperature_unit(self) -> str:

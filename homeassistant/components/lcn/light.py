@@ -10,8 +10,8 @@ from homeassistant.components.light import (
     ATTR_TRANSITION,
     DOMAIN as DOMAIN_LIGHT,
     SUPPORT_BRIGHTNESS,
+    SUPPORT_TRANSITION,
     LightEntity,
-    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_DOMAIN, CONF_ENTITIES
@@ -75,9 +75,7 @@ class LcnOutputLight(LcnEntity, LightEntity):
         self._transition = pypck.lcn_defs.time_to_ramp_value(
             config[CONF_DOMAIN_DATA][CONF_TRANSITION]
         )
-        self._attr_supported_features = LightEntityFeature.TRANSITION
-        if config[CONF_DOMAIN_DATA][CONF_DIMMABLE]:
-            self._attr_supported_features |= SUPPORT_BRIGHTNESS
+        self.dimmable = config[CONF_DOMAIN_DATA][CONF_DIMMABLE]
 
         self._brightness = 255
         self._is_on = False
@@ -94,6 +92,13 @@ class LcnOutputLight(LcnEntity, LightEntity):
         await super().async_will_remove_from_hass()
         if not self.device_connection.is_group:
             await self.device_connection.cancel_status_request_handler(self.output)
+
+    @property
+    def supported_features(self) -> int:
+        """Flag supported features."""
+        if self.dimmable:
+            return SUPPORT_TRANSITION | SUPPORT_BRIGHTNESS
+        return SUPPORT_TRANSITION
 
     @property
     def brightness(self) -> int | None:
