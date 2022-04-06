@@ -308,7 +308,9 @@ class MicrosoftFace:
                     url, data=payload, headers=headers, params=params
                 )
 
-                answer = await response.json()
+                answer = {}
+                if response.content_length > 0:
+                    answer = await response.json()
 
             _LOGGER.debug("Read from microsoft face api: %s", answer)
             if response.status < 300:
