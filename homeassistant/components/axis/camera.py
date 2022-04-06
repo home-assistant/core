@@ -1,7 +1,7 @@
 """Support for Axis camera streaming."""
 from urllib.parse import urlencode
 
-from homeassistant.components.camera import SUPPORT_STREAM
+from homeassistant.components.camera import CameraEntityFeature
 from homeassistant.components.mjpeg import MjpegCamera, filter_urllib3_logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import HTTP_DIGEST_AUTHENTICATION
@@ -32,6 +32,8 @@ async def async_setup_entry(
 class AxisCamera(AxisEntityBase, MjpegCamera):
     """Representation of a Axis camera."""
 
+    _attr_supported_features = CameraEntityFeature.STREAM
+
     def __init__(self, device):
         """Initialize Axis Communications camera component."""
         AxisEntityBase.__init__(self, device)
@@ -57,11 +59,6 @@ class AxisCamera(AxisEntityBase, MjpegCamera):
         )
 
         await super().async_added_to_hass()
-
-    @property
-    def supported_features(self) -> int:
-        """Return supported features."""
-        return SUPPORT_STREAM
 
     def _new_address(self) -> None:
         """Set new device address for video stream."""
