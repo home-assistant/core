@@ -684,6 +684,26 @@ class LazyMinimalState(LazyState):
         """Return the entity_id."""
         return self._row.entity_id  # type: ignore[no-any-return]
 
+    @property  # type: ignore[misc]
+    def attributes(self) -> dict[str, Any]:  # type: ignore[override]
+        """State attributes."""
+        return json.loads(self._row.shared_attrs or self._row.attributes or "{}")  # type: ignore[no-any-return]
+
+    @property  # type: ignore[misc]
+    def context(self) -> Context:  # type: ignore[override]
+        """State context."""
+        return Context(id=None)  # type: ignore[arg-type]
+
+    @property  # type: ignore[misc]
+    def last_changed(self) -> datetime:  # type: ignore[override]
+        """Last changed datetime."""
+        return process_timestamp(self._row.last_changed)  # type: ignore[no-any-return]
+
+    @property  # type: ignore[misc]
+    def last_updated(self) -> datetime:  # type: ignore[override]
+        """Last updated datetime."""
+        return process_timestamp(self._row.last_updated)  # type: ignore[no-any-return]
+
     def as_dict(self) -> dict[str, Any]:  # type: ignore[override]
         """Return a dict representation of the LazyState.
 
