@@ -517,9 +517,40 @@ async def test_import_without_setupm(hass, config_credential):
 async def test_websocket_without_platform(
     hass: HomeAssistant, ws_client: ClientFixture
 ):
-    """Test websocket list command."""
+    """Test an integration without the application credential platform."""
     assert await async_setup_component(hass, "application_credentials", {})
     hass.config.components.add(TEST_DOMAIN)
+
+    client = await ws_client()
+    resp = await client.cmd(
+        "create",
+        {
+            CONF_DOMAIN: TEST_DOMAIN,
+            CONF_CLIENT_ID: CLIENT_ID,
+            CONF_CLIENT_SECRET: CLIENT_SECRET,
+        },
+    )
+    assert not resp.get("success")
+    assert "error" in resp
+    assert resp["error"].get("code") == "invalid_format"
+
+
+@pytest.mark.parametrize("disable_setup", [True])
+async def test_websocket_without_authorization_server(
+    hass: HomeAssistant, ws_client: ClientFixture
+):
+    """Test platform with incorrect implementation."""
+    assert await async_setup_component(hass, "application_credentials", {})
+    hass.config.components.add(TEST_DOMAIN)
+
+    # Platform does not implemenent async_get_authorization_server
+    platform = Mock()
+    del platform.async_get_authorization_server
+    mock_platform(
+        hass,
+        f"{TEST_DOMAIN}.application_credentials",
+        platform,
+    )
 
     client = await ws_client()
     resp = await client.cmd(

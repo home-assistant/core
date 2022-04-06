@@ -210,6 +210,7 @@ async def _get_platform(
             err,
         )
         return None
+    _LOGGER.debug(hasattr(platform, "async_get_authorization_server"))
     if not hasattr(platform, "async_get_authorization_server"):
         raise ValueError(
             "Integration '%s' platform application_credentials did not implement 'async_get_authorization_server'"
