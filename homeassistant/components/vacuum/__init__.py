@@ -173,10 +173,12 @@ class _BaseVacuum(Entity):
     Contains common properties and functions for all vacuum devices.
     """
 
+    _attr_supported_features: int
+
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Flag vacuum cleaner features that are supported."""
-        raise NotImplementedError()
+        return self._attr_supported_features
 
     @property
     def battery_level(self):
