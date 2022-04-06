@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Iterable, MutableMapping
+from collections.abc import Iterable, Iterator, MutableMapping
 from datetime import datetime
 from itertools import groupby
 import logging
@@ -547,14 +547,20 @@ def _sorted_states_to_dict(
         elapsed = time.perf_counter() - timer_start
         _LOGGER.debug("getting %d first datapoints took %fs", len(result), elapsed)
 
+    if entity_ids and len(entity_ids) == 1:
+        states_iter: Iterable[tuple[str | Column, Iterator[States]]] = (
+            (entity_ids[0], iter(states)),
+        )
+    else:
+        states_iter = groupby(states, lambda state: state.entity_id)
+
     # Append all changes to it
-    for ent_id, group in groupby(states, lambda state: state.entity_id):  # type: ignore[no-any-return]
-        domain = split_entity_id(ent_id)[0]
+    for ent_id, group in states_iter:
         ent_results = result[ent_id]
         attr_cache: dict[str, dict[str, Any]] = {}
-
-        if not minimal_response or domain in NEED_ATTRIBUTE_DOMAINS:
+        if not minimal_response or split_entity_id(ent_id)[0] in NEED_ATTRIBUTE_DOMAINS:
             ent_results.extend(LazyState(db_state, attr_cache) for db_state in group)
+            continue
 
         # With minimal response we only provide a native
         # State for the first and last response. All the states
