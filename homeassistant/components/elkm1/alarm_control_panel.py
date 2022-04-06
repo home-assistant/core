@@ -9,11 +9,7 @@ from homeassistant.components.alarm_control_panel import (
     ATTR_CHANGED_BY,
     FORMAT_NUMBER,
     AlarmControlPanelEntity,
-)
-from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_HOME,
-    SUPPORT_ALARM_ARM_NIGHT,
+    AlarmControlPanelEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -107,6 +103,12 @@ async def async_setup_entry(
 class ElkArea(ElkAttachedEntity, AlarmControlPanelEntity, RestoreEntity):
     """Representation of an Area / Partition within the ElkM1 alarm panel."""
 
+    _attr_supported_features = (
+        AlarmControlPanelEntityFeature.ARM_HOME
+        | AlarmControlPanelEntityFeature.ARM_AWAY
+        | AlarmControlPanelEntityFeature.ARM_NIGHT
+    )
+
     def __init__(self, element, elk, elk_data):
         """Initialize Area as Alarm Control Panel."""
         super().__init__(element, elk, elk_data)
@@ -169,11 +171,6 @@ class ElkArea(ElkAttachedEntity, AlarmControlPanelEntity, RestoreEntity):
     def state(self):
         """Return the state of the element."""
         return self._state
-
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_NIGHT
 
     @property
     def extra_state_attributes(self):

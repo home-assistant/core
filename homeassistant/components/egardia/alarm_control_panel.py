@@ -6,10 +6,7 @@ import logging
 import requests
 
 import homeassistant.components.alarm_control_panel as alarm
-from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_HOME,
-)
+from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
@@ -66,6 +63,11 @@ def setup_platform(
 class EgardiaAlarm(alarm.AlarmControlPanelEntity):
     """Representation of a Egardia alarm."""
 
+    _attr_supported_features = (
+        AlarmControlPanelEntityFeature.ARM_HOME
+        | AlarmControlPanelEntityFeature.ARM_AWAY
+    )
+
     def __init__(
         self, name, egardiasystem, rs_enabled=False, rs_codes=None, rs_port=52010
     ):
@@ -92,11 +94,6 @@ class EgardiaAlarm(alarm.AlarmControlPanelEntity):
     def state(self):
         """Return the state of the device."""
         return self._status
-
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
 
     @property
     def should_poll(self):

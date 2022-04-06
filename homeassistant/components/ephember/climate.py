@@ -17,15 +17,17 @@ from pyephember.pyephember import (
 )
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
+from homeassistant.components.climate import (
+    PLATFORM_SCHEMA,
+    ClimateEntity,
+    ClimateEntityFeature,
+)
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
     HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
-    SUPPORT_AUX_HEAT,
-    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
@@ -94,9 +96,9 @@ class EphEmberThermostat(ClimateEntity):
     def supported_features(self):
         """Return the list of supported features."""
         if self._hot_water:
-            return SUPPORT_AUX_HEAT
+            return ClimateEntityFeature.AUX_HEAT
 
-        return SUPPORT_TARGET_TEMPERATURE | SUPPORT_AUX_HEAT
+        return ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.AUX_HEAT
 
     @property
     def name(self):
