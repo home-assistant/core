@@ -12,8 +12,9 @@ import voluptuous as vol
 from zwave_js_server.version import VersionInfo, get_server_version
 
 from homeassistant import config_entries, exceptions
-from homeassistant.components import usb, zeroconf
+from homeassistant.components import usb
 from homeassistant.components.hassio import HassioServiceInfo, is_hassio
+from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.const import CONF_NAME, CONF_URL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import (
@@ -338,7 +339,7 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
         return await self.async_step_manual()
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle zeroconf discovery."""
         home_id = str(discovery_info.properties["homeId"])
