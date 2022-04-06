@@ -685,8 +685,8 @@ class StateTranslated:
         self._hass = hass
 
     def __call__(self, entity_id, language):
-        state = None
         """Retrieve translated state if available."""
+        state = None
         if "." in entity_id:
             state = _get_state_if_valid(self._hass, entity_id)
 

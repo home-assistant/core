@@ -224,10 +224,10 @@ class _TranslationCache:
         return self.get_cached(language, category, components)
 
     def get_cached(
-            self,
-            language: str,
-            category: str,
-            components: set[str],
+        self,
+        language: str,
+        category: str,
+        components: set[str],
     ) -> list[dict[str, dict[str, Any]]]:
         """Return resources from the cache."""
 
@@ -367,4 +367,3 @@ def get_cached_translations(
     cached = cache.get_cached(language, category, components)
 
     return dict(ChainMap(*cached))
-

@@ -634,9 +634,8 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
                 await load_translations_to_cache(hass, language)
                 _LOGGER.info("Loading state translations for language: %s", language)
 
-        hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STARTED, load_translations
-        )
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, load_translations)
+
 
 def _log_pkg_error(package: str, component: str, config: dict, message: str) -> None:
     """Log an error while merging packages."""
