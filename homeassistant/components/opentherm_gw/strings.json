@@ -2,7 +2,6 @@
   "config": {
     "step": {
       "init": {
-        "title": "OpenTherm Gateway",
         "data": {
           "name": "[%key:common::config_flow::data::name%]",
           "device": "Path or URL",
@@ -19,7 +18,6 @@
   "options": {
     "step": {
       "init": {
-        "description": "Options for the OpenTherm Gateway",
         "data": {
           "floor_temperature": "Floor Temperature",
           "read_precision": "Read Precision",

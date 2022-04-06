@@ -19,7 +19,6 @@ PLATFORMS = [
     Platform.SELECT,
     Platform.SENSOR,
 ]
-ALL = ["all"]
 DEFAULT_NAME = "Sensibo"
 TIMEOUT = 8
 

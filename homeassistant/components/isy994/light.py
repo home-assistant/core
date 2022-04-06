@@ -8,8 +8,8 @@ from pyisy.helpers import NodeProperty
 from pyisy.nodes import Node
 
 from homeassistant.components.light import (
+    COLOR_MODE_BRIGHTNESS,
     DOMAIN as LIGHT,
-    SUPPORT_BRIGHTNESS,
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -51,6 +51,9 @@ async def async_setup_entry(
 class ISYLightEntity(ISYNodeEntity, LightEntity, RestoreEntity):
     """Representation of an ISY994 light device."""
 
+    _attr_color_mode = COLOR_MODE_BRIGHTNESS
+    _attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
+
     def __init__(self, node: Node, restore_light_state: bool) -> None:
         """Initialize the ISY994 light device."""
         super().__init__(node)
@@ -91,7 +94,6 @@ class ISYLightEntity(ISYNodeEntity, LightEntity, RestoreEntity):
                 self._last_brightness = self._node.status
         super().async_on_update(event)
 
-    # pylint: disable=arguments-differ
     async def async_turn_on(self, brightness: int | None = None, **kwargs: Any) -> None:
         """Send the turn on command to the ISY994 light device."""
         if self._restore_light_state and brightness is None and self._last_brightness:
@@ -108,11 +110,6 @@ class ISYLightEntity(ISYNodeEntity, LightEntity, RestoreEntity):
         attribs = super().extra_state_attributes
         attribs[ATTR_LAST_BRIGHTNESS] = self._last_brightness
         return attribs
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return SUPPORT_BRIGHTNESS
 
     async def async_added_to_hass(self) -> None:
         """Restore last_brightness on restart."""

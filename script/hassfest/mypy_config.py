@@ -57,13 +57,8 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.hassio.sensor",
     "homeassistant.components.hassio.system_health",
     "homeassistant.components.hassio.websocket_api",
-    "homeassistant.components.here_travel_time.sensor",
     "homeassistant.components.home_plus_control",
     "homeassistant.components.home_plus_control.api",
-    "homeassistant.components.homekit.aidmanager",
-    "homeassistant.components.homekit.config_flow",
-    "homeassistant.components.homekit.util",
-    "homeassistant.components.honeywell.climate",
     "homeassistant.components.icloud",
     "homeassistant.components.icloud.account",
     "homeassistant.components.icloud.device_tracker",
@@ -172,9 +167,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.xiaomi_miio.light",
     "homeassistant.components.xiaomi_miio.sensor",
     "homeassistant.components.xiaomi_miio.switch",
-    "homeassistant.components.yeelight",
-    "homeassistant.components.yeelight.light",
-    "homeassistant.components.yeelight.scanner",
     "homeassistant.components.zha.alarm_control_panel",
     "homeassistant.components.zha.api",
     "homeassistant.components.zha.binary_sensor",
@@ -214,9 +206,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.zha.sensor",
     "homeassistant.components.zha.siren",
     "homeassistant.components.zha.switch",
-    "homeassistant.components.zwave",
-    "homeassistant.components.zwave.migration",
-    "homeassistant.components.zwave.node_entity",
 ]
 
 # Component modules which should set no_implicit_reexport = true.

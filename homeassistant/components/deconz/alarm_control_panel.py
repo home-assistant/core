@@ -1,8 +1,6 @@
 """Support for deCONZ alarm control panel devices."""
 from __future__ import annotations
 
-from collections.abc import ValuesView
-
 from pydeconz.alarm_system import AlarmSystem
 from pydeconz.sensor import (
     ANCILLARY_CONTROL_ARMED_AWAY,
@@ -21,10 +19,8 @@ from pydeconz.sensor import (
 from homeassistant.components.alarm_control_panel import (
     DOMAIN,
     FORMAT_NUMBER,
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_HOME,
-    SUPPORT_ALARM_ARM_NIGHT,
     AlarmControlPanelEntity,
+    AlarmControlPanelEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -81,11 +77,13 @@ async def async_setup_entry(
 
     @callback
     def async_add_alarm_control_panel(
-        sensors: list[AncillaryControl]
-        | ValuesView[AncillaryControl] = gateway.api.sensors.values(),
+        sensors: list[AncillaryControl] | None = None,
     ) -> None:
         """Add alarm control panel devices from deCONZ."""
         entities = []
+
+        if sensors is None:
+            sensors = list(gateway.api.sensors.ancillary_control.values())
 
         for sensor in sensors:
 
@@ -124,7 +122,9 @@ class DeconzAlarmControlPanel(DeconzDevice, AlarmControlPanelEntity):
 
     _attr_code_format = FORMAT_NUMBER
     _attr_supported_features = (
-        SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_NIGHT
+        AlarmControlPanelEntityFeature.ARM_AWAY
+        | AlarmControlPanelEntityFeature.ARM_HOME
+        | AlarmControlPanelEntityFeature.ARM_NIGHT
     )
 
     def __init__(
@@ -143,7 +143,7 @@ class DeconzAlarmControlPanel(DeconzDevice, AlarmControlPanelEntity):
         keys = {"panel", "reachable"}
         if (
             self._device.changed_keys.intersection(keys)
-            and self._device.state in DECONZ_TO_ALARM_STATE
+            and self._device.panel in DECONZ_TO_ALARM_STATE
         ):
             super().async_update_callback()
 

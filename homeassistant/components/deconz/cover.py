@@ -1,8 +1,6 @@
 """Support for deCONZ covers."""
-
 from __future__ import annotations
 
-from collections.abc import ValuesView
 from typing import Any, cast
 
 from pydeconz.light import Cover
@@ -11,16 +9,9 @@ from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
     DOMAIN,
-    SUPPORT_CLOSE,
-    SUPPORT_CLOSE_TILT,
-    SUPPORT_OPEN,
-    SUPPORT_OPEN_TILT,
-    SUPPORT_SET_POSITION,
-    SUPPORT_SET_TILT_POSITION,
-    SUPPORT_STOP,
-    SUPPORT_STOP_TILT,
     CoverDeviceClass,
     CoverEntity,
+    CoverEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -47,11 +38,12 @@ async def async_setup_entry(
     gateway.entities[DOMAIN] = set()
 
     @callback
-    def async_add_cover(
-        lights: list[Cover] | ValuesView[Cover] = gateway.api.lights.values(),
-    ) -> None:
+    def async_add_cover(lights: list[Cover] | None = None) -> None:
         """Add cover from deCONZ."""
         entities = []
+
+        if lights is None:
+            lights = list(gateway.api.lights.covers.values())
 
         for light in lights:
             if (
@@ -84,16 +76,16 @@ class DeconzCover(DeconzDevice, CoverEntity):
         """Set up cover device."""
         super().__init__(device, gateway)
 
-        self._attr_supported_features = SUPPORT_OPEN
-        self._attr_supported_features |= SUPPORT_CLOSE
-        self._attr_supported_features |= SUPPORT_STOP
-        self._attr_supported_features |= SUPPORT_SET_POSITION
+        self._attr_supported_features = CoverEntityFeature.OPEN
+        self._attr_supported_features |= CoverEntityFeature.CLOSE
+        self._attr_supported_features |= CoverEntityFeature.STOP
+        self._attr_supported_features |= CoverEntityFeature.SET_POSITION
 
         if self._device.tilt is not None:
-            self._attr_supported_features |= SUPPORT_OPEN_TILT
-            self._attr_supported_features |= SUPPORT_CLOSE_TILT
-            self._attr_supported_features |= SUPPORT_STOP_TILT
-            self._attr_supported_features |= SUPPORT_SET_TILT_POSITION
+            self._attr_supported_features |= CoverEntityFeature.OPEN_TILT
+            self._attr_supported_features |= CoverEntityFeature.CLOSE_TILT
+            self._attr_supported_features |= CoverEntityFeature.STOP_TILT
+            self._attr_supported_features |= CoverEntityFeature.SET_TILT_POSITION
 
         self._attr_device_class = DEVICE_CLASS.get(self._device.type)
 

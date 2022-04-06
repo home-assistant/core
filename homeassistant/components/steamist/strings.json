@@ -15,7 +15,7 @@
       },
       "discovery_confirm": {
         "description": "Do you want to setup {name} ({ipaddress})?"
-      }      
+      }
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",

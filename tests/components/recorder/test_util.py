@@ -1,5 +1,5 @@
 """Test util methods."""
-from datetime import timedelta
+from datetime import datetime, timedelta
 import os
 import sqlite3
 from unittest.mock import MagicMock, patch
@@ -12,7 +12,11 @@ from homeassistant.components import recorder
 from homeassistant.components.recorder import run_information_with_session, util
 from homeassistant.components.recorder.const import DATA_INSTANCE, SQLITE_URL_PREFIX
 from homeassistant.components.recorder.models import RecorderRuns
-from homeassistant.components.recorder.util import end_incomplete_runs, session_scope
+from homeassistant.components.recorder.util import (
+    end_incomplete_runs,
+    is_second_sunday,
+    session_scope,
+)
 from homeassistant.util import dt as dt_util
 
 from .common import corrupt_db_file
@@ -93,7 +97,7 @@ def test_validate_or_move_away_sqlite_database(hass, tmpdir, caplog):
 
 async def test_last_run_was_recently_clean(hass):
     """Test we can check if the last recorder run was recently clean."""
-    await async_init_recorder_component(hass)
+    await async_init_recorder_component(hass, {recorder.CONF_COMMIT_INTERVAL: 1})
     await hass.async_block_till_done()
 
     cursor = hass.data[DATA_INSTANCE].engine.raw_connection().cursor()
@@ -570,8 +574,28 @@ async def test_write_lock_db(hass, tmp_path):
 
     instance = hass.data[DATA_INSTANCE]
 
+    def _drop_table():
+        with instance.engine.connect() as connection:
+            connection.execute(text("DROP TABLE events;"))
+
     with util.write_lock_db_sqlite(instance):
         # Database should be locked now, try writing SQL command
-        with instance.engine.connect() as connection:
-            with pytest.raises(OperationalError):
-                connection.execute(text("DROP TABLE events;"))
+        with pytest.raises(OperationalError):
+            # This needs to be called in another thread since
+            # the lock method is BEGIN IMMEDIATE and since we have
+            # a connection per thread with sqlite now, we cannot do it
+            # in the same thread as the one holding the lock since it
+            # would be allowed to proceed as the goal is to prevent
+            # all the other threads from accessing the database
+            await hass.async_add_executor_job(_drop_table)
+
+
+def test_is_second_sunday():
+    """Test we can find the second sunday of the month."""
+    assert is_second_sunday(datetime(2022, 1, 9, 0, 0, 0, tzinfo=dt_util.UTC)) is True
+    assert is_second_sunday(datetime(2022, 2, 13, 0, 0, 0, tzinfo=dt_util.UTC)) is True
+    assert is_second_sunday(datetime(2022, 3, 13, 0, 0, 0, tzinfo=dt_util.UTC)) is True
+    assert is_second_sunday(datetime(2022, 4, 10, 0, 0, 0, tzinfo=dt_util.UTC)) is True
+    assert is_second_sunday(datetime(2022, 5, 8, 0, 0, 0, tzinfo=dt_util.UTC)) is True
+
+    assert is_second_sunday(datetime(2022, 1, 10, 0, 0, 0, tzinfo=dt_util.UTC)) is False

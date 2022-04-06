@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections.abc import MutableMapping
-import logging
 from typing import Any
 
 from aiohttp.client_exceptions import ClientResponseError
@@ -10,18 +9,15 @@ from brunt import BruntClientAsync, Thing
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    SUPPORT_CLOSE,
-    SUPPORT_OPEN,
-    SUPPORT_SET_POSITION,
     CoverDeviceClass,
     CoverEntity,
+    CoverEntityFeature,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -38,27 +34,6 @@ from .const import (
     OPEN_POSITION,
     REGULAR_INTERVAL,
 )
-
-_LOGGER = logging.getLogger(__name__)
-
-COVER_FEATURES = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Component setup, run import config flow for each entry in config."""
-    _LOGGER.warning(
-        "Loading brunt via platform config is deprecated; The configuration has been migrated to a config entry and can be safely removed from configuration.yaml"
-    )
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-        )
-    )
 
 
 async def async_setup_entry(
@@ -83,6 +58,12 @@ class BruntDevice(CoordinatorEntity, CoverEntity):
     Contains the common logic for all Brunt devices.
     """
 
+    _attr_supported_features = (
+        CoverEntityFeature.OPEN
+        | CoverEntityFeature.CLOSE
+        | CoverEntityFeature.SET_POSITION
+    )
+
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
@@ -102,7 +83,6 @@ class BruntDevice(CoordinatorEntity, CoverEntity):
 
         self._attr_name = self._thing.name
         self._attr_device_class = CoverDeviceClass.BLIND
-        self._attr_supported_features = COVER_FEATURES
         self._attr_attribution = ATTRIBUTION
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._attr_unique_id)},

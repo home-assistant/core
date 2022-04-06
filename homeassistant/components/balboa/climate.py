@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 
-from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
@@ -14,9 +14,6 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
-    SUPPORT_FAN_MODE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -79,9 +76,11 @@ class BalboaSpaClimate(BalboaEntity, ClimateEntity):
         }
         scale = self._client.get_tempscale()
         self._attr_preset_modes = self._client.get_heatmode_stringlist()
-        self._attr_supported_features = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
+        self._attr_supported_features = (
+            ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+        )
         if self._client.have_blower():
-            self._attr_supported_features |= SUPPORT_FAN_MODE
+            self._attr_supported_features |= ClimateEntityFeature.FAN_MODE
         self._attr_min_temp = self._client.tmin[self._client.TEMPRANGE_LOW][scale]
         self._attr_max_temp = self._client.tmax[self._client.TEMPRANGE_HIGH][scale]
         self._attr_temperature_unit = TEMP_FAHRENHEIT
