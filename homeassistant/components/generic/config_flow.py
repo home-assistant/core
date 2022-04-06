@@ -136,7 +136,7 @@ async def async_test_still(hass, info) -> tuple[dict[str, str], str | None]:
     try:
         url = url.async_render(parse_result=False)
     except TemplateError as err:
-        _LOGGER.warning("Problem parsing template %s: %s", url, err)
+        _LOGGER.warning("Problem rendering template %s: %s", url, err)
         return {CONF_STILL_IMAGE_URL: "template_error"}, None
     verify_ssl = info.get(CONF_VERIFY_SSL)
     auth = generate_auth(info)
