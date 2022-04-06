@@ -1048,6 +1048,7 @@ async def test_addon_running_already_configured(
         unique_id=1234,  # Unique ID is purposely set to int to test migration logic
     )
     entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}

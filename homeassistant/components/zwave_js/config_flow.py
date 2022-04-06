@@ -316,15 +316,6 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
         """Return the options flow."""
         return OptionsFlowHandler(config_entry)
 
-    @callback
-    def convert_unique_ids_to_strings(self) -> None:
-        """Convert all config entry unique IDs to strings."""
-        for entry in self.hass.config_entries.async_entries(DOMAIN):
-            if not isinstance(entry.unique_id, str):
-                self.hass.config_entries.async_update_entry(
-                    entry, unique_id=str(entry.unique_id)
-                )
-
     async def async_step_import(self, data: dict[str, Any]) -> FlowResult:
         """Handle imported data.
 
@@ -419,7 +410,6 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            self.convert_unique_ids_to_strings()
             await self.async_set_unique_id(
                 str(version_info.home_id), raise_on_progress=False
             )
@@ -455,7 +445,6 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
         except CannotConnect:
             return self.async_abort(reason="cannot_connect")
 
-        self.convert_unique_ids_to_strings()
         await self.async_set_unique_id(str(version_info.home_id))
         self._abort_if_unique_id_configured(updates={CONF_URL: self.ws_address})
 
@@ -589,7 +578,6 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
                 except CannotConnect as err:
                     raise AbortFlow("cannot_connect") from err
 
-            self.convert_unique_ids_to_strings()
             await self.async_set_unique_id(
                 str(self.version_info.home_id), raise_on_progress=False
             )
@@ -679,7 +667,7 @@ class OptionsFlowHandler(BaseZwaveJSFlow, config_entries.OptionsFlow):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            if self.config_entry.unique_id != version_info.home_id:
+            if self.config_entry.unique_id != str(version_info.home_id):
                 return self.async_abort(reason="different_device")
 
             # Make sure we disable any add-on handling
@@ -839,7 +827,7 @@ class OptionsFlowHandler(BaseZwaveJSFlow, config_entries.OptionsFlow):
             except CannotConnect:
                 return await self.async_revert_addon_config(reason="cannot_connect")
 
-        if self.config_entry.unique_id != self.version_info.home_id:
+        if self.config_entry.unique_id != str(self.version_info.home_id):
             return await self.async_revert_addon_config(reason="different_device")
 
         self._async_update_entry(

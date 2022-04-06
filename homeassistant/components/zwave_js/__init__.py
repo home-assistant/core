@@ -113,6 +113,11 @@ DATA_INVALID_SERVER_VERSION_LOGGED = "invalid_server_version_logged"
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Z-Wave JS component."""
     hass.data[DOMAIN] = {}
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        if not isinstance(entry.unique_id, str):
+            hass.config_entries.async_update_entry(
+                entry, unique_id=str(entry.unique_id)
+            )
     return True
 
 
