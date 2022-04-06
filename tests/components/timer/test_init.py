@@ -19,11 +19,13 @@ from homeassistant.components.timer import (
     DOMAIN,
     EVENT_TIMER_CANCELLED,
     EVENT_TIMER_FINISHED,
+    EVENT_TIMER_MODIFIED,
     EVENT_TIMER_PAUSED,
     EVENT_TIMER_RESTARTED,
     EVENT_TIMER_STARTED,
     SERVICE_CANCEL,
     SERVICE_FINISH,
+    SERVICE_MODIFY,
     SERVICE_PAUSE,
     SERVICE_START,
     STATUS_ACTIVE,
@@ -176,11 +178,14 @@ async def test_methods_and_events(hass):
         {"call": SERVICE_CANCEL, "state": STATUS_IDLE, "event": EVENT_TIMER_CANCELLED},
         {"call": SERVICE_START, "state": STATUS_ACTIVE, "event": EVENT_TIMER_STARTED},
         {"call": SERVICE_FINISH, "state": STATUS_IDLE, "event": EVENT_TIMER_FINISHED},
+        {"call": SERVICE_FINISH, "state": STATUS_IDLE, "event": None},
         {"call": SERVICE_START, "state": STATUS_ACTIVE, "event": EVENT_TIMER_STARTED},
         {"call": SERVICE_PAUSE, "state": STATUS_PAUSED, "event": EVENT_TIMER_PAUSED},
         {"call": SERVICE_CANCEL, "state": STATUS_IDLE, "event": EVENT_TIMER_CANCELLED},
         {"call": SERVICE_START, "state": STATUS_ACTIVE, "event": EVENT_TIMER_STARTED},
         {"call": SERVICE_START, "state": STATUS_ACTIVE, "event": EVENT_TIMER_RESTARTED},
+        {"call": SERVICE_PAUSE, "state": STATUS_PAUSED, "event": EVENT_TIMER_PAUSED},
+        {"call": SERVICE_FINISH, "state": STATUS_IDLE, "event": EVENT_TIMER_FINISHED},
     ]
 
     expectedEvents = 0
@@ -194,7 +199,7 @@ async def test_methods_and_events(hass):
         state = hass.states.get("timer.test1")
         assert state
         if step["state"] is not None:
-            assert state.state == step["state"]
+            assert state.state == step["state"], str(step)
 
         if step["event"] is not None:
             expectedEvents += 1
@@ -830,3 +835,119 @@ async def test_restore_active_finished_outside_grace(hass):
     assert ATTR_FINISHES_AT not in entity.extra_state_attributes
     assert entity.extra_state_attributes[ATTR_RESTORE]
     assert len(events) == 1
+
+
+async def test_modify_service(hass):
+    """Test the modify service."""
+    results = []
+
+    def fake_event_listener(event):
+        """Fake event listener for trigger."""
+        results.append(event)
+
+    hass.bus.async_listen(EVENT_TIMER_STARTED, fake_event_listener)
+    hass.bus.async_listen(EVENT_TIMER_PAUSED, fake_event_listener)
+    hass.bus.async_listen(EVENT_TIMER_FINISHED, fake_event_listener)
+    hass.bus.async_listen(EVENT_TIMER_CANCELLED, fake_event_listener)
+    hass.bus.async_listen(EVENT_TIMER_MODIFIED, fake_event_listener)
+
+    def _check_events(*events):
+        events = list(events)
+        while len(results) > 0 and len(events) > 0:
+            expected_type, expected_duration = events.pop(0)
+            event = results.pop(0)
+            assert event.event_type == expected_type, results
+            if expected_duration:
+                assert event.data[ATTR_DURATION] == expected_duration
+        assert len(events) == 0
+        assert len(results) == 0
+
+    async def _call_modify(duration):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_MODIFY,
+            {CONF_ENTITY_ID: "timer.test1", ATTR_DURATION: duration},
+        )
+        await hass.async_block_till_done()
+
+    def _check_state(state, duration, remaining):
+        timer = hass.states.get("timer.test1")
+        assert timer
+        assert timer.state == state
+        assert timer.attributes[ATTR_DURATION] == duration
+        if remaining:
+            assert timer.attributes[ATTR_REMAINING] == remaining
+        else:
+            assert ATTR_REMAINING not in timer.attributes
+
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {"test1": {CONF_DURATION: 10}}})
+
+    # Test modifying running timers
+    await hass.services.async_call(
+        DOMAIN, SERVICE_START, {CONF_ENTITY_ID: "timer.test1"}
+    )
+    await hass.async_block_till_done()
+    _check_events((EVENT_TIMER_STARTED, None))
+    _check_state(STATUS_ACTIVE, "0:00:10", "0:00:10")
+
+    await _call_modify("00:00:05")
+    _check_events((EVENT_TIMER_MODIFIED, "0:00:05"))
+    _check_state(STATUS_ACTIVE, "0:00:10", "0:00:15")
+
+    await _call_modify("-00:00:10")
+    _check_events((EVENT_TIMER_MODIFIED, "-0:00:10"))
+    _check_state(STATUS_ACTIVE, "0:00:10", "0:00:05")
+
+    await _call_modify("-00:00:10")
+    _check_events((EVENT_TIMER_MODIFIED, "-0:00:10"), (EVENT_TIMER_FINISHED, None))
+    _check_state(STATUS_IDLE, "0:00:10", None)
+
+    # Test modifying idle timers
+    await _call_modify("00:00:20")
+    _check_events((EVENT_TIMER_MODIFIED, "0:00:20"))
+    _check_state(STATUS_IDLE, "0:00:30", None)
+
+    await _call_modify("-01:00:00")
+    _check_events((EVENT_TIMER_MODIFIED, "-1:00:00"))
+    _check_state(STATUS_IDLE, "0:00:00", None)
+
+    # Test modifying paused timers
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_START,
+        {CONF_ENTITY_ID: "timer.test1", ATTR_DURATION: "00:00:10"},
+    )
+    await hass.async_block_till_done()
+    await hass.services.async_call(
+        DOMAIN, SERVICE_PAUSE, {CONF_ENTITY_ID: "timer.test1"}
+    )
+    await hass.async_block_till_done()
+    _check_state(STATUS_PAUSED, "0:00:10", "0:00:10")
+
+    await _call_modify("00:00:05")
+    _check_events(
+        (EVENT_TIMER_STARTED, None),
+        (EVENT_TIMER_PAUSED, None),
+        (EVENT_TIMER_MODIFIED, "0:00:05"),
+    )
+    _check_state(STATUS_PAUSED, "0:00:10", "0:00:15")
+
+    await _call_modify("-00:00:10")
+    _check_events((EVENT_TIMER_MODIFIED, "-0:00:10"))
+    _check_state(STATUS_PAUSED, "0:00:10", "0:00:05")
+
+    await _call_modify("-00:00:10")
+    _check_events((EVENT_TIMER_FINISHED, None), (EVENT_TIMER_MODIFIED, "-0:00:10"))
+    _check_state(STATUS_IDLE, "0:00:10", None)
+
+    assert len(results) == 0
+
+
+def test_format_timedelta():
+    """Test `timer._format_timedelta`."""
+    assert _format_timedelta(timedelta(seconds=10000)) == "2:46:40"
+    assert _format_timedelta(timedelta(seconds=1000)) == "0:16:40"
+    assert _format_timedelta(timedelta(seconds=10)) == "0:00:10"
+    assert _format_timedelta(timedelta(seconds=-10)) == "-0:00:10"
+    assert _format_timedelta(timedelta(seconds=-1000)) == "-0:16:40"
+    assert _format_timedelta(timedelta(seconds=-10000)) == "-2:46:40"

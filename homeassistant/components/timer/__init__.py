@@ -52,14 +52,17 @@ EVENT_TIMER_CANCELLED = "timer.cancelled"
 EVENT_TIMER_STARTED = "timer.started"
 EVENT_TIMER_RESTARTED = "timer.restarted"
 EVENT_TIMER_PAUSED = "timer.paused"
+EVENT_TIMER_MODIFIED = "timer.modified"
 
 SERVICE_START = "start"
 SERVICE_PAUSE = "pause"
 SERVICE_CANCEL = "cancel"
 SERVICE_FINISH = "finish"
+SERVICE_MODIFY = "modify"
 
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
+
 
 CREATE_FIELDS = {
     vol.Required(CONF_NAME): cv.string,
@@ -76,16 +79,24 @@ UPDATE_FIELDS = {
 
 
 def _format_timedelta(delta: timedelta):
+    sign = ""
     total_seconds = delta.total_seconds()
+    if total_seconds < 0:
+        total_seconds = total_seconds * -1
+        sign = "-"
     hours, remainder = divmod(total_seconds, 3600)
     minutes, seconds = divmod(remainder, 60)
-    return f"{int(hours)}:{int(minutes):02}:{int(seconds):02}"
+    return f"{sign}{int(hours)}:{int(minutes):02}:{int(seconds):02}"
 
 
 def _none_to_empty_dict(value):
     if value is None:
         return {}
     return value
+
+
+def _now() -> datetime:
+    return dt_util.utcnow().replace(microsecond=0)
 
 
 CONFIG_SCHEMA = vol.Schema(
@@ -164,6 +175,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(SERVICE_PAUSE, {}, "async_pause")
     component.async_register_entity_service(SERVICE_CANCEL, {}, "async_cancel")
     component.async_register_entity_service(SERVICE_FINISH, {}, "async_finish")
+    component.async_register_entity_service(
+        SERVICE_MODIFY,
+        {vol.Required(ATTR_DURATION): cv.time_period},
+        "async_modify",
+    )
 
     return True
 
@@ -281,7 +297,7 @@ class Timer(RestoreEntity):
         end = cv.datetime(state.attributes[ATTR_FINISHES_AT])
         # If there is time remaining in the timer, restore the remaining time then
         # start the timer
-        if (remaining := end - dt_util.utcnow().replace(microsecond=0)) > timedelta(0):
+        if (remaining := end - _now()) > timedelta(0):
             self._remaining = remaining
             self._state = STATUS_PAUSED
             self.async_start()
@@ -303,7 +319,7 @@ class Timer(RestoreEntity):
             event = EVENT_TIMER_RESTARTED
 
         self._state = STATUS_ACTIVE
-        start = dt_util.utcnow().replace(microsecond=0)
+        start = _now()
 
         # Set remaining to new value if needed
         if duration:
@@ -328,7 +344,7 @@ class Timer(RestoreEntity):
 
         self._listener()
         self._listener = None
-        self._remaining = self._end - dt_util.utcnow().replace(microsecond=0)
+        self._remaining = self._end - _now()
         self._state = STATUS_PAUSED
         self._end = None
         self.hass.bus.async_fire(EVENT_TIMER_PAUSED, {ATTR_ENTITY_ID: self.entity_id})
@@ -351,13 +367,16 @@ class Timer(RestoreEntity):
     @callback
     def async_finish(self):
         """Reset and updates the states, fire finished event."""
-        if self._state != STATUS_ACTIVE:
+        if self._state == STATUS_PAUSED:
+            end = _now()
+        elif self._state == STATUS_ACTIVE:
+            end = self._end
+        else:
             return
 
         if self._listener:
             self._listener()
             self._listener = None
-        end = self._end
         self._state = STATUS_IDLE
         self._end = None
         self._remaining = None
@@ -365,6 +384,55 @@ class Timer(RestoreEntity):
             EVENT_TIMER_FINISHED,
             {ATTR_ENTITY_ID: self.entity_id, ATTR_FINISHED_AT: end.isoformat()},
         )
+        self.async_write_ha_state()
+
+    @callback
+    def async_modify(self, duration: timedelta):
+        """
+        Add / Subtract time from a timer.
+
+        If a timer is running, the duration is added to it without changing the default value.
+        If a timer is idle, the new value is set as its default value.
+        """
+        zero = timedelta(0)
+
+        if self._listener:
+            self._listener()
+            self._listener = None
+
+        restart_listener = False
+
+        if self._state == STATUS_ACTIVE and self._end:
+            remaining = self._end - _now()
+            self._remaining = remaining + duration
+            self._end = self._end + duration
+            restart_listener = True
+
+        elif self._state == STATUS_IDLE:
+            self._duration = max(zero, self._duration + duration)
+
+        elif self._state == STATUS_PAUSED and self._remaining:
+            self._remaining = self._remaining + duration
+            if self._remaining <= zero:
+                self.async_finish()
+
+        else:
+            _LOGGER.error("Unknown state: %s", self._state)
+            return
+
+        self.hass.bus.async_fire(
+            EVENT_TIMER_MODIFIED,
+            {
+                ATTR_ENTITY_ID: self.entity_id,
+                ATTR_DURATION: _format_timedelta(duration),
+            },
+        )
+
+        if restart_listener and self._end:
+            self._listener = async_track_point_in_utc_time(
+                self.hass, self._async_finished, self._end
+            )
+
         self.async_write_ha_state()
 
     @callback

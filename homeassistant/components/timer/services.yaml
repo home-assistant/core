@@ -34,3 +34,20 @@ finish:
   target:
     entity:
       domain: timer
+
+modify:
+  name: Modify
+  description: Add / Subtract time from a timer.
+  fields:
+    duration:
+      name: Duration
+      description: Duration to add / subtract from the timer. To subtract time, use a negative value.
+      example: "00:01:00"
+      required: true
+      default: 00:01:00
+      selector:
+        text:
+
+  target:
+    entity:
+      domain: timer
