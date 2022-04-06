@@ -287,17 +287,13 @@ class HistoryPeriodView(HomeAssistantView):
             elapsed = time.perf_counter() - timer_start
             _LOGGER.debug("Extracted %d states in %fs", sum(map(len, result)), elapsed)
 
+        result = list(result.values())
+
         # Optionally reorder the result to respect the ordering given
         # by any entities explicitly included in the configuration.
         if not self.filters or not self.use_include_order:
-            ret = self.json(
-                [
-                    [state.as_dict() for state in state_list]
-                    for state_list in result.values()
-                ]
-            )
+            ret = self.json(result)
         else:
-            result = list(result.values())
             sorted_result = []
             for order_entity in self.filters.included_entities:
                 for state_list in result:
@@ -306,12 +302,7 @@ class HistoryPeriodView(HomeAssistantView):
                         result.remove(state_list)
                         break
             sorted_result.extend(result)
-            ret = self.json(
-                [
-                    [state.as_dict() for state in state_list]
-                    for state_list in sorted_result
-                ]
-            )
+            ret = self.json(sorted_result)
         pr.disable()
         pr.create_stats()
         pr.dump_stats(f"history.{dt_util.utcnow()}.cprof")
