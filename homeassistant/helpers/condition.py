@@ -897,7 +897,7 @@ def numeric_state_validate_config(
 
     registry = er.async_get(hass)
     config = dict(config)
-    config[CONF_ENTITY_ID] = er.async_resolve_entity_ids(
+    config[CONF_ENTITY_ID] = er.async_validate_entity_ids(
         registry, cv.entity_ids_or_uuids(config[CONF_ENTITY_ID])
     )
     return config
@@ -908,7 +908,7 @@ def state_validate_config(hass: HomeAssistant, config: ConfigType) -> ConfigType
 
     registry = er.async_get(hass)
     config = dict(config)
-    config[CONF_ENTITY_ID] = er.async_resolve_entity_ids(
+    config[CONF_ENTITY_ID] = er.async_validate_entity_ids(
         registry, cv.entity_ids_or_uuids(config[CONF_ENTITY_ID])
     )
     return config

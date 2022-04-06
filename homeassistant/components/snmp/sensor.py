@@ -48,6 +48,7 @@ from .const import (
     DEFAULT_NAME,
     DEFAULT_PORT,
     DEFAULT_PRIV_PROTOCOL,
+    DEFAULT_TIMEOUT,
     DEFAULT_VERSION,
     MAP_AUTH_PROTOCOLS,
     MAP_PRIV_PROTOCOLS,
@@ -125,14 +126,14 @@ async def async_setup_platform(
                 authProtocol=getattr(hlapi, MAP_AUTH_PROTOCOLS[authproto]),
                 privProtocol=getattr(hlapi, MAP_PRIV_PROTOCOLS[privproto]),
             ),
-            UdpTransportTarget((host, port)),
+            UdpTransportTarget((host, port), timeout=DEFAULT_TIMEOUT),
             ContextData(),
         ]
     else:
         request_args = [
             SnmpEngine(),
             CommunityData(community, mpModel=SNMP_VERSIONS[version]),
-            UdpTransportTarget((host, port)),
+            UdpTransportTarget((host, port), timeout=DEFAULT_TIMEOUT),
             ContextData(),
         ]
 

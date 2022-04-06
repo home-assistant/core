@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from asyncio import run_coroutine_threadsafe
 import datetime
-import json
 import logging
 from typing import Any
 
@@ -50,7 +49,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
 )
 from homeassistant.components.plex.const import PLEX_URI_SCHEME
-from homeassistant.components.plex.services import lookup_plex_media
+from homeassistant.components.plex.services import process_plex_payload
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TIME, STATE_IDLE, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -64,6 +63,9 @@ from .const import (
     DATA_SONOS,
     DOMAIN as SONOS_DOMAIN,
     MEDIA_TYPES_TO_SONOS,
+    MODELS_LINEIN_AND_TV,
+    MODELS_LINEIN_ONLY,
+    MODELS_TV_ONLY,
     PLAYABLE_MEDIA_TYPES,
     SONOS_CREATE_MEDIA_PLAYER,
     SONOS_MEDIA_UPDATED,
@@ -474,20 +476,17 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             soco.add_to_queue(favorite.reference)
             soco.play_from_queue(0)
 
-    @property  # type: ignore[misc]
+    @property
     def source_list(self) -> list[str]:
         """List of available input sources."""
-        sources = [fav.title for fav in self.speaker.favorites]
-
-        model = self.coordinator.model_name.upper()
-        if "PLAY:5" in model or "CONNECT" in model:
-            sources += [SOURCE_LINEIN]
-        elif "PLAYBAR" in model:
-            sources += [SOURCE_LINEIN, SOURCE_TV]
-        elif "BEAM" in model or "PLAYBASE" in model:
-            sources += [SOURCE_TV]
-
-        return sources
+        model = self.coordinator.model_name.split()[-1].upper()
+        if model in MODELS_LINEIN_ONLY:
+            return [SOURCE_LINEIN]
+        if model in MODELS_TV_ONLY:
+            return [SOURCE_TV]
+        if model in MODELS_LINEIN_AND_TV:
+            return [SOURCE_LINEIN, SOURCE_TV]
+        return []
 
     @soco_error(UPNP_ERRORS_TO_IGNORE)
     def media_play(self) -> None:
@@ -567,18 +566,17 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         soco = self.coordinator.soco
         if media_id and media_id.startswith(PLEX_URI_SCHEME):
             plex_plugin = self.speaker.plex_plugin
-            media_id = media_id[len(PLEX_URI_SCHEME) :]
-            payload = json.loads(media_id)
-            if isinstance(payload, dict):
-                shuffle = payload.pop("shuffle", False)
-            else:
-                shuffle = False
-            media = lookup_plex_media(self.hass, media_type, json.dumps(payload))
-            if not kwargs.get(ATTR_MEDIA_ENQUEUE):
-                soco.clear_queue()
-            if shuffle:
+            result = process_plex_payload(
+                self.hass, media_type, media_id, supports_playqueues=False
+            )
+            if result.shuffle:
                 self.set_shuffle(True)
-            plex_plugin.play_now(media)
+            if kwargs.get(ATTR_MEDIA_ENQUEUE):
+                plex_plugin.add_to_queue(result.media)
+            else:
+                soco.clear_queue()
+                plex_plugin.add_to_queue(result.media)
+                soco.play_from_queue(0)
             return
 
         share_link = self.coordinator.share_link

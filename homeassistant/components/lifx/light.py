@@ -74,6 +74,7 @@ MESSAGE_RETRIES = 8
 UNAVAILABLE_GRACE = 90
 
 FIX_MAC_FW = AwesomeVersion("3.70")
+SWITCH_PRODUCT_IDS = [70, 71, 89]
 
 SERVICE_LIFX_SET_STATE = "set_state"
 
@@ -396,14 +397,18 @@ class LIFXManager:
             # Read initial state
             ack = AwaitAioLIFX().wait
 
-            # Used to populate sw_version
-            # no need to wait as we do not
-            # need it until later
-            bulb.get_hostfirmware()
+            # Get the product info first so that LIFX Switches
+            # can be ignored.
+            version_resp = await ack(bulb.get_version)
+            if version_resp and bulb.product in SWITCH_PRODUCT_IDS:
+                _LOGGER.warning(
+                    "(Switch) action=skip_discovery, reason=unsupported, serial=%s, ip_addr=%s, type='LIFX Switch'",
+                    str(bulb.mac_addr).replace(":", ""),
+                    bulb.ip_addr,
+                )
+                return False
 
             color_resp = await ack(bulb.get_color)
-            if color_resp:
-                version_resp = await ack(bulb.get_version)
 
             if color_resp is None or version_resp is None:
                 _LOGGER.error("Failed to initialize %s", bulb.ip_addr)

@@ -6,7 +6,7 @@
             "connection_error": "\u9023\u7dda\u5931\u6557"
         },
         "error": {
-            "discovery_error": "\u63a2\u7d22 Motion \u9598\u9053\u5668\u5931\u6557",
+            "discovery_error": "\u641c\u7d22 Motion \u9598\u9053\u5668\u5931\u6557",
             "invalid_interface": "\u7db2\u8def\u4ecb\u9762\u7121\u6548"
         },
         "flow_title": "Motion Blinds",
@@ -31,7 +31,7 @@
                     "api_key": "API \u91d1\u9470",
                     "host": "IP \u4f4d\u5740"
                 },
-                "description": "\u9023\u7dda\u81f3 Motion \u9598\u9053\u5668\uff0c\u5047\u5982\u672a\u63d0\u4f9b IP \u4f4d\u5740\uff0c\u5c07\u4f7f\u7528\u81ea\u52d5\u63a2\u7d22",
+                "description": "\u9023\u7dda\u81f3 Motion \u9598\u9053\u5668\uff0c\u5047\u5982\u672a\u63d0\u4f9b IP \u4f4d\u5740\uff0c\u5c07\u4f7f\u7528\u81ea\u52d5\u641c\u7d22",
                 "title": "Motion Blinds"
             }
         }

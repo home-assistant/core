@@ -8,18 +8,18 @@
   "codeowners": ["@bachya"],
   "iot_class": "local_polling",
   "dhcp": [
-      {
-        "hostname": "gvc*",
-        "macaddress": "30AEA4*"
-      },
-      {
-        "hostname": "gvc*",
-        "macaddress": "B4E62D*"
-      },
-      {
-        "hostname": "guardian*",
-        "macaddress": "30AEA4*"
-      }
+    {
+      "hostname": "gvc*",
+      "macaddress": "30AEA4*"
+    },
+    {
+      "hostname": "gvc*",
+      "macaddress": "B4E62D*"
+    },
+    {
+      "hostname": "guardian*",
+      "macaddress": "30AEA4*"
+    }
   ],
   "loggers": ["aioguardian"]
 }

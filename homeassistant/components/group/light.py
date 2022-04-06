@@ -36,6 +36,7 @@ from homeassistant.components.light import (
     SUPPORT_WHITE_VALUE,
     LightEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
@@ -46,9 +47,10 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_ON,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import Event, HomeAssistant, State, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -57,6 +59,7 @@ from . import GroupEntity
 from .util import find_state_attributes, mean_tuple, reduce_attribute
 
 DEFAULT_NAME = "Light Group"
+CONF_ALL = "all"
 
 # No limit on parallel updates to enable a group calling another group
 PARALLEL_UPDATES = 0
@@ -66,6 +69,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Required(CONF_ENTITIES): cv.entities_domain(light.DOMAIN),
+        vol.Optional(CONF_ALL): cv.boolean,
     }
 )
 
@@ -86,9 +90,29 @@ async def async_setup_platform(
     async_add_entities(
         [
             LightGroup(
-                config.get(CONF_UNIQUE_ID), config[CONF_NAME], config[CONF_ENTITIES]
+                config.get(CONF_UNIQUE_ID),
+                config[CONF_NAME],
+                config[CONF_ENTITIES],
+                config.get(CONF_ALL),
             )
         ]
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Initialize Light Group config entry."""
+    registry = er.async_get(hass)
+    entities = er.async_validate_entity_ids(
+        registry, config_entry.options[CONF_ENTITIES]
+    )
+    mode = config_entry.options.get(CONF_ALL, False)
+
+    async_add_entities(
+        [LightGroup(config_entry.entry_id, config_entry.title, entities, mode)]
     )
 
 
@@ -115,12 +139,13 @@ class LightGroup(GroupEntity, LightEntity):
 
     _attr_available = False
     _attr_icon = "mdi:lightbulb-group"
-    _attr_is_on = False
     _attr_max_mireds = 500
     _attr_min_mireds = 154
     _attr_should_poll = False
 
-    def __init__(self, unique_id: str | None, name: str, entity_ids: list[str]) -> None:
+    def __init__(
+        self, unique_id: str | None, name: str, entity_ids: list[str], mode: str | None
+    ) -> None:
         """Initialize a light group."""
         self._entity_ids = entity_ids
         self._white_value: int | None = None
@@ -128,6 +153,9 @@ class LightGroup(GroupEntity, LightEntity):
         self._attr_name = name
         self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entity_ids}
         self._attr_unique_id = unique_id
+        self.mode = any
+        if mode:
+            self.mode = all
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -190,7 +218,22 @@ class LightGroup(GroupEntity, LightEntity):
         states: list[State] = list(filter(None, all_states))
         on_states = [state for state in states if state.state == STATE_ON]
 
-        self._attr_is_on = len(on_states) > 0
+        # filtered_states are members currently in the state machine
+        filtered_states: list[str] = [x.state for x in all_states if x is not None]
+
+        valid_state = self.mode(
+            state not in (STATE_UNKNOWN, STATE_UNAVAILABLE) for state in filtered_states
+        )
+
+        if not valid_state:
+            # Set as unknown if any / all member is unknown or unavailable
+            self._attr_is_on = None
+        else:
+            # Set as ON if any / all member is ON
+            self._attr_is_on = self.mode(
+                list(map(lambda x: x == STATE_ON, filtered_states))
+            )
+
         self._attr_available = any(state.state != STATE_UNAVAILABLE for state in states)
         self._attr_brightness = reduce_attribute(on_states, ATTR_BRIGHTNESS)
 

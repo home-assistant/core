@@ -60,8 +60,8 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
+from .config_validation import BITMASK_SCHEMA
 from .const import (
-    BITMASK_SCHEMA,
     CONF_DATA_COLLECTION_OPTED_IN,
     DATA_CLIENT,
     DOMAIN,

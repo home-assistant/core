@@ -131,18 +131,30 @@ async def test_dump_log_object(hass, caplog):
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
+    class DumpLogDummy:
+        def __init__(self, fail):
+            self.fail = fail
+
+        def __repr__(self):
+            if self.fail:
+                raise Exception("failed")
+            return "<DumpLogDummy success>"
+
+    obj1 = DumpLogDummy(False)
+    obj2 = DumpLogDummy(True)
+
     assert hass.services.has_service(DOMAIN, SERVICE_DUMP_LOG_OBJECTS)
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_DUMP_LOG_OBJECTS, {CONF_TYPE: "MockConfigEntry"}
+        DOMAIN, SERVICE_DUMP_LOG_OBJECTS, {CONF_TYPE: "DumpLogDummy"}
     )
     await hass.async_block_till_done()
 
-    assert "MockConfigEntry" in caplog.text
+    assert "<DumpLogDummy success>" in caplog.text
+    assert "Failed to serialize" in caplog.text
+    del obj1
+    del obj2
     caplog.clear()
-
-    assert await hass.config_entries.async_unload(entry.entry_id)
-    await hass.async_block_till_done()
 
 
 async def test_log_thread_frames(hass, caplog):

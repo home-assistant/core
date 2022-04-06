@@ -7,7 +7,7 @@
   "zeroconf": [
     {
       "type": "_axis-video._tcp.local.",
-      "properties": {"macaddress": "1ccae3*"}
+      "properties": { "macaddress": "1ccae3*" }
     }
   ],
   "codeowners": ["@oblogic7", "@bdraco", "@flacjacket"],

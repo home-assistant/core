@@ -12,10 +12,10 @@
         "step": {
             "user": {
                 "data": {
-                    "flow_type": "\u9023\u7dda\u985e\u578b"
+                    "flow_type": "\u9023\u7dda\u985e\u5225"
                 },
                 "description": "\u7522\u54c1\uff1a",
-                "title": "Plugwise \u985e\u578b"
+                "title": "Plugwise \u985e\u5225"
             },
             "user_gateway": {
                 "data": {

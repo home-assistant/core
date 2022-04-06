@@ -129,7 +129,6 @@ class ModernFormsFanEntity(FanEntity, ModernFormsDeviceEntity):
     @modernforms_exception_handler
     async def async_turn_on(
         self,
-        speed: int | None = None,
         percentage: int | None = None,
         preset_mode: int | None = None,
         **kwargs: Any,

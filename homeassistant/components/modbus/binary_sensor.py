@@ -39,7 +39,7 @@ async def async_setup_platform(
 ) -> None:
     """Set up the Modbus binary sensors."""
 
-    if discovery_info is None:  # pragma: no cover
+    if discovery_info is None:
         return
 
     sensors: list[ModbusBinarySensor | SlaveSensor] = []

@@ -8,6 +8,7 @@ from homeassistant.components.modbus.const import (
     CONF_INPUT_TYPE,
     CONF_LAZY_ERROR,
     CONF_SLAVE_COUNT,
+    MODBUS_DOMAIN,
 )
 from homeassistant.const import (
     CONF_ADDRESS,
@@ -22,6 +23,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import State
+from homeassistant.setup import async_setup_component
 
 from .conftest import TEST_ENTITY_NAME, ReadResult, do_next_cycle
 
@@ -257,16 +259,68 @@ async def test_config_slave_binary_sensor(hass, mock_modbus):
                 {
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 51,
-                    CONF_SLAVE_COUNT: 8,
                 }
             ]
         },
     ],
 )
 @pytest.mark.parametrize(
-    "register_words,expected, slaves",
+    "config_addon,register_words,expected, slaves",
     [
         (
+            {CONF_SLAVE_COUNT: 1},
+            [0x01],
+            STATE_ON,
+            [
+                STATE_OFF,
+            ],
+        ),
+        (
+            {CONF_SLAVE_COUNT: 1},
+            [0x02],
+            STATE_OFF,
+            [
+                STATE_ON,
+            ],
+        ),
+        (
+            {CONF_SLAVE_COUNT: 1},
+            [0x04],
+            STATE_OFF,
+            [
+                STATE_OFF,
+            ],
+        ),
+        (
+            {CONF_SLAVE_COUNT: 7},
+            [0x01],
+            STATE_ON,
+            [
+                STATE_OFF,
+                STATE_OFF,
+                STATE_OFF,
+                STATE_OFF,
+                STATE_OFF,
+                STATE_OFF,
+                STATE_OFF,
+            ],
+        ),
+        (
+            {CONF_SLAVE_COUNT: 7},
+            [0x82],
+            STATE_OFF,
+            [
+                STATE_ON,
+                STATE_OFF,
+                STATE_OFF,
+                STATE_OFF,
+                STATE_OFF,
+                STATE_OFF,
+                STATE_ON,
+            ],
+        ),
+        (
+            {CONF_SLAVE_COUNT: 10},
             [0x01, 0x00],
             STATE_ON,
             [
@@ -278,23 +332,12 @@ async def test_config_slave_binary_sensor(hass, mock_modbus):
                 STATE_OFF,
                 STATE_OFF,
                 STATE_OFF,
-            ],
-        ),
-        (
-            [0x02, 0x00],
-            STATE_OFF,
-            [
-                STATE_ON,
-                STATE_OFF,
-                STATE_OFF,
-                STATE_OFF,
-                STATE_OFF,
-                STATE_OFF,
                 STATE_OFF,
                 STATE_OFF,
             ],
         ),
         (
+            {CONF_SLAVE_COUNT: 10},
             [0x01, 0x01],
             STATE_ON,
             [
@@ -306,6 +349,25 @@ async def test_config_slave_binary_sensor(hass, mock_modbus):
                 STATE_OFF,
                 STATE_OFF,
                 STATE_ON,
+                STATE_OFF,
+                STATE_OFF,
+            ],
+        ),
+        (
+            {CONF_SLAVE_COUNT: 10},
+            [0x81, 0x01],
+            STATE_ON,
+            [
+                STATE_OFF,
+                STATE_OFF,
+                STATE_OFF,
+                STATE_OFF,
+                STATE_OFF,
+                STATE_OFF,
+                STATE_ON,
+                STATE_ON,
+                STATE_OFF,
+                STATE_OFF,
             ],
         ),
     ],
@@ -314,6 +376,18 @@ async def test_slave_binary_sensor(hass, expected, slaves, mock_do_cycle):
     """Run test for given config."""
     assert hass.states.get(ENTITY_ID).state == expected
 
-    for i in range(8):
+    for i in range(len(slaves)):
         entity_id = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}_{i+1}".replace(" ", "_")
         assert hass.states.get(entity_id).state == slaves[i]
+
+
+async def test_no_discovery_info_binary_sensor(hass, caplog):
+    """Test setup without discovery info."""
+    assert SENSOR_DOMAIN not in hass.config.components
+    assert await async_setup_component(
+        hass,
+        SENSOR_DOMAIN,
+        {SENSOR_DOMAIN: {"platform": MODBUS_DOMAIN}},
+    )
+    await hass.async_block_till_done()
+    assert SENSOR_DOMAIN in hass.config.components

@@ -124,13 +124,3 @@ async def init_integration_missing_some_attrs(
     await hass.async_block_till_done()
 
     return mock_config_entry
-
-
-@pytest.fixture
-def enable_all_entities() -> Generator[AsyncMock, None, None]:
-    """Test fixture that ensures all entities are enabled in the registry."""
-    with patch(
-        "homeassistant.helpers.entity.Entity.entity_registry_enabled_default",
-        return_value=True,
-    ) as mock_entity_registry_enabled_by_default:
-        yield mock_entity_registry_enabled_by_default

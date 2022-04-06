@@ -14,6 +14,7 @@ then
     echo "------"
     echo "Requirements change added another dependency conflict."
     echo "Make sure to check the 'pip check' output above!"
+    echo "Expected $DEPENDENCY_CONFLICTS conflicts, got $LINE_COUNT."
     exit 1
 elif [[ $((LINE_COUNT)) -lt $DEPENDENCY_CONFLICTS ]]
 then

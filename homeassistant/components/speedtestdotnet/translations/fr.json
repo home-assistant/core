@@ -6,7 +6,7 @@
         },
         "step": {
             "user": {
-                "description": "Voulez-vous commencer la configuration ?"
+                "description": "Voulez-vous commencer la configuration\u00a0?"
             }
         }
     },

@@ -15,10 +15,10 @@
             },
             "pick_radio": {
                 "data": {
-                    "radio_type": "\u7121\u7dda\u96fb\u985e\u578b"
+                    "radio_type": "\u7121\u7dda\u96fb\u985e\u5225"
                 },
-                "description": "\u9078\u64c7 Zigbee \u7121\u7dda\u96fb\u985e\u578b",
-                "title": "\u7121\u7dda\u96fb\u985e\u578b"
+                "description": "\u9078\u64c7 Zigbee \u7121\u7dda\u96fb\u985e\u5225",
+                "title": "\u7121\u7dda\u96fb\u985e\u5225"
             },
             "port_config": {
                 "data": {

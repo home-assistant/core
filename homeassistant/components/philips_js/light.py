@@ -123,7 +123,9 @@ def _average_pixels(data):
     return 0.0, 0.0, 0.0
 
 
-class PhilipsTVLightEntity(CoordinatorEntity, LightEntity):
+class PhilipsTVLightEntity(
+    CoordinatorEntity[PhilipsTVDataUpdateCoordinator], LightEntity
+):
     """Representation of a Philips TV exposing the JointSpace API."""
 
     def __init__(

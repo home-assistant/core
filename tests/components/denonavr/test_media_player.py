@@ -6,7 +6,6 @@ import pytest
 from homeassistant.components import media_player
 from homeassistant.components.denonavr.config_flow import (
     CONF_MANUFACTURER,
-    CONF_MODEL,
     CONF_SERIAL_NUMBER,
     CONF_TYPE,
     DOMAIN,
@@ -18,7 +17,7 @@ from homeassistant.components.denonavr.media_player import (
     SERVICE_SET_DYNAMIC_EQ,
     SERVICE_UPDATE_AUDYSSEY,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST
+from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_MODEL
 
 from tests.common import MockConfigEntry
 

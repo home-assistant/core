@@ -127,8 +127,8 @@
             "on": "\u0395\u03bd\u03b5\u03c1\u03b3\u03cc"
         },
         "battery": {
-            "off": "\u039a\u03b1\u03bd\u03bf\u03bd\u03b9\u03ba\u03cc\u03c2",
-            "on": "\u03a7\u03b1\u03bc\u03b7\u03bb\u03cc\u03c2"
+            "off": "\u039a\u03b1\u03bd\u03bf\u03bd\u03b9\u03ba\u03ae",
+            "on": "\u03a7\u03b1\u03bc\u03b7\u03bb\u03ae"
         },
         "battery_charging": {
             "off": "\u0394\u03b5 \u03c6\u03bf\u03c1\u03c4\u03af\u03b6\u03b5\u03b9",
@@ -147,7 +147,7 @@
             "on": "\u039a\u03c1\u03cd\u03bf"
         },
         "connectivity": {
-            "off": "\u0391\u03c0\u03bf\u03c3\u03cd\u03bd\u03b4\u03b5\u03c3\u03b7",
+            "off": "\u0391\u03c0\u03bf\u03c3\u03c5\u03bd\u03b4\u03b5\u03b4\u03b5\u03bc\u03ad\u03bd\u03bf\u03c2",
             "on": "\u03a3\u03c5\u03bd\u03b4\u03b5\u03b4\u03b5\u03bc\u03ad\u03bd\u03bf\u03c2"
         },
         "door": {
@@ -156,7 +156,7 @@
         },
         "garage_door": {
             "off": "\u039a\u03bb\u03b5\u03b9\u03c3\u03c4\u03cc",
-            "on": "\u0386\u03bd\u03bf\u03b9\u03b3\u03bc\u03b1"
+            "on": "\u0391\u03bd\u03bf\u03b9\u03c7\u03c4\u03cc"
         },
         "gas": {
             "off": "\u0394\u03b5\u03bd \u03b5\u03bd\u03c4\u03bf\u03c0\u03af\u03c3\u03c4\u03b7\u03ba\u03b5",

@@ -37,10 +37,8 @@ async def async_setup_entry(
     )
 
 
-class BraviaTVRemote(CoordinatorEntity, RemoteEntity):
+class BraviaTVRemote(CoordinatorEntity[BraviaTVCoordinator], RemoteEntity):
     """Representation of a Bravia TV Remote."""
-
-    coordinator: BraviaTVCoordinator
 
     def __init__(
         self,

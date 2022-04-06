@@ -163,7 +163,9 @@ class DaikinClimate(ClimateEntity):
             # temperature
             elif attr == ATTR_TEMPERATURE:
                 try:
-                    values[HA_ATTR_TO_DAIKIN[ATTR_TARGET_TEMPERATURE]] = str(int(value))
+                    values[HA_ATTR_TO_DAIKIN[ATTR_TARGET_TEMPERATURE]] = str(
+                        round(float(value), 1)
+                    )
                 except ValueError:
                     _LOGGER.error("Invalid temperature %s", value)
 

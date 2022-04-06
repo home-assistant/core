@@ -51,7 +51,7 @@
                     "disable_rtsp": "Wy\u0142\u0105cz strumie\u0144 RTSP",
                     "override_connection_host": "Zast\u0105p host po\u0142\u0105czenia"
                 },
-                "description": "Opcja metryk w czasie rzeczywistym powinna by\u0107 w\u0142\u0105czona tylko wtedy, gdy w\u0142\u0105czono czujniki diagnostyczne i chcesz je aktualizowa\u0107 w czasie rzeczywistym. Je\u015bli nie s\u0105 w\u0142\u0105czone, b\u0119d\u0105 aktualizowane tylko raz na 15 minut.",
+                "description": "Opcja metryk w czasie rzeczywistym powinna by\u0107 w\u0142\u0105czona tylko wtedy, gdy w\u0142\u0105czono sensory diagnostyczne i chcesz je aktualizowa\u0107 w czasie rzeczywistym. Je\u015bli nie s\u0105 w\u0142\u0105czone, b\u0119d\u0105 aktualizowane tylko raz na 15 minut.",
                 "title": "Opcje UniFi Protect"
             }
         }

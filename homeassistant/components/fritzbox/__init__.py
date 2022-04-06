@@ -93,10 +93,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class FritzBoxEntity(CoordinatorEntity):
+class FritzBoxEntity(CoordinatorEntity[FritzboxDataUpdateCoordinator]):
     """Basis FritzBox entity."""
-
-    coordinator: FritzboxDataUpdateCoordinator
 
     def __init__(
         self,

@@ -38,10 +38,9 @@ async def async_setup_entry(
 
 
 # https://developers.home-assistant.io/docs/core/entity/climate/
-class Alpha2Climate(CoordinatorEntity, ClimateEntity):
+class Alpha2Climate(CoordinatorEntity[Alpha2BaseCoordinator], ClimateEntity):
     """Alpha2 ClimateEntity."""
 
-    coordinator: Alpha2BaseCoordinator
     target_temperature_step = 0.2
 
     _attr_supported_features = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE

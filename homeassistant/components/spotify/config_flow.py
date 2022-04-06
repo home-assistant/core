@@ -5,7 +5,6 @@ import logging
 from typing import Any
 
 from spotipy import Spotify
-import voluptuous as vol
 
 from homeassistant.components import persistent_notification
 from homeassistant.config_entries import ConfigEntry
@@ -83,7 +82,6 @@ class SpotifyFlowHandler(
             return self.async_show_form(
                 step_id="reauth_confirm",
                 description_placeholders={"account": self.reauth_entry.data["id"]},
-                data_schema=vol.Schema({}),
                 errors={},
             )
 

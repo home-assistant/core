@@ -1,12 +1,13 @@
 """Component to interface with various sensors that can be monitored."""
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta, timezone
 import inspect
 import logging
+from math import floor, log10
 from typing import Any, Final, cast, final
 
 import voluptuous as vol
@@ -14,6 +15,7 @@ import voluptuous as vol
 from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (  # noqa: F401
+    CONF_UNIT_OF_MEASUREMENT,
     DEVICE_CLASS_AQI,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_CO,
@@ -44,8 +46,9 @@ from homeassistant.const import (  # noqa: F401
     DEVICE_CLASS_VOLTAGE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    TEMP_KELVIN,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
@@ -54,7 +57,11 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, StateType
-from homeassistant.util import dt as dt_util
+from homeassistant.util import (
+    dt as dt_util,
+    pressure as pressure_util,
+    temperature as temperature_util,
+)
 
 from .const import CONF_STATE_CLASS  # noqa: F401
 
@@ -194,6 +201,25 @@ STATE_CLASS_TOTAL: Final = "total"
 STATE_CLASS_TOTAL_INCREASING: Final = "total_increasing"
 STATE_CLASSES: Final[list[str]] = [cls.value for cls in SensorStateClass]
 
+UNIT_CONVERSIONS: dict[str, Callable[[float, str, str], float]] = {
+    SensorDeviceClass.PRESSURE: pressure_util.convert,
+    SensorDeviceClass.TEMPERATURE: temperature_util.convert,
+}
+
+UNIT_RATIOS: dict[str, dict[str, float]] = {
+    SensorDeviceClass.PRESSURE: pressure_util.UNIT_CONVERSION,
+    SensorDeviceClass.TEMPERATURE: {
+        TEMP_CELSIUS: 1.0,
+        TEMP_FAHRENHEIT: 1.8,
+        TEMP_KELVIN: 1.0,
+    },
+}
+
+VALID_UNITS: dict[str, tuple[str, ...]] = {
+    SensorDeviceClass.PRESSURE: pressure_util.VALID_UNITS,
+    SensorDeviceClass.TEMPERATURE: temperature_util.VALID_UNITS,
+}
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track states and offer events for sensors."""
@@ -264,9 +290,17 @@ class SensorEntity(Entity):
     )
     _last_reset_reported = False
     _temperature_conversion_reported = False
+    _sensor_option_unit_of_measurement: str | None = None
 
     # Temporary private attribute to track if deprecation has been logged.
     __datetime_as_string_deprecation_logged = False
+
+    async def async_internal_added_to_hass(self) -> None:
+        """Call when the sensor entity is added to hass."""
+        await super().async_internal_added_to_hass()
+        if not self.registry_entry:
+            return
+        self.async_registry_entry_updated()
 
     @property
     def device_class(self) -> SensorDeviceClass | str | None:
@@ -350,6 +384,9 @@ class SensorEntity(Entity):
     @property
     def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the entity, after unit conversion."""
+        if self._sensor_option_unit_of_measurement:
+            return self._sensor_option_unit_of_measurement
+
         # Support for _attr_unit_of_measurement will be removed in Home Assistant 2021.11
         if (
             hasattr(self, "_attr_unit_of_measurement")
@@ -368,7 +405,8 @@ class SensorEntity(Entity):
     @property
     def state(self) -> Any:
         """Return the state of the sensor and perform unit conversions, if needed."""
-        unit_of_measurement = self.native_unit_of_measurement
+        native_unit_of_measurement = self.native_unit_of_measurement
+        unit_of_measurement = self.unit_of_measurement
         value = self.native_value
         device_class = self.device_class
 
@@ -407,16 +445,48 @@ class SensorEntity(Entity):
                     f"but does not provide a date state but {type(value)}"
                 ) from err
 
-        units = self.hass.config.units
         if (
             value is not None
-            and unit_of_measurement in (TEMP_CELSIUS, TEMP_FAHRENHEIT)
-            and unit_of_measurement != units.temperature_unit
+            and native_unit_of_measurement != unit_of_measurement
+            and self.device_class in UNIT_CONVERSIONS
         ):
-            if (
-                self.device_class != DEVICE_CLASS_TEMPERATURE
-                and not self._temperature_conversion_reported
-            ):
+            assert unit_of_measurement
+            assert native_unit_of_measurement
+
+            value_s = str(value)
+            prec = len(value_s) - value_s.index(".") - 1 if "." in value_s else 0
+
+            # Scale the precision when converting to a larger unit
+            # For example 1.1 kWh should be rendered as 0.0011 kWh, not 0.0 kWh
+            ratio_log = max(
+                0,
+                log10(
+                    UNIT_RATIOS[self.device_class][native_unit_of_measurement]
+                    / UNIT_RATIOS[self.device_class][unit_of_measurement]
+                ),
+            )
+            prec = prec + floor(ratio_log)
+
+            # Suppress ValueError (Could not convert sensor_value to float)
+            with suppress(ValueError):
+                value_f = float(value)  # type: ignore[arg-type]
+                value_f_new = UNIT_CONVERSIONS[self.device_class](
+                    value_f,
+                    native_unit_of_measurement,
+                    unit_of_measurement,
+                )
+
+                # Round to the wanted precision
+                value = round(value_f_new) if prec == 0 else round(value_f_new, prec)
+
+        elif (
+            value is not None
+            and self.device_class != DEVICE_CLASS_TEMPERATURE
+            and native_unit_of_measurement != self.hass.config.units.temperature_unit
+            and native_unit_of_measurement in (TEMP_CELSIUS, TEMP_FAHRENHEIT)
+        ):
+            units = self.hass.config.units
+            if not self._temperature_conversion_reported:
                 self._temperature_conversion_reported = True
                 report_issue = self._suggest_report_issue()
                 _LOGGER.warning(
@@ -429,7 +499,7 @@ class SensorEntity(Entity):
                     self.entity_id,
                     type(self),
                     self.device_class,
-                    unit_of_measurement,
+                    native_unit_of_measurement,
                     units.temperature_unit,
                     report_issue,
                 )
@@ -437,7 +507,7 @@ class SensorEntity(Entity):
             prec = len(value_s) - value_s.index(".") - 1 if "." in value_s else 0
             # Suppress ValueError (Could not convert sensor_value to float)
             with suppress(ValueError):
-                temp = units.temperature(float(value), unit_of_measurement)  # type: ignore[arg-type]
+                temp = units.temperature(float(value), native_unit_of_measurement)  # type: ignore[arg-type]
                 value = round(temp) if prec == 0 else round(temp, prec)
 
         return value
@@ -452,6 +522,22 @@ class SensorEntity(Entity):
             return f"<Entity {self.name}>"
 
         return super().__repr__()
+
+    @callback
+    def async_registry_entry_updated(self) -> None:
+        """Run when the entity registry entry has been updated."""
+        assert self.registry_entry
+        if (
+            (sensor_options := self.registry_entry.options.get(DOMAIN))
+            and (custom_unit := sensor_options.get(CONF_UNIT_OF_MEASUREMENT))
+            and (device_class := self.device_class) in UNIT_CONVERSIONS
+            and self.native_unit_of_measurement in VALID_UNITS[device_class]
+            and custom_unit in VALID_UNITS[device_class]
+        ):
+            self._sensor_option_unit_of_measurement = custom_unit
+            return
+
+        self._sensor_option_unit_of_measurement = None
 
 
 @dataclass

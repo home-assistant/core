@@ -202,12 +202,12 @@ class HorizonDevice(MediaPlayerEntity):
             try:
                 self._client.connect()
                 self._client.authorize()
-            except AuthenticationError as msg:
-                _LOGGER.error("Authentication to %s failed: %s", self._name, msg)
+            except AuthenticationError as msg2:
+                _LOGGER.error("Authentication to %s failed: %s", self._name, msg2)
                 return
-            except OSError as msg:
+            except OSError as msg2:
                 # occurs if horizon box is offline
-                _LOGGER.error("Reconnect to %s failed: %s", self._name, msg)
+                _LOGGER.error("Reconnect to %s failed: %s", self._name, msg2)
                 return
 
             self._send(key=key, channel=channel)

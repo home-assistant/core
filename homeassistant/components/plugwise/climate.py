@@ -12,7 +12,6 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
@@ -21,17 +20,10 @@ from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP, DOMAIN
+from .const import DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP, DOMAIN, THERMOSTAT_CLASSES
 from .coordinator import PlugwiseDataUpdateCoordinator
 from .entity import PlugwiseEntity
 from .util import plugwise_command
-
-THERMOSTAT_CLASSES = [
-    "thermostat",
-    "thermostatic_radiator_valve",
-    "zone_thermometer",
-    "zone_thermostat",
-]
 
 
 async def async_setup_entry(
@@ -71,7 +63,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
             self._attr_preset_modes = list(presets)
 
         # Determine hvac modes and current hvac mode
-        self._attr_hvac_modes = [HVAC_MODE_HEAT, HVAC_MODE_OFF]
+        self._attr_hvac_modes = [HVAC_MODE_HEAT]
         if self.coordinator.data.gateway.get("cooling_present"):
             self._attr_hvac_modes.append(HVAC_MODE_COOL)
         if self.device.get("available_schedules") != ["None"]:
@@ -97,7 +89,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
     def hvac_mode(self) -> str:
         """Return HVAC operation ie. heat, cool mode."""
         if (mode := self.device.get("mode")) is None or mode not in self.hvac_modes:
-            return HVAC_MODE_OFF
+            return HVAC_MODE_HEAT
         return mode
 
     @property

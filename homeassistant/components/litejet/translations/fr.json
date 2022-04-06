@@ -11,7 +11,7 @@
                 "data": {
                     "port": "Port"
                 },
-                "description": "Connectez le port RS232-2 du LiteJet \u00e0 votre ordinateur et entrez le chemin d'acc\u00e8s au p\u00e9riph\u00e9rique de port s\u00e9rie. \n\n Le LiteJet MCP doit \u00eatre configur\u00e9 pour 19,2 K bauds, 8 bits de donn\u00e9es, 1 bit d'arr\u00eat, sans parit\u00e9 et pour transmettre un \u00abCR\u00bb apr\u00e8s chaque r\u00e9ponse.",
+                "description": "Connectez le port RS232-2 du LiteJet \u00e0 votre ordinateur puis entrez le chemin d'acc\u00e8s au p\u00e9riph\u00e9rique sur port s\u00e9rie. \n\nLe LiteJet MCP doit \u00eatre configur\u00e9 pour 19,2\u00a0kilobauds, 8\u00a0bits de donn\u00e9es, 1\u00a0bit d'arr\u00eat, sans parit\u00e9 et pour transmettre un \u00ab\u00a0CR\u00a0\u00bb apr\u00e8s chaque r\u00e9ponse.",
                 "title": "Connectez-vous \u00e0 LiteJet"
             }
         }

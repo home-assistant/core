@@ -1,8 +1,8 @@
 """Test function in __init__.py."""
 from __future__ import annotations
 
-from collections.abc import Callable
-from typing import Any, Awaitable
+from collections.abc import Awaitable, Callable
+from typing import Any
 from unittest.mock import patch
 
 from aiohttp import ClientWebSocketResponse
@@ -359,14 +359,14 @@ async def test_import(
 async def test_remove_config_entry_device(
     hass: HomeAssistant,
     gps_sensor: Sensor,
-    integration: tuple[MockConfigEntry, Callable[[str], None]],
+    integration: MockConfigEntry,
     gateway: BaseSyncGateway,
     hass_ws_client: Callable[[HomeAssistant], Awaitable[ClientWebSocketResponse]],
 ) -> None:
     """Test that a device can be removed ok."""
     entity_id = "sensor.gps_sensor_1_1"
     node_id = 1
-    config_entry, _ = integration
+    config_entry = integration
     assert await async_setup_component(hass, "config", {})
     await hass.async_block_till_done()
 

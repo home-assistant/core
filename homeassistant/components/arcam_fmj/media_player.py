@@ -230,7 +230,7 @@ class ArcamFmj(MediaPlayerEntity):
         ]
 
         root = BrowseMedia(
-            title="Root",
+            title="Arcam FMJ Receiver",
             media_class=MEDIA_CLASS_DIRECTORY,
             media_content_id="root",
             media_content_type="library",

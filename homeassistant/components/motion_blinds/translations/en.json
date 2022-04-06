@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Device is already configured",
+            "already_configured": "Device is already configured, connection settings are updated",
             "already_in_progress": "Configuration flow is already in progress",
             "connection_error": "Failed to connect"
         },
@@ -9,7 +9,7 @@
             "discovery_error": "Failed to discover a Motion Gateway",
             "invalid_interface": "Invalid network interface"
         },
-        "flow_title": "Motion Blinds",
+        "flow_title": "{short_mac} ({ip_address})",
         "step": {
             "connect": {
                 "data": {

@@ -32,7 +32,6 @@ from homeassistant.helpers import config_validation as cv
 import homeassistant.helpers.check_config as check_config
 from homeassistant.helpers.entity import Entity
 from homeassistant.loader import async_get_integration
-from homeassistant.util import dt as dt_util
 from homeassistant.util.yaml import SECRET_YAML
 
 from tests.common import get_test_config_dir, patch_yaml_files
@@ -44,7 +43,6 @@ VERSION_PATH = os.path.join(CONFIG_DIR, config_util.VERSION_FILE)
 AUTOMATIONS_PATH = os.path.join(CONFIG_DIR, config_util.AUTOMATION_CONFIG_PATH)
 SCRIPTS_PATH = os.path.join(CONFIG_DIR, config_util.SCRIPT_CONFIG_PATH)
 SCENES_PATH = os.path.join(CONFIG_DIR, config_util.SCENE_CONFIG_PATH)
-ORIG_TIMEZONE = dt_util.DEFAULT_TIME_ZONE
 
 
 def create_file(path):
@@ -57,8 +55,6 @@ def create_file(path):
 def teardown():
     """Clean up."""
     yield
-
-    dt_util.DEFAULT_TIME_ZONE = ORIG_TIMEZONE
 
     if os.path.isfile(YAML_PATH):
         os.remove(YAML_PATH)
