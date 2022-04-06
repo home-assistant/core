@@ -1,5 +1,4 @@
 """Kaleidescape Media Player."""
-
 from __future__ import annotations
 
 import logging
@@ -7,15 +6,9 @@ from typing import TYPE_CHECKING
 
 from kaleidescape import const as kaleidescape_const
 
-from homeassistant.components.media_player import MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_STOP,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
+from homeassistant.components.media_player import (
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
 )
 from homeassistant.const import STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING
 from homeassistant.util.dt import utcnow
@@ -25,8 +18,6 @@ from .entity import KaleidescapeEntity
 
 if TYPE_CHECKING:
     from datetime import datetime
-
-    from kaleidescape import Device as KaleidescapeDevice
 
     from homeassistant.config_entries import ConfigEntry
     from homeassistant.core import HomeAssistant
@@ -41,15 +32,6 @@ KALEIDESCAPE_PLAYING_STATES = [
 
 KALEIDESCAPE_PAUSED_STATES = [kaleidescape_const.PLAY_STATUS_PAUSED]
 
-SUPPORTED_FEATURES = (
-    SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-    | SUPPORT_PLAY
-    | SUPPORT_PAUSE
-    | SUPPORT_STOP
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_PREVIOUS_TRACK
-)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,10 +47,15 @@ async def async_setup_entry(
 class KaleidescapeMediaPlayer(KaleidescapeEntity, MediaPlayerEntity):
     """Representation of a Kaleidescape device."""
 
-    def __init__(self, device: KaleidescapeDevice) -> None:
-        """Initialize media player."""
-        super().__init__(device)
-        self._attr_supported_features = SUPPORTED_FEATURES
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.PLAY
+        | MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.STOP
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.PREVIOUS_TRACK
+    )
 
     async def async_turn_on(self) -> None:
         """Send leave standby command."""
