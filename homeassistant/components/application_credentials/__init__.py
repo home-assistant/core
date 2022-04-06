@@ -127,7 +127,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
     ).async_setup(hass)
 
-    config_entry_oauth2_flow.async_register_local_apis(hass)
     config_entry_oauth2_flow.async_add_implementation_provider(
         hass, DOMAIN, _async_provide_implementation
     )
