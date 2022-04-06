@@ -4,7 +4,7 @@ from __future__ import annotations
 from abc import abstractmethod
 import asyncio
 import logging
-from typing import Any
+from typing import Any, cast
 
 import aiohttp
 from async_timeout import timeout
@@ -307,6 +307,20 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
     def flow_manager(self) -> config_entries.ConfigEntriesFlowManager:
         """Return the correct flow manager."""
         return self.hass.config_entries.flow
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle a flow start."""
+        for entry in self.hass.config_entries.async_entries(DOMAIN):
+            if not isinstance(entry.unique_id, str):
+                self.hass.config_entries.async_update_entry(
+                    entry, unique_id=str(entry.unique_id)
+                )
+
+        return cast(
+            FlowResult, await getattr(self, f"async_step_{self.source}")(user_input)
+        )
 
     @staticmethod
     @callback
