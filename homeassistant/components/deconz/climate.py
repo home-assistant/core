@@ -1,7 +1,6 @@
 """Support for deCONZ climate devices."""
 from __future__ import annotations
 
-from collections.abc import ValuesView
 from typing import Any
 
 from pydeconz.sensor import (
@@ -26,7 +25,7 @@ from pydeconz.sensor import (
     Thermostat,
 )
 
-from homeassistant.components.climate import DOMAIN, ClimateEntity
+from homeassistant.components.climate import DOMAIN, ClimateEntity, ClimateEntityFeature
 from homeassistant.components.climate.const import (
     FAN_AUTO,
     FAN_HIGH,
@@ -41,9 +40,6 @@ from homeassistant.components.climate.const import (
     PRESET_BOOST,
     PRESET_COMFORT,
     PRESET_ECO,
-    SUPPORT_FAN_MODE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
@@ -107,12 +103,12 @@ async def async_setup_entry(
     gateway.entities[DOMAIN] = set()
 
     @callback
-    def async_add_climate(
-        sensors: list[Thermostat]
-        | ValuesView[Thermostat] = gateway.api.sensors.values(),
-    ) -> None:
+    def async_add_climate(sensors: list[Thermostat] | None = None) -> None:
         """Add climate devices from deCONZ."""
         entities: list[DeconzThermostat] = []
+
+        if sensors is None:
+            sensors = list(gateway.api.sensors.thermostat.values())
 
         for sensor in sensors:
 
@@ -163,13 +159,13 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
             value: key for key, value in self._hvac_mode_to_deconz.items()
         }
 
-        self._attr_supported_features = SUPPORT_TARGET_TEMPERATURE
+        self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
 
         if device.fan_mode:
-            self._attr_supported_features |= SUPPORT_FAN_MODE
+            self._attr_supported_features |= ClimateEntityFeature.FAN_MODE
 
         if device.preset:
-            self._attr_supported_features |= SUPPORT_PRESET_MODE
+            self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
 
     # Fan control
 
@@ -245,7 +241,7 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
     @property
     def current_temperature(self) -> float:
         """Return the current temperature."""
-        return self._device.temperature  # type: ignore[no-any-return]
+        return self._device.scaled_temperature  # type: ignore[no-any-return]
 
     @property
     def target_temperature(self) -> float | None:

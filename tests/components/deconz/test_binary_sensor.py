@@ -675,7 +675,7 @@ async def test_add_new_binary_sensor_ignored(
     )
 
     aioclient_mock.clear_requests()
-    data = {"groups": {}, "lights": {}, "sensors": {"1": sensor}}
+    data = {"config": {}, "groups": {}, "lights": {}, "sensors": {"1": sensor}}
     mock_deconz_request(aioclient_mock, config_entry.data, data)
 
     await hass.services.async_call(DECONZ_DOMAIN, SERVICE_DEVICE_REFRESH)

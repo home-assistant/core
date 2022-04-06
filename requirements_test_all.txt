@@ -570,7 +570,7 @@ hole==0.7.0
 holidays==0.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220401.0
+home-assistant-frontend==20220405.0
 
 # homeassistant.components.home_connect
 homeconnect==0.7.0
@@ -944,7 +944,7 @@ pycoolmasternet-async==0.1.2
 pydaikin==2.7.0
 
 # homeassistant.components.deconz
-pydeconz==87
+pydeconz==88
 
 # homeassistant.components.dexcom
 pydexcom==0.2.3
@@ -1157,7 +1157,7 @@ pyownet==0.10.0.post1
 pypck==0.7.14
 
 # homeassistant.components.plaato
-pyplaato==0.0.15
+pyplaato==0.0.16
 
 # homeassistant.components.point
 pypoint==2.3.0
@@ -1242,7 +1242,7 @@ python-izone==1.2.3
 python-juicenet==1.1.0
 
 # homeassistant.components.tplink
-python-kasa==0.4.2
+python-kasa==0.4.3
 
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.11
