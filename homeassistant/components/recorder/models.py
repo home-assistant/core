@@ -670,6 +670,8 @@ class LazyState(State):
 class LazyMinimalState(State):
     """A lazy minimal version of core State."""
 
+    __slots__ = ["_row"]
+
     def __init__(self, row: States) -> None:  # pylint: disable=super-init-not-called
         """Init the lazy minimal state."""
         self._row = row
