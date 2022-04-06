@@ -19,7 +19,6 @@ from homeassistant.components.recorder import (
 )
 from homeassistant.components.recorder.const import DOMAIN as RECORDER_DOMAIN
 from homeassistant.components.recorder.models import (
-    LazyState,
     StatisticData,
     StatisticMetaData,
     StatisticResult,
@@ -417,9 +416,9 @@ def _compile_statistics(  # noqa: C901
     entities_full_history = [
         i.entity_id for i in sensor_states if "sum" in wanted_statistics[i.entity_id]
     ]
-    history_list: MutableMapping[str, Iterable[LazyState | State | dict[str, Any]]] = {}
+    history_list: MutableMapping[str, Iterable[State]] = {}
     if entities_full_history:
-        history_list = history.get_significant_states_with_session(
+        history_list = history.get_full_significant_states_with_session(
             hass,
             session,
             start - datetime.timedelta.resolution,
@@ -433,7 +432,7 @@ def _compile_statistics(  # noqa: C901
         if "sum" not in wanted_statistics[i.entity_id]
     ]
     if entities_significant_history:
-        _history_list = history.get_significant_states_with_session(
+        _history_list = history.get_full_significant_states_with_session(
             hass,
             session,
             start - datetime.timedelta.resolution,

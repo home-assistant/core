@@ -158,31 +158,20 @@ def get_significant_states(
         )
 
 
-def get_significant_states_with_session(
+def _query_significant_states_with_session(
     hass: HomeAssistant,
     session: Session,
     start_time: datetime,
     end_time: datetime | None = None,
     entity_ids: list[str] | None = None,
     filters: Any = None,
-    include_start_time_state: bool = True,
     significant_changes_only: bool = True,
-    minimal_response: bool = False,
     no_attributes: bool = False,
-) -> MutableMapping[str, Iterable[State | dict[str, Any]]]:
-    """
-    Return states changes during UTC period start_time - end_time.
+) -> list[States]:
+    """Query the database for significant state changes."""
+    if _LOGGER.isEnabledFor(logging.DEBUG):
+        timer_start = time.perf_counter()
 
-    entity_ids is an optional iterable of entities to include in the results.
-
-    filters is an optional SQLAlchemy filter which will be applied to the database
-    queries unless entity_ids is given, in which case its ignored.
-
-    Significant states are all states where there is a state change,
-    as well as all states from certain domains (for instance
-    thermostat so that we get current temperature in our graphs).
-    """
-    timer_start = time.perf_counter()
     baked_query, join_attributes = bake_query_and_join_attributes(hass, no_attributes)
 
     if entity_ids is not None and len(entity_ids) == 1:
@@ -240,6 +229,43 @@ def get_significant_states_with_session(
         elapsed = time.perf_counter() - timer_start
         _LOGGER.debug("get_significant_states took %fs", elapsed)
 
+    return states
+
+
+def get_significant_states_with_session(
+    hass: HomeAssistant,
+    session: Session,
+    start_time: datetime,
+    end_time: datetime | None = None,
+    entity_ids: list[str] | None = None,
+    filters: Any = None,
+    include_start_time_state: bool = True,
+    significant_changes_only: bool = True,
+    minimal_response: bool = False,
+    no_attributes: bool = False,
+) -> MutableMapping[str, Iterable[State | dict[str, Any]]]:
+    """
+    Return states changes during UTC period start_time - end_time.
+
+    entity_ids is an optional iterable of entities to include in the results.
+
+    filters is an optional SQLAlchemy filter which will be applied to the database
+    queries unless entity_ids is given, in which case its ignored.
+
+    Significant states are all states where there is a state change,
+    as well as all states from certain domains (for instance
+    thermostat so that we get current temperature in our graphs).
+    """
+    states = _query_significant_states_with_session(
+        hass,
+        session,
+        start_time,
+        end_time,
+        entity_ids,
+        filters,
+        significant_changes_only,
+        no_attributes,
+    )
     return _sorted_states_to_dict(
         hass,
         session,
@@ -250,6 +276,35 @@ def get_significant_states_with_session(
         include_start_time_state,
         minimal_response,
         no_attributes,
+    )
+
+
+def get_full_significant_states_with_session(
+    hass: HomeAssistant,
+    session: Session,
+    start_time: datetime,
+    end_time: datetime | None = None,
+    entity_ids: list[str] | None = None,
+    filters: Any = None,
+    include_start_time_state: bool = True,
+    significant_changes_only: bool = True,
+    no_attributes: bool = False,
+) -> MutableMapping[str, Iterable[State]]:
+    """Variant of get_significant_states_with_session that does not return minimal respsonses."""
+    return cast(
+        MutableMapping[str, Iterable[State]],
+        get_significant_states_with_session(
+            hass,
+            session,
+            start_time,
+            end_time,
+            entity_ids,
+            filters,
+            include_start_time_state,
+            significant_changes_only,
+            False,
+            no_attributes,
+        ),
     )
 
 
