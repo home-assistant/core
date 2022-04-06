@@ -176,7 +176,10 @@ async def async_setup_platform(
 ) -> None:
     """Set up the utility meter sensor."""
     if discovery_info is None:
-        _LOGGER.error("This platform is only available through discovery")
+        _LOGGER.error(
+            "This platform is not available to configure "
+            "from 'sensor:' in configuration.yaml"
+        )
         return
 
     meters = []
@@ -474,7 +477,7 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
     @property
     def device_class(self):
         """Return the device class of the sensor."""
-        return DEVICE_CLASS_MAP.get(self.unit_of_measurement)
+        return DEVICE_CLASS_MAP.get(self._unit_of_measurement)
 
     @property
     def state_class(self):

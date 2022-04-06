@@ -13,10 +13,9 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_EFFECT,
     ATTR_HS_COLOR,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_EFFECT,
+    COLOR_MODE_HS,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -74,8 +73,6 @@ DEFAULT_PORT = const.DEFAULT_PORT_JSON
 DEFAULT_HDMI_PRIORITY = 880
 DEFAULT_EFFECT_LIST: list[str] = []
 
-SUPPORT_HYPERION = SUPPORT_COLOR | SUPPORT_BRIGHTNESS | SUPPORT_EFFECT
-
 ICON_LIGHTBULB = "mdi:lightbulb"
 ICON_EFFECT = "mdi:lava-lamp"
 ICON_EXTERNAL_SOURCE = "mdi:television-ambient-light"
@@ -126,6 +123,10 @@ async def async_setup_entry(
 
 class HyperionBaseLight(LightEntity):
     """A Hyperion light base class."""
+
+    _attr_color_mode = COLOR_MODE_HS
+    _attr_supported_color_modes = {COLOR_MODE_HS}
+    _attr_supported_features = LightEntityFeature.EFFECT
 
     def __init__(
         self,
@@ -220,11 +221,6 @@ class HyperionBaseLight(LightEntity):
     def effect_list(self) -> list[str]:
         """Return the list of supported effects."""
         return self._effect_list
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return SUPPORT_HYPERION
 
     @property
     def available(self) -> bool:

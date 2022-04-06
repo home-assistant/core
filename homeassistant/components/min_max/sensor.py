@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import statistics
 
 import voluptuous as vol
 
@@ -149,7 +150,7 @@ def calc_mean(sensor_values, round_digits):
 
     if not result:
         return None
-    return round(sum(result) / len(result), round_digits)
+    return round(statistics.mean(result), round_digits)
 
 
 def calc_median(sensor_values, round_digits):
@@ -162,14 +163,7 @@ def calc_median(sensor_values, round_digits):
 
     if not result:
         return None
-    result.sort()
-    if len(result) % 2 == 0:
-        median1 = result[len(result) // 2]
-        median2 = result[len(result) // 2 - 1]
-        median = (median1 + median2) / 2
-    else:
-        median = result[len(result) // 2]
-    return round(median, round_digits)
+    return round(statistics.median(result), round_digits)
 
 
 class MinMaxSensor(SensorEntity):

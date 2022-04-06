@@ -19,10 +19,78 @@ class ObsoleteImportMatch:
 
 
 _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
+    "homeassistant.components.binarysensor": [
+        ObsoleteImportMatch(
+            reason="replaced by BinarySensorDeviceClass enum",
+            constant=re.compile(r"^DEVICE_CLASS_(\w*)$"),
+        ),
+    ],
+    "homeassistant.components.cover": [
+        ObsoleteImportMatch(
+            reason="replaced by CoverDeviceClass enum",
+            constant=re.compile(r"^DEVICE_CLASS_(\w*)$"),
+        ),
+    ],
+    "homeassistant.components.humidifier": [
+        ObsoleteImportMatch(
+            reason="replaced by HumidifierDeviceClass enum",
+            constant=re.compile(r"^DEVICE_CLASS_(\w*)$"),
+        ),
+    ],
+    "homeassistant.components.humidifier.const": [
+        ObsoleteImportMatch(
+            reason="replaced by HumidifierDeviceClass enum",
+            constant=re.compile(r"^DEVICE_CLASS_(\w*)$"),
+        ),
+    ],
+    "homeassistant.components.media_player": [
+        ObsoleteImportMatch(
+            reason="replaced by MediaPlayerDeviceClass enum",
+            constant=re.compile(r"^DEVICE_CLASS_(\w*)$"),
+        ),
+    ],
     "homeassistant.components.sensor": [
+        ObsoleteImportMatch(
+            reason="replaced by SensorDeviceClass enum",
+            constant=re.compile(r"^DEVICE_CLASS_(\w*)$"),
+        ),
         ObsoleteImportMatch(
             reason="replaced by SensorStateClass enum",
             constant=re.compile(r"^STATE_CLASS_(\w*)$"),
+        ),
+    ],
+    "homeassistant.components.switch": [
+        ObsoleteImportMatch(
+            reason="replaced by SwitchDeviceClass enum",
+            constant=re.compile(r"^DEVICE_CLASS_(\w*)$"),
+        ),
+    ],
+    "homeassistant.config_entries": [
+        ObsoleteImportMatch(
+            reason="replaced by ConfigEntryDisabler enum",
+            constant=re.compile(r"^DISABLED_(\w*)$"),
+        ),
+    ],
+    "homeassistant.const": [
+        ObsoleteImportMatch(
+            reason="replaced by SensorDeviceClass enum",
+            constant=re.compile(r"^DEVICE_CLASS_(\w*)$"),
+        ),
+        ObsoleteImportMatch(
+            reason="replaced by EntityCategory enum",
+            constant=re.compile(r"^(ENTITY_CATEGORY_(\w*))|(ENTITY_CATEGORIES)$"),
+        ),
+    ],
+    "homeassistant.core": [
+        ObsoleteImportMatch(
+            reason="replaced by ConfigSource enum",
+            constant=re.compile(r"^SOURCE_(\w*)$"),
+        ),
+    ],
+    "homeassistant.helpers.device_registry": [
+        ObsoleteImportMatch(
+            reason="replaced by DeviceEntryDisabler enum",
+            constant=re.compile(r"^DISABLED_(\w*)$"),
         ),
     ],
 }

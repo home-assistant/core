@@ -17,6 +17,7 @@ from homeassistant.components.utility_meter.const import (
     SERVICE_SELECT_TARIFF,
     SIGNAL_RESET_METER,
 )
+import homeassistant.components.utility_meter.select as um_select
 import homeassistant.components.utility_meter.sensor as um_sensor
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -380,6 +381,7 @@ async def test_bad_cron(hass, legacy_patchable_time):
 
 async def test_setup_missing_discovery(hass):
     """Test setup with configuration missing discovery_info."""
+    assert not await um_select.async_setup_platform(hass, {CONF_PLATFORM: DOMAIN}, None)
     assert not await um_sensor.async_setup_platform(hass, {CONF_PLATFORM: DOMAIN}, None)
 
 

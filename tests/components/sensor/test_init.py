@@ -63,31 +63,28 @@ async def test_temperature_conversion(
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == state_unit
 
 
-async def test_deprecated_temperature_conversion(
-    hass, caplog, enable_custom_integrations
+@pytest.mark.parametrize("device_class", (None, SensorDeviceClass.PRESSURE))
+async def test_temperature_conversion_wrong_device_class(
+    hass, device_class, enable_custom_integrations
 ):
-    """Test warning on deprecated temperature conversion."""
+    """Test temperatures are not converted if the sensor has wrong device class."""
     platform = getattr(hass.components, "test.sensor")
     platform.init(empty=True)
     platform.ENTITIES["0"] = platform.MockSensor(
-        name="Test", native_value="0.0", native_unit_of_measurement=TEMP_FAHRENHEIT
+        name="Test",
+        native_value="0.0",
+        native_unit_of_measurement=TEMP_FAHRENHEIT,
+        device_class=device_class,
     )
 
     entity0 = platform.ENTITIES["0"]
     assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
+    # Check temperature is not converted
     state = hass.states.get(entity0.entity_id)
-    assert state.state == "-17.8"
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
-    assert (
-        "Entity sensor.test (<class 'custom_components.test.sensor.MockSensor'>) "
-        "with device_class None reports a temperature in °F which will be converted to "
-        "°C. Temperature conversion for entities without correct device_class is "
-        "deprecated and will be removed from Home Assistant Core 2022.3. Please update "
-        "your configuration if device_class is manually configured, otherwise report it "
-        "to the custom component author."
-    ) in caplog.text
+    assert state.state == "0.0"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_FAHRENHEIT
 
 
 @pytest.mark.parametrize("state_class", ("measurement", "total_increasing"))

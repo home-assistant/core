@@ -7,7 +7,11 @@ from bluepy.btle import BTLEException  # pylint: disable=import-error
 import eq3bt as eq3  # pylint: disable=import-error
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
+from homeassistant.components.climate import (
+    PLATFORM_SCHEMA,
+    ClimateEntity,
+    ClimateEntityFeature,
+)
 from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO,
     HVAC_MODE_HEAT,
@@ -15,8 +19,6 @@ from homeassistant.components.climate.const import (
     PRESET_AWAY,
     PRESET_BOOST,
     PRESET_NONE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
@@ -83,8 +85,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_DEVICES): vol.Schema({cv.string: DEVICE_SCHEMA})}
 )
 
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
-
 
 def setup_platform(
     hass: HomeAssistant,
@@ -105,17 +105,16 @@ def setup_platform(
 class EQ3BTSmartThermostat(ClimateEntity):
     """Representation of an eQ-3 Bluetooth Smart thermostat."""
 
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+    )
+
     def __init__(self, _mac, _name):
         """Initialize the thermostat."""
         # We want to avoid name clash with this module.
         self._name = _name
         self._mac = _mac
         self._thermostat = eq3.Thermostat(_mac)
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_FLAGS
 
     @property
     def available(self) -> bool:
@@ -196,7 +195,7 @@ class EQ3BTSmartThermostat(ClimateEntity):
     def preset_mode(self):
         """Return the current preset mode, e.g., home, away, temp.
 
-        Requires SUPPORT_PRESET_MODE.
+        Requires ClimateEntityFeature.PRESET_MODE.
         """
         return EQ_TO_HA_PRESET.get(self._thermostat.mode)
 
@@ -204,7 +203,7 @@ class EQ3BTSmartThermostat(ClimateEntity):
     def preset_modes(self):
         """Return a list of available preset modes.
 
-        Requires SUPPORT_PRESET_MODE.
+        Requires ClimateEntityFeature.PRESET_MODE.
         """
         return list(HA_TO_EQ_PRESET)
 
