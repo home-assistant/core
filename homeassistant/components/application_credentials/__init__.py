@@ -34,13 +34,11 @@ DOMAIN = "application_credentials"
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 DATA_STORAGE = "storage"
-CONF_AUTH_IMPL = "auth_implementation"
 
 CREATE_FIELDS = {
     vol.Required(CONF_DOMAIN): cv.string,
     vol.Required(CONF_CLIENT_ID): cv.string,
     vol.Required(CONF_CLIENT_SECRET): cv.string,
-    vol.Optional(CONF_AUTH_IMPL): cv.string,
 }
 UPDATE_FIELDS: dict = {}  # Not supported
 
@@ -103,8 +101,7 @@ class ApplicationCredentialsStorageCollection(collection.StorageCollection):
         for item in self.async_items():
             if item[CONF_DOMAIN] != domain:
                 continue
-            auth_domain = item.get(CONF_AUTH_IMPL, item[CONF_ID])
-            credentials[auth_domain] = ClientCredential(
+            credentials[item[CONF_ID]] = ClientCredential(
                 item[CONF_CLIENT_ID], item[CONF_CLIENT_SECRET]
             )
         return credentials
@@ -135,13 +132,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 async def async_import_client_credential(
-    hass: HomeAssistant, domain: str, auth_domain: str, credential: ClientCredential
+    hass: HomeAssistant, domain: str, credential: ClientCredential
 ) -> None:
-    """Import an existing credential from configuration.yaml.
-
-    The imported credential auth domain should match the existing auth implementation domain used
-    when creating the LocalOAuth2Implementation, which is also persisted in the ConfigEntry.
-    """
+    """Import an existing credential from configuration.yaml."""
     if DOMAIN not in hass.data:
         raise ValueError("Integration 'application_credentials' not setup")
     storage_collection = hass.data[DOMAIN][DATA_STORAGE]
@@ -149,7 +142,6 @@ async def async_import_client_credential(
         CONF_DOMAIN: domain,
         CONF_CLIENT_ID: credential.client_id,
         CONF_CLIENT_SECRET: credential.client_secret,
-        CONF_AUTH_IMPL: auth_domain,
     }
     await storage_collection.async_create_item(item)
 
