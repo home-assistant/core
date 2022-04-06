@@ -5,7 +5,7 @@ import logging
 
 from pylutron_caseta import FAN_HIGH, FAN_LOW, FAN_MEDIUM, FAN_MEDIUM_HIGH, FAN_OFF
 
-from homeassistant.components.fan import DOMAIN, SUPPORT_SET_SPEED, FanEntity
+from homeassistant.components.fan import DOMAIN, FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -49,6 +49,8 @@ async def async_setup_entry(
 class LutronCasetaFan(LutronCasetaDevice, FanEntity):
     """Representation of a Lutron Caseta fan. Including Fan Speed."""
 
+    _attr_supported_features = FanEntityFeature.SET_SPEED
+
     @property
     def percentage(self) -> int | None:
         """Return the current speed percentage."""
@@ -64,11 +66,6 @@ class LutronCasetaFan(LutronCasetaDevice, FanEntity):
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
         return len(ORDERED_NAMED_FAN_SPEEDS)
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features. Speed Only."""
-        return SUPPORT_SET_SPEED
 
     async def async_turn_on(
         self,
