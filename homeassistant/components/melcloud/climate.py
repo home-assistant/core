@@ -14,7 +14,7 @@ from pymelcloud.atw_device import (
 )
 import voluptuous as vol
 
-from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
     DEFAULT_MAX_TEMP,
@@ -25,9 +25,6 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
-    SUPPORT_FAN_MODE,
-    SUPPORT_SWING_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
@@ -128,7 +125,9 @@ class AtaDeviceClimate(MelCloudClimate):
     """Air-to-Air climate device."""
 
     _attr_supported_features = (
-        SUPPORT_FAN_MODE | SUPPORT_TARGET_TEMPERATURE | SUPPORT_SWING_MODE
+        ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.SWING_MODE
     )
 
     def __init__(self, device: MelCloudDevice, ata_device: AtaDevice) -> None:
@@ -296,7 +295,7 @@ class AtwDeviceZoneClimate(MelCloudClimate):
 
     _attr_max_temp = 30
     _attr_min_temp = 10
-    _attr_supported_features = SUPPORT_TARGET_TEMPERATURE
+    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
 
     def __init__(
         self, device: MelCloudDevice, atw_device: AtwDevice, atw_zone: Zone
