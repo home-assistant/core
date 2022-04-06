@@ -25,7 +25,8 @@ async def async_get_config_entry_diagnostics(
     diag["deconz_config"] = async_redact_data(
         gateway.api.config.raw, REDACT_DECONZ_CONFIG
     )
-    diag["websocket_state"] = gateway.api.websocket.state
+    if gateway.api.websocket:
+        diag["websocket_state"] = gateway.api.websocket.state
     diag["deconz_ids"] = gateway.deconz_ids
     diag["entities"] = gateway.entities
     diag["events"] = {
@@ -37,8 +38,42 @@ async def async_get_config_entry_diagnostics(
     }
     diag["alarm_systems"] = {k: v.raw for k, v in gateway.api.alarmsystems.items()}
     diag["groups"] = {k: v.raw for k, v in gateway.api.groups.items()}
-    diag["lights"] = {k: v.raw for k, v in gateway.api.lights.items()}
+
+    lights: dict[str, Any] = {k: v.raw for k, v in gateway.api.lights.covers.items()}
+    lights |= {k: v.raw for k, v in gateway.api.lights.fans.items()}
+    lights |= {k: v.raw for k, v in gateway.api.lights.lights.items()}
+    lights |= {k: v.raw for k, v in gateway.api.lights.locks.items()}
+    lights |= {k: v.raw for k, v in gateway.api.lights.range_extender.items()}
+    lights |= {k: v.raw for k, v in gateway.api.lights.sirens.items()}
+    diag["lights"] = lights
+
     diag["scenes"] = {k: v.raw for k, v in gateway.api.scenes.items()}
-    diag["sensors"] = {k: v.raw for k, v in gateway.api.sensors.items()}
+
+    sensors: dict[str, Any] = {
+        k: v.raw for k, v in gateway.api.sensors.air_quality.items()
+    }
+    sensors |= {k: v.raw for k, v in gateway.api.sensors.alarm.items()}
+    sensors |= {k: v.raw for k, v in gateway.api.sensors.ancillary_control.items()}
+    sensors |= {k: v.raw for k, v in gateway.api.sensors.battery.items()}
+    sensors |= {k: v.raw for k, v in gateway.api.sensors.carbon_monoxide.items()}
+    sensors |= {k: v.raw for k, v in gateway.api.sensors.consumption.items()}
+    sensors |= {k: v.raw for k, v in gateway.api.sensors.daylight.items()}
+    sensors |= {k: v.raw for k, v in gateway.api.sensors.door_lock.items()}
+    sensors |= {k: v.raw for k, v in gateway.api.sensors.fire.items()}
+    sensors |= {k: v.raw for k, v in gateway.api.sensors.generic_flag.items()}
+    sensors |= {k: v.raw for k, v in gateway.api.sensors.generic_status.items()}
+    sensors |= {k: v.raw for k, v in gateway.api.sensors.humidity.items()}
+    sensors |= {k: v.raw for k, v in gateway.api.sensors.light_level.items()}
+    sensors |= {k: v.raw for k, v in gateway.api.sensors.open_close.items()}
+    sensors |= {k: v.raw for k, v in gateway.api.sensors.power.items()}
+    sensors |= {k: v.raw for k, v in gateway.api.sensors.presence.items()}
+    sensors |= {k: v.raw for k, v in gateway.api.sensors.pressure.items()}
+    sensors |= {k: v.raw for k, v in gateway.api.sensors.switch.items()}
+    sensors |= {k: v.raw for k, v in gateway.api.sensors.temperature.items()}
+    sensors |= {k: v.raw for k, v in gateway.api.sensors.thermostat.items()}
+    sensors |= {k: v.raw for k, v in gateway.api.sensors.time.items()}
+    sensors |= {k: v.raw for k, v in gateway.api.sensors.vibration.items()}
+    sensors |= {k: v.raw for k, v in gateway.api.sensors.water.items()}
+    diag["sensors"] = sensors
 
     return diag
