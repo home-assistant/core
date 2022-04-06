@@ -5,8 +5,8 @@ from unittest.mock import AsyncMock, MagicMock
 from pvo import PVOutputAuthenticationError, PVOutputConnectionError
 
 from homeassistant.components.pvoutput.const import CONF_SYSTEM_ID, DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_REAUTH, SOURCE_USER
-from homeassistant.const import CONF_API_KEY, CONF_NAME
+from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
@@ -149,33 +149,6 @@ async def test_already_configured(
 
     assert result2.get("type") == RESULT_TYPE_ABORT
     assert result2.get("reason") == "already_configured"
-
-
-async def test_import_flow(
-    hass: HomeAssistant,
-    mock_pvoutput_config_flow: MagicMock,
-    mock_setup_entry: AsyncMock,
-) -> None:
-    """Test the import configuration flow."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={
-            CONF_SYSTEM_ID: 1337,
-            CONF_API_KEY: "tadaaa",
-            CONF_NAME: "Test",
-        },
-    )
-
-    assert result.get("type") == RESULT_TYPE_CREATE_ENTRY
-    assert result.get("title") == "Test"
-    assert result.get("data") == {
-        CONF_SYSTEM_ID: 1337,
-        CONF_API_KEY: "tadaaa",
-    }
-
-    assert len(mock_setup_entry.mock_calls) == 1
-    assert len(mock_pvoutput_config_flow.system.mock_calls) == 1
 
 
 async def test_reauth_flow(

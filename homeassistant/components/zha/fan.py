@@ -91,9 +91,7 @@ class BaseFan(FanEntity):
         """Return the number of speeds the fan supports."""
         return int_states_in_range(SPEED_RANGE)
 
-    async def async_turn_on(
-        self, speed=None, percentage=None, preset_mode=None, **kwargs
-    ) -> None:
+    async def async_turn_on(self, percentage=None, preset_mode=None, **kwargs) -> None:
         """Turn the entity on."""
         if percentage is None:
             percentage = DEFAULT_ON_PERCENTAGE

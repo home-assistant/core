@@ -229,6 +229,7 @@ def _fetch_powerwall_data(power_wall: Powerwall) -> PowerwallData:
         meters=power_wall.get_meters(),
         grid_services_active=power_wall.is_grid_services_active(),
         grid_status=power_wall.get_grid_status(),
+        backup_reserve=power_wall.get_backup_reserve_percentage(),
     )
 
 

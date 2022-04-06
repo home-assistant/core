@@ -1,0 +1,14 @@
+{
+    "config": {
+        "step": {
+            "init": {
+                "data": {
+                    "entity_id": "Entitas saklar",
+                    "target_domain": "Jenis"
+                },
+                "title": "Jadikan saklar sebagai\u2026"
+            }
+        }
+    },
+    "title": "Saklar sebagai X"
+}

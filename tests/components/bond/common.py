@@ -8,6 +8,7 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 from aiohttp.client_exceptions import ClientResponseError
+from bond_api import DeviceType
 
 from homeassistant import core
 from homeassistant.components.bond.const import DOMAIN as BOND_DOMAIN
@@ -16,6 +17,15 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import utcnow
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+
+
+def ceiling_fan_with_breeze(name: str):
+    """Create a ceiling fan with given name with breeze support."""
+    return {
+        "name": name,
+        "type": DeviceType.CEILING_FAN,
+        "actions": ["SetSpeed", "SetDirection", "BreezeOn"],
+    }
 
 
 def patch_setup_entry(domain: str, *, enabled: bool = True):

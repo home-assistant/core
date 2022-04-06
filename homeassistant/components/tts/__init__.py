@@ -17,6 +17,7 @@ from aiohttp import web
 import mutagen
 from mutagen.id3 import ID3, TextFrame as ID3Text
 import voluptuous as vol
+import yarl
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.media_player.const import (
@@ -41,6 +42,7 @@ from homeassistant.helpers.network import get_url
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.setup import async_prepare_setup_platform
+from homeassistant.util.network import normalize_url
 from homeassistant.util.yaml import load_yaml
 
 from .const import DOMAIN
@@ -92,6 +94,16 @@ def _deprecated_platform(value):
     return value
 
 
+def valid_base_url(value: str) -> str:
+    """Validate base url, return value."""
+    url = yarl.URL(cv.url(value))
+
+    if url.path != "/":
+        raise vol.Invalid("Path should be empty")
+
+    return normalize_url(value)
+
+
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_PLATFORM): vol.All(cv.string, _deprecated_platform),
@@ -100,7 +112,7 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_TIME_MEMORY, default=DEFAULT_TIME_MEMORY): vol.All(
             vol.Coerce(int), vol.Range(min=60, max=57600)
         ),
-        vol.Optional(CONF_BASE_URL): cv.string,
+        vol.Optional(CONF_BASE_URL): valid_base_url,
         vol.Optional(CONF_SERVICE_NAME): cv.string,
     }
 )

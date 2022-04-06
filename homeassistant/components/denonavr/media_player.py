@@ -35,7 +35,13 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_COMMAND, CONF_HOST, STATE_PAUSED, STATE_PLAYING
+from homeassistant.const import (
+    ATTR_COMMAND,
+    CONF_HOST,
+    CONF_MODEL,
+    STATE_PAUSED,
+    STATE_PLAYING,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity import DeviceInfo
@@ -44,7 +50,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import CONF_RECEIVER
 from .config_flow import (
     CONF_MANUFACTURER,
-    CONF_MODEL,
     CONF_SERIAL_NUMBER,
     CONF_TYPE,
     CONF_UPDATE_AUDYSSEY,

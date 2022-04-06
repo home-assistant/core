@@ -76,7 +76,7 @@ class TradfriDeviceDataUpdateCoordinator(DataUpdateCoordinator[Device]):
             if self._exception:
                 exc = self._exception
                 self._exception = None  # Clear stored exception
-                raise exc  # pylint: disable-msg=raising-bad-type
+                raise exc
         except RequestError as err:
             raise UpdateFailed(f"Error communicating with API: {err}.") from err
 

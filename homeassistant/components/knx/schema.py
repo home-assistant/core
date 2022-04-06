@@ -6,11 +6,9 @@ from collections import OrderedDict
 from typing import Any, ClassVar, Final
 
 import voluptuous as vol
-from xknx import XKNX
 from xknx.devices.climate import SetpointShiftMode
 from xknx.dpt import DPTBase, DPTNumeric
 from xknx.exceptions import ConversionError, CouldNotParseAddress
-from xknx.io import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 from xknx.telegram.address import IndividualAddress, parse_device_group_address
 
 from homeassistant.components.binary_sensor import (
@@ -27,10 +25,8 @@ from homeassistant.const import (
     CONF_ENTITY_CATEGORY,
     CONF_ENTITY_ID,
     CONF_EVENT,
-    CONF_HOST,
     CONF_MODE,
     CONF_NAME,
-    CONF_PORT,
     CONF_TYPE,
     Platform,
 )
@@ -40,9 +36,6 @@ from homeassistant.helpers.entity import validate_entity_category
 from .const import (
     CONF_INVERT,
     CONF_KNX_EXPOSE,
-    CONF_KNX_INDIVIDUAL_ADDRESS,
-    CONF_KNX_ROUTING,
-    CONF_KNX_TUNNELING,
     CONF_PAYLOAD,
     CONF_PAYLOAD_LENGTH,
     CONF_RESET_AFTER,
@@ -195,57 +188,6 @@ sync_state_validator = vol.Any(
     cv.boolean,
     cv.matches_regex(r"^(init|expire|every)( \d*)?$"),
 )
-
-
-##############
-# CONNECTION
-##############
-
-
-class ConnectionSchema:
-    """
-    Voluptuous schema for KNX connection.
-
-    DEPRECATED: Migrated to config and options flow. Will be removed in a future version of Home Assistant.
-    """
-
-    CONF_KNX_LOCAL_IP = "local_ip"
-    CONF_KNX_MCAST_GRP = "multicast_group"
-    CONF_KNX_MCAST_PORT = "multicast_port"
-    CONF_KNX_RATE_LIMIT = "rate_limit"
-    CONF_KNX_ROUTE_BACK = "route_back"
-    CONF_KNX_STATE_UPDATER = "state_updater"
-
-    CONF_KNX_DEFAULT_STATE_UPDATER = True
-    CONF_KNX_DEFAULT_RATE_LIMIT = 20
-
-    TUNNELING_SCHEMA = vol.Schema(
-        {
-            vol.Optional(CONF_PORT, default=DEFAULT_MCAST_PORT): cv.port,
-            vol.Required(CONF_HOST): cv.string,
-            vol.Optional(CONF_KNX_LOCAL_IP): cv.string,
-            vol.Optional(CONF_KNX_ROUTE_BACK, default=False): cv.boolean,
-        }
-    )
-
-    ROUTING_SCHEMA = vol.Maybe(vol.Schema({vol.Optional(CONF_KNX_LOCAL_IP): cv.string}))
-
-    SCHEMA = {
-        vol.Exclusive(CONF_KNX_ROUTING, "connection_type"): ROUTING_SCHEMA,
-        vol.Exclusive(CONF_KNX_TUNNELING, "connection_type"): TUNNELING_SCHEMA,
-        vol.Optional(
-            CONF_KNX_INDIVIDUAL_ADDRESS, default=XKNX.DEFAULT_ADDRESS
-        ): ia_validator,
-        vol.Optional(CONF_KNX_MCAST_GRP, default=DEFAULT_MCAST_GRP): cv.string,
-        vol.Optional(CONF_KNX_MCAST_PORT, default=DEFAULT_MCAST_PORT): cv.port,
-        vol.Optional(
-            CONF_KNX_STATE_UPDATER, default=CONF_KNX_DEFAULT_STATE_UPDATER
-        ): cv.boolean,
-        vol.Optional(CONF_KNX_RATE_LIMIT, default=CONF_KNX_DEFAULT_RATE_LIMIT): vol.All(
-            vol.Coerce(int), vol.Range(min=1, max=100)
-        ),
-    }
-
 
 #########
 # EVENT

@@ -12,7 +12,6 @@ import RFXtrx as rfxtrxmod
 import async_timeout
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_ID,
@@ -31,6 +30,7 @@ from homeassistant.helpers.device_registry import (
     DeviceEntry,
     DeviceRegistry,
 )
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -40,15 +40,15 @@ from .const import (
     COMMAND_GROUP_LIST,
     CONF_AUTOMATIC_ADD,
     CONF_DATA_BITS,
+    CONF_PROTOCOLS,
     DATA_RFXOBJECT,
     DEVICE_PACKET_TYPE_LIGHTING4,
+    DOMAIN,
     EVENT_RFXTRX_EVENT,
     SERVICE_SEND,
 )
 
-DOMAIN = "rfxtrx"
-
-DEFAULT_SIGNAL_REPETITIONS = 1
+DEFAULT_OFF_DELAY = 2.0
 
 SIGNAL_EVENT = f"{DOMAIN}_event"
 
@@ -81,12 +81,11 @@ PLATFORMS = [
     Platform.LIGHT,
     Platform.BINARY_SENSOR,
     Platform.COVER,
+    Platform.SIREN,
 ]
 
 
-async def async_setup_entry(
-    hass: HomeAssistant, entry: config_entries.ConfigEntry
-) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the RFXtrx component."""
     hass.data.setdefault(DOMAIN, {})
 
@@ -121,15 +120,28 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 def _create_rfx(config):
     """Construct a rfx object based on config."""
+
+    modes = config.get(CONF_PROTOCOLS)
+
+    if modes:
+        _LOGGER.debug("Using modes: %s", ",".join(modes))
+    else:
+        _LOGGER.debug("No modes defined, using device configuration")
+
     if config[CONF_PORT] is not None:
         # If port is set then we create a TCP connection
         rfx = rfxtrxmod.Connect(
             (config[CONF_HOST], config[CONF_PORT]),
             None,
             transport_protocol=rfxtrxmod.PyNetworkTransport,
+            modes=modes,
         )
     else:
-        rfx = rfxtrxmod.Connect(config[CONF_DEVICE], None)
+        rfx = rfxtrxmod.Connect(
+            config[CONF_DEVICE],
+            None,
+            modes=modes,
+        )
 
     return rfx
 
@@ -147,7 +159,7 @@ def _get_device_lookup(devices):
     return lookup
 
 
-async def async_setup_internal(hass, entry: config_entries.ConfigEntry):
+async def async_setup_internal(hass, entry: ConfigEntry):
     """Set up the RFXtrx component."""
     config = entry.data
 
@@ -276,7 +288,7 @@ async def async_setup_internal(hass, entry: config_entries.ConfigEntry):
 
 async def async_setup_platform_entry(
     hass: HomeAssistant,
-    config_entry: config_entries.ConfigEntry,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
     supported: Callable[[rfxtrxmod.RFXtrxEvent], bool],
     constructor: Callable[
@@ -323,7 +335,7 @@ async def async_setup_platform_entry(
             async_add_entities(constructor(event, event, device_id, {}))
 
         config_entry.async_on_unload(
-            hass.helpers.dispatcher.async_dispatcher_connect(SIGNAL_EVENT, _update)
+            async_dispatcher_connect(hass, SIGNAL_EVENT, _update)
         )
 
 
@@ -473,9 +485,7 @@ class RfxtrxEntity(RestoreEntity):
             self._apply_event(self._event)
 
         self.async_on_remove(
-            self.hass.helpers.dispatcher.async_dispatcher_connect(
-                SIGNAL_EVENT, self._handle_event
-            )
+            async_dispatcher_connect(self.hass, SIGNAL_EVENT, self._handle_event)
         )
 
     @property
@@ -549,15 +559,12 @@ class RfxtrxCommandEntity(RfxtrxEntity):
         self,
         device: rfxtrxmod.RFXtrxDevice,
         device_id: DeviceTuple,
-        signal_repetitions: int = 1,
         event: rfxtrxmod.RFXtrxEvent | None = None,
     ) -> None:
         """Initialzie a switch or light device."""
         super().__init__(device, device_id, event=event)
-        self.signal_repetitions = signal_repetitions
         self._state: bool | None = None
 
     async def _async_send(self, fun, *args):
         rfx_object = self.hass.data[DOMAIN][DATA_RFXOBJECT]
-        for _ in range(self.signal_repetitions):
-            await self.hass.async_add_executor_job(fun, rfx_object.transport, *args)
+        await self.hass.async_add_executor_job(fun, rfx_object.transport, *args)

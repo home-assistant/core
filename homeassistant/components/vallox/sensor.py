@@ -32,11 +32,10 @@ from .const import (
 )
 
 
-class ValloxSensor(CoordinatorEntity, SensorEntity):
+class ValloxSensor(CoordinatorEntity[ValloxDataUpdateCoordinator], SensorEntity):
     """Representation of a Vallox sensor."""
 
     entity_description: ValloxSensorEntityDescription
-    coordinator: ValloxDataUpdateCoordinator
 
     def __init__(
         self,

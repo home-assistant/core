@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 from http import HTTPStatus
-import logging
 from typing import Any, Final
 
 import aiohttp
@@ -20,7 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
 
-from .const import AIOSHELLY_DEVICE_TIMEOUT_SEC, CONF_SLEEP_PERIOD, DOMAIN
+from .const import AIOSHELLY_DEVICE_TIMEOUT_SEC, CONF_SLEEP_PERIOD, DOMAIN, LOGGER
 from .utils import (
     get_block_device_name,
     get_block_device_sleep_period,
@@ -30,8 +29,6 @@ from .utils import (
     get_model_name,
     get_rpc_device_name,
 )
-
-_LOGGER: Final = logging.getLogger(__name__)
 
 HOST_SCHEMA: Final = vol.Schema({vol.Required(CONF_HOST): str})
 
@@ -107,7 +104,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except aioshelly.exceptions.FirmwareUnsupported:
                 return self.async_abort(reason="unsupported_firmware")
             except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
+                LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(self.info["mac"])
@@ -123,7 +120,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 except HTTP_CONNECT_ERRORS:
                     errors["base"] = "cannot_connect"
                 except Exception:  # pylint: disable=broad-except
-                    _LOGGER.exception("Unexpected exception")
+                    LOGGER.exception("Unexpected exception")
                     errors["base"] = "unknown"
                 else:
                     return self.async_create_entry(
@@ -158,7 +155,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except HTTP_CONNECT_ERRORS:
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
+                LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(

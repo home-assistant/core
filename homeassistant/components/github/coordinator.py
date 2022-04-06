@@ -6,15 +6,17 @@ from typing import Any
 from aiogithubapi import (
     GitHubAPI,
     GitHubConnectionException,
+    GitHubEventModel,
     GitHubException,
     GitHubRatelimitException,
     GitHubResponseModel,
 )
 
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_UPDATE_INTERVAL, DOMAIN, LOGGER
+from .const import FALLBACK_UPDATE_INTERVAL, LOGGER, REFRESH_EVENT_TYPES
 
 GRAPHQL_REPOSITORY_QUERY = """
 query ($owner: String!, $repository: String!) {
@@ -109,13 +111,14 @@ class GitHubDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.repository = repository
         self._client = client
         self._last_response: GitHubResponseModel[dict[str, Any]] | None = None
+        self._subscription_id: str | None = None
         self.data = {}
 
         super().__init__(
             hass,
             LOGGER,
-            name=DOMAIN,
-            update_interval=DEFAULT_UPDATE_INTERVAL,
+            name=repository,
+            update_interval=FALLBACK_UPDATE_INTERVAL,
         )
 
     async def _async_update_data(self) -> GitHubResponseModel[dict[str, Any]]:
@@ -136,3 +139,26 @@ class GitHubDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         else:
             self._last_response = response
             return response.data["data"]["repository"]
+
+    async def _handle_event(self, event: GitHubEventModel) -> None:
+        """Handle an event."""
+        if event.type in REFRESH_EVENT_TYPES:
+            await self.async_request_refresh()
+
+    @staticmethod
+    async def _handle_error(error: GitHubException) -> None:
+        """Handle an error."""
+        LOGGER.error("An error occurred while processing new events - %s", error)
+
+    async def subscribe(self) -> None:
+        """Subscribe to repository events."""
+        self._subscription_id = await self._client.repos.events.subscribe(
+            self.repository,
+            event_callback=self._handle_event,
+            error_callback=self._handle_error,
+        )
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.unsubscribe)
+
+    def unsubscribe(self, *args) -> None:
+        """Unsubscribe to repository events."""
+        self._client.repos.events.unsubscribe(subscription_id=self._subscription_id)

@@ -6,6 +6,7 @@ from yalesmartalarmclient.client import (
     YALE_STATE_ARM_PARTIAL,
     YALE_STATE_DISARM,
 )
+from yalesmartalarmclient.exceptions import AuthenticationError, UnknownError
 
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
@@ -40,3 +41,10 @@ STATE_MAP = {
     YALE_STATE_ARM_PARTIAL: STATE_ALARM_ARMED_HOME,
     YALE_STATE_ARM_FULL: STATE_ALARM_ARMED_AWAY,
 }
+
+YALE_BASE_ERRORS = (
+    ConnectionError,
+    TimeoutError,
+    UnknownError,
+)
+YALE_ALL_ERRORS = (*YALE_BASE_ERRORS, AuthenticationError)

@@ -20,7 +20,7 @@
                     "temperature_unit": "ElkM1 \u6240\u4f7f\u7528\u6eab\u5ea6\u55ae\u4f4d\u3002",
                     "username": "\u4f7f\u7528\u8005\u540d\u7a31"
                 },
-                "description": "\u9023\u7dda\u81f3\u6240\u63a2\u7d22\u7684\u7cfb\u7d71\uff1a{mac_address} ({host})",
+                "description": "\u9023\u7dda\u81f3\u6240\u767c\u73fe\u7684\u7cfb\u7d71\uff1a{mac_address} ({host})",
                 "title": "\u9023\u7dda\u81f3 Elk-M1 Control"
             },
             "manual_connection": {
@@ -45,7 +45,7 @@
                     "temperature_unit": "ElkM1 \u4f7f\u7528\u6eab\u5ea6\u55ae\u4f4d\u3002",
                     "username": "\u4f7f\u7528\u8005\u540d\u7a31"
                 },
-                "description": "\u9078\u64c7\u6240\u63a2\u7d22\u5230\u7684\u7cfb\u7d71\uff0c\u6216\u5047\u5982\u6c92\u627e\u5230\u7684\u8a71\u9032\u884c\u624b\u52d5\u8f38\u5165\u3002",
+                "description": "\u9078\u64c7\u6240\u767c\u73fe\u5230\u7684\u7cfb\u7d71\uff0c\u6216\u5047\u5982\u6c92\u627e\u5230\u7684\u8a71\u9032\u884c\u624b\u52d5\u8f38\u5165\u3002",
                 "title": "\u9023\u7dda\u81f3 Elk-M1 Control"
             }
         }

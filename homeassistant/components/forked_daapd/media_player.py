@@ -6,7 +6,11 @@ import logging
 from pyforked_daapd import ForkedDaapdAPI
 from pylibrespot_java import LibrespotJavaAPI
 
+from homeassistant.components import media_source
 from homeassistant.components.media_player import MediaPlayerEntity
+from homeassistant.components.media_player.browse_media import (
+    async_process_play_media_url,
+)
 from homeassistant.components.media_player.const import MEDIA_TYPE_MUSIC
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -660,7 +664,14 @@ class ForkedDaapdMaster(MediaPlayerEntity):
 
     async def async_play_media(self, media_type, media_id, **kwargs):
         """Play a URI."""
+        if media_source.is_media_source_id(media_id):
+            media_type = MEDIA_TYPE_MUSIC
+            play_item = await media_source.async_resolve_media(self.hass, media_id)
+            media_id = play_item.url
+
         if media_type == MEDIA_TYPE_MUSIC:
+            media_id = async_process_play_media_url(self.hass, media_id)
+
             saved_state = self.state  # save play state
             saved_mute = self.is_volume_muted
             sleep_future = asyncio.create_task(
@@ -875,3 +886,11 @@ class ForkedDaapdUpdater:
                 self._api,
                 outputs_to_add,
             )
+
+    async def async_browse_media(self, media_content_type=None, media_content_id=None):
+        """Implement the websocket media browsing helper."""
+        return await media_source.async_browse_media(
+            self.hass,
+            media_content_id,
+            content_filter=lambda item: item.media_content_type.startswith("audio/"),
+        )
