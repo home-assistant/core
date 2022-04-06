@@ -107,6 +107,7 @@ async def test_last_run_was_recently_clean(hass):
         is False
     )
 
+    # We should let the recorder thread do this instead, not call directly
     await hass.async_add_executor_job(hass.data[DATA_INSTANCE]._end_session)
     await hass.async_block_till_done()
 
@@ -577,9 +578,12 @@ async def test_write_lock_db(hass, tmp_path):
     instance = hass.data[DATA_INSTANCE]
 
     def _drop_table():
+        # This will deadlock in tests with the MutexPool
         with instance.engine.connect() as connection:
             connection.execute(text("DROP TABLE events;"))
 
+    # This will issue a warning about being called from the wrong thread.
+    # I think the test should use the lock database API instead of calling this directly
     with util.write_lock_db_sqlite(instance):
         # Database should be locked now, try writing SQL command
         with pytest.raises(OperationalError):

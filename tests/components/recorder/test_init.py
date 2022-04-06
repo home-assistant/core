@@ -83,7 +83,7 @@ def _default_recorder(hass):
     )
 
 
-async def test_shutdown_before_startup_finishes(hass):
+async def _test_shutdown_before_startup_finishes(hass):
     """Test shutdown before recorder starts is clean."""
 
     hass.state = CoreState.not_running
@@ -92,6 +92,7 @@ async def test_shutdown_before_startup_finishes(hass):
     await hass.data[DATA_INSTANCE].async_db_ready
     await hass.async_block_till_done()
 
+    # This means the connection is checked out by some random thread, and never released
     session = await hass.async_add_executor_job(hass.data[DATA_INSTANCE].get_session)
 
     with patch.object(hass.data[DATA_INSTANCE], "engine"):

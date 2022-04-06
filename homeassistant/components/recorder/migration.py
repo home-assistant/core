@@ -55,13 +55,11 @@ def get_schema_version(instance: Any) -> int:
         )
         current_version = getattr(res, "schema_version", None)
 
-        if current_version is None:
-            current_version = _inspect_schema_version(instance.engine, session)
-            _LOGGER.debug(
-                "No schema version found. Inspected version: %s", current_version
-            )
+    if current_version is None:
+        current_version = _inspect_schema_version(instance)
+        _LOGGER.debug("No schema version found. Inspected version: %s", current_version)
 
-        return current_version
+    return current_version
 
 
 def schema_is_current(current_version: int) -> bool:
@@ -651,7 +649,7 @@ def _apply_update(instance, new_version, old_version):  # noqa: C901
         raise ValueError(f"No schema migration defined for version {new_version}")
 
 
-def _inspect_schema_version(engine, session):
+def _inspect_schema_version(instance):
     """Determine the schema version by inspecting the db structure.
 
     When the schema version is not present in the db, either db was just
@@ -660,17 +658,19 @@ def _inspect_schema_version(engine, session):
     version 1 are present to make the determination. Eventually this logic
     can be removed and we can assume a new db is being created.
     """
+    engine = instance.engine
     inspector = sqlalchemy.inspect(engine)
     indexes = inspector.get_indexes("events")
 
-    for index in indexes:
-        if index["column_names"] == ["time_fired"]:
-            # Schema addition from version 1 detected. New DB.
-            session.add(StatisticsRuns(start=get_start_time()))
-            session.add(SchemaChanges(schema_version=SCHEMA_VERSION))
-            return SCHEMA_VERSION
+    with session_scope(session=instance.get_session()) as session:
+        for index in indexes:
+            if index["column_names"] == ["time_fired"]:
+                # Schema addition from version 1 detected. New DB.
+                session.add(StatisticsRuns(start=get_start_time()))
+                session.add(SchemaChanges(schema_version=SCHEMA_VERSION))
+                return SCHEMA_VERSION
 
-    # Version 1 schema changes not found, this db needs to be migrated.
-    current_version = SchemaChanges(schema_version=0)
-    session.add(current_version)
-    return current_version.schema_version
+        # Version 1 schema changes not found, this db needs to be migrated.
+        current_version = SchemaChanges(schema_version=0)
+        session.add(current_version)
+        return current_version.schema_version
