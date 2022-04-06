@@ -165,7 +165,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
             self._precision = self._evo_device.setpointCapabilities["valueResolution"]
 
         self._preset_modes = list(HA_PRESET_TO_EVO)
-        self._supported_features = (
+        self._attr_supported_features = (
             ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
         )
 
@@ -328,7 +328,7 @@ class EvoController(EvoClimateEntity):
         self._preset_modes = [
             TCS_PRESET_TO_HA[m] for m in modes if m in list(TCS_PRESET_TO_HA)
         ]
-        self._supported_features = (
+        self._attr_supported_features = (
             ClimateEntityFeature.PRESET_MODE if self._preset_modes else 0
         )
 

@@ -60,7 +60,7 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
         self._icon = "mdi:thermometer-lines"
 
         self._precision = PRECISION_TENTHS if evo_broker.client_v1 else PRECISION_WHOLE
-        self._supported_features = (
+        self._attr_supported_features = (
             WaterHeaterEntityFeature.AWAY_MODE | WaterHeaterEntityFeature.OPERATION_MODE
         )
 
