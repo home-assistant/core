@@ -13,8 +13,8 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     COLOR_MODE_HS,
     PLATFORM_SCHEMA,
-    SUPPORT_EFFECT,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.const import CONF_HOSTS
 from homeassistant.core import HomeAssistant
@@ -76,7 +76,7 @@ class EverLightsLight(LightEntity):
 
     _attr_color_mode = COLOR_MODE_HS
     _attr_supported_color_modes = {COLOR_MODE_HS}
-    _attr_supported_features = SUPPORT_EFFECT
+    _attr_supported_features = LightEntityFeature.EFFECT
 
     def __init__(self, api, channel, status, effects):
         """Initialize the light."""
