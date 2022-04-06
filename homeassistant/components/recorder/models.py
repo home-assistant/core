@@ -22,7 +22,6 @@ from sqlalchemy import (
     distinct,
 )
 from sqlalchemy.dialects import mysql, oracle, postgresql
-from sqlalchemy.engine.row import Row
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy.orm.session import Session
@@ -550,7 +549,7 @@ class LazyState(State):
     ]
 
     def __init__(  # pylint: disable=super-init-not-called
-        self, row: Row, attr_cache: dict[str, dict[str, Any]] | None = None
+        self, row: States, attr_cache: dict[str, dict[str, Any]] | None = None
     ) -> None:
         """Init the lazy state."""
         self._row = row
@@ -672,6 +671,40 @@ class LazyState(State):
 class LazyMinimalState(LazyState):
     """A lazy minimal version of core State."""
 
+    def __init__(self, row: States) -> None:  # pylint: disable=super-init-not-called
+        """Init the lazy state."""
+        self._row = row
+
+    @property
+    def state(self) -> str:  # type: ignore[override]
+        """Return the state."""
+        return self._row.state or ""
+
+    @property
+    def entity_id(self) -> str:  # type: ignore[override]
+        """Return the entity_id."""
+        return self._row.entity_id  # type: ignore[no-any-return]
+
+    @property  # type: ignore[misc]
+    def attributes(self) -> dict[str, Any]:  # type: ignore[override]
+        """State attributes."""
+        return json.loads(self._row.shared_attrs or self._row.attributes or "{}")  # type: ignore[no-any-return]
+
+    @property  # type: ignore[misc]
+    def context(self) -> Context:  # type: ignore[override]
+        """State context."""
+        return Context(id=None)  # type: ignore[arg-type]
+
+    @property  # type: ignore[misc]
+    def last_changed(self) -> datetime:  # type: ignore[override]
+        """Last changed datetime."""
+        return process_timestamp(self._row.last_changed)  # type: ignore[no-any-return]
+
+    @property  # type: ignore[misc]
+    def last_updated(self) -> datetime:  # type: ignore[override]
+        """Last updated datetime."""
+        return process_timestamp(self._row.last_updated)  # type: ignore[no-any-return]
+
     def as_dict(self) -> dict[str, Any]:  # type: ignore[override]
         """Return a dict representation of the LazyState.
 
@@ -680,6 +713,6 @@ class LazyMinimalState(LazyState):
         To be used for JSON serialization.
         """
         return {
-            "state": self.state,
+            "state": self._row.state or "",
             "last_changed": process_timestamp_to_utc_isoformat(self._row.last_changed),
         }
