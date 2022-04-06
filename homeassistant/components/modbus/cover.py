@@ -45,7 +45,7 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Read configuration and create Modbus cover."""
-    if discovery_info is None:  # pragma: no cover
+    if discovery_info is None:
         return
 
     covers = []

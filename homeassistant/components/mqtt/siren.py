@@ -36,10 +36,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import PLATFORMS, MqttCommandTemplate, MqttValueTemplate, subscription
+from . import MqttCommandTemplate, MqttValueTemplate, subscription
 from .. import mqtt
 from .const import (
     CONF_COMMAND_TEMPLATE,
@@ -48,12 +47,17 @@ from .const import (
     CONF_QOS,
     CONF_RETAIN,
     CONF_STATE_TOPIC,
-    DOMAIN,
+    CONF_STATE_VALUE_TEMPLATE,
     PAYLOAD_EMPTY_JSON,
     PAYLOAD_NONE,
 )
 from .debug_info import log_messages
-from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
+from .mixins import (
+    MQTT_ENTITY_COMMON_SCHEMA,
+    MqttEntity,
+    async_setup_entry_helper,
+    async_setup_platform_helper,
+)
 
 DEFAULT_NAME = "MQTT Siren"
 DEFAULT_PAYLOAD_ON = "ON"
@@ -66,7 +70,6 @@ CONF_AVAILABLE_TONES = "available_tones"
 CONF_COMMAND_OFF_TEMPLATE = "command_off_template"
 CONF_STATE_ON = "state_on"
 CONF_STATE_OFF = "state_off"
-CONF_STATE_VALUE_TEMPLATE = "state_value_template"
 CONF_SUPPORT_DURATION = "support_duration"
 CONF_SUPPORT_VOLUME_SET = "support_volume_set"
 
@@ -118,8 +121,9 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up MQTT siren through configuration.yaml."""
-    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
-    await _async_setup_entity(hass, async_add_entities, config)
+    await async_setup_platform_helper(
+        hass, siren.DOMAIN, config, async_add_entities, _async_setup_entity
+    )
 
 
 async def async_setup_entry(

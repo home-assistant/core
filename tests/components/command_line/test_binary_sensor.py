@@ -51,6 +51,7 @@ async def test_template(hass: HomeAssistant) -> None:
     )
 
     entity_state = hass.states.get("binary_sensor.test")
+    assert entity_state
     assert entity_state.state == STATE_ON
 
 
@@ -65,10 +66,11 @@ async def test_sensor_off(hass: HomeAssistant) -> None:
         },
     )
     entity_state = hass.states.get("binary_sensor.test")
+    assert entity_state
     assert entity_state.state == STATE_OFF
 
 
-async def test_unique_id(hass):
+async def test_unique_id(hass: HomeAssistant) -> None:
     """Test unique_id option and if it only creates one binary sensor per id."""
     assert await setup.async_setup_component(
         hass,

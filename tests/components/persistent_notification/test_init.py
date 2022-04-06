@@ -20,7 +20,7 @@ async def test_create(hass):
     assert len(hass.states.async_entity_ids(pn.DOMAIN)) == 0
     assert len(notifications) == 0
 
-    pn.async_create(hass, "Hello World {{ 1 + 1 }}", title="{{ 1 + 1 }} beers")
+    pn.async_create(hass, "Hello World 2", title="2 beers")
 
     entity_ids = hass.states.async_entity_ids(pn.DOMAIN)
     assert len(entity_ids) == 1
@@ -66,27 +66,6 @@ async def test_create_notification_id(hass):
 
     notification = notifications.get(entity_id)
     assert notification["message"] == "test 2"
-
-
-async def test_create_template_error(hass):
-    """Ensure we output templates if contain error."""
-    notifications = hass.data[pn.DOMAIN]
-    assert len(hass.states.async_entity_ids(pn.DOMAIN)) == 0
-    assert len(notifications) == 0
-
-    pn.async_create(hass, "{{ message + 1 }}", "{{ title + 1 }}")
-
-    entity_ids = hass.states.async_entity_ids(pn.DOMAIN)
-    assert len(entity_ids) == 1
-    assert len(notifications) == 1
-
-    state = hass.states.get(entity_ids[0])
-    assert state.attributes.get("message") == "{{ message + 1 }}"
-    assert state.attributes.get("title") == "{{ title + 1 }}"
-
-    notification = notifications.get(entity_ids[0])
-    assert notification["message"] == "{{ message + 1 }}"
-    assert notification["title"] == "{{ title + 1 }}"
 
 
 async def test_dismiss_notification(hass):

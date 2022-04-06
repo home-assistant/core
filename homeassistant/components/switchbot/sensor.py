@@ -74,8 +74,6 @@ async def async_setup_entry(
 class SwitchBotSensor(SwitchbotEntity, SensorEntity):
     """Representation of a Switchbot sensor."""
 
-    coordinator: SwitchbotDataUpdateCoordinator
-
     def __init__(
         self,
         coordinator: SwitchbotDataUpdateCoordinator,

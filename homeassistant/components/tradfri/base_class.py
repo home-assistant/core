@@ -4,21 +4,18 @@ from __future__ import annotations
 from abc import abstractmethod
 from collections.abc import Callable
 from functools import wraps
-import logging
 from typing import Any, cast
 
 from pytradfri.command import Command
 from pytradfri.device import Device
-from pytradfri.error import PytradfriError
+from pytradfri.error import RequestError
 
 from homeassistant.core import callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import DOMAIN, LOGGER
 from .coordinator import TradfriDeviceDataUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def handle_error(
@@ -31,16 +28,14 @@ def handle_error(
         """Decorate api call."""
         try:
             await func(command)
-        except PytradfriError as err:
-            _LOGGER.error("Unable to execute command %s: %s", command, err)
+        except RequestError as err:
+            LOGGER.error("Unable to execute command %s: %s", command, err)
 
     return wrapper
 
 
-class TradfriBaseEntity(CoordinatorEntity):
+class TradfriBaseEntity(CoordinatorEntity[TradfriDeviceDataUpdateCoordinator]):
     """Base Tradfri device."""
-
-    coordinator: TradfriDeviceDataUpdateCoordinator
 
     def __init__(
         self,
@@ -84,7 +79,7 @@ class TradfriBaseEntity(CoordinatorEntity):
             identifiers={(DOMAIN, self._device.id)},
             manufacturer=info.manufacturer,
             model=info.model_number,
-            name=self._attr_name,
+            name=self._device.name,
             sw_version=info.firmware_version,
             via_device=(DOMAIN, self._gateway_id),
         )

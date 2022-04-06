@@ -39,6 +39,8 @@ MODEL_NUM = 0x35
 MODEL = "AK001-ZJ2149"
 MODEL_DESCRIPTION = "Bulb RGBCW"
 MAC_ADDRESS = "aa:bb:cc:dd:ee:ff"
+MAC_ADDRESS_ONE_OFF = "aa:bb:cc:dd:ee:fe"
+
 FLUX_MAC_ADDRESS = "AABBCCDDEEFF"
 SHORT_MAC_ADDRESS = "DDEEFF"
 
@@ -110,6 +112,7 @@ def _mocked_bulb() -> AIOWifiLedBulb:
     bulb.paired_remotes = 2
     bulb.pixels_per_segment = 300
     bulb.segments = 2
+    bulb.diagnostics = {"mock_diag": "mock_diag"}
     bulb.music_pixels_per_segment = 150
     bulb.music_segments = 4
     bulb.operating_mode = "RGB&W"

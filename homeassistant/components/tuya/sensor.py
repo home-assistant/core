@@ -295,6 +295,9 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         *BATTERY_SENSORS,
     ),
+    # Door and Window Controller
+    # https://developer.tuya.com/en/docs/iot/s?id=K9gf48r5zjsy9
+    "mc": BATTERY_SENSORS,
     # Door Window Sensor
     # https://developer.tuya.com/en/docs/iot/s?id=K9gf48hm02l8m
     "mcs": BATTERY_SENSORS,
@@ -742,6 +745,105 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             icon="mdi:progress-clock",
         ),
     ),
+    # Humidifier
+    # https://developer.tuya.com/en/docs/iot/s?id=K9gf48qwjz0i3
+    "jsq": (
+        TuyaSensorEntityDescription(
+            key=DPCode.HUMIDITY_CURRENT,
+            name="Humidity",
+            device_class=SensorDeviceClass.HUMIDITY,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.TEMP_CURRENT,
+            name="Temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.TEMP_CURRENT_F,
+            name="Temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.LEVEL_CURRENT,
+            name="Water Level",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            icon="mdi:waves-arrow-up",
+        ),
+    ),
+    # Air Purifier
+    # https://developer.tuya.com/en/docs/iot/s?id=K9gf48r41mn81
+    "kj": (
+        TuyaSensorEntityDescription(
+            key=DPCode.FILTER,
+            name="Filter Utilization",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            icon="mdi:ticket-percent-outline",
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.PM25,
+            name="Particulate Matter 2.5 µm",
+            device_class=SensorDeviceClass.PM25,
+            state_class=SensorStateClass.MEASUREMENT,
+            icon="mdi:molecule",
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.TEMP,
+            name="Temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.HUMIDITY,
+            name="Humidity",
+            device_class=SensorDeviceClass.HUMIDITY,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.TVOC,
+            name="Total Volatile Organic Compound",
+            device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.ECO2,
+            name="Concentration of Carbon Dioxide",
+            device_class=SensorDeviceClass.CO2,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.TOTAL_TIME,
+            name="Total Operating Time",
+            icon="mdi:history",
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.TOTAL_PM,
+            name="Total Absorption of Particles",
+            icon="mdi:texture-box",
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.AIR_QUALITY,
+            name="Air quality",
+            icon="mdi:air-filter",
+            device_class=TuyaDeviceClass.AIR_QUALITY,
+        ),
+    ),
+    # Fan
+    # https://developer.tuya.com/en/docs/iot/s?id=K9gf48quojr54
+    "fs": (
+        TuyaSensorEntityDescription(
+            key=DPCode.TEMP_CURRENT,
+            name="Temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+    ),
 }
 
 # Socket (duplicate of `kg`)
@@ -844,6 +946,10 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
             if self._uom is None:
                 self._attr_device_class = None
                 return
+
+            # If we still have a device class, we should not use an icon
+            if self.device_class:
+                self._attr_icon = None
 
             # Found unit of measurement, use the standardized Unit
             # Use the target conversion unit (if set)

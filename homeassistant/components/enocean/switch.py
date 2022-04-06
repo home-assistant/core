@@ -91,7 +91,7 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
             if packet.parsed["DT"]["raw_value"] == 1:
                 raw_val = packet.parsed["MR"]["raw_value"]
                 divisor = packet.parsed["DIV"]["raw_value"]
-                watts = raw_val / (10 ** divisor)
+                watts = raw_val / (10**divisor)
                 if watts > 1:
                     self._on_state = True
                     self.schedule_update_ha_state()

@@ -873,7 +873,7 @@ def _state_generator(hass: HomeAssistant, domain: str | None) -> Generator:
 def _get_state_if_valid(hass: HomeAssistant, entity_id: str) -> TemplateState | None:
     state = hass.states.get(entity_id)
     if state is None and not valid_entity_id(entity_id):
-        raise TemplateError(f"Invalid entity ID '{entity_id}'")  # type: ignore
+        raise TemplateError(f"Invalid entity ID '{entity_id}'")  # type: ignore[arg-type]
     return _get_template_state_from_state(hass, entity_id, state)
 
 
@@ -924,6 +924,9 @@ def result_as_boolean(template_result: Any | None) -> bool:
 
 def expand(hass: HomeAssistant, *args: Any) -> Iterable[State]:
     """Expand out any groups into entity states."""
+    # circular import.
+    from . import entity as entity_helper  # pylint: disable=import-outside-toplevel
+
     search = list(args)
     found = {}
     while search:
@@ -941,7 +944,10 @@ def expand(hass: HomeAssistant, *args: Any) -> Iterable[State]:
             # ignore other types
             continue
 
-        if entity_id.startswith(_GROUP_DOMAIN_PREFIX):
+        if entity_id.startswith(_GROUP_DOMAIN_PREFIX) or (
+            (source := entity_helper.entity_sources(hass).get(entity_id))
+            and source["domain"] == "group"
+        ):
             # Collect state will be called in here since it's wrapped
             group_entities = entity.attributes.get(ATTR_ENTITY_ID)
             if group_entities:
@@ -1339,7 +1345,7 @@ def forgiving_round(value, precision=0, method="common", default=_SENTINEL):
     """Filter to round a value."""
     try:
         # support rounding methods like jinja
-        multiplier = float(10 ** precision)
+        multiplier = float(10**precision)
         if method == "ceil":
             value = math.ceil(float(value) * multiplier) / multiplier
         elif method == "floor":

@@ -51,7 +51,7 @@ DEFAULT_URL = "ws://localhost:3000"
 TITLE = "Z-Wave JS"
 
 ADDON_SETUP_TIMEOUT = 5
-ADDON_SETUP_TIMEOUT_ROUNDS = 4
+ADDON_SETUP_TIMEOUT_ROUNDS = 40
 CONF_EMULATE_HARDWARE = "emulate_hardware"
 CONF_LOG_LEVEL = "log_level"
 SERVER_VERSION_TIMEOUT = 10
@@ -385,7 +385,6 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="usb_confirm",
                 description_placeholders={CONF_NAME: self._title},
-                data_schema=vol.Schema({}),
             )
 
         self._usb_discovery = True
@@ -412,7 +411,7 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
         else:
             await self.async_set_unique_id(
-                version_info.home_id, raise_on_progress=False
+                str(version_info.home_id), raise_on_progress=False
             )
             # Make sure we disable any add-on handling
             # if the controller is reconfigured in a manual step.
@@ -446,7 +445,7 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
         except CannotConnect:
             return self.async_abort(reason="cannot_connect")
 
-        await self.async_set_unique_id(version_info.home_id)
+        await self.async_set_unique_id(str(version_info.home_id))
         self._abort_if_unique_id_configured(updates={CONF_URL: self.ws_address})
 
         return await self.async_step_hassio_confirm()
@@ -580,7 +579,7 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
                     raise AbortFlow("cannot_connect") from err
 
             await self.async_set_unique_id(
-                self.version_info.home_id, raise_on_progress=False
+                str(self.version_info.home_id), raise_on_progress=False
             )
 
         self._abort_if_unique_id_configured(
@@ -668,7 +667,7 @@ class OptionsFlowHandler(BaseZwaveJSFlow, config_entries.OptionsFlow):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            if self.config_entry.unique_id != version_info.home_id:
+            if self.config_entry.unique_id != str(version_info.home_id):
                 return self.async_abort(reason="different_device")
 
             # Make sure we disable any add-on handling
@@ -828,7 +827,7 @@ class OptionsFlowHandler(BaseZwaveJSFlow, config_entries.OptionsFlow):
             except CannotConnect:
                 return await self.async_revert_addon_config(reason="cannot_connect")
 
-        if self.config_entry.unique_id != self.version_info.home_id:
+        if self.config_entry.unique_id != str(self.version_info.home_id):
             return await self.async_revert_addon_config(reason="different_device")
 
         self._async_update_entry(

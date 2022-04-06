@@ -17,7 +17,12 @@ from homeassistant.components.weather import (
     WeatherEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import (
+    CONF_NAME,
+    SPEED_MILES_PER_HOUR,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
@@ -51,10 +56,10 @@ async def async_setup_entry(
     async_add_entities([AccuWeatherEntity(name, coordinator)])
 
 
-class AccuWeatherEntity(CoordinatorEntity, WeatherEntity):
+class AccuWeatherEntity(
+    CoordinatorEntity[AccuWeatherDataUpdateCoordinator], WeatherEntity
+):
     """Define an AccuWeather entity."""
-
-    coordinator: AccuWeatherDataUpdateCoordinator
 
     def __init__(
         self, name: str, coordinator: AccuWeatherDataUpdateCoordinator
@@ -62,9 +67,13 @@ class AccuWeatherEntity(CoordinatorEntity, WeatherEntity):
         """Initialize."""
         super().__init__(coordinator)
         self._unit_system = API_METRIC if coordinator.is_metric else API_IMPERIAL
-        self._attr_wind_speed_unit = self.coordinator.data["Wind"]["Speed"][
-            self._unit_system
-        ]["Unit"]
+        wind_speed_unit = self.coordinator.data["Wind"]["Speed"][self._unit_system][
+            "Unit"
+        ]
+        if wind_speed_unit == "mi/h":
+            self._attr_wind_speed_unit = SPEED_MILES_PER_HOUR
+        else:
+            self._attr_wind_speed_unit = wind_speed_unit
         self._attr_name = name
         self._attr_unique_id = coordinator.location_key
         self._attr_temperature_unit = (

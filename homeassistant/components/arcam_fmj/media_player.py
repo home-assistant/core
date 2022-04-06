@@ -4,20 +4,15 @@ import logging
 from arcam.fmj import SourceCodes
 from arcam.fmj.state import State
 
-from homeassistant.components.media_player import BrowseMedia, MediaPlayerEntity
+from homeassistant.components.media_player import (
+    BrowseMedia,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
+)
 from homeassistant.components.media_player.const import (
     MEDIA_CLASS_DIRECTORY,
     MEDIA_CLASS_MUSIC,
     MEDIA_TYPE_MUSIC,
-    SUPPORT_BROWSE_MEDIA,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_SELECT_SOUND_MODE,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
 )
 from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.config_entries import ConfigEntry
@@ -77,17 +72,17 @@ class ArcamFmj(MediaPlayerEntity):
         self._attr_name = f"{device_name} - Zone: {state.zn}"
         self._uuid = uuid
         self._attr_supported_features = (
-            SUPPORT_SELECT_SOURCE
-            | SUPPORT_PLAY_MEDIA
-            | SUPPORT_BROWSE_MEDIA
-            | SUPPORT_VOLUME_SET
-            | SUPPORT_VOLUME_MUTE
-            | SUPPORT_VOLUME_STEP
-            | SUPPORT_TURN_OFF
-            | SUPPORT_TURN_ON
+            MediaPlayerEntityFeature.SELECT_SOURCE
+            | MediaPlayerEntityFeature.PLAY_MEDIA
+            | MediaPlayerEntityFeature.BROWSE_MEDIA
+            | MediaPlayerEntityFeature.VOLUME_SET
+            | MediaPlayerEntityFeature.VOLUME_MUTE
+            | MediaPlayerEntityFeature.VOLUME_STEP
+            | MediaPlayerEntityFeature.TURN_OFF
+            | MediaPlayerEntityFeature.TURN_ON
         )
         if state.zn == 1:
-            self._attr_supported_features |= SUPPORT_SELECT_SOUND_MODE
+            self._attr_supported_features |= MediaPlayerEntityFeature.SELECT_SOUND_MODE
         self._attr_unique_id = f"{uuid}-{state.zn}"
         self._attr_entity_registry_enabled_default = state.zn == 1
 
@@ -230,7 +225,7 @@ class ArcamFmj(MediaPlayerEntity):
         ]
 
         root = BrowseMedia(
-            title="Root",
+            title="Arcam FMJ Receiver",
             media_class=MEDIA_CLASS_DIRECTORY,
             media_content_id="root",
             media_content_type="library",

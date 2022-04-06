@@ -13,6 +13,7 @@ from tests.common import MockConfigEntry, load_fixture
 
 HOMEKIT_DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
     host="1.2.3.4",
+    addresses=["1.2.3.4"],
     hostname="mock_hostname",
     name="Hunter Douglas Powerview Hub._hap._tcp.local.",
     port=None,
@@ -22,6 +23,7 @@ HOMEKIT_DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
 
 ZEROCONF_DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
     host="1.2.3.4",
+    addresses=["1.2.3.4"],
     hostname="mock_hostname",
     name="Hunter Douglas Powerview Hub._powerview._tcp.local.",
     port=None,

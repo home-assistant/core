@@ -39,8 +39,7 @@ async def check_migration(hass: core.HomeAssistant, entry: ConfigEntry) -> None:
         data[CONF_API_KEY] = data.pop(CONF_USERNAME)
         hass.config_entries.async_update_entry(entry, data=data)
 
-    conf_api_version = entry.data.get(CONF_API_VERSION, 1)
-    if conf_api_version == 1:
+    if (conf_api_version := entry.data.get(CONF_API_VERSION, 1)) == 1:
         # a bridge might have upgraded firmware since last run so
         # we discover its capabilities at every startup
         websession = aiohttp_client.async_get_clientsession(hass)

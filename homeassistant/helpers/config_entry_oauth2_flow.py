@@ -217,7 +217,7 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
             )
 
         self.external_data: Any = None
-        self.flow_impl: AbstractOAuth2Implementation = None  # type: ignore
+        self.flow_impl: AbstractOAuth2Implementation = None  # type: ignore[assignment]
 
     @property
     @abstractmethod

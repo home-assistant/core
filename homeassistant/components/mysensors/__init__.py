@@ -15,6 +15,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_OPTIMISTIC, Platform
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import ConfigType
@@ -42,7 +43,7 @@ from .const import (
     SensorType,
 )
 from .device import MySensorsDevice, get_mysensors_devices
-from .gateway import finish_setup, get_mysensors_gateway, gw_stop, setup_gateway
+from .gateway import finish_setup, gw_stop, setup_gateway
 from .helpers import on_unload
 
 _LOGGER = logging.getLogger(__name__)
@@ -123,27 +124,30 @@ GATEWAY_SCHEMA = vol.Schema(
 )
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            vol.All(
-                deprecated(CONF_DEBUG),
-                deprecated(CONF_OPTIMISTIC),
-                deprecated(CONF_PERSISTENCE),
-                {
-                    vol.Required(CONF_GATEWAYS): vol.All(
-                        cv.ensure_list,
-                        set_default_persistence_file,
-                        has_all_unique_files,
-                        [GATEWAY_SCHEMA],
-                    ),
-                    vol.Optional(CONF_RETAIN, default=True): cv.boolean,
-                    vol.Optional(CONF_VERSION, default=DEFAULT_VERSION): cv.string,
-                    vol.Optional(CONF_OPTIMISTIC, default=False): cv.boolean,
-                    vol.Optional(CONF_PERSISTENCE, default=True): cv.boolean,
-                },
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.Schema(
+                vol.All(
+                    deprecated(CONF_DEBUG),
+                    deprecated(CONF_OPTIMISTIC),
+                    deprecated(CONF_PERSISTENCE),
+                    {
+                        vol.Required(CONF_GATEWAYS): vol.All(
+                            cv.ensure_list,
+                            set_default_persistence_file,
+                            has_all_unique_files,
+                            [GATEWAY_SCHEMA],
+                        ),
+                        vol.Optional(CONF_RETAIN, default=True): cv.boolean,
+                        vol.Optional(CONF_VERSION, default=DEFAULT_VERSION): cv.string,
+                        vol.Optional(CONF_OPTIMISTIC, default=False): cv.boolean,
+                        vol.Optional(CONF_PERSISTENCE, default=True): cv.boolean,
+                    },
+                )
             )
-        )
-    },
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -243,7 +247,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Remove an instance of the MySensors integration."""
 
-    gateway = get_mysensors_gateway(hass, entry.entry_id)
+    gateway: BaseAsyncGateway = hass.data[DOMAIN][MYSENSORS_GATEWAYS][entry.entry_id]
 
     unload_ok = await hass.config_entries.async_unload_platforms(
         entry, PLATFORMS_WITH_ENTRY_SUPPORT
@@ -261,6 +265,23 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     del hass.data[DOMAIN][MYSENSORS_GATEWAYS][entry.entry_id]
 
     await gw_stop(hass, entry, gateway)
+    return True
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: DeviceEntry
+) -> bool:
+    """Remove a MySensors config entry from a device."""
+    gateway: BaseAsyncGateway = hass.data[DOMAIN][MYSENSORS_GATEWAYS][
+        config_entry.entry_id
+    ]
+    device_id = next(
+        device_id for domain, device_id in device_entry.identifiers if domain == DOMAIN
+    )
+    node_id = int(device_id.partition("-")[2])
+    gateway.sensors.pop(node_id, None)
+    gateway.tasks.persistence.need_save = True
+
     return True
 
 
@@ -296,10 +317,7 @@ def setup_mysensors_platform(
             )
             continue
         gateway_id, node_id, child_id, value_type = dev_id
-        gateway: BaseAsyncGateway | None = get_mysensors_gateway(hass, gateway_id)
-        if not gateway:
-            _LOGGER.warning("Skipping setup of %s, no gateway found", dev_id)
-            continue
+        gateway: BaseAsyncGateway = hass.data[DOMAIN][MYSENSORS_GATEWAYS][gateway_id]
 
         if isinstance(device_class, dict):
             child = gateway.sensors[node_id].children[child_id]

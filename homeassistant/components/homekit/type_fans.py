@@ -39,6 +39,7 @@ from .const import (
     CHAR_ROTATION_DIRECTION,
     CHAR_ROTATION_SPEED,
     CHAR_SWING_MODE,
+    CHAR_TARGET_FAN_STATE,
     PROP_MIN_STEP,
     SERV_FANV2,
     SERV_SWITCH,
@@ -58,35 +59,38 @@ class Fan(HomeAccessory):
     def __init__(self, *args):
         """Initialize a new Fan accessory object."""
         super().__init__(*args, category=CATEGORY_FAN)
-        chars = []
+        self.chars = []
         state = self.hass.states.get(self.entity_id)
 
         features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         percentage_step = state.attributes.get(ATTR_PERCENTAGE_STEP, 1)
-        preset_modes = state.attributes.get(ATTR_PRESET_MODES)
+        self.preset_modes = state.attributes.get(ATTR_PRESET_MODES)
 
         if features & SUPPORT_DIRECTION:
-            chars.append(CHAR_ROTATION_DIRECTION)
+            self.chars.append(CHAR_ROTATION_DIRECTION)
         if features & SUPPORT_OSCILLATE:
-            chars.append(CHAR_SWING_MODE)
+            self.chars.append(CHAR_SWING_MODE)
         if features & SUPPORT_SET_SPEED:
-            chars.append(CHAR_ROTATION_SPEED)
+            self.chars.append(CHAR_ROTATION_SPEED)
+        if self.preset_modes and len(self.preset_modes) == 1:
+            self.chars.append(CHAR_TARGET_FAN_STATE)
 
-        serv_fan = self.add_preload_service(SERV_FANV2, chars)
+        serv_fan = self.add_preload_service(SERV_FANV2, self.chars)
         self.set_primary_service(serv_fan)
         self.char_active = serv_fan.configure_char(CHAR_ACTIVE, value=0)
 
         self.char_direction = None
         self.char_speed = None
         self.char_swing = None
+        self.char_target_fan_state = None
         self.preset_mode_chars = {}
 
-        if CHAR_ROTATION_DIRECTION in chars:
+        if CHAR_ROTATION_DIRECTION in self.chars:
             self.char_direction = serv_fan.configure_char(
                 CHAR_ROTATION_DIRECTION, value=0
             )
 
-        if CHAR_ROTATION_SPEED in chars:
+        if CHAR_ROTATION_SPEED in self.chars:
             # Initial value is set to 100 because 0 is a special value (off). 100 is
             # an arbitrary non-zero value. It is updated immediately by async_update_state
             # to set to the correct initial value.
@@ -96,8 +100,13 @@ class Fan(HomeAccessory):
                 properties={PROP_MIN_STEP: percentage_step},
             )
 
-        if preset_modes:
-            for preset_mode in preset_modes:
+        if self.preset_modes and len(self.preset_modes) == 1:
+            self.char_target_fan_state = serv_fan.configure_char(
+                CHAR_TARGET_FAN_STATE,
+                value=0,
+            )
+        elif self.preset_modes:
+            for preset_mode in self.preset_modes:
                 preset_serv = self.add_preload_service(SERV_SWITCH, CHAR_NAME)
                 serv_fan.add_linked_service(preset_serv)
                 preset_serv.configure_char(
@@ -115,7 +124,7 @@ class Fan(HomeAccessory):
                     ),
                 )
 
-        if CHAR_SWING_MODE in chars:
+        if CHAR_SWING_MODE in self.chars:
             self.char_swing = serv_fan.configure_char(CHAR_SWING_MODE, value=0)
         self.async_update_state(state)
         serv_fan.setter_callback = self._set_chars
@@ -148,6 +157,24 @@ class Fan(HomeAccessory):
         # get the speed they asked for
         if CHAR_ROTATION_SPEED in char_values:
             self.set_percentage(char_values[CHAR_ROTATION_SPEED])
+        if CHAR_TARGET_FAN_STATE in char_values:
+            self.set_single_preset_mode(char_values[CHAR_TARGET_FAN_STATE])
+
+    def set_single_preset_mode(self, value):
+        """Set auto call came from HomeKit."""
+        params = {ATTR_ENTITY_ID: self.entity_id}
+        if value:
+            _LOGGER.debug(
+                "%s: Set auto to 1 (%s)", self.entity_id, self.preset_modes[0]
+            )
+            params[ATTR_PRESET_MODE] = self.preset_modes[0]
+            self.async_call_service(DOMAIN, SERVICE_SET_PRESET_MODE, params)
+        else:
+            current_state = self.hass.states.get(self.entity_id)
+            percentage = current_state.attributes.get(ATTR_PERCENTAGE) or 50
+            params[ATTR_PERCENTAGE] = percentage
+            _LOGGER.debug("%s: Set auto to 0", self.entity_id)
+            self.async_call_service(DOMAIN, SERVICE_TURN_ON, params)
 
     def set_preset_mode(self, value, preset_mode):
         """Set preset_mode if call came from HomeKit."""
@@ -193,6 +220,7 @@ class Fan(HomeAccessory):
         """Update fan after state change."""
         # Handle State
         state = new_state.state
+        attributes = new_state.attributes
         if state in (STATE_ON, STATE_OFF):
             self._state = 1 if state == STATE_ON else 0
             self.char_active.set_value(self._state)
@@ -208,7 +236,7 @@ class Fan(HomeAccessory):
         if self.char_speed is not None and state != STATE_OFF:
             # We do not change the homekit speed when turning off
             # as it will clear the restore state
-            percentage = new_state.attributes.get(ATTR_PERCENTAGE)
+            percentage = attributes.get(ATTR_PERCENTAGE)
             # If the homeassistant component reports its speed as the first entry
             # in its speed list but is not off, the hk_speed_value is 0. But 0
             # is a special value in homekit. When you turn on a homekit accessory
@@ -227,12 +255,18 @@ class Fan(HomeAccessory):
 
         # Handle Oscillating
         if self.char_swing is not None:
-            oscillating = new_state.attributes.get(ATTR_OSCILLATING)
+            oscillating = attributes.get(ATTR_OSCILLATING)
             if isinstance(oscillating, bool):
                 hk_oscillating = 1 if oscillating else 0
                 self.char_swing.set_value(hk_oscillating)
 
-        current_preset_mode = new_state.attributes.get(ATTR_PRESET_MODE)
+        current_preset_mode = attributes.get(ATTR_PRESET_MODE)
+        if self.char_target_fan_state is not None:
+            # Handle single preset mode
+            self.char_target_fan_state.set_value(int(current_preset_mode is not None))
+            return
+
+        # Handle multiple preset modes
         for preset_mode, char in self.preset_mode_chars.items():
             hk_value = 1 if preset_mode == current_preset_mode else 0
             char.set_value(hk_value)

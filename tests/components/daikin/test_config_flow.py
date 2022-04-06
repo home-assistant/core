@@ -124,6 +124,7 @@ async def test_api_password_abort(hass):
             SOURCE_ZEROCONF,
             zeroconf.ZeroconfServiceInfo(
                 host=HOST,
+                addresses=[HOST],
                 hostname="mock_hostname",
                 name="mock_name",
                 port=None,

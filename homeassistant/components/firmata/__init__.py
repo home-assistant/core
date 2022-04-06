@@ -190,7 +190,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={},
+        connections=set(),
         identifiers={(DOMAIN, board.name)},
         manufacturer=FIRMATA_MANUFACTURER,
         name=board.name,

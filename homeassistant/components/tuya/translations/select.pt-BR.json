@@ -10,6 +10,15 @@
             "1": "Desligado",
             "2": "Ligado"
         },
+        "tuya__countdown": {
+            "1h": "1 hora",
+            "2h": "2 horas",
+            "3h": "3 horas",
+            "4h": "4 horas",
+            "5h": "5 horas",
+            "6h": "6 horas",
+            "cancel": "Cancelar"
+        },
         "tuya__curtain_mode": {
             "morning": "Manh\u00e3",
             "night": "Noite"
@@ -30,6 +39,32 @@
         "tuya__fingerbot_mode": {
             "click": "Pulsador",
             "switch": "Interruptor"
+        },
+        "tuya__humidifier_level": {
+            "level_1": "N\u00edvel 1",
+            "level_10": "N\u00edvel 10",
+            "level_2": "N\u00edvel 2",
+            "level_3": "N\u00edvel 3",
+            "level_4": "N\u00edvel 4",
+            "level_5": "N\u00edvel 5",
+            "level_6": "N\u00edvel 6",
+            "level_7": "N\u00edvel 7",
+            "level_8": "N\u00edvel 8",
+            "level_9": "N\u00edvel 9"
+        },
+        "tuya__humidifier_moodlighting": {
+            "1": "Ambiente 1",
+            "2": "Ambiente 2",
+            "3": "Ambiente 3",
+            "4": "Ambiente 4",
+            "5": "Ambiente 5"
+        },
+        "tuya__humidifier_spray_mode": {
+            "auto": "Autom\u00e1tico",
+            "health": "Sa\u00fade",
+            "humidity": "Umidade",
+            "sleep": "Sono",
+            "work": "Trabalho"
         },
         "tuya__ipc_work_mode": {
             "0": "Modo de baixo consumo",

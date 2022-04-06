@@ -15,18 +15,21 @@ CONF_REGIONS: str = "regions"
 CONF_MESSAGE_SLOTS: str = "slots"
 CONF_FILTER_CORONA: str = "corona_filter"
 
-ATTR_HEADLINE: str = "Headline"
-ATTR_ID: str = "ID"
-ATTR_SENT: str = "Sent"
-ATTR_START: str = "Start"
-ATTR_EXPIRES: str = "Expires"
+ATTR_HEADLINE: str = "headline"
+ATTR_DESCRIPTION: str = "description"
+ATTR_SENDER: str = "sender"
+ATTR_SEVERITY: str = "severity"
+ATTR_ID: str = "id"
+ATTR_SENT: str = "sent"
+ATTR_START: str = "start"
+ATTR_EXPIRES: str = "expires"
 
 CONST_LIST_A_TO_D: list[str] = ["A", "Ä", "B", "C", "D"]
 CONST_LIST_E_TO_H: list[str] = ["E", "F", "G", "H"]
 CONST_LIST_I_TO_L: list[str] = ["I", "J", "K", "L"]
 CONST_LIST_M_TO_Q: list[str] = ["M", "N", "O", "Ö", "P", "Q"]
 CONST_LIST_R_TO_U: list[str] = ["R", "S", "T", "U", "Ü"]
-CONST_LIST_V_TO_Z: list[str] = ["V", "W", "X", "Y"]
+CONST_LIST_V_TO_Z: list[str] = ["V", "W", "X", "Y", "Z"]
 
 CONST_REGION_A_TO_D: Final = "_a_to_d"
 CONST_REGION_E_TO_H: Final = "_e_to_h"

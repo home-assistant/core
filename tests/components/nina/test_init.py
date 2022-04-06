@@ -1,5 +1,4 @@
 """Test the Nina init file."""
-import json
 from typing import Any
 from unittest.mock import patch
 
@@ -10,7 +9,9 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, load_fixture
+from . import mocked_request_function
+
+from tests.common import MockConfigEntry
 
 ENTRY_DATA: dict[str, Any] = {
     "slots": 5,
@@ -22,13 +23,9 @@ ENTRY_DATA: dict[str, Any] = {
 async def init_integration(hass) -> MockConfigEntry:
     """Set up the NINA integration in Home Assistant."""
 
-    dummy_response: dict[str, Any] = json.loads(
-        load_fixture("sample_warnings.json", "nina")
-    )
-
     with patch(
         "pynina.baseApi.BaseAPI._makeRequest",
-        return_value=dummy_response,
+        wraps=mocked_request_function,
     ):
 
         entry: MockConfigEntry = MockConfigEntry(

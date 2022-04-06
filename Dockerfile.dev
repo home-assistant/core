@@ -33,9 +33,9 @@ WORKDIR /workspaces
 # Install Python dependencies from requirements
 COPY requirements.txt ./
 COPY homeassistant/package_constraints.txt homeassistant/package_constraints.txt
-RUN pip3 install -r requirements.txt
+RUN pip3 install -r requirements.txt --use-deprecated=legacy-resolver
 COPY requirements_test.txt requirements_test_pre_commit.txt ./
-RUN pip3 install -r requirements_test.txt
+RUN pip3 install -r requirements_test.txt --use-deprecated=legacy-resolver
 RUN rm -rf requirements.txt requirements_test.txt requirements_test_pre_commit.txt homeassistant/
 
 # Set the default shell to bash instead of sh

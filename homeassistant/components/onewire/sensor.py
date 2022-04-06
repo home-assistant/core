@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable, Mapping
 import copy
 from dataclasses import dataclass
 import logging
@@ -38,6 +39,9 @@ from .const import (
     DEVICE_KEYS_0_3,
     DEVICE_KEYS_A_B,
     DOMAIN,
+    OPTION_ENTRY_DEVICE_OPTIONS,
+    OPTION_ENTRY_SENSOR_PRECISION,
+    PRECISION_MAPPING_FAMILY_28,
     READ_MODE_FLOAT,
     READ_MODE_INT,
 )
@@ -54,7 +58,24 @@ from .onewirehub import OneWireHub
 class OneWireSensorEntityDescription(OneWireEntityDescription, SensorEntityDescription):
     """Class describing OneWire sensor entities."""
 
-    override_key: str | None = None
+    override_key: Callable[[str, Mapping[str, Any]], str] | None = None
+
+
+def _get_sensor_precision_family_28(device_id: str, options: Mapping[str, Any]) -> str:
+    """Get precision form config flow options."""
+    precision: str = (
+        options.get(OPTION_ENTRY_DEVICE_OPTIONS, {})
+        .get(device_id, {})
+        .get(OPTION_ENTRY_SENSOR_PRECISION, "temperature")
+    )
+    if precision in PRECISION_MAPPING_FAMILY_28:
+        return precision
+    _LOGGER.warning(
+        "Invalid sensor precision `%s` for device `%s`: reverting to default",
+        precision,
+        device_id,
+    )
+    return "temperature"
 
 
 SIMPLE_TEMPERATURE_SENSOR_DESCRIPTION = OneWireSensorEntityDescription(
@@ -185,7 +206,17 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             state_class=SensorStateClass.MEASUREMENT,
         ),
     ),
-    "28": (SIMPLE_TEMPERATURE_SENSOR_DESCRIPTION,),
+    "28": (
+        OneWireSensorEntityDescription(
+            key="temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            name="Temperature",
+            native_unit_of_measurement=TEMP_CELSIUS,
+            override_key=_get_sensor_precision_family_28,
+            read_mode=READ_MODE_FLOAT,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+    ),
     "30": (
         SIMPLE_TEMPERATURE_SENSOR_DESCRIPTION,
         OneWireSensorEntityDescription(
@@ -195,7 +226,7 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             name="Thermocouple temperature",
             native_unit_of_measurement=TEMP_CELSIUS,
             read_mode=READ_MODE_FLOAT,
-            override_key="typeK/temperature",
+            override_key=lambda d, o: "typeK/temperature",
             state_class=SensorStateClass.MEASUREMENT,
         ),
         OneWireSensorEntityDescription(
@@ -352,13 +383,15 @@ async def async_setup_entry(
     """Set up 1-Wire platform."""
     onewirehub = hass.data[DOMAIN][config_entry.entry_id]
     entities = await hass.async_add_executor_job(
-        get_entities, onewirehub, config_entry.data
+        get_entities, onewirehub, config_entry.data, config_entry.options
     )
     async_add_entities(entities, True)
 
 
 def get_entities(
-    onewirehub: OneWireHub, config: MappingProxyType[str, Any]
+    onewirehub: OneWireHub,
+    config: MappingProxyType[str, Any],
+    options: MappingProxyType[str, Any],
 ) -> list[SensorEntity]:
     """Get a list of entities."""
     if not onewirehub.devices:
@@ -400,9 +433,12 @@ def get_entities(
                         description.device_class = SensorDeviceClass.HUMIDITY
                         description.native_unit_of_measurement = PERCENTAGE
                         description.name = f"Wetness {s_id}"
+                override_key = None
+                if description.override_key:
+                    override_key = description.override_key(device_id, options)
                 device_file = os.path.join(
                     os.path.split(device.path)[0],
-                    description.override_key or description.key,
+                    override_key or description.key,
                 )
                 name = f"{device_id} {description.name}"
                 entities.append(

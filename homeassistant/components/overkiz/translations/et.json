@@ -12,6 +12,7 @@
             "too_many_requests": "Liiga palju p\u00e4ringuid, proovi hiljem uuesti",
             "unknown": "Ootamatu t\u00f5rge"
         },
+        "flow_title": "L\u00fc\u00fcs: {gateway_id}",
         "step": {
             "user": {
                 "data": {

@@ -152,6 +152,37 @@ light:
   payload_on: "on"
   payload_off: "off"
 
+Configuration with brightness command template:
+
+light:
+  platform: mqtt
+  name: "Office Light"
+  state_topic: "office/rgb1/light/status"
+  command_topic: "office/rgb1/light/switch"
+  brightness_state_topic: "office/rgb1/brightness/status"
+  brightness_command_topic: "office/rgb1/brightness/set"
+  brightness_command_template: '{ "brightness": "{{ value }}" }'
+  qos: 0
+  payload_on: "on"
+  payload_off: "off"
+
+Configuration with effect command template:
+
+light:
+  platform: mqtt
+  name: "Office Light Color Temp"
+  state_topic: "office/rgb1/light/status"
+  command_topic: "office/rgb1/light/switch"
+  effect_state_topic: "office/rgb1/effect/status"
+  effect_command_topic: "office/rgb1/effect/set"
+  effect_command_template: '{ "effect": "{{ value }}" }'
+  effect_list:
+    - rainbow
+    - colorloop
+  qos: 0
+  payload_on: "on"
+  payload_off: "off"
+
 """
 import copy
 from unittest.mock import call, patch
@@ -202,6 +233,7 @@ from .test_common import (
     help_test_entity_id_update_subscriptions,
     help_test_publishing_with_custom_encoding,
     help_test_reloadable,
+    help_test_reloadable_late,
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
     help_test_setting_blocked_attribute_via_mqtt_json_message,
@@ -3393,18 +3425,18 @@ async def test_max_mireds(hass, mqtt_mock):
             "brightness_command_topic",
             {"color_temp": "200", "brightness": "50"},
             50,
-            None,
-            None,
-            None,
+            "brightness_command_template",
+            "value",
+            b"5",
         ),
         (
             light.SERVICE_TURN_ON,
             "effect_command_topic",
             {"rgb_color": [255, 128, 0], "effect": "color_loop"},
             "color_loop",
-            None,
-            None,
-            None,
+            "effect_command_template",
+            "value",
+            b"c",
         ),
         (
             light.SERVICE_TURN_ON,
@@ -3496,6 +3528,13 @@ async def test_reloadable(hass, mqtt_mock, caplog, tmp_path):
     await help_test_reloadable(hass, mqtt_mock, caplog, tmp_path, domain, config)
 
 
+async def test_reloadable_late(hass, mqtt_client_mock, caplog, tmp_path):
+    """Test reloading the MQTT platform with late entry setup."""
+    domain = light.DOMAIN
+    config = DEFAULT_CONFIG[domain]
+    await help_test_reloadable_late(hass, caplog, tmp_path, domain, config)
+
+
 @pytest.mark.parametrize(
     "topic,value,attribute,attribute_value,init_payload",
     [
@@ -3557,3 +3596,81 @@ async def test_encoding_subscribable_topics(
         attribute_value,
         init_payload,
     )
+
+
+async def test_sending_mqtt_brightness_command_with_template(hass, mqtt_mock):
+    """Test the sending of Brightness command with template."""
+    config = {
+        light.DOMAIN: {
+            "platform": "mqtt",
+            "name": "test",
+            "command_topic": "test_light_brightness/set",
+            "brightness_command_topic": "test_light_brightness/brightness/set",
+            "brightness_command_template": "{{ (1000 / value) | round(0) }}",
+            "payload_on": "on",
+            "payload_off": "off",
+            "qos": 0,
+        }
+    }
+
+    assert await async_setup_component(hass, light.DOMAIN, config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.test")
+    assert state.state == STATE_UNKNOWN
+
+    await common.async_turn_on(hass, "light.test", brightness=100)
+
+    mqtt_mock.async_publish.assert_has_calls(
+        [
+            call("test_light_brightness/set", "on", 0, False),
+            call("test_light_brightness/brightness/set", "10", 0, False),
+        ],
+        any_order=True,
+    )
+
+    state = hass.states.get("light.test")
+    assert state.state == STATE_ON
+    assert state.attributes["brightness"] == 100
+
+
+async def test_sending_mqtt_effect_command_with_template(hass, mqtt_mock):
+    """Test the sending of Effect command with template."""
+    config = {
+        light.DOMAIN: {
+            "platform": "mqtt",
+            "name": "test",
+            "command_topic": "test_light_brightness/set",
+            "brightness_command_topic": "test_light_brightness/brightness/set",
+            "effect_command_topic": "test_light_brightness/effect/set",
+            "effect_command_template": '{ "effect": "{{ value }}" }',
+            "effect_list": ["colorloop", "random"],
+            "payload_on": "on",
+            "payload_off": "off",
+            "qos": 0,
+        }
+    }
+
+    assert await async_setup_component(hass, light.DOMAIN, config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.test")
+    assert state.state == STATE_UNKNOWN
+
+    await common.async_turn_on(hass, "light.test", effect="colorloop")
+
+    mqtt_mock.async_publish.assert_has_calls(
+        [
+            call("test_light_brightness/set", "on", 0, False),
+            call(
+                "test_light_brightness/effect/set",
+                '{ "effect": "colorloop" }',
+                0,
+                False,
+            ),
+        ],
+        any_order=True,
+    )
+    state = hass.states.get("light.test")
+    assert state.state == STATE_ON
+    assert state.attributes.get("effect") == "colorloop"

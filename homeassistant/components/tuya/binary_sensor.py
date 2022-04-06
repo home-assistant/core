@@ -110,6 +110,14 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
         ),
         TAMPER_BINARY_SENSOR,
     ),
+    # Door and Window Controller
+    # https://developer.tuya.com/en/docs/iot/s?id=K9gf48r5zjsy9
+    "mc": (
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.DOORCONTACT_STATE,
+            device_class=BinarySensorDeviceClass.DOOR,
+        ),
+    ),
     # Door Window Sensor
     # https://developer.tuya.com/en/docs/iot/s?id=K9gf48hm02l8m
     "mcs": (

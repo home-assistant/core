@@ -25,7 +25,9 @@
     },
     "options": {
         "error": {
+            "currency_unavailable": "Jeden lub wi\u0119cej \u017c\u0105danych sald walutowych nie jest dostarczanych przez interfejs API Coinbase.",
             "currency_unavaliable": "Jeden lub wi\u0119cej \u017c\u0105danych sald walutowych nie jest dostarczanych przez interfejs API Coinbase.",
+            "exchange_rate_unavailable": "Jeden lub wi\u0119cej z \u017c\u0105danych kurs\u00f3w wymiany nie jest dostarczany przez Coinbase.",
             "exchange_rate_unavaliable": "Jeden lub wi\u0119cej z \u017c\u0105danych kurs\u00f3w wymiany nie jest dostarczany przez Coinbase.",
             "unknown": "Nieoczekiwany b\u0142\u0105d"
         },
@@ -33,7 +35,7 @@
             "init": {
                 "data": {
                     "account_balance_currencies": "Salda portfela do zg\u0142oszenia.",
-                    "exchange_base": "Waluta bazowa dla czujnik\u00f3w kurs\u00f3w walut.",
+                    "exchange_base": "Waluta bazowa dla sensor\u00f3w kurs\u00f3w walut.",
                     "exchange_rate_currencies": "Kursy walut do zg\u0142oszenia."
                 },
                 "description": "Dostosuj opcje Coinbase"

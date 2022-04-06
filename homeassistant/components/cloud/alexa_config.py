@@ -133,7 +133,10 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
 
         entity_registry = er.async_get(self.hass)
         if registry_entry := entity_registry.async_get(entity_id):
-            auxiliary_entity = registry_entry.entity_category is not None
+            auxiliary_entity = (
+                registry_entry.entity_category is not None
+                or registry_entry.hidden_by is not None
+            )
         else:
             auxiliary_entity = False
 
@@ -187,7 +190,11 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
                 self._alexa_sync_unsub = None
             return
 
-        if ALEXA_DOMAIN not in self.hass.config.components and self.enabled:
+        if (
+            ALEXA_DOMAIN not in self.hass.config.components
+            and self.enabled
+            and self.hass.is_running
+        ):
             await async_setup_component(self.hass, ALEXA_DOMAIN, {})
 
         if self.should_report_state != self.is_reporting_states:

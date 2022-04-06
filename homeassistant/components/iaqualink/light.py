@@ -1,11 +1,12 @@
 """Support for Aqualink pool lights."""
-import logging
+from __future__ import annotations
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_EFFECT,
+    COLOR_MODE_BRIGHTNESS,
+    COLOR_MODE_ONOFF,
     DOMAIN,
-    SUPPORT_BRIGHTNESS,
     SUPPORT_EFFECT,
     LightEntity,
 )
@@ -16,8 +17,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import AqualinkEntity, refresh_system
 from .const import DOMAIN as AQUALINK_DOMAIN
 from .utils import await_or_reraise
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
@@ -88,11 +87,20 @@ class HassAqualinkLight(AqualinkEntity, LightEntity):
         return list(self.dev.supported_light_effects)
 
     @property
+    def color_mode(self) -> str:
+        """Return the color mode of the light."""
+        if self.dev.is_dimmer:
+            return COLOR_MODE_BRIGHTNESS
+        return COLOR_MODE_ONOFF
+
+    @property
+    def supported_color_modes(self) -> set[str] | None:
+        """Flag supported color modes."""
+        return {self.color_mode}
+
+    @property
     def supported_features(self) -> int:
         """Return the list of features supported by the light."""
-        if self.dev.is_dimmer:
-            return SUPPORT_BRIGHTNESS
-
         if self.dev.is_color:
             return SUPPORT_EFFECT
 

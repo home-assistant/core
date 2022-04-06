@@ -99,5 +99,7 @@ class KaiterraApiData:
                 self.data[self._devices_ids[i]] = device
         except IndexError as err:
             _LOGGER.error("Parsing error %s", err)
+        except TypeError as err:
+            _LOGGER.error("Type error %s", err)
 
         async_dispatcher_send(self._hass, DISPATCHER_KAITERRA)

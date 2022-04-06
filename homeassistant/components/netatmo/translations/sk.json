@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "reauth_successful": "Op\u00e4tovn\u00e9 overenie bolo \u00faspe\u0161n\u00e9"
+        },
+        "create_entry": {
+            "default": "\u00daspe\u0161ne overen\u00e9"
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Vyberte met\u00f3du overenia"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "public_weather": {
+                "data": {
+                    "lat_ne": "Zemepisn\u00e1 \u0161\u00edrka: severov\u00fdchodn\u00fd roh",
+                    "lat_sw": "Zemepisn\u00e1 \u0161\u00edrka: juhoz\u00e1padn\u00fd roh",
+                    "lon_ne": "Zemepisn\u00e1 d\u013a\u017eka: severov\u00fdchodn\u00fd roh",
+                    "lon_sw": "Zemepisn\u00e1 d\u013a\u017eka: juhoz\u00e1padn\u00fd roh"
+                }
+            }
+        }
+    }
+}

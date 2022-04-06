@@ -201,6 +201,7 @@ async def test_zeroconf_form(hass: core.HomeAssistant):
             context={"source": config_entries.SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
                 host="test-host",
+                addresses=["test-host"],
                 hostname="mock_hostname",
                 name="test-bond-id.some-other-tail-info",
                 port=None,
@@ -238,6 +239,7 @@ async def test_zeroconf_form_token_unavailable(hass: core.HomeAssistant):
             context={"source": config_entries.SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
                 host="test-host",
+                addresses=["test-host"],
                 hostname="mock_hostname",
                 name="test-bond-id.some-other-tail-info",
                 port=None,
@@ -278,6 +280,7 @@ async def test_zeroconf_form_with_token_available(hass: core.HomeAssistant):
             context={"source": config_entries.SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
                 host="test-host",
+                addresses=["test-host"],
                 hostname="mock_hostname",
                 name="test-bond-id.some-other-tail-info",
                 port=None,
@@ -318,6 +321,7 @@ async def test_zeroconf_form_with_token_available_name_unavailable(
             context={"source": config_entries.SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
                 host="test-host",
+                addresses=["test-host"],
                 hostname="mock_hostname",
                 name="test-bond-id.some-other-tail-info",
                 port=None,
@@ -361,6 +365,7 @@ async def test_zeroconf_already_configured(hass: core.HomeAssistant):
             context={"source": config_entries.SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
                 host="updated-host",
+                addresses=["updated-host"],
                 hostname="mock_hostname",
                 name="already-registered-bond-id.some-other-tail-info",
                 port=None,
@@ -405,6 +410,7 @@ async def test_zeroconf_already_configured_refresh_token(hass: core.HomeAssistan
             context={"source": config_entries.SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
                 host="updated-host",
+                addresses=["updated-host"],
                 hostname="mock_hostname",
                 name="already-registered-bond-id.some-other-tail-info",
                 port=None,
@@ -442,6 +448,7 @@ async def test_zeroconf_already_configured_no_reload_same_host(
             context={"source": config_entries.SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
                 host="stored-host",
+                addresses=["stored-host"],
                 hostname="mock_hostname",
                 name="already-registered-bond-id.some-other-tail-info",
                 port=None,
@@ -463,6 +470,7 @@ async def test_zeroconf_form_unexpected_error(hass: core.HomeAssistant):
         source=config_entries.SOURCE_ZEROCONF,
         initial_input=zeroconf.ZeroconfServiceInfo(
             host="test-host",
+            addresses=["test-host"],
             hostname="mock_hostname",
             name="test-bond-id.some-other-tail-info",
             port=None,

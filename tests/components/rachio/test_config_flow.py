@@ -114,6 +114,7 @@ async def test_form_homekit(hass):
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
             host="mock_host",
+            addresses=["mock_host"],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
@@ -138,6 +139,7 @@ async def test_form_homekit(hass):
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
             host="mock_host",
+            addresses=["mock_host"],
             hostname="mock_hostname",
             name="mock_name",
             port=None,

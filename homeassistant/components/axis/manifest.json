@@ -5,6 +5,7 @@
   "documentation": "https://www.home-assistant.io/integrations/axis",
   "requirements": ["axis==44"],
   "dhcp": [
+    { "registered_devices": true },
     {
       "hostname": "axis-00408c*",
       "macaddress": "00408C*"
@@ -26,15 +27,15 @@
   "zeroconf": [
     {
       "type": "_axis-video._tcp.local.",
-      "properties": {"macaddress": "00408c*"}
+      "properties": { "macaddress": "00408c*" }
     },
     {
       "type": "_axis-video._tcp.local.",
-      "properties": {"macaddress": "accc8e*"}
+      "properties": { "macaddress": "accc8e*" }
     },
     {
       "type": "_axis-video._tcp.local.",
-      "properties": {"macaddress": "b8a44f*"}
+      "properties": { "macaddress": "b8a44f*" }
     }
   ],
   "after_dependencies": ["mqtt"],

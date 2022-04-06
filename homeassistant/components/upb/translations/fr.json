@@ -5,7 +5,7 @@
         },
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
-            "invalid_upb_file": "Fichier d'exportation UPB UPStart manquant ou invalide, v\u00e9rifiez le nom et le chemin du fichier.",
+            "invalid_upb_file": "Fichier d'exportation UPB UPStart manquant ou non valide, v\u00e9rifiez le nom et le chemin d'acc\u00e8s du fichier.",
             "unknown": "Erreur inattendue"
         },
         "step": {

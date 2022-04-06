@@ -1,5 +1,6 @@
 """Support for Freebox devices (Freebox v6 and Freebox mini 4K)."""
 from datetime import timedelta
+import logging
 
 from freebox_api.exceptions import HttpRequestError
 import voluptuous as vol
@@ -28,6 +29,8 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 SCAN_INTERVAL = timedelta(seconds=30)
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -67,6 +70,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Services
     async def async_reboot(call: ServiceCall) -> None:
         """Handle reboot service call."""
+        # The Freebox reboot service has been replaced by a
+        # dedicated button entity and marked as deprecated
+        _LOGGER.warning(
+            "The 'freebox.reboot' service is deprecated and "
+            "replaced by a dedicated reboot button entity; please "
+            "use that entity to reboot the freebox instead"
+        )
         await router.reboot()
 
     hass.services.async_register(DOMAIN, SERVICE_REBOOT, async_reboot)

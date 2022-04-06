@@ -17,16 +17,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .base_class import TradfriBaseEntity
-from .const import (
-    ATTR_AUTO,
-    ATTR_MAX_FAN_STEPS,
-    CONF_GATEWAY_ID,
-    COORDINATOR,
-    COORDINATOR_LIST,
-    DOMAIN,
-    KEY_API,
-)
+from .const import CONF_GATEWAY_ID, COORDINATOR, COORDINATOR_LIST, DOMAIN, KEY_API
 from .coordinator import TradfriDeviceDataUpdateCoordinator
+
+ATTR_AUTO = "Auto"
+ATTR_MAX_FAN_STEPS = 49
 
 
 def _from_fan_percentage(percentage: int) -> int:
@@ -148,7 +143,6 @@ class TradfriAirPurifierFan(TradfriBaseEntity, FanEntity):
 
     async def async_turn_on(
         self,
-        speed: str | None = None,
         percentage: int | None = None,
         preset_mode: str | None = None,
         **kwargs: Any,

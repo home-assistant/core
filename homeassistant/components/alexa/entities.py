@@ -83,7 +83,7 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
-ENTITY_ADAPTERS = Registry()
+ENTITY_ADAPTERS: Registry[str, type[AlexaEntity]] = Registry()
 
 TRANSLATION_TABLE = dict.fromkeys(map(ord, r"}{\/|\"()[]+~!><*%"), None)
 

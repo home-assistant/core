@@ -17,7 +17,7 @@
                     "adb_server_ip": "ADB \u4f3a\u670d\u5668 IP \u4f4d\u5740\uff08\u4fdd\u7559\u7a7a\u767d\u70ba\u4e0d\u4f7f\u7528\uff09",
                     "adb_server_port": "ADB \u4f3a\u670d\u5668\u901a\u8a0a\u57e0",
                     "adbkey": "ADB \u91d1\u9470\u6a94\u6848\u8def\u5f91\uff08\u4fdd\u7559\u7a7a\u767d\u5c07\u6703\u81ea\u52d5\u7522\u751f\uff09",
-                    "device_class": "\u88dd\u7f6e\u985e\u578b",
+                    "device_class": "\u88dd\u7f6e\u985e\u5225",
                     "host": "\u4e3b\u6a5f\u7aef",
                     "port": "\u901a\u8a0a\u57e0"
                 },

@@ -11,6 +11,7 @@ from homeassistant.components.history_stats import DOMAIN
 from homeassistant.components.history_stats.sensor import HistoryStatsSensor
 from homeassistant.const import SERVICE_RELOAD, STATE_UNKNOWN
 import homeassistant.core as ha
+from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.helpers.template import Template
 from homeassistant.setup import async_setup_component, setup_component
 import homeassistant.util.dt as dt_util
@@ -339,7 +340,7 @@ async def test_measure_multiple(hass):
         return_value=fake_states,
     ), patch("homeassistant.components.recorder.history.get_state", return_value=None):
         for i in range(1, 5):
-            await hass.helpers.entity_component.async_update_entity(f"sensor.sensor{i}")
+            await async_update_entity(hass, f"sensor.sensor{i}")
         await hass.async_block_till_done()
 
     assert hass.states.get("sensor.sensor1").state == "0.5"
@@ -416,7 +417,7 @@ async def async_test_measure(hass):
         return_value=fake_states,
     ), patch("homeassistant.components.recorder.history.get_state", return_value=None):
         for i in range(1, 5):
-            await hass.helpers.entity_component.async_update_entity(f"sensor.sensor{i}")
+            await async_update_entity(hass, f"sensor.sensor{i}")
         await hass.async_block_till_done()
 
     assert hass.states.get("sensor.sensor1").state == "0.5"

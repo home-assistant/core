@@ -8,11 +8,11 @@ from typing import TYPE_CHECKING, Any
 from soco import SoCo
 from soco.alarms import Alarm, Alarms
 from soco.events_base import Event as SonosEvent
-from soco.exceptions import SoCoException
 
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import DATA_SONOS, SONOS_ALARMS_UPDATED, SONOS_CREATE_ALARM
+from .helpers import soco_error
 from .household_coordinator import SonosHouseholdCoordinator
 
 if TYPE_CHECKING:
@@ -71,13 +71,10 @@ class SonosAlarms(SonosHouseholdCoordinator):
             speaker.event_stats.process(event)
             await self.async_update_entities(speaker.soco, event_id)
 
+    @soco_error()
     def update_cache(self, soco: SoCo, update_id: int | None = None) -> bool:
         """Update cache of known alarms and return if cache has changed."""
-        try:
-            self.alarms.update(soco)
-        except (OSError, SoCoException) as err:
-            _LOGGER.error("Could not update alarms using %s: %s", soco, err)
-            return False
+        self.alarms.update(soco)
 
         if update_id and self.alarms.last_id < update_id:
             # Skip updates if latest query result is outdated or lagging

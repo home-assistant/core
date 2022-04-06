@@ -16,13 +16,13 @@ from homeassistant.const import (
     CONF_ICON,
     CONF_ICON_TEMPLATE,
     CONF_NAME,
+    EVENT_HOMEASSISTANT_START,
 )
-from homeassistant.core import EVENT_HOMEASSISTANT_START, CoreState, callback
+from homeassistant.core import CoreState, Event, callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import (
-    Event,
     TrackTemplate,
     TrackTemplateResult,
     async_track_template_result,
@@ -94,7 +94,7 @@ LEGACY_FIELDS = {
 
 def rewrite_common_legacy_to_modern_conf(
     entity_cfg: dict[str, Any], extra_legacy_fields: dict[str, str] = None
-) -> list[dict]:
+) -> dict[str, Any]:
     """Rewrite legacy config."""
     entity_cfg = {**entity_cfg}
     if extra_legacy_fields is None:
@@ -176,10 +176,12 @@ class _TemplateAttribute:
             if self.none_on_template_error:
                 self._default_update(result)
             else:
+                assert self.on_update
                 self.on_update(result)
             return
 
         if not self.validator:
+            assert self.on_update
             self.on_update(result)
             return
 
@@ -197,9 +199,11 @@ class _TemplateAttribute:
                 self._entity.entity_id,
                 ex.msg,
             )
+            assert self.on_update
             self.on_update(None)
             return
 
+        assert self.on_update
         self.on_update(validated)
         return
 
@@ -321,11 +325,11 @@ class TemplateEntity(Entity):
         """
         assert self.hass is not None, "hass cannot be None"
         template.hass = self.hass
-        attribute = _TemplateAttribute(
+        template_attribute = _TemplateAttribute(
             self, attribute, template, validator, on_update, none_on_template_error
         )
         self._template_attrs.setdefault(template, [])
-        self._template_attrs[template].append(attribute)
+        self._template_attrs[template].append(template_attribute)
 
     @callback
     def _handle_results(
@@ -362,7 +366,7 @@ class TemplateEntity(Entity):
         self.async_write_ha_state()
 
     async def _async_template_startup(self, *_) -> None:
-        template_var_tups = []
+        template_var_tups: list[TrackTemplate] = []
         has_availability_template = False
         for template, attributes in self._template_attrs.items():
             template_var_tup = TrackTemplate(template, None)

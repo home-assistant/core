@@ -12,5 +12,10 @@
   "codeowners": ["@Crownstone", "@RicArch97"],
   "after_dependencies": ["usb"],
   "iot_class": "cloud_push",
-  "loggers": ["crownstone_cloud", "crownstone_core", "crownstone_sse", "crownstone_uart"]
+  "loggers": [
+    "crownstone_cloud",
+    "crownstone_core",
+    "crownstone_sse",
+    "crownstone_uart"
+  ]
 }

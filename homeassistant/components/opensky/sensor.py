@@ -26,6 +26,7 @@ from homeassistant.util import distance as util_distance, location as util_locat
 
 CONF_ALTITUDE = "altitude"
 
+ATTR_ICAO24 = "icao24"
 ATTR_CALLSIGN = "callsign"
 ATTR_ALTITUDE = "altitude"
 ATTR_ON_GROUND = "on_ground"
@@ -45,7 +46,7 @@ OPENSKY_ATTRIBUTION = (
 )
 OPENSKY_API_URL = "https://opensky-network.org/api/states/all"
 OPENSKY_API_FIELDS = [
-    "icao24",
+    ATTR_ICAO24,
     ATTR_CALLSIGN,
     "origin_country",
     "time_position",
@@ -128,11 +129,13 @@ class OpenSkySensor(SensorEntity):
                 altitude = metadata[flight].get(ATTR_ALTITUDE)
                 longitude = metadata[flight].get(ATTR_LONGITUDE)
                 latitude = metadata[flight].get(ATTR_LATITUDE)
+                icao24 = metadata[flight].get(ATTR_ICAO24)
             else:
                 # Assume Flight has landed if missing.
                 altitude = 0
                 longitude = None
                 latitude = None
+                icao24 = None
 
             data = {
                 ATTR_CALLSIGN: flight,
@@ -140,6 +143,7 @@ class OpenSkySensor(SensorEntity):
                 ATTR_SENSOR: self._name,
                 ATTR_LONGITUDE: longitude,
                 ATTR_LATITUDE: latitude,
+                ATTR_ICAO24: icao24,
             }
             self._hass.bus.fire(event, data)
 

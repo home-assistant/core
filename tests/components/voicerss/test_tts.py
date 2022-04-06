@@ -15,7 +15,7 @@ import homeassistant.components.tts as tts
 from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component, async_mock_service
-from tests.components.tts.test_init import mutagen_mock  # noqa: F401
+from tests.components.tts.conftest import mutagen_mock  # noqa: F401
 
 URL = "https://api.voicerss.org/"
 FORM_DATA = {

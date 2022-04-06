@@ -15,7 +15,7 @@
                     "ssl": "Menggunakan sertifikat SSL",
                     "username": "Nama Pengguna (Opsional)"
                 },
-                "description": "Host default: {host}\nPort default: {port}\nNama pengguna default: {username}",
+                "description": "Host default: {host}\nNama pengguna default: {username}",
                 "title": "Netgear"
             }
         }

@@ -1,10 +1,9 @@
 """Support for the Hive alarm."""
 from datetime import timedelta
 
-from homeassistant.components.alarm_control_panel import AlarmControlPanelEntity
-from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_NIGHT,
+from homeassistant.components.alarm_control_panel import (
+    AlarmControlPanelEntity,
+    AlarmControlPanelEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -36,8 +35,7 @@ async def async_setup_entry(
     """Set up Hive thermostat based on a config entry."""
 
     hive = hass.data[DOMAIN][entry.entry_id]
-    devices = hive.session.deviceList.get("alarm_control_panel")
-    if devices:
+    if devices := hive.session.deviceList.get("alarm_control_panel"):
         async_add_entities(
             [HiveAlarmControlPanelEntity(hive, dev) for dev in devices], True
         )
@@ -47,6 +45,10 @@ class HiveAlarmControlPanelEntity(HiveEntity, AlarmControlPanelEntity):
     """Representation of a Hive alarm."""
 
     _attr_icon = ICON
+    _attr_supported_features = (
+        AlarmControlPanelEntityFeature.ARM_NIGHT
+        | AlarmControlPanelEntityFeature.ARM_AWAY
+    )
 
     @property
     def unique_id(self):
@@ -81,11 +83,6 @@ class HiveAlarmControlPanelEntity(HiveEntity, AlarmControlPanelEntity):
         if self.device["status"]["state"]:
             return STATE_ALARM_TRIGGERED
         return HIVETOHA[self.device["status"]["mode"]]
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_ALARM_ARM_NIGHT | SUPPORT_ALARM_ARM_AWAY
 
     async def async_alarm_disarm(self, code=None):
         """Send disarm command."""

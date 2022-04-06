@@ -15,7 +15,7 @@
                     "ssl": "\u4f7f\u7528 SSL \u8a8d\u8b49",
                     "username": "\u4f7f\u7528\u8005\u540d\u7a31\uff08\u9078\u9805\uff09"
                 },
-                "description": "\u9810\u8a2d\u4e3b\u6a5f\u7aef\uff1a{host}\n\u9810\u8a2d\u901a\u8a0a\u57e0\uff1a{port}\n\u9810\u8a2d\u4f7f\u7528\u8005\u540d\u7a31\uff1a{username}",
+                "description": "\u9810\u8a2d\u4e3b\u6a5f\u7aef\uff1a{host}\n\u9810\u8a2d\u4f7f\u7528\u8005\u540d\u7a31\uff1a{username}",
                 "title": "Netgear"
             }
         }

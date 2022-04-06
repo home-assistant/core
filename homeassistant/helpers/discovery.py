@@ -66,11 +66,7 @@ def discover(
     hass_config: ConfigType,
 ) -> None:
     """Fire discovery event. Can ensure a component is loaded."""
-    hass.add_job(
-        async_discover(  # type: ignore
-            hass, service, discovered, component, hass_config
-        )
-    )
+    hass.add_job(async_discover(hass, service, discovered, component, hass_config))
 
 
 @bind_hass
@@ -99,7 +95,7 @@ def async_listen_platform(
     hass: core.HomeAssistant,
     component: str,
     callback: Callable[[str, dict[str, Any] | None], Any],
-) -> None:
+) -> Callable[[], None]:
     """Register a platform loader listener.
 
     This method must be run in the event loop.
@@ -116,7 +112,7 @@ def async_listen_platform(
         if task:
             await task
 
-    async_dispatcher_connect(
+    return async_dispatcher_connect(
         hass, SIGNAL_PLATFORM_DISCOVERED.format(service), discovery_platform_listener
     )
 
@@ -131,9 +127,7 @@ def load_platform(
 ) -> None:
     """Load a component and platform dynamically."""
     hass.add_job(
-        async_load_platform(  # type: ignore
-            hass, component, platform, discovered, hass_config
-        )
+        async_load_platform(hass, component, platform, discovered, hass_config)
     )
 
 

@@ -100,8 +100,6 @@ CONF_FLASH_TIME_SHORT = "flash_time_short"
 CONF_MAX_MIREDS = "max_mireds"
 CONF_MIN_MIREDS = "min_mireds"
 
-PAYLOAD_NONE = "None"
-
 
 def valid_color_configuration(config):
     """Test color_mode is not combined with deprecated config."""

@@ -15,7 +15,7 @@
                     "ssl": "Uses an SSL certificate",
                     "username": "Username (Optional)"
                 },
-                "description": "Default host: {host}\nDefault port: {port}\nDefault username: {username}",
+                "description": "Default host: {host}\nDefault username: {username}",
                 "title": "Netgear"
             }
         }

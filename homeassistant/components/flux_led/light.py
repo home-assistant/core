@@ -19,9 +19,8 @@ from homeassistant.components.light import (
     ATTR_RGBW_COLOR,
     ATTR_RGBWW_COLOR,
     ATTR_WHITE,
-    SUPPORT_EFFECT,
-    SUPPORT_TRANSITION,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
@@ -178,7 +177,7 @@ async def async_setup_entry(
             FluxLight(
                 coordinator,
                 entry.unique_id or entry.entry_id,
-                entry.data[CONF_NAME],
+                entry.data.get(CONF_NAME, entry.title),
                 list(custom_effect_colors),
                 options.get(CONF_CUSTOM_EFFECT_SPEED_PCT, DEFAULT_EFFECT_SPEED),
                 options.get(CONF_CUSTOM_EFFECT_TRANSITION, TRANSITION_GRADUAL),
@@ -187,10 +186,12 @@ async def async_setup_entry(
     )
 
 
-class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
+class FluxLight(
+    FluxOnOffEntity, CoordinatorEntity[FluxLedUpdateCoordinator], LightEntity
+):
     """Representation of a Flux light."""
 
-    _attr_supported_features = SUPPORT_TRANSITION | SUPPORT_EFFECT
+    _attr_supported_features = LightEntityFeature.TRANSITION | LightEntityFeature.EFFECT
 
     def __init__(
         self,

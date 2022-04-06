@@ -8,33 +8,27 @@ from datetime import datetime, timedelta
 import functools
 from typing import Any, TypeVar
 
-from async_upnp_client import UpnpService, UpnpStateVariable
+from async_upnp_client.client import UpnpService, UpnpStateVariable
 from async_upnp_client.const import NotificationSubType
 from async_upnp_client.exceptions import UpnpError, UpnpResponseError
 from async_upnp_client.profiles.dlna import DmrDevice, PlayMode, TransportState
 from async_upnp_client.utils import async_get_local_ip
+from didl_lite import didl_lite
 from typing_extensions import Concatenate, ParamSpec
 
 from homeassistant import config_entries
-from homeassistant.components import ssdp
-from homeassistant.components.media_player import MediaPlayerEntity
+from homeassistant.components import media_source, ssdp
+from homeassistant.components.media_player import (
+    BrowseMedia,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
+    async_process_play_media_url,
+)
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_EXTRA,
     REPEAT_MODE_ALL,
     REPEAT_MODE_OFF,
     REPEAT_MODE_ONE,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_REPEAT_SET,
-    SUPPORT_SEEK,
-    SUPPORT_SELECT_SOUND_MODE,
-    SUPPORT_SHUFFLE_SET,
-    SUPPORT_STOP,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
 )
 from homeassistant.const import (
     CONF_DEVICE_ID,
@@ -61,6 +55,7 @@ from .const import (
     MEDIA_UPNP_CLASS_MAP,
     REPEAT_PLAY_MODES,
     SHUFFLE_PLAY_MODES,
+    STREAMABLE_PROTOCOLS,
 )
 from .data import EventListenAddr, get_domain_data
 
@@ -69,8 +64,6 @@ PARALLEL_UPDATES = 0
 _T = TypeVar("_T", bound="DlnaDmrEntity")
 _R = TypeVar("_R")
 _P = ParamSpec("_P")
-
-Func = TypeVar("Func", bound=Callable[..., Any])
 
 
 def catch_request_errors(
@@ -498,32 +491,35 @@ class DlnaDmrEntity(MediaPlayerEntity):
         supported_features = 0
 
         if self._device.has_volume_level:
-            supported_features |= SUPPORT_VOLUME_SET
+            supported_features |= MediaPlayerEntityFeature.VOLUME_SET
         if self._device.has_volume_mute:
-            supported_features |= SUPPORT_VOLUME_MUTE
+            supported_features |= MediaPlayerEntityFeature.VOLUME_MUTE
         if self._device.can_play:
-            supported_features |= SUPPORT_PLAY
+            supported_features |= MediaPlayerEntityFeature.PLAY
         if self._device.can_pause:
-            supported_features |= SUPPORT_PAUSE
+            supported_features |= MediaPlayerEntityFeature.PAUSE
         if self._device.can_stop:
-            supported_features |= SUPPORT_STOP
+            supported_features |= MediaPlayerEntityFeature.STOP
         if self._device.can_previous:
-            supported_features |= SUPPORT_PREVIOUS_TRACK
+            supported_features |= MediaPlayerEntityFeature.PREVIOUS_TRACK
         if self._device.can_next:
-            supported_features |= SUPPORT_NEXT_TRACK
+            supported_features |= MediaPlayerEntityFeature.NEXT_TRACK
         if self._device.has_play_media:
-            supported_features |= SUPPORT_PLAY_MEDIA
+            supported_features |= (
+                MediaPlayerEntityFeature.PLAY_MEDIA
+                | MediaPlayerEntityFeature.BROWSE_MEDIA
+            )
         if self._device.can_seek_rel_time:
-            supported_features |= SUPPORT_SEEK
+            supported_features |= MediaPlayerEntityFeature.SEEK
 
         play_modes = self._device.valid_play_modes
         if play_modes & {PlayMode.RANDOM, PlayMode.SHUFFLE}:
-            supported_features |= SUPPORT_SHUFFLE_SET
+            supported_features |= MediaPlayerEntityFeature.SHUFFLE_SET
         if play_modes & {PlayMode.REPEAT_ONE, PlayMode.REPEAT_ALL}:
-            supported_features |= SUPPORT_REPEAT_SET
+            supported_features |= MediaPlayerEntityFeature.REPEAT_SET
 
         if self._device.has_presets:
-            supported_features |= SUPPORT_SELECT_SOUND_MODE
+            supported_features |= MediaPlayerEntityFeature.SELECT_SOUND_MODE
 
         return supported_features
 
@@ -586,10 +582,30 @@ class DlnaDmrEntity(MediaPlayerEntity):
         """Play a piece of media."""
         _LOGGER.debug("Playing media: %s, %s, %s", media_type, media_id, kwargs)
         assert self._device is not None
+
+        didl_metadata: str | None = None
+        title: str = ""
+
+        # If media is media_source, resolve it to url and MIME type, and maybe metadata
+        if media_source.is_media_source_id(media_id):
+            sourced_media = await media_source.async_resolve_media(self.hass, media_id)
+            media_type = sourced_media.mime_type
+            media_id = sourced_media.url
+            _LOGGER.debug("sourced_media is %s", sourced_media)
+            if sourced_metadata := getattr(sourced_media, "didl_metadata", None):
+                didl_metadata = didl_lite.to_xml_string(sourced_metadata).decode(
+                    "utf-8"
+                )
+                title = sourced_metadata.title
+
+        # If media ID is a relative URL, we serve it from HA.
+        media_id = async_process_play_media_url(self.hass, media_id)
+
         extra: dict[str, Any] = kwargs.get(ATTR_MEDIA_EXTRA) or {}
         metadata: dict[str, Any] = extra.get("metadata") or {}
 
-        title = extra.get("title") or metadata.get("title") or "Home Assistant"
+        if not title:
+            title = extra.get("title") or metadata.get("title") or "Home Assistant"
         if thumb := extra.get("thumb"):
             metadata["album_art_uri"] = thumb
 
@@ -598,15 +614,16 @@ class DlnaDmrEntity(MediaPlayerEntity):
             if hass_key in metadata:
                 metadata[didl_key] = metadata.pop(hass_key)
 
-        # Create metadata specific to the given media type; different fields are
-        # available depending on what the upnp_class is.
-        upnp_class = MEDIA_UPNP_CLASS_MAP.get(media_type)
-        didl_metadata = await self._device.construct_play_media_metadata(
-            media_url=media_id,
-            media_title=title,
-            override_upnp_class=upnp_class,
-            meta_data=metadata,
-        )
+        if not didl_metadata:
+            # Create metadata specific to the given media type; different fields are
+            # available depending on what the upnp_class is.
+            upnp_class = MEDIA_UPNP_CLASS_MAP.get(media_type)
+            didl_metadata = await self._device.construct_play_media_metadata(
+                media_url=media_id,
+                media_title=title,
+                override_upnp_class=upnp_class,
+                meta_data=metadata,
+            )
 
         # Stop current playing media
         if self._device.can_stop:
@@ -725,6 +742,54 @@ class DlnaDmrEntity(MediaPlayerEntity):
         """Select sound mode."""
         assert self._device is not None
         await self._device.async_select_preset(sound_mode)
+
+    async def async_browse_media(
+        self,
+        media_content_type: str | None = None,
+        media_content_id: str | None = None,
+    ) -> BrowseMedia:
+        """Implement the websocket media browsing helper.
+
+        Browses all available media_sources by default. Filters content_type
+        based on the DMR's sink_protocol_info.
+        """
+        _LOGGER.debug(
+            "async_browse_media(%s, %s)", media_content_type, media_content_id
+        )
+
+        # media_content_type is ignored; it's the content_type of the current
+        # media_content_id, not the desired content_type of whomever is calling.
+
+        content_filter = self._get_content_filter()
+
+        return await media_source.async_browse_media(
+            self.hass, media_content_id, content_filter=content_filter
+        )
+
+    def _get_content_filter(self) -> Callable[[BrowseMedia], bool]:
+        """Return a function that filters media based on what the renderer can play."""
+        if not self._device or not self._device.sink_protocol_info:
+            # Nothing is specified by the renderer, so show everything
+            _LOGGER.debug("Get content filter with no device or sink protocol info")
+            return lambda _: True
+
+        _LOGGER.debug("Get content filter for %s", self._device.sink_protocol_info)
+        if self._device.sink_protocol_info[0] == "*":
+            # Renderer claims it can handle everything, so show everything
+            return lambda _: True
+
+        # Convert list of things like "http-get:*:audio/mpeg:*" to just "audio/mpeg"
+        content_types: list[str] = []
+        for protocol_info in self._device.sink_protocol_info:
+            protocol, _, content_format, _ = protocol_info.split(":", 3)
+            if protocol in STREAMABLE_PROTOCOLS:
+                content_types.append(content_format)
+
+        def _content_type_filter(item: BrowseMedia) -> bool:
+            """Filter media items by their content_type."""
+            return item.media_content_type in content_types
+
+        return _content_type_filter
 
     @property
     def media_title(self) -> str | None:

@@ -16,7 +16,7 @@
         },
         "error": {
             "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
-            "invalid_auth": "Authentification invalide",
+            "invalid_auth": "Authentification non valide",
             "no_devices_found": "Aucun appareil trouv\u00e9 sur le r\u00e9seau",
             "no_usable_service": "Un dispositif a \u00e9t\u00e9 trouv\u00e9, mais aucun moyen d\u2019\u00e9tablir un lien avec lui. Si vous continuez \u00e0 voir ce message, essayez de sp\u00e9cifier son adresse IP ou de red\u00e9marrer votre Apple TV.",
             "unknown": "Erreur inattendue"

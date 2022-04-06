@@ -18,7 +18,7 @@
                     "username": "Nome utente",
                     "verify_ssl": "Verifica il certificato SSL"
                 },
-                "description": "Vuoi configurare {name} ( {ip_address} )? Avrai bisogno di un utente locale creato nella tua console UniFi OS con cui accedere. Gli utenti Ubiquiti Cloud non funzioneranno. Per ulteriori informazioni: {local_user_documentation_url}",
+                "description": "Vuoi configurare {name} ({ip_address})? Avrai bisogno di un utente locale creato nella tua console UniFi OS con cui accedere. Gli utenti Ubiquiti Cloud non funzioneranno. Per ulteriori informazioni: {local_user_documentation_url}",
                 "title": "Rilevato UniFi Protect"
             },
             "reauth_confirm": {

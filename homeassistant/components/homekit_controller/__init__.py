@@ -14,18 +14,19 @@ from aiohomekit.model.characteristics import (
 )
 from aiohomekit.model.services import Service, ServicesTypes
 
-from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.typing import ConfigType
 
 from .config_flow import normalize_hkid
 from .connection import HKDevice, valid_serial_number
-from .const import CONTROLLER, ENTITY_MAP, KNOWN_DEVICES, TRIGGERS
+from .const import ENTITY_MAP, KNOWN_DEVICES, TRIGGERS
 from .storage import EntityMapStorage
+from .utils import async_get_controller
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,8 +66,10 @@ class HomeKitEntity(Entity):
     async def async_added_to_hass(self) -> None:
         """Entity added to hass."""
         self.async_on_remove(
-            self.hass.helpers.dispatcher.async_dispatcher_connect(
-                self._accessory.signal_state_updated, self.async_write_ha_state
+            async_dispatcher_connect(
+                self.hass,
+                self._accessory.signal_state_updated,
+                self.async_write_ha_state,
             )
         )
 
@@ -208,10 +211,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     map_storage = hass.data[ENTITY_MAP] = EntityMapStorage(hass)
     await map_storage.async_initialize()
 
-    async_zeroconf_instance = await zeroconf.async_get_async_instance(hass)
-    hass.data[CONTROLLER] = aiohomekit.Controller(
-        async_zeroconf_instance=async_zeroconf_instance
-    )
+    await async_get_controller(hass)
+
     hass.data[KNOWN_DEVICES] = {}
     hass.data[TRIGGERS] = {}
 
@@ -246,10 +247,10 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     # Remove cached type data from .storage/homekit_controller-entity-map
     hass.data[ENTITY_MAP].async_delete_map(hkid)
 
+    controller = await async_get_controller(hass)
+
     # Remove the pairing on the device, making the device discoverable again.
     # Don't reuse any objects in hass.data as they are already unloaded
-    async_zeroconf_instance = await zeroconf.async_get_async_instance(hass)
-    controller = aiohomekit.Controller(async_zeroconf_instance=async_zeroconf_instance)
     controller.load_pairing(hkid, dict(entry.data))
     try:
         await controller.remove_pairing(hkid)

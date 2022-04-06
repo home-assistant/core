@@ -82,10 +82,10 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         async_start_discovery(self.hass)
         return self.async_abort(reason="discovery_started")
 
-    async def async_step_discovery(
+    async def async_step_integration_discovery(
         self, discovery_info: DiscoveryInfoType
     ) -> FlowResult:
-        """Handle discovery."""
+        """Handle integration discovery."""
         self._discovered_device = discovery_info
         mac = _async_unifi_mac_from_hass(discovery_info["hw_addr"])
         await self.async_set_unique_id(mac)

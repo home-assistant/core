@@ -1,16 +1,16 @@
 """Implementation of the musiccast media player."""
 from __future__ import annotations
 
+import contextlib
 import logging
 
 from aiomusiccast import MusicCastGroupException, MusicCastMediaContent
 from aiomusiccast.features import ZoneFeature
-import voluptuous as vol
 
-from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA,
-    BrowseMedia,
-    MediaPlayerEntity,
+from homeassistant.components import media_source
+from homeassistant.components.media_player import BrowseMedia, MediaPlayerEntity
+from homeassistant.components.media_player.browse_media import (
+    async_process_play_media_url,
 )
 from homeassistant.components.media_player.const import (
     MEDIA_CLASS_DIRECTORY,
@@ -35,21 +35,12 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PORT,
-    STATE_IDLE,
-    STATE_OFF,
-    STATE_PAUSED,
-    STATE_PLAYING,
-)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import uuid
 
 from . import MusicCastDataUpdateCoordinator, MusicCastDeviceEntity
@@ -59,7 +50,6 @@ from .const import (
     DEFAULT_ZONE,
     DOMAIN,
     HA_REPEAT_MODE_TO_MC_MAPPING,
-    INTERVAL_SECONDS,
     MC_REPEAT_MODE_TO_HA_MAPPING,
     MEDIA_CLASS_MAPPING,
     NULL_GROUP,
@@ -75,42 +65,6 @@ MUSIC_PLAYER_BASE_SUPPORT = (
     | SUPPORT_GROUPING
     | SUPPORT_PLAY_MEDIA
 )
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=5000): cv.port,
-        vol.Optional(INTERVAL_SECONDS, default=0): cv.positive_int,
-    }
-)
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_devices: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Import legacy configurations."""
-
-    if hass.config_entries.async_entries(DOMAIN) and config[CONF_HOST] not in [
-        entry.data[CONF_HOST] for entry in hass.config_entries.async_entries(DOMAIN)
-    ]:
-        _LOGGER.error(
-            "Configuration in configuration.yaml is not supported anymore. "
-            "Please add this device using the config flow: %s",
-            config[CONF_HOST],
-        )
-    else:
-        _LOGGER.warning(
-            "Configuration in configuration.yaml is deprecated. Use the config flow instead"
-        )
-
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-            )
-        )
 
 
 async def async_setup_entry(
@@ -333,6 +287,10 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
 
     async def async_play_media(self, media_type: str, media_id: str, **kwargs) -> None:
         """Play media."""
+        if media_source.is_media_source_id(media_id):
+            play_item = await media_source.async_resolve_media(self.hass, media_id)
+            media_id = play_item.url
+
         if self.state == STATE_OFF:
             await self.async_turn_on()
 
@@ -353,7 +311,9 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
                 )
                 return
 
-            if parts[0] == "http":
+            if parts[0] in ("http", "https") or media_id.startswith("/"):
+                media_id = async_process_play_media_url(self.hass, media_id)
+
                 await self.coordinator.musiccast.play_url_media(
                     self._zone_id, media_id, "HomeAssistant"
                 )
@@ -365,6 +325,15 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
 
     async def async_browse_media(self, media_content_type=None, media_content_id=None):
         """Implement the websocket media browsing helper."""
+        if media_content_id and media_source.is_media_source_id(media_content_id):
+            return await media_source.async_browse_media(
+                self.hass,
+                media_content_id,
+                content_filter=lambda item: item.media_content_type.startswith(
+                    "audio/"
+                ),
+            )
+
         if self.state == STATE_OFF:
             raise HomeAssistantError(
                 "The device has to be turned on to be able to browse media."
@@ -375,11 +344,13 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
             media_content_provider = await MusicCastMediaContent.browse_media(
                 self.coordinator.musiccast, self._zone_id, media_content_path, 24
             )
+            add_media_source = False
 
         else:
             media_content_provider = MusicCastMediaContent.categories(
                 self.coordinator.musiccast, self._zone_id
             )
+            add_media_source = True
 
         def get_content_type(item):
             if item.can_play:
@@ -398,6 +369,21 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
             )
             for child in media_content_provider.children
         ]
+
+        if add_media_source:
+            with contextlib.suppress(media_source.BrowseError):
+                item = await media_source.async_browse_media(
+                    self.hass,
+                    None,
+                    content_filter=lambda item: item.media_content_type.startswith(
+                        "audio/"
+                    ),
+                )
+                # If domain is None, it's overview of available sources
+                if item.domain is None:
+                    children.extend(item.children)
+                else:
+                    children.append(item)
 
         overview = BrowseMedia(
             title=media_content_provider.title,

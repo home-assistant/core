@@ -1,8 +1,16 @@
 {
   "config": {
+    "flow_title": "{mac_address} ({host})",
     "step": {
       "user": {
         "title": "Connect to Elk-M1 Control",
+        "description": "Choose a discovered system or 'Manual Entry' if no devices have been discovered.",
+        "data": {
+          "device": "Device"
+        }
+      },
+      "manual_connection": {
+        "title": "[%key:component::elkm1::config::step::user::title%]",
         "description": "The address string must be in the form 'address[:port]' for 'secure' and 'non-secure'. Example: '192.168.1.1'. The port is optional and defaults to 2101 for 'non-secure' and 2601 for 'secure'. For the serial protocol, the address must be in the form 'tty[:baud]'. Example: '/dev/ttyS1'. The baud is optional and defaults to 115200.",
         "data": {
           "protocol": "Protocol",
@@ -12,6 +20,16 @@
           "prefix": "A unique prefix (leave blank if you only have one ElkM1).",
           "temperature_unit": "The temperature unit ElkM1 uses."
         }
+      },
+      "discovered_connection": {
+        "title": "[%key:component::elkm1::config::step::user::title%]",
+        "description": "Connect to the discovered system: {mac_address} ({host})",
+        "data": {
+          "protocol": "[%key:component::elkm1::config::step::manual_connection::data::protocol%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "temperature_unit": "[%key:component::elkm1::config::step::manual_connection::data::temperature_unit%]"
+        }
       }
     },
     "error": {
@@ -20,6 +38,10 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "already_configured": "An ElkM1 with this prefix is already configured",
       "address_already_configured": "An ElkM1 with this address is already configured"
     }

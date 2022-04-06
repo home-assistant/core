@@ -12,7 +12,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Nom r\u00e9seau (ou adresse IP) de votre Twinkly"
+                    "host": "H\u00f4te"
                 },
                 "description": "Configurer votre Twinkly",
                 "title": "Twinkly"

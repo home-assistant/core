@@ -3,7 +3,7 @@
         "abort": {
             "server_failure": "Le serveur RTSPtoWebRTC a renvoy\u00e9 une erreur. Consultez les journaux pour plus d'informations.",
             "server_unreachable": "Impossible de communiquer avec le serveur RTSPtoWebRTC. Consultez les journaux pour plus d'informations.",
-            "single_instance_allowed": "D\u00e9j\u00e0 configur\u00e9. Une seule configuration possible"
+            "single_instance_allowed": "D\u00e9j\u00e0 configur\u00e9. Une seule configuration possible."
         },
         "error": {
             "invalid_url": "Doit \u00eatre une URL de serveur RTSPtoWebRTC valide, par exemple https://example.com",
@@ -12,7 +12,8 @@
         },
         "step": {
             "hassio_confirm": {
-                "description": "Voulez-vous configurer Home Assistant pour qu'il se connecte au serveur RTSPtoWebRTC fourni par l'add-on\u00a0: {addon}\u00a0?"
+                "description": "Voulez-vous configurer Home Assistant pour qu'il se connecte au serveur RTSPtoWebRTC fourni par l'add-on\u00a0: {addon}\u00a0?",
+                "title": "RTSPtoWebRTC via le module compl\u00e9mentaire Home Assistant"
             },
             "user": {
                 "data": {

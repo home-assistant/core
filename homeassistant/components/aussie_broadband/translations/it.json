@@ -18,6 +18,13 @@
                 "description": "Aggiorna la password per {username}",
                 "title": "Autentica nuovamente l'integrazione"
             },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password"
+                },
+                "description": "Aggiorna la password per {username}",
+                "title": "Autentica nuovamente l'integrazione"
+            },
             "service": {
                 "data": {
                     "services": "Servizi"

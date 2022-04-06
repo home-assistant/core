@@ -77,8 +77,8 @@
                     "will_enable": "Abilita il messaggio testamento",
                     "will_payload": "Payload del messaggio testamento",
                     "will_qos": "QoS del messaggio testamento",
-                    "will_retain": "Persistenza del messaggio testamento",
-                    "will_topic": "Argomento del messaggio testamento"
+                    "will_retain": "Persistenza del messaggio will",
+                    "will_topic": "Argomento del messaggio will"
                 },
                 "description": "Rilevamento: se il rilevamento \u00e8 abilitato (consigliato), Home Assistant rilever\u00e0 automaticamente i dispositivi e le entit\u00e0 che pubblicano la loro configurazione sul broker MQTT. Se il rilevamento \u00e8 disabilitato, tutta la configurazione deve essere eseguita manualmente.\nMessaggio di nascita: il messaggio di nascita verr\u00e0 inviato ogni volta che Home Assistant si (ri)collega al broker MQTT.\nMessaggio testamento: Il messaggio testamento verr\u00e0 inviato ogni volta che Home Assistant perde la connessione al broker, sia in caso di buona (es. arresto di Home Assistant) sia in caso di cattiva (es. Home Assistant in crash o perdita della connessione di rete) disconnessione.",
                 "title": "Opzioni MQTT"

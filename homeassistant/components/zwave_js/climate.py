@@ -242,7 +242,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         if self._current_mode is None:
             # Thermostat(valve) with no support for setting a mode is considered heating-only
             return [ThermostatSetpointType.HEATING]
-        return THERMOSTAT_MODE_SETPOINT_MAP.get(int(self._current_mode.value), [])  # type: ignore
+        return THERMOSTAT_MODE_SETPOINT_MAP.get(int(self._current_mode.value), [])  # type: ignore[no-any-return]
 
     @property
     def temperature_unit(self) -> str:

@@ -54,7 +54,7 @@ class DemoSiren(SirenEntity):
     def __init__(
         self,
         name: str,
-        available_tones: str | None = None,
+        available_tones: list[str | int] | None = None,
         support_volume_set: bool = False,
         support_duration: bool = False,
         is_on: bool = True,
