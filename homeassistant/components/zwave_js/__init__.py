@@ -775,14 +775,3 @@ def async_ensure_addon_updated(hass: HomeAssistant) -> None:
     if addon_manager.task_in_progress():
         raise ConfigEntryNotReady
     addon_manager.async_schedule_update_addon(catch_error=True)
-
-
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
-    """Migrate old entry."""
-    if isinstance(config_entry.unique_id, int):  # type: ignore[unreachable]
-        hass.config_entries.async_update_entry(  # type: ignore[unreachable]
-            config_entry,
-            unique_id=str(config_entry.unique_id),
-        )
-
-    return True
