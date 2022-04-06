@@ -14,9 +14,8 @@ from homeassistant.components.light import (
     PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
-    SUPPORT_EFFECT,
-    SUPPORT_TRANSITION,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
@@ -72,8 +71,11 @@ class LW12WiFi(LightEntity):
         self._rgb_color = [255, 255, 255]
         self._brightness = 255
         # Setup feature list
-        self._supported_features = (
-            SUPPORT_BRIGHTNESS | SUPPORT_EFFECT | SUPPORT_COLOR | SUPPORT_TRANSITION
+        self._attr_supported_features = (
+            SUPPORT_BRIGHTNESS
+            | LightEntityFeature.EFFECT
+            | SUPPORT_COLOR
+            | LightEntityFeature.TRANSITION
         )
 
     @property
@@ -102,11 +104,6 @@ class LW12WiFi(LightEntity):
     def is_on(self):
         """Return true if light is on."""
         return self._state
-
-    @property
-    def supported_features(self):
-        """Return a list of supported features."""
-        return self._supported_features
 
     @property
     def effect_list(self):
