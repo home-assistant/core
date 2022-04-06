@@ -740,7 +740,7 @@ googlemaps==2.5.1
 goslide-api==0.5.1
 
 # homeassistant.components.remote_rpi_gpio
-gpiozero==1.5.1
+gpiozero==1.6.2
 
 # homeassistant.components.gpsd
 gps3==0.33.3
@@ -1197,6 +1197,9 @@ phone_modem==0.1.1
 
 # homeassistant.components.onewire
 pi1wire==0.1.0
+
+# homeassistant.components.remote_rpi_gpio
+pigpio==1.78
 
 # homeassistant.components.pilight
 pilight==0.1.1
