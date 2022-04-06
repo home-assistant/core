@@ -283,17 +283,13 @@ class HistoryPeriodView(HomeAssistantView):
             elapsed = time.perf_counter() - timer_start
             _LOGGER.debug("Extracted %d states in %fs", sum(map(len, result)), elapsed)
 
+        result = list(result.values())
+
         # Optionally reorder the result to respect the ordering given
         # by any entities explicitly included in the configuration.
         if not self.filters or not self.use_include_order:
-            return self.json(
-                [
-                    [state.as_dict() for state in state_list]
-                    for state_list in result.values()
-                ]
-            )
+            return self.json(result)
 
-        result = list(result.values())
         sorted_result = []
         for order_entity in self.filters.included_entities:
             for state_list in result:
@@ -302,9 +298,7 @@ class HistoryPeriodView(HomeAssistantView):
                     result.remove(state_list)
                     break
         sorted_result.extend(result)
-        return self.json(
-            [[state.as_dict() for state in state_list] for state_list in sorted_result]
-        )
+        return self.json(sorted_result)
 
 
 def sqlalchemy_filter_from_include_exclude_conf(conf: ConfigType) -> Filters | None:
