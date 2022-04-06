@@ -50,24 +50,38 @@ async def config_credential() -> ClientCredential | None:
     return None
 
 
-@pytest.fixture(autouse=True)
-async def mock_application_credentials_integration(
-    hass, authorization_server, config_credential: ClientCredential | None
-):
-    """Mock a application_credentials integration."""
-    assert await async_setup_component(hass, "application_credentials", {})
-    hass.config.components.add(TEST_DOMAIN)
+async def setup_application_credentials_integration(
+    hass: HomeAssistant,
+    domain: str,
+    authorization_server: AuthorizationServer,
+    config_credential: ClientCredential | None,
+) -> None:
+    """Set up a fake application_credentials integration."""
+    hass.config.components.add(domain)
     mock_platform(
         hass,
-        f"{TEST_DOMAIN}.application_credentials",
+        f"{domain}.application_credentials",
         Mock(
             async_get_authorization_server=AsyncMock(return_value=authorization_server),
         ),
     )
     if config_credential:
         await async_import_client_credential(
-            hass, TEST_DOMAIN, AUTH_DOMAIN, config_credential
+            hass, domain, AUTH_DOMAIN, config_credential
         )
+
+
+@pytest.fixture(autouse=True)
+async def mock_application_credentials_integration(
+    hass: HomeAssistant,
+    authorization_server: AuthorizationServer,
+    config_credential: ClientCredential | None,
+):
+    """Mock a application_credentials integration."""
+    assert await async_setup_component(hass, "application_credentials", {})
+    await setup_application_credentials_integration(
+        hass, TEST_DOMAIN, authorization_server, config_credential
+    )
 
 
 class FakeConfigFlow(config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN):
@@ -336,6 +350,31 @@ async def test_websocket_import_config(ws_client: ClientFixture):
 
 async def test_config_flow_no_credentials(hass):
     """Test config flow base case with no credentials registered."""
+    result = await hass.config_entries.flow.async_init(
+        TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result.get("type") == data_entry_flow.RESULT_TYPE_ABORT
+    assert result.get("reason") == "missing_configuration"
+
+
+async def test_config_flow_other_domain(
+    hass: HomeAssistant,
+    ws_client: ClientFixture,
+    authorization_server: AuthorizationServer,
+):
+    """Test config flow ignores credentials for another domain."""
+    await setup_application_credentials_integration(
+        hass, "other_domain", authorization_server, config_credential=None
+    )
+    client = await ws_client()
+    await client.cmd_result(
+        "create",
+        {
+            CONF_DOMAIN: "other_domain",
+            CONF_CLIENT_ID: CLIENT_ID,
+            CONF_CLIENT_SECRET: CLIENT_SECRET,
+        },
+    )
     result = await hass.config_entries.flow.async_init(
         TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
