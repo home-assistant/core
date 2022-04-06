@@ -997,6 +997,26 @@ async def test_browse_media(
     # Audio file should appear
     assert expected_child_audio in response["result"]["children"]
 
+    # Device specifies extra parameters in MIME type, uses non-standard "x-"
+    # prefix, and capitilizes things, all of which should be ignored
+    dmr_device_mock.sink_protocol_info = [
+        "http-get:*:audio/X-MPEG;codecs=mp3:*",
+    ]
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/browse_media",
+            "entity_id": mock_entity_id,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    # Video file should not be shown
+    assert expected_child_video not in response["result"]["children"]
+    # Audio file should appear
+    assert expected_child_audio in response["result"]["children"]
+
     # Device does not specify what it can play
     dmr_device_mock.sink_protocol_info = []
     client = await hass_ws_client()

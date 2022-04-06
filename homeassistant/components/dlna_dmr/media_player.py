@@ -767,7 +767,11 @@ class DlnaDmrEntity(MediaPlayerEntity):
         )
 
     def _get_content_filter(self) -> Callable[[BrowseMedia], bool]:
-        """Return a function that filters media based on what the renderer can play."""
+        """Return a function that filters media based on what the renderer can play.
+
+        The filtering is pretty loose; it's better to show something that can't
+        be played than hide something that can.
+        """
         if not self._device or not self._device.sink_protocol_info:
             # Nothing is specified by the renderer, so show everything
             _LOGGER.debug("Get content filter with no device or sink protocol info")
@@ -778,18 +782,25 @@ class DlnaDmrEntity(MediaPlayerEntity):
             # Renderer claims it can handle everything, so show everything
             return lambda _: True
 
-        # Convert list of things like "http-get:*:audio/mpeg:*" to just "audio/mpeg"
-        content_types: list[str] = []
+        # Convert list of things like "http-get:*:audio/mpeg;codecs=mp3:*"
+        # to just "audio/mpeg"
+        content_types = set[str]()
         for protocol_info in self._device.sink_protocol_info:
             protocol, _, content_format, _ = protocol_info.split(":", 3)
+            # Transform content_format for better generic matching
+            content_format = content_format.lower().replace("/x-", "/", 1)
+            content_format = content_format.partition(";")[0]
+
             if protocol in STREAMABLE_PROTOCOLS:
-                content_types.append(content_format)
+                content_types.add(content_format)
 
-        def _content_type_filter(item: BrowseMedia) -> bool:
-            """Filter media items by their content_type."""
-            return item.media_content_type in content_types
+        def _content_filter(item: BrowseMedia) -> bool:
+            """Filter media items by their media_content_type."""
+            content_type = item.media_content_type
+            content_type = content_type.lower().replace("/x-", "/", 1).partition(";")[0]
+            return content_type in content_types
 
-        return _content_type_filter
+        return _content_filter
 
     @property
     def media_title(self) -> str | None:
