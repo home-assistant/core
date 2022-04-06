@@ -576,9 +576,7 @@ def _sorted_states_to_dict(
             # replace the last minimal state with
             # a full state
             ent_results[-1] = LazyState(
-                ent_results[  # pylint: disable=protected-access
-                    -1
-                ]._row,  # type: ignore[attr-defined]
+                ent_results[-1].row,  # type: ignore[attr-defined]
                 attr_cache,
             )
 
