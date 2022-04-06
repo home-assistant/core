@@ -811,7 +811,10 @@ async def test_abort_usb_discovery_with_existing_flow(hass, supervisor, addon_op
 async def test_abort_usb_discovery_already_configured(hass, supervisor, addon_options):
     """Test usb discovery flow is aborted when there is an existing entry."""
     entry = MockConfigEntry(
-        domain=DOMAIN, data={"url": "ws://localhost:3000"}, title=TITLE, unique_id=1234
+        domain=DOMAIN,
+        data={"url": "ws://localhost:3000"},
+        title=TITLE,
+        unique_id="1234",
     )
     entry.add_to_hass(hass)
 
@@ -1042,9 +1045,10 @@ async def test_addon_running_already_configured(
             "s2_unauthenticated_key": "old987",
         },
         title=TITLE,
-        unique_id="1234",
+        unique_id=1234,  # Unique ID is purposely set to int to test migration logic
     )
     entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -1560,7 +1564,7 @@ async def test_install_addon_failure(hass, supervisor, addon_installed, install_
 async def test_options_manual(hass, client, integration):
     """Test manual settings in options flow."""
     entry = integration
-    entry.unique_id = 1234
+    entry.unique_id = "1234"
 
     assert client.connect.call_count == 1
     assert client.disconnect.call_count == 0
@@ -1605,7 +1609,7 @@ async def test_options_manual_different_device(hass, integration):
 async def test_options_not_addon(hass, client, supervisor, integration):
     """Test options flow and opting out of add-on on Supervisor."""
     entry = integration
-    entry.unique_id = 1234
+    entry.unique_id = "1234"
 
     assert client.connect.call_count == 1
     assert client.disconnect.call_count == 0
@@ -1706,7 +1710,7 @@ async def test_options_addon_running(
     """Test options flow and add-on already running on Supervisor."""
     addon_options.update(old_addon_options)
     entry = integration
-    entry.unique_id = 1234
+    entry.unique_id = "1234"
     data = {**entry.data, **entry_data}
     hass.config_entries.async_update_entry(entry, data=data)
 
@@ -1816,7 +1820,7 @@ async def test_options_addon_running_no_changes(
     """Test options flow without changes, and add-on already running on Supervisor."""
     addon_options.update(old_addon_options)
     entry = integration
-    entry.unique_id = 1234
+    entry.unique_id = "1234"
     data = {**entry.data, **entry_data}
     hass.config_entries.async_update_entry(entry, data=data)
 
@@ -1929,7 +1933,7 @@ async def test_options_different_device(
     """Test options flow and configuring a different device."""
     addon_options.update(old_addon_options)
     entry = integration
-    entry.unique_id = 1234
+    entry.unique_id = "1234"
     data = {**entry.data, **entry_data}
     hass.config_entries.async_update_entry(entry, data=data)
 
@@ -2079,7 +2083,7 @@ async def test_options_addon_restart_failed(
     """Test options flow and add-on restart failure."""
     addon_options.update(old_addon_options)
     entry = integration
-    entry.unique_id = 1234
+    entry.unique_id = "1234"
     data = {**entry.data, **entry_data}
     hass.config_entries.async_update_entry(entry, data=data)
 
@@ -2200,7 +2204,7 @@ async def test_options_addon_running_server_info_failure(
     """Test options flow and add-on already running with server info failure."""
     addon_options.update(old_addon_options)
     entry = integration
-    entry.unique_id = 1234
+    entry.unique_id = "1234"
     data = {**entry.data, **entry_data}
     hass.config_entries.async_update_entry(entry, data=data)
 
@@ -2304,7 +2308,7 @@ async def test_options_addon_not_installed(
     addon_installed.return_value["version"] = None
     addon_options.update(old_addon_options)
     entry = integration
-    entry.unique_id = 1234
+    entry.unique_id = "1234"
     data = {**entry.data, **entry_data}
     hass.config_entries.async_update_entry(entry, data=data)
 
