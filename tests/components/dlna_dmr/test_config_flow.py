@@ -74,7 +74,7 @@ MOCK_DISCOVERY = ssdp.SsdpServiceInfo(
             ]
         },
     },
-    x_homeassistant_matching_domains=(DLNA_DOMAIN,),
+    x_homeassistant_matching_domains={DLNA_DOMAIN},
 )
 
 
@@ -390,7 +390,7 @@ async def test_ssdp_missing_services(hass: HomeAssistant) -> None:
     """Test SSDP ignores devices that are missing required services."""
     # No services defined at all
     discovery = dataclasses.replace(MOCK_DISCOVERY)
-    discovery.upnp = discovery.upnp.copy()
+    discovery.upnp = dict(discovery.upnp)
     del discovery.upnp[ssdp.ATTR_UPNP_SERVICE_LIST]
     result = await hass.config_entries.flow.async_init(
         DLNA_DOMAIN,
@@ -402,7 +402,7 @@ async def test_ssdp_missing_services(hass: HomeAssistant) -> None:
 
     # AVTransport service is missing
     discovery = dataclasses.replace(MOCK_DISCOVERY)
-    discovery.upnp = discovery.upnp.copy()
+    discovery.upnp = dict(discovery.upnp)
     discovery.upnp[ssdp.ATTR_UPNP_SERVICE_LIST] = {
         "service": [
             service
@@ -431,7 +431,7 @@ async def test_ssdp_ignore_device(hass: HomeAssistant) -> None:
     assert result["reason"] == "alternative_integration"
 
     discovery = dataclasses.replace(MOCK_DISCOVERY)
-    discovery.upnp = discovery.upnp.copy()
+    discovery.upnp = dict(discovery.upnp)
     discovery.upnp[
         ssdp.ATTR_UPNP_DEVICE_TYPE
     ] = "urn:schemas-upnp-org:device:ZonePlayer:1"
@@ -450,7 +450,7 @@ async def test_ssdp_ignore_device(hass: HomeAssistant) -> None:
         ("Royal Philips Electronics", "Philips TV DMR"),
     ]:
         discovery = dataclasses.replace(MOCK_DISCOVERY)
-        discovery.upnp = discovery.upnp.copy()
+        discovery.upnp = dict(discovery.upnp)
         discovery.upnp[ssdp.ATTR_UPNP_MANUFACTURER] = manufacturer
         discovery.upnp[ssdp.ATTR_UPNP_MODEL_NAME] = model
         result = await hass.config_entries.flow.async_init(
