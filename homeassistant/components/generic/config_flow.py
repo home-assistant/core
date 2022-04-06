@@ -349,7 +349,9 @@ class GenericOptionsFlowHandler(OptionsFlow):
         self.cached_user_input: dict[str, Any] = {}
         self.cached_title = ""
 
-    async def async_step_init(self, user_input: dict[str, Any]) -> FlowResult:
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Manage Generic IP Camera options."""
         errors: dict[str, str] = {}
 
