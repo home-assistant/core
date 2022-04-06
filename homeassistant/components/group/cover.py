@@ -313,26 +313,19 @@ class CoverGroup(GroupEntity, CoverEntity):
         )
 
         supported_features = 0
-        supported_features |= (
-            CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
-            if self._covers[KEY_OPEN_CLOSE]
-            else 0
-        )
+        if self._covers[KEY_OPEN_CLOSE]:
+            supported_features |= CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
         supported_features |= CoverEntityFeature.STOP if self._covers[KEY_STOP] else 0
-        supported_features |= (
-            CoverEntityFeature.SET_POSITION if self._covers[KEY_POSITION] else 0
-        )
-        supported_features |= (
-            CoverEntityFeature.OPEN_TILT | CoverEntityFeature.CLOSE_TILT
-            if self._tilts[KEY_OPEN_CLOSE]
-            else 0
-        )
-        supported_features |= (
-            CoverEntityFeature.STOP_TILT if self._tilts[KEY_STOP] else 0
-        )
-        supported_features |= (
-            CoverEntityFeature.SET_TILT_POSITION if self._tilts[KEY_POSITION] else 0
-        )
+        if self._covers[KEY_POSITION]:
+            supported_features |= CoverEntityFeature.SET_POSITION
+        if self._tilts[KEY_OPEN_CLOSE]:
+            supported_features |= (
+                CoverEntityFeature.OPEN_TILT | CoverEntityFeature.CLOSE_TILT
+            )
+        if self._tilts[KEY_STOP]:
+            supported_features |= CoverEntityFeature.STOP_TILT
+        if self._tilts[KEY_POSITION]:
+            supported_features |= CoverEntityFeature.SET_TILT_POSITION
         self._attr_supported_features = supported_features
 
         if not self._attr_assumed_state:

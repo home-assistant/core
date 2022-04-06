@@ -405,45 +405,35 @@ class MediaPlayerGroup(MediaPlayerEntity):
             self._state = None
 
         supported_features = 0
-        supported_features |= (
-            MediaPlayerEntityFeature.CLEAR_PLAYLIST
-            if self._features[KEY_CLEAR_PLAYLIST]
-            else 0
-        )
-        supported_features |= (
-            MediaPlayerEntityFeature.NEXT_TRACK
-            | MediaPlayerEntityFeature.PREVIOUS_TRACK
-            if self._features[KEY_TRACKS]
-            else 0
-        )
-        supported_features |= (
-            MediaPlayerEntityFeature.PAUSE
-            | MediaPlayerEntityFeature.PLAY
-            | MediaPlayerEntityFeature.STOP
-            if self._features[KEY_PAUSE_PLAY_STOP]
-            else 0
-        )
-        supported_features |= (
-            MediaPlayerEntityFeature.PLAY_MEDIA if self._features[KEY_PLAY_MEDIA] else 0
-        )
-        supported_features |= (
-            MediaPlayerEntityFeature.SEEK if self._features[KEY_SEEK] else 0
-        )
-        supported_features |= (
-            MediaPlayerEntityFeature.SHUFFLE_SET if self._features[KEY_SHUFFLE] else 0
-        )
-        supported_features |= (
-            MediaPlayerEntityFeature.TURN_ON | MediaPlayerEntityFeature.TURN_OFF
-            if self._features[KEY_ON_OFF]
-            else 0
-        )
-        supported_features |= (
-            MediaPlayerEntityFeature.VOLUME_MUTE
-            | MediaPlayerEntityFeature.VOLUME_SET
-            | MediaPlayerEntityFeature.VOLUME_STEP
-            if self._features[KEY_VOLUME]
-            else 0
-        )
+        if self._features[KEY_CLEAR_PLAYLIST]:
+            supported_features |= MediaPlayerEntityFeature.CLEAR_PLAYLIST
+        if self._features[KEY_TRACKS]:
+            supported_features |= (
+                MediaPlayerEntityFeature.NEXT_TRACK
+                | MediaPlayerEntityFeature.PREVIOUS_TRACK
+            )
+        if self._features[KEY_PAUSE_PLAY_STOP]:
+            supported_features |= (
+                MediaPlayerEntityFeature.PAUSE
+                | MediaPlayerEntityFeature.PLAY
+                | MediaPlayerEntityFeature.STOP
+            )
+        if self._features[KEY_PLAY_MEDIA]:
+            supported_features |= MediaPlayerEntityFeature.PLAY_MEDIA
+        if self._features[KEY_SEEK]:
+            supported_features |= MediaPlayerEntityFeature.SEEK
+        if self._features[KEY_SHUFFLE]:
+            supported_features |= MediaPlayerEntityFeature.SHUFFLE_SET
+        if self._features[KEY_ON_OFF]:
+            supported_features |= (
+                MediaPlayerEntityFeature.TURN_ON | MediaPlayerEntityFeature.TURN_OFF
+            )
+        if self._features[KEY_VOLUME]:
+            supported_features |= (
+                MediaPlayerEntityFeature.VOLUME_MUTE
+                | MediaPlayerEntityFeature.VOLUME_SET
+                | MediaPlayerEntityFeature.VOLUME_STEP
+            )
 
         self._supported_features = supported_features
         self.async_write_ha_state()
