@@ -197,7 +197,11 @@ class EvoZone(EvoChild, EvoClimateEntity):
     @property
     def hvac_mode(self) -> str:
         """Return the current operating mode of a Zone."""
-        return HVAC_MODE_OFF if self._evo_tcs.systemModeStatus["mode"] == EVO_HEATOFF else HVAC_MODE_HEAT
+        return (
+             HVAC_MODE_OFF
+             if self._evo_tcs.systemModeStatus["mode"] == EVO_HEATOFF
+             else HVAC_MODE_HEAT
+        )
 
     @property
     def target_temperature(self) -> float:
