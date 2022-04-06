@@ -1,6 +1,7 @@
 """Provides device automations for MQTT."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import logging
 from typing import Any
 
@@ -25,7 +26,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType
 
 from . import debug_info, trigger as mqtt_trigger
 from .. import mqtt
@@ -89,7 +90,7 @@ class TriggerInstance:
     trigger: Trigger = attr.ib()
     remove: CALLBACK_TYPE | None = attr.ib(default=None)
 
-    async def async_attach_trigger(self):
+    async def async_attach_trigger(self) -> None:
         """Attach MQTT trigger."""
         mqtt_config = {
             mqtt_trigger.CONF_PLATFORM: mqtt.DOMAIN,
@@ -128,7 +129,9 @@ class Trigger:
     value_template: str | None = attr.ib()
     trigger_instances: list[TriggerInstance] = attr.ib(factory=list)
 
-    async def add_trigger(self, action, automation_info):
+    async def add_trigger(
+        self, action: AutomationActionType, automation_info: AutomationTriggerInfo
+    ) -> Callable:
         """Add MQTT trigger."""
         instance = TriggerInstance(action, automation_info, self)
         self.trigger_instances.append(instance)
@@ -149,7 +152,7 @@ class Trigger:
 
         return async_remove
 
-    async def update_trigger(self, config: ConfigType):
+    async def update_trigger(self, config: ConfigType) -> None:
         """Update MQTT device trigger."""
         self.type = config[CONF_TYPE]
         self.subtype = config[CONF_SUBTYPE]
@@ -166,7 +169,7 @@ class Trigger:
             for trig in self.trigger_instances:
                 await trig.async_attach_trigger()
 
-    def detach_trigger(self):
+    def detach_trigger(self) -> None:
         """Remove MQTT device trigger."""
         # Mark trigger as unknown
         self.topic = None
@@ -205,7 +208,7 @@ class MqttDeviceTrigger(MqttDiscoveryDeviceUpdate):
             LOG_NAME,
         )
 
-    async def async_setup(self):
+    async def async_setup(self) -> None:
         """Initialize the device trigger."""
         discovery_hash = self.discovery_data[ATTR_DISCOVERY_HASH]
         discovery_id = discovery_hash[1]
@@ -229,16 +232,7 @@ class MqttDeviceTrigger(MqttDiscoveryDeviceUpdate):
             self.hass, discovery_hash, self.discovery_data, self.device_id
         )
 
-    async def async_update(self, payload: DiscoveryInfoType):
-        """Update device trigger."""
-        config = TRIGGER_DISCOVERY_SCHEMA(payload)
-        discovery_hash = self.discovery_data[ATTR_DISCOVERY_HASH]
-        discovery_id = discovery_hash[1]
-        trigger: Trigger = self.hass.data[DEVICE_TRIGGERS][discovery_id]
-        await trigger.update_trigger(config)
-        update_device(self.hass, self._config_entry, config)
-
-    async def async_tear_down(self):
+    async def async_tear_down(self) -> None:
         """Cleanup device trigger."""
         discovery_hash = self.discovery_data[ATTR_DISCOVERY_HASH]
         discovery_id = discovery_hash[1]
@@ -246,13 +240,12 @@ class MqttDeviceTrigger(MqttDiscoveryDeviceUpdate):
             _LOGGER.info("Removing trigger: %s", discovery_hash)
             trigger: Trigger = self.hass.data[DEVICE_TRIGGERS][discovery_id]
             trigger.detach_trigger()
-            trigger = None
             debug_info.remove_trigger_discovery_data(self.hass, discovery_hash)
 
 
 async def async_setup_trigger(
     hass, config: ConfigType, config_entry: ConfigEntry, discovery_data: dict
-):
+) -> None:
     """Set up the MQTT device trigger."""
     config = TRIGGER_DISCOVERY_SCHEMA(config)
     discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
@@ -267,7 +260,7 @@ async def async_setup_trigger(
     await mqtt_device_trigger.async_setup()
 
 
-async def async_removed_from_device(hass: HomeAssistant, device_id: str):
+async def async_removed_from_device(hass: HomeAssistant, device_id: str) -> None:
     """Handle Mqtt removed from a device."""
     triggers = await async_get_triggers(hass, device_id)
     for trig in triggers:

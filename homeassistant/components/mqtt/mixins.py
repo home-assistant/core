@@ -529,7 +529,7 @@ class MqttDiscoveryDeviceUpdate:
         self,
         hass: HomeAssistant,
         discovery_data: dict | None,
-        device_id: str | None,
+        device_id: str,
         config_entry: ConfigEntry,
         log_name: str,
     ) -> None:
@@ -567,7 +567,7 @@ class MqttDiscoveryDeviceUpdate:
                 discovery_payload
                 and discovery_payload != self.discovery_data[ATTR_DISCOVERY_PAYLOAD]
             ):
-                rediscover = bool(await self.async_update(discovery_payload))
+                rediscover = True
             if not discovery_payload or rediscover:
                 # unregister and clean up the current discovery instance
                 self.terminate_discovery()
@@ -602,7 +602,7 @@ class MqttDiscoveryDeviceUpdate:
                     self.discovery_hash,
                 )
 
-        async def _async_device_removed(event):
+        async def _async_device_removed(event) -> None:
             """Handle the manual removal of a device."""
             nonlocal skip_device_removal, self
             if skip_device_removal or not async_removed_from_device(
@@ -668,10 +668,6 @@ class MqttDiscoveryDeviceUpdate:
 
     async def async_tear_down(self) -> None:
         """Handle the cleanup of platform specific parts."""
-
-    async def async_update(self, payload) -> None | bool:  # pylint: disable=no-self-use
-        """Handle the discovery update of platform specific parts."""
-        return True
 
 
 class MqttDiscoveryUpdate(Entity):

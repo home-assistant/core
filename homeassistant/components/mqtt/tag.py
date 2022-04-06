@@ -8,7 +8,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE, CONF_PLATFORM, CONF_VALUE_TEMPLATE
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
@@ -21,6 +21,8 @@ from .mixins import (
     async_setup_entry_helper,
     update_device,
 )
+from .models import ReceiveMessage
+from .subscription import EntitySubscription
 from .util import valid_subscribe_topic
 
 LOG_NAME = "Tag"
@@ -39,7 +41,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Set up MQTT device automation dynamically through MQTT discovery."""
 
     setup = functools.partial(_async_setup_tag, hass, config_entry=config_entry)
@@ -75,7 +77,7 @@ async def _async_setup_tag(
         hass.data[TAGS][device_id][discovery_id] = tag_scanner
 
 
-def async_has_tags(hass, device_id):
+def async_has_tags(hass: HomeAssistant, device_id: str) -> bool:
     """Device has tag scanners."""
     if TAGS not in hass.data or device_id not in hass.data[TAGS]:
         return False
@@ -99,7 +101,7 @@ class MQTTTagScanner(MqttDiscoveryDeviceUpdate):
         self.device_id = device_id
         self.discovery_data = discovery_data
         self.hass = hass
-        self._sub_state = None
+        self._sub_state: dict[str, EntitySubscription] | None = None
         self._value_template = MqttValueTemplate(
             config.get(CONF_VALUE_TEMPLATE),
             hass=self.hass,
@@ -109,10 +111,11 @@ class MQTTTagScanner(MqttDiscoveryDeviceUpdate):
             self, hass, discovery_data, device_id, config_entry, LOG_NAME
         )
 
-    async def subscribe_topics(self):
+    async def subscribe_topics(self) -> None:
         """Subscribe to MQTT topics."""
 
-        async def tag_scanned(msg):
+        @callback
+        async def tag_scanned(msg: ReceiveMessage) -> None:
             tag_id = self._value_template(msg.payload, "").strip()
             if not tag_id:  # No output from template, ignore
                 return
@@ -135,7 +138,7 @@ class MQTTTagScanner(MqttDiscoveryDeviceUpdate):
         )
         await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
-    async def async_tear_down(self):
+    async def async_tear_down(self) -> None:
         """Cleanup tag scanner."""
         discovery_hash = self.discovery_data[ATTR_DISCOVERY_HASH]
         discovery_id = discovery_hash[1]

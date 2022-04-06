@@ -452,7 +452,6 @@ async def test_if_fires_on_mqtt_message_late_discover(
     )
 
     async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data1)
-    await hass.async_block_till_done()
     async_fire_mqtt_message(hass, "homeassistant/device_automation/bla2/config", data2)
     await hass.async_block_till_done()
 
@@ -521,7 +520,6 @@ async def test_if_fires_on_mqtt_message_after_update(
 
     # Update the trigger with different topic
     async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data2)
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     async_fire_mqtt_message(hass, "foobar/triggers/button1", "")
