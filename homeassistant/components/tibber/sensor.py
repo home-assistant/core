@@ -403,7 +403,9 @@ class TibberSensorElPrice(TibberSensor):
 
             # iterate through tomorrows prices and add list with only prices
             if priceinfo["tomorrow"]:
-                self._attr_extra_state_attributes["raw_tomorrow"] = priceinfo["tomorrow"]
+                self._attr_extra_state_attributes["raw_tomorrow"] = priceinfo[
+                    "tomorrow"
+                ]
                 local_tomorrow = []
                 local_tomorrow_valid = True
                 for entry in priceinfo["tomorrow"]:
