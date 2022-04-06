@@ -1,0 +1,25 @@
+{
+  "domain": "broadlinkcustom",
+  "name": "Broadlink Custom",
+  "documentation": "https://www.home-assistant.io/integrations/broadlink",
+  "requirements": ["broadlink==0.18.1"],
+  "codeowners": ["@bendamschke"],
+  "config_flow": true,
+  "dhcp": [
+    { "registered_devices": true },
+    {
+      "macaddress": "34EA34*"
+    },
+    {
+      "macaddress": "24DFA7*"
+    },
+    {
+      "macaddress": "A043B0*"
+    },
+    {
+      "macaddress": "B4430D*"
+    }
+  ],
+  "iot_class": "local_polling",
+  "loggers": ["broadlinkcustom"]
+}

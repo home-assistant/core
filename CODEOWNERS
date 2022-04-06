@@ -140,6 +140,8 @@ build.json @home-assistant/supervisor
 /tests/components/braviatv/ @bieniu @Drafteed
 /homeassistant/components/broadlink/ @danielhiversen @felipediel @L-I-Am
 /tests/components/broadlink/ @danielhiversen @felipediel @L-I-Am
+/homeassistant/components/broadlinkcustom/ @bendamschke
+/tests/components/broadlinkcustom/ @bendamschke
 /homeassistant/components/brother/ @bieniu
 /tests/components/brother/ @bieniu
 /homeassistant/components/brunt/ @eavanvalkenburg

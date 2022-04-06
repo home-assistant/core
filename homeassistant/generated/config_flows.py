@@ -49,6 +49,7 @@ FLOWS = {
         "bosch_shc",
         "braviatv",
         "broadlink",
+        "broadlinkcustom",
         "brother",
         "brunt",
         "bsblan",
