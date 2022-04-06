@@ -16,6 +16,7 @@ from homeassistant.components.ws66i.const import (
 from homeassistant.const import CONF_IP_ADDRESS
 
 from tests.common import MockConfigEntry
+from tests.components.ws66i.test_media_player import AttrDict
 
 CONFIG = {CONF_IP_ADDRESS: "1.1.1.1"}
 
@@ -115,7 +116,11 @@ async def test_options_flow(hass):
     )
     config_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.ws66i.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.ws66i.get_ws66i") as mock_ws66i:
+        ws66i_instance = mock_ws66i.return_value
+        ws66i_instance.zone_status.return_value = AttrDict(
+            power=True, volume=0, mute=True, source=1, treble=0, bass=0, balance=10
+        )
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
