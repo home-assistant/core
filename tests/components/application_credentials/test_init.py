@@ -504,13 +504,20 @@ async def test_config_flow_with_config_credential(
 
 
 @pytest.mark.parametrize("disable_setup", [True])
-async def test_import_without_setupm(hass, config_credential):
+async def test_import_without_setup(hass, config_credential):
     """Test import of credentials without setting up the integration."""
 
     with pytest.raises(ValueError):
         await async_import_client_credential(
             hass, TEST_DOMAIN, TEST_DOMAIN, config_credential
         )
+
+    # Config flow does not have authentication
+    result = await hass.config_entries.flow.async_init(
+        TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result.get("type") == data_entry_flow.RESULT_TYPE_ABORT
+    assert result.get("reason") == "missing_configuration"
 
 
 @pytest.mark.parametrize("disable_setup", [True])
@@ -533,6 +540,13 @@ async def test_websocket_without_platform(
     assert not resp.get("success")
     assert "error" in resp
     assert resp["error"].get("code") == "invalid_format"
+
+    # Config flow does not have authentication
+    result = await hass.config_entries.flow.async_init(
+        TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result.get("type") == data_entry_flow.RESULT_TYPE_ABORT
+    assert result.get("reason") == "missing_configuration"
 
 
 @pytest.mark.parametrize("disable_setup", [True])
@@ -564,3 +578,9 @@ async def test_websocket_without_authorization_server(
     assert not resp.get("success")
     assert "error" in resp
     assert resp["error"].get("code") == "invalid_format"
+
+    # Config flow does not have authentication
+    with pytest.raises(ValueError):
+        await hass.config_entries.flow.async_init(
+            TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
