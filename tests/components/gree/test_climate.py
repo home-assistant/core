@@ -6,6 +6,7 @@ from greeclimate.device import HorizontalSwing, VerticalSwing
 from greeclimate.exceptions import DeviceNotBoundError, DeviceTimeoutError
 import pytest
 
+from homeassistant.components.climate import ClimateEntityFeature
 from homeassistant.components.climate.const import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
@@ -38,11 +39,7 @@ from homeassistant.components.climate.const import (
     SWING_OFF,
     SWING_VERTICAL,
 )
-from homeassistant.components.gree.climate import (
-    FAN_MODES_REVERSE,
-    HVAC_MODES_REVERSE,
-    SUPPORTED_FEATURES,
-)
+from homeassistant.components.gree.climate import FAN_MODES_REVERSE, HVAC_MODES_REVERSE
 from homeassistant.components.gree.const import FAN_MEDIUM_HIGH, FAN_MEDIUM_LOW
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -771,4 +768,9 @@ async def test_supported_features_with_turnon(hass, discovery, device):
     """Test for supported_features property."""
     await async_setup_gree(hass)
     state = hass.states.get(ENTITY_ID)
-    assert state.attributes[ATTR_SUPPORTED_FEATURES] == SUPPORTED_FEATURES
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.SWING_MODE
+    )

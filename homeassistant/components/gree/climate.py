@@ -15,7 +15,7 @@ from greeclimate.device import (
     VerticalSwing,
 )
 
-from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
 from homeassistant.components.climate.const import (
     FAN_AUTO,
     FAN_HIGH,
@@ -32,10 +32,6 @@ from homeassistant.components.climate.const import (
     PRESET_ECO,
     PRESET_NONE,
     PRESET_SLEEP,
-    SUPPORT_FAN_MODE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_SWING_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
     SWING_BOTH,
     SWING_HORIZONTAL,
     SWING_OFF,
@@ -96,13 +92,6 @@ FAN_MODES_REVERSE = {v: k for k, v in FAN_MODES.items()}
 
 SWING_MODES = [SWING_OFF, SWING_VERTICAL, SWING_HORIZONTAL, SWING_BOTH]
 
-SUPPORTED_FEATURES = (
-    SUPPORT_TARGET_TEMPERATURE
-    | SUPPORT_FAN_MODE
-    | SUPPORT_PRESET_MODE
-    | SUPPORT_SWING_MODE
-)
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -126,6 +115,13 @@ async def async_setup_entry(
 
 class GreeClimateEntity(CoordinatorEntity, ClimateEntity):
     """Representation of a Gree HVAC device."""
+
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.SWING_MODE
+    )
 
     def __init__(self, coordinator):
         """Initialize the Gree device."""
@@ -365,8 +361,3 @@ class GreeClimateEntity(CoordinatorEntity, ClimateEntity):
     def swing_modes(self) -> list[str]:
         """Return the swing modes currently supported for this device."""
         return SWING_MODES
-
-    @property
-    def supported_features(self) -> int:
-        """Return the supported features for this device integration."""
-        return SUPPORTED_FEATURES
