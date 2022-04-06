@@ -71,13 +71,22 @@ async def setup_application_credentials_integration(
         )
 
 
+@pytest.fixture
+def disable_setup() -> bool:
+    """Fixture to disable mock credentials integration."""
+    return False
+
+
 @pytest.fixture(autouse=True)
 async def mock_application_credentials_integration(
+    disable_setup: bool,
     hass: HomeAssistant,
     authorization_server: AuthorizationServer,
     config_credential: ClientCredential | None,
 ):
     """Mock a application_credentials integration."""
+    if disable_setup:
+        return
     assert await async_setup_component(hass, "application_credentials", {})
     await setup_application_credentials_integration(
         hass, TEST_DOMAIN, authorization_server, config_credential
@@ -492,3 +501,13 @@ async def test_config_flow_with_config_credential(
     assert result.get("type") == data_entry_flow.RESULT_TYPE_EXTERNAL_STEP
     result = await oauth_fixture.complete_external_step(result)
     assert result["data"].get("auth_implementation") == AUTH_DOMAIN
+
+
+@pytest.mark.parametrize("disable_setup", [True])
+async def test_import_without_setupm(hass, config_credential):
+    """Test import of credentials without setting up the integration."""
+
+    with pytest.raises(ValueError):
+        await async_import_client_credential(
+            hass, TEST_DOMAIN, TEST_DOMAIN, config_credential
+        )
