@@ -299,6 +299,20 @@ async def test_websocket_delete(ws_client: ClientFixture):
     assert await client.cmd_result("list") == []
 
 
+async def test_websocket_delete_item_not_found(ws_client: ClientFixture):
+    """Test websocket delete command."""
+    client = await ws_client()
+
+    resp = await client.cmd("delete", {"application_credentials_id": ID})
+    assert not resp.get("success")
+    assert "error" in resp
+    assert resp["error"].get("code") == "not_found"
+    assert (
+        resp["error"].get("message")
+        == f"Unable to find application_credentials_id {ID}"
+    )
+
+
 @pytest.mark.parametrize("config_credential", [DEVELOPER_CREDENTIAL])
 async def test_websocket_import_config(ws_client: ClientFixture):
     """Test websocket list command for an imported credential."""
