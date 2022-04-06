@@ -2,21 +2,14 @@
 # pylint: disable=protected-access,invalid-name
 from copy import copy
 from datetime import datetime, timedelta
-import json
 from unittest.mock import patch, sentinel
 
 import pytest
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder import history
-from homeassistant.components.recorder.models import (
-    Events,
-    StateAttributes,
-    States,
-    process_timestamp,
-)
+from homeassistant.components.recorder.models import Events, StateAttributes, States
 import homeassistant.core as ha
-from homeassistant.helpers.json import JSONEncoder
 import homeassistant.util.dt as dt_util
 
 from .conftest import SetupRecorderInstanceT
@@ -299,23 +292,6 @@ def test_get_significant_states_minimal_response(hass_recorder):
     hass = hass_recorder()
     zero, four, states = record_states(hass)
     hist = history.get_significant_states(hass, zero, four, minimal_response=True)
-
-    # The second media_player.test state is reduced
-    # down to last_changed and state when minimal_response
-    # is set.  We use JSONEncoder to make sure that are
-    # pre-encoded last_changed is always the same as what
-    # will happen with encoding a native state
-    input_state = states["media_player.test"][1]
-    orig_last_changed = json.dumps(
-        process_timestamp(input_state.last_changed),
-        cls=JSONEncoder,
-    ).replace('"', "")
-    orig_state = input_state.state
-    states["media_player.test"][1] = {
-        "last_changed": orig_last_changed,
-        "state": orig_state,
-    }
-
     assert states == hist
 
 
