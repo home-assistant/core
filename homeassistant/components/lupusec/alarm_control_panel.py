@@ -3,10 +3,9 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-from homeassistant.components.alarm_control_panel import AlarmControlPanelEntity
-from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_HOME,
+from homeassistant.components.alarm_control_panel import (
+    AlarmControlPanelEntity,
+    AlarmControlPanelEntityFeature,
 )
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
@@ -45,6 +44,11 @@ def setup_platform(
 class LupusecAlarm(LupusecDevice, AlarmControlPanelEntity):
     """An alarm_control_panel implementation for Lupusec."""
 
+    _attr_supported_features = (
+        AlarmControlPanelEntityFeature.ARM_HOME
+        | AlarmControlPanelEntityFeature.ARM_AWAY
+    )
+
     @property
     def icon(self):
         """Return the icon."""
@@ -64,11 +68,6 @@ class LupusecAlarm(LupusecDevice, AlarmControlPanelEntity):
         else:
             state = None
         return state
-
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
