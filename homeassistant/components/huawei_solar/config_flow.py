@@ -5,17 +5,15 @@ import logging
 from typing import Any
 
 from huawei_solar import (
-    AsyncHuaweiSolar,
     ConnectionException,
+    HuaweiSolarBridge,
     HuaweiSolarException,
     ReadException,
-    register_names as rn,
 )
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 
@@ -32,54 +30,55 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
+async def validate_input(data: dict[str, Any]) -> dict[str, Any]:
     """Validate the user input allows us to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
 
-    inverter = None
+    bridge = None
     try:
-        inverter = await AsyncHuaweiSolar.create(
+        bridge = await HuaweiSolarBridge.create(
             host=data[CONF_HOST],
             port=data[CONF_PORT],
-            slave=data[CONF_SLAVE_IDS][0],
-        )
-
-        model_name, serial_number = await inverter.get_multiple(
-            [rn.MODEL_NAME, rn.SERIAL_NUMBER]
+            slave_id=data[CONF_SLAVE_IDS][0],
         )
 
         _LOGGER.info(
             "Successfully connected to inverter %s with SN %s",
-            model_name.value,
-            serial_number.value,
+            bridge.model_name,
+            bridge.serial_number,
         )
+
+        result = {
+            "model_name": bridge.model_name,
+            "serial_number": bridge.serial_number,
+        }
 
         # Also validate the other slave-ids
         for slave_id in data[CONF_SLAVE_IDS][1:]:
             try:
-                slave_model_name, slave_serial_number = await inverter.get_multiple(
-                    [rn.MODEL_NAME, rn.SERIAL_NUMBER], slave_id
+                slave_bridge = await HuaweiSolarBridge.create_extra_slave(
+                    bridge, slave_id
                 )
 
                 _LOGGER.info(
                     "Successfully connected to slave inverter %s: %s with SN %s",
                     slave_id,
-                    slave_model_name.value,
-                    slave_serial_number.value,
+                    slave_bridge.model_name,
+                    slave_bridge.serial_number,
                 )
             except HuaweiSolarException as err:
                 _LOGGER.error("Could not connect to slave %s", slave_id)
                 raise SlaveException(f"Could not connect to slave {slave_id}") from err
 
         # Return info that you want to store in the config entry.
-        return {"model_name": model_name.value, "serial_number": serial_number.value}
+        return result
 
     finally:
-        if inverter is not None:
+        if bridge is not None:
             # Cleanup this inverter object explicitly to prevent it from trying to maintain a modbus connection
-            await inverter.stop()
+            await bridge.stop()
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -87,47 +86,74 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    def __init__(self) -> None:
+        """Initialize flow."""
+
+        self._host: str | None = None
+        self._port: int | None = None
+        self._slave_ids: list[int] | None = None
+
+        self._inverter_info: dict | None = None
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="user", data_schema=STEP_USER_DATA_SCHEMA
-            )
 
         errors = {}
 
-        try:
-            user_input[CONF_SLAVE_IDS] = list(
-                map(int, user_input[CONF_SLAVE_IDS].split(","))
-            )
-        except ValueError:
-            errors["base"] = "invalid_slave_ids"
-        else:
-
+        if user_input is not None:
             try:
-                info = await validate_input(self.hass, user_input)
-
-            except ConnectionException:
-                errors["base"] = "cannot_connect"
-            except SlaveException:
-                errors["base"] = "slave_cannot_connect"
-            except ReadException:
-                errors["base"] = "read_error"
-            except Exception as exception:  # pylint: disable=broad-except
-                _LOGGER.exception(exception)
-                errors["base"] = "unknown"
-            else:
-                await self.async_set_unique_id(info["serial_number"])
-                self._abort_if_unique_id_configured()
-
-                return self.async_create_entry(
-                    title=info["model_name"], data=user_input
+                user_input[CONF_SLAVE_IDS] = list(
+                    map(int, user_input[CONF_SLAVE_IDS].split(","))
                 )
+            except ValueError:
+                errors["base"] = "invalid_slave_ids"
+            else:
+
+                try:
+                    info = await validate_input(user_input)
+
+                except ConnectionException:
+                    errors["base"] = "cannot_connect"
+                except SlaveException:
+                    errors["base"] = "slave_cannot_connect"
+                except ReadException:
+                    errors["base"] = "read_error"
+                except Exception as exception:  # pylint: disable=broad-except
+                    _LOGGER.exception(exception)
+                    errors["base"] = "unknown"
+                else:
+                    await self.async_set_unique_id(info["serial_number"])
+                    self._abort_if_unique_id_configured()
+
+                    self._host = user_input[CONF_HOST]
+                    self._port = user_input[CONF_PORT]
+                    self._slave_ids = user_input[CONF_SLAVE_IDS]
+
+                    self._inverter_info = info
+                    self.context["title_placeholders"] = {"name": info["model_name"]}
+
+                    return await self._create_entry()
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+        )
+
+    async def _create_entry(self):
+        """Create the entry."""
+        assert self._host is not None
+        assert self._port is not None
+        assert self._slave_ids is not None
+
+        data = {
+            CONF_HOST: self._host,
+            CONF_PORT: self._port,
+            CONF_SLAVE_IDS: self._slave_ids,
+        }
+
+        return self.async_create_entry(
+            title=self._inverter_info["model_name"], data=data
         )
 
 

@@ -14,7 +14,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_SLAVE_IDS, DATA_UPDATE_COORDINATORS, DOMAIN, UPDATE_INTERVAL
@@ -71,7 +71,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         for extra_slave_id in entry.data[CONF_SLAVE_IDS][1:]:
             extra_bridge = await HuaweiSolarBridge.create_extra_slave(
-                primary_bridge.client, extra_slave_id
+                primary_bridge, extra_slave_id
             )
 
             extra_bridge_device_infos = _compute_device_infos(
@@ -98,6 +98,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             await primary_bridge.stop()
 
         raise ConfigEntryNotReady from err
+    except Exception as err:
+        # always try to stop the bridge, as it will keep retrying
+        # in the background otherwise!
+        if primary_bridge is not None:
+            await primary_bridge.stop()
+
+        raise err
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
@@ -137,7 +144,7 @@ def _compute_device_infos(
         name=bridge.model_name,
         manufacturer="Huawei",
         model=bridge.model_name,
-        via_device=connecting_inverter_device_id,  # type: ignore
+        via_device=connecting_inverter_device_id,  # type: ignore[typeddict-item]
     )
 
     # Add power meter device if a power meter is detected
@@ -208,7 +215,7 @@ async def _create_update_coordinator(
 ):
     async def async_update_data():
         try:
-            async with async_timeout.timeout(10):
+            async with async_timeout.timeout(20):
                 return await bridge.update()
         except HuaweiSolarException as err:
             raise UpdateFailed(
@@ -228,3 +235,11 @@ async def _create_update_coordinator(
     await coordinator.async_config_entry_first_refresh()
 
     return coordinator
+
+
+class HuaweiSolarEntity(Entity):
+    """Huawei Solar Entity."""
+
+    def add_name_suffix(self, suffix) -> None:
+        """Add a suffix after the current entity name."""
+        self._attr_name = f"{self.name}{suffix}"
