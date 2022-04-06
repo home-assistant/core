@@ -39,7 +39,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.SENSOR, Platform.NUMBER, Platform.LOCK]
 UPDATE_INTERVAL = 30
 
-# Translation of StatusId based on Wallbox portal code
+# Translation of StatusId based on Wallbox portal code https://my.wallbox.com/src/utilities/charger/chargerStatuses.js
 CHARGER_STATUS: dict[int, str] = {
     0: "Disconnected",
     14: "Error",
