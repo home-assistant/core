@@ -103,11 +103,11 @@ set_device_value:
       selector:
         select:
           options:
-            - 'boolean'
-            - 'dateTime.iso8601'
-            - 'double'
-            - 'int'
-            - 'string'
+            - "boolean"
+            - "dateTime.iso8601"
+            - "double"
+            - "int"
+            - "string"
 
 reconnect:
   name: Reconnect

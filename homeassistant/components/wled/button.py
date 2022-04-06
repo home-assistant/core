@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .const import DOMAIN, LOGGER
 from .coordinator import WLEDDataUpdateCoordinator
 from .helpers import wled_exception_handler
 from .models import WLEDEntity
@@ -52,6 +52,9 @@ class WLEDUpdateButton(WLEDEntity, ButtonEntity):
     _attr_device_class = ButtonDeviceClass.UPDATE
     _attr_entity_category = EntityCategory.CONFIG
 
+    # Disabled by default, as this entity is deprecated.
+    _attr_entity_registry_enabled_default = False
+
     def __init__(self, coordinator: WLEDDataUpdateCoordinator) -> None:
         """Initialize the button entity."""
         super().__init__(coordinator=coordinator)
@@ -83,6 +86,11 @@ class WLEDUpdateButton(WLEDEntity, ButtonEntity):
     @wled_exception_handler
     async def async_press(self) -> None:
         """Send out a update command."""
+        LOGGER.warning(
+            "The WLED update button '%s' is deprecated, please "
+            "use the new update entity as a replacement",
+            self.entity_id,
+        )
         current = self.coordinator.data.info.version
         beta = self.coordinator.data.info.version_latest_beta
         stable = self.coordinator.data.info.version_latest_stable

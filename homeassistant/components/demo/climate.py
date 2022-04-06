@@ -13,13 +13,7 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
     HVAC_MODES,
-    SUPPORT_AUX_HEAT,
-    SUPPORT_FAN_MODE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_SWING_MODE,
-    SUPPORT_TARGET_HUMIDITY,
-    SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_RANGE,
+    ClimateEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
@@ -138,19 +132,25 @@ class DemoClimate(ClimateEntity):
         self._name = name
         self._support_flags = SUPPORT_FLAGS
         if target_temperature is not None:
-            self._support_flags = self._support_flags | SUPPORT_TARGET_TEMPERATURE
+            self._support_flags = (
+                self._support_flags | ClimateEntityFeature.TARGET_TEMPERATURE
+            )
         if preset is not None:
-            self._support_flags = self._support_flags | SUPPORT_PRESET_MODE
+            self._support_flags = self._support_flags | ClimateEntityFeature.PRESET_MODE
         if fan_mode is not None:
-            self._support_flags = self._support_flags | SUPPORT_FAN_MODE
+            self._support_flags = self._support_flags | ClimateEntityFeature.FAN_MODE
         if target_humidity is not None:
-            self._support_flags = self._support_flags | SUPPORT_TARGET_HUMIDITY
+            self._support_flags = (
+                self._support_flags | ClimateEntityFeature.TARGET_HUMIDITY
+            )
         if swing_mode is not None:
-            self._support_flags = self._support_flags | SUPPORT_SWING_MODE
+            self._support_flags = self._support_flags | ClimateEntityFeature.SWING_MODE
         if aux is not None:
-            self._support_flags = self._support_flags | SUPPORT_AUX_HEAT
+            self._support_flags = self._support_flags | ClimateEntityFeature.AUX_HEAT
         if HVAC_MODE_HEAT_COOL in hvac_modes or HVAC_MODE_AUTO in hvac_modes:
-            self._support_flags = self._support_flags | SUPPORT_TARGET_TEMPERATURE_RANGE
+            self._support_flags = (
+                self._support_flags | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+            )
         self._target_temperature = target_temperature
         self._target_humidity = target_humidity
         self._unit_of_measurement = unit_of_measurement

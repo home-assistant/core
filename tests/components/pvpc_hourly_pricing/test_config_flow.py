@@ -12,7 +12,6 @@ from homeassistant.components.pvpc_hourly_pricing import (
 )
 from homeassistant.const import CONF_NAME
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util import dt as dt_util
 
 from .conftest import check_valid_state
 
@@ -32,7 +31,7 @@ async def test_config_flow(
     - Check removal and add again to check state restoration
     - Configure options to change power and tariff to "2.0TD"
     """
-    hass.config.time_zone = dt_util.get_time_zone("Europe/Madrid")
+    hass.config.set_time_zone("Europe/Madrid")
     tst_config = {
         CONF_NAME: "test",
         ATTR_TARIFF: TARIFFS[1],

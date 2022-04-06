@@ -37,7 +37,7 @@ authorisation_response = json.loads(
 )
 
 
-async def test_wallbox_setup_unload_entry(hass: HomeAssistant):
+async def test_wallbox_setup_unload_entry(hass: HomeAssistant) -> None:
     """Test Wallbox Unload."""
 
     await setup_integration(hass)
@@ -47,7 +47,7 @@ async def test_wallbox_setup_unload_entry(hass: HomeAssistant):
     assert entry.state == ConfigEntryState.NOT_LOADED
 
 
-async def test_wallbox_unload_entry_connection_error(hass: HomeAssistant):
+async def test_wallbox_unload_entry_connection_error(hass: HomeAssistant) -> None:
     """Test Wallbox Unload Connection Error."""
 
     await setup_integration_connection_error(hass)
@@ -57,7 +57,7 @@ async def test_wallbox_unload_entry_connection_error(hass: HomeAssistant):
     assert entry.state == ConfigEntryState.NOT_LOADED
 
 
-async def test_wallbox_refresh_failed_invalid_auth(hass: HomeAssistant):
+async def test_wallbox_refresh_failed_invalid_auth(hass: HomeAssistant) -> None:
     """Test Wallbox setup with authentication error."""
 
     await setup_integration(hass)
@@ -83,7 +83,7 @@ async def test_wallbox_refresh_failed_invalid_auth(hass: HomeAssistant):
     assert entry.state == ConfigEntryState.NOT_LOADED
 
 
-async def test_wallbox_refresh_failed_connection_error(hass: HomeAssistant):
+async def test_wallbox_refresh_failed_connection_error(hass: HomeAssistant) -> None:
     """Test Wallbox setup with connection error."""
 
     await setup_integration(hass)
@@ -109,7 +109,7 @@ async def test_wallbox_refresh_failed_connection_error(hass: HomeAssistant):
     assert entry.state == ConfigEntryState.NOT_LOADED
 
 
-async def test_wallbox_refresh_failed_read_only(hass: HomeAssistant):
+async def test_wallbox_refresh_failed_read_only(hass: HomeAssistant) -> None:
     """Test Wallbox setup for read-only user."""
 
     await setup_integration_read_only(hass)

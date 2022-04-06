@@ -10,7 +10,7 @@ from homeassistant.components.mjpeg.const import (
     CONF_STILL_IMAGE_URL,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_NAME,
@@ -18,7 +18,6 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
     HTTP_BASIC_AUTHENTICATION,
-    HTTP_DIGEST_AUTHENTICATION,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import (
@@ -250,70 +249,6 @@ async def test_already_configured(
 
     assert result2.get("type") == RESULT_TYPE_ABORT
     assert result2.get("reason") == "already_configured"
-
-
-async def test_import_flow(
-    hass: HomeAssistant,
-    mock_mjpeg_requests: Mocker,
-    mock_setup_entry: AsyncMock,
-) -> None:
-    """Test the import configuration flow."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={
-            CONF_AUTHENTICATION: HTTP_DIGEST_AUTHENTICATION,
-            CONF_MJPEG_URL: "http://example.com/mjpeg",
-            CONF_NAME: "Imported Camera",
-            CONF_PASSWORD: "omgpuppies",
-            CONF_STILL_IMAGE_URL: "http://example.com/still",
-            CONF_USERNAME: "frenck",
-            CONF_VERIFY_SSL: False,
-        },
-    )
-
-    assert result.get("type") == RESULT_TYPE_CREATE_ENTRY
-    assert result.get("title") == "Imported Camera"
-    assert result.get("data") == {}
-    assert result.get("options") == {
-        CONF_AUTHENTICATION: HTTP_DIGEST_AUTHENTICATION,
-        CONF_MJPEG_URL: "http://example.com/mjpeg",
-        CONF_PASSWORD: "omgpuppies",
-        CONF_STILL_IMAGE_URL: "http://example.com/still",
-        CONF_USERNAME: "frenck",
-        CONF_VERIFY_SSL: False,
-    }
-
-    assert len(mock_setup_entry.mock_calls) == 1
-    assert mock_mjpeg_requests.call_count == 0
-
-
-async def test_import_flow_already_configured(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
-) -> None:
-    """Test the import configuration flow for an already configured entry."""
-    mock_config_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={
-            CONF_AUTHENTICATION: HTTP_DIGEST_AUTHENTICATION,
-            CONF_MJPEG_URL: "https://example.com/mjpeg",
-            CONF_NAME: "Imported Camera",
-            CONF_PASSWORD: "omgpuppies",
-            CONF_STILL_IMAGE_URL: "https://example.com/still",
-            CONF_USERNAME: "frenck",
-            CONF_VERIFY_SSL: False,
-        },
-    )
-
-    assert result.get("type") == RESULT_TYPE_ABORT
-    assert result.get("reason") == "already_configured"
-
-    assert len(mock_setup_entry.mock_calls) == 0
 
 
 async def test_options_flow(

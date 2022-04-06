@@ -55,6 +55,7 @@ from homeassistant.helpers import (
     restore_state,
     storage,
 )
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import async_setup_component, setup_component
 from homeassistant.util.async_ import run_callback_threadsafe
@@ -282,7 +283,7 @@ async def async_test_home_assistant(loop, load_registries=True):
     hass.config.latitude = 32.87336
     hass.config.longitude = -117.22743
     hass.config.elevation = 0
-    hass.config.time_zone = "US/Pacific"
+    hass.config.set_time_zone("US/Pacific")
     hass.config.units = METRIC_SYSTEM
     hass.config.media_dirs = {"local": get_test_config_dir("media")}
     hass.config.skip_pip = True
@@ -914,7 +915,7 @@ def init_recorder_component(hass, add_config=None):
 
 async def async_init_recorder_component(hass, add_config=None):
     """Initialize the recorder asynchronously."""
-    config = add_config or {}
+    config = add_config or {recorder.CONF_COMMIT_INTERVAL: 0}
     if recorder.CONF_DB_URL not in config:
         config[recorder.CONF_DB_URL] = "sqlite://"
 
@@ -1208,7 +1209,7 @@ def async_mock_signal(hass, signal):
         """Mock service call."""
         calls.append(args)
 
-    hass.helpers.dispatcher.async_dispatcher_connect(signal, mock_signal_handler)
+    async_dispatcher_connect(hass, signal, mock_signal_handler)
 
     return calls
 

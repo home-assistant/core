@@ -12,44 +12,29 @@ from .conftest import patch_metrics
 
 from tests.common import MockConfigEntry
 
-ORIG_TZ = dt.DEFAULT_TIME_ZONE
-
-
-@pytest.fixture(autouse=True)
-def reset_tz():
-    """Restore the default TZ after test runs."""
-    yield
-    dt.DEFAULT_TIME_ZONE = ORIG_TZ
-
 
 @pytest.fixture
 def set_tz(request):
     """Set the default TZ to the one requested."""
-    return request.getfixturevalue(request.param)
+    request.getfixturevalue(request.param)
 
 
 @pytest.fixture
-def utc() -> tzinfo:
+def utc(hass: HomeAssistant) -> None:
     """Set the default TZ to UTC."""
-    tz = dt.get_time_zone("UTC")
-    dt.set_default_time_zone(tz)
-    return tz
+    hass.config.set_time_zone("UTC")
 
 
 @pytest.fixture
-def helsinki() -> tzinfo:
+def helsinki(hass: HomeAssistant) -> None:
     """Set the default TZ to Europe/Helsinki."""
-    tz = dt.get_time_zone("Europe/Helsinki")
-    dt.set_default_time_zone(tz)
-    return tz
+    hass.config.set_time_zone("Europe/Helsinki")
 
 
 @pytest.fixture
-def new_york() -> tzinfo:
+def new_york(hass: HomeAssistant) -> None:
     """Set the default TZ to America/New_York."""
-    tz = dt.get_time_zone("America/New_York")
-    dt.set_default_time_zone(tz)
-    return tz
+    hass.config.set_time_zone("America/New_York")
 
 
 def _sensor_to_datetime(sensor):
@@ -173,3 +158,88 @@ async def test_remaining_time_for_filter_in_the_past(
         mocked_filter_end_date,
         _now_at_13(),
     )
+
+
+async def test_cell_state_sensor_heat_recovery(
+    mock_entry: MockConfigEntry, hass: HomeAssistant
+):
+    """Test cell state sensor in heat recovery state."""
+    # Arrange
+    metrics = {"A_CYC_CELL_STATE": 0}
+
+    # Act
+    with patch_metrics(metrics=metrics):
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Assert
+    sensor = hass.states.get("sensor.vallox_cell_state")
+    assert sensor.state == "Heat Recovery"
+
+
+async def test_cell_state_sensor_cool_recovery(
+    mock_entry: MockConfigEntry, hass: HomeAssistant
+):
+    """Test cell state sensor in cool recovery state."""
+    # Arrange
+    metrics = {"A_CYC_CELL_STATE": 1}
+
+    # Act
+    with patch_metrics(metrics=metrics):
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Assert
+    sensor = hass.states.get("sensor.vallox_cell_state")
+    assert sensor.state == "Cool Recovery"
+
+
+async def test_cell_state_sensor_bypass(
+    mock_entry: MockConfigEntry, hass: HomeAssistant
+):
+    """Test cell state sensor in bypass state."""
+    # Arrange
+    metrics = {"A_CYC_CELL_STATE": 2}
+
+    # Act
+    with patch_metrics(metrics=metrics):
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Assert
+    sensor = hass.states.get("sensor.vallox_cell_state")
+    assert sensor.state == "Bypass"
+
+
+async def test_cell_state_sensor_defrosting(
+    mock_entry: MockConfigEntry, hass: HomeAssistant
+):
+    """Test cell state sensor in defrosting state."""
+    # Arrange
+    metrics = {"A_CYC_CELL_STATE": 3}
+
+    # Act
+    with patch_metrics(metrics=metrics):
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Assert
+    sensor = hass.states.get("sensor.vallox_cell_state")
+    assert sensor.state == "Defrosting"
+
+
+async def test_cell_state_sensor_unknown_state(
+    mock_entry: MockConfigEntry, hass: HomeAssistant
+):
+    """Test cell state sensor in unknown state."""
+    # Arrange
+    metrics = {"A_CYC_CELL_STATE": 4}
+
+    # Act
+    with patch_metrics(metrics=metrics):
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Assert
+    sensor = hass.states.get("sensor.vallox_cell_state")
+    assert sensor.state == "unknown"

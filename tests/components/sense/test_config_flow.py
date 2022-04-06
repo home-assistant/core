@@ -3,6 +3,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from sense_energy import (
+    SenseAPIException,
     SenseAPITimeoutException,
     SenseAuthenticationException,
     SenseMFARequiredException,
@@ -189,7 +190,7 @@ async def test_form_mfa_required_exception(hass, mock_sense):
     assert result3["errors"] == {"base": "unknown"}
 
 
-async def test_form_cannot_connect(hass):
+async def test_form_timeout(hass):
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -198,6 +199,25 @@ async def test_form_cannot_connect(hass):
     with patch(
         "sense_energy.ASyncSenseable.authenticate",
         side_effect=SenseAPITimeoutException,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"timeout": "6", "email": "test-email", "password": "test-password"},
+        )
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_form_cannot_connect(hass):
+    """Test we handle cannot connect error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "sense_energy.ASyncSenseable.authenticate",
+        side_effect=SenseAPIException,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

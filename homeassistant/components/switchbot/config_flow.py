@@ -131,19 +131,6 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=data_schema, errors=errors
         )
 
-    async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
-        """Handle config import from yaml."""
-        _LOGGER.debug("import config: %s", import_config)
-
-        import_config[CONF_MAC] = import_config[CONF_MAC].replace("-", ":").lower()
-
-        await self.async_set_unique_id(import_config[CONF_MAC].replace(":", ""))
-        self._abort_if_unique_id_configured()
-
-        return self.async_create_entry(
-            title=import_config[CONF_NAME], data=import_config
-        )
-
 
 class SwitchbotOptionsFlowHandler(OptionsFlow):
     """Handle Switchbot options."""

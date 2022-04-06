@@ -11,7 +11,8 @@ from httplib2 import ServerNotFoundError
 from homeassistant.components.calendar import (
     ENTITY_ID_FORMAT,
     CalendarEventDevice,
-    calculate_offset,
+    extract_offset,
+    get_date,
     is_offset_reached,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -178,9 +179,12 @@ class GoogleCalendarEventDevice(CalendarEventDevice):
             _LOGGER.error("Unable to connect to Google: %s", err)
             return
 
-        # Pick the first visible event. Make a copy since calculate_offset mutates the event
+        # Pick the first visible event and apply offset calculations.
         valid_items = filter(self._event_filter, items)
         self._event = copy.deepcopy(next(valid_items, None))
         if self._event:
-            calculate_offset(self._event, self._offset)
-            self._offset_reached = is_offset_reached(self._event)
+            (summary, offset) = extract_offset(self._event["summary"], self._offset)
+            self._event["summary"] = summary
+            self._offset_reached = is_offset_reached(
+                get_date(self._event["start"]), offset
+            )

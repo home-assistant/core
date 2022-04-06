@@ -15,7 +15,10 @@ from homeassistant.const import CONF_API_KEY, CONF_NAME
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
@@ -128,9 +131,7 @@ class AfterShipSensor(SensorEntity):
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(
-            self.hass.helpers.dispatcher.async_dispatcher_connect(
-                UPDATE_TOPIC, self._force_update
-            )
+            async_dispatcher_connect(self.hass, UPDATE_TOPIC, self._force_update)
         )
 
     async def _force_update(self) -> None:
