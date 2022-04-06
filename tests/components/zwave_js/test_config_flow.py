@@ -1033,7 +1033,6 @@ async def test_addon_running_already_configured(
     addon_options["s2_access_control_key"] = "new456"
     addon_options["s2_authenticated_key"] = "new789"
     addon_options["s2_unauthenticated_key"] = "new987"
-    # Unique ID is purposely set to int to test migration logic
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -1046,7 +1045,7 @@ async def test_addon_running_already_configured(
             "s2_unauthenticated_key": "old987",
         },
         title=TITLE,
-        unique_id=1234,
+        unique_id=1234,  # Unique ID is purposely set to int to test migration logic
     )
     entry.add_to_hass(hass)
 
