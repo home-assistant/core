@@ -671,7 +671,7 @@ class LazyMinimalState(LazyState):
     """A lazy minimal version of core State."""
 
     def __init__(self, row: States) -> None:  # pylint: disable=super-init-not-called
-        """Init the lazy state."""
+        """Init the lazy minimal state."""
         self._row = row
 
     @property
@@ -705,7 +705,7 @@ class LazyMinimalState(LazyState):
         return process_timestamp(self._row.last_updated)  # type: ignore[no-any-return]
 
     def as_dict(self) -> dict[str, Any]:  # type: ignore[override]
-        """Return a dict representation of the LazyState.
+        """Return a dict representation of the LazyMinimalState.
 
         Async friendly.
 
