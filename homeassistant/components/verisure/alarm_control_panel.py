@@ -30,10 +30,10 @@ async def async_setup_entry(
     async_add_entities([VerisureAlarm(coordinator=hass.data[DOMAIN][entry.entry_id])])
 
 
-class VerisureAlarm(CoordinatorEntity, AlarmControlPanelEntity):
+class VerisureAlarm(
+    CoordinatorEntity[VerisureDataUpdateCoordinator], AlarmControlPanelEntity
+):
     """Representation of a Verisure alarm status."""
-
-    coordinator: VerisureDataUpdateCoordinator
 
     _attr_code_format = FORMAT_NUMBER
     _attr_name = "Verisure Alarm"

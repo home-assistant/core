@@ -225,6 +225,17 @@ SSDP = {
     "samsungtv": [
         {
             "st": "urn:samsung.com:device:RemoteControlReceiver:1"
+        },
+        {
+            "st": "urn:samsung.com:service:MainTVAgent2:1"
+        },
+        {
+            "manufacturer": "Samsung",
+            "st": "urn:schemas-upnp-org:service:RenderingControl:1"
+        },
+        {
+            "manufacturer": "Samsung Electronics",
+            "st": "urn:schemas-upnp-org:service:RenderingControl:1"
         }
     ],
     "songpal": [

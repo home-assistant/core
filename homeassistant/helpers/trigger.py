@@ -3,13 +3,14 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
+import functools
 import logging
 from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_ID, CONF_PLATFORM
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.const import CONF_ID, CONF_PLATFORM, CONF_VARIABLES
+from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import IntegrationNotFound, async_get_integration
 
@@ -55,6 +56,25 @@ async def async_validate_trigger_config(
     return config
 
 
+def _trigger_action_wrapper(
+    hass: HomeAssistant, action: Callable, conf: ConfigType
+) -> Callable:
+    """Wrap trigger action with extra vars if configured."""
+    if CONF_VARIABLES not in conf:
+        return action
+
+    @functools.wraps(action)
+    async def with_vars(
+        run_variables: dict[str, Any], context: Context | None = None
+    ) -> None:
+        """Wrap action with extra vars."""
+        trigger_variables = conf[CONF_VARIABLES]
+        run_variables.update(trigger_variables.async_render(hass, run_variables))
+        await action(run_variables, context)
+
+    return with_vars
+
+
 async def async_initialize_triggers(
     hass: HomeAssistant,
     trigger_config: list[ConfigType],
@@ -80,7 +100,12 @@ async def async_initialize_triggers(
             "variables": variables,
             "trigger_data": trigger_data,
         }
-        triggers.append(platform.async_attach_trigger(hass, conf, action, info))
+
+        triggers.append(
+            platform.async_attach_trigger(
+                hass, conf, _trigger_action_wrapper(hass, action, conf), info
+            )
+        )
 
     attach_results = await asyncio.gather(*triggers, return_exceptions=True)
     removes: list[Callable[[], None]] = []

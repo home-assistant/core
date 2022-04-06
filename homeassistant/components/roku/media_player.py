@@ -402,9 +402,6 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
             stream_name = original_media_id
             stream_format = guess_stream_format(media_id, mime_type)
 
-        # If media ID is a relative URL, we serve it from HA.
-        media_id = async_process_play_media_url(self.hass, media_id)
-
         if media_type == FORMAT_CONTENT_TYPE[HLS_PROVIDER]:
             media_type = MEDIA_TYPE_VIDEO
             mime_type = FORMAT_CONTENT_TYPE[HLS_PROVIDER]
@@ -412,6 +409,9 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
             stream_format = "hls"
 
         if media_type in (MEDIA_TYPE_MUSIC, MEDIA_TYPE_URL, MEDIA_TYPE_VIDEO):
+            # If media ID is a relative URL, we serve it from HA.
+            media_id = async_process_play_media_url(self.hass, media_id)
+
             parsed = yarl.URL(media_id)
 
             if mime_type is None:

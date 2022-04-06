@@ -183,9 +183,13 @@ class GoogleCalendarService:
         """Get the calendar service with valid credetnails."""
         await self._session.async_ensure_token_valid()
         creds = _async_google_creds(self._hass, self._session.token)
-        return google_discovery.build(
-            "calendar", "v3", credentials=creds, cache_discovery=False
-        )
+
+        def _build() -> google_discovery.Resource:
+            return google_discovery.build(
+                "calendar", "v3", credentials=creds, cache_discovery=False
+            )
+
+        return await self._hass.async_add_executor_job(_build)
 
     async def async_list_calendars(
         self,
@@ -194,7 +198,7 @@ class GoogleCalendarService:
         service = await self._async_get_service()
 
         def _list_calendars() -> list[dict[str, Any]]:
-            cal_list = service.calendarList()  # pylint: disable=no-member
+            cal_list = service.calendarList()
             return cal_list.list().execute()["items"]
 
         return await self._hass.async_add_executor_job(_list_calendars)
@@ -206,7 +210,7 @@ class GoogleCalendarService:
         service = await self._async_get_service()
 
         def _create_event() -> dict[str, Any]:
-            events = service.events()  # pylint: disable=no-member
+            events = service.events()
             return events.insert(calendarId=calendar_id, body=event).execute()
 
         return await self._hass.async_add_executor_job(_create_event)
@@ -223,7 +227,7 @@ class GoogleCalendarService:
         service = await self._async_get_service()
 
         def _list_events() -> tuple[list[dict[str, Any]], str | None]:
-            events = service.events()  # pylint: disable=no-member
+            events = service.events()
             result = events.list(
                 calendarId=calendar_id,
                 timeMin=_api_time_format(start_time if start_time else dt.now()),

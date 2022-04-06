@@ -6,6 +6,7 @@ import logging
 from typing import Any
 from urllib.parse import urlparse
 
+import aiohttp
 from aiohue import LinkButtonNotPressed, create_app_key
 from aiohue.discovery import DiscoveredHueBridge, discover_bridge, discover_nupnp
 from aiohue.util import normalize_bridge_id
@@ -70,9 +71,12 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, host: str, bridge_id: str | None = None
     ) -> DiscoveredHueBridge:
         """Return a DiscoveredHueBridge object."""
-        bridge = await discover_bridge(
-            host, websession=aiohttp_client.async_get_clientsession(self.hass)
-        )
+        try:
+            bridge = await discover_bridge(
+                host, websession=aiohttp_client.async_get_clientsession(self.hass)
+            )
+        except aiohttp.ClientError:
+            return None
         if bridge_id is not None:
             bridge_id = normalize_bridge_id(bridge_id)
             assert bridge_id == bridge.id

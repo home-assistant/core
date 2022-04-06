@@ -11,7 +11,7 @@ from yeelight.main import get_known_models
 from homeassistant import config_entries, exceptions
 from homeassistant.components import dhcp, ssdp, zeroconf
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_ID, CONF_NAME
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_ID, CONF_MODEL, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
@@ -19,7 +19,6 @@ import homeassistant.helpers.config_validation as cv
 from .const import (
     CONF_DETECTED_MODEL,
     CONF_MODE_MUSIC,
-    CONF_MODEL,
     CONF_NIGHTLIGHT_SWITCH,
     CONF_NIGHTLIGHT_SWITCH_TYPE,
     CONF_SAVE_ON_CHANGE,

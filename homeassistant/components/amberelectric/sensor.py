@@ -51,7 +51,7 @@ def friendly_channel_type(channel_type: str) -> str:
     return "General"
 
 
-class AmberSensor(CoordinatorEntity, SensorEntity):
+class AmberSensor(CoordinatorEntity[AmberUpdateCoordinator], SensorEntity):
     """Amber Base Sensor."""
 
     _attr_attribution = ATTRIBUTION
@@ -180,7 +180,7 @@ class AmberPriceDescriptorSensor(AmberSensor):
         return self.coordinator.data[self.entity_description.key][self.channel_type]
 
 
-class AmberGridSensor(CoordinatorEntity, SensorEntity):
+class AmberGridSensor(CoordinatorEntity[AmberUpdateCoordinator], SensorEntity):
     """Sensor to show single grid specific values."""
 
     _attr_attribution = ATTRIBUTION

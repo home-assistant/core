@@ -7,7 +7,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .const import CONF_GATEWAY_ID, COORDINATOR, COORDINATOR_LIST, DOMAIN, GROUPS_LIST
+from .const import CONF_GATEWAY_ID, COORDINATOR, COORDINATOR_LIST, DOMAIN
 
 
 async def async_get_config_entry_diagnostics(
@@ -32,5 +32,4 @@ async def async_get_config_entry_diagnostics(
     return {
         "gateway_version": device.sw_version,
         "device_data": sorted(device_data),
-        "no_of_groups": len(coordinator_data[GROUPS_LIST]),
     }

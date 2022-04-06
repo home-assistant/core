@@ -21,6 +21,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
 
@@ -96,9 +97,7 @@ class QSEntity(Entity):
     async def async_added_to_hass(self):
         """Listen for updates from QSUSb via dispatcher."""
         self.async_on_remove(
-            self.hass.helpers.dispatcher.async_dispatcher_connect(
-                self.qsid, self.update_packet
-            )
+            async_dispatcher_connect(self.hass, self.qsid, self.update_packet)
         )
 
 

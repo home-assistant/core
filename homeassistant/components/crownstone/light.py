@@ -11,7 +11,8 @@ from crownstone_uart import CrownstoneUart
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    SUPPORT_BRIGHTNESS,
+    COLOR_MODE_BRIGHTNESS,
+    COLOR_MODE_ONOFF,
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -98,11 +99,16 @@ class CrownstoneEntity(CrownstoneBaseEntity, LightEntity):
         return crownstone_state_to_hass(self.device.state) > 0
 
     @property
-    def supported_features(self) -> int:
-        """Return the supported features of this Crownstone."""
+    def color_mode(self) -> str:
+        """Return the color mode of the light."""
         if self.device.abilities.get(DIMMING_ABILITY).is_enabled:
-            return SUPPORT_BRIGHTNESS
-        return 0
+            return COLOR_MODE_BRIGHTNESS
+        return COLOR_MODE_ONOFF
+
+    @property
+    def supported_color_modes(self) -> set[str] | None:
+        """Flag supported color modes."""
+        return {self.color_mode}
 
     async def async_added_to_hass(self) -> None:
         """Set up a listener when this entity is added to HA."""

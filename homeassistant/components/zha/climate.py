@@ -161,9 +161,9 @@ class Thermostat(ZhaEntity, ClimateEntity):
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        if self._thrm.local_temp is None:
+        if self._thrm.local_temperature is None:
             return None
-        return self._thrm.local_temp / ZCL_TEMP
+        return self._thrm.local_temperature / ZCL_TEMP
 
     @property
     def extra_state_attributes(self):
@@ -272,7 +272,7 @@ class Thermostat(ZhaEntity, ClimateEntity):
     @property
     def hvac_modes(self) -> tuple[str, ...]:
         """Return the list of available HVAC operation modes."""
-        return SEQ_OF_OPERATION.get(self._thrm.ctrl_seqe_of_oper, (HVAC_MODE_OFF,))
+        return SEQ_OF_OPERATION.get(self._thrm.ctrl_sequence_of_oper, (HVAC_MODE_OFF,))
 
     @property
     def precision(self):
@@ -601,6 +601,8 @@ class CentralitePearl(ZenWithinThermostat):
         "_TZE200_2atgpdho",
         "_TZE200_pvvbommb",
         "_TZE200_4eeyebrt",
+        "_TZE200_cpmgn2cf",
+        "_TZE200_9sfg7gm0",
         "_TYST11_ckud7u2l",
         "_TYST11_ywdxldoj",
         "_TYST11_cwnjrr72",
@@ -776,7 +778,10 @@ class StelproFanHeater(Thermostat):
 @STRICT_MATCH(
     channel_names=CHANNEL_THERMOSTAT,
     manufacturers={
-        "_TZE200_hue3yfsn",
+        "_TZE200_e9ba97vf",  # TV01-ZG
+        "_TZE200_husqqvux",  # TSL-TRV-TV01ZG
+        "_TZE200_hue3yfsn",  # TV02-ZG
+        "_TZE200_kly8gjlz",  # TV05-ZG
     },
 )
 class ZONNSMARTThermostat(Thermostat):

@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from asyncio import run_coroutine_threadsafe
 import datetime
-import json
 import logging
 from typing import Any
 
@@ -50,7 +49,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
 )
 from homeassistant.components.plex.const import PLEX_URI_SCHEME
-from homeassistant.components.plex.services import lookup_plex_media
+from homeassistant.components.plex.services import process_plex_payload
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TIME, STATE_IDLE, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -567,20 +566,16 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         soco = self.coordinator.soco
         if media_id and media_id.startswith(PLEX_URI_SCHEME):
             plex_plugin = self.speaker.plex_plugin
-            media_id = media_id[len(PLEX_URI_SCHEME) :]
-            payload = json.loads(media_id)
-            if isinstance(payload, dict):
-                shuffle = payload.pop("shuffle", False)
-            else:
-                shuffle = False
-            media = lookup_plex_media(self.hass, media_type, json.dumps(payload))
-            if shuffle:
+            result = process_plex_payload(
+                self.hass, media_type, media_id, supports_playqueues=False
+            )
+            if result.shuffle:
                 self.set_shuffle(True)
             if kwargs.get(ATTR_MEDIA_ENQUEUE):
-                plex_plugin.add_to_queue(media)
+                plex_plugin.add_to_queue(result.media)
             else:
                 soco.clear_queue()
-                plex_plugin.add_to_queue(media)
+                plex_plugin.add_to_queue(result.media)
                 soco.play_from_queue(0)
             return
 

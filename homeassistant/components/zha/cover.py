@@ -133,20 +133,20 @@ class ZhaCover(ZhaEntity, CoverEntity):
     async def async_open_cover(self, **kwargs):
         """Open the window cover."""
         res = await self._cover_channel.up_open()
-        if isinstance(res, list) and res[1] is Status.SUCCESS:
+        if not isinstance(res, Exception) and res[1] is Status.SUCCESS:
             self.async_update_state(STATE_OPENING)
 
     async def async_close_cover(self, **kwargs):
         """Close the window cover."""
         res = await self._cover_channel.down_close()
-        if isinstance(res, list) and res[1] is Status.SUCCESS:
+        if not isinstance(res, Exception) and res[1] is Status.SUCCESS:
             self.async_update_state(STATE_CLOSING)
 
     async def async_set_cover_position(self, **kwargs):
         """Move the roller shutter to a specific position."""
         new_pos = kwargs[ATTR_POSITION]
         res = await self._cover_channel.go_to_lift_percentage(100 - new_pos)
-        if isinstance(res, list) and res[1] is Status.SUCCESS:
+        if not isinstance(res, Exception) and res[1] is Status.SUCCESS:
             self.async_update_state(
                 STATE_CLOSING if new_pos < self._current_position else STATE_OPENING
             )
@@ -154,7 +154,7 @@ class ZhaCover(ZhaEntity, CoverEntity):
     async def async_stop_cover(self, **kwargs):
         """Stop the window cover."""
         res = await self._cover_channel.stop()
-        if isinstance(res, list) and res[1] is Status.SUCCESS:
+        if not isinstance(res, Exception) and res[1] is Status.SUCCESS:
             self._state = STATE_OPEN if self._current_position > 0 else STATE_CLOSED
             self.async_write_ha_state()
 
@@ -250,7 +250,7 @@ class Shade(ZhaEntity, CoverEntity):
     async def async_open_cover(self, **kwargs):
         """Open the window cover."""
         res = await self._on_off_channel.on()
-        if not isinstance(res, list) or res[1] != Status.SUCCESS:
+        if isinstance(res, Exception) or res[1] != Status.SUCCESS:
             self.debug("couldn't open cover: %s", res)
             return
 
@@ -260,7 +260,7 @@ class Shade(ZhaEntity, CoverEntity):
     async def async_close_cover(self, **kwargs):
         """Close the window cover."""
         res = await self._on_off_channel.off()
-        if not isinstance(res, list) or res[1] != Status.SUCCESS:
+        if isinstance(res, Exception) or res[1] != Status.SUCCESS:
             self.debug("couldn't open cover: %s", res)
             return
 
@@ -274,7 +274,7 @@ class Shade(ZhaEntity, CoverEntity):
             new_pos * 255 / 100, 1
         )
 
-        if not isinstance(res, list) or res[1] != Status.SUCCESS:
+        if isinstance(res, Exception) or res[1] != Status.SUCCESS:
             self.debug("couldn't set cover's position: %s", res)
             return
 
@@ -284,7 +284,7 @@ class Shade(ZhaEntity, CoverEntity):
     async def async_stop_cover(self, **kwargs) -> None:
         """Stop the cover."""
         res = await self._level_channel.stop()
-        if not isinstance(res, list) or res[1] != Status.SUCCESS:
+        if isinstance(res, Exception) or res[1] != Status.SUCCESS:
             self.debug("couldn't stop cover: %s", res)
             return
 

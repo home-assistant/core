@@ -35,9 +35,19 @@ def entity_reg(hass):
     "set_state,features_reg,features_state,expected_action_types",
     [
         (False, 0, 0, ["set_hvac_mode"]),
-        (False, const.SUPPORT_PRESET_MODE, 0, ["set_hvac_mode", "set_preset_mode"]),
+        (
+            False,
+            const.ClimateEntityFeature.PRESET_MODE,
+            0,
+            ["set_hvac_mode", "set_preset_mode"],
+        ),
         (True, 0, 0, ["set_hvac_mode"]),
-        (True, 0, const.SUPPORT_PRESET_MODE, ["set_hvac_mode", "set_preset_mode"]),
+        (
+            True,
+            0,
+            const.ClimateEntityFeature.PRESET_MODE,
+            ["set_hvac_mode", "set_preset_mode"],
+        ),
     ],
 )
 async def test_get_actions(

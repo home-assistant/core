@@ -98,14 +98,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         SynologyDSMLoginPermissionDeniedException,
     ) as err:
         if err.args[0] and isinstance(err.args[0], dict):
-            # pylint: disable=no-member
             details = err.args[0].get(EXCEPTION_DETAILS, EXCEPTION_UNKNOWN)
         else:
             details = EXCEPTION_UNKNOWN
         raise ConfigEntryAuthFailed(f"reason: {details}") from err
     except (SynologyDSMLoginFailedException, SynologyDSMRequestException) as err:
         if err.args[0] and isinstance(err.args[0], dict):
-            # pylint: disable=no-member
             details = err.args[0].get(EXCEPTION_DETAILS, EXCEPTION_UNKNOWN)
         else:
             details = EXCEPTION_UNKNOWN
@@ -227,7 +225,9 @@ async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> Non
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-class SynologyDSMBaseEntity(CoordinatorEntity):
+class SynologyDSMBaseEntity(
+    CoordinatorEntity[DataUpdateCoordinator[dict[str, dict[str, Any]]]]
+):
     """Representation of a Synology NAS entry."""
 
     entity_description: SynologyDSMEntityDescription
