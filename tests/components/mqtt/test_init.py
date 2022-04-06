@@ -16,6 +16,7 @@ from homeassistant.components import mqtt
 from homeassistant.components.mqtt import debug_info
 from homeassistant.components.mqtt.mixins import MQTT_ENTITY_DEVICE_INFO_SCHEMA
 from homeassistant.components.mqtt.models import ReceiveMessage
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     EVENT_HOMEASSISTANT_STARTED,
@@ -2415,3 +2416,17 @@ async def test_subscribe_connection_status(hass, mqtt_mock, mqtt_client_mock):
     assert len(mqtt_connected_calls) == 2
     assert mqtt_connected_calls[0] is True
     assert mqtt_connected_calls[1] is False
+
+
+async def test_unload_entry(hass, mqtt_mock, mqtt_client_mock) -> None:
+    """Test unloading the MQTT entry."""
+    assert hass.services.has_service(mqtt.DOMAIN, "dump")
+    assert hass.services.has_service(mqtt.DOMAIN, "publish")
+
+    mqtt_config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    assert mqtt_config_entry.state is ConfigEntryState.LOADED
+    assert await hass.config_entries.async_unload(mqtt_config_entry.entry_id)
+    assert mqtt_config_entry.state is ConfigEntryState.NOT_LOADED
+
+    assert not hass.services.has_service(mqtt.DOMAIN, "dump")
+    assert not hass.services.has_service(mqtt.DOMAIN, "publish")

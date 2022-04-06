@@ -6,6 +6,7 @@ import pytest
 import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.mqtt import _LOGGER, DOMAIN, debug_info
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.trigger import async_initialize_triggers
 from homeassistant.setup import async_setup_component
@@ -1303,3 +1304,57 @@ async def test_trigger_debug_info(hass, mqtt_mock):
         == "homeassistant/device_automation/bla2/config"
     )
     assert debug_info_data["triggers"][0]["discovery_data"]["payload"] == config2
+
+
+async def test_unload_entry(hass, calls, device_reg, mqtt_mock) -> None:
+    """Test unloading the MQTT entry."""
+
+    data1 = (
+        '{ "automation_type":"trigger",'
+        '  "device":{"identifiers":["0AFFD2"]},'
+        '  "topic": "foobar/triggers/button1",'
+        '  "type": "button_short_press",'
+        '  "subtype": "button_1" }'
+    )
+    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data1)
+    await hass.async_block_till_done()
+    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": device_entry.id,
+                        "discovery_id": "bla1",
+                        "type": "button_short_press",
+                        "subtype": "button_1",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {"some": ("short_press")},
+                    },
+                },
+            ]
+        },
+    )
+
+    # Fake short press 1
+    async_fire_mqtt_message(hass, "foobar/triggers/button1", "short_press")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    mqtt_config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert mqtt_config_entry.state is ConfigEntryState.LOADED
+    assert await hass.config_entries.async_unload(mqtt_config_entry.entry_id)
+    assert mqtt_config_entry.state is ConfigEntryState.NOT_LOADED
+    await hass.async_block_till_done()
+
+    # Fake short press 2
+    async_fire_mqtt_message(hass, "foobar/triggers/button1", "short_press")
+    await hass.async_block_till_done()
+    assert len(calls) == 1

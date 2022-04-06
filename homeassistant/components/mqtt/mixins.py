@@ -528,7 +528,7 @@ class MqttDiscoveryDeviceUpdate:
     def __init__(
         self,
         hass: HomeAssistant,
-        discovery_data: dict | None,
+        discovery_data: dict,
         device_id: str,
         config_entry: ConfigEntry,
         log_name: str,
@@ -539,9 +539,6 @@ class MqttDiscoveryDeviceUpdate:
         self.hass = hass
         self.log_name = log_name
         self._remove_discovery = None
-
-        if discovery_data is None:
-            return
 
         discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
         self.discovery_data = discovery_data
