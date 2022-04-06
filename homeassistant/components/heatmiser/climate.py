@@ -11,8 +11,8 @@ from homeassistant.components.climate import (
     HVAC_MODE_OFF,
     PLATFORM_SCHEMA,
     ClimateEntity,
+    ClimateEntityFeature,
 )
-from homeassistant.components.climate.const import SUPPORT_TARGET_TEMPERATURE
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_HOST,
@@ -76,6 +76,8 @@ def setup_platform(
 class HeatmiserV3Thermostat(ClimateEntity):
     """Representation of a HeatmiserV3 thermostat."""
 
+    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+
     def __init__(self, therm, device, uh1):
         """Initialize the thermostat."""
         self.therm = therm(device[CONF_ID], "prt", uh1)
@@ -87,11 +89,6 @@ class HeatmiserV3Thermostat(ClimateEntity):
         self.dcb = None
         self._hvac_mode = HVAC_MODE_HEAT
         self._temperature_unit = None
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_TARGET_TEMPERATURE
 
     @property
     def name(self):
