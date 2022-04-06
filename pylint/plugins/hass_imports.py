@@ -25,6 +25,12 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
             constant=re.compile(r"^DEVICE_CLASS_(\w*)$"),
         ),
     ],
+    "homeassistant.components.camera": [
+        ObsoleteImportMatch(
+            reason="replaced by CameraEntityFeature enum",
+            constant=re.compile(r"^SUPPORT_(\w*)$"),
+        ),
+    ],
     "homeassistant.components.cover": [
         ObsoleteImportMatch(
             reason="replaced by CoverDeviceClass enum",
