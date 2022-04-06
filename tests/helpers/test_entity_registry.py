@@ -1293,6 +1293,7 @@ def test_migrate_entity_to_new_platform(hass, registry):
     assert new_entry.icon == "new_icon"
     assert new_entry.platform == "hue2"
 
+    # Test nonexisting entity
     with pytest.raises(ValueError):
         registry.async_migrate_entity_to_new_platform(
             "light.not_a_real_light",
@@ -1301,6 +1302,14 @@ def test_migrate_entity_to_new_platform(hass, registry):
             new_config_entry_id=new_config_entry.entry_id,
         )
 
+    # Test migrate entity without new config entry ID
+    with pytest.raises(ValueError):
+        registry.async_migrate_entity_to_new_platform(
+            "light.light",
+            "hue3",
+        )
+
+    # Test entity with a state
     hass.states.async_set("light.light", "on")
     with pytest.raises(ValueError):
         registry.async_migrate_entity_to_new_platform(

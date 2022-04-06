@@ -623,8 +623,8 @@ class EntityRegistry:
         entity_id: str,
         new_platform: str,
         *,
+        new_config_entry_id: str | UndefinedType = UNDEFINED,
         new_unique_id: str | UndefinedType = UNDEFINED,
-        new_config_entry_id: str | None | UndefinedType = UNDEFINED,
         new_device_id: str | None | UndefinedType = UNDEFINED,
     ) -> RegistryEntry:
         """
@@ -641,6 +641,12 @@ class EntityRegistry:
             raise ValueError("Only entities that haven't been loaded can be migrated")
 
         old = self.entities[entity_id]
+        if new_config_entry_id == UNDEFINED and old.config_entry_id is not None:
+            raise ValueError(
+                f"new_config_entry_id required because {entity_id} is already linked "
+                "to a config entry"
+            )
+
         new = self.entities[entity_id] = attr.evolve(old, platform=new_platform)
         return self.async_update_entity(
             new.entity_id,
