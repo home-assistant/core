@@ -263,6 +263,10 @@ class HistoryPeriodView(HomeAssistantView):
         no_attributes,
     ):
         """Fetch significant stats from the database as json."""
+        import cProfile
+
+        pr = cProfile.Profile()
+        pr.enable()
         timer_start = time.perf_counter()
 
         with session_scope(hass=hass) as session:
@@ -286,25 +290,32 @@ class HistoryPeriodView(HomeAssistantView):
         # Optionally reorder the result to respect the ordering given
         # by any entities explicitly included in the configuration.
         if not self.filters or not self.use_include_order:
-            return self.json(
+            ret = self.json(
                 [
                     [state.as_dict() for state in state_list]
                     for state_list in result.values()
                 ]
             )
-
-        result = list(result.values())
-        sorted_result = []
-        for order_entity in self.filters.included_entities:
-            for state_list in result:
-                if state_list[0].entity_id == order_entity:
-                    sorted_result.append(state_list)
-                    result.remove(state_list)
-                    break
-        sorted_result.extend(result)
-        return self.json(
-            [[state.as_dict() for state in state_list] for state_list in sorted_result]
-        )
+        else:
+            result = list(result.values())
+            sorted_result = []
+            for order_entity in self.filters.included_entities:
+                for state_list in result:
+                    if state_list[0].entity_id == order_entity:
+                        sorted_result.append(state_list)
+                        result.remove(state_list)
+                        break
+            sorted_result.extend(result)
+            ret = self.json(
+                [
+                    [state.as_dict() for state in state_list]
+                    for state_list in sorted_result
+                ]
+            )
+        pr.disable()
+        pr.create_stats()
+        pr.dump_stats(f"history.{dt_util.utcnow()}.cprof")
+        return ret
 
 
 def sqlalchemy_filter_from_include_exclude_conf(conf: ConfigType) -> Filters | None:
