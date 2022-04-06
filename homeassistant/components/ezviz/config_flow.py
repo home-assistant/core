@@ -307,50 +307,6 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_import(self, import_config):
-        """Handle config import from yaml."""
-        _LOGGER.debug("import config: %s", import_config)
-
-        # Check importing camera.
-        if ATTR_SERIAL in import_config:
-            return await self.async_step_import_camera(import_config)
-
-        # Validate and setup of main ezviz cloud account.
-        try:
-            return await self._validate_and_create_auth(import_config)
-
-        except InvalidURL:
-            _LOGGER.error("Error importing Ezviz platform config: invalid host")
-            return self.async_abort(reason="invalid_host")
-
-        except InvalidHost:
-            _LOGGER.error("Error importing Ezviz platform config: cannot connect")
-            return self.async_abort(reason="cannot_connect")
-
-        except (AuthTestResultFailed, PyEzvizError):
-            _LOGGER.error("Error importing Ezviz platform config: invalid auth")
-            return self.async_abort(reason="invalid_auth")
-
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception(
-                "Error importing ezviz platform config: unexpected exception"
-            )
-
-        return self.async_abort(reason="unknown")
-
-    async def async_step_import_camera(self, data):
-        """Create RTSP auth entry per camera in config."""
-
-        await self.async_set_unique_id(data[ATTR_SERIAL])
-        self._abort_if_unique_id_configured()
-
-        _LOGGER.debug("Create camera with: %s", data)
-
-        cam_serial = data.pop(ATTR_SERIAL)
-        data[CONF_TYPE] = ATTR_TYPE_CAMERA
-
-        return self.async_create_entry(title=cam_serial, data=data)
-
 
 class EzvizOptionsFlowHandler(OptionsFlow):
     """Handle Ezviz client options."""

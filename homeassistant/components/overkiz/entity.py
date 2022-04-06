@@ -16,10 +16,8 @@ from .coordinator import OverkizDataUpdateCoordinator
 from .executor import OverkizExecutor
 
 
-class OverkizEntity(CoordinatorEntity):
+class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
     """Representation of an Overkiz device entity."""
-
-    coordinator: OverkizDataUpdateCoordinator
 
     def __init__(
         self, device_url: str, coordinator: OverkizDataUpdateCoordinator

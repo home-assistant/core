@@ -5,12 +5,17 @@ import logging
 
 from panasonic_viera import Keys
 
+from homeassistant.components import media_source
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
 )
+from homeassistant.components.media_player.browse_media import (
+    async_process_play_media_url,
+)
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_URL,
+    SUPPORT_BROWSE_MEDIA,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -52,6 +57,7 @@ SUPPORT_VIERATV = (
     | SUPPORT_PLAY
     | SUPPORT_PLAY_MEDIA
     | SUPPORT_STOP
+    | SUPPORT_BROWSE_MEDIA
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -198,8 +204,18 @@ class PanasonicVieraTVEntity(MediaPlayerEntity):
 
     async def async_play_media(self, media_type, media_id, **kwargs):
         """Play media."""
+        if media_source.is_media_source_id(media_id):
+            media_type = MEDIA_TYPE_URL
+            play_item = await media_source.async_resolve_media(self.hass, media_id)
+            media_id = play_item.url
+
         if media_type != MEDIA_TYPE_URL:
             _LOGGER.warning("Unsupported media_type: %s", media_type)
             return
 
+        media_id = async_process_play_media_url(self.hass, media_id)
         await self._remote.async_play_media(media_type, media_id)
+
+    async def async_browse_media(self, media_content_type=None, media_content_id=None):
+        """Implement the websocket media browsing helper."""
+        return await media_source.async_browse_media(self.hass, media_content_id)

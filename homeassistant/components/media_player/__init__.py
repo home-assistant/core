@@ -70,6 +70,7 @@ from .browse_media import BrowseMedia, async_process_play_media_url  # noqa: F40
 from .const import (  # noqa: F401
     ATTR_APP_ID,
     ATTR_APP_NAME,
+    ATTR_ENTITY_PICTURE_LOCAL,
     ATTR_GROUP_MEMBERS,
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
@@ -936,7 +937,7 @@ class MediaPlayerEntity(Entity):
                 state_attr[attr] = value
 
         if self.media_image_remotely_accessible:
-            state_attr["entity_picture_local"] = self.media_image_local
+            state_attr[ATTR_ENTITY_PICTURE_LOCAL] = self.media_image_local
 
         return state_attr
 

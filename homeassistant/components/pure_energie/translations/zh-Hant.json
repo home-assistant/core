@@ -16,7 +16,7 @@
             },
             "zeroconf_confirm": {
                 "description": "\u662f\u5426\u8981\u65b0\u589e Pure Energie Meter (`{model}`) \u81f3 Home Assistant\uff1f",
-                "title": "\u81ea\u52d5\u63a2\u7d22\u5230 Pure Energie Meter \u88dd\u7f6e"
+                "title": "\u81ea\u52d5\u641c\u7d22\u5230 Pure Energie Meter \u88dd\u7f6e"
             }
         }
     }

@@ -25,7 +25,7 @@ from homeassistant.components.fan import (
     FanEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, CONF_MODEL
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -83,8 +83,6 @@ from .device import XiaomiCoordinatedMiioEntity
 _LOGGER = logging.getLogger(__name__)
 
 DATA_KEY = "fan.xiaomi_miio"
-
-CONF_MODEL = "model"
 
 ATTR_MODE_NATURE = "Nature"
 ATTR_MODE_NORMAL = "Normal"
@@ -326,7 +324,6 @@ class XiaomiGenericDevice(XiaomiCoordinatedMiioEntity, FanEntity):
 
     async def async_turn_on(
         self,
-        speed: str = None,
         percentage: int = None,
         preset_mode: str = None,
         **kwargs,

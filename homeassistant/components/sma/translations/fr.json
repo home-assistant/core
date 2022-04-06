@@ -7,7 +7,7 @@
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
             "cannot_retrieve_device_info": "Connexion r\u00e9ussie, mais impossible de r\u00e9cup\u00e9rer les informations sur l'appareil",
-            "invalid_auth": "Authentification invalide",
+            "invalid_auth": "Authentification non valide",
             "unknown": "Erreur inattendue"
         },
         "step": {

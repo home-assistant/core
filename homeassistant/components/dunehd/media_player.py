@@ -93,11 +93,10 @@ class DuneHDPlayerEntity(MediaPlayerEntity):
         self._state: dict[str, Any] = {}
         self._unique_id = unique_id
 
-    def update(self) -> bool:
+    def update(self) -> None:
         """Update internal status of the entity."""
         self._state = self._player.update_state()
         self.__update_title()
-        return True
 
     @property
     def state(self) -> str | None:

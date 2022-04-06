@@ -94,10 +94,8 @@ async def async_setup_platform(
     )
 
 
-class TautulliSensor(CoordinatorEntity, SensorEntity):
+class TautulliSensor(CoordinatorEntity[TautulliDataUpdateCoordinator], SensorEntity):
     """Representation of a Tautulli sensor."""
-
-    coordinator: TautulliDataUpdateCoordinator
 
     def __init__(
         self,

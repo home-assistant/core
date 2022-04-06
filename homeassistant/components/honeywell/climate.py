@@ -81,8 +81,8 @@ PARALLEL_UPDATES = 1
 
 async def async_setup_entry(hass, config, async_add_entities, discovery_info=None):
     """Set up the Honeywell thermostat."""
-    cool_away_temp = config.data.get(CONF_COOL_AWAY_TEMPERATURE)
-    heat_away_temp = config.data.get(CONF_HEAT_AWAY_TEMPERATURE)
+    cool_away_temp = config.options.get(CONF_COOL_AWAY_TEMPERATURE)
+    heat_away_temp = config.options.get(CONF_HEAT_AWAY_TEMPERATURE)
 
     data = hass.data[DOMAIN][config.entry_id]
 

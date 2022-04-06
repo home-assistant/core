@@ -31,6 +31,11 @@ async def setup_github_integration(
             },
             headers=headers,
         )
+        aioclient_mock.get(
+            f"https://api.github.com/repos/{repository}/events",
+            json=[],
+            headers=headers,
+        )
     aioclient_mock.post(
         "https://api.github.com/graphql",
         json=json.loads(load_fixture("graphql.json", DOMAIN)),

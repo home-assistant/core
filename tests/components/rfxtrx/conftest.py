@@ -14,13 +14,16 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 
 
-def create_rfx_test_cfg(device="abcd", automatic_add=False, devices=None):
+def create_rfx_test_cfg(
+    device="abcd", automatic_add=False, protocols=None, devices=None
+):
     """Create rfxtrx config entry data."""
     return {
         "device": device,
         "host": None,
         "port": None,
         "automatic_add": automatic_add,
+        "protocols": protocols,
         "debug": False,
         "devices": devices,
     }

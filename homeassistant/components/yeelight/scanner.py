@@ -67,12 +67,13 @@ class YeelightScanner:
 
                 return _async_connected
 
+            source = (str(source_ip), 0)
             self._listeners.append(
                 SsdpSearchListener(
                     async_callback=self._async_process_entry,
                     service_type=SSDP_ST,
                     target=SSDP_TARGET,
-                    source_ip=source_ip,
+                    source=source,
                     async_connect_callback=_wrap_async_connected_idx(idx),
                 )
             )
@@ -87,7 +88,7 @@ class YeelightScanner:
                 continue
             _LOGGER.warning(
                 "Failed to setup listener for %s: %s",
-                self._listeners[idx].source_ip,
+                self._listeners[idx].source,
                 result,
             )
             failed_listeners.append(self._listeners[idx])

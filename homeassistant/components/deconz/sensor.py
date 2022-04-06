@@ -75,7 +75,7 @@ class DeconzSensorDescriptionMixin:
     """Required values when describing secondary sensor attributes."""
 
     update_key: str
-    value_fn: Callable[[PydeconzSensor], float | int | None]
+    value_fn: Callable[[PydeconzSensor], float | int | str | None]
 
 
 @dataclass
@@ -334,14 +334,14 @@ class DeconzSensor(DeconzDevice, SensorEntity):
         """Return the state of the sensor."""
         if self.entity_description.device_class is SensorDeviceClass.TIMESTAMP:
             return dt_util.parse_datetime(
-                self.entity_description.value_fn(self._device)
+                self.entity_description.value_fn(self._device)  # type: ignore[arg-type]
             )
         return self.entity_description.value_fn(self._device)
 
     @property
-    def extra_state_attributes(self) -> dict[str, bool | float | int | None]:
+    def extra_state_attributes(self) -> dict[str, bool | float | int | str | None]:
         """Return the state attributes of the sensor."""
-        attr: dict[str, bool | float | int | None] = {}
+        attr: dict[str, bool | float | int | str | None] = {}
 
         if self.entity_description.key not in PROVIDES_EXTRA_ATTRIBUTES:
             return attr

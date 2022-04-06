@@ -91,7 +91,6 @@ class ISYLightEntity(ISYNodeEntity, LightEntity, RestoreEntity):
                 self._last_brightness = self._node.status
         super().async_on_update(event)
 
-    # pylint: disable=arguments-differ
     async def async_turn_on(self, brightness: int | None = None, **kwargs: Any) -> None:
         """Send the turn on command to the ISY994 light device."""
         if self._restore_light_state and brightness is None and self._last_brightness:

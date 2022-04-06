@@ -5,7 +5,7 @@ from typing import Any
 
 import voluptuous as vol
 from yalesmartalarmclient.client import YaleSmartAlarmClient
-from yalesmartalarmclient.exceptions import AuthenticationError, UnknownError
+from yalesmartalarmclient.exceptions import AuthenticationError
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import CONF_CODE, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
@@ -21,6 +21,7 @@ from .const import (
     DEFAULT_NAME,
     DOMAIN,
     LOGGER,
+    YALE_BASE_ERRORS,
 )
 
 DATA_SCHEMA = vol.Schema(
@@ -52,11 +53,6 @@ class YaleConfigFlow(ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return YaleOptionsFlowHandler(config_entry)
 
-    async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
-        """Import a configuration from config.yaml."""
-
-        return await self.async_step_user(user_input=config)
-
     async def async_step_reauth(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -81,7 +77,7 @@ class YaleConfigFlow(ConfigFlow, domain=DOMAIN):
             except AuthenticationError as error:
                 LOGGER.error("Authentication failed. Check credentials %s", error)
                 errors = {"base": "invalid_auth"}
-            except (ConnectionError, TimeoutError, UnknownError) as error:
+            except YALE_BASE_ERRORS as error:
                 LOGGER.error("Connection to API failed %s", error)
                 errors = {"base": "cannot_connect"}
 
@@ -124,7 +120,7 @@ class YaleConfigFlow(ConfigFlow, domain=DOMAIN):
             except AuthenticationError as error:
                 LOGGER.error("Authentication failed. Check credentials %s", error)
                 errors = {"base": "invalid_auth"}
-            except (ConnectionError, TimeoutError, UnknownError) as error:
+            except YALE_BASE_ERRORS as error:
                 LOGGER.error("Connection to API failed %s", error)
                 errors = {"base": "cannot_connect"}
 

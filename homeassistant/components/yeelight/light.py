@@ -245,7 +245,7 @@ def _parse_custom_effects(effects_config):
 def _async_cmd(func):
     """Define a wrapper to catch exceptions from the bulb."""
 
-    async def _async_wrap(self, *args, **kwargs):
+    async def _async_wrap(self: "YeelightGenericLight", *args, **kwargs):
         for attempts in range(2):
             try:
                 _LOGGER.debug("Calling %s with %s %s", func, args, kwargs)
@@ -708,7 +708,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         """Activate flash."""
         if not flash:
             return
-        if int(self._bulb.last_properties["color_mode"]) != 1:
+        if int(self._get_property("color_mode")) != 1:
             _LOGGER.error("Flash supported currently only in RGB mode")
             return
 

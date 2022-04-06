@@ -33,7 +33,7 @@
                     "ip_address": "Indirizzo IP (Lascia vuoto se stai usando il rilevamento automatico).",
                     "mode": "Modalit\u00e0 di configurazione"
                 },
-                "description": "Seleziona la modalit\u00e0 per la configurazione. Il campo per l'indirizzo IP pu\u00f2 essere lasciato vuoto se si seleziona il rilevamento automatico, poich\u00e9 i dispositivi saranno automaticamente individuati.",
+                "description": "Seleziona la modalit\u00e0 per la configurazione. Il campo per l'indirizzo IP pu\u00f2 essere lasciato vuoto se si seleziona il rilevamento automatico, poich\u00e9 i dispositivi saranno rilevati automaticamente.",
                 "title": "PlayStation 4"
             }
         }

@@ -188,6 +188,7 @@ class SonosDiscoveryManager:
             _ = soco.volume
             return soco
         except NotSupportedException as exc:
+            # pylint: disable-next=used-before-assignment
             _LOGGER.debug("Device %s is not supported, ignoring: %s", uid, exc)
             self.data.discovery_ignored.add(ip_address)
         except (OSError, SoCoException) as ex:

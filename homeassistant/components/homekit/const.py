@@ -150,6 +150,8 @@ SERV_WINDOW_COVERING = "WindowCovering"
 CHAR_ACTIVE = "Active"
 CHAR_ACTIVE_IDENTIFIER = "ActiveIdentifier"
 CHAR_AIR_PARTICULATE_DENSITY = "AirParticulateDensity"
+CHAR_PM25_DENSITY = "PM2.5Density"
+CHAR_PM10_DENSITY = "PM10Density"
 CHAR_AIR_QUALITY = "AirQuality"
 CHAR_BATTERY_LEVEL = "BatteryLevel"
 CHAR_BRIGHTNESS = "Brightness"
@@ -235,7 +237,6 @@ PROP_MIN_VALUE = "minValue"
 PROP_MIN_STEP = "minStep"
 PROP_CELSIUS = {"minValue": -273, "maxValue": 999}
 PROP_VALID_VALUES = "ValidValues"
-
 # #### Thresholds ####
 THRESHOLD_CO = 25
 THRESHOLD_CO2 = 1000

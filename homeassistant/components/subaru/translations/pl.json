@@ -35,7 +35,7 @@
                 "data": {
                     "update_enabled": "W\u0142\u0105cz odpytywanie pojazdu"
                 },
-                "description": "Po w\u0142\u0105czeniu, odpytywanie pojazdu b\u0119dzie co 2 godziny wysy\u0142a\u0107 zdalne polecenie do pojazdu w celu uzyskania nowych danych z czujnika. Bez odpytywania pojazdu, nowe dane z czujnika s\u0105 odbierane tylko wtedy, gdy pojazd automatycznie przesy\u0142a dane (zwykle po wy\u0142\u0105czeniu silnika).",
+                "description": "Po w\u0142\u0105czeniu, odpytywanie pojazdu b\u0119dzie co 2 godziny wysy\u0142a\u0107 zdalne polecenie do pojazdu w celu uzyskania nowych danych z sensora. Bez odpytywania pojazdu, nowe dane z sensora s\u0105 odbierane tylko wtedy, gdy pojazd automatycznie przesy\u0142a dane (zwykle po wy\u0142\u0105czeniu silnika).",
                 "title": "Opcje Subaru Starlink"
             }
         }

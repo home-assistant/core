@@ -4,6 +4,7 @@ import pytest
 from homeassistant.components import light
 from homeassistant.components.light.reproduce_state import DEPRECATION_WARNING
 from homeassistant.core import State
+from homeassistant.helpers.state import async_reproduce_state
 
 from tests.common import async_mock_service
 
@@ -43,7 +44,8 @@ async def test_reproducing_states(hass, caplog):
     turn_off_calls = async_mock_service(hass, "light", "turn_off")
 
     # These calls should do nothing as entities already in desired state
-    await hass.helpers.state.async_reproduce_state(
+    await async_reproduce_state(
+        hass,
         [
             State("light.entity_off", "off"),
             State("light.entity_bright", "on", VALID_BRIGHTNESS),
@@ -58,23 +60,22 @@ async def test_reproducing_states(hass, caplog):
             State("light.entity_profile", "on", VALID_PROFILE),
             State("light.entity_rgb", "on", VALID_RGB_COLOR),
             State("light.entity_xy", "on", VALID_XY_COLOR),
-        ]
+        ],
     )
 
     assert len(turn_on_calls) == 0
     assert len(turn_off_calls) == 0
 
     # Test invalid state is handled
-    await hass.helpers.state.async_reproduce_state(
-        [State("light.entity_off", "not_supported")]
-    )
+    await async_reproduce_state(hass, [State("light.entity_off", "not_supported")])
 
     assert "not_supported" in caplog.text
     assert len(turn_on_calls) == 0
     assert len(turn_off_calls) == 0
 
     # Make sure correct services are called
-    await hass.helpers.state.async_reproduce_state(
+    await async_reproduce_state(
+        hass,
         [
             State("light.entity_xy", "off"),
             State("light.entity_off", "on", VALID_BRIGHTNESS),
@@ -194,8 +195,8 @@ async def test_filter_color_modes(hass, caplog, color_mode):
 
     turn_on_calls = async_mock_service(hass, "light", "turn_on")
 
-    await hass.helpers.state.async_reproduce_state(
-        [State("light.entity", "on", {**all_colors, "color_mode": color_mode})]
+    await async_reproduce_state(
+        hass, [State("light.entity", "on", {**all_colors, "color_mode": color_mode})]
     )
 
     expected_map = {
@@ -225,8 +226,8 @@ async def test_filter_color_modes(hass, caplog, color_mode):
 
     # This should do nothing, the light is already in the desired state
     hass.states.async_set("light.entity", "on", {"color_mode": color_mode, **expected})
-    await hass.helpers.state.async_reproduce_state(
-        [State("light.entity", "on", {**expected, "color_mode": color_mode})]
+    await async_reproduce_state(
+        hass, [State("light.entity", "on", {**expected, "color_mode": color_mode})]
     )
     assert len(turn_on_calls) == 1
 
@@ -235,8 +236,8 @@ async def test_deprecation_warning(hass, caplog):
     """Test deprecation warning."""
     hass.states.async_set("light.entity_off", "off", {})
     turn_on_calls = async_mock_service(hass, "light", "turn_on")
-    await hass.helpers.state.async_reproduce_state(
-        [State("light.entity_off", "on", {"brightness_pct": 80})]
+    await async_reproduce_state(
+        hass, [State("light.entity_off", "on", {"brightness_pct": 80})]
     )
     assert len(turn_on_calls) == 1
     assert DEPRECATION_WARNING % ["brightness_pct"] in caplog.text

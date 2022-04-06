@@ -7,18 +7,16 @@ from pyezviz.exceptions import HTTPError, InvalidHost, PyEzvizError
 import voluptuous as vol
 
 from homeassistant.components import ffmpeg
-from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_STREAM, Camera
+from homeassistant.components.camera import SUPPORT_STREAM, Camera
 from homeassistant.components.ffmpeg import get_ffmpeg_manager
 from homeassistant.config_entries import (
     SOURCE_IGNORE,
-    SOURCE_IMPORT,
     SOURCE_INTEGRATION_DISCOVERY,
     ConfigEntry,
 )
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     ATTR_DIRECTION,
@@ -27,7 +25,6 @@ from .const import (
     ATTR_SERIAL,
     ATTR_SPEED,
     ATTR_TYPE,
-    CONF_CAMERAS,
     CONF_FFMPEG_ARGUMENTS,
     DATA_COORDINATOR,
     DEFAULT_CAMERA_USERNAME,
@@ -47,60 +44,7 @@ from .const import (
 from .coordinator import EzvizDataUpdateCoordinator
 from .entity import EzvizEntity
 
-CAMERA_SCHEMA = vol.Schema(
-    {vol.Required(CONF_USERNAME): cv.string, vol.Required(CONF_PASSWORD): cv.string}
-)
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_CAMERAS, default={}): {cv.string: CAMERA_SCHEMA},
-    }
-)
-
 _LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: entity_platform.AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up a Ezviz IP Camera from platform config."""
-    _LOGGER.warning(
-        "Loading ezviz via platform config is deprecated, it will be automatically imported. Please remove it afterwards"
-    )
-
-    # Check if entry config exists and skips import if it does.
-    if hass.config_entries.async_entries(DOMAIN):
-        return
-
-    # Check if importing camera account.
-    if CONF_CAMERAS in config:
-        cameras_conf = config[CONF_CAMERAS]
-        for serial, camera in cameras_conf.items():
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={"source": SOURCE_IMPORT},
-                    data={
-                        ATTR_SERIAL: serial,
-                        CONF_USERNAME: camera[CONF_USERNAME],
-                        CONF_PASSWORD: camera[CONF_PASSWORD],
-                    },
-                )
-            )
-
-    # Check if importing main ezviz cloud account.
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=config,
-        )
-    )
 
 
 async def async_setup_entry(
@@ -227,8 +171,6 @@ async def async_setup_entry(
 
 class EzvizCamera(EzvizEntity, Camera):
     """An implementation of a Ezviz security camera."""
-
-    coordinator: EzvizDataUpdateCoordinator
 
     def __init__(
         self,

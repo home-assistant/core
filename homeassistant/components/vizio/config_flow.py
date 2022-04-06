@@ -454,7 +454,6 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._must_show_form = False
         return self.async_show_form(
             step_id=step_id,
-            data_schema=vol.Schema({}),
             description_placeholders={"access_token": self._data[CONF_ACCESS_TOKEN]},
         )
 
