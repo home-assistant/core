@@ -5,8 +5,10 @@ import logging
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
+    SUPPORT_CLOSE,
+    SUPPORT_OPEN,
+    SUPPORT_SET_POSITION,
     CoverEntity,
-    CoverEntityFeature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -35,11 +37,10 @@ def setup_platform(
 class LutronCover(LutronDevice, CoverEntity):
     """Representation of a Lutron shade."""
 
-    _attr_supported_features = (
-        CoverEntityFeature.OPEN
-        | CoverEntityFeature.CLOSE
-        | CoverEntityFeature.SET_POSITION
-    )
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
 
     @property
     def is_closed(self):
