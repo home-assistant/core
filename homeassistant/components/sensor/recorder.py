@@ -7,7 +7,7 @@ import datetime
 import itertools
 import logging
 import math
-from typing import Any
+from typing import Any, cast
 
 from sqlalchemy.orm.session import Session
 
@@ -19,6 +19,7 @@ from homeassistant.components.recorder import (
 )
 from homeassistant.components.recorder.const import DOMAIN as RECORDER_DOMAIN
 from homeassistant.components.recorder.models import (
+    LazyState,
     StatisticData,
     StatisticMetaData,
     StatisticResult,
@@ -416,7 +417,7 @@ def _compile_statistics(  # noqa: C901
     entities_full_history = [
         i.entity_id for i in sensor_states if "sum" in wanted_statistics[i.entity_id]
     ]
-    history_list: MutableMapping[str, list[State]] = {}
+    history_list: MutableMapping[str, Iterable[LazyState | State | dict[str, Any]]] = {}
     if entities_full_history:
         history_list = history.get_significant_states_with_session(
             hass,
@@ -444,7 +445,7 @@ def _compile_statistics(  # noqa: C901
     # from the recorder. Get the state from the state machine instead.
     for _state in sensor_states:
         if _state.entity_id not in history_list:
-            history_list[_state.entity_id] = [_state]
+            history_list[_state.entity_id] = (_state,)
 
     for _state in sensor_states:  # pylint: disable=too-many-nested-blocks
         entity_id = _state.entity_id
@@ -460,7 +461,7 @@ def _compile_statistics(  # noqa: C901
             old_metadatas,
             # entity_history does not contain minimal responses
             # so we must cast here
-            entity_history,
+            cast(list[State], entity_history),
             device_class,
             entity_id,
         )

@@ -22,6 +22,7 @@ from sqlalchemy import (
     distinct,
 )
 from sqlalchemy.dialects import mysql, oracle, postgresql
+from sqlalchemy.engine.row import Row
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy.orm.session import Session
@@ -207,7 +208,6 @@ class States(Base):  # type: ignore[misc,valid-type]
 
     def to_native(self, validate_entity_id: bool = True) -> State | None:
         """Convert to an HA state object."""
-        # After 2023.8 make state.to_native require StateAttributes
         try:
             return State(
                 self.entity_id,
@@ -540,7 +540,7 @@ class LazyState(State):
     """A lazy version of core State."""
 
     __slots__ = [
-        "row",
+        "_row",
         "_attributes",
         "_last_changed",
         "_last_updated",
@@ -549,12 +549,12 @@ class LazyState(State):
     ]
 
     def __init__(  # pylint: disable=super-init-not-called
-        self, row: States, attr_cache: dict[str, dict[str, Any]] | None = None
+        self, row: Row, attr_cache: dict[str, dict[str, Any]] | None = None
     ) -> None:
         """Init the lazy state."""
-        self.row = row
-        self.entity_id: str = self.row.entity_id
-        self.state = self.row.state or ""
+        self._row = row
+        self.entity_id: str = self._row.entity_id
+        self.state = self._row.state or ""
         self._attributes: dict[str, Any] | None = None
         self._last_changed: datetime | None = None
         self._last_updated: datetime | None = None
@@ -565,7 +565,7 @@ class LazyState(State):
     def attributes(self) -> dict[str, Any]:  # type: ignore[override]
         """State attributes."""
         if self._attributes is None:
-            source = self.row.shared_attrs or self.row.attributes
+            source = self._row.shared_attrs or self._row.attributes
             if self._attr_cache is not None and (
                 attributes := self._attr_cache.get(source)
             ):
@@ -579,7 +579,7 @@ class LazyState(State):
             except ValueError:
                 # When json.loads fails
                 _LOGGER.exception(
-                    "Error converting row to state attributes: %s", self.row
+                    "Error converting row to state attributes: %s", self._row
                 )
                 self._attributes = {}
             if self._attr_cache is not None:
@@ -607,7 +607,7 @@ class LazyState(State):
     def last_changed(self) -> datetime:  # type: ignore[override]
         """Last changed datetime."""
         if self._last_changed is None:
-            self._last_changed = process_timestamp(self.row.last_changed)
+            self._last_changed = process_timestamp(self._row.last_changed)
         return self._last_changed
 
     @last_changed.setter
@@ -619,7 +619,7 @@ class LazyState(State):
     def last_updated(self) -> datetime:  # type: ignore[override]
         """Last updated datetime."""
         if self._last_updated is None:
-            self._last_updated = process_timestamp(self.row.last_updated)
+            self._last_updated = process_timestamp(self._row.last_updated)
         return self._last_updated
 
     @last_updated.setter
@@ -636,13 +636,13 @@ class LazyState(State):
         """
         if self._last_changed is None and self._last_updated is None:
             last_changed_isoformat = process_timestamp_to_utc_isoformat(
-                self.row.last_changed
+                self._row.last_changed
             )
-            if self.row.last_changed == self.row.last_updated:
+            if self._row.last_changed == self._row.last_updated:
                 last_updated_isoformat = last_changed_isoformat
             else:
                 last_updated_isoformat = process_timestamp_to_utc_isoformat(
-                    self.row.last_updated
+                    self._row.last_updated
                 )
         else:
             last_changed_isoformat = self.last_changed.isoformat()
@@ -661,64 +661,7 @@ class LazyState(State):
     def __eq__(self, other: Any) -> bool:
         """Return the comparison."""
         return (
-            other.__class__ in [self.__class__, State, LazyMinimalState]
-            and self.entity_id == other.entity_id
-            and self.state == other.state
-            and self.attributes == other.attributes
-        )
-
-
-class LazyMinimalState(State):
-    """A lazy minimal version of core State."""
-
-    __slots__ = ["row"]
-
-    def __init__(self, row: States) -> None:  # pylint: disable=super-init-not-called
-        """Init the lazy minimal state."""
-        self.row = row
-        self.state = self.row.state or ""
-
-    @property
-    def entity_id(self) -> str:  # type: ignore[override]
-        """Return the entity_id."""
-        return self.row.entity_id  # type: ignore[no-any-return]
-
-    @property
-    def attributes(self) -> dict[str, Any]:  # type: ignore[override]
-        """State attributes."""
-        return json.loads(self.row.shared_attrs or self.row.attributes or "{}")  # type: ignore[no-any-return]
-
-    @property
-    def context(self) -> Context:  # type: ignore[override]
-        """State context."""
-        return Context(id=None)  # type: ignore[arg-type]
-
-    @property
-    def last_changed(self) -> datetime:  # type: ignore[override]
-        """Last changed datetime."""
-        return process_timestamp(self.row.last_changed)  # type: ignore[no-any-return]
-
-    @property
-    def last_updated(self) -> datetime:  # type: ignore[override]
-        """Last updated datetime."""
-        return process_timestamp(self.row.last_updated)  # type: ignore[no-any-return]
-
-    def as_dict(self) -> dict[str, Any]:  # type: ignore[override]
-        """Return a dict representation of the LazyMinimalState.
-
-        Async friendly.
-
-        To be used for JSON serialization.
-        """
-        return {
-            "state": self.state,
-            "last_changed": process_timestamp_to_utc_isoformat(self.row.last_changed),
-        }
-
-    def __eq__(self, other: Any) -> bool:
-        """Return the comparison."""
-        return (
-            other.__class__ in (self.__class__, State, LazyState)
+            other.__class__ in [self.__class__, State]
             and self.entity_id == other.entity_id
             and self.state == other.state
             and self.attributes == other.attributes
