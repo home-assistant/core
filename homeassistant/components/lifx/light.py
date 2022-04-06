@@ -30,11 +30,10 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
-    SUPPORT_EFFECT,
-    SUPPORT_TRANSITION,
     VALID_BRIGHTNESS,
     VALID_BRIGHTNESS_PCT,
     LightEntity,
+    LightEntityFeature,
     preprocess_turn_on_alternatives,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -569,7 +568,11 @@ class LIFXLight(LightEntity):
     @property
     def supported_features(self):
         """Flag supported features."""
-        support = SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION | SUPPORT_EFFECT
+        support = (
+            SUPPORT_BRIGHTNESS
+            | LightEntityFeature.TRANSITION
+            | LightEntityFeature.EFFECT
+        )
 
         bulb_features = lifx_features(self.bulb)
         if bulb_features["min_kelvin"] != bulb_features["max_kelvin"]:
