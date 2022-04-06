@@ -248,7 +248,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key=obis_references.ELECTRICITY_IMPORTED_TOTAL,
         name="Energy Consumption (total)",
-        dsmr_versions={"5", "5B", "5L", "5S", "Q3D"},
+        dsmr_versions={"5L", "5S", "Q3D"},
         force_update=True,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
