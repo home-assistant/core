@@ -25,10 +25,8 @@ from homeassistant.components.light import (
     COLOR_MODE_WHITE,
     FLASH_LONG,
     FLASH_SHORT,
-    SUPPORT_EFFECT,
-    SUPPORT_FLASH,
-    SUPPORT_TRANSITION,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -354,14 +352,14 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
     @property
     def supported_features(self) -> int:
         """Flag supported features."""
-        flags = SUPPORT_FLASH
+        flags: int = LightEntityFeature.FLASH
 
         # All color modes except UNKNOWN,ON_OFF support transition
         modes = self._native_supported_color_modes
         if any(m not in (0, LightColorCapability.ON_OFF) for m in modes):
-            flags |= SUPPORT_TRANSITION
+            flags |= LightEntityFeature.TRANSITION
         if self._static_info.effects:
-            flags |= SUPPORT_EFFECT
+            flags |= LightEntityFeature.EFFECT
         return flags
 
     @property

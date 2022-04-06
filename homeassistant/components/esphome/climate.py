@@ -13,7 +13,7 @@ from aioesphomeapi import (
     ClimateSwingMode,
 )
 
-from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
@@ -48,11 +48,6 @@ from homeassistant.components.climate.const import (
     PRESET_HOME,
     PRESET_NONE,
     PRESET_SLEEP,
-    SUPPORT_FAN_MODE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_SWING_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_RANGE,
     SWING_BOTH,
     SWING_HORIZONTAL,
     SWING_OFF,
@@ -223,15 +218,15 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
         """Return the list of supported features."""
         features = 0
         if self._static_info.supports_two_point_target_temperature:
-            features |= SUPPORT_TARGET_TEMPERATURE_RANGE
+            features |= ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         else:
-            features |= SUPPORT_TARGET_TEMPERATURE
+            features |= ClimateEntityFeature.TARGET_TEMPERATURE
         if self.preset_modes:
-            features |= SUPPORT_PRESET_MODE
+            features |= ClimateEntityFeature.PRESET_MODE
         if self.fan_modes:
-            features |= SUPPORT_FAN_MODE
+            features |= ClimateEntityFeature.FAN_MODE
         if self.swing_modes:
-            features |= SUPPORT_SWING_MODE
+            features |= ClimateEntityFeature.SWING_MODE
         return features
 
     @esphome_state_property
