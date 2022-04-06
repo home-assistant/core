@@ -667,3 +667,19 @@ class LazyState(State):
             and self.state == other.state
             and self.attributes == other.attributes
         )
+
+
+class LazyMinimalState(LazyState):
+    """A lazy minimal version of core State."""
+
+    def as_dict(self) -> dict[str, Any]:  # type: ignore[override]
+        """Return a dict representation of the LazyState.
+
+        Async friendly.
+
+        To be used for JSON serialization.
+        """
+        return {
+            "state": self.state,
+            "last_changed": process_timestamp_to_utc_isoformat(self._row.last_changed),
+        }

@@ -7,7 +7,7 @@ from datetime import datetime
 from itertools import groupby
 import logging
 import time
-from typing import Any, cast
+from typing import Any
 
 from sqlalchemy import Column, Text, and_, bindparam, func, or_
 from sqlalchemy.ext import baked
@@ -18,13 +18,7 @@ from homeassistant.components import recorder
 from homeassistant.core import HomeAssistant, State, split_entity_id
 import homeassistant.util.dt as dt_util
 
-from .models import (
-    LazyState,
-    RecorderRuns,
-    StateAttributes,
-    States,
-    process_timestamp_to_utc_isoformat,
-)
+from .models import LazyMinimalState, LazyState, RecorderRuns, StateAttributes, States
 from .util import execute, session_scope
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
@@ -141,7 +135,7 @@ def get_significant_states(
     significant_changes_only: bool = True,
     minimal_response: bool = False,
     no_attributes: bool = False,
-) -> MutableMapping[str, Iterable[LazyState | State | dict[str, Any]]]:
+) -> MutableMapping[str, list[State]]:
     """Wrap get_significant_states_with_session with an sql session."""
     with session_scope(hass=hass) as session:
         return get_significant_states_with_session(
@@ -169,7 +163,7 @@ def get_significant_states_with_session(
     significant_changes_only: bool = True,
     minimal_response: bool = False,
     no_attributes: bool = False,
-) -> MutableMapping[str, Iterable[LazyState | State | dict[str, Any]]]:
+) -> MutableMapping[str, list[State]]:
     """
     Return states changes during UTC period start_time - end_time.
 
@@ -262,7 +256,7 @@ def state_changes_during_period(
     descending: bool = False,
     limit: int | None = None,
     include_start_time_state: bool = True,
-) -> MutableMapping[str, Iterable[LazyState]]:
+) -> MutableMapping[str, list[State]]:
     """Return states changes during UTC period start_time - end_time."""
     with session_scope(hass=hass) as session:
         baked_query, join_attributes = bake_query_and_join_attributes(
@@ -302,22 +296,19 @@ def state_changes_during_period(
 
         entity_ids = [entity_id] if entity_id is not None else None
 
-        return cast(
-            MutableMapping[str, Iterable[LazyState]],
-            _sorted_states_to_dict(
-                hass,
-                session,
-                states,
-                start_time,
-                entity_ids,
-                include_start_time_state=include_start_time_state,
-            ),
+        return _sorted_states_to_dict(
+            hass,
+            session,
+            states,
+            start_time,
+            entity_ids,
+            include_start_time_state=include_start_time_state,
         )
 
 
 def get_last_state_changes(
     hass: HomeAssistant, number_of_states: int, entity_id: str
-) -> MutableMapping[str, Iterable[LazyState]]:
+) -> MutableMapping[str, list[State]]:
     """Return the last number_of_states."""
     start_time = dt_util.utcnow()
 
@@ -348,16 +339,13 @@ def get_last_state_changes(
 
         entity_ids = [entity_id] if entity_id is not None else None
 
-        return cast(
-            MutableMapping[str, Iterable[LazyState]],
-            _sorted_states_to_dict(
-                hass,
-                session,
-                reversed(states),
-                start_time,
-                entity_ids,
-                include_start_time_state=False,
-            ),
+        return _sorted_states_to_dict(
+            hass,
+            session,
+            reversed(states),
+            start_time,
+            entity_ids,
+            include_start_time_state=False,
         )
 
 
@@ -368,7 +356,7 @@ def get_states(
     run: RecorderRuns | None = None,
     filters: Any = None,
     no_attributes: bool = False,
-) -> list[LazyState]:
+) -> list[State]:
     """Return the states at a specific point in time."""
     if (
         run is None
@@ -392,7 +380,7 @@ def _get_states_with_session(
     run: RecorderRuns | None = None,
     filters: Any | None = None,
     no_attributes: bool = False,
-) -> list[LazyState]:
+) -> list[State]:
     """Return the states at a specific point in time."""
     if entity_ids and len(entity_ids) == 1:
         return _get_single_entity_states_with_session(
@@ -488,7 +476,7 @@ def _get_single_entity_states_with_session(
     utc_point_in_time: datetime,
     entity_id: str,
     no_attributes: bool = False,
-) -> list[LazyState]:
+) -> list[State]:
     # Use an entirely different (and extremely fast) query if we only
     # have a single entity id
     baked_query, join_attributes = bake_query_and_join_attributes(hass, no_attributes)
@@ -520,7 +508,7 @@ def _sorted_states_to_dict(
     include_start_time_state: bool = True,
     minimal_response: bool = False,
     no_attributes: bool = False,
-) -> MutableMapping[str, Iterable[LazyState | State | dict[str, Any]]]:
+) -> MutableMapping[str, list[State]]:
     """Convert SQL results into JSON friendly data structure.
 
     This takes our state list and turns it into a JSON friendly data
@@ -532,7 +520,7 @@ def _sorted_states_to_dict(
     each list of states, otherwise our graphs won't start on the Y
     axis correctly.
     """
-    result: dict[str, list[LazyState | dict[str, Any]]] = defaultdict(list)
+    result: dict[str, list[State]] = defaultdict(list)
     # Set all entity IDs to empty lists in result set to maintain the order
     if entity_ids is not None:
         for ent_id in entity_ids:
@@ -559,10 +547,6 @@ def _sorted_states_to_dict(
         elapsed = time.perf_counter() - timer_start
         _LOGGER.debug("getting %d first datapoints took %fs", len(result), elapsed)
 
-    # Called in a tight loop so cache the function
-    # here
-    _process_timestamp_to_utc_isoformat = process_timestamp_to_utc_isoformat
-
     # Append all changes to it
     for ent_id, group in groupby(states, lambda state: state.entity_id):  # type: ignore[no-any-return]
         domain = split_entity_id(ent_id)[0]
@@ -579,31 +563,24 @@ def _sorted_states_to_dict(
         if not ent_results:
             ent_results.append(LazyState(next(group), attr_cache))
 
-        prev_state = ent_results[-1]
-        assert isinstance(prev_state, LazyState)
         initial_state_count = len(ent_results)
-
         for db_state in group:
             # With minimal response we do not care about attribute
             # changes so we can filter out duplicate states
-            if db_state.state == prev_state.state:
+            if db_state.state == ent_results[-1].state:
                 continue
+            ent_results.append(LazyMinimalState(db_state))
 
-            ent_results.append(
-                {
-                    STATE_KEY: db_state.state,
-                    LAST_CHANGED_KEY: _process_timestamp_to_utc_isoformat(
-                        db_state.last_changed
-                    ),
-                }
-            )
-            prev_state = db_state
-
-        if prev_state and len(ent_results) != initial_state_count:
+        if len(ent_results) != initial_state_count:
             # There was at least one state change
             # replace the last minimal state with
             # a full state
-            ent_results[-1] = LazyState(prev_state, attr_cache)
+            ent_results[-1] = LazyState(
+                ent_results[  # pylint: disable=protected-access
+                    -1
+                ]._row,  # type: ignore[attr-defined]
+                attr_cache,
+            )
 
     # Filter out the empty lists if some states had 0 results.
     return {key: val for key, val in result.items() if val}
@@ -615,7 +592,7 @@ def get_state(
     entity_id: str,
     run: RecorderRuns | None = None,
     no_attributes: bool = False,
-) -> LazyState | None:
+) -> State | None:
     """Return a state at a specific point in time."""
     states = get_states(hass, utc_point_in_time, [entity_id], run, None, no_attributes)
     return states[0] if states else None
