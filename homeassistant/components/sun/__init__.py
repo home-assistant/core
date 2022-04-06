@@ -131,9 +131,6 @@ class Sun(Entity):
         )
         self._loaded_listener = None
         if DOMAIN in hass.config.components:
-            # If the import flow has not finished
-            # its possible the EVENT_COMPONENT_LOADED
-            # event already fired
             self.update_location()
         else:
             self._loaded_listener = self.hass.bus.async_listen(
