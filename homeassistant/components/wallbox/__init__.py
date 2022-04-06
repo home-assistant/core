@@ -29,6 +29,8 @@ from .const import (
     CONF_SERIAL_NUMBER_KEY,
     CONF_SOFTWARE_KEY,
     CONF_STATION,
+    CONF_STATUS_DESCRIPTION_KEY,
+    CONF_STATUS_ID_KEY,
     DOMAIN,
 )
 
@@ -36,6 +38,39 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.SENSOR, Platform.NUMBER, Platform.LOCK]
 UPDATE_INTERVAL = 30
+
+# Translation of StatusId based on Wallbox portal code:
+# https://my.wallbox.com/src/utilities/charger/chargerStatuses.js
+CHARGER_STATUS: dict[int, str] = {
+    0: "Disconnected",
+    14: "Error",
+    15: "Error",
+    161: "Ready",
+    162: "Ready",
+    163: "Disconnected",
+    164: "Waiting",
+    165: "Locked",
+    166: "Updating",
+    177: "Scheduled",
+    178: "Paused",
+    179: "Scheduled",
+    180: "Waiting for car demand",
+    181: "Waiting for car demand",
+    182: "Paused",
+    183: "Waiting in queue by Power Sharing",
+    184: "Waiting in queue by Power Sharing",
+    185: "Waiting in queue by Power Boost",
+    186: "Waiting in queue by Power Boost",
+    187: "Waiting MID failed",
+    188: "Waiting MID safety margin exceeded",
+    189: "Waiting in queue by Eco-Smart",
+    193: "Charging",
+    194: "Charging",
+    195: "Charging",
+    196: "Discharging",
+    209: "Locked",
+    210: "Locked",
+}
 
 
 class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -86,6 +121,9 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             data[CONF_LOCKED_UNLOCKED_KEY] = data[CONF_DATA_KEY][
                 CONF_LOCKED_UNLOCKED_KEY
             ]
+            data[CONF_STATUS_DESCRIPTION_KEY] = CHARGER_STATUS.get(
+                data[CONF_STATUS_ID_KEY], "Unknown"
+            )
 
             return data
 
