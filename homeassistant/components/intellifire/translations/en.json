@@ -1,37 +1,37 @@
 {
-	"config": {
-		"flow_title": "{serial} ({host})",
-		"step": {
-			"manual_device_entry": {
-				"description": "Local Configuration",
-				"data": {
-					"host": "[%key:common::config_flow::data::host%]"
-				}
-			},
-			"api_config": {
-				"data": {
-					"username": "[%key:common::config_flow::data::username%]",
-					"password": "[%key:common::config_flow::data::password%]"
-				},
-				"dhcp_confirm": {
-					"description": "Do you want to setup {host}\nSerial: {serial}?"
-				},
-				"pick_device": {
-					"data": {
-						"host": "[%key:common::config_flow::data::host%]"
-					}
-				}
-			},
-			"error": {
-				"cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-				"api_error": "api_error",
-				"iftapi_connect": "iftapi_connect"
-			},
-			"abort": {
-				"already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-				"reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-				"not_intellifire_device": "Not an IntelliFire Device."
-			}
-		}
-	}
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "not_intellifire_device": "Not an IntelliFire Device.",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "api_error": "api_error",
+            "cannot_connect": "Failed to connect",
+            "iftapi_connect": "iftapi_connect"
+        },
+        "flow_title": "{serial} ({host})",
+        "step": {
+            "api_config": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                }
+            },
+            "dhcp_confirm": {
+                "description": "Do you want to setup {host}\nSerial: {serial}?"
+            },
+            "manual_device_entry": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Local Configuration"
+            },
+            "pick_device": {
+                "data": {
+                    "host": "Host"
+                }
+            }
+        }
+    }
 }
