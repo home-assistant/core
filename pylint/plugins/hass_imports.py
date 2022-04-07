@@ -42,17 +42,37 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
             reason="replaced by HumidifierDeviceClass enum",
             constant=re.compile(r"^DEVICE_CLASS_(\w*)$"),
         ),
+        ObsoleteImportMatch(
+            reason="replaced by HumidifierEntityFeature enum",
+            constant=re.compile(r"^SUPPORT_(\w*)$"),
+        ),
     ],
     "homeassistant.components.humidifier.const": [
         ObsoleteImportMatch(
             reason="replaced by HumidifierDeviceClass enum",
             constant=re.compile(r"^DEVICE_CLASS_(\w*)$"),
         ),
+        ObsoleteImportMatch(
+            reason="replaced by HumidifierEntityFeature enum",
+            constant=re.compile(r"^SUPPORT_(\w*)$"),
+        ),
+    ],
+    "homeassistant.components.lock": [
+        ObsoleteImportMatch(
+            reason="replaced by LockEntityFeature enum",
+            constant=re.compile(r"^SUPPORT_(\w*)$"),
+        ),
     ],
     "homeassistant.components.media_player": [
         ObsoleteImportMatch(
             reason="replaced by MediaPlayerDeviceClass enum",
             constant=re.compile(r"^DEVICE_CLASS_(\w*)$"),
+        ),
+    ],
+    "homeassistant.components.remote": [
+        ObsoleteImportMatch(
+            reason="replaced by RemoteEntityFeature enum",
+            constant=re.compile(r"^SUPPORT_(\w*)$"),
         ),
     ],
     "homeassistant.components.sensor": [
@@ -69,6 +89,12 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
         ObsoleteImportMatch(
             reason="replaced by SwitchDeviceClass enum",
             constant=re.compile(r"^DEVICE_CLASS_(\w*)$"),
+        ),
+    ],
+    "homeassistant.components.water_heater": [
+        ObsoleteImportMatch(
+            reason="replaced by WaterHeaterEntityFeature enum",
+            constant=re.compile(r"^SUPPORT_(\w*)$"),
         ),
     ],
     "homeassistant.config_entries": [

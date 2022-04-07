@@ -9,6 +9,7 @@ from homeassistant import config as hass_config
 import homeassistant.components.input_number as input_number
 import homeassistant.components.input_select as input_select
 import homeassistant.components.media_player as media_player
+from homeassistant.components.media_player.const import MediaPlayerEntityFeature
 import homeassistant.components.switch as switch
 import homeassistant.components.universal.media_player as universal
 from homeassistant.const import (
@@ -696,22 +697,22 @@ async def test_supported_features_children_and_cmds(
     await ump.async_update()
 
     check_flags = (
-        universal.SUPPORT_TURN_ON
-        | universal.SUPPORT_TURN_OFF
-        | universal.SUPPORT_VOLUME_STEP
-        | universal.SUPPORT_VOLUME_MUTE
-        | universal.SUPPORT_SELECT_SOUND_MODE
-        | universal.SUPPORT_SELECT_SOURCE
-        | universal.SUPPORT_REPEAT_SET
-        | universal.SUPPORT_SHUFFLE_SET
-        | universal.SUPPORT_VOLUME_SET
-        | universal.SUPPORT_PLAY
-        | universal.SUPPORT_PAUSE
-        | universal.SUPPORT_STOP
-        | universal.SUPPORT_NEXT_TRACK
-        | universal.SUPPORT_PREVIOUS_TRACK
-        | universal.SUPPORT_PLAY_MEDIA
-        | universal.SUPPORT_CLEAR_PLAYLIST
+        MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.VOLUME_STEP
+        | MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.SELECT_SOUND_MODE
+        | MediaPlayerEntityFeature.SELECT_SOURCE
+        | MediaPlayerEntityFeature.REPEAT_SET
+        | MediaPlayerEntityFeature.SHUFFLE_SET
+        | MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.PLAY
+        | MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.STOP
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.PREVIOUS_TRACK
+        | MediaPlayerEntityFeature.PLAY_MEDIA
+        | MediaPlayerEntityFeature.CLEAR_PLAYLIST
     )
 
     assert check_flags == ump.supported_features
@@ -910,7 +911,7 @@ async def test_supported_features_play_pause(
     await hass.async_block_till_done()
     await ump.async_update()
 
-    check_flags = universal.SUPPORT_PLAY | universal.SUPPORT_PAUSE
+    check_flags = MediaPlayerEntityFeature.PLAY | MediaPlayerEntityFeature.PAUSE
 
     assert check_flags == ump.supported_features
 
