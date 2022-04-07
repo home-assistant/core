@@ -65,7 +65,16 @@ async def test_restore_state(hass):
     assert state.state == "midpeak"
 
 
-async def test_services(hass):
+@pytest.mark.parametrize(
+    "meter",
+    (
+        ["select.energy_bill"],
+        "select.energy_bill",
+        ["utility_meter.energy_bill"],
+        "utility_meter.energy_bill",
+    ),
+)
+async def test_services(hass, meter):
     """Test energy sensor reset service."""
     config = {
         "utility_meter": {
@@ -159,7 +168,7 @@ async def test_services(hass):
     assert state.state == "1"
 
     # Reset meters
-    data = {ATTR_ENTITY_ID: "select.energy_bill"}
+    data = {ATTR_ENTITY_ID: meter}
     await hass.services.async_call(DOMAIN, SERVICE_RESET, data)
     await hass.async_block_till_done()
 
