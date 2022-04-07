@@ -433,7 +433,7 @@ class HomeAssistant:
         task: asyncio.Future[_R]
         if hassjob.job_type == HassJobType.Coroutinefunction:
             task = self.loop.create_task(
-                cast(Callable[..., Awaitable[_R]], hassjob.target)(*args)
+                cast(Callable[..., Coroutine[Any, Any, _R]], hassjob.target)(*args)
             )
         elif hassjob.job_type == HassJobType.Callback:
             self.loop.call_soon(hassjob.target, *args)
@@ -449,7 +449,7 @@ class HomeAssistant:
 
         return task
 
-    def create_task(self, target: Awaitable[Any]) -> None:
+    def create_task(self, target: Coroutine[Any, Any, Any]) -> None:
         """Add task to the executor pool.
 
         target: target to call.
@@ -457,7 +457,7 @@ class HomeAssistant:
         self.loop.call_soon_threadsafe(self.async_create_task, target)
 
     @callback
-    def async_create_task(self, target: Awaitable[_R]) -> asyncio.Task[_R]:
+    def async_create_task(self, target: Coroutine[Any, Any, _R]) -> asyncio.Task[_R]:
         """Create a task from within the eventloop.
 
         This method must be run in the event loop.
