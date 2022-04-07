@@ -6,9 +6,9 @@
             "reauth_successful": "Re-authentication was successful"
         },
         "error": {
-            "api_error": "api_error",
+            "api_error": "Login failed",
             "cannot_connect": "Failed to connect",
-            "iftapi_connect": "iftapi_connect"
+            "iftapi_connect": "Error conecting to iftapi.net"
         },
         "flow_title": "{serial} ({host})",
         "step": {

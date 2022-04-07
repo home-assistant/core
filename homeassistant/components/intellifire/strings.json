@@ -25,8 +25,8 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "api_error": "api_error",
-      "iftapi_connect": "iftapi_connect"
+      "api_error": "Login failed",
+      "iftapi_connect": "Error conecting to iftapi.net"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
