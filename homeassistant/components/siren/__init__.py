@@ -20,12 +20,17 @@ from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
+from .const import (  # noqa: F401
     ATTR_AVAILABLE_TONES,
     ATTR_DURATION,
     ATTR_TONE,
     ATTR_VOLUME_LEVEL,
     DOMAIN,
+    SUPPORT_DURATION,
+    SUPPORT_TONES,
+    SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON,
+    SUPPORT_VOLUME_SET,
     SirenEntityFeature,
 )
 
