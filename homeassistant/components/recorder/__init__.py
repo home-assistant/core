@@ -681,18 +681,11 @@ class Recorder(threading.Thread):
         self._queue_watcher = async_track_time_interval(
             self.hass, self._async_check_queue, timedelta(minutes=10)
         )
-        self._keep_alive_listener = async_track_time_interval(
-            self.hass, self._async_keep_alive, timedelta(seconds=KEEPALIVE_TIME)
-        )
-        self._commit_listener = async_track_time_interval(
-            self.hass, self._async_commit, timedelta(seconds=self.commit_interval)
-        )
 
     @callback
     def _async_keep_alive(self, now: datetime) -> None:
         """Queue a keep alive."""
-        if self.async_recorder_ready.is_set():
-            self.queue.put(KeepAliveTask())
+        self.queue.put(KeepAliveTask())
 
     @callback
     def _async_commit(self, now: datetime) -> None:
@@ -700,7 +693,7 @@ class Recorder(threading.Thread):
         if (
             self.commit_interval
             and not self._database_lock_task
-            and self.async_recorder_ready.is_set()
+            and self._event_session_has_pending_writes()
         ):
             self.queue.put(CommitTask())
 
@@ -822,6 +815,7 @@ class Recorder(threading.Thread):
             """Shut down the Recorder."""
             if not self._hass_started.done():
                 self._hass_started.set_result(SHUTDOWN_TASK)
+            self.queue.put(CommitTask())
             self.queue.put(StopTask())
             self._async_stop_listeners()
             await self.hass.async_add_executor_job(self.join)
@@ -861,6 +855,14 @@ class Recorder(threading.Thread):
     @callback
     def _async_recorder_ready(self) -> None:
         """Finish start and mark recorder ready."""
+        assert self.engine is not None
+        if self.engine.dialect.name != "sqlite":
+            self._keep_alive_listener = async_track_time_interval(
+                self.hass, self._async_keep_alive, timedelta(seconds=KEEPALIVE_TIME)
+            )
+        self._commit_listener = async_track_time_interval(
+            self.hass, self._async_commit, timedelta(seconds=self.commit_interval)
+        )
         self._async_setup_periodic_tasks()
         self.async_recorder_ready.set()
 
@@ -1180,11 +1182,14 @@ class Recorder(threading.Thread):
             return True
         return False
 
+    def _event_session_has_pending_writes(self) -> bool:
+        return bool(
+            self.event_session and (self.event_session.new or self.event_session.dirty)
+        )
+
     def _commit_event_session_or_retry(self) -> None:
         """Commit the event session if there is work to do."""
-        if not self.event_session or (
-            not self.event_session.new and not self.event_session.dirty
-        ):
+        if not self._event_session_has_pending_writes():
             return
         tries = 1
         while tries <= self.db_max_retries:
