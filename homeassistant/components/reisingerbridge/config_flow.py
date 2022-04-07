@@ -93,14 +93,3 @@ class CannotConnect(HomeAssistantError):
 
 class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""
-
-
-# async def _async_has_devices(hass: HomeAssistant) -> bool:
-#     """Return if there are devices that can be discovered."""
-#     Check if there are any devices that can be discovered in the network.
-#     devices = await hass.async_add_executor_job(my_pypi_dependency.discover)
-#     aiozc = await zeroconf.async_get_async_instance(hass)
-#     return len(devices) > 0
-
-
-# config_entry_flow.register_discovery_flow(DOMAIN, "Reisinger Bridge", _async_has_devices)

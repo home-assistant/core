@@ -46,6 +46,5 @@ class OpenReisingerEntity(CoordinatorEntity):
             manufacturer="Reisinger GmbH",
             sw_version="1.0.0",
             default_name=self._attr_name,
-            # sw_version="self.coordinator.data["fwv"]",
         )
         return device_info

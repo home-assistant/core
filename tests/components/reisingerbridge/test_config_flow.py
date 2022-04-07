@@ -33,15 +33,20 @@ async def test_form(hass: HomeAssistant) -> None:
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"host": "http://1.1.1.1", "device_key": "AfsasdnfkjDD"},
+            {
+                "device_name": "S5000Left",
+                "host": "http://1.1.1.1",
+                "device_key": "asrpiaADsas",
+            },
         )
         await hass.async_block_till_done()
 
     assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result2["title"] == "Name of the device"
     assert result2["data"] == {
+        "device_name": "S5000Left",
         "host": "http://1.1.1.1",
-        "device_key": "AfsasdnfkjDD",
+        "device_key": "asrpiaADsas",
         "port": 80,
     }
     assert len(mock_setup_entry.mock_calls) == 1
@@ -59,7 +64,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"host": "http://1.1.1.1", "device_key": "AfsasdnfkjDD"},
+            {"host": "http://1.1.1.1", "device_key": "asrpiaADsas"},
         )
 
     assert result2["type"] == RESULT_TYPE_FORM
@@ -78,7 +83,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"host": "http://1.1.1.1", "device_key": "AfsasdnfkjDD"},
+            {"host": "http://1.1.1.1", "device_key": "asrpiaADsas"},
         )
 
     assert result2["type"] == RESULT_TYPE_FORM
@@ -97,7 +102,7 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"host": "http://1.1.1.1", "device_key": "AfsasdnfkjDD"},
+            {"host": "http://1.1.1.1", "device_key": "asrpiaADsas"},
         )
 
     assert result2["type"] == RESULT_TYPE_FORM
@@ -109,8 +114,10 @@ async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
     first_entry = MockConfigEntry(
         domain="reisingerbridge",
         data={
+            "device_name": "S5000Left",
             "host": "http://1.1.1.1",
-            "device_key": "AfsasdnfkjDD",
+            "port": 80,
+            "device_key": "asrpiaADsas",
         },
         unique_id="unique",
     )
@@ -124,8 +131,9 @@ async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data={
+                "device_name": "S5000Left",
                 "host": "http://1.1.1.1",
-                "device_key": "AfsasdnfkjDD",
+                "device_key": "asrpiaADsas",
                 "port": 80,
             },
         )

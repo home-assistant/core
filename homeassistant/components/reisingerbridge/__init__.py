@@ -16,9 +16,7 @@ from .const import CONF_DEVICE_KEY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-# For your initial PR, limit it to 1 platform.
 PLATFORMS: list[Platform] = [Platform.COVER]
-# PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.COVER]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
