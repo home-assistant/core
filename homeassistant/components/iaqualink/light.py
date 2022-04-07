@@ -7,8 +7,8 @@ from homeassistant.components.light import (
     COLOR_MODE_BRIGHTNESS,
     COLOR_MODE_ONOFF,
     DOMAIN,
-    SUPPORT_EFFECT,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -102,6 +102,6 @@ class HassAqualinkLight(AqualinkEntity, LightEntity):
     def supported_features(self) -> int:
         """Return the list of features supported by the light."""
         if self.dev.is_color:
-            return SUPPORT_EFFECT
+            return LightEntityFeature.EFFECT
 
         return 0
