@@ -243,6 +243,11 @@ class AiohttpClientMockResponse:
         """Return content."""
         return mock_stream(self.response)
 
+    @property
+    def content_length(self):
+        """Return content_length."""
+        return len(self.response)
+
     async def read(self):
         """Return mock response."""
         return self.response
