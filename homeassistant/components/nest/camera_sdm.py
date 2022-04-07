@@ -17,7 +17,7 @@ from google_nest_sdm.camera_traits import (
 from google_nest_sdm.device import Device
 from google_nest_sdm.exceptions import ApiException
 
-from homeassistant.components.camera import SUPPORT_STREAM, Camera
+from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.components.camera.const import STREAM_TYPE_WEB_RTC
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -110,7 +110,7 @@ class NestCamera(Camera):
         """Flag supported features."""
         supported_features = 0
         if CameraLiveStreamTrait.NAME in self._device.traits:
-            supported_features |= SUPPORT_STREAM
+            supported_features |= CameraEntityFeature.STREAM
         return supported_features
 
     @property
@@ -134,7 +134,7 @@ class NestCamera(Camera):
 
     async def stream_source(self) -> str | None:
         """Return the source of the stream."""
-        if not self.supported_features & SUPPORT_STREAM:
+        if not self.supported_features & CameraEntityFeature.STREAM:
             return None
         if CameraLiveStreamTrait.NAME not in self._device.traits:
             return None
