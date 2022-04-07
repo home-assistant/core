@@ -661,7 +661,11 @@ class ZHADevice(LogMixin):
     async def async_add_to_group(self, group_id: int) -> None:
         """Add this device to the provided zigbee group."""
         try:
-            await self._zigpy_device.add_to_group(group_id)
+            # A group name is required. However, the spec also explicitly states that
+            # the group name can be ignored by the receiving device if a device cannot
+            # store it, so we cannot rely on it existing after being written. This is
+            # only done to make the ZCL command valid.
+            await self._zigpy_device.add_to_group(group_id, name=f"0x{group_id:04X}")
         except (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError) as ex:
             self.debug(
                 "Failed to add device '%s' to group: 0x%04x ex: %s",
@@ -687,7 +691,9 @@ class ZHADevice(LogMixin):
     ) -> None:
         """Add the device endpoint to the provided zigbee group."""
         try:
-            await self._zigpy_device.endpoints[endpoint_id].add_to_group(group_id)
+            await self._zigpy_device.endpoints[endpoint_id].add_to_group(
+                group_id, name=f"0x{group_id:04X}"
+            )
         except (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError) as ex:
             self.debug(
                 "Failed to add endpoint: %s for device: '%s' to group: 0x%04x ex: %s",
