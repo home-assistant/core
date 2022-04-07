@@ -64,7 +64,12 @@ async def async_setup_entry(
     """Set up the Fibaro controller devices."""
     entities: list[SensorEntity] = []
     for device in hass.data[DOMAIN][entry.entry_id][FIBARO_DEVICES]["sensor"]:
-        entities.append(FibaroSensor(device))
+        if device.type == "com.fibaro.energyMeter":
+            entities.append(FibaroEnergySensor(device))
+            if "power" in device.interfaces:
+                entities.append(FibaroPowerSensor(device))
+        else:
+            entities.append(FibaroSensor(device))
     for device_type in ("cover", "light", "switch"):
         for device in hass.data[DOMAIN][entry.entry_id][FIBARO_DEVICES][device_type]:
             if "energy" in device.interfaces:
