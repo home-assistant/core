@@ -106,11 +106,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def async_reset_meters(service_call):
         """Reset all sensors of a meter."""
-        meters = (
-            service_call.data["entity_id"]
-            if isinstance(service_call.data["entity_id"], list)
-            else [service_call.data["entity_id"]]
-        )
+        meters = service_call.data["entity_id"]
 
         for meter in meters:
             _LOGGER.debug("resetting meter %s", meter)
@@ -127,7 +123,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         DOMAIN,
         SERVICE_RESET,
         async_reset_meters,
-        vol.Schema({ATTR_ENTITY_ID: vol.Any(cv.entity_id, [cv.entity_id])}),
+        vol.Schema({ATTR_ENTITY_ID: vol.All(cv.ensure_list, [cv.entity_id])}),
     )
 
     if DOMAIN not in config:
