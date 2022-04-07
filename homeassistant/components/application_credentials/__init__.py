@@ -1,13 +1,9 @@
 """The Application Credentials integration.
 
-This integration provides APIs for managing local OAuth credentials on behalf of other
-integrations. The preferred approach for all OAuth integrations is to use the cloud
-account linking service, and this is the alternative for integrations that can't use
-it.
-
-Integrations register an authorization server, and then the APIs are used to add
-one or more client credentials. Integrations may also provide credentials
-from yaml for backwards compatibility.
+This integration provides APIs for managing local OAuth credentials on behalf
+of other integrations. Integrations register an authorization server, and then
+the APIs are used to add one or more client credentials. Integrations may also
+provide credentials from yaml for backwards compatibility.
 """
 from __future__ import annotations
 
