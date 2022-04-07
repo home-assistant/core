@@ -232,7 +232,7 @@ GROUP_MEMBER_SCHEMA = vol.All(
     vol.Schema(
         {
             vol.Required(ATTR_IEEE): IEEE_SCHEMA,
-            vol.Required(ATTR_ENDPOINT_ID): int,
+            vol.Required(ATTR_ENDPOINT_ID): vol.Coerce(int),
         }
     ),
     _cv_group_member,
@@ -244,8 +244,8 @@ CLUSTER_BINDING_SCHEMA = vol.All(
         {
             vol.Required(ATTR_NAME): cv.string,
             vol.Required(ATTR_TYPE): cv.string,
-            vol.Required(ATTR_ID): int,
-            vol.Required(ATTR_ENDPOINT_ID): int,
+            vol.Required(ATTR_ID): vol.Coerce(int),
+            vol.Required(ATTR_ENDPOINT_ID): vol.Coerce(int),
         }
     ),
     _cv_cluster_binding,
