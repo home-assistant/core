@@ -204,7 +204,9 @@ async def test_events_during_migration_queue_exhausted(hass):
         "homeassistant.components.recorder.create_engine", new=create_engine_test
     ), patch.object(recorder, "MAX_QUEUE_BACKLOG", 1):
         await async_setup_component(
-            hass, "recorder", {"recorder": {"db_url": "sqlite://"}}
+            hass,
+            "recorder",
+            {"recorder": {"db_url": "sqlite://", "commit_interval": 0}},
         )
         hass.states.async_set("my.entity", "on", {})
         await hass.async_block_till_done()
