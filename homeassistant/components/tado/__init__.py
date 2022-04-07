@@ -19,6 +19,7 @@ from homeassistant.util import Throttle
 from .const import (
     CONF_FALLBACK,
     CONST_OVERLAY_MANUAL,
+    CONST_OVERLAY_TADO_DEFAULT,
     CONST_OVERLAY_TADO_MODE,
     CONST_OVERLAY_TADO_OPTIONS,
     DATA,
@@ -53,7 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     username = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
-    fallback = entry.options.get(CONF_FALLBACK, CONST_OVERLAY_TADO_MODE)
+    fallback = entry.options.get(CONF_FALLBACK, CONST_OVERLAY_TADO_DEFAULT)
 
     tadoconnector = TadoConnector(hass, username, password, fallback)
 
@@ -101,7 +102,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 def _async_import_options_from_data_if_missing(hass: HomeAssistant, entry: ConfigEntry):
     options = dict(entry.options)
     if CONF_FALLBACK not in options:
-        options[CONF_FALLBACK] = entry.data.get(CONF_FALLBACK, CONST_OVERLAY_TADO_MODE)
+        options[CONF_FALLBACK] = entry.data.get(
+            CONF_FALLBACK, CONST_OVERLAY_TADO_DEFAULT
+        )
         hass.config_entries.async_update_entry(entry, options=options)
 
     if options[CONF_FALLBACK] not in CONST_OVERLAY_TADO_OPTIONS:
