@@ -61,7 +61,7 @@ class ApplicationCredentialsStorageCollection(collection.StorageCollection):
 
     CREATE_SCHEMA = vol.Schema(CREATE_FIELDS)
 
-    async def _process_create_data(self, data: dict) -> dict:
+    async def _process_create_data(self, data: dict[str, str]) -> dict[str, str]:
         """Validate the config is valid."""
         result = self.CREATE_SCHEMA(data)
         domain = result[CONF_DOMAIN]
@@ -70,11 +70,13 @@ class ApplicationCredentialsStorageCollection(collection.StorageCollection):
         return result
 
     @callback
-    def _get_suggested_id(self, info: dict) -> str:
+    def _get_suggested_id(self, info: dict[str, str]) -> str:
         """Suggest an ID based on the config."""
         return f"{info[CONF_DOMAIN]}.{info[CONF_CLIENT_ID]}"
 
-    async def _update_data(self, data: dict, update_data: dict) -> dict:
+    async def _update_data(
+        self, data: dict[str, str], update_data: dict[str, str]
+    ) -> dict[str, str]:
         """Return a new updated data object."""
         raise ValueError("Updates not supported")
 
@@ -92,7 +94,7 @@ class ApplicationCredentialsStorageCollection(collection.StorageCollection):
 
         await super().async_delete_item(item_id)
 
-    async def async_import_item(self, info: dict) -> None:
+    async def async_import_item(self, info: dict[str, str]) -> None:
         """Import an yaml credential if it does not already exist."""
         suggested_id = self._get_suggested_id(info)
         if self.id_manager.has_id(slugify(suggested_id)):
