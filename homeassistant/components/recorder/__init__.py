@@ -1119,8 +1119,7 @@ class Recorder(threading.Thread):
             self.event_session.add(dbstate)
             dbstate.event = dbevent
 
-        # If they do not have a commit interval
-        # than we commit right away
+        # Commit right away if the commit interval is zero
         if not self.commit_interval:
             self._commit_event_session_or_retry()
 
