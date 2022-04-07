@@ -1403,3 +1403,11 @@ async def test_database_lock_without_instance(hass):
             assert await instance.lock_database()
         finally:
             assert instance.unlock_database()
+
+
+async def test_in_memory_database(hass, caplog):
+    """Test connecting to an in-memory recorder is not allowed."""
+    assert not await async_setup_component(
+        hass, recorder.DOMAIN, {recorder.DOMAIN: {recorder.CONF_DB_URL: "sqlite://"}}
+    )
+    assert "In-memory SQLite database is not supported" in caplog.text

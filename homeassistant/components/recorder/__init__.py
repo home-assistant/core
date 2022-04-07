@@ -177,6 +177,19 @@ FILTER_SCHEMA = INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
     {vol.Optional(CONF_EXCLUDE, default=EXCLUDE_SCHEMA({})): EXCLUDE_SCHEMA}
 )
 
+
+ALLOW_IN_MEMORY_DB = False
+
+
+def validate_db_url(db_url: str) -> Any:
+    """Validate database URL."""
+    # Don't allow on-memory sqlite databases
+    if (db_url == SQLITE_URL_PREFIX or ":memory:" in db_url) and not ALLOW_IN_MEMORY_DB:
+        raise vol.Invalid("In-memory SQLite database is not supported")
+
+    return db_url
+
+
 CONFIG_SCHEMA = vol.Schema(
     {
         vol.Optional(DOMAIN, default=dict): vol.All(
@@ -190,7 +203,7 @@ CONFIG_SCHEMA = vol.Schema(
                         vol.Coerce(int), vol.Range(min=1)
                     ),
                     vol.Optional(CONF_PURGE_INTERVAL, default=1): cv.positive_int,
-                    vol.Optional(CONF_DB_URL): cv.string,
+                    vol.Optional(CONF_DB_URL): vol.All(cv.string, validate_db_url),
                     vol.Optional(
                         CONF_COMMIT_INTERVAL, default=DEFAULT_COMMIT_INTERVAL
                     ): cv.positive_int,
