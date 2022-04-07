@@ -355,7 +355,7 @@ class ZigbeeChannel(LogMixin):
         """Handle ZDO commands on this cluster."""
 
     @callback
-    def zha_send_event(self, command: str, arg: dict | CommandSchema) -> None:
+    def zha_send_event(self, command: str, arg: list | dict | CommandSchema) -> None:
         """Relay events to hass."""
 
         if isinstance(arg, CommandSchema):
@@ -373,7 +373,7 @@ class ZigbeeChannel(LogMixin):
                 ATTR_UNIQUE_ID: self.unique_id,
                 ATTR_CLUSTER_ID: self.cluster.cluster_id,
                 ATTR_COMMAND: command,
-                # Maintain backwards compatibility with the old zigpy rsp format
+                # Maintain backwards compatibility with the old zigpy response format
                 ATTR_ARGS: args,
                 ATTR_PARAMS: params,
             }
