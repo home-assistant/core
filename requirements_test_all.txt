@@ -421,7 +421,7 @@ emulated_roku==0.2.1
 enocean==0.50
 
 # homeassistant.components.environment_canada
-env_canada==0.5.21
+env_canada==0.5.22
 
 # homeassistant.components.enphase_envoy
 envoy_reader==0.20.1
@@ -1428,7 +1428,7 @@ spotipy==2.19.0
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-sqlalchemy==1.4.34
+sqlalchemy==1.4.35
 
 # homeassistant.components.srp_energy
 srpenergy==1.3.6
