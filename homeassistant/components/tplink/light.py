@@ -103,7 +103,7 @@ RANDOM_EFFECT_DICT: Final = {
     vol.Optional("random_seed", default=100): vol.All(
         vol.Coerce(int), vol.Range(min=1, max=100)
     ),
-    vol.Required("backgrounds"): vol.All(
+    vol.Optional("backgrounds"): vol.All(
         cv.ensure_list,
         vol.Length(min=1, max=16),
         [vol.All(vol.Coerce(tuple), HSV_SEQUENCE)],
@@ -366,7 +366,7 @@ class TPLinkSmartLightStrip(TPLinkSmartBulb):
         fadeoff: int,
         init_states: tuple[int, int, int],
         random_seed: int,
-        backgrounds: Sequence[tuple[int, int, int]],
+        backgrounds: Sequence[tuple[int, int, int]] | None = None,
         hue_range: tuple[int, int] | None = None,
         saturation_range: tuple[int, int] | None = None,
         brightness_range: tuple[int, int] | None = None,
@@ -378,8 +378,9 @@ class TPLinkSmartLightStrip(TPLinkSmartBulb):
             "type": "random",
             "init_states": [init_states],
             "random_seed": random_seed,
-            "backgrounds": backgrounds,
         }
+        if backgrounds:
+            effect["backgrounds"] = backgrounds
         if fadeoff:
             effect["fadeoff"] = fadeoff
         if hue_range:
