@@ -106,27 +106,28 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def async_reset_meters(service_call):
         """Reset all sensors of a meter."""
-        entity_id = service_call.data["entity_id"]
+        meters = (
+            service_call.data["entity_id"]
+            if isinstance(service_call.data["entity_id"], list)
+            else [service_call.data["entity_id"]]
+        )
 
-        domain = split_entity_id(entity_id)[0]
-        if domain == DOMAIN:
-            for entity in hass.data[DATA_LEGACY_COMPONENT].entities:
-                if entity_id == entity.entity_id:
-                    _LOGGER.debug(
-                        "forward reset meter from %s to %s",
-                        entity_id,
-                        entity.tracked_entity_id,
-                    )
-                    entity_id = entity.tracked_entity_id
-
-        _LOGGER.debug("reset meter %s", entity_id)
-        async_dispatcher_send(hass, SIGNAL_RESET_METER, entity_id)
+        for meter in meters:
+            _LOGGER.debug("resetting meter %s", meter)
+            domain, entity = split_entity_id(meter)
+            # backward compatibility up to 2022.07:
+            if domain == DOMAIN:
+                async_dispatcher_send(
+                    hass, SIGNAL_RESET_METER, f"{SELECT_DOMAIN}.{entity}"
+                )
+            else:
+                async_dispatcher_send(hass, SIGNAL_RESET_METER, meter)
 
     hass.services.async_register(
         DOMAIN,
         SERVICE_RESET,
         async_reset_meters,
-        vol.Schema({ATTR_ENTITY_ID: cv.entity_id}),
+        vol.Schema({ATTR_ENTITY_ID: vol.Any(cv.entity_id, [cv.entity_id])}),
     )
 
     if DOMAIN not in config:
