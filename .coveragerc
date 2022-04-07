@@ -966,6 +966,8 @@ omit =
     homeassistant/components/recorder/repack.py
     homeassistant/components/recswitch/switch.py
     homeassistant/components/reddit/*
+    homeassistant/components/reisingerbridge/cover.py
+    homeassistant/components/reisingerbridge/entity.py
     homeassistant/components/rejseplanen/sensor.py
     homeassistant/components/remember_the_milk/__init__.py
     homeassistant/components/repetier/__init__.py
