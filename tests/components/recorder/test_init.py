@@ -83,12 +83,18 @@ def _default_recorder(hass):
     )
 
 
-async def _test_shutdown_before_startup_finishes(hass):
+async def test_shutdown_before_startup_finishes(hass, tmp_path):
     """Test shutdown before recorder starts is clean."""
 
+    # On-disk database because this test does not play nice with the
+    # MutexPool
+    config = {
+        recorder.CONF_DB_URL: "sqlite:///" + str(tmp_path / "pytest.db"),
+        recorder.CONF_COMMIT_INTERVAL: 1,
+    }
     hass.state = CoreState.not_running
 
-    await async_init_recorder_component(hass)
+    await async_init_recorder_component(hass, config)
     await hass.data[DATA_INSTANCE].async_db_ready
     await hass.async_block_till_done()
 
