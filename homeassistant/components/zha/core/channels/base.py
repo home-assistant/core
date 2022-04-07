@@ -365,7 +365,7 @@ class ZigbeeChannel(LogMixin):
                     ATTR_CLUSTER_ID: self.cluster.cluster_id,
                     ATTR_COMMAND: command,
                     # Maintain backwards compatibility with the old zigpy rsp format
-                    ATTR_ARGS: [arg for arg in arg if arg is not None],
+                    ATTR_ARGS: [a for a in arg if a is not None],
                     ATTR_PARAMS: arg.as_dict(),
                 }
             )
