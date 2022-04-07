@@ -658,16 +658,19 @@ class Recorder(threading.Thread):
         self.event_session: Session | None = None
         self.get_session: Callable[[], Session] | None = None
         self._completed_first_database_setup: bool | None = None
-        self._event_listener: CALLBACK_TYPE | None = None
-        self._keep_alive_listener: CALLBACK_TYPE | None = None
-        self._commit_listener: CALLBACK_TYPE | None = None
         self.async_migration_event = asyncio.Event()
         self.migration_in_progress = False
-        self._queue_watcher: CALLBACK_TYPE | None = None
         self._db_supports_row_number = True
         self._database_lock_task: DatabaseLockTask | None = None
         self._db_executor: DBInterruptibleThreadPoolExecutor | None = None
         self._exclude_attributes_by_domain = exclude_attributes_by_domain
+
+        self._event_listener: CALLBACK_TYPE | None = None
+        self._keep_alive_listener: CALLBACK_TYPE | None = None
+        self._commit_listener: CALLBACK_TYPE | None = None
+        self._perodic_listener: CALLBACK_TYPE | None = None
+        self._nightly_listener: CALLBACK_TYPE | None = None
+        self._queue_watcher: CALLBACK_TYPE | None = None
 
         self.enabled = True
 
@@ -754,6 +757,12 @@ class Recorder(threading.Thread):
         if self._commit_listener:
             self._commit_listener()
             self._commit_listener = None
+        if self._nightly_listener:
+            self._nightly_listener()
+            self._nightly_listener = None
+        if self._perodic_listener:
+            self._perodic_listener()
+            self._perodic_listener = None
 
     @callback
     def _async_event_filter(self, event: Event) -> bool:
@@ -930,12 +939,12 @@ class Recorder(threading.Thread):
             return
 
         # Run nightly tasks at 4:12am
-        async_track_time_change(
+        self._nightly_listener = async_track_time_change(
             self.hass, self.async_nightly_tasks, hour=4, minute=12, second=0
         )
 
         # Compile short term statistics every 5 minutes
-        async_track_utc_time_change(
+        self._perodic_listener = async_track_utc_time_change(
             self.hass, self.async_periodic_statistics, minute=range(0, 60, 5), second=10
         )
 
@@ -1005,6 +1014,7 @@ class Recorder(threading.Thread):
         self.stop_requested = False
         while not self.stop_requested:
             task = self.queue.get()
+            _LOGGER.debug("Processing task: %s", task)
             try:
                 self._process_one_task_or_recover(task)
             except Exception as err:  # pylint: disable=broad-except
