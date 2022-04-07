@@ -44,7 +44,7 @@ async def async_setup_entry(
 
     async_add_entities(
         [GeoJsonEventsSensor(coordinator, config_entry_unique_id)],
-        True,
+        False,
     )
     _LOGGER.debug("Sensor setup done")
 

@@ -62,19 +62,25 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][FEED][entry.entry_id]
 
     @callback
-    def async_add_geolocation(feed_manager, config_entry_unique_id, external_id):
+    def async_add_geolocation(coordinator, config_entry_unique_id, external_id):
         """Add geolocation entity from feed."""
         new_entity = GeoJsonLocationEventNew(
-            feed_manager, config_entry_unique_id, external_id
+            coordinator, config_entry_unique_id, external_id
         )
         _LOGGER.debug("Adding geolocation %s", new_entity)
-        async_add_entities([new_entity], True)
+        async_add_entities([new_entity], False)
 
     coordinator.listeners.append(
         async_dispatcher_connect(
             hass, coordinator.async_event_new_entity(), async_add_geolocation
         )
     )
+    # Initial generation of entries.
+    if coordinator.data:
+        async_add_entities(
+            GeoJsonLocationEventNew(coordinator, entry.unique_id, external_id)
+            for external_id in coordinator.data.keys()
+        )
     _LOGGER.debug("Geolocation setup done")
 
 
@@ -90,7 +96,7 @@ class GeoJsonLocationEventNew(CoordinatorEntity, GeolocationEvent):
     def __init__(
         self,
         coordinator: GeoJsonEventsFeedEntityCoordinator,
-        config_entry_unique_id: str,
+        config_entry_unique_id: str | None,
         external_id: str,
     ) -> None:
         """Initialize the entity."""

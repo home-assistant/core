@@ -21,7 +21,7 @@ from ...config_entries import SOURCE_IMPORT, ConfigEntry
 from ...helpers.dispatcher import async_dispatcher_send
 from ...helpers.update_coordinator import DataUpdateCoordinator
 from ...util.unit_system import METRIC_SYSTEM
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, FEED, PLATFORMS
+from .const import DEFAULT_SCAN_INTERVAL_SECONDS, DOMAIN, FEED, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,7 +34,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     conf = config[DOMAIN]
     latitude = conf.get(CONF_LATITUDE, hass.config.latitude)
     longitude = conf.get(CONF_LONGITUDE, hass.config.longitude)
-    scan_interval = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+    scan_interval = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL_SECONDS)
 
     hass.async_create_task(
         hass.config_entries.flow.async_init(
@@ -66,6 +66,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     feeds[config_entry.entry_id] = coordinator
     _LOGGER.debug("Feed entity coordinator added for %s", config_entry.entry_id)
     await coordinator.async_init()
+    await coordinator.async_config_entry_first_refresh()
     return True
 
 
@@ -99,6 +100,7 @@ class GeoJsonEventsFeedEntityCoordinator(DataUpdateCoordinator):
             status_callback=self._status_update,
         )
         self._config_entry_id = config_entry.entry_id
+        self._first_update = True
         self._status_info = None
         self.listeners = []
         super().__init__(
@@ -117,12 +119,15 @@ class GeoJsonEventsFeedEntityCoordinator(DataUpdateCoordinator):
     async def async_init(self):
         """Schedule initial and regular updates based on configured time interval."""
         self.hass.config_entries.async_setup_platforms(self.config_entry, PLATFORMS)
+        # await self.async_update()
         _LOGGER.debug("Feed entity coordinator initialized")
 
     async def async_update(self):
         """Refresh data."""
         await self._feed_manager.update()
         _LOGGER.debug("Feed entity coordinator updated")
+        self._first_update = False
+        return self._feed_manager.feed_entries
 
     async def async_stop(self):
         """Stop this feed entity coordinator from refreshing."""
@@ -147,13 +152,14 @@ class GeoJsonEventsFeedEntityCoordinator(DataUpdateCoordinator):
     async def _generate_entity(self, external_id: str):
         """Generate new entity."""
         _LOGGER.debug("New entry received for: %s", external_id)
-        async_dispatcher_send(
-            self.hass,
-            self.async_event_new_entity(),
-            self,
-            self.config_entry.unique_id,
-            external_id,
-        )
+        if not self._first_update:
+            async_dispatcher_send(
+                self.hass,
+                self.async_event_new_entity(),
+                self,
+                self.config_entry.unique_id,
+                external_id,
+            )
 
     async def _update_entity(self, external_id: str):
         """Ignore update call; this is handled by the coordinator."""
@@ -161,7 +167,8 @@ class GeoJsonEventsFeedEntityCoordinator(DataUpdateCoordinator):
     async def _remove_entity(self, external_id: str):
         """Remove entity."""
         _LOGGER.debug("Remove received for: %s", external_id)
-        async_dispatcher_send(self.hass, f"{DOMAIN}_delete_{external_id}")
+        if not self._first_update:
+            async_dispatcher_send(self.hass, f"{DOMAIN}_delete_{external_id}")
 
     async def _status_update(self, status_info):
         """Store status update."""
