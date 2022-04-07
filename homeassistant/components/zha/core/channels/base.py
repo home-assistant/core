@@ -381,7 +381,7 @@ class ZigbeeChannel(LogMixin):
                 }
             )
         else:
-            raise ValueError(f"Unexpected zha_send_event {command!r} argument: {arg!r}")
+            raise TypeError(f"Unexpected zha_send_event {command!r} argument: {arg!r}")
 
     async def async_update(self):
         """Retrieve latest state from cluster."""
