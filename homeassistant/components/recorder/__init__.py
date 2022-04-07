@@ -697,7 +697,11 @@ class Recorder(threading.Thread):
     @callback
     def _async_commit(self, now: datetime) -> None:
         """Queue a commit."""
-        if self.commit_interval and self.async_recorder_ready.is_set():
+        if (
+            self.commit_interval
+            and not self._database_lock_task
+            and self.async_recorder_ready.is_set()
+        ):
             self.queue.put(CommitTask())
 
     @callback
