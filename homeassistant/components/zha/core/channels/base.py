@@ -8,7 +8,7 @@ import logging
 from typing import Any
 
 import zigpy.exceptions
-from zigpy.zcl.foundation import ConfigureReportingResponseRecord, Status
+from zigpy.zcl.foundation import CommandSchema, ConfigureReportingResponseRecord, Status
 
 from homeassistant.const import ATTR_COMMAND
 from homeassistant.core import callback
@@ -20,6 +20,7 @@ from ..const import (
     ATTR_ATTRIBUTE_ID,
     ATTR_ATTRIBUTE_NAME,
     ATTR_CLUSTER_ID,
+    ATTR_PARAMS,
     ATTR_TYPE,
     ATTR_UNIQUE_ID,
     ATTR_VALUE,
@@ -354,16 +355,33 @@ class ZigbeeChannel(LogMixin):
         """Handle ZDO commands on this cluster."""
 
     @callback
-    def zha_send_event(self, command: str, args: int | dict) -> None:
+    def zha_send_event(self, command: str, arg: dict | CommandSchema) -> None:
         """Relay events to hass."""
-        self._ch_pool.zha_send_event(
-            {
-                ATTR_UNIQUE_ID: self.unique_id,
-                ATTR_CLUSTER_ID: self.cluster.cluster_id,
-                ATTR_COMMAND: command,
-                ATTR_ARGS: args,
-            }
-        )
+
+        if isinstance(arg, CommandSchema):
+            self._ch_pool.zha_send_event(
+                {
+                    ATTR_UNIQUE_ID: self.unique_id,
+                    ATTR_CLUSTER_ID: self.cluster.cluster_id,
+                    ATTR_COMMAND: command,
+                    # Maintain backwards compatibility with the old zigpy rsp format
+                    ATTR_ARGS: [arg for arg in arg if arg is not None],
+                    ATTR_PARAMS: arg.as_dict(),
+                }
+            )
+        elif isinstance(arg, (list, dict)):
+            # Quirks can directly send lists and dicts to ZHA this way
+            self._ch_pool.zha_send_event(
+                {
+                    ATTR_UNIQUE_ID: self.unique_id,
+                    ATTR_CLUSTER_ID: self.cluster.cluster_id,
+                    ATTR_COMMAND: command,
+                    ATTR_ARGS: arg,
+                    ATTR_PARAMS: {},
+                }
+            )
+        else:
+            raise ValueError(f"Unexpected zha_send_event {command!r} argument: {arg!r}")
 
     async def async_update(self):
         """Retrieve latest state from cluster."""
