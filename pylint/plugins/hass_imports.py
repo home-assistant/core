@@ -65,6 +65,12 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
             constant=re.compile(r"^DEVICE_CLASS_(\w*)$"),
         ),
     ],
+    "homeassistant.components.water_heater": [
+        ObsoleteImportMatch(
+            reason="replaced by WaterHeaterEntityFeature enum",
+            constant=re.compile(r"^SUPPORT_(\w*)$"),
+        ),
+    ],
     "homeassistant.config_entries": [
         ObsoleteImportMatch(
             reason="replaced by ConfigEntryDisabler enum",
