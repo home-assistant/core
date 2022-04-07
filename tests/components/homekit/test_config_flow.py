@@ -1347,6 +1347,16 @@ async def test_options_flow_exclude_mode_skips_category_entities(
         entity_category=EntityCategory.CONFIG,
     )
     hass.states.async_set(sonos_config_switch.entity_id, "off")
+
+    sonos_notconfig_switch: RegistryEntry = entity_reg.async_get_or_create(
+        "switch",
+        "sonos",
+        "notconfig",
+        device_id="1234",
+        entity_category=None,
+    )
+    hass.states.async_set(sonos_notconfig_switch.entity_id, "off")
+
     await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(
@@ -1391,14 +1401,24 @@ async def test_options_flow_exclude_mode_skips_category_entities(
 
     result4 = await hass.config_entries.options.async_configure(
         result2["flow_id"],
-        user_input={"entities": ["media_player.tv", "switch.other"]},
+        user_input={
+            "entities": [
+                "media_player.tv",
+                "switch.other",
+                sonos_notconfig_switch.entity_id,
+            ]
+        },
     )
     assert result4["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert config_entry.options == {
         "mode": "bridge",
         "filter": {
             "exclude_domains": [],
-            "exclude_entities": ["media_player.tv", "switch.other"],
+            "exclude_entities": [
+                "media_player.tv",
+                "switch.other",
+                sonos_notconfig_switch.entity_id,
+            ],
             "include_domains": ["media_player", "switch"],
             "include_entities": [],
         },

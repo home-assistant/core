@@ -12,12 +12,7 @@ from pyoverkiz.types import StateType as OverkizStateType
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityDescription,
-)
-from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_HOME,
-    SUPPORT_ALARM_ARM_NIGHT,
-    SUPPORT_ALARM_TRIGGER,
+    AlarmControlPanelEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -162,10 +157,10 @@ ALARM_DESCRIPTIONS: list[OverkizAlarmDescription] = [
         key=UIWidget.TSKALARM_CONTROLLER,
         entity_registry_enabled_default=False,
         supported_features=(
-            SUPPORT_ALARM_ARM_AWAY
-            | SUPPORT_ALARM_ARM_HOME
-            | SUPPORT_ALARM_ARM_NIGHT
-            | SUPPORT_ALARM_TRIGGER
+            AlarmControlPanelEntityFeature.ARM_AWAY
+            | AlarmControlPanelEntityFeature.ARM_HOME
+            | AlarmControlPanelEntityFeature.ARM_NIGHT
+            | AlarmControlPanelEntityFeature.TRIGGER
         ),
         fn_state=_state_tsk_alarm_controller,
         alarm_disarm=OverkizCommand.ALARM_OFF,
@@ -181,7 +176,9 @@ ALARM_DESCRIPTIONS: list[OverkizAlarmDescription] = [
     OverkizAlarmDescription(
         key=UIWidget.STATEFUL_ALARM_CONTROLLER,
         supported_features=(
-            SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_NIGHT
+            AlarmControlPanelEntityFeature.ARM_AWAY
+            | AlarmControlPanelEntityFeature.ARM_HOME
+            | AlarmControlPanelEntityFeature.ARM_NIGHT
         ),
         fn_state=_state_stateful_alarm_controller,
         alarm_disarm=OverkizCommand.ALARM_OFF,
@@ -195,7 +192,8 @@ ALARM_DESCRIPTIONS: list[OverkizAlarmDescription] = [
     # MyFoxAlarmController
     OverkizAlarmDescription(
         key=UIWidget.MY_FOX_ALARM_CONTROLLER,
-        supported_features=SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_NIGHT,
+        supported_features=AlarmControlPanelEntityFeature.ARM_AWAY
+        | AlarmControlPanelEntityFeature.ARM_NIGHT,
         fn_state=_state_myfox_alarm_controller,
         alarm_disarm=OverkizCommand.DISARM,
         alarm_arm_night=OverkizCommand.PARTIAL,
@@ -205,7 +203,9 @@ ALARM_DESCRIPTIONS: list[OverkizAlarmDescription] = [
     OverkizAlarmDescription(
         key=UIWidget.ALARM_PANEL_CONTROLLER,
         supported_features=(
-            SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_NIGHT
+            AlarmControlPanelEntityFeature.ARM_AWAY
+            | AlarmControlPanelEntityFeature.ARM_HOME
+            | AlarmControlPanelEntityFeature.ARM_NIGHT
         ),
         fn_state=_state_alarm_panel_controller,
         alarm_disarm=OverkizCommand.DISARM,
