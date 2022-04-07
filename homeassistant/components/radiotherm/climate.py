@@ -7,7 +7,11 @@ from socket import timeout
 import radiotherm
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
+from homeassistant.components.climate import (
+    PLATFORM_SCHEMA,
+    ClimateEntity,
+    ClimateEntityFeature,
+)
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_COOL,
     CURRENT_HVAC_HEAT,
@@ -20,9 +24,6 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_OFF,
     PRESET_AWAY,
     PRESET_HOME,
-    SUPPORT_FAN_MODE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
@@ -105,9 +106,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE | SUPPORT_PRESET_MODE
-
-
 def setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -141,6 +139,12 @@ def setup_platform(
 class RadioThermostat(ClimateEntity):
     """Representation of a Radio Thermostat."""
 
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.PRESET_MODE
+    )
+
     def __init__(self, device, hold_temp):
         """Initialize the thermostat."""
         self.device = device
@@ -162,11 +166,6 @@ class RadioThermostat(ClimateEntity):
 
         # Fan circulate mode is only supported by the CT80 models.
         self._is_model_ct80 = isinstance(self.device, radiotherm.thermostat.CT80)
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_FLAGS
 
     async def async_added_to_hass(self):
         """Register callbacks."""
