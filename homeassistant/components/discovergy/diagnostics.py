@@ -9,8 +9,8 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from ...helpers.update_coordinator import DataUpdateCoordinator
 from .const import (
     CONF_ACCESS_TOKEN,
     CONF_ACCESS_TOKEN_SECRET,

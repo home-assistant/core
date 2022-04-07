@@ -14,6 +14,7 @@ from homeassistant.const import (
     ATTR_NAME,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
@@ -22,7 +23,6 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from ...exceptions import ConfigEntryAuthFailed
 from .const import (
     API_CLIENT,
     COORDINATORS,
