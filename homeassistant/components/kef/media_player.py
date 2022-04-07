@@ -240,7 +240,7 @@ class KefMediaPlayer(MediaPlayerEntity):
             | MediaPlayerEntityFeature.PLAY  # only in Bluetooth and Wifi
             | MediaPlayerEntityFeature.PREVIOUS_TRACK  # only in Bluetooth and Wifi
         )
-        if self._supports_on:
+        if supports_on:
             self._attr_supported_features |= MediaPlayerEntityFeature.TURN_ON
 
     @property
