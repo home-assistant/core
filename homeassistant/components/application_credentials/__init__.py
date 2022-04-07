@@ -6,7 +6,7 @@ account linking service, and this is the alternative for integrations that can't
 it.
 
 Integrations register an authorization server, and then the APIs are used to add
-add one or more client credentials. Integrations may also provide credentials
+one or more client credentials. Integrations may also provide credentials
 from yaml for backwards compatibility.
 """
 from __future__ import annotations
