@@ -590,6 +590,10 @@ class CommitTask(RecorderTask):
         instance._commit_event_session_or_retry()
 
 
+COMMIT_TASK = CommitTask()
+KEEP_ALIVE_TASK = KeepAliveTask()
+
+
 class Recorder(threading.Thread):
     """A threaded recorder class."""
 
@@ -685,13 +689,13 @@ class Recorder(threading.Thread):
     @callback
     def _async_keep_alive(self, now: datetime) -> None:
         """Queue a keep alive."""
-        self.queue.put(KeepAliveTask())
+        self.queue.put(KEEP_ALIVE_TASK)
 
     @callback
     def _async_commit(self, now: datetime) -> None:
         """Queue a commit."""
         if not self._database_lock_task and self._event_session_has_pending_writes():
-            self.queue.put(CommitTask())
+            self.queue.put(COMMIT_TASK)
 
     @callback
     def async_add_executor_job(
@@ -811,7 +815,6 @@ class Recorder(threading.Thread):
             """Shut down the Recorder."""
             if not self._hass_started.done():
                 self._hass_started.set_result(SHUTDOWN_TASK)
-            self.queue.put(CommitTask())
             self.queue.put(StopTask())
             self._async_stop_listeners()
             await self.hass.async_add_executor_job(self.join)
