@@ -108,19 +108,17 @@ class FibaroLight(FibaroDevice, LightEntity):
 
     def _turn_on(self, **kwargs):
         """Really turn the light on."""
-        if brightness_supported(self.supported_color_modes) and (
-            ATTR_BRIGHTNESS in kwargs
-        ):
+        if ATTR_BRIGHTNESS in kwargs:
             self._attr_brightness = kwargs[ATTR_BRIGHTNESS]
             self.set_level(scaleto99(self._attr_brightness))
 
-        if color_supported(self.supported_color_modes) and (ATTR_RGB_COLOR in kwargs):
+        if ATTR_RGB_COLOR in kwargs:
             # Update based on parameters
             self._attr_rgb_color = kwargs[ATTR_RGB_COLOR]
             self.call_set_color(*self._attr_rgb_color, 0)
             return
 
-        if color_supported(self.supported_color_modes) and (ATTR_RGBW_COLOR in kwargs):
+        if ATTR_RGBW_COLOR in kwargs:
             # Update based on parameters
             self._attr_rgbw_color = kwargs[ATTR_RGBW_COLOR]
             self.call_set_color(*self._attr_rgbw_color)
