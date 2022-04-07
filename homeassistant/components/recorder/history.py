@@ -294,16 +294,16 @@ def get_full_significant_states_with_session(
     return cast(
         MutableMapping[str, list[State]],
         get_significant_states_with_session(
-            hass,
-            session,
-            start_time,
-            end_time,
-            entity_ids,
-            filters,
-            include_start_time_state,
-            significant_changes_only,
-            False,
-            no_attributes,
+            hass=hass,
+            session=session,
+            start_time=start_time,
+            end_time=end_time,
+            entity_ids=entity_ids,
+            filters=filters,
+            include_start_time_state=include_start_time_state,
+            significant_changes_only=significant_changes_only,
+            minimal_response=False,
+            no_attributes=no_attributes,
         ),
     )
 
