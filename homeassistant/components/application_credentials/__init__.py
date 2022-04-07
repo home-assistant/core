@@ -66,7 +66,7 @@ class ApplicationCredentialsStorageCollection(collection.StorageCollection):
         result = self.CREATE_SCHEMA(data)
         domain = result[CONF_DOMAIN]
         if not await _get_platform(self.hass, domain):
-            raise ValueError("No application_credentials platform for %s" % domain)
+            raise ValueError(f"No application_credentials platform for {domain}")
         return result
 
     @callback
@@ -206,6 +206,6 @@ async def _get_platform(
         return None
     if not hasattr(platform, "async_get_authorization_server"):
         raise ValueError(
-            "Integration '%s' platform application_credentials did not implement 'async_get_authorization_server'"
+            f"Integration '{integration_domain}' platform application_credentials did not implement 'async_get_authorization_server'"
         )
     return platform
