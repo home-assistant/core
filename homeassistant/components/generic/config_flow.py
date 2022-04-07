@@ -109,7 +109,7 @@ def build_schema(
     return vol.Schema(spec)
 
 
-def build_schema2(user_input: dict[str, Any] | MappingProxyType[str, Any]):
+def build_schema_content_type(user_input: dict[str, Any] | MappingProxyType[str, Any]):
     """Create schema for conditional 2nd page specifying stream content_type."""
     return vol.Schema(
         {
@@ -293,7 +293,7 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
                     # Show a conditional 2nd page to ask them the content type.
                     self.cached_user_input = user_input
                     self.cached_title = name
-                    return await self.async_step_user2()
+                    return await self.async_step_content_type()
         else:
             user_input = DEFAULT_DATA.copy()
 
@@ -303,7 +303,7 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_user2(
+    async def async_step_content_type(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the user's choice for stream content_type."""
@@ -314,8 +314,8 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
                 title=self.cached_title, data={}, options=user_input
             )
         return self.async_show_form(
-            step_id="user2",
-            data_schema=build_schema2({}),
+            step_id="content_type",
+            data_schema=build_schema_content_type({}),
             errors={},
         )
 
@@ -360,7 +360,9 @@ class GenericOptionsFlowHandler(OptionsFlow):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            errors, still_format = await async_test_still(self.hass, user_input)
+            errors, still_format = await async_test_still(
+                self.hass, self.config_entry.options | user_input
+            )
             errors = errors | await async_test_stream(self.hass, user_input)
             still_url = user_input.get(CONF_STILL_IMAGE_URL)
             stream_url = user_input.get(CONF_STREAM_SOURCE)
@@ -387,18 +389,23 @@ class GenericOptionsFlowHandler(OptionsFlow):
                     )
                 self.cached_title = title
                 self.cached_user_input = data
-                return self.async_show_form(
-                    step_id="init2",
-                    data_schema=build_schema2(self.config_entry.options),
-                    errors=errors,
-                )
+                return await self.async_step_content_type()
+
         return self.async_show_form(
             step_id="init",
             data_schema=build_schema(user_input or self.config_entry.options, True),
             errors=errors,
         )
 
-    async def async_step_init2(self, user_input: dict[str, Any]) -> FlowResult:
+    async def async_step_content_type(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the user's choice for stream content_type."""
-        user_input = self.cached_user_input | user_input
-        return self.async_create_entry(title=self.cached_title, data=user_input)
+        if user_input is not None:
+            user_input = self.cached_user_input | user_input
+            return self.async_create_entry(title=self.cached_title, data=user_input)
+        return self.async_show_form(
+            step_id="content_type",
+            data_schema=build_schema_content_type(self.cached_user_input),
+            errors={},
+        )

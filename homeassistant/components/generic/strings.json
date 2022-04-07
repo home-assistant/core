@@ -34,7 +34,7 @@
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         }
       },
-      "user2": {
+      "content_type": {
         "description": "Specify the content type for the stream.",
         "data": {
           "content_type": "Content Type"
@@ -60,10 +60,10 @@
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         }
       },
-      "init2": {
-        "description": "[%key:component::generic::config::step::user2::description%]",
+      "content_type": {
+        "description": "[%key:component::generic::config::step::content_type::description%]",
         "data": {
-          "content_type": "[%key:component::generic::config::step::user2::data::content_type%]"
+          "content_type": "[%key:component::generic::config::step::content_type::data::content_type%]"
         }
       }
     },

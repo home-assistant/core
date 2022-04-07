@@ -23,6 +23,12 @@
             "confirm": {
                 "description": "Do you want to start set up?"
             },
+            "content_type": {
+                "data": {
+                    "content_type": "Content Type"
+                },
+                "description": "Specify the content type for the stream."
+            },
             "user": {
                 "data": {
                     "authentication": "Authentication",
@@ -36,12 +42,6 @@
                     "verify_ssl": "Verify SSL certificate"
                 },
                 "description": "Enter the settings to connect to the camera."
-            },
-            "user2": {
-                "data": {
-                    "content_type": "Content Type"
-                },
-                "description": "Specify the content type for the stream."
             }
         }
     },
@@ -62,6 +62,12 @@
             "unknown": "Unexpected error"
         },
         "step": {
+            "content_type": {
+                "data": {
+                    "content_type": "Content Type"
+                },
+                "description": "Specify the content type for the stream."
+            },
             "init": {
                 "data": {
                     "authentication": "Authentication",
@@ -74,12 +80,6 @@
                     "username": "Username",
                     "verify_ssl": "Verify SSL certificate"
                 }
-            },
-            "init2": {
-                "data": {
-                    "content_type": "Content Type"
-                },
-                "description": "Specify the content type for the stream."
             }
         }
     }
