@@ -12,15 +12,8 @@ from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
     DEVICE_CLASSES_SCHEMA,
-    SUPPORT_CLOSE,
-    SUPPORT_CLOSE_TILT,
-    SUPPORT_OPEN,
-    SUPPORT_OPEN_TILT,
-    SUPPORT_SET_POSITION,
-    SUPPORT_SET_TILT_POSITION,
-    SUPPORT_STOP,
-    SUPPORT_STOP_TILT,
     CoverEntity,
+    CoverEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -102,10 +95,10 @@ DEFAULT_TILT_OPEN_POSITION = 100
 DEFAULT_TILT_OPTIMISTIC = False
 
 TILT_FEATURES = (
-    SUPPORT_OPEN_TILT
-    | SUPPORT_CLOSE_TILT
-    | SUPPORT_STOP_TILT
-    | SUPPORT_SET_TILT_POSITION
+    CoverEntityFeature.OPEN_TILT
+    | CoverEntityFeature.CLOSE_TILT
+    | CoverEntityFeature.STOP_TILT
+    | CoverEntityFeature.SET_TILT_POSITION
 )
 
 MQTT_COVER_ATTRIBUTES_BLOCKED = frozenset(
@@ -519,14 +512,14 @@ class MqttCover(MqttEntity, CoverEntity):
         supported_features = 0
         if self._config.get(CONF_COMMAND_TOPIC) is not None:
             if self._config.get(CONF_PAYLOAD_OPEN) is not None:
-                supported_features |= SUPPORT_OPEN
+                supported_features |= CoverEntityFeature.OPEN
             if self._config.get(CONF_PAYLOAD_CLOSE) is not None:
-                supported_features |= SUPPORT_CLOSE
+                supported_features |= CoverEntityFeature.CLOSE
             if self._config.get(CONF_PAYLOAD_STOP) is not None:
-                supported_features |= SUPPORT_STOP
+                supported_features |= CoverEntityFeature.STOP
 
         if self._config.get(CONF_SET_POSITION_TOPIC) is not None:
-            supported_features |= SUPPORT_SET_POSITION
+            supported_features |= CoverEntityFeature.SET_POSITION
 
         if self._config.get(CONF_TILT_COMMAND_TOPIC) is not None:
             supported_features |= TILT_FEATURES

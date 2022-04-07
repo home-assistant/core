@@ -15,7 +15,7 @@ from pyisy.constants import (
 )
 from pyisy.nodes import Node
 
-from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
@@ -26,9 +26,6 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
-    SUPPORT_FAN_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -59,10 +56,6 @@ from .const import (
 from .entity import ISYNodeEntity
 from .helpers import convert_isy_value_to_hass, migrate_old_unique_ids
 
-ISY_SUPPORTED_FEATURES = (
-    SUPPORT_FAN_MODE | SUPPORT_TARGET_TEMPERATURE | SUPPORT_TARGET_TEMPERATURE_RANGE
-)
-
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -81,6 +74,12 @@ async def async_setup_entry(
 class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
     """Representation of an ISY994 thermostat entity."""
 
+    _attr_supported_features = (
+        ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+    )
+
     def __init__(self, node: Node) -> None:
         """Initialize the ISY Thermostat entity."""
         super().__init__(node)
@@ -94,11 +93,6 @@ class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
         self._current_humidity = 0
         self._target_temp_low = 0
         self._target_temp_high = 0
-
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return ISY_SUPPORTED_FEATURES
 
     @property
     def precision(self) -> float:

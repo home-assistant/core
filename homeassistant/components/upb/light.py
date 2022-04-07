@@ -3,7 +3,8 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_FLASH,
     ATTR_TRANSITION,
-    SUPPORT_BRIGHTNESS,
+    COLOR_MODE_BRIGHTNESS,
+    COLOR_MODE_ONOFF,
     SUPPORT_FLASH,
     SUPPORT_TRANSITION,
     LightEntity,
@@ -56,10 +57,22 @@ class UpbLight(UpbAttachedEntity, LightEntity):
         self._brightness = self._element.status
 
     @property
+    def color_mode(self) -> str:
+        """Return the color mode of the light."""
+        if self._element.dimmable:
+            return COLOR_MODE_BRIGHTNESS
+        return COLOR_MODE_ONOFF
+
+    @property
+    def supported_color_modes(self) -> set[str]:
+        """Flag supported color modes."""
+        return {self.color_mode}
+
+    @property
     def supported_features(self):
         """Flag supported features."""
         if self._element.dimmable:
-            return SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION | SUPPORT_FLASH
+            return SUPPORT_TRANSITION | SUPPORT_FLASH
         return SUPPORT_FLASH
 
     @property

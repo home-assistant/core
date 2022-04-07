@@ -11,13 +11,8 @@ from iaqualink.const import (
 )
 from iaqualink.device import AqualinkHeater, AqualinkPump, AqualinkSensor, AqualinkState
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
-    DOMAIN,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
-    SUPPORT_TARGET_TEMPERATURE,
-)
+from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
+from homeassistant.components.climate.const import DOMAIN, HVAC_MODE_HEAT, HVAC_MODE_OFF
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant
@@ -47,15 +42,12 @@ async def async_setup_entry(
 class HassAqualinkThermostat(AqualinkEntity, ClimateEntity):
     """Representation of a thermostat."""
 
+    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+
     @property
     def name(self) -> str:
         """Return the name of the thermostat."""
         return self.dev.label.split(" ")[0]
-
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_TARGET_TEMPERATURE
 
     @property
     def hvac_modes(self) -> list[str]:

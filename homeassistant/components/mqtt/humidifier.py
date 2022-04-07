@@ -12,9 +12,9 @@ from homeassistant.components.humidifier import (
     ATTR_MODE,
     DEFAULT_MAX_HUMIDITY,
     DEFAULT_MIN_HUMIDITY,
-    SUPPORT_MODES,
     HumidifierDeviceClass,
     HumidifierEntity,
+    HumidifierEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -250,7 +250,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
         else:
             self._available_modes = []
         if self._available_modes:
-            self._attr_supported_features = SUPPORT_MODES
+            self._attr_supported_features = HumidifierEntityFeature.MODES
         else:
             self._attr_supported_features = 0
 
