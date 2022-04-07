@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 import logging
 from pprint import pformat
-from typing import Any, Optional, Type, cast
+from typing import Any, Optional, cast
 from urllib.parse import urlparse
 
 from async_upnp_client.client import UpnpError
@@ -331,7 +331,7 @@ class DlnaDmrOptionsFlowHandler(config_entries.OptionsFlow):
 
         fields = {}
 
-        def _add_with_suggestion(key: str, validator: Callable | Type[bool]) -> None:
+        def _add_with_suggestion(key: str, validator: Callable | type[bool]) -> None:
             """Add a field to with a suggested value.
 
             For bools, use the existing value as default, or fallback to False.
