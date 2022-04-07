@@ -690,11 +690,7 @@ class Recorder(threading.Thread):
     @callback
     def _async_commit(self, now: datetime) -> None:
         """Queue a commit."""
-        if (
-            self.commit_interval
-            and not self._database_lock_task
-            and self._event_session_has_pending_writes()
-        ):
+        if not self._database_lock_task and self._event_session_has_pending_writes():
             self.queue.put(CommitTask())
 
     @callback
@@ -860,9 +856,10 @@ class Recorder(threading.Thread):
             self._keep_alive_listener = async_track_time_interval(
                 self.hass, self._async_keep_alive, timedelta(seconds=KEEPALIVE_TIME)
             )
-        self._commit_listener = async_track_time_interval(
-            self.hass, self._async_commit, timedelta(seconds=self.commit_interval)
-        )
+        if self.commit_interval:
+            self._commit_listener = async_track_time_interval(
+                self.hass, self._async_commit, timedelta(seconds=self.commit_interval)
+            )
         self._async_setup_periodic_tasks()
         self.async_recorder_ready.set()
 
