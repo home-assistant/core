@@ -19,16 +19,50 @@ class ObsoleteImportMatch:
 
 
 _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
+    "homeassistant.components.alarm_control_panel": [
+        ObsoleteImportMatch(
+            reason="replaced by AlarmControlPanelEntityFeature enum",
+            constant=re.compile(r"^SUPPORT_(\w*)$"),
+        ),
+    ],
+    "homeassistant.components.alarm_control_panel.const": [
+        ObsoleteImportMatch(
+            reason="replaced by AlarmControlPanelEntityFeature enum",
+            constant=re.compile(r"^SUPPORT_(\w*)$"),
+        ),
+    ],
     "homeassistant.components.binarysensor": [
         ObsoleteImportMatch(
             reason="replaced by BinarySensorDeviceClass enum",
             constant=re.compile(r"^DEVICE_CLASS_(\w*)$"),
         ),
     ],
+    "homeassistant.components.climate": [
+        ObsoleteImportMatch(
+            reason="replaced by ClimateEntityFeature enum",
+            constant=re.compile(r"^SUPPORT_(\w*)$"),
+        ),
+    ],
+    "homeassistant.components.climate.const": [
+        ObsoleteImportMatch(
+            reason="replaced by ClimateEntityFeature enum",
+            constant=re.compile(r"^SUPPORT_(\w*)$"),
+        ),
+    ],
     "homeassistant.components.cover": [
         ObsoleteImportMatch(
             reason="replaced by CoverDeviceClass enum",
             constant=re.compile(r"^DEVICE_CLASS_(\w*)$"),
+        ),
+        ObsoleteImportMatch(
+            reason="replaced by CoverEntityFeature enum",
+            constant=re.compile(r"^SUPPORT_(\w*)$"),
+        ),
+    ],
+    "homeassistant.components.fan": [
+        ObsoleteImportMatch(
+            reason="replaced by FanEntityFeature enum",
+            constant=re.compile(r"^SUPPORT_(\w*)$"),
         ),
     ],
     "homeassistant.components.humidifier": [
@@ -61,6 +95,16 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
         ObsoleteImportMatch(
             reason="replaced by MediaPlayerDeviceClass enum",
             constant=re.compile(r"^DEVICE_CLASS_(\w*)$"),
+        ),
+        ObsoleteImportMatch(
+            reason="replaced by MediaPlayerEntityFeature enum",
+            constant=re.compile(r"^SUPPORT_(\w*)$"),
+        ),
+    ],
+    "homeassistant.components.media_player.const": [
+        ObsoleteImportMatch(
+            reason="replaced by MediaPlayerEntityFeature enum",
+            constant=re.compile(r"^SUPPORT_(\w*)$"),
         ),
     ],
     "homeassistant.components.remote": [

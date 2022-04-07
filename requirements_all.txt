@@ -110,7 +110,7 @@ aio_geojson_nsw_rfs_incidents==0.4
 aio_georss_gdacs==0.5
 
 # homeassistant.components.airzone
-aioairzone==0.3.1
+aioairzone==0.3.3
 
 # homeassistant.components.ambient_station
 aioambient==2021.11.0
@@ -1928,7 +1928,7 @@ python-qbittorrent==0.4.2
 python-ripple-api==0.0.3
 
 # homeassistant.components.smarttub
-python-smarttub==0.0.30
+python-smarttub==0.0.31
 
 # homeassistant.components.songpal
 python-songpal==0.14.1
