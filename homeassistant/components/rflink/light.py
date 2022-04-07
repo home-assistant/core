@@ -8,8 +8,8 @@ import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    COLOR_MODE_BRIGHTNESS,
     PLATFORM_SCHEMA,
-    SUPPORT_BRIGHTNESS,
     LightEntity,
 )
 from homeassistant.const import CONF_DEVICES, CONF_NAME, CONF_TYPE
@@ -177,6 +177,8 @@ class RflinkLight(SwitchableRflinkDevice, LightEntity):
 class DimmableRflinkLight(SwitchableRflinkDevice, LightEntity):
     """Rflink light device that support dimming."""
 
+    _attr_color_mode = COLOR_MODE_BRIGHTNESS
+    _attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
     _brightness = 255
 
     async def async_added_to_hass(self):
@@ -220,11 +222,6 @@ class DimmableRflinkLight(SwitchableRflinkDevice, LightEntity):
     def brightness(self):
         """Return the brightness of this light between 0..255."""
         return self._brightness
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_BRIGHTNESS
 
 
 class HybridRflinkLight(DimmableRflinkLight, LightEntity):
