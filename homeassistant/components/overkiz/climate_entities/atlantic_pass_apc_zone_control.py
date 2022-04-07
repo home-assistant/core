@@ -27,7 +27,6 @@ class AtlanticPassAPCZoneControl(OverkizEntity, ClimateEntity):
     """Representation of Atlantic Pass APC Zone Control."""
 
     _attr_hvac_modes = [*HVAC_MODE_TO_OVERKIZ]
-    _attr_supported_features = 0
     _attr_temperature_unit = TEMP_CELSIUS
 
     @property
