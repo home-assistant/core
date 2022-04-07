@@ -1,5 +1,7 @@
 """Tests for OpenERZ component."""
+from datetime import datetime
 from unittest.mock import MagicMock, patch
+from zoneinfo import ZoneInfo
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.setup import async_setup_component
@@ -29,6 +31,12 @@ async def test_sensor_state(hass):
         entity_id = "sensor.test_name"
         test_openerz_state = hass.states.get(entity_id)
 
-        assert test_openerz_state.state == "2020-12-12"
+        assert (
+            test_openerz_state.state
+            == datetime.strptime("2020-12-12 07:00", "%Y-%m-%d %H:%M")
+            .replace(tzinfo=ZoneInfo("Europe/Zurich"))
+            .astimezone()
+            .isoformat()
+        )
         assert test_openerz_state.name == "test_name"
         pickup_instance.find_next_pickup.assert_called_once()

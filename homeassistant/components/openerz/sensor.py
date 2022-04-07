@@ -1,12 +1,13 @@
 """Support for OpenERZ API for Zurich city waste disposal system."""
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
 from openerz_api.main import OpenERZConnector
 import voluptuous as vol
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
@@ -58,9 +59,25 @@ class OpenERZSensor(SensorEntity):
         """Return the state of the sensor."""
         return self._state
 
+    @property
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return SensorDeviceClass.TIMESTAMP
+
     def update(self):
         """Fetch new state data for the sensor.
 
         This is the only method that should fetch new data for Home Assistant.
+
+        The api returns a string of format "%Y-%m-%d". From the ERZ website,
+        it can be deducted that the pickup happens after 07:00 in the morning.
+
+        As this platform only works for Zurich, the timezone will be set to Zurich.
         """
-        self._state = self.api_connector.find_next_pickup(day_offset=31)
+        date_string = self.api_connector.find_next_pickup(day_offset=31)
+        time_string = "07:00"
+        datetime_string = f"{date_string} {time_string}"
+        zh_tz = ZoneInfo("Europe/Zurich")
+        self._state = datetime.strptime(datetime_string, "%Y-%m-%d %H:%M").replace(
+            tzinfo=zh_tz
+        )
