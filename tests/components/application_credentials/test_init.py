@@ -352,6 +352,25 @@ async def test_websocket_import_config(ws_client: ClientFixture):
     assert await client.cmd_result("list") == []
 
 
+@pytest.mark.parametrize("config_credential", [DEVELOPER_CREDENTIAL])
+async def test_import_duplicate_credentials(
+    hass: HomeAssistant, ws_client: ClientFixture
+):
+    """Exercise duplicate credentials are ignored."""
+
+    # Import the test credential again and verify it is not imported twice
+    await async_import_client_credential(hass, TEST_DOMAIN, DEVELOPER_CREDENTIAL)
+    client = await ws_client()
+    assert await client.cmd_result("list") == [
+        {
+            CONF_DOMAIN: TEST_DOMAIN,
+            CONF_CLIENT_ID: CLIENT_ID,
+            CONF_CLIENT_SECRET: CLIENT_SECRET,
+            "id": ID,
+        }
+    ]
+
+
 async def test_config_flow_no_credentials(hass):
     """Test config flow base case with no credentials registered."""
     result = await hass.config_entries.flow.async_init(

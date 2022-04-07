@@ -24,6 +24,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import IntegrationNotFound, async_get_integration
+from homeassistant.util import slugify
 
 __all__ = ["ClientCredential", "AuthorizationServer", "async_import_client_credential"]
 
@@ -95,6 +96,13 @@ class ApplicationCredentialsStorageCollection(collection.StorageCollection):
 
         await super().async_delete_item(item_id)
 
+    async def async_import_item(self, info: dict) -> None:
+        """Import an yaml credential if it does not already exist."""
+        suggested_id = self._get_suggested_id(info)
+        if self.id_manager.has_id(slugify(suggested_id)):
+            return
+        await self.async_create_item(info)
+
     def async_client_credentials(self, domain: str) -> dict[str, ClientCredential]:
         """Return ClientCredentials in storage for the specified domain."""
         credentials = {}
@@ -143,7 +151,7 @@ async def async_import_client_credential(
         CONF_CLIENT_ID: credential.client_id,
         CONF_CLIENT_SECRET: credential.client_secret,
     }
-    await storage_collection.async_create_item(item)
+    await storage_collection.async_import_item(item)
 
 
 async def _async_provide_implementation(
