@@ -13,7 +13,7 @@ ATTR_VOLUME_LEVEL: Final = "volume_level"
 
 
 class SirenEntityFeature(IntEnum):
-    """Supported features of the alarm control panel entity."""
+    """Supported features of the siren entity."""
 
     TURN_ON = 1
     TURN_OFF = 2
