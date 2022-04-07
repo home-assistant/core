@@ -18,7 +18,9 @@ from homeassistant.util import Throttle
 
 from .const import (
     CONF_FALLBACK,
+    CONST_OVERLAY_MANUAL,
     CONST_OVERLAY_TADO_MODE,
+    CONST_OVERLAY_TADO_OPTIONS,
     DATA,
     DOMAIN,
     INSIDE_TEMPERATURE_MEASUREMENT,
@@ -52,6 +54,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     username = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
     fallback = entry.options.get(CONF_FALLBACK, CONST_OVERLAY_TADO_MODE)
+    if fallback not in CONST_OVERLAY_TADO_OPTIONS:
+        if fallback:
+            fallback = CONST_OVERLAY_TADO_MODE
+        else:
+            fallback = CONST_OVERLAY_MANUAL
 
     tadoconnector = TadoConnector(hass, username, password, fallback)
 
