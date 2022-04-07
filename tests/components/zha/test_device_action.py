@@ -140,3 +140,13 @@ async def test_action(hass, device_ias):
         assert calls[0].domain == DOMAIN
         assert calls[0].service == "warning_device_warn"
         assert calls[0].data["ieee"] == ieee_address
+
+
+async def test_invalid_zha_event_type(hass, device_ias):
+    """Test that unexpected types are not passed to `zha_send_event`."""
+    zigpy_device, zha_device = device_ias
+    channel = zha_device.channels.pools[0].client_channels["1:0x0006"]
+
+    # `zha_send_event` accepts only zigpy responses, lists, and dicts
+    with pytest.raises(TypeError):
+        channel.zha_send_event(COMMAND_SINGLE, 123)
