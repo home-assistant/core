@@ -578,6 +578,18 @@ class KeepAliveTask(RecorderTask):
         instance._send_keep_alive()
 
 
+@dataclass
+class CommitTask(RecorderTask):
+    """Commit the event session."""
+
+    commit_before = False
+
+    def run(self, instance: Recorder) -> None:
+        """Handle the task."""
+        # pylint: disable-next=[protected-access]
+        instance._commit_event_session_or_retry()
+
+
 class Recorder(threading.Thread):
     """A threaded recorder class."""
 
@@ -604,7 +616,6 @@ class Recorder(threading.Thread):
         self.auto_purge = auto_purge
         self.auto_repack = auto_repack
         self.keep_days = keep_days
-        self._last_commit_time = 0.0
         self._hass_started: asyncio.Future[object] = asyncio.Future()
         self.commit_interval = commit_interval
         self.queue: queue.SimpleQueue[RecorderTask] = queue.SimpleQueue()
@@ -632,6 +643,7 @@ class Recorder(threading.Thread):
         self._completed_first_database_setup: bool | None = None
         self._event_listener: CALLBACK_TYPE | None = None
         self._keep_alive_listener: CALLBACK_TYPE | None = None
+        self._commit_listener: CALLBACK_TYPE | None = None
         self.async_migration_event = asyncio.Event()
         self.migration_in_progress = False
         self._queue_watcher: CALLBACK_TYPE | None = None
@@ -672,12 +684,25 @@ class Recorder(threading.Thread):
         self._keep_alive_listener = async_track_time_interval(
             self.hass, self._async_keep_alive, timedelta(seconds=KEEPALIVE_TIME)
         )
+        self._commit_listener = async_track_time_interval(
+            self.hass, self._async_commit, timedelta(seconds=self.commit_interval)
+        )
 
     @callback
     def _async_keep_alive(self, now: datetime) -> None:
         """Queue a keep alive."""
         if self.async_recorder_ready.is_set():
             self.queue.put(KeepAliveTask())
+
+    @callback
+    def _async_commit(self, now: datetime) -> None:
+        """Queue a commit."""
+        if (
+            self.commit_interval
+            and not self._database_lock_task
+            and self.async_recorder_ready.is_set()
+        ):
+            self.queue.put(CommitTask())
 
     @callback
     def async_add_executor_job(
@@ -720,6 +745,9 @@ class Recorder(threading.Thread):
         if self._keep_alive_listener:
             self._keep_alive_listener()
             self._keep_alive_listener = None
+        if self._commit_listener:
+            self._commit_listener()
+            self._commit_listener = None
 
     @callback
     def _async_event_filter(self, event: Event) -> bool:
@@ -1069,11 +1097,7 @@ class Recorder(threading.Thread):
             return
         self._process_event_into_session(event)
         # Commit if the commit interval is zero
-        # or we have reached the time since last commit
-        if (
-            not self.commit_interval
-            or (time.monotonic() - self._last_commit_time) > self.commit_interval
-        ):
+        if not self.commit_interval:
             self._commit_event_session_or_retry()
 
     def _process_event_into_session(self, event: Event) -> None:
@@ -1106,7 +1130,6 @@ class Recorder(threading.Thread):
             return
 
         dbstate.attributes = None
-        dbstate.event = dbevent
 
         # Matching attributes found in the pending commit
         if pending_attributes := self._pending_state_attributes.get(shared_attrs):
@@ -1144,7 +1167,8 @@ class Recorder(threading.Thread):
             self._pending_expunge.append(dbstate)
         else:
             dbstate.state = None
-            self.event_session.add(dbstate)
+        dbstate.event = dbevent
+        self.event_session.add(dbstate)
 
     def _handle_database_error(self, err: Exception) -> bool:
         """Handle a database error that may result in moving away the corrupt db."""
@@ -1183,7 +1207,6 @@ class Recorder(threading.Thread):
     def _commit_event_session(self) -> None:
         assert self.event_session is not None
         self._commits_without_expire += 1
-        self._last_commit_time = time.monotonic()
 
         if self._pending_expunge:
             self.event_session.flush()
