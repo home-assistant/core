@@ -8,7 +8,7 @@ from intellifire4py.exceptions import LoginException
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import DOMAIN, LOGGER
 from .coordinator import IntellifireDataUpdateCoordinator
@@ -31,7 +31,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             username=entry.data[CONF_USERNAME],
             password=entry.data[CONF_PASSWORD],
         )
-    except (ConnectionError, ClientConnectionError, LoginException) as err:
+    except (ConnectionError, ClientConnectionError) as err:
+        raise ConfigEntryNotReady from err
+    except LoginException as err:
         raise ConfigEntryAuthFailed(err) from err
     finally:
         await ift_control.close()
