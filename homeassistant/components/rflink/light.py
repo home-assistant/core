@@ -8,8 +8,9 @@ import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    COLOR_MODE_BRIGHTNESS,
+    COLOR_MODE_ONOFF,
     PLATFORM_SCHEMA,
-    SUPPORT_BRIGHTNESS,
     LightEntity,
 )
 from homeassistant.const import CONF_DEVICES, CONF_NAME, CONF_TYPE
@@ -177,6 +178,8 @@ class RflinkLight(SwitchableRflinkDevice, LightEntity):
 class DimmableRflinkLight(SwitchableRflinkDevice, LightEntity):
     """Rflink light device that support dimming."""
 
+    _attr_color_mode = COLOR_MODE_BRIGHTNESS
+    _attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
     _brightness = 255
 
     async def async_added_to_hass(self):
@@ -221,11 +224,6 @@ class DimmableRflinkLight(SwitchableRflinkDevice, LightEntity):
         """Return the brightness of this light between 0..255."""
         return self._brightness
 
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_BRIGHTNESS
-
 
 class HybridRflinkLight(DimmableRflinkLight, LightEntity):
     """Rflink light device that sends out both dim and on/off commands.
@@ -259,6 +257,9 @@ class ToggleRflinkLight(SwitchableRflinkDevice, LightEntity):
     If the light is on and 'on' gets sent, the light will turn off
     and if the light is off and 'on' gets sent, the light will turn on.
     """
+
+    _attr_color_mode = COLOR_MODE_ONOFF
+    _attr_supported_color_modes = {COLOR_MODE_ONOFF}
 
     def _handle_event(self, event):
         """Adjust state if Rflink picks up a remote command for this device."""
