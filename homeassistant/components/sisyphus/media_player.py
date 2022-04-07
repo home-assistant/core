@@ -24,18 +24,6 @@ from . import DATA_SISYPHUS
 
 MEDIA_TYPE_TRACK = "sisyphus_track"
 
-SUPPORTED_FEATURES = (
-    MediaPlayerEntityFeature.VOLUME_MUTE
-    | MediaPlayerEntityFeature.VOLUME_SET
-    | MediaPlayerEntityFeature.TURN_OFF
-    | MediaPlayerEntityFeature.TURN_ON
-    | MediaPlayerEntityFeature.PAUSE
-    | MediaPlayerEntityFeature.SHUFFLE_SET
-    | MediaPlayerEntityFeature.PREVIOUS_TRACK
-    | MediaPlayerEntityFeature.NEXT_TRACK
-    | MediaPlayerEntityFeature.PLAY
-)
-
 
 async def async_setup_platform(
     hass: HomeAssistant,
