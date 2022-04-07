@@ -359,29 +359,25 @@ class ZigbeeChannel(LogMixin):
         """Relay events to hass."""
 
         if isinstance(arg, CommandSchema):
-            self._ch_pool.zha_send_event(
-                {
-                    ATTR_UNIQUE_ID: self.unique_id,
-                    ATTR_CLUSTER_ID: self.cluster.cluster_id,
-                    ATTR_COMMAND: command,
-                    # Maintain backwards compatibility with the old zigpy rsp format
-                    ATTR_ARGS: [a for a in arg if a is not None],
-                    ATTR_PARAMS: arg.as_dict(),
-                }
-            )
+            args = [a for a in arg if a is not None]
+            params = arg.as_dict()
         elif isinstance(arg, (list, dict)):
             # Quirks can directly send lists and dicts to ZHA this way
-            self._ch_pool.zha_send_event(
-                {
-                    ATTR_UNIQUE_ID: self.unique_id,
-                    ATTR_CLUSTER_ID: self.cluster.cluster_id,
-                    ATTR_COMMAND: command,
-                    ATTR_ARGS: arg,
-                    ATTR_PARAMS: {},
-                }
-            )
+            args = arg
+            params = {}
         else:
             raise TypeError(f"Unexpected zha_send_event {command!r} argument: {arg!r}")
+
+        self._ch_pool.zha_send_event(
+            {
+                ATTR_UNIQUE_ID: self.unique_id,
+                ATTR_CLUSTER_ID: self.cluster.cluster_id,
+                ATTR_COMMAND: command,
+                # Maintain backwards compatibility with the old zigpy rsp format
+                ATTR_ARGS: args,
+                ATTR_PARAMS: params,
+            }
+        )
 
     async def async_update(self):
         """Retrieve latest state from cluster."""
