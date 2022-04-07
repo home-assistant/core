@@ -103,7 +103,7 @@ def _async_import_options_from_data_if_missing(hass: HomeAssistant, entry: Confi
     if CONF_FALLBACK not in options:
         options[CONF_FALLBACK] = entry.data.get(CONF_FALLBACK, CONST_OVERLAY_TADO_MODE)
         hass.config_entries.async_update_entry(entry, options=options)
-    
+
     if options[CONF_FALLBACK] not in CONST_OVERLAY_TADO_OPTIONS:
         if options[CONF_FALLBACK]:
             options[CONF_FALLBACK] = CONST_OVERLAY_TADO_MODE
