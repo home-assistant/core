@@ -6,7 +6,6 @@ reset:
   target:
     entity:
       domain: select
-      integration: utility_meter
 
 next_tariff:
   name: Next Tariff
