@@ -66,9 +66,7 @@ class UpbLight(UpbAttachedEntity, LightEntity):
     @property
     def supported_color_modes(self) -> set[str]:
         """Flag supported color modes."""
-        if self._element.dimmable:
-            return {COLOR_MODE_BRIGHTNESS}
-        return {COLOR_MODE_ONOFF}
+        return {self.color_mode}
 
     @property
     def supported_features(self):
