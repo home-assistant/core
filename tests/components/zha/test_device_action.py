@@ -143,6 +143,7 @@ async def test_action(hass, device_ias):
 
 
 async def test_invalid_zha_event_type(hass, device_ias):
+    """Test that unexpected types are not passed to `zha_send_event`."""
     zigpy_device, zha_device = device_ias
     channel = zha_device.channels.pools[0].client_channels["1:0x0006"]
 
