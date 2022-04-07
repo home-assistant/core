@@ -72,21 +72,12 @@ async def setup_application_credentials_integration(
     )
 
 
-@pytest.fixture
-def disable_setup() -> bool:
-    """Fixture to disable mock credentials integration."""
-    return False
-
-
 @pytest.fixture(autouse=True)
 async def mock_application_credentials_integration(
-    disable_setup: bool,
     hass: HomeAssistant,
     authorization_server: AuthorizationServer,
 ):
     """Mock a application_credentials integration."""
-    if disable_setup:
-        return
     assert await async_setup_component(hass, "application_credentials", {})
     await setup_application_credentials_integration(
         hass, TEST_DOMAIN, authorization_server
@@ -535,7 +526,7 @@ async def test_config_flow_with_config_credential(
     assert result["data"].get("auth_implementation") == ID
 
 
-@pytest.mark.parametrize("disable_setup", [True])
+@pytest.mark.parametrize("mock_application_credentials_integration", [None])
 async def test_import_without_setup(hass, config_credential):
     """Test import of credentials without setting up the integration."""
 
@@ -550,7 +541,7 @@ async def test_import_without_setup(hass, config_credential):
     assert result.get("reason") == "missing_configuration"
 
 
-@pytest.mark.parametrize("disable_setup", [True])
+@pytest.mark.parametrize("mock_application_credentials_integration", [None])
 async def test_websocket_without_platform(
     hass: HomeAssistant, ws_client: ClientFixture
 ):
@@ -579,7 +570,7 @@ async def test_websocket_without_platform(
     assert result.get("reason") == "missing_configuration"
 
 
-@pytest.mark.parametrize("disable_setup", [True])
+@pytest.mark.parametrize("mock_application_credentials_integration", [None])
 async def test_websocket_without_authorization_server(
     hass: HomeAssistant, ws_client: ClientFixture
 ):
