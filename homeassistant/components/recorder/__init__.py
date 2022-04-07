@@ -740,17 +740,22 @@ class Recorder(threading.Thread):
             "The recorder queue reached the maximum size of %s; Events are no longer being recorded",
             MAX_QUEUE_BACKLOG,
         )
-        self._async_stop_listeners()
+        self._async_stop_queue_watcher_and_event_listener()
 
     @callback
-    def _async_stop_listeners(self) -> None:
-        """Stop watching the queue, keep alive, and listening for events."""
+    def _async_stop_queue_watcher_and_event_listener(self) -> None:
+        """Stop watching the queue and listening for events."""
         if self._queue_watcher:
             self._queue_watcher()
             self._queue_watcher = None
         if self._event_listener:
             self._event_listener()
             self._event_listener = None
+
+    @callback
+    def _async_stop_listeners(self) -> None:
+        """Stop listeners."""
+        self._async_stop_queue_watcher_and_event_listener()
         if self._keep_alive_listener:
             self._keep_alive_listener()
             self._keep_alive_listener = None
