@@ -7,8 +7,8 @@ from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
 from homeassistant.components.climate import (
     HVAC_MODE_OFF,
-    SUPPORT_PRESET_MODE,
     ClimateEntity,
+    ClimateEntityFeature,
 )
 from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT,
@@ -43,7 +43,7 @@ class AtlanticElectricalHeater(OverkizEntity, ClimateEntity):
 
     _attr_hvac_modes = [*HVAC_MODES_TO_OVERKIZ]
     _attr_preset_modes = [*PRESET_MODES_TO_OVERKIZ]
-    _attr_supported_features = SUPPORT_PRESET_MODE
+    _attr_supported_features = ClimateEntityFeature.PRESET_MODE
     _attr_temperature_unit = TEMP_CELSIUS
 
     @property
