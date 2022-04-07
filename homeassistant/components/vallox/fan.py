@@ -9,8 +9,8 @@ from vallox_websocket_api import Vallox
 from vallox_websocket_api.exceptions import ValloxApiException
 
 from homeassistant.components.fan import (
-    SUPPORT_PRESET_MODE,
     FanEntity,
+    FanEntityFeature,
     NotValidPresetModeError,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -83,6 +83,8 @@ async def async_setup_entry(
 class ValloxFan(CoordinatorEntity[ValloxDataUpdateCoordinator], FanEntity):
     """Representation of the fan."""
 
+    _attr_supported_features = FanEntityFeature.PRESET_MODE
+
     def __init__(
         self,
         name: str,
@@ -97,11 +99,6 @@ class ValloxFan(CoordinatorEntity[ValloxDataUpdateCoordinator], FanEntity):
         self._attr_name = name
 
         self._attr_unique_id = str(self.coordinator.data.get_uuid())
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return SUPPORT_PRESET_MODE
 
     @property
     def preset_modes(self) -> list[str]:

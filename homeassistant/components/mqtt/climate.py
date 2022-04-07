@@ -10,6 +10,7 @@ from homeassistant.components import climate
 from homeassistant.components.climate import (
     PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA,
     ClimateEntity,
+    ClimateEntityFeature,
 )
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
@@ -30,12 +31,6 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_OFF,
     PRESET_AWAY,
     PRESET_NONE,
-    SUPPORT_AUX_HEAT,
-    SUPPORT_FAN_MODE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_SWING_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -1040,27 +1035,27 @@ class MqttClimate(MqttEntity, ClimateEntity):
         if (self._topic[CONF_TEMP_STATE_TOPIC] is not None) or (
             self._topic[CONF_TEMP_COMMAND_TOPIC] is not None
         ):
-            support |= SUPPORT_TARGET_TEMPERATURE
+            support |= ClimateEntityFeature.TARGET_TEMPERATURE
 
         if (self._topic[CONF_TEMP_LOW_STATE_TOPIC] is not None) or (
             self._topic[CONF_TEMP_LOW_COMMAND_TOPIC] is not None
         ):
-            support |= SUPPORT_TARGET_TEMPERATURE_RANGE
+            support |= ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
 
         if (self._topic[CONF_TEMP_HIGH_STATE_TOPIC] is not None) or (
             self._topic[CONF_TEMP_HIGH_COMMAND_TOPIC] is not None
         ):
-            support |= SUPPORT_TARGET_TEMPERATURE_RANGE
+            support |= ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
 
         if (self._topic[CONF_FAN_MODE_STATE_TOPIC] is not None) or (
             self._topic[CONF_FAN_MODE_COMMAND_TOPIC] is not None
         ):
-            support |= SUPPORT_FAN_MODE
+            support |= ClimateEntityFeature.FAN_MODE
 
         if (self._topic[CONF_SWING_MODE_STATE_TOPIC] is not None) or (
             self._topic[CONF_SWING_MODE_COMMAND_TOPIC] is not None
         ):
-            support |= SUPPORT_SWING_MODE
+            support |= ClimateEntityFeature.SWING_MODE
 
         # AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.9
         if (
@@ -1070,12 +1065,12 @@ class MqttClimate(MqttEntity, ClimateEntity):
             or (self._topic[CONF_HOLD_STATE_TOPIC] is not None)
             or (self._topic[CONF_HOLD_COMMAND_TOPIC] is not None)
         ):
-            support |= SUPPORT_PRESET_MODE
+            support |= ClimateEntityFeature.PRESET_MODE
 
         if (self._topic[CONF_AUX_STATE_TOPIC] is not None) or (
             self._topic[CONF_AUX_COMMAND_TOPIC] is not None
         ):
-            support |= SUPPORT_AUX_HEAT
+            support |= ClimateEntityFeature.AUX_HEAT
 
         return support
 

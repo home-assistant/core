@@ -365,10 +365,7 @@ async def test_discovered_by_unifi_discovery_direct_connect_updated(
     )
     mock_config.add_to_hass(hass)
 
-    with _patch_discovery(), patch(
-        "homeassistant.components.unifiprotect.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with _patch_discovery():
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
@@ -378,7 +375,6 @@ async def test_discovered_by_unifi_discovery_direct_connect_updated(
 
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
-    assert len(mock_setup_entry.mock_calls) == 1
     assert mock_config.data[CONF_HOST] == DIRECT_CONNECT_DOMAIN
 
 
@@ -401,10 +397,7 @@ async def test_discovered_by_unifi_discovery_direct_connect_updated_but_not_usin
     )
     mock_config.add_to_hass(hass)
 
-    with _patch_discovery(), patch(
-        "homeassistant.components.unifiprotect.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with _patch_discovery():
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
@@ -414,7 +407,6 @@ async def test_discovered_by_unifi_discovery_direct_connect_updated_but_not_usin
 
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
-    assert len(mock_setup_entry.mock_calls) == 1
     assert mock_config.data[CONF_HOST] == "127.0.0.1"
 
 
