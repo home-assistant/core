@@ -568,7 +568,9 @@ async def test_write_lock_db(hass, tmp_path):
     from sqlalchemy.exc import OperationalError
 
     # Use file DB, in memory DB cannot do write locks.
-    config = {recorder.CONF_DB_URL: "sqlite:///" + str(tmp_path / "pytest.db")}
+    config = {
+        recorder.CONF_DB_URL: "sqlite:///" + str(tmp_path / "pytest.db?timeout=0.1")
+    }
     await async_init_recorder_component(hass, config)
     await hass.async_block_till_done()
 
