@@ -576,7 +576,7 @@ class EventTask(RecorderTask):
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
         # pylint: disable-next=[protected-access]
-        instance._process_one_event_and_commit(self.event)
+        instance._process_one_event(self.event)
 
 
 @dataclass
@@ -1117,7 +1117,7 @@ class Recorder(threading.Thread):
             self.queue.qsize(),
         )
 
-    def _process_one_event_and_commit(self, event: Event) -> None:
+    def _process_one_event(self, event: Event) -> None:
         if not self.enabled:
             return
         self._process_event_into_session(event)
