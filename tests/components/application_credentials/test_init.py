@@ -48,11 +48,18 @@ async def config_credential() -> ClientCredential | None:
     return None
 
 
+@pytest.fixture
+async def import_config_credential(
+    hass: HomeAssistant, config_credential: ClientCredential
+) -> None:
+    """Fixture to import the yaml based credential."""
+    await async_import_client_credential(hass, TEST_DOMAIN, config_credential)
+
+
 async def setup_application_credentials_integration(
     hass: HomeAssistant,
     domain: str,
     authorization_server: AuthorizationServer,
-    config_credential: ClientCredential | None,
 ) -> None:
     """Set up a fake application_credentials integration."""
     hass.config.components.add(domain)
@@ -63,8 +70,6 @@ async def setup_application_credentials_integration(
             async_get_authorization_server=AsyncMock(return_value=authorization_server),
         ),
     )
-    if config_credential:
-        await async_import_client_credential(hass, domain, config_credential)
 
 
 @pytest.fixture
@@ -78,14 +83,13 @@ async def mock_application_credentials_integration(
     disable_setup: bool,
     hass: HomeAssistant,
     authorization_server: AuthorizationServer,
-    config_credential: ClientCredential | None,
 ):
     """Mock a application_credentials integration."""
     if disable_setup:
         return
     assert await async_setup_component(hass, "application_credentials", {})
     await setup_application_credentials_integration(
-        hass, TEST_DOMAIN, authorization_server, config_credential
+        hass, TEST_DOMAIN, authorization_server
     )
 
 
@@ -333,7 +337,11 @@ async def test_websocket_delete_item_not_found(ws_client: ClientFixture):
 
 
 @pytest.mark.parametrize("config_credential", [DEVELOPER_CREDENTIAL])
-async def test_websocket_import_config(ws_client: ClientFixture):
+async def test_websocket_import_config(
+    ws_client: ClientFixture,
+    config_credential: ClientCredential,
+    import_config_credential: Any,
+):
     """Test websocket list command for an imported credential."""
     client = await ws_client()
 
@@ -354,7 +362,10 @@ async def test_websocket_import_config(ws_client: ClientFixture):
 
 @pytest.mark.parametrize("config_credential", [DEVELOPER_CREDENTIAL])
 async def test_import_duplicate_credentials(
-    hass: HomeAssistant, ws_client: ClientFixture
+    hass: HomeAssistant,
+    ws_client: ClientFixture,
+    config_credential: ClientCredential,
+    import_config_credential: Any,
 ):
     """Exercise duplicate credentials are ignored."""
 
@@ -387,7 +398,9 @@ async def test_config_flow_other_domain(
 ):
     """Test config flow ignores credentials for another domain."""
     await setup_application_credentials_integration(
-        hass, "other_domain", authorization_server, config_credential=None
+        hass,
+        "other_domain",
+        authorization_server,
     )
     client = await ws_client()
     await client.cmd_result(
@@ -506,7 +519,12 @@ async def test_config_flow_create_delete_credential(
 
 @pytest.mark.parametrize("config_credential", [DEVELOPER_CREDENTIAL])
 async def test_config_flow_with_config_credential(
-    hass, hass_client_no_auth, aioclient_mock, oauth_fixture: OAuthFixture
+    hass,
+    hass_client_no_auth,
+    aioclient_mock,
+    oauth_fixture,
+    config_credential,
+    import_config_credential,
 ):
     """Test config flow with application credential registered."""
     result = await hass.config_entries.flow.async_init(
