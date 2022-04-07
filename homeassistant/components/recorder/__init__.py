@@ -11,7 +11,6 @@ import queue
 import sqlite3
 import threading
 import time
-import traceback
 from typing import Any, TypeVar, cast
 
 from lru import LRU  # pylint: disable=no-name-in-module
@@ -20,7 +19,6 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.orm.session import Session
-from sqlalchemy.pool import StaticPool
 import voluptuous as vol
 
 from homeassistant.components import persistent_notification
@@ -81,7 +79,7 @@ from .models import (
     StatisticsRuns,
     process_timestamp,
 )
-from .pool import POOL_SIZE, RecorderPool
+from .pool import POOL_SIZE, MutexPool, RecorderPool
 from .util import (
     dburl_to_path,
     end_incomplete_runs,
@@ -214,60 +212,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 # Pool size must accommodate Recorder thread + All db executors
 MAX_DB_EXECUTOR_WORKERS = POOL_SIZE - 1
-
-DEBUG_MUTEX_POOL = False
-DEBUG_MUTEX_POOL_TRACE = False
-
-
-class MutexPool(StaticPool):  # type: ignore[misc]
-    """A pool which prevents concurrent accesses from multiple threads."""
-
-    _counter = 0
-    pool_lock: threading.RLock
-
-    def _do_return_conn(self, conn: Any) -> None:
-        if DEBUG_MUTEX_POOL_TRACE:
-            trace = traceback.extract_stack()
-            trace_msg = "".join(traceback.format_list(trace[:-1]))
-        else:
-            trace_msg = ""
-
-        super()._do_return_conn(conn)
-        if DEBUG_MUTEX_POOL:
-            self._counter -= 1
-            _LOGGER.error(
-                "%s return conn %s %s %s",
-                threading.current_thread().name,
-                self._counter,
-                conn,
-                trace_msg,
-            )
-        MutexPool.pool_lock.release()
-
-    def _do_get(self) -> Any:
-
-        if DEBUG_MUTEX_POOL_TRACE:
-            trace = traceback.extract_stack()
-            trace_msg = "".join(traceback.format_list(trace[:-1]))
-        else:
-            trace_msg = ""
-
-        if DEBUG_MUTEX_POOL:
-            _LOGGER.error("%s wait conn %s", threading.current_thread().name, trace_msg)
-        # pylint: disable-next=consider-using-with
-        got_lock = MutexPool.pool_lock.acquire(timeout=1)
-        if not got_lock:
-            raise SQLAlchemyError
-        conn = super()._do_get()
-        if DEBUG_MUTEX_POOL:
-            self._counter += 1
-            _LOGGER.error(
-                "%s get conn: %s %s",
-                threading.current_thread().name,
-                self._counter,
-                conn,
-            )
-        return conn
 
 
 def get_instance(hass: HomeAssistant) -> Recorder:

@@ -1,12 +1,21 @@
 """A pool for sqlite connections."""
+import logging
 import threading
+import traceback
 from typing import Any
 
-from sqlalchemy.pool import NullPool, SingletonThreadPool
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.pool import NullPool, SingletonThreadPool, StaticPool
 
 from homeassistant.helpers.frame import report
 
 from .const import DB_WORKER_PREFIX
+
+_LOGGER = logging.getLogger(__name__)
+
+# For debugging the MutexPool
+DEBUG_MUTEX_POOL = False
+DEBUG_MUTEX_POOL_TRACE = False
 
 POOL_SIZE = 5
 
@@ -63,3 +72,58 @@ class RecorderPool(SingletonThreadPool, NullPool):  # type: ignore[misc]
         return super(  # pylint: disable=bad-super-call
             NullPool, self
         )._create_connection()
+
+
+class MutexPool(StaticPool):  # type: ignore[misc]
+    """A pool which prevents concurrent accesses from multiple threads.
+
+    This is used in tests to prevent unsafe concurrent accesses to in-memory SQLite
+    databases.
+    """
+
+    _counter = 0
+    pool_lock: threading.RLock
+
+    def _do_return_conn(self, conn: Any) -> None:
+        if DEBUG_MUTEX_POOL_TRACE:
+            trace = traceback.extract_stack()
+            trace_msg = "".join(traceback.format_list(trace[:-1]))
+        else:
+            trace_msg = ""
+
+        super()._do_return_conn(conn)
+        if DEBUG_MUTEX_POOL:
+            self._counter -= 1
+            _LOGGER.error(
+                "%s return conn %s %s %s",
+                threading.current_thread().name,
+                self._counter,
+                conn,
+                trace_msg,
+            )
+        MutexPool.pool_lock.release()
+
+    def _do_get(self) -> Any:
+
+        if DEBUG_MUTEX_POOL_TRACE:
+            trace = traceback.extract_stack()
+            trace_msg = "".join(traceback.format_list(trace[:-1]))
+        else:
+            trace_msg = ""
+
+        if DEBUG_MUTEX_POOL:
+            _LOGGER.error("%s wait conn %s", threading.current_thread().name, trace_msg)
+        # pylint: disable-next=consider-using-with
+        got_lock = MutexPool.pool_lock.acquire(timeout=1)
+        if not got_lock:
+            raise SQLAlchemyError
+        conn = super()._do_get()
+        if DEBUG_MUTEX_POOL:
+            self._counter += 1
+            _LOGGER.error(
+                "%s get conn: %s %s",
+                threading.current_thread().name,
+                self._counter,
+                conn,
+            )
+        return conn
