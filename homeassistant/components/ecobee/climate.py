@@ -5,7 +5,7 @@ import collections
 
 import voluptuous as vol
 
-from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
@@ -22,12 +22,6 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_OFF,
     PRESET_AWAY,
     PRESET_NONE,
-    SUPPORT_AUX_HEAT,
-    SUPPORT_FAN_MODE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_HUMIDITY,
-    SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -169,11 +163,11 @@ SET_FAN_MIN_ON_TIME_SCHEMA = vol.Schema(
 
 
 SUPPORT_FLAGS = (
-    SUPPORT_TARGET_TEMPERATURE
-    | SUPPORT_PRESET_MODE
-    | SUPPORT_AUX_HEAT
-    | SUPPORT_TARGET_TEMPERATURE_RANGE
-    | SUPPORT_FAN_MODE
+    ClimateEntityFeature.TARGET_TEMPERATURE
+    | ClimateEntityFeature.PRESET_MODE
+    | ClimateEntityFeature.AUX_HEAT
+    | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+    | ClimateEntityFeature.FAN_MODE
 )
 
 
@@ -361,7 +355,7 @@ class Thermostat(ClimateEntity):
     def supported_features(self):
         """Return the list of supported features."""
         if self.has_humidifier_control:
-            return SUPPORT_FLAGS | SUPPORT_TARGET_HUMIDITY
+            return SUPPORT_FLAGS | ClimateEntityFeature.TARGET_HUMIDITY
         return SUPPORT_FLAGS
 
     @property

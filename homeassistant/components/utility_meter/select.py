@@ -20,6 +20,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     ATTR_TARIFF,
@@ -42,12 +43,7 @@ async def async_setup_entry(
 ) -> None:
     """Initialize Utility Meter config entry."""
     name = config_entry.title
-
-    # Remove when frontend list selector is available
-    if not config_entry.options.get(CONF_TARIFFS):
-        tariffs = []
-    else:
-        tariffs = config_entry.options[CONF_TARIFFS].split(",")
+    tariffs = config_entry.options[CONF_TARIFFS]
 
     legacy_add_entities = None
     unique_id = config_entry.entry_id
@@ -55,8 +51,20 @@ async def async_setup_entry(
     async_add_entities([tariff_select])
 
 
-async def async_setup_platform(hass, conf, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    conf: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the utility meter select."""
+    if discovery_info is None:
+        _LOGGER.error(
+            "This platform is not available to configure "
+            "from 'select:' in configuration.yaml"
+        )
+        return
+
     legacy_component = hass.data[DATA_LEGACY_COMPONENT]
     async_add_entities(
         [

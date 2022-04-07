@@ -247,7 +247,7 @@ class HERETravelTimeSensor(SensorEntity, CoordinatorEntity):
         async def _update_at_start(_):
             await self.async_update()
 
-        async_at_start(self.hass, _update_at_start)
+        self.async_on_remove(async_at_start(self.hass, _update_at_start))
 
     @property
     def native_value(self) -> str | None:
@@ -285,6 +285,7 @@ class HERETravelTimeSensor(SensorEntity, CoordinatorEntity):
         """Return the attribution."""
         if self.coordinator.data is not None:
             return self.coordinator.data.get(ATTR_ATTRIBUTION)
+        return None
 
     @property
     def icon(self) -> str:

@@ -33,7 +33,7 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
                 "name": "Electricity meter",
                 "offset": 0,
                 "source": input_sensor_entity_id,
-                "tariffs": "",
+                "tariffs": [],
             },
         )
         await hass.async_block_till_done()
@@ -48,7 +48,7 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
         "net_consumption": False,
         "offset": 0,
         "source": input_sensor_entity_id,
-        "tariffs": "",
+        "tariffs": [],
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -61,7 +61,7 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
         "net_consumption": False,
         "offset": 0,
         "source": input_sensor_entity_id,
-        "tariffs": "",
+        "tariffs": [],
     }
     assert config_entry.title == "Electricity meter"
 
@@ -83,7 +83,7 @@ async def test_tariffs(hass: HomeAssistant) -> None:
             "name": "Electricity meter",
             "offset": 0,
             "source": input_sensor_entity_id,
-            "tariffs": "cat,dog,horse,cow",
+            "tariffs": ["cat", "dog", "horse", "cow"],
         },
     )
     await hass.async_block_till_done()
@@ -98,7 +98,7 @@ async def test_tariffs(hass: HomeAssistant) -> None:
         "net_consumption": False,
         "offset": 0,
         "source": input_sensor_entity_id,
-        "tariffs": "cat,dog,horse,cow",
+        "tariffs": ["cat", "dog", "horse", "cow"],
     }
 
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
@@ -110,7 +110,7 @@ async def test_tariffs(hass: HomeAssistant) -> None:
         "net_consumption": False,
         "offset": 0,
         "source": input_sensor_entity_id,
-        "tariffs": "cat,dog,horse,cow",
+        "tariffs": ["cat", "dog", "horse", "cow"],
     }
     assert config_entry.title == "Electricity meter"
 
@@ -127,7 +127,7 @@ async def test_tariffs(hass: HomeAssistant) -> None:
             "name": "Electricity meter",
             "offset": 0,
             "source": input_sensor_entity_id,
-            "tariffs": "cat,cat,cat,cat",
+            "tariffs": ["cat", "cat", "cat", "cat"],
         },
     )
     await hass.async_block_till_done()

@@ -30,11 +30,9 @@ from homeassistant.components.light import (
     COLOR_MODE_BRIGHTNESS,
     COLOR_MODE_ONOFF,
     PLATFORM_SCHEMA,
-    SUPPORT_EFFECT,
-    SUPPORT_FLASH,
-    SUPPORT_TRANSITION,
     SUPPORT_WHITE_VALUE,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -74,7 +72,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 SUPPORT_GROUP_LIGHT = (
-    SUPPORT_EFFECT | SUPPORT_FLASH | SUPPORT_TRANSITION | SUPPORT_WHITE_VALUE
+    LightEntityFeature.EFFECT
+    | LightEntityFeature.FLASH
+    | LightEntityFeature.TRANSITION
+    | SUPPORT_WHITE_VALUE
 )
 
 _LOGGER = logging.getLogger(__name__)

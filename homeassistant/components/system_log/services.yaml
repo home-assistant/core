@@ -32,8 +32,7 @@ write:
               value: "critical"
     logger:
       name: Logger
-      description:
-        Logger name under which to log the message. Defaults to
+      description: Logger name under which to log the message. Defaults to
         'system_log.external'.
       example: mycomponent.myplatform
       selector:

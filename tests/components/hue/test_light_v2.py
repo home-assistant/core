@@ -14,8 +14,8 @@ async def test_lights(hass, mock_bridge_v2, v2_resources_test_data):
     await setup_platform(hass, mock_bridge_v2, "light")
     # there shouldn't have been any requests at this point
     assert len(mock_bridge_v2.mock_requests) == 0
-    # 6 entities should be created from test data (grouped_lights are disabled by default)
-    assert len(hass.states.async_all()) == 6
+    # 8 entities should be created from test data
+    assert len(hass.states.async_all()) == 8
 
     # test light which supports color and color temperature
     light_1 = hass.states.get("light.hue_light_with_color_and_color_temperature_1")
@@ -329,32 +329,14 @@ async def test_grouped_lights(hass, mock_bridge_v2, v2_resources_test_data):
 
     await setup_platform(hass, mock_bridge_v2, "light")
 
-    # test if entities for hue groups are created and disabled by default
+    # test if entities for hue groups are created and enabled by default
     for entity_id in ("light.test_zone", "light.test_room"):
         ent_reg = er.async_get(hass)
         entity_entry = ent_reg.async_get(entity_id)
 
         assert entity_entry
-        assert entity_entry.disabled
-        assert entity_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
-        # entity should not have a device assigned
-        assert entity_entry.device_id is None
-
-        # enable the entity
-        updated_entry = ent_reg.async_update_entity(
-            entity_entry.entity_id, **{"disabled_by": None}
-        )
-        assert updated_entry != entity_entry
-        assert updated_entry.disabled is False
-
-    # reload platform and check if entities are correctly there
-    await hass.config_entries.async_forward_entry_unload(
-        mock_bridge_v2.config_entry, "light"
-    )
-    await hass.config_entries.async_forward_entry_setup(
-        mock_bridge_v2.config_entry, "light"
-    )
-    await hass.async_block_till_done()
+        # scene entities should have be assigned to the room/zone device/service
+        assert entity_entry.device_id is not None
 
     # test light created for hue zone
     test_entity = hass.states.get("light.test_zone")

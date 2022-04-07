@@ -1,11 +1,12 @@
 """The sensor tests for the Airzone platform."""
 
 from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
 
 from .util import async_init_integration
 
 
-async def test_airzone_create_binary_sensors(hass):
+async def test_airzone_create_binary_sensors(hass: HomeAssistant) -> None:
     """Test creation of binary sensors."""
 
     await async_init_integration(hass)

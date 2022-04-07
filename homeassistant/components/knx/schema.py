@@ -31,7 +31,7 @@ from homeassistant.const import (
     Platform,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import validate_entity_category
+from homeassistant.helpers.entity import ENTITY_CATEGORIES_SCHEMA
 
 from .const import (
     CONF_INVERT,
@@ -262,7 +262,7 @@ class BinarySensorSchema(KNXPlatformSchema):
                 ),
                 vol.Optional(CONF_DEVICE_CLASS): BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
                 vol.Optional(CONF_RESET_AFTER): cv.positive_float,
-                vol.Optional(CONF_ENTITY_CATEGORY): validate_entity_category,
+                vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
             }
         ),
     )
@@ -298,7 +298,7 @@ class ButtonSchema(KNXPlatformSchema):
                 vol.Exclusive(
                     CONF_TYPE, "length_or_type", msg=length_or_type_msg
                 ): object,
-                vol.Optional(CONF_ENTITY_CATEGORY): validate_entity_category,
+                vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
             }
         ),
         vol.Any(
@@ -442,7 +442,7 @@ class ClimateSchema(KNXPlatformSchema):
                 ): vol.In(HVAC_MODES),
                 vol.Optional(CONF_MIN_TEMP): vol.Coerce(float),
                 vol.Optional(CONF_MAX_TEMP): vol.Coerce(float),
-                vol.Optional(CONF_ENTITY_CATEGORY): validate_entity_category,
+                vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
             }
         ),
     )
@@ -497,7 +497,7 @@ class CoverSchema(KNXPlatformSchema):
                 vol.Optional(CONF_INVERT_POSITION, default=False): cv.boolean,
                 vol.Optional(CONF_INVERT_ANGLE, default=False): cv.boolean,
                 vol.Optional(CONF_DEVICE_CLASS): COVER_DEVICE_CLASSES_SCHEMA,
-                vol.Optional(CONF_ENTITY_CATEGORY): validate_entity_category,
+                vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
             }
         ),
     )
@@ -560,7 +560,7 @@ class FanSchema(KNXPlatformSchema):
             vol.Optional(CONF_OSCILLATION_ADDRESS): ga_list_validator,
             vol.Optional(CONF_OSCILLATION_STATE_ADDRESS): ga_list_validator,
             vol.Optional(CONF_MAX_STEP): cv.byte,
-            vol.Optional(CONF_ENTITY_CATEGORY): validate_entity_category,
+            vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
         }
     )
 
@@ -664,7 +664,7 @@ class LightSchema(KNXPlatformSchema):
                 vol.Optional(CONF_MAX_KELVIN, default=DEFAULT_MAX_KELVIN): vol.All(
                     vol.Coerce(int), vol.Range(min=1)
                 ),
-                vol.Optional(CONF_ENTITY_CATEGORY): validate_entity_category,
+                vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
             }
         ),
         vol.Any(
@@ -744,7 +744,7 @@ class NumberSchema(KNXPlatformSchema):
                 vol.Optional(CONF_MAX): vol.Coerce(float),
                 vol.Optional(CONF_MIN): vol.Coerce(float),
                 vol.Optional(CONF_STEP): cv.positive_float,
-                vol.Optional(CONF_ENTITY_CATEGORY): validate_entity_category,
+                vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
             }
         ),
         number_limit_sub_validator,
@@ -766,7 +766,7 @@ class SceneSchema(KNXPlatformSchema):
             vol.Required(CONF_SCENE_NUMBER): vol.All(
                 vol.Coerce(int), vol.Range(min=1, max=64)
             ),
-            vol.Optional(CONF_ENTITY_CATEGORY): validate_entity_category,
+            vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
         }
     )
 
@@ -797,7 +797,7 @@ class SelectSchema(KNXPlatformSchema):
                 ],
                 vol.Required(KNX_ADDRESS): ga_list_validator,
                 vol.Optional(CONF_STATE_ADDRESS): ga_list_validator,
-                vol.Optional(CONF_ENTITY_CATEGORY): validate_entity_category,
+                vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
             }
         ),
         select_options_sub_validator,
@@ -822,7 +822,7 @@ class SensorSchema(KNXPlatformSchema):
             vol.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
             vol.Required(CONF_TYPE): sensor_type_validator,
             vol.Required(CONF_STATE_ADDRESS): ga_list_validator,
-            vol.Optional(CONF_ENTITY_CATEGORY): validate_entity_category,
+            vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
         }
     )
 
@@ -843,7 +843,7 @@ class SwitchSchema(KNXPlatformSchema):
             vol.Optional(CONF_RESPOND_TO_READ, default=False): cv.boolean,
             vol.Required(KNX_ADDRESS): ga_list_validator,
             vol.Optional(CONF_STATE_ADDRESS): ga_list_validator,
-            vol.Optional(CONF_ENTITY_CATEGORY): validate_entity_category,
+            vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
         }
     )
 
@@ -890,7 +890,7 @@ class WeatherSchema(KNXPlatformSchema):
                 vol.Optional(CONF_KNX_DAY_NIGHT_ADDRESS): ga_list_validator,
                 vol.Optional(CONF_KNX_AIR_PRESSURE_ADDRESS): ga_list_validator,
                 vol.Optional(CONF_KNX_HUMIDITY_ADDRESS): ga_list_validator,
-                vol.Optional(CONF_ENTITY_CATEGORY): validate_entity_category,
+                vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
             }
         ),
     )

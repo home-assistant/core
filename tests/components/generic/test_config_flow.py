@@ -1,6 +1,7 @@
 """Test The generic (IP Camera) config flow."""
 
 import errno
+import os.path
 from unittest.mock import patch
 
 import av
@@ -9,6 +10,7 @@ import pytest
 import respx
 
 from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant.components.camera import async_get_image
 from homeassistant.components.generic.const import (
     CONF_CONTENT_TYPE,
     CONF_FRAMERATE,
@@ -111,6 +113,57 @@ async def test_form_only_stillimage(hass, fakeimg_png, user_flow):
 
 
 @respx.mock
+async def test_form_only_stillimage_gif(hass, fakeimg_gif, user_flow):
+    """Test we complete ok if the user wants a gif."""
+    data = TESTDATA.copy()
+    data.pop(CONF_STREAM_SOURCE)
+    result2 = await hass.config_entries.flow.async_configure(
+        user_flow["flow_id"],
+        data,
+    )
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result2["options"][CONF_CONTENT_TYPE] == "image/gif"
+
+
+@respx.mock
+async def test_form_only_svg_whitespace(hass, fakeimgbytes_svg, user_flow):
+    """Test we complete ok if svg starts with whitespace, issue #68889."""
+    fakeimgbytes_wspace_svg = bytes("  \n ", encoding="utf-8") + fakeimgbytes_svg
+    respx.get("http://127.0.0.1/testurl/1").respond(stream=fakeimgbytes_wspace_svg)
+    data = TESTDATA.copy()
+    data.pop(CONF_STREAM_SOURCE)
+    result2 = await hass.config_entries.flow.async_configure(
+        user_flow["flow_id"],
+        data,
+    )
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+
+@respx.mock
+@pytest.mark.parametrize(
+    "image_file",
+    [
+        ("sample1_animate.png"),
+        ("sample2_jpeg_odd_header.jpg"),
+        ("sample3_jpeg_odd_header.jpg"),
+        ("sample4_K5-60mileAnim-320x240.gif"),
+    ],
+)
+async def test_form_only_still_sample(hass, user_flow, image_file):
+    """Test various sample images #69037."""
+    image_path = os.path.join(os.path.dirname(__file__), image_file)
+    with open(image_path, "rb") as image:
+        respx.get("http://127.0.0.1/testurl/1").respond(stream=image.read())
+    data = TESTDATA.copy()
+    data.pop(CONF_STREAM_SOURCE)
+    result2 = await hass.config_entries.flow.async_configure(
+        user_flow["flow_id"],
+        data,
+    )
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+
+@respx.mock
 async def test_form_rtsp_mode(hass, fakeimg_png, mock_av_open, user_flow):
     """Test we complete ok if the user enters a stream url."""
     with mock_av_open as mock_setup:
@@ -139,7 +192,7 @@ async def test_form_rtsp_mode(hass, fakeimg_png, mock_av_open, user_flow):
     assert len(mock_setup.mock_calls) == 1
 
 
-async def test_form_only_stream(hass, mock_av_open):
+async def test_form_only_stream(hass, mock_av_open, fakeimgbytes_jpg):
     """Test we complete ok if the user wants stream only."""
     await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
@@ -152,21 +205,34 @@ async def test_form_only_stream(hass, mock_av_open):
             result["flow_id"],
             data,
         )
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result2["title"] == "127_0_0_1_testurl_2"
-    assert result2["options"] == {
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        {CONF_CONTENT_TYPE: "image/jpeg"},
+    )
+
+    assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result3["title"] == "127_0_0_1_testurl_2"
+    assert result3["options"] == {
         CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
         CONF_STREAM_SOURCE: "http://127.0.0.1/testurl/2",
         CONF_RTSP_TRANSPORT: "tcp",
         CONF_USERNAME: "fred_flintstone",
         CONF_PASSWORD: "bambam",
         CONF_LIMIT_REFETCH_TO_URL_CHANGE: False,
-        CONF_CONTENT_TYPE: None,
+        CONF_CONTENT_TYPE: "image/jpeg",
         CONF_FRAMERATE: 5,
         CONF_VERIFY_SSL: False,
     }
 
     await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.generic.camera.GenericCamera.async_camera_image",
+        return_value=fakeimgbytes_jpg,
+    ):
+        image_obj = await async_get_image(hass, "camera.127_0_0_1_testurl_2")
+        assert image_obj.content == fakeimgbytes_jpg
     assert len(mock_setup.mock_calls) == 1
 
 
@@ -424,6 +490,45 @@ async def test_options_template_error(hass, fakeimgbytes_png, mock_av_open):
         )
         assert result4.get("type") == data_entry_flow.RESULT_TYPE_FORM
         assert result4["errors"] == {"still_image_url": "template_error"}
+
+
+@respx.mock
+async def test_options_only_stream(hass, fakeimgbytes_png, mock_av_open):
+    """Test the options flow without a still_image_url."""
+    respx.get("http://127.0.0.1/testurl/2").respond(stream=fakeimgbytes_png)
+    data = TESTDATA.copy()
+    data.pop(CONF_STILL_IMAGE_URL)
+
+    mock_entry = MockConfigEntry(
+        title="Test Camera",
+        domain=DOMAIN,
+        data={},
+        options=data,
+    )
+    with mock_av_open:
+        mock_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
+
+        result = await hass.config_entries.options.async_init(mock_entry.entry_id)
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "init"
+
+        # try updating the config options
+        result2 = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input=data,
+        )
+        # Should be shown a 2nd form
+        assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result2["step_id"] == "content_type"
+
+        result3 = await hass.config_entries.options.async_configure(
+            result2["flow_id"],
+            user_input={CONF_CONTENT_TYPE: "image/png"},
+        )
+        assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result3["data"][CONF_CONTENT_TYPE] == "image/png"
 
 
 # These below can be deleted after deprecation period is finished.

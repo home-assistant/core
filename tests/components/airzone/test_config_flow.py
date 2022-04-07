@@ -2,19 +2,20 @@
 
 from unittest.mock import MagicMock, patch
 
-from aiohttp.client_exceptions import ClientConnectorError
+from aiohttp.client_exceptions import ClientConnectorError, ClientResponseError
 
 from homeassistant import data_entry_flow
 from homeassistant.components.airzone.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.core import HomeAssistant
 
 from .util import CONFIG, HVAC_MOCK
 
 from tests.common import MockConfigEntry
 
 
-async def test_form(hass):
+async def test_form(hass: HomeAssistant) -> None:
     """Test that the form is served with valid input."""
 
     with patch(
@@ -23,6 +24,12 @@ async def test_form(hass):
     ) as mock_setup_entry, patch(
         "homeassistant.components.airzone.AirzoneLocalApi.get_hvac",
         return_value=HVAC_MOCK,
+    ), patch(
+        "homeassistant.components.airzone.AirzoneLocalApi.get_hvac_systems",
+        side_effect=ClientResponseError(MagicMock(), MagicMock()),
+    ), patch(
+        "homeassistant.components.airzone.AirzoneLocalApi.get_webserver",
+        side_effect=ClientResponseError(MagicMock(), MagicMock()),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
@@ -50,7 +57,7 @@ async def test_form(hass):
         assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_duplicated_id(hass):
+async def test_form_duplicated_id(hass: HomeAssistant) -> None:
     """Test setting up duplicated entry."""
 
     entry = MockConfigEntry(domain=DOMAIN, data=CONFIG)
@@ -68,7 +75,7 @@ async def test_form_duplicated_id(hass):
         assert result["reason"] == "already_configured"
 
 
-async def test_connection_error(hass):
+async def test_connection_error(hass: HomeAssistant):
     """Test connection to host error."""
 
     with patch(

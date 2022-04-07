@@ -12,6 +12,7 @@ from sqlalchemy.exc import DatabaseError, OperationalError, SQLAlchemyError
 from homeassistant.components import recorder
 from homeassistant.components.recorder import (
     CONF_AUTO_PURGE,
+    CONF_AUTO_REPACK,
     CONF_DB_URL,
     CONFIG_SCHEMA,
     DOMAIN,
@@ -70,6 +71,7 @@ def _default_recorder(hass):
     return Recorder(
         hass,
         auto_purge=True,
+        auto_repack=True,
         keep_days=7,
         commit_interval=1,
         uri="sqlite://",
@@ -77,6 +79,7 @@ def _default_recorder(hass):
         db_retry_wait=3,
         entity_filter=CONFIG_SCHEMA({DOMAIN: {}}),
         exclude_t=[],
+        exclude_attributes_by_domain={},
     )
 
 
@@ -182,7 +185,9 @@ async def test_saving_many_states(
     hass: HomeAssistant, async_setup_recorder_instance: SetupRecorderInstanceT
 ):
     """Test we expire after many commits."""
-    instance = await async_setup_recorder_instance(hass)
+    instance = await async_setup_recorder_instance(
+        hass, {recorder.CONF_COMMIT_INTERVAL: 1}
+    )
 
     entity_id = "test.recorder"
     attributes = {"test_attr": 5, "test_attr_10": "nice"}
@@ -626,6 +631,7 @@ async def test_defaults_set(hass):
     assert recorder_config is not None
     # pylint: disable=unsubscriptable-object
     assert recorder_config["auto_purge"]
+    assert recorder_config["auto_repack"]
     assert recorder_config["purge_keep_days"] == 10
 
 
@@ -689,6 +695,120 @@ def test_auto_purge(hass_recorder):
         test_time = test_time + timedelta(hours=1)
         run_tasks_at_time(hass, test_time)
         assert len(purge_old_data.mock_calls) == 1
+        assert len(perodic_db_cleanups.mock_calls) == 1
+
+    dt_util.set_default_time_zone(original_tz)
+
+
+@pytest.mark.parametrize("enable_nightly_purge", [True])
+def test_auto_purge_auto_repack_on_second_sunday(hass_recorder):
+    """Test periodic purge scheduling does a repack on the 2nd sunday."""
+    hass = hass_recorder()
+
+    original_tz = dt_util.DEFAULT_TIME_ZONE
+
+    tz = dt_util.get_time_zone("Europe/Copenhagen")
+    dt_util.set_default_time_zone(tz)
+
+    # Purging is scheduled to happen at 4:12am every day. Exercise this behavior by
+    # firing time changed events and advancing the clock around this time. Pick an
+    # arbitrary year in the future to avoid boundary conditions relative to the current
+    # date.
+    #
+    # The clock is started at 4:15am then advanced forward below
+    now = dt_util.utcnow()
+    test_time = datetime(now.year + 2, 1, 1, 4, 15, 0, tzinfo=tz)
+    run_tasks_at_time(hass, test_time)
+
+    with patch(
+        "homeassistant.components.recorder.is_second_sunday", return_value=True
+    ), patch(
+        "homeassistant.components.recorder.purge.purge_old_data", return_value=True
+    ) as purge_old_data, patch(
+        "homeassistant.components.recorder.perodic_db_cleanups"
+    ) as perodic_db_cleanups:
+        # Advance one day, and the purge task should run
+        test_time = test_time + timedelta(days=1)
+        run_tasks_at_time(hass, test_time)
+        assert len(purge_old_data.mock_calls) == 1
+        args, _ = purge_old_data.call_args_list[0]
+        assert args[2] is True  # repack
+        assert len(perodic_db_cleanups.mock_calls) == 1
+
+    dt_util.set_default_time_zone(original_tz)
+
+
+@pytest.mark.parametrize("enable_nightly_purge", [True])
+def test_auto_purge_auto_repack_disabled_on_second_sunday(hass_recorder):
+    """Test periodic purge scheduling does not auto repack on the 2nd sunday if disabled."""
+    hass = hass_recorder({CONF_AUTO_REPACK: False})
+
+    original_tz = dt_util.DEFAULT_TIME_ZONE
+
+    tz = dt_util.get_time_zone("Europe/Copenhagen")
+    dt_util.set_default_time_zone(tz)
+
+    # Purging is scheduled to happen at 4:12am every day. Exercise this behavior by
+    # firing time changed events and advancing the clock around this time. Pick an
+    # arbitrary year in the future to avoid boundary conditions relative to the current
+    # date.
+    #
+    # The clock is started at 4:15am then advanced forward below
+    now = dt_util.utcnow()
+    test_time = datetime(now.year + 2, 1, 1, 4, 15, 0, tzinfo=tz)
+    run_tasks_at_time(hass, test_time)
+
+    with patch(
+        "homeassistant.components.recorder.is_second_sunday", return_value=True
+    ), patch(
+        "homeassistant.components.recorder.purge.purge_old_data", return_value=True
+    ) as purge_old_data, patch(
+        "homeassistant.components.recorder.perodic_db_cleanups"
+    ) as perodic_db_cleanups:
+        # Advance one day, and the purge task should run
+        test_time = test_time + timedelta(days=1)
+        run_tasks_at_time(hass, test_time)
+        assert len(purge_old_data.mock_calls) == 1
+        args, _ = purge_old_data.call_args_list[0]
+        assert args[2] is False  # repack
+        assert len(perodic_db_cleanups.mock_calls) == 1
+
+    dt_util.set_default_time_zone(original_tz)
+
+
+@pytest.mark.parametrize("enable_nightly_purge", [True])
+def test_auto_purge_no_auto_repack_on_not_second_sunday(hass_recorder):
+    """Test periodic purge scheduling does not do a repack unless its the 2nd sunday."""
+    hass = hass_recorder()
+
+    original_tz = dt_util.DEFAULT_TIME_ZONE
+
+    tz = dt_util.get_time_zone("Europe/Copenhagen")
+    dt_util.set_default_time_zone(tz)
+
+    # Purging is scheduled to happen at 4:12am every day. Exercise this behavior by
+    # firing time changed events and advancing the clock around this time. Pick an
+    # arbitrary year in the future to avoid boundary conditions relative to the current
+    # date.
+    #
+    # The clock is started at 4:15am then advanced forward below
+    now = dt_util.utcnow()
+    test_time = datetime(now.year + 2, 1, 1, 4, 15, 0, tzinfo=tz)
+    run_tasks_at_time(hass, test_time)
+
+    with patch(
+        "homeassistant.components.recorder.is_second_sunday", return_value=False
+    ), patch(
+        "homeassistant.components.recorder.purge.purge_old_data", return_value=True
+    ) as purge_old_data, patch(
+        "homeassistant.components.recorder.perodic_db_cleanups"
+    ) as perodic_db_cleanups:
+        # Advance one day, and the purge task should run
+        test_time = test_time + timedelta(days=1)
+        run_tasks_at_time(hass, test_time)
+        assert len(purge_old_data.mock_calls) == 1
+        args, _ = purge_old_data.call_args_list[0]
+        assert args[2] is False  # repack
         assert len(perodic_db_cleanups.mock_calls) == 1
 
     dt_util.set_default_time_zone(original_tz)

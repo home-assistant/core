@@ -10,6 +10,7 @@ from homeassistant.components.google_assistant import helpers as ga_helpers
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, State
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.util.dt import utcnow
 
 from tests.common import async_fire_time_changed, mock_registry
@@ -227,21 +228,21 @@ async def test_google_config_expose_entity_prefs(hass, mock_conf, cloud_prefs):
         "test",
         "light_config_id",
         suggested_object_id="config_light",
-        entity_category="config",
+        entity_category=EntityCategory.CONFIG,
     )
     entity_entry2 = entity_registry.async_get_or_create(
         "light",
         "test",
         "light_diagnostic_id",
         suggested_object_id="diagnostic_light",
-        entity_category="diagnostic",
+        entity_category=EntityCategory.DIAGNOSTIC,
     )
     entity_entry3 = entity_registry.async_get_or_create(
         "light",
         "test",
         "light_system_id",
         suggested_object_id="system_light",
-        entity_category="system",
+        entity_category=EntityCategory.SYSTEM,
     )
     entity_entry4 = entity_registry.async_get_or_create(
         "light",

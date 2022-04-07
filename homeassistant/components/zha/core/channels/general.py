@@ -103,7 +103,7 @@ class AnalogOutput(ZigbeeChannel):
         except zigpy.exceptions.ZigbeeException as ex:
             self.error("Could not set value: %s", ex)
             return False
-        if isinstance(res, list) and all(
+        if not isinstance(res, Exception) and all(
             record.status == Status.SUCCESS for record in res[0]
         ):
             return True
@@ -380,7 +380,11 @@ class Ota(ZigbeeChannel):
         self, tsn: int, command_id: int, args: list[Any] | None
     ) -> None:
         """Handle OTA commands."""
-        cmd_name = self.cluster.server_commands.get(command_id, [command_id])[0]
+        if command_id in self.cluster.server_commands:
+            cmd_name = self.cluster.server_commands[command_id].name
+        else:
+            cmd_name = command_id
+
         signal_id = self._ch_pool.unique_id.split("-")[0]
         if cmd_name == "query_next_image":
             self.async_send_signal(SIGNAL_UPDATE_DEVICE.format(signal_id), args[3])
@@ -418,7 +422,11 @@ class PollControl(ZigbeeChannel):
         self, tsn: int, command_id: int, args: list[Any] | None
     ) -> None:
         """Handle commands received to this cluster."""
-        cmd_name = self.cluster.client_commands.get(command_id, [command_id])[0]
+        if command_id in self.cluster.client_commands:
+            cmd_name = self.cluster.client_commands[command_id].name
+        else:
+            cmd_name = command_id
+
         self.debug("Received %s tsn command '%s': %s", tsn, cmd_name, args)
         self.zha_send_event(cmd_name, args)
         if cmd_name == "checkin":

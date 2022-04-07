@@ -57,6 +57,8 @@ DHCP: list[dict[str, str | bool]] = [
     {'domain': 'lyric', 'hostname': 'lyric-*', 'macaddress': '00D02D*'},
     {'domain': 'motion_blinds', 'registered_devices': True},
     {'domain': 'motion_blinds', 'hostname': 'motion_*'},
+    {'domain': 'motion_blinds', 'hostname': 'brel_*'},
+    {'domain': 'motion_blinds', 'hostname': 'connector_*'},
     {'domain': 'myq', 'macaddress': '645299*'},
     {'domain': 'nest', 'macaddress': '18B430*'},
     {'domain': 'nest', 'macaddress': '641666*'},

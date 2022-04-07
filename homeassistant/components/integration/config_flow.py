@@ -16,10 +16,10 @@ from homeassistant.const import (
     TIME_SECONDS,
 )
 from homeassistant.helpers import selector
-from homeassistant.helpers.helper_config_entry_flow import (
-    HelperConfigFlowHandler,
-    HelperFlowFormStep,
-    HelperFlowMenuStep,
+from homeassistant.helpers.schema_config_entry_flow import (
+    SchemaConfigFlowHandler,
+    SchemaFlowFormStep,
+    SchemaFlowMenuStep,
 )
 
 from .const import (
@@ -37,8 +37,8 @@ UNIT_PREFIXES = [
     {"value": "none", "label": "none"},
     {"value": "k", "label": "k (kilo)"},
     {"value": "M", "label": "M (mega)"},
-    {"value": "G", "label": "T (tera)"},
-    {"value": "T", "label": "P (peta)"},
+    {"value": "G", "label": "G (giga)"},
+    {"value": "T", "label": "T (tera)"},
 ]
 TIME_UNITS = [
     {"value": TIME_SECONDS, "label": "s (seconds)"},
@@ -83,21 +83,21 @@ CONFIG_SCHEMA = vol.Schema(
             {"select": {"options": UNIT_PREFIXES}}
         ),
         vol.Required(CONF_UNIT_TIME, default=TIME_HOURS): selector.selector(
-            {"select": {"options": TIME_UNITS}}
+            {"select": {"options": TIME_UNITS, "mode": "dropdown"}}
         ),
     }
 )
 
-CONFIG_FLOW: dict[str, HelperFlowFormStep | HelperFlowMenuStep] = {
-    "user": HelperFlowFormStep(CONFIG_SCHEMA)
+CONFIG_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
+    "user": SchemaFlowFormStep(CONFIG_SCHEMA)
 }
 
-OPTIONS_FLOW: dict[str, HelperFlowFormStep | HelperFlowMenuStep] = {
-    "init": HelperFlowFormStep(OPTIONS_SCHEMA)
+OPTIONS_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
+    "init": SchemaFlowFormStep(OPTIONS_SCHEMA)
 }
 
 
-class ConfigFlowHandler(HelperConfigFlowHandler, domain=DOMAIN):
+class ConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     """Handle a config or options flow for Integration."""
 
     config_flow = CONFIG_FLOW

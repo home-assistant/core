@@ -42,7 +42,7 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
-    SUPPORT_TARGET_TEMPERATURE,
+    ClimateEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE
@@ -112,7 +112,7 @@ class AirzoneClimate(AirzoneEntity, ClimateEntity):
         super().__init__(coordinator, entry, system_zone_id, zone_data)
         self._attr_name = f"{zone_data[AZD_NAME]}"
         self._attr_unique_id = f"{entry.entry_id}_{system_zone_id}"
-        self._attr_supported_features = SUPPORT_TARGET_TEMPERATURE
+        self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
         self._attr_target_temperature_step = API_TEMPERATURE_STEP
         self._attr_max_temp = self.get_zone_value(AZD_TEMP_MAX)
         self._attr_min_temp = self.get_zone_value(AZD_TEMP_MIN)
@@ -144,10 +144,14 @@ class AirzoneClimate(AirzoneEntity, ClimateEntity):
         if hvac_mode == HVAC_MODE_OFF:
             params[API_ON] = 0
         else:
-            if self.get_zone_value(AZD_MASTER):
-                mode = HVAC_MODE_HASS_TO_LIB[hvac_mode]
-                if mode != self.get_zone_value(AZD_MODE):
+            mode = HVAC_MODE_HASS_TO_LIB[hvac_mode]
+            if mode != self.get_zone_value(AZD_MODE):
+                if self.get_zone_value(AZD_MASTER):
                     params[API_MODE] = mode
+                else:
+                    raise HomeAssistantError(
+                        f"Mode can't be changed on slave zone {self.name}"
+                    )
             params[API_ON] = 1
         _LOGGER.debug("Set hvac_mode=%s params=%s", hvac_mode, params)
         await self._async_update_hvac_params(params)

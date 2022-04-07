@@ -20,7 +20,6 @@ from homeassistant.const import (
     CONF_NAME,
     ENERGY_KILO_WATT_HOUR,
     ENERGY_WATT_HOUR,
-    EVENT_HOMEASSISTANT_START,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -33,6 +32,7 @@ from homeassistant.helpers.event import (
     async_track_state_change_event,
 )
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.start import async_at_start
 from homeassistant.helpers.template import is_number
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
@@ -119,12 +119,7 @@ async def async_setup_entry(
     tariff_entity = hass.data[DATA_UTILITY][entry_id][CONF_TARIFF_ENTITY]
 
     meters = []
-
-    # Remove when frontend list selector is available
-    if not config_entry.options.get(CONF_TARIFFS):
-        tariffs = []
-    else:
-        tariffs = config_entry.options[CONF_TARIFFS].split(",")
+    tariffs = config_entry.options[CONF_TARIFFS]
 
     if not tariffs:
         # Add single sensor, not gated by a tariff selector
@@ -181,7 +176,10 @@ async def async_setup_platform(
 ) -> None:
     """Set up the utility meter sensor."""
     if discovery_info is None:
-        _LOGGER.error("This platform is only available through discovery")
+        _LOGGER.error(
+            "This platform is not available to configure "
+            "from 'sensor:' in configuration.yaml"
+        )
         return
 
     meters = []
@@ -293,10 +291,15 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
                 sensor.start(source_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT))
 
         if (
-            old_state is None
-            or new_state is None
-            or old_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]
+            new_state is None
             or new_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]
+            or (
+                not self._sensor_delta_values
+                and (
+                    old_state is None
+                    or old_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]
+                )
+            )
         ):
             return
 
@@ -314,9 +317,12 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
             self._state += adjustment
 
         except DecimalException as err:
-            _LOGGER.warning(
-                "Invalid state (%s > %s): %s", old_state.state, new_state.state, err
-            )
+            if self._sensor_delta_values:
+                _LOGGER.warning("Invalid adjustment of %s: %s", new_state.state, err)
+            else:
+                _LOGGER.warning(
+                    "Invalid state (%s > %s): %s", old_state.state, new_state.state, err
+                )
         self.async_write_ha_state()
 
     @callback
@@ -349,10 +355,12 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
     async def _async_reset_meter(self, event):
         """Determine cycle - Helper function for larger than daily cycles."""
         if self._cron_pattern is not None:
-            async_track_point_in_time(
-                self.hass,
-                self._async_reset_meter,
-                croniter(self._cron_pattern, dt_util.now()).get_next(datetime),
+            self.async_on_remove(
+                async_track_point_in_time(
+                    self.hass,
+                    self._async_reset_meter,
+                    croniter(self._cron_pattern, dt_util.now()).get_next(datetime),
+                )
             )
         await self.async_reset_meter(self._tariff_entity)
 
@@ -377,13 +385,19 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
         await super().async_added_to_hass()
 
         if self._cron_pattern is not None:
-            async_track_point_in_time(
-                self.hass,
-                self._async_reset_meter,
-                croniter(self._cron_pattern, dt_util.now()).get_next(datetime),
+            self.async_on_remove(
+                async_track_point_in_time(
+                    self.hass,
+                    self._async_reset_meter,
+                    croniter(self._cron_pattern, dt_util.now()).get_next(datetime),
+                )
             )
 
-        async_dispatcher_connect(self.hass, SIGNAL_RESET_METER, self.async_reset_meter)
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_RESET_METER, self.async_reset_meter
+            )
+        )
 
         if state := await self.async_get_last_state():
             try:
@@ -418,11 +432,17 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
                 _LOGGER.debug(
                     "<%s> tracks utility meter %s", self.name, self._tariff_entity
                 )
-                async_track_state_change_event(
-                    self.hass, [self._tariff_entity], self.async_tariff_change
+                self.async_on_remove(
+                    async_track_state_change_event(
+                        self.hass, [self._tariff_entity], self.async_tariff_change
+                    )
                 )
 
                 tariff_entity_state = self.hass.states.get(self._tariff_entity)
+                if not tariff_entity_state:
+                    # The utility meter is not yet added
+                    return
+
                 self._change_status(tariff_entity_state.state)
                 return
 
@@ -436,9 +456,13 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
                 self.hass, [self._sensor_source_id], self.async_reading
             )
 
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_START, async_source_tracking
-        )
+        self.async_on_remove(async_at_start(self.hass, async_source_tracking))
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Run when entity will be removed from hass."""
+        if self._collecting:
+            self._collecting()
+        self._collecting = None
 
     @property
     def name(self):
@@ -453,7 +477,7 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
     @property
     def device_class(self):
         """Return the device class of the sensor."""
-        return DEVICE_CLASS_MAP.get(self.unit_of_measurement)
+        return DEVICE_CLASS_MAP.get(self._unit_of_measurement)
 
     @property
     def state_class(self):

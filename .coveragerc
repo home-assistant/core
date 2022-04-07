@@ -216,6 +216,7 @@ omit =
     homeassistant/components/digital_ocean/*
     homeassistant/components/digitalloggers/switch.py
     homeassistant/components/discogs/sensor.py
+    homeassistant/components/discord/__init__.py
     homeassistant/components/discord/notify.py
     homeassistant/components/dlib_face_detect/image_processing.py
     homeassistant/components/dlib_face_identify/image_processing.py
@@ -676,6 +677,9 @@ omit =
     homeassistant/components/map/*
     homeassistant/components/mastodon/notify.py
     homeassistant/components/matrix/*
+    homeassistant/components/meater/__init__.py
+    homeassistant/components/meater/const.py
+    homeassistant/components/meater/sensor.py
     homeassistant/components/media_extractor/*
     homeassistant/components/mediaroom/media_player.py
     homeassistant/components/melcloud/__init__.py
@@ -1194,7 +1198,10 @@ omit =
     homeassistant/components/tado/sensor.py
     homeassistant/components/tado/water_heater.py
     homeassistant/components/tank_utility/sensor.py
-    homeassistant/components/tankerkoenig/*
+    homeassistant/components/tankerkoenig/__init__.py
+    homeassistant/components/tankerkoenig/binary_sensor.py
+    homeassistant/components/tankerkoenig/const.py
+    homeassistant/components/tankerkoenig/sensor.py
     homeassistant/components/tapsaff/binary_sensor.py
     homeassistant/components/tautulli/const.py
     homeassistant/components/tautulli/coordinator.py
@@ -1321,10 +1328,8 @@ omit =
     homeassistant/components/upc_connect/*
     homeassistant/components/uscis/sensor.py
     homeassistant/components/vallox/__init__.py
-    homeassistant/components/vallox/const.py
     homeassistant/components/vallox/fan.py
     homeassistant/components/vallox/sensor.py
-    homeassistant/components/vallox/binary_sensor.py
     homeassistant/components/vasttrafik/sensor.py
     homeassistant/components/velbus/__init__.py
     homeassistant/components/velbus/binary_sensor.py
@@ -1377,6 +1382,9 @@ omit =
     homeassistant/components/volumio/browse_media.py
     homeassistant/components/volumio/media_player.py
     homeassistant/components/volvooncall/*
+    homeassistant/components/vulcan/__init__.py
+    homeassistant/components/vulcan/calendar.py
+    homeassistant/components/vulcan/fetch_data.py
     homeassistant/components/w800rf32/*
     homeassistant/components/waqi/sensor.py
     homeassistant/components/waterfurnace/*

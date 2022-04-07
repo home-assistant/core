@@ -21,9 +21,14 @@ class MockUpdateEntity(MockEntity, UpdateEntity):
     """Mock UpdateEntity class."""
 
     @property
-    def current_version(self) -> str | None:
-        """Version currently in use."""
-        return self._handle("current_version")
+    def auto_update(self) -> bool:
+        """Indicate if the device or service has auto update enabled."""
+        return self._handle("auto_update")
+
+    @property
+    def installed_version(self) -> str | None:
+        """Version currently installed and in use."""
+        return self._handle("installed_version")
 
     @property
     def in_progress(self) -> bool | int | None:
@@ -56,10 +61,10 @@ class MockUpdateEntity(MockEntity, UpdateEntity):
             _LOGGER.info("Creating backup before installing update")
 
         if version is not None:
-            self._values["current_version"] = version
+            self._values["installed_version"] = version
             _LOGGER.info(f"Installed update with version: {version}")
         else:
-            self._values["current_version"] = self.latest_version
+            self._values["installed_version"] = self.latest_version
             _LOGGER.info("Installed latest update")
 
     def release_notes(self) -> str | None:
@@ -78,28 +83,28 @@ def init(empty=False):
             MockUpdateEntity(
                 name="No Update",
                 unique_id="no_update",
-                current_version="1.0.0",
+                installed_version="1.0.0",
                 latest_version="1.0.0",
                 supported_features=UpdateEntityFeature.INSTALL,
             ),
             MockUpdateEntity(
                 name="Update Available",
                 unique_id="update_available",
-                current_version="1.0.0",
+                installed_version="1.0.0",
                 latest_version="1.0.1",
                 supported_features=UpdateEntityFeature.INSTALL,
             ),
             MockUpdateEntity(
                 name="Update Unknown",
                 unique_id="update_unknown",
-                current_version="1.0.0",
+                installed_version="1.0.0",
                 latest_version=None,
                 supported_features=UpdateEntityFeature.INSTALL,
             ),
             MockUpdateEntity(
                 name="Update Specific Version",
                 unique_id="update_specific_version",
-                current_version="1.0.0",
+                installed_version="1.0.0",
                 latest_version="1.0.0",
                 supported_features=UpdateEntityFeature.INSTALL
                 | UpdateEntityFeature.SPECIFIC_VERSION,
@@ -107,7 +112,7 @@ def init(empty=False):
             MockUpdateEntity(
                 name="Update Backup",
                 unique_id="update_backup",
-                current_version="1.0.0",
+                installed_version="1.0.0",
                 latest_version="1.0.1",
                 supported_features=UpdateEntityFeature.INSTALL
                 | UpdateEntityFeature.SPECIFIC_VERSION
@@ -116,7 +121,7 @@ def init(empty=False):
             MockUpdateEntity(
                 name="Update Already in Progress",
                 unique_id="update_already_in_progres",
-                current_version="1.0.0",
+                installed_version="1.0.0",
                 latest_version="1.0.1",
                 in_progress=50,
                 supported_features=UpdateEntityFeature.INSTALL
@@ -125,15 +130,23 @@ def init(empty=False):
             MockUpdateEntity(
                 name="Update No Install",
                 unique_id="no_install",
-                current_version="1.0.0",
+                installed_version="1.0.0",
                 latest_version="1.0.1",
             ),
             MockUpdateEntity(
                 name="Update with release notes",
                 unique_id="with_release_notes",
-                current_version="1.0.0",
+                installed_version="1.0.0",
                 latest_version="1.0.1",
                 supported_features=UpdateEntityFeature.RELEASE_NOTES,
+            ),
+            MockUpdateEntity(
+                name="Update with auto update",
+                unique_id="with_auto_update",
+                installed_version="1.0.0",
+                latest_version="1.0.1",
+                auto_update=True,
+                supported_features=UpdateEntityFeature.INSTALL,
             ),
         ]
     )

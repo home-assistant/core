@@ -17,6 +17,7 @@ from homeassistant.components.utility_meter.const import (
     SERVICE_SELECT_TARIFF,
     SIGNAL_RESET_METER,
 )
+import homeassistant.components.utility_meter.select as um_select
 import homeassistant.components.utility_meter.sensor as um_sensor
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -65,7 +66,16 @@ async def test_restore_state(hass):
     assert state.state == "midpeak"
 
 
-async def test_services(hass):
+@pytest.mark.parametrize(
+    "meter",
+    (
+        ["select.energy_bill"],
+        "select.energy_bill",
+        ["utility_meter.energy_bill"],
+        "utility_meter.energy_bill",
+    ),
+)
+async def test_services(hass, meter):
     """Test energy sensor reset service."""
     config = {
         "utility_meter": {
@@ -159,7 +169,7 @@ async def test_services(hass):
     assert state.state == "1"
 
     # Reset meters
-    data = {ATTR_ENTITY_ID: "select.energy_bill"}
+    data = {ATTR_ENTITY_ID: meter}
     await hass.services.async_call(DOMAIN, SERVICE_RESET, data)
     await hass.async_block_till_done()
 
@@ -186,7 +196,7 @@ async def test_services_config_entry(hass):
             "net_consumption": False,
             "offset": 0,
             "source": "sensor.energy",
-            "tariffs": "peak,offpeak",
+            "tariffs": ["peak", "offpeak"],
         },
         title="Energy bill",
     )
@@ -202,7 +212,7 @@ async def test_services_config_entry(hass):
             "net_consumption": False,
             "offset": 0,
             "source": "sensor.energy",
-            "tariffs": "peak,offpeak",
+            "tariffs": ["peak", "offpeak"],
         },
         title="Energy bill2",
     )
@@ -380,6 +390,7 @@ async def test_bad_cron(hass, legacy_patchable_time):
 
 async def test_setup_missing_discovery(hass):
     """Test setup with configuration missing discovery_info."""
+    assert not await um_select.async_setup_platform(hass, {CONF_PLATFORM: DOMAIN}, None)
     assert not await um_sensor.async_setup_platform(hass, {CONF_PLATFORM: DOMAIN}, None)
 
 
@@ -469,11 +480,11 @@ async def test_legacy_support(hass):
     "tariffs,expected_entities",
     (
         (
-            "",
+            [],
             ["sensor.electricity_meter"],
         ),
         (
-            "high,low",
+            ["high", "low"],
             [
                 "sensor.electricity_meter_low",
                 "sensor.electricity_meter_high",

@@ -55,15 +55,15 @@ class SynoDSMUpdateEntity(SynologyDSMBaseEntity, UpdateEntity):
     _attr_title = "Synology DSM"
 
     @property
-    def current_version(self) -> str | None:
-        """Version currently in use."""
+    def installed_version(self) -> str | None:
+        """Version installed and in use."""
         return self._api.information.version_string  # type: ignore[no-any-return]
 
     @property
     def latest_version(self) -> str | None:
         """Latest version available for install."""
         if not self._api.upgrade.update_available:
-            return self.current_version
+            return self.installed_version
         return self._api.upgrade.available_version  # type: ignore[no-any-return]
 
     @property
