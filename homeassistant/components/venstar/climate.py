@@ -3,7 +3,11 @@ from __future__ import annotations
 
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
+from homeassistant.components.climate import (
+    PLATFORM_SCHEMA,
+    ClimateEntity,
+    ClimateEntityFeature,
+)
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
@@ -20,11 +24,6 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_OFF,
     PRESET_AWAY,
     PRESET_NONE,
-    SUPPORT_FAN_MODE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_HUMIDITY,
-    SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
@@ -134,13 +133,17 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        features = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE | SUPPORT_PRESET_MODE
+        features = (
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.FAN_MODE
+            | ClimateEntityFeature.PRESET_MODE
+        )
 
         if self._client.mode == self._client.MODE_AUTO:
-            features |= SUPPORT_TARGET_TEMPERATURE_RANGE
+            features |= ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
 
         if self._client.hum_setpoint is not None:
-            features |= SUPPORT_TARGET_HUMIDITY
+            features |= ClimateEntityFeature.TARGET_HUMIDITY
 
         return features
 
