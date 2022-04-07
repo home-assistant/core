@@ -435,10 +435,18 @@ jobs:
           . venv/bin/activate
           pre-commit run --hook-stage manual check-json --all-files
 
-      - name: Run prettier
+      - name: Run prettier (fully)
+        if: needs.changes.outputs.test_full_suite == 'true'
         run: |
           . venv/bin/activate
           pre-commit run --hook-stage manual prettier --all-files
+
+      - name: Run prettier (partially)
+        if: needs.changes.outputs.test_full_suite == 'false'
+        shell: bash
+        run: |
+          . venv/bin/activate
+          pre-commit run --hook-stage manual prettier --files {homeassistant,tests}/components/${{ needs.changes.outputs.integrations_glob }}/**/*
 
       - name: Register check executables problem matcher
         run: |
