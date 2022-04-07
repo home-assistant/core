@@ -80,6 +80,16 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
             reason="replaced by MediaPlayerDeviceClass enum",
             constant=re.compile(r"^DEVICE_CLASS_(\w*)$"),
         ),
+        ObsoleteImportMatch(
+            reason="replaced by MediaPlayerEntityFeature enum",
+            constant=re.compile(r"^SUPPORT_(\w*)$"),
+        ),
+    ],
+    "homeassistant.components.media_player.const": [
+        ObsoleteImportMatch(
+            reason="replaced by MediaPlayerEntityFeature enum",
+            constant=re.compile(r"^SUPPORT_(\w*)$"),
+        ),
     ],
     "homeassistant.components.remote": [
         ObsoleteImportMatch(
