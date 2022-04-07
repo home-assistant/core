@@ -492,6 +492,45 @@ async def test_options_template_error(hass, fakeimgbytes_png, mock_av_open):
         assert result4["errors"] == {"still_image_url": "template_error"}
 
 
+@respx.mock
+async def test_options_only_stream(hass, fakeimgbytes_png, mock_av_open):
+    """Test the options flow without a still_image_url."""
+    respx.get("http://127.0.0.1/testurl/2").respond(stream=fakeimgbytes_png)
+    data = TESTDATA.copy()
+    data.pop(CONF_STILL_IMAGE_URL)
+
+    mock_entry = MockConfigEntry(
+        title="Test Camera",
+        domain=DOMAIN,
+        data={},
+        options=data,
+    )
+    with mock_av_open:
+        mock_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
+
+        result = await hass.config_entries.options.async_init(mock_entry.entry_id)
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "init"
+
+        # try updating the config options
+        result2 = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input=data,
+        )
+        # Should be shown a 2nd form
+        assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result2["step_id"] == "content_type"
+
+        result3 = await hass.config_entries.options.async_configure(
+            result2["flow_id"],
+            user_input={CONF_CONTENT_TYPE: "image/png"},
+        )
+        assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result3["data"][CONF_CONTENT_TYPE] == "image/png"
+
+
 # These below can be deleted after deprecation period is finished.
 @respx.mock
 async def test_import(hass, fakeimg_png, mock_av_open):
