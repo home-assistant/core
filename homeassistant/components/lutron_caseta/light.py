@@ -7,8 +7,8 @@ from homeassistant.components.light import (
     ATTR_TRANSITION,
     COLOR_MODE_BRIGHTNESS,
     DOMAIN,
-    SUPPORT_TRANSITION,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -58,7 +58,7 @@ class LutronCasetaLight(LutronCasetaDevice, LightEntity):
 
     _attr_color_mode = COLOR_MODE_BRIGHTNESS
     _attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
-    _attr_supported_features = SUPPORT_TRANSITION
+    _attr_supported_features = LightEntityFeature.TRANSITION
 
     @property
     def brightness(self):
