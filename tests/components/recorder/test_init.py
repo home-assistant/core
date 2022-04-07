@@ -98,7 +98,6 @@ async def test_shutdown_before_startup_finishes(hass, tmp_path):
     await hass.data[DATA_INSTANCE].async_db_ready
     await hass.async_block_till_done()
 
-    # This means the connection is checked out by some random thread, and never released
     session = await hass.async_add_executor_job(hass.data[DATA_INSTANCE].get_session)
 
     with patch.object(hass.data[DATA_INSTANCE], "engine"):
