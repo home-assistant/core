@@ -630,7 +630,7 @@ class AllStates:
         """Initialize all states."""
         self._hass = hass
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str):
         """Return the domain state."""
         if "." in name:
             return _get_state_if_valid(self._hass, name)
@@ -667,7 +667,7 @@ class AllStates:
         self._collect_all_lifecycle()
         return self._hass.states.async_entity_ids_count()
 
-    def __call__(self, entity_id):
+    def __call__(self, entity_id: str):
         """Return the states."""
         state = _get_state(self._hass, entity_id)
         return STATE_UNKNOWN if state is None else state.state
@@ -684,7 +684,7 @@ class StateTranslated:
         """Initialize all states."""
         self._hass = hass
 
-    def __call__(self, entity_id, language):
+    def __call__(self, entity_id: str, language: str):
         """Retrieve translated state if available."""
         state = None
         if "." in entity_id:
@@ -722,7 +722,7 @@ class DomainStates:
         self._hass = hass
         self._domain = domain
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str):
         """Return the states."""
         return _get_state_if_valid(self._hass, f"{self._domain}.{name}")
 
