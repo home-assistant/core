@@ -13,7 +13,6 @@ from homeassistant.components.climate.const import (
 from homeassistant.components.overkiz.entity import OverkizEntity
 from homeassistant.const import TEMP_CELSIUS
 
-# Map TaHoma HVAC modes to Home Assistant HVAC modes
 OVERKIZ_TO_HVAC_MODE: dict[str, str] = {
     OverkizCommandParam.HEATING: HVAC_MODE_HEAT,
     OverkizCommandParam.DRYING: HVAC_MODE_DRY,
