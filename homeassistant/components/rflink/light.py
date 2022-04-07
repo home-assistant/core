@@ -9,6 +9,7 @@ import voluptuous as vol
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     COLOR_MODE_BRIGHTNESS,
+    COLOR_MODE_ONOFF,
     PLATFORM_SCHEMA,
     LightEntity,
 )
@@ -256,6 +257,9 @@ class ToggleRflinkLight(SwitchableRflinkDevice, LightEntity):
     If the light is on and 'on' gets sent, the light will turn off
     and if the light is off and 'on' gets sent, the light will turn on.
     """
+
+    _attr_color_mode = COLOR_MODE_ONOFF
+    _attr_supported_color_modes = {COLOR_MODE_ONOFF}
 
     def _handle_event(self, event):
         """Adjust state if Rflink picks up a remote command for this device."""
