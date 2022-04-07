@@ -4,7 +4,7 @@ import logging
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_TRANSITION,
-    SUPPORT_BRIGHTNESS,
+    COLOR_MODE_BRIGHTNESS,
     SUPPORT_TRANSITION,
     LightEntity,
 )
@@ -41,6 +41,10 @@ async def async_setup_entry(
 class LiteJetLight(LightEntity):
     """Representation of a single LiteJet light."""
 
+    _attr_color_mode = COLOR_MODE_BRIGHTNESS
+    _attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
+    _attr_supported_features = SUPPORT_TRANSITION
+
     def __init__(self, config_entry, lj, i, name):  # pylint: disable=invalid-name
         """Initialize a LiteJet light."""
         self._config_entry = config_entry
@@ -62,11 +66,6 @@ class LiteJetLight(LightEntity):
         """Handle state changes."""
         _LOGGER.debug("Updating due to notification for %s", self._name)
         self.schedule_update_ha_state(True)
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
 
     @property
     def name(self):
