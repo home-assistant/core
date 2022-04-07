@@ -1119,45 +1119,19 @@ async def test_disabled_entities_excluded_from_entity_list(hass, registry):
 async def test_entity_max_length_exceeded(hass, registry):
     """Test that an exception is raised when the max character length is exceeded."""
 
-    long_entity_id_name = (
+    long_domain_name = (
         "1234567890123456789012345678901234567890123456789012345678901234567890"
         "1234567890123456789012345678901234567890123456789012345678901234567890"
         "1234567890123456789012345678901234567890123456789012345678901234567890"
         "1234567890123456789012345678901234567890123456789012345678901234567890"
     )
 
-    with pytest.raises(MaxLengthExceeded) as exc_info:
-        registry.async_generate_entity_id("sensor", long_entity_id_name)
-
-    assert exc_info.value.property_name == "generated_entity_id"
-    assert exc_info.value.max_length == 255
-    assert exc_info.value.value == f"sensor.{long_entity_id_name}"
-
-    # Try again but against the domain
-    long_domain_name = long_entity_id_name
     with pytest.raises(MaxLengthExceeded) as exc_info:
         registry.async_generate_entity_id(long_domain_name, "sensor")
 
     assert exc_info.value.property_name == "domain"
     assert exc_info.value.max_length == 64
     assert exc_info.value.value == long_domain_name
-
-    # Try again but force a number to get added to the entity ID
-    long_entity_id_name = (
-        "1234567890123456789012345678901234567890123456789012345678901234567890"
-        "1234567890123456789012345678901234567890123456789012345678901234567890"
-        "1234567890123456789012345678901234567890123456789012345678901234567890"
-        "1234567890123456789012345678901234567"
-    )
-
-    with pytest.raises(MaxLengthExceeded) as exc_info:
-        registry.async_generate_entity_id(
-            "sensor", long_entity_id_name, [f"sensor.{long_entity_id_name}"]
-        )
-
-    assert exc_info.value.property_name == "generated_entity_id"
-    assert exc_info.value.max_length == 255
-    assert exc_info.value.value == f"sensor.{long_entity_id_name}_2"
 
 
 async def test_resolve_entity_ids(hass, registry):
