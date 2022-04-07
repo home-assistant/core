@@ -1,8 +1,7 @@
 """ONVIF event parsers."""
 from collections.abc import Callable, Coroutine
-from typing import Any
-
 import datetime
+from typing import Any
 
 from homeassistant.util import dt as dt_util
 from homeassistant.util.decorator import Registry
