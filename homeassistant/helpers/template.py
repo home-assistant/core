@@ -710,6 +710,7 @@ class StateTranslated:
         return state.state
 
     def __repr__(self) -> str:
+        """Representation of Translated state."""
         return "<template StateTranslated>"
 
 
