@@ -990,6 +990,7 @@ class Recorder(threading.Thread):
         self.stop_requested = False
         while not self.stop_requested:
             task = self.queue.get()
+            _LOGGER.debug("Processing task: %s", task)
             try:
                 self._process_one_task_or_recover(task)
             except Exception as err:  # pylint: disable=broad-except
