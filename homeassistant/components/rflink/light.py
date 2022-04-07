@@ -228,7 +228,7 @@ class DimmableRflinkLight(SwitchableRflinkDevice, LightEntity):
         return self._brightness
 
 
-class HybridRflinkLight(DimmableRflinkLight, LightEntity):
+class HybridRflinkLight(DimmableRflinkLight):
     """Rflink light device that sends out both dim and on/off commands.
 
     Used for protocols which support lights that are not exclusively on/off
@@ -252,7 +252,7 @@ class HybridRflinkLight(DimmableRflinkLight, LightEntity):
             await self._async_handle_command("turn_on")
 
 
-class ToggleRflinkLight(SwitchableRflinkDevice, LightEntity):
+class ToggleRflinkLight(RflinkLight):
     """Rflink light device which sends out only 'on' commands.
 
     Some switches like for example Livolo light switches use the
@@ -260,9 +260,6 @@ class ToggleRflinkLight(SwitchableRflinkDevice, LightEntity):
     If the light is on and 'on' gets sent, the light will turn off
     and if the light is off and 'on' gets sent, the light will turn on.
     """
-
-    _attr_color_mode = COLOR_MODE_ONOFF
-    _attr_supported_color_modes = {COLOR_MODE_ONOFF}
 
     def _handle_event(self, event):
         """Adjust state if Rflink picks up a remote command for this device."""
