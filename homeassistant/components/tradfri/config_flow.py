@@ -39,7 +39,9 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize flow."""
         self._host: str | None = None
 
-    async def async_step_user(self, _: dict[str, Any] | None = None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initialized by the user."""
         return await self.async_step_auth()
 
