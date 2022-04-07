@@ -570,6 +570,8 @@ class EventTask(RecorderTask):
 class KeepAliveTask(RecorderTask):
     """A keep alive to be sent."""
 
+    commit_before = False
+
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
         # pylint: disable-next=[protected-access]
