@@ -13,6 +13,7 @@ from homeassistant.components import recorder
 from homeassistant.components.recorder import (
     CONF_AUTO_PURGE,
     CONF_AUTO_REPACK,
+    CONF_COMMIT_INTERVAL,
     CONF_DB_URL,
     CONFIG_SCHEMA,
     DOMAIN,
@@ -186,7 +187,7 @@ async def test_saving_many_states(
 ):
     """Test we expire after many commits."""
     instance = await async_setup_recorder_instance(
-        hass, {recorder.CONF_COMMIT_INTERVAL: 1}
+        hass, {recorder.CONF_COMMIT_INTERVAL: 0}
     )
 
     entity_id = "test.recorder"
@@ -1208,7 +1209,9 @@ async def test_database_corruption_while_running(hass, tmpdir, caplog):
     test_db_file = await hass.async_add_executor_job(_create_tmpdir_for_test_db)
     dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
 
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: dburl}})
+    assert await async_setup_component(
+        hass, DOMAIN, {DOMAIN: {CONF_DB_URL: dburl, CONF_COMMIT_INTERVAL: 0}}
+    )
     await hass.async_block_till_done()
     caplog.clear()
 
@@ -1299,7 +1302,10 @@ def test_entity_id_filter(hass_recorder):
 async def test_database_lock_and_unlock(hass: HomeAssistant, tmp_path):
     """Test writing events during lock getting written after unlocking."""
     # Use file DB, in memory DB cannot do write locks.
-    config = {recorder.CONF_DB_URL: "sqlite:///" + str(tmp_path / "pytest.db")}
+    config = {
+        recorder.CONF_COMMIT_INTERVAL: 0,
+        recorder.CONF_DB_URL: "sqlite:///" + str(tmp_path / "pytest.db"),
+    }
     await async_init_recorder_component(hass, config)
     await hass.async_block_till_done()
 
@@ -1333,7 +1339,10 @@ async def test_database_lock_and_unlock(hass: HomeAssistant, tmp_path):
 async def test_database_lock_and_overflow(hass: HomeAssistant, tmp_path):
     """Test writing events during lock leading to overflow the queue causes the database to unlock."""
     # Use file DB, in memory DB cannot do write locks.
-    config = {recorder.CONF_DB_URL: "sqlite:///" + str(tmp_path / "pytest.db")}
+    config = {
+        recorder.CONF_COMMIT_INTERVAL: 0,
+        recorder.CONF_DB_URL: "sqlite:///" + str(tmp_path / "pytest.db"),
+    }
     await async_init_recorder_component(hass, config)
     await hass.async_block_till_done()
 
