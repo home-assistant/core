@@ -293,11 +293,7 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
                     # Show a conditional 2nd page to ask them the content type.
                     self.cached_user_input = user_input
                     self.cached_title = name
-                    return self.async_show_form(
-                        step_id="user2",
-                        data_schema=build_schema2({}),
-                        errors={},
-                    )
+                    return await self.async_step_user2()
         else:
             user_input = DEFAULT_DATA.copy()
 
@@ -307,12 +303,20 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_user2(self, user_input: dict[str, Any]) -> FlowResult:
+    async def async_step_user2(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the user's choice for stream content_type."""
-        user_input = self.cached_user_input | user_input
-        await self.async_set_unique_id(self.flow_id)
-        return self.async_create_entry(
-            title=self.cached_title, data={}, options=user_input
+        if user_input is not None:
+            user_input = self.cached_user_input | user_input
+            await self.async_set_unique_id(self.flow_id)
+            return self.async_create_entry(
+                title=self.cached_title, data={}, options=user_input
+            )
+        return self.async_show_form(
+            step_id="user2",
+            data_schema=build_schema2({}),
+            errors={},
         )
 
     async def async_step_import(self, import_config) -> FlowResult:
