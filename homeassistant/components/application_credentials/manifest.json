@@ -3,7 +3,7 @@
   "name": "Application Credentials",
   "config_flow": false,
   "documentation": "https://www.home-assistant.io/integrations/application_credentials",
-  "dependencies": ["http"],
+  "dependencies": ["auth"],
   "codeowners": ["@home-assistant/core"],
   "quality_scale": "internal"
 }
