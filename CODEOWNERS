@@ -825,6 +825,8 @@ build.json @home-assistant/supervisor
 /tests/components/recollect_waste/ @bachya
 /homeassistant/components/recorder/ @home-assistant/core
 /tests/components/recorder/ @home-assistant/core
+/homeassistant/components/reisingerbridge/ @sreisi
+/tests/components/reisingerbridge/ @sreisi
 /homeassistant/components/rejseplanen/ @DarkFox
 /homeassistant/components/remote/ @home-assistant/core
 /tests/components/remote/ @home-assistant/core
