@@ -13,9 +13,7 @@ from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
     DOMAIN,
-    SUPPORT_SET_POSITION,
-    SUPPORT_SET_TILT_POSITION,
-    SUPPORT_STOP,
+    CoverEntityFeature,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -201,11 +199,11 @@ class OpeningDeviceBase(HomeAccessory):
         state = self.hass.states.get(self.entity_id)
 
         self.features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-        self._supports_stop = self.features & SUPPORT_STOP
+        self._supports_stop = self.features & CoverEntityFeature.STOP
         self.chars = []
         if self._supports_stop:
             self.chars.append(CHAR_HOLD_POSITION)
-        self._supports_tilt = self.features & SUPPORT_SET_TILT_POSITION
+        self._supports_tilt = self.features & CoverEntityFeature.SET_TILT_POSITION
 
         if self._supports_tilt:
             self.chars.extend([CHAR_TARGET_TILT_ANGLE, CHAR_CURRENT_TILT_ANGLE])
@@ -276,7 +274,7 @@ class OpeningDevice(OpeningDeviceBase, HomeAccessory):
             CHAR_CURRENT_POSITION, value=0
         )
         target_args = {"value": 0}
-        if self.features & SUPPORT_SET_POSITION:
+        if self.features & CoverEntityFeature.SET_POSITION:
             target_args["setter_callback"] = self.move_cover
         else:
             # If its tilt only we lock the position state to 0 (closed)

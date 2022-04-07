@@ -824,7 +824,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         self.data = {}
         self.entry_id = config_entry.entry_id
         self.dev_reg = dev_reg
-        self.is_hass_os = "hassos" in get_info(self.hass)
+        self.is_hass_os = (get_info(self.hass) or {}).get("hassos") is not None
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
@@ -890,6 +890,12 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         }
         if stale_addons := supervisor_addon_devices - set(new_data[DATA_KEY_ADDONS]):
             async_remove_addons_from_dev_reg(self.dev_reg, stale_addons)
+
+        if not self.is_hass_os and (
+            dev := self.dev_reg.async_get_device({(DOMAIN, "OS")})
+        ):
+            # Remove the OS device if it exists and the installation is not hassos
+            self.dev_reg.async_remove_device(dev.id)
 
         # If there are new add-ons, we should reload the config entry so we can
         # create new devices and entities. We can return an empty dict because

@@ -485,16 +485,14 @@ class StatisticsSensor(SensorEntity):
         else:
             start_date = datetime.fromtimestamp(0, tz=dt_util.UTC)
             _LOGGER.debug("%s: retrieving all records", self.entity_id)
-        entity_states = history.state_changes_during_period(
+        return history.state_changes_during_period(
             self.hass,
             start_date,
             entity_id=lower_entity_id,
             descending=True,
             limit=self._samples_max_buffer_size,
             include_start_time_state=False,
-        )
-        # Need to cast since minimal responses is not passed in
-        return cast(list[State], entity_states.get(lower_entity_id, []))
+        ).get(lower_entity_id, [])
 
     async def _initialize_from_database(self) -> None:
         """Initialize the list of states from the database.
