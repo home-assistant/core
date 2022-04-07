@@ -12,12 +12,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import (
+    API_CLIENT,
     APP_NAME,
     CONF_ACCESS_TOKEN,
     CONF_ACCESS_TOKEN_SECRET,
     CONF_CONSUMER_KEY,
     CONF_CONSUMER_SECRET,
+    COORDINATORS,
     DOMAIN,
+    METERS,
 )
 
 PLATFORMS = ["sensor"]
@@ -40,20 +43,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return False
 
     # init Discovergy class with tokens from config
-    hass.data[DOMAIN][entry.entry_id] = pydiscovergy.Discovergy(
-        app_name=APP_NAME,
-        consumer_token=ConsumerToken(
-            entry.data[CONF_CONSUMER_KEY], entry.data[CONF_CONSUMER_SECRET]
+    hass.data[DOMAIN][entry.entry_id] = {
+        API_CLIENT: pydiscovergy.Discovergy(
+            app_name=APP_NAME,
+            consumer_token=ConsumerToken(
+                entry.data[CONF_CONSUMER_KEY], entry.data[CONF_CONSUMER_SECRET]
+            ),
+            access_token=AccessToken(
+                entry.data[CONF_ACCESS_TOKEN], entry.data[CONF_ACCESS_TOKEN_SECRET]
+            ),
         ),
-        access_token=AccessToken(
-            entry.data[CONF_ACCESS_TOKEN], entry.data[CONF_ACCESS_TOKEN_SECRET]
-        ),
-    )
+        METERS: [],
+        COORDINATORS: {},
+    }
 
     try:
-        # try to get data from api to check if access token is still valid
+        # try to get meters from api to check if access token is still valid and later use
         # if no exception is raised everything is fine to go
-        await hass.data[DOMAIN][entry.entry_id].get_meters()
+        hass.data[DOMAIN][entry.entry_id][METERS] = await hass.data[DOMAIN][
+            entry.entry_id
+        ][API_CLIENT].get_meters()
     except discovergyError.AccessTokenExpired as err:
         _LOGGER.debug("Token expired while connecting to Discovergy: %s", err)
         entry.async_start_reauth(hass)

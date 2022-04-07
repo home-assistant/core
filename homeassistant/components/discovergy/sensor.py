@@ -14,21 +14,23 @@ from homeassistant.const import (
     ATTR_NAME,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
-    ConfigEntryAuthFailed,
     CoordinatorEntity,
     DataUpdateCoordinator,
     UpdateFailed,
 )
 
+from ...exceptions import ConfigEntryAuthFailed
 from .const import (
+    API_CLIENT,
+    COORDINATORS,
     DOMAIN,
     ELECTRICITY_SENSORS,
     GAS_SENSORS,
     MANUFACTURER,
+    METERS,
     MIN_TIME_BETWEEN_UPDATES,
 )
 
@@ -70,19 +72,10 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Discovergy sensors."""
-    try:
-        discovergy_instance = hass.data[DOMAIN][entry.entry_id]
-        meters = await discovergy_instance.get_meters()
-    except AccessTokenExpired as err:
-        _LOGGER.debug("Token expired while communicating with API: %s", err)
-        entry.async_start_reauth(hass)
-    except HTTPError as err:
-        raise ConfigEntryNotReady(f"Error communicating with API: {err}") from err
-    except Exception as err:  # pylint: disable=broad-except
-        raise ConfigEntryNotReady(
-            f"Unexpected error while communicating with API: {err}"
-        ) from err
-    else:
+    discovergy_instance: Discovergy = hass.data[DOMAIN][entry.entry_id][API_CLIENT]
+    meters: list[Meter] = hass.data[DOMAIN][entry.entry_id][METERS]
+
+    if len(meters) > 0:
         entities = []
         for meter in meters:
             # Get coordinator for meter, set config entry and fetch initial data
@@ -91,14 +84,19 @@ async def async_setup_entry(
             coordinator.config_entry = entry
             await coordinator.async_config_entry_first_refresh()
 
-            SENSORS = None
-            if meter.measurement_type == "ELECTRICITY":
-                SENSORS = ELECTRICITY_SENSORS
-            elif meter.measurement_type == "GAS":
-                SENSORS = GAS_SENSORS
+            # add coordinator to data for diagnostics
+            hass.data[DOMAIN][entry.entry_id][COORDINATORS][
+                meter.get_meter_id()
+            ] = coordinator
 
-            if SENSORS is not None:
-                for description in SENSORS:
+            sensors = None
+            if meter.measurement_type == "ELECTRICITY":
+                sensors = ELECTRICITY_SENSORS
+            elif meter.measurement_type == "GAS":
+                sensors = GAS_SENSORS
+
+            if sensors is not None:
+                for description in sensors:
                     # check if this meter has this data, then add this sensor
                     if description.key in coordinator.data.values:
                         entities.append(
@@ -139,10 +137,7 @@ class DiscovergySensor(CoordinatorEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return the sensor state."""
         if self.coordinator.data:
-            if (
-                self.entity_description.key == "energy"
-                or self.entity_description.key == "energyOut"
-            ):
+            if self.entity_description.key in ("energy", "energyOut"):
                 return (
                     self.coordinator.data.values[self.entity_description.key]
                     / 10000000000
