@@ -12,10 +12,8 @@ from homeassistant.components.fan import (
     ATTR_OSCILLATING,
     ATTR_PERCENTAGE,
     ATTR_PRESET_MODE,
-    SUPPORT_OSCILLATE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_SET_SPEED,
     FanEntity,
+    FanEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -326,12 +324,12 @@ class MqttFan(MqttEntity, FanEntity):
         self._supported_features = 0
         self._supported_features |= (
             self._topic[CONF_OSCILLATION_COMMAND_TOPIC] is not None
-            and SUPPORT_OSCILLATE
+            and FanEntityFeature.OSCILLATE
         )
         if self._feature_percentage:
-            self._supported_features |= SUPPORT_SET_SPEED
+            self._supported_features |= FanEntityFeature.SET_SPEED
         if self._feature_preset_mode:
-            self._supported_features |= SUPPORT_PRESET_MODE
+            self._supported_features |= FanEntityFeature.PRESET_MODE
 
         for key, tpl in self._command_templates.items():
             self._command_templates[key] = MqttCommandTemplate(
