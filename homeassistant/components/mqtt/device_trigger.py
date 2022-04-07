@@ -35,6 +35,7 @@ from .discovery import MQTT_DISCOVERY_DONE
 from .mixins import (
     MQTT_ENTITY_DEVICE_INFO_SCHEMA,
     MqttDiscoveryDeviceUpdate,
+    send_discovery_done,
     update_device,
 )
 
@@ -258,6 +259,7 @@ async def async_setup_trigger(
         hass, config, device_id, discovery_data, config_entry
     )
     await mqtt_device_trigger.async_setup()
+    send_discovery_done(hass, discovery_data)
 
 
 async def async_removed_from_device(hass: HomeAssistant, device_id: str) -> None:

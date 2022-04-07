@@ -19,6 +19,7 @@ from .mixins import (
     MQTT_ENTITY_DEVICE_INFO_SCHEMA,
     MqttDiscoveryDeviceUpdate,
     async_setup_entry_helper,
+    send_discovery_done,
     update_device,
 )
 from .models import ReceiveMessage
@@ -75,6 +76,8 @@ async def _async_setup_tag(
 
     if device_id:
         hass.data[TAGS][device_id][discovery_id] = tag_scanner
+
+    send_discovery_done(hass, discovery_data)
 
 
 def async_has_tags(hass: HomeAssistant, device_id: str) -> bool:

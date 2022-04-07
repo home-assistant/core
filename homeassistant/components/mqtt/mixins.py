@@ -56,7 +56,6 @@ from . import (
     debug_info,
     subscription,
 )
-from ..mqtt import publish
 from .const import (
     ATTR_DISCOVERY_HASH,
     ATTR_DISCOVERY_PAYLOAD,
@@ -522,6 +521,35 @@ async def cleanup_device_registry(
         )
 
 
+def get_discovery_hash(discovery_data: dict | None) -> tuple:
+    """Get the discovery hash from the discovery data."""
+    return discovery_data[ATTR_DISCOVERY_HASH] if discovery_data else ()
+
+
+def send_discovery_done(hass: HomeAssistant, discovery_data: dict | None) -> None:
+    """Acknowledge a discovery message has been handled."""
+    if discovery_hash := get_discovery_hash(discovery_data):
+        async_dispatcher_send(hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None)
+
+
+def terminate_discovery(
+    hass: HomeAssistant, discovery_data: dict | None, dispatcher: Callable | None
+) -> None:
+    """Terminate the discovery."""
+    if (discovery_hash := get_discovery_hash(discovery_data)) == ():
+        return
+    if dispatcher:
+        dispatcher()
+        dispatcher = None
+    clear_discovery_hash(hass, discovery_hash)
+
+
+async def async_remove_discovery_payload(hass: HomeAssistant, discovery_data: dict):
+    """Remove the auto discovery payload to avoid rediscovery after a restart."""
+    discovery_topic = discovery_data[ATTR_DISCOVERY_TOPIC]
+    await async_publish(hass, discovery_topic, "", retain=True)
+
+
 class MqttDiscoveryDeviceUpdate:
     """Add support for auto discovery for platforms without an entity."""
 
@@ -540,12 +568,9 @@ class MqttDiscoveryDeviceUpdate:
         self.log_name = log_name
         self._remove_discovery = None
 
-        discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
-        self.discovery_data = discovery_data
-        self.discovery_hash: tuple = discovery_hash
+        self._discovery_data = discovery_data
 
         config_entry_id = config_entry.entry_id
-        discovery_topic = discovery_data[ATTR_DISCOVERY_TOPIC]
         rediscover: bool = False
         skip_device_removal: bool = False
 
@@ -554,34 +579,35 @@ class MqttDiscoveryDeviceUpdate:
         ) -> None:
             """Handle discovery update."""
             nonlocal rediscover, self
+            discovery_hash = get_discovery_hash(discovery_data)
             _LOGGER.info(
                 "Got update for %s with hash: %s '%s'",
                 self.log_name,
-                self.discovery_hash,
+                discovery_hash,
                 discovery_payload,
             )
             if (
                 discovery_payload
-                and discovery_payload != self.discovery_data[ATTR_DISCOVERY_PAYLOAD]
+                and discovery_payload != self._discovery_data[ATTR_DISCOVERY_PAYLOAD]
             ):
                 rediscover = True
             if not discovery_payload or rediscover:
                 # unregister and clean up the current discovery instance
-                self.terminate_discovery()
+                terminate_discovery(hass, discovery_data, self._remove_signal)
                 await _async_tear_down()
-                self.async_send_discovery_done()
+                send_discovery_done(hass, discovery_data)
                 _LOGGER.info(
                     "%s %s has been removed",
                     self.log_name,
-                    self.discovery_hash,
+                    discovery_hash,
                 )
             else:
                 # Normal update without change
-                self.async_send_discovery_done()
+                send_discovery_done(hass, discovery_data)
                 _LOGGER.info(
                     "%s %s no changes",
                     self.log_name,
-                    self.discovery_hash,
+                    discovery_hash,
                 )
                 return
             if rediscover:
@@ -589,14 +615,14 @@ class MqttDiscoveryDeviceUpdate:
                 await async_process_discovery_payload(
                     hass,
                     config_entry,
-                    self.discovery_hash[0],
-                    self.discovery_hash[1],
+                    discovery_hash[0],
+                    discovery_hash[1],
                     discovery_payload,
                 )
                 _LOGGER.debug(
                     "%s %s rediscovery initiated",
                     self.log_name,
-                    self.discovery_hash,
+                    discovery_hash,
                 )
 
         async def _async_device_removed(event) -> None:
@@ -610,9 +636,9 @@ class MqttDiscoveryDeviceUpdate:
             skip_device_removal = True
             # Unregister and clean up and publish an empty payload
             # so the service is not rediscovered after a restart
-            self.terminate_discovery()
-            publish(hass, discovery_topic, "", retain=True)
+            terminate_discovery(hass, discovery_data, self._remove_signal)
             await _async_tear_down()
+            await async_remove_discovery_payload(hass, discovery_data)
 
         async def _async_tear_down() -> None:
             """Handle the cleanup of the discovery service."""
@@ -628,13 +654,14 @@ class MqttDiscoveryDeviceUpdate:
         def _entry_unload(*_: Any) -> None:
             """Handle the unload of the config entry."""
             nonlocal self
-            self.terminate_discovery()
+            terminate_discovery(hass, discovery_data, self._remove_signal)
             # cleanup platform resources
             hass.async_create_task(_async_tear_down())
 
-        self._remove_discovery = async_dispatcher_connect(
+        discovery_hash = get_discovery_hash(discovery_data)
+        self._remove_signal = async_dispatcher_connect(
             hass,
-            MQTT_DISCOVERY_UPDATED.format(self.discovery_hash),
+            MQTT_DISCOVERY_UPDATED.format(discovery_hash),
             async_discovery_update,
         )
         config_entry.async_on_unload(_entry_unload)
@@ -642,26 +669,11 @@ class MqttDiscoveryDeviceUpdate:
             self._remove_device_updated = hass.bus.async_listen(
                 EVENT_DEVICE_REGISTRY_UPDATED, _async_device_removed
             )
-        self.async_send_discovery_done()
         _LOGGER.info(
             "%s %s has been initialized",
             self.log_name,
-            self.discovery_hash,
+            discovery_hash,
         )
-
-    @callback
-    def async_send_discovery_done(self) -> None:
-        """Acknowledge a discovery message has been handled."""
-        async_dispatcher_send(
-            self.hass, MQTT_DISCOVERY_DONE.format(self.discovery_hash), None
-        )
-
-    def terminate_discovery(self) -> None:
-        """Terminate the discovery."""
-        if self._remove_discovery:
-            self._remove_discovery()
-            self._remove_discovery = None
-            clear_discovery_hash(self.hass, self.discovery_hash)
 
     async def async_tear_down(self) -> None:
         """Handle the cleanup of platform specific parts."""
@@ -722,7 +734,7 @@ class MqttDiscoveryUpdate(Entity):
                 else:
                     # Non-empty, unchanged payload: Ignore to avoid changing states
                     _LOGGER.info("Ignoring unchanged update for: %s", self.entity_id)
-            self.async_send_discovery_done()
+            send_discovery_done(self.hass, self._discovery_data)
 
         if discovery_hash:
             debug_info.add_entity_discovery_data(
@@ -736,18 +748,6 @@ class MqttDiscoveryUpdate(Entity):
                 discovery_callback,
             )
 
-    @callback
-    def async_send_discovery_done(self) -> None:
-        """Acknowledge a discovery message has been handled."""
-        discovery_hash = (
-            self._discovery_data[ATTR_DISCOVERY_HASH] if self._discovery_data else None
-        )
-        if not discovery_hash:
-            return
-        async_dispatcher_send(
-            self.hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
-        )
-
     async def async_removed_from_registry(self) -> None:
         """Clear retained discovery topic in broker."""
         if not self._removed_from_hass:
@@ -756,18 +756,13 @@ class MqttDiscoveryUpdate(Entity):
             self._cleanup_discovery_on_remove()
 
             # Clear the discovery topic so the entity is not rediscovered after a restart
-            discovery_topic = self._discovery_data[ATTR_DISCOVERY_TOPIC]
-            await async_publish(self.hass, discovery_topic, "", retain=True)
+            await async_remove_discovery_payload(self.hass, self._discovery_data)
 
     @callback
     def add_to_platform_abort(self) -> None:
         """Abort adding an entity to a platform."""
-        if self._discovery_data:
-            discovery_hash = self._discovery_data[ATTR_DISCOVERY_HASH]
-            clear_discovery_hash(self.hass, discovery_hash)
-            async_dispatcher_send(
-                self.hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
-            )
+        terminate_discovery(self.hass, self._discovery_data, self._remove_signal)
+        send_discovery_done(self.hass, self._discovery_data)
         super().add_to_platform_abort()
 
     async def async_will_remove_from_hass(self) -> None:
@@ -777,12 +772,8 @@ class MqttDiscoveryUpdate(Entity):
     def _cleanup_discovery_on_remove(self) -> None:
         """Stop listening to signal and cleanup discovery data."""
         if self._discovery_data and not self._removed_from_hass:
-            clear_discovery_hash(self.hass, self._discovery_data[ATTR_DISCOVERY_HASH])
+            terminate_discovery(self.hass, self._discovery_data, self._remove_signal)
             self._removed_from_hass = True
-
-        if self._remove_signal:
-            self._remove_signal()
-            self._remove_signal = None
 
 
 def device_info_from_config(config) -> DeviceInfo | None:
@@ -887,7 +878,7 @@ class MqttEntity(
         self._prepare_subscribe_topics()
         await self._subscribe_topics()
         await self.mqtt_async_added_to_hass()
-        self.async_send_discovery_done()
+        send_discovery_done(self.hass, self._discovery_data)
 
     async def mqtt_async_added_to_hass(self):
         """Call before the discovery message is acknowledged.
