@@ -174,6 +174,9 @@ async def async_setup_platform(
 class RflinkLight(SwitchableRflinkDevice, LightEntity):
     """Representation of a Rflink light."""
 
+    _attr_color_mode = COLOR_MODE_ONOFF
+    _attr_supported_color_modes = {COLOR_MODE_ONOFF}
+
 
 class DimmableRflinkLight(SwitchableRflinkDevice, LightEntity):
     """Rflink light device that support dimming."""
