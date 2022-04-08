@@ -269,7 +269,10 @@ class SamsungTVDevice(MediaPlayerEntity):
         if self._dmr_device is None:
             session = async_get_clientsession(self.hass)
             upnp_requester = AiohttpSessionRequester(session)
-            upnp_factory = UpnpFactory(upnp_requester)
+            # Set non_strict to avoid invalid data sent by Samsung TV:
+            # Got invalid value for <UpnpStateVariable(PlaybackStorageMedium, string)>:
+            # NETWORK,NONE
+            upnp_factory = UpnpFactory(upnp_requester, non_strict=True)
             upnp_device: UpnpDevice | None = None
             with contextlib.suppress(UpnpConnectionError):
                 upnp_device = await upnp_factory.async_create_device(
