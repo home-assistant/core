@@ -114,7 +114,7 @@ CONF_PRECISION = "precision"
 CONF_QUANTILE_INTERVALS = "quantile_intervals"
 CONF_QUANTILE_METHOD = "quantile_method"
 
-SERVICE_RESET_BUFFER = "reset_buffer"
+SERVICE_RESET_BUFFER = "reset"
 SERVICE_RESET_ATTR_KEEP_COUNT = "keep_count"
 SERVICE_RESET_ATTR_KEEP_AGE = "keep_age"
 
@@ -238,7 +238,7 @@ async def async_setup_platform(
             ),
             vol.Optional(SERVICE_RESET_ATTR_KEEP_AGE): cv.time_period,
         },
-        StatisticsSensor.reset_buffer.__name__,
+        StatisticsSensor.reset.__name__,
     )
 
 
@@ -427,7 +427,7 @@ class StatisticsSensor(SensorEntity):
             key: value for key, value in self.attributes.items() if value is not None
         }
 
-    def reset_buffer(
+    def reset(
         self, keep_count: int = 0, keep_age: timedelta = timedelta(-1)
     ) -> None:
         """Remove states, optionally keep latest according to count and/or age."""

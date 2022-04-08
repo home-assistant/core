@@ -389,7 +389,7 @@ async def test_age_limit_expiry(hass: HomeAssistant):
 
 
 async def test_reset_service(hass: HomeAssistant):
-    """Test correct function of the reset service 'statistics.reset_buffer'."""
+    """Test correct function of the reset service 'statistics.reset'."""
     now = dt_util.utcnow()
     mock_data = {
         "return_time": datetime(now.year + 1, 8, 2, 12, 23, tzinfo=dt_util.UTC)
@@ -431,7 +431,7 @@ async def test_reset_service(hass: HomeAssistant):
 
         await hass.services.async_call(
             domain=STATISTICS_DOMAIN,
-            service="reset_buffer",
+            service="reset",
             service_data={
                 "entity_id": "sensor.test",
                 "keep_count": 999,
@@ -447,7 +447,7 @@ async def test_reset_service(hass: HomeAssistant):
 
         await hass.services.async_call(
             domain=STATISTICS_DOMAIN,
-            service="reset_buffer",
+            service="reset",
             service_data={
                 "entity_id": "sensor.test",
                 "keep_count": 1,
@@ -463,7 +463,7 @@ async def test_reset_service(hass: HomeAssistant):
 
         await hass.services.async_call(
             domain=STATISTICS_DOMAIN,
-            service="reset_buffer",
+            service="reset",
             service_data={
                 "entity_id": "sensor.test",
                 "keep_count": 8,
@@ -478,7 +478,7 @@ async def test_reset_service(hass: HomeAssistant):
 
         await hass.services.async_call(
             domain=STATISTICS_DOMAIN,
-            service="reset_buffer",
+            service="reset",
             service_data={
                 "entity_id": "sensor.test",
                 "keep_age": (7 - 1) * 60,
@@ -493,7 +493,7 @@ async def test_reset_service(hass: HomeAssistant):
 
         await hass.services.async_call(
             domain=STATISTICS_DOMAIN,
-            service="reset_buffer",
+            service="reset",
             service_data={
                 "entity_id": "sensor.test",
                 "keep_age": {"minutes": (6 - 1)},
@@ -509,7 +509,7 @@ async def test_reset_service(hass: HomeAssistant):
 
         await hass.services.async_call(
             domain=STATISTICS_DOMAIN,
-            service="reset_buffer",
+            service="reset",
             service_data={
                 "entity_id": "sensor.test",
                 "keep_age": 0,
@@ -524,7 +524,7 @@ async def test_reset_service(hass: HomeAssistant):
 
         await hass.services.async_call(
             domain=STATISTICS_DOMAIN,
-            service="reset_buffer",
+            service="reset",
             service_data={
                 "entity_id": "sensor.test",
             },
