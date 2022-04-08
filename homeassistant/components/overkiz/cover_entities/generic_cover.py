@@ -8,11 +8,8 @@ from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
 from homeassistant.components.cover import (
     ATTR_TILT_POSITION,
-    SUPPORT_CLOSE_TILT,
-    SUPPORT_OPEN_TILT,
-    SUPPORT_SET_TILT_POSITION,
-    SUPPORT_STOP_TILT,
     CoverEntity,
+    CoverEntityFeature,
 )
 from homeassistant.components.overkiz.entity import OverkizEntity
 
@@ -178,15 +175,15 @@ class OverkizGenericCover(OverkizEntity, CoverEntity):
         supported_features = 0
 
         if self.executor.has_command(*COMMANDS_OPEN_TILT):
-            supported_features |= SUPPORT_OPEN_TILT
+            supported_features |= CoverEntityFeature.OPEN_TILT
 
             if self.executor.has_command(*COMMANDS_STOP_TILT):
-                supported_features |= SUPPORT_STOP_TILT
+                supported_features |= CoverEntityFeature.STOP_TILT
 
         if self.executor.has_command(*COMMANDS_CLOSE_TILT):
-            supported_features |= SUPPORT_CLOSE_TILT
+            supported_features |= CoverEntityFeature.CLOSE_TILT
 
         if self.executor.has_command(*COMMANDS_SET_TILT_POSITION):
-            supported_features |= SUPPORT_SET_TILT_POSITION
+            supported_features |= CoverEntityFeature.SET_TILT_POSITION
 
         return supported_features

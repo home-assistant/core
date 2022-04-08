@@ -36,9 +36,9 @@ def entity_reg(hass):
     "set_state,features_reg,features_state,expected_action_types",
     [
         (False, 0, 0, []),
-        (False, const.SUPPORT_MODES, 0, ["set_mode"]),
+        (False, const.HumidifierEntityFeature.MODES, 0, ["set_mode"]),
         (True, 0, 0, []),
-        (True, 0, const.SUPPORT_MODES, ["set_mode"]),
+        (True, 0, const.HumidifierEntityFeature.MODES, ["set_mode"]),
     ],
 )
 async def test_get_actions(

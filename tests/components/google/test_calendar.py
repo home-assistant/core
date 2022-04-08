@@ -6,6 +6,7 @@ import datetime
 from http import HTTPStatus
 from typing import Any
 from unittest.mock import patch
+import urllib
 
 import httplib2
 import pytest
@@ -74,12 +75,21 @@ def upcoming() -> dict[str, Any]:
     }
 
 
+def upcoming_date() -> dict[str, Any]:
+    """Create a test event with an arbitrary start/end date fetched from the api url."""
+    now = dt_util.now()
+    return {
+        "start": {"date": now.date().isoformat()},
+        "end": {"date": now.date().isoformat()},
+    }
+
+
 def upcoming_event_url() -> str:
     """Return a calendar API to return events created by upcoming()."""
     now = dt_util.now()
     start = (now - datetime.timedelta(minutes=60)).isoformat()
     end = (now + datetime.timedelta(minutes=60)).isoformat()
-    return f"/api/calendars/{TEST_ENTITY}?start={start}&end={end}"
+    return f"/api/calendars/{TEST_ENTITY}?start={urllib.parse.quote(start)}&end={urllib.parse.quote(end)}"
 
 
 async def test_all_day_event(
@@ -262,6 +272,35 @@ async def test_all_day_offset_event(hass, mock_events_list_items, component_setu
     }
 
 
+async def test_missing_summary(hass, mock_events_list_items, component_setup):
+    """Test that we can create an event trigger on device."""
+    start_event = dt_util.now() + datetime.timedelta(minutes=14)
+    end_event = start_event + datetime.timedelta(minutes=60)
+    event = {
+        **TEST_EVENT,
+        "start": {"dateTime": start_event.isoformat()},
+        "end": {"dateTime": end_event.isoformat()},
+    }
+    del event["summary"]
+    mock_events_list_items([event])
+
+    assert await component_setup()
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state.name == TEST_ENTITY_NAME
+    assert state.state == STATE_OFF
+    assert dict(state.attributes) == {
+        "friendly_name": TEST_ENTITY_NAME,
+        "message": "",
+        "all_day": False,
+        "offset_reached": False,
+        "start_time": start_event.strftime(DATE_STR_FORMAT),
+        "end_time": end_event.strftime(DATE_STR_FORMAT),
+        "location": event["location"],
+        "description": event["description"],
+    }
+
+
 async def test_update_error(
     hass, calendar_resource, component_setup, test_api_calendar
 ):
@@ -365,10 +404,12 @@ async def test_http_event_api_failure(
     assert events == []
 
 
+@pytest.mark.freeze_time("2022-03-27 12:05:00+00:00")
 async def test_http_api_event(
     hass, hass_client, mock_events_list_items, component_setup
 ):
     """Test querying the API and fetching events from the server."""
+    hass.config.set_time_zone("Asia/Baghdad")
     event = {
         **TEST_EVENT,
         **upcoming(),
@@ -381,8 +422,35 @@ async def test_http_api_event(
     assert response.status == HTTPStatus.OK
     events = await response.json()
     assert len(events) == 1
-    assert "summary" in events[0]
-    assert events[0]["summary"] == event["summary"]
+    assert {k: events[0].get(k) for k in ["summary", "start", "end"]} == {
+        "summary": TEST_EVENT["summary"],
+        "start": {"dateTime": "2022-03-27T15:05:00+03:00"},
+        "end": {"dateTime": "2022-03-27T15:10:00+03:00"},
+    }
+
+
+@pytest.mark.freeze_time("2022-03-27 12:05:00+00:00")
+async def test_http_api_all_day_event(
+    hass, hass_client, mock_events_list_items, component_setup
+):
+    """Test querying the API and fetching events from the server."""
+    event = {
+        **TEST_EVENT,
+        **upcoming_date(),
+    }
+    mock_events_list_items([event])
+    assert await component_setup()
+
+    client = await hass_client()
+    response = await client.get(upcoming_event_url())
+    assert response.status == HTTPStatus.OK
+    events = await response.json()
+    assert len(events) == 1
+    assert {k: events[0].get(k) for k in ["summary", "start", "end"]} == {
+        "summary": TEST_EVENT["summary"],
+        "start": {"date": "2022-03-27"},
+        "end": {"date": "2022-03-27"},
+    }
 
 
 @pytest.mark.parametrize(

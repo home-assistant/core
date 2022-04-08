@@ -1,5 +1,5 @@
 """Test util methods."""
-from datetime import timedelta
+from datetime import datetime, timedelta
 import os
 import sqlite3
 from unittest.mock import MagicMock, patch
@@ -12,7 +12,11 @@ from homeassistant.components import recorder
 from homeassistant.components.recorder import run_information_with_session, util
 from homeassistant.components.recorder.const import DATA_INSTANCE, SQLITE_URL_PREFIX
 from homeassistant.components.recorder.models import RecorderRuns
-from homeassistant.components.recorder.util import end_incomplete_runs, session_scope
+from homeassistant.components.recorder.util import (
+    end_incomplete_runs,
+    is_second_sunday,
+    session_scope,
+)
 from homeassistant.util import dt as dt_util
 
 from .common import corrupt_db_file
@@ -93,7 +97,7 @@ def test_validate_or_move_away_sqlite_database(hass, tmpdir, caplog):
 
 async def test_last_run_was_recently_clean(hass):
     """Test we can check if the last recorder run was recently clean."""
-    await async_init_recorder_component(hass)
+    await async_init_recorder_component(hass, {recorder.CONF_COMMIT_INTERVAL: 1})
     await hass.async_block_till_done()
 
     cursor = hass.data[DATA_INSTANCE].engine.raw_connection().cursor()
@@ -546,11 +550,11 @@ def test_end_incomplete_runs(hass_recorder, caplog):
     assert "Ended unfinished session" in caplog.text
 
 
-def test_perodic_db_cleanups(hass_recorder):
-    """Test perodic db cleanups."""
+def test_periodic_db_cleanups(hass_recorder):
+    """Test periodic db cleanups."""
     hass = hass_recorder()
     with patch.object(hass.data[DATA_INSTANCE].engine, "connect") as connect_mock:
-        util.perodic_db_cleanups(hass.data[DATA_INSTANCE])
+        util.periodic_db_cleanups(hass.data[DATA_INSTANCE])
 
     text_obj = connect_mock.return_value.__enter__.return_value.execute.mock_calls[0][
         1
@@ -564,7 +568,9 @@ async def test_write_lock_db(hass, tmp_path):
     from sqlalchemy.exc import OperationalError
 
     # Use file DB, in memory DB cannot do write locks.
-    config = {recorder.CONF_DB_URL: "sqlite:///" + str(tmp_path / "pytest.db")}
+    config = {
+        recorder.CONF_DB_URL: "sqlite:///" + str(tmp_path / "pytest.db?timeout=0.1")
+    }
     await async_init_recorder_component(hass, config)
     await hass.async_block_till_done()
 
@@ -584,3 +590,14 @@ async def test_write_lock_db(hass, tmp_path):
             # would be allowed to proceed as the goal is to prevent
             # all the other threads from accessing the database
             await hass.async_add_executor_job(_drop_table)
+
+
+def test_is_second_sunday():
+    """Test we can find the second sunday of the month."""
+    assert is_second_sunday(datetime(2022, 1, 9, 0, 0, 0, tzinfo=dt_util.UTC)) is True
+    assert is_second_sunday(datetime(2022, 2, 13, 0, 0, 0, tzinfo=dt_util.UTC)) is True
+    assert is_second_sunday(datetime(2022, 3, 13, 0, 0, 0, tzinfo=dt_util.UTC)) is True
+    assert is_second_sunday(datetime(2022, 4, 10, 0, 0, 0, tzinfo=dt_util.UTC)) is True
+    assert is_second_sunday(datetime(2022, 5, 8, 0, 0, 0, tzinfo=dt_util.UTC)) is True
+
+    assert is_second_sunday(datetime(2022, 1, 10, 0, 0, 0, tzinfo=dt_util.UTC)) is False

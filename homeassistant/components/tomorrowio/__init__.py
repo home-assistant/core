@@ -18,7 +18,13 @@ from pytomorrowio.exceptions import (
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_LATITUDE,
+    CONF_LOCATION,
+    CONF_LONGITUDE,
+    CONF_NAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -194,8 +200,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     api = TomorrowioV4(
         entry.data[CONF_API_KEY],
-        entry.data[CONF_LATITUDE],
-        entry.data[CONF_LONGITUDE],
+        entry.data[CONF_LOCATION][CONF_LATITUDE],
+        entry.data[CONF_LOCATION][CONF_LONGITUDE],
         session=async_get_clientsession(hass),
     )
 

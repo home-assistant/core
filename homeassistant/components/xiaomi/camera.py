@@ -12,6 +12,7 @@ from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
 from homeassistant.components.ffmpeg import get_ffmpeg_manager
 from homeassistant.const import (
     CONF_HOST,
+    CONF_MODEL,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PATH,
@@ -34,7 +35,6 @@ DEFAULT_USERNAME = "root"
 DEFAULT_ARGUMENTS = "-pred 1"
 
 CONF_FFMPEG_ARGUMENTS = "ffmpeg_arguments"
-CONF_MODEL = "model"
 
 MODEL_YI = "yi"
 MODEL_XIAOFANG = "xiaofang"

@@ -234,6 +234,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class DeviceListener(TuyaDeviceListener):
     """Device Update Listener."""
 
+    # pylint: disable=arguments-differ
+    # Library incorrectly defines methods as 'classmethod'
+    # https://github.com/tuya/tuya-iot-python-sdk/pull/48
+
     def __init__(
         self,
         hass: HomeAssistant,

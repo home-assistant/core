@@ -10,11 +10,7 @@ from fjaraskupan import (
     State,
 )
 
-from homeassistant.components.fan import (
-    SUPPORT_PRESET_MODE,
-    SUPPORT_SET_SPEED,
-    FanEntity,
-)
+from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -72,6 +68,8 @@ async def async_setup_entry(
 
 class Fan(CoordinatorEntity[DataUpdateCoordinator[State]], FanEntity):
     """Fan entity."""
+
+    _attr_supported_features = FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE
 
     def __init__(
         self,
@@ -154,11 +152,6 @@ class Fan(CoordinatorEntity[DataUpdateCoordinator[State]], FanEntity):
     def percentage(self) -> int | None:
         """Return the current speed."""
         return self._percentage
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return SUPPORT_SET_SPEED | SUPPORT_PRESET_MODE
 
     @property
     def is_on(self) -> bool:
