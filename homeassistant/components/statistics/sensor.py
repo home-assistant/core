@@ -339,7 +339,7 @@ class StatisticsSensor(SensorEntity):
         except ValueError:
             self.attributes[STAT_SOURCE_VALUE_VALID] = False
             _LOGGER.error(
-                "%s: parsing error, expected number and received %s",
+                "%s: parsing error. Expected number or binary state, but received '%s'",
                 self.entity_id,
                 new_state.state,
             )
