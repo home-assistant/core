@@ -705,12 +705,17 @@ class Recorder(threading.Thread):
     @callback
     def _async_keep_alive(self, now: datetime) -> None:
         """Queue a keep alive."""
-        self.queue.put(KEEP_ALIVE_TASK)
+        if self._event_listener:
+            self.queue.put(KEEP_ALIVE_TASK)
 
     @callback
     def _async_commit(self, now: datetime) -> None:
         """Queue a commit."""
-        if not self._database_lock_task and self._event_session_has_pending_writes():
+        if (
+            self._event_listener
+            and not self._database_lock_task
+            and self._event_session_has_pending_writes()
+        ):
             self.queue.put(COMMIT_TASK)
 
     @callback
