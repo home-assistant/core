@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, Final
 
 from homeassistant.components.fan import (
     SUPPORT_PRESET_MODE,
@@ -19,6 +19,15 @@ from .const import CONF_MODEL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+DEVICE_TO_SPEED_PERCENTAGE_MAP: Final = {
+    FanSpeed.Off: 0,
+    FanSpeed.Silent: 10,
+    FanSpeed.Speed1: 25,
+    FanSpeed.Speed2: 50,
+    FanSpeed.Speed3: 75,
+    FanSpeed.Turbo: 100,
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -34,12 +43,13 @@ async def async_setup_entry(
 class PurifierEntity(FanEntity):
     """Representation of a Philips air purifier."""
 
-    should_poll: bool = False
+    _attr_should_poll: bool = False
 
-    supported_features: int = SUPPORT_PRESET_MODE | SUPPORT_SET_SPEED
-    preset_modes: list[str] = [m.name for m in list(Mode) if m != Mode.Manual]
+    _attr_supported_features: int = SUPPORT_PRESET_MODE | SUPPORT_SET_SPEED
+    _attr_preset_modes: list[str] = [m.name for m in list(Mode) if m != Mode.Manual]
     speeds = [FanSpeed.Speed1, FanSpeed.Speed2, FanSpeed.Speed3, FanSpeed.Turbo]
-    speed_count: int = len(speeds)
+    _attr_speed_count: int = len(speeds)
+    _attr_icon = "mdi:air-purifier"
 
     def __init__(self, client: ReliableClient, config_entry: ConfigEntry) -> None:
         """Initialize a PurifierEntity."""
@@ -79,11 +89,6 @@ class PurifierEntity(FanEntity):
     def available(self):
         """Return whether the purifier is available."""
         return self._status is not None
-
-    @property
-    def icon(self) -> str | None:
-        """Use an air purifier icon instead of the default fan."""
-        return "mdi:air-purifier"
 
     @property
     def device_info(self):
@@ -137,21 +142,12 @@ class PurifierEntity(FanEntity):
         mode = Mode[preset_mode]
         await self._client.set_preset_mode(mode)
 
-    device_to_speed_percentage_map = {
-        FanSpeed.Off: 0,
-        FanSpeed.Silent: 10,
-        FanSpeed.Speed1: 25,
-        FanSpeed.Speed2: 50,
-        FanSpeed.Speed3: 75,
-        FanSpeed.Turbo: 100,
-    }
-
     @property
     def percentage(self) -> int | None:
         """Return the current fan speed converted to a percentage."""
         if self._status is None:
             return None
-        return self.device_to_speed_percentage_map[self._status.fan_speed]
+        return DEVICE_TO_SPEED_PERCENTAGE_MAP[self._status.fan_speed]
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the fan to a constant speed."""
