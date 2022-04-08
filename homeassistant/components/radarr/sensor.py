@@ -32,7 +32,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
 from . import RadarrEntity
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN
 from .coordinator import RadarrDataUpdateCoordinator
 
 
@@ -129,7 +129,7 @@ async def async_setup_entry(
     coordinator: RadarrDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     entities = []
     for description in SENSOR_TYPES:
-        if description.key in "diskspace":
+        if description.key == "diskspace":
             for mount in coordinator.disk_space:
                 desc = deepcopy(description)
                 name = mount.path.rsplit("/")[-1].rsplit("\\")[-1]
@@ -175,9 +175,6 @@ class RadarrSensor(RadarrEntity, SensorEntity):
 
 def get_space(coordinator: RadarrDataUpdateCoordinator, name: str) -> str:
     """Get space."""
-    LOGGER.warning(name)
-    for mount in coordinator.disk_space:
-        LOGGER.warning(mount.path)
     space = [
         mount.freeSpace / 1024 ** BYTE_SIZES.index(DATA_GIGABYTES)
         for mount in coordinator.disk_space
