@@ -24,6 +24,8 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
+from . import mocked_request_function
+
 from tests.common import MockConfigEntry, load_fixture
 
 DUMMY_DATA: dict[str, Any] = {
@@ -49,7 +51,7 @@ async def test_show_set_form(hass: HomeAssistant) -> None:
     """Test that the setup form is served."""
     with patch(
         "pynina.baseApi.BaseAPI._makeRequest",
-        return_value=DUMMY_RESPONSE_REGIONS,
+        wraps=mocked_request_function,
     ):
 
         result: dict[str, Any] = await hass.config_entries.flow.async_init(
@@ -93,7 +95,7 @@ async def test_step_user(hass: HomeAssistant) -> None:
     """Test starting a flow by user with valid values."""
     with patch(
         "pynina.baseApi.BaseAPI._makeRequest",
-        return_value=DUMMY_RESPONSE_REGIONS,
+        wraps=mocked_request_function,
     ), patch(
         "homeassistant.components.nina.async_setup_entry",
         return_value=True,
@@ -111,7 +113,7 @@ async def test_step_user_no_selection(hass: HomeAssistant) -> None:
     """Test starting a flow by user with no selection."""
     with patch(
         "pynina.baseApi.BaseAPI._makeRequest",
-        return_value=DUMMY_RESPONSE_REGIONS,
+        wraps=mocked_request_function,
     ):
 
         result: dict[str, Any] = await hass.config_entries.flow.async_init(
@@ -127,7 +129,7 @@ async def test_step_user_already_configured(hass: HomeAssistant) -> None:
     """Test starting a flow by user but it was already configured."""
     with patch(
         "pynina.baseApi.BaseAPI._makeRequest",
-        return_value=DUMMY_RESPONSE_REGIONS,
+        wraps=mocked_request_function,
     ):
         result: dict[str, Any] = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=DUMMY_DATA
@@ -159,7 +161,7 @@ async def test_options_flow_init(hass: HomeAssistant) -> None:
         "homeassistant.components.nina.async_setup_entry", return_value=True
     ), patch(
         "pynina.baseApi.BaseAPI._makeRequest",
-        return_value=DUMMY_RESPONSE_REGIONS,
+        wraps=mocked_request_function,
     ):
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
@@ -205,7 +207,7 @@ async def test_options_flow_with_no_selection(hass: HomeAssistant) -> None:
         "homeassistant.components.nina.async_setup_entry", return_value=True
     ), patch(
         "pynina.baseApi.BaseAPI._makeRequest",
-        return_value=DUMMY_RESPONSE_REGIONS,
+        wraps=mocked_request_function,
     ):
 
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
@@ -280,16 +282,12 @@ async def test_options_flow_entity_removal(hass: HomeAssistant) -> None:
 
     with patch(
         "pynina.baseApi.BaseAPI._makeRequest",
-        return_value=DUMMY_RESPONSE_WARNIGNS,
-    ) as mock:
+        wraps=mocked_request_function,
+    ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-        mock.return_value = DUMMY_RESPONSE_REGIONS
-
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
-
-        mock.return_value = DUMMY_RESPONSE_WARNIGNS
 
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
