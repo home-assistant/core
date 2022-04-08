@@ -94,7 +94,7 @@ aio_geojson_nsw_rfs_incidents==0.4
 aio_georss_gdacs==0.5
 
 # homeassistant.components.airzone
-aioairzone==0.2.3
+aioairzone==0.3.3
 
 # homeassistant.components.ambient_station
 aioambient==2021.11.0
@@ -1003,7 +1003,7 @@ pygatt[GATTTOOL]==4.0.5
 pygti==0.9.2
 
 # homeassistant.components.version
-pyhaversion==22.04.0
+pyhaversion==22.4.1
 
 # homeassistant.components.heos
 pyheos==0.7.2
@@ -1605,7 +1605,7 @@ youless-api==0.16
 zeroconf==0.38.4
 
 # homeassistant.components.zha
-zha-quirks==0.0.69
+zha-quirks==0.0.71
 
 # homeassistant.components.zha
 zigpy-deconz==0.15.0
