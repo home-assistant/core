@@ -86,13 +86,6 @@ DEPRECATION_WARNING_CHARACTERISTIC = (
     "for further details: "
     "https://www.home-assistant.io/integrations/statistics/"
 )
-DEPRECATION_WARNING_SIZE = (
-    "The configuration of either 'sampling_size' or 'max_age' will become "
-    "mandatory in a future release of the statistics integration. Please "
-    "add 'sampling_size: %s' to the configuration of sensor '%s' to keep "
-    "the current behavior. Read the documentation for further details: "
-    "https://www.home-assistant.io/integrations/statistics/"
-)
 
 # Statistics supported by a sensor source (numeric)
 STATS_NUMERIC_SUPPORT = (
@@ -181,27 +174,15 @@ def valid_state_characteristic_configuration(config: dict[str, Any]) -> dict[str
     return config
 
 
-def valid_boundary_configuration(config: dict[str, Any]) -> dict[str, Any]:
-    """Validate that either sampling_size or max_age are provided."""
-
-    if config.get(CONF_SAMPLES_MAX_BUFFER_SIZE) is None:
-        config[CONF_SAMPLES_MAX_BUFFER_SIZE] = DEFAULT_BUFFER_SIZE
-        if config.get(CONF_MAX_AGE) is None:
-            _LOGGER.warning(
-                DEPRECATION_WARNING_SIZE,
-                str(DEFAULT_BUFFER_SIZE),
-                config[CONF_NAME],
-            )
-    return config
-
-
 _PLATFORM_SCHEMA_BASE = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(CONF_STATE_CHARACTERISTIC): cv.string,
-        vol.Optional(CONF_SAMPLES_MAX_BUFFER_SIZE): vol.Coerce(int),
+        vol.Optional(
+            CONF_SAMPLES_MAX_BUFFER_SIZE, default=DEFAULT_BUFFER_SIZE
+        ): vol.All(vol.Coerce(int), vol.Range(min=1)),
         vol.Optional(CONF_MAX_AGE): cv.time_period,
         vol.Optional(CONF_PRECISION, default=DEFAULT_PRECISION): vol.Coerce(int),
         vol.Optional(
@@ -215,7 +196,6 @@ _PLATFORM_SCHEMA_BASE = PLATFORM_SCHEMA.extend(
 PLATFORM_SCHEMA = vol.All(
     _PLATFORM_SCHEMA_BASE,
     valid_state_characteristic_configuration,
-    valid_boundary_configuration,
 )
 
 
