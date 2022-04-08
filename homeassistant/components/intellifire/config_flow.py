@@ -49,7 +49,7 @@ async def validate_host_input(host: str) -> str:
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for IntelliFire."""
 
-    VERSION = 2
+    VERSION = 1
 
     def __init__(self):
         """Initialize the Config Flow Handler."""
@@ -161,6 +161,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_manual_device_entry(self, user_input=None):
         """Handle manual input of local IP configuration."""
+        LOGGER.debug("STEP: manual_device_entry")
         errors = {}
         self._host = user_input.get(CONF_HOST) if user_input else None
         if user_input is not None:
@@ -180,6 +181,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Pick which device to configure."""
         errors = {}
+        LOGGER.debug("STEP: pick_device")
 
         if user_input is not None:
             if user_input[CONF_HOST] == MANUAL_ENTRY_STRING:
@@ -210,7 +212,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Launch fireplaces discovery
         await self._find_fireplaces()
-        LOGGER.debug("STEP: USER")
+        LOGGER.debug("STEP: user")
         if self._not_configured_hosts:
             LOGGER.debug("Running Step: pick_device")
             return await self.async_step_pick_device()
@@ -219,7 +221,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(self, user_input=None):
         """Perform reauth upon an API authentication error."""
-
+        LOGGER.debug("STEP: reauth")
         entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         # populate the expected vars
         self._serial = entry.unique_id
@@ -229,6 +231,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_dhcp(self, discovery_info: DhcpServiceInfo) -> FlowResult:
         """Handle DHCP Discovery."""
 
+        LOGGER.debug("STEP: dhcp")
         # Run validation logic on ip
         host = discovery_info.ip
 
@@ -251,6 +254,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_dhcp_confirm(self, user_input=None):
         """Attempt to confirm."""
 
+        LOGGER.debug("STEP: dhcp_confirm")
         # Add the hosts one by one
         host = self._discovered_host.ip
         serial = self._discovered_host.serial

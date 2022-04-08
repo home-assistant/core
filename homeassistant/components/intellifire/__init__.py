@@ -22,7 +22,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Define the API Objects
     read_object = IntellifireAsync(entry.data[CONF_HOST])
-
     ift_control = IntellifireControlAsync(
         fireplace_ip=entry.data[CONF_HOST],
     )
@@ -33,8 +32,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     except (ConnectionError, ClientConnectionError) as err:
         raise ConfigEntryNotReady from err
-    except LoginException as err:
+    except (LoginException, KeyError) as err:
         raise ConfigEntryAuthFailed(err) from err
+
     finally:
         await ift_control.close()
 
@@ -56,23 +56,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
-
-
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
-    """Migrate old entry."""
-    LOGGER.debug("Migrating from version %s", config_entry.version)
-
-    version = config_entry.version
-
-    if version == 1:
-
-        # Version 1 doesn't have API information so we will replace username/password with dummy data and a reauth flow will get triggered above
-
-        config_entry.version = 2
-        new = {**config_entry.data}
-        new[CONF_USERNAME] = ""
-        new[CONF_PASSWORD] = ""
-        hass.config_entries.async_update_entry(config_entry, data=new)
-
-    LOGGER.info("Migration to version %s successful", config_entry.version)
-    return True
