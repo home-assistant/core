@@ -30,7 +30,6 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
     EVENT_STATE_CHANGED,
-    EVENT_TIME_CHANGED,
     MATCH_ALL,
 )
 from homeassistant.core import (
@@ -775,9 +774,6 @@ class Recorder(threading.Thread):
     @callback
     def _async_event_filter(self, event: Event) -> bool:
         """Filter events."""
-        if event.event_type == EVENT_TIME_CHANGED:
-            return False
-
         if event.event_type in self.exclude_t:
             return False
 

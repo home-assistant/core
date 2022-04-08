@@ -1,7 +1,12 @@
 """The tests for the Configurator component."""
 
+from datetime import timedelta
+
 import homeassistant.components.configurator as configurator
-from homeassistant.const import ATTR_FRIENDLY_NAME, EVENT_TIME_CHANGED
+from homeassistant.const import ATTR_FRIENDLY_NAME
+import homeassistant.util.dt as dt_util
+
+from tests.common import async_fire_time_changed
 
 
 async def test_request_least_info(hass):
@@ -95,8 +100,7 @@ async def test_request_done_works(hass):
     request_id = configurator.async_request_config(hass, "Test Request", lambda _: None)
     configurator.async_request_done(hass, request_id)
     assert len(hass.states.async_all()) == 1
-
-    hass.bus.async_fire(EVENT_TIME_CHANGED)
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 0
 

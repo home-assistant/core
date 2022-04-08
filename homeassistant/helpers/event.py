@@ -16,10 +16,8 @@ from typing_extensions import Concatenate, ParamSpec
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_NOW,
     EVENT_CORE_CONFIG_UPDATE,
     EVENT_STATE_CHANGED,
-    EVENT_TIME_CHANGED,
     MATCH_ALL,
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
@@ -1464,17 +1462,6 @@ def async_track_utc_time_change(
 ) -> CALLBACK_TYPE:
     """Add a listener that will fire if time matches a pattern."""
     job = HassJob(action)
-    # We do not have to wrap the function with time pattern matching logic
-    # if no pattern given
-    if all(val is None for val in (hour, minute, second)):
-
-        @callback
-        def time_change_listener(event: Event) -> None:
-            """Fire every time event that comes in."""
-            hass.async_run_hass_job(job, cast(datetime, event.data[ATTR_NOW]))
-
-        return hass.bus.async_listen(EVENT_TIME_CHANGED, time_change_listener)
-
     matching_seconds = dt_util.parse_time_expression(second, 0, 59)
     matching_minutes = dt_util.parse_time_expression(minute, 0, 59)
     matching_hours = dt_util.parse_time_expression(hour, 0, 23)

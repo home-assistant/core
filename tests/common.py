@@ -40,7 +40,6 @@ from homeassistant.const import (
     DEVICE_DEFAULT_NAME,
     EVENT_HOMEASSISTANT_CLOSE,
     EVENT_STATE_CHANGED,
-    EVENT_TIME_CHANGED,
     STATE_OFF,
     STATE_ON,
 )
@@ -385,8 +384,6 @@ def async_fire_time_changed(
     """Fire a time changed event."""
     if datetime_ is None:
         datetime_ = date_util.utcnow()
-
-    hass.bus.async_fire(EVENT_TIME_CHANGED, {"now": date_util.as_utc(datetime_)})
 
     for task in list(hass.loop._scheduled):
         if not isinstance(task, asyncio.TimerHandle):
