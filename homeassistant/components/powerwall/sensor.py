@@ -117,8 +117,10 @@ async def async_setup_entry(
     data: PowerwallData = coordinator.data
     entities: list[PowerWallEntity] = [
         PowerWallChargeSensor(powerwall_data),
-        PowerWallBackupReserveSensor(powerwall_data),
     ]
+
+    if data.backup_reserve is not None:
+        entities.append(PowerWallBackupReserveSensor(powerwall_data))
 
     for meter in data.meters.meters:
         entities.append(PowerWallExportSensor(powerwall_data, meter))
