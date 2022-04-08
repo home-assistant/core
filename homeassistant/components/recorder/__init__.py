@@ -649,7 +649,6 @@ class Recorder(threading.Thread):
         self.entity_filter = entity_filter
         self.exclude_t = exclude_t
 
-        self._timechanges_seen = 0
         self._commits_without_expire = 0
         self._old_states: dict[str, States] = {}
         self._state_attributes_ids: LRU = LRU(STATE_ATTRIBUTES_ID_CACHE_SIZE)
