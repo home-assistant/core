@@ -9,20 +9,11 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY, CONF_NAME
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.util import slugify
 
 from .const import CONF_SITE_ID, DEFAULT_NAME, DOMAIN
-
-
-@callback
-def solaredge_entries(hass: HomeAssistant):
-    """Return the site_ids for the domain."""
-    return {
-        (entry.data[CONF_SITE_ID])
-        for entry in hass.config_entries.async_entries(DOMAIN)
-    }
 
 
 class SolarEdgeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -34,9 +25,18 @@ class SolarEdgeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._errors = {}
 
+    @callback
+    def _async_current_site_ids(self) -> set[str]:
+        """Return the site_ids for the domain."""
+        return {
+            entry.data[CONF_SITE_ID]
+            for entry in self._async_current_entries(include_ignore=False)
+            if CONF_SITE_ID in entry.data
+        }
+
     def _site_in_configuration_exists(self, site_id: str) -> bool:
         """Return True if site_id exists in configuration."""
-        return site_id in solaredge_entries(self.hass)
+        return site_id in self._async_current_site_ids()
 
     def _check_site(self, site_id: str, api_key: str) -> bool:
         """Check if we can connect to the soleredge api service."""

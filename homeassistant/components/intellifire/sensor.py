@@ -115,12 +115,6 @@ INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
     ),
     IntellifireSensorEntityDescription(
-        key="errors",
-        name="Errors",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda data: data.error_codes_string,
-    ),
-    IntellifireSensorEntityDescription(
         key="ecm_latency",
         name="ECM Latency",
         entity_category=EntityCategory.DIAGNOSTIC,

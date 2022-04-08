@@ -49,7 +49,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistantError, State
-from homeassistant.helpers import device_registry
+from homeassistant.helpers import device_registry, entity_registry as er
 from homeassistant.helpers.entityfilter import (
     CONF_EXCLUDE_DOMAINS,
     CONF_EXCLUDE_ENTITIES,
@@ -480,6 +480,61 @@ async def test_homekit_entity_glob_filter_with_config_entities(
     assert (
         hass.states.get(select_config_entity.entity_id) not in filtered_states
     )  # not explicted included and its a config entity
+    assert hass.states.get("cover.excluded_test") not in filtered_states
+    assert hass.states.get("light.included_test") in filtered_states
+    assert hass.states.get("select.keep") in filtered_states
+
+
+async def test_homekit_entity_glob_filter_with_hidden_entities(
+    hass, mock_async_zeroconf, entity_reg
+):
+    """Test the entity filter with hidden entities."""
+    entry = await async_init_integration(hass)
+
+    from homeassistant.helpers.entity_registry import RegistryEntry
+
+    select_config_entity: RegistryEntry = entity_reg.async_get_or_create(
+        "select",
+        "any",
+        "any",
+        device_id="1234",
+        hidden_by=er.RegistryEntryHider.INTEGRATION,
+    )
+    hass.states.async_set(select_config_entity.entity_id, "off")
+
+    switch_config_entity: RegistryEntry = entity_reg.async_get_or_create(
+        "switch",
+        "any",
+        "any",
+        device_id="1234",
+        hidden_by=er.RegistryEntryHider.INTEGRATION,
+    )
+    hass.states.async_set(switch_config_entity.entity_id, "off")
+    hass.states.async_set("select.keep", "open")
+
+    hass.states.async_set("cover.excluded_test", "open")
+    hass.states.async_set("light.included_test", "on")
+
+    entity_filter = generate_filter(
+        ["select"],
+        ["switch.test", switch_config_entity.entity_id],
+        [],
+        [],
+        ["*.included_*"],
+        ["*.excluded_*"],
+    )
+    homekit = _mock_homekit(hass, entry, HOMEKIT_MODE_BRIDGE, entity_filter)
+
+    homekit.bridge = Mock()
+    homekit.bridge.accessories = {}
+
+    filtered_states = await homekit.async_configure_accessories()
+    assert (
+        hass.states.get(switch_config_entity.entity_id) in filtered_states
+    )  # explicitly included
+    assert (
+        hass.states.get(select_config_entity.entity_id) not in filtered_states
+    )  # not explicted included and its a hidden entity
     assert hass.states.get("cover.excluded_test") not in filtered_states
     assert hass.states.get("light.included_test") in filtered_states
     assert hass.states.get("select.keep") in filtered_states

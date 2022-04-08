@@ -12,6 +12,7 @@ from homeassistant.components.wallbox.const import (
     CONF_CHARGING_SPEED_KEY,
     CONF_CURRENT_VERSION_KEY,
     CONF_DATA_KEY,
+    CONF_LOCKED_UNLOCKED_KEY,
     CONF_MAX_AVAILABLE_POWER_KEY,
     CONF_MAX_CHARGING_CURRENT_KEY,
     CONF_NAME_KEY,
@@ -19,9 +20,11 @@ from homeassistant.components.wallbox.const import (
     CONF_SERIAL_NUMBER_KEY,
     CONF_SOFTWARE_KEY,
     CONF_STATION,
+    CONF_STATUS_ID_KEY,
     DOMAIN,
 )
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 
 from .const import CONF_ERROR, CONF_JWT, CONF_STATUS, CONF_TTL, CONF_USER_ID
 
@@ -31,6 +34,7 @@ test_response = json.loads(
     json.dumps(
         {
             CONF_CHARGING_POWER_KEY: 0,
+            CONF_STATUS_ID_KEY: 161,
             CONF_MAX_AVAILABLE_POWER_KEY: 25.2,
             CONF_CHARGING_SPEED_KEY: 0,
             CONF_ADDED_RANGE_KEY: 150,
@@ -38,6 +42,7 @@ test_response = json.loads(
             CONF_NAME_KEY: "WallboxName",
             CONF_DATA_KEY: {
                 CONF_MAX_CHARGING_CURRENT_KEY: 24,
+                CONF_LOCKED_UNLOCKED_KEY: False,
                 CONF_SERIAL_NUMBER_KEY: "20000",
                 CONF_PART_NUMBER_KEY: "PLP1-0-2-4-9-002-E",
                 CONF_SOFTWARE_KEY: {CONF_CURRENT_VERSION_KEY: "5.5.10"},
@@ -69,7 +74,7 @@ entry = MockConfigEntry(
 )
 
 
-async def setup_integration(hass):
+async def setup_integration(hass: HomeAssistant) -> None:
     """Test wallbox sensor class setup."""
 
     entry.add_to_hass(hass)
@@ -97,7 +102,7 @@ async def setup_integration(hass):
         await hass.async_block_till_done()
 
 
-async def setup_integration_connection_error(hass):
+async def setup_integration_connection_error(hass: HomeAssistant) -> None:
     """Test wallbox sensor class setup with a connection error."""
 
     with requests_mock.Mocker() as mock_request:
@@ -123,7 +128,7 @@ async def setup_integration_connection_error(hass):
         await hass.async_block_till_done()
 
 
-async def setup_integration_read_only(hass):
+async def setup_integration_read_only(hass: HomeAssistant) -> None:
     """Test wallbox sensor class setup for read only."""
 
     with requests_mock.Mocker() as mock_request:

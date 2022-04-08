@@ -38,6 +38,7 @@ PLATFORMS = [
     Platform.CAMERA,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.UPDATE,
 ]
 COORDINATOR_CAMERAS = "coordinator_cameras"
 COORDINATOR_CENTRAL = "coordinator_central"
@@ -112,9 +113,11 @@ class SynologyDSMSwitchEntityDescription(
 # Binary sensors
 UPGRADE_BINARY_SENSORS: tuple[SynologyDSMBinarySensorEntityDescription, ...] = (
     SynologyDSMBinarySensorEntityDescription(
+        # Deprecated, scheduled to be removed in 2022.6 (#68664)
         api_key=SynoCoreUpgrade.API_KEY,
         key="update_available",
         name="Update Available",
+        entity_registry_enabled_default=False,
         device_class=BinarySensorDeviceClass.UPDATE,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),

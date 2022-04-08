@@ -232,14 +232,16 @@ class HistoryStatsSensor(SensorEntity):
     def _update(self, start, end, now_timestamp, start_timestamp, end_timestamp):
         # Get history between start and end
         history_list = history.state_changes_during_period(
-            self.hass, start, end, str(self._entity_id)
+            self.hass, start, end, str(self._entity_id), no_attributes=True
         )
 
         if self._entity_id not in history_list:
             return
 
         # Get the first state
-        last_state = history.get_state(self.hass, start, self._entity_id)
+        last_state = history.get_state(
+            self.hass, start, self._entity_id, no_attributes=True
+        )
         last_state = last_state is not None and last_state in self._entity_states
         last_time = start_timestamp
         elapsed = 0

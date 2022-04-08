@@ -253,8 +253,10 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
                     self._state = integral
                 self.async_write_ha_state()
 
-        async_track_state_change_event(
-            self.hass, [self._sensor_source_id], calc_integration
+        self.async_on_remove(
+            async_track_state_change_event(
+                self.hass, [self._sensor_source_id], calc_integration
+            )
         )
 
     @property

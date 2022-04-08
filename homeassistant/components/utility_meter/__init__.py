@@ -7,10 +7,12 @@ import voluptuous as vol
 
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import CONF_NAME
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import discovery
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, Platform
+from homeassistant.core import HomeAssistant, split_entity_id
+from homeassistant.helpers import discovery, entity_registry as er
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
@@ -30,6 +32,8 @@ from .const import (
     DATA_UTILITY,
     DOMAIN,
     METER_TYPES,
+    SERVICE_RESET,
+    SIGNAL_RESET_METER,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -81,7 +85,7 @@ METER_CONFIG_SCHEMA = vol.Schema(
             vol.Optional(CONF_METER_DELTA_VALUES, default=False): cv.boolean,
             vol.Optional(CONF_METER_NET_CONSUMPTION, default=False): cv.boolean,
             vol.Optional(CONF_TARIFFS, default=[]): vol.All(
-                cv.ensure_list, [cv.string]
+                cv.ensure_list, vol.Unique(), [cv.string]
             ),
             vol.Optional(CONF_CRON_PATTERN): validate_cron_pattern,
         },
@@ -99,6 +103,31 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DATA_LEGACY_COMPONENT] = EntityComponent(_LOGGER, DOMAIN, hass)
 
     hass.data[DATA_UTILITY] = {}
+
+    async def async_reset_meters(service_call):
+        """Reset all sensors of a meter."""
+        meters = service_call.data["entity_id"]
+
+        for meter in meters:
+            _LOGGER.debug("resetting meter %s", meter)
+            domain, entity = split_entity_id(meter)
+            # backward compatibility up to 2022.07:
+            if domain == DOMAIN:
+                async_dispatcher_send(
+                    hass, SIGNAL_RESET_METER, f"{SELECT_DOMAIN}.{entity}"
+                )
+            else:
+                async_dispatcher_send(hass, SIGNAL_RESET_METER, meter)
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_RESET,
+        async_reset_meters,
+        vol.Schema({ATTR_ENTITY_ID: vol.All(cv.ensure_list, [cv.entity_id])}),
+    )
+
+    if DOMAIN not in config:
+        return True
 
     for meter, conf in config[DOMAIN].items():
         _LOGGER.debug("Setup %s.%s", DOMAIN, meter)
@@ -151,3 +180,59 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
 
     return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up Utility Meter from a config entry."""
+    entity_registry = er.async_get(hass)
+    hass.data[DATA_UTILITY][entry.entry_id] = {}
+    hass.data[DATA_UTILITY][entry.entry_id][DATA_TARIFF_SENSORS] = []
+
+    try:
+        er.async_validate_entity_id(entity_registry, entry.options[CONF_SOURCE_SENSOR])
+    except vol.Invalid:
+        # The entity is identified by an unknown entity registry ID
+        _LOGGER.error(
+            "Failed to setup utility_meter for unknown entity %s",
+            entry.options[CONF_SOURCE_SENSOR],
+        )
+        return False
+
+    if not entry.options.get(CONF_TARIFFS):
+        # Only a single meter sensor is required
+        hass.data[DATA_UTILITY][entry.entry_id][CONF_TARIFF_ENTITY] = None
+        hass.config_entries.async_setup_platforms(entry, (Platform.SENSOR,))
+    else:
+        # Create tariff selection + one meter sensor for each tariff
+        entity_entry = entity_registry.async_get_or_create(
+            Platform.SELECT, DOMAIN, entry.entry_id, suggested_object_id=entry.title
+        )
+        hass.data[DATA_UTILITY][entry.entry_id][
+            CONF_TARIFF_ENTITY
+        ] = entity_entry.entity_id
+        hass.config_entries.async_setup_platforms(
+            entry, (Platform.SELECT, Platform.SENSOR)
+        )
+
+    entry.async_on_unload(entry.add_update_listener(config_entry_update_listener))
+
+    return True
+
+
+async def config_entry_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Update listener, called when the config entry options are changed."""
+    await hass.config_entries.async_reload(entry.entry_id)
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    if unload_ok := await hass.config_entries.async_unload_platforms(
+        entry,
+        (
+            Platform.SELECT,
+            Platform.SENSOR,
+        ),
+    ):
+        hass.data[DATA_UTILITY].pop(entry.entry_id)
+
+    return unload_ok

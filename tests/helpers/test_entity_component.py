@@ -16,7 +16,7 @@ from homeassistant.const import (
 import homeassistant.core as ha
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import discovery
-from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.entity_component import EntityComponent, async_update_entity
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -385,7 +385,7 @@ async def test_update_entity(hass):
     # Called as part of async_add_entities
     assert len(entity.async_write_ha_state.mock_calls) == 1
 
-    await hass.helpers.entity_component.async_update_entity(entity.entity_id)
+    await async_update_entity(hass, entity.entity_id)
 
     assert len(entity.async_update_ha_state.mock_calls) == 1
     assert entity.async_update_ha_state.mock_calls[-1][1][0] is True
