@@ -204,6 +204,8 @@ class SamsungTVDevice(MediaPlayerEntity):
             )
 
         if self._attr_state != STATE_ON:
+            if self._dmr_device:
+                await self._async_shutdown_dmr()
             return
 
         startup_tasks: list[Coroutine[Any, Any, None]] = []
