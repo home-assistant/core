@@ -5,6 +5,7 @@ from homeassistant.components.knx.schema import ClimateSchema
 from homeassistant.const import CONF_NAME, STATE_IDLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry
+from homeassistant.setup import async_setup_component
 
 from .conftest import KNXTestKit
 
@@ -162,7 +163,7 @@ async def test_climate_preset_mode(hass: HomeAssistant, knx: KNXTestKit):
     assert len(knx.xknx.devices[1].device_updated_cbs) == 1
 
 
-async def test_update_entity(hass: HomeAssistant, knx: KNXTestKit, mock_ha):
+async def test_update_entity(hass: HomeAssistant, knx: KNXTestKit):
     """Test update climate entity for KNX."""
     events = async_capture_events(hass, "state_changed")
     await knx.setup_integration(
@@ -177,6 +178,8 @@ async def test_update_entity(hass: HomeAssistant, knx: KNXTestKit, mock_ha):
             }
         }
     )
+    assert await async_setup_component(hass, "homeassistant", {})
+    await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 1
     assert len(events) == 1
     events.pop()

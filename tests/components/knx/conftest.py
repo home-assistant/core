@@ -229,10 +229,3 @@ async def knx(request, hass, mock_config_entry: MockConfigEntry):
     knx_test_kit = KNXTestKit(hass, mock_config_entry)
     yield knx_test_kit
     await knx_test_kit.assert_no_telegram()
-
-
-@pytest.fixture(name="mock_ha")
-async def mock_ha_fixture(hass):
-    """Load homeassistant to allow service calls."""
-    assert await async_setup_component(hass, "homeassistant", {})
-    await hass.async_block_till_done()
