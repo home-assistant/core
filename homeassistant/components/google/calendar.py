@@ -183,7 +183,9 @@ class GoogleCalendarEventDevice(CalendarEventDevice):
         valid_items = filter(self._event_filter, items)
         self._event = copy.deepcopy(next(valid_items, None))
         if self._event:
-            (summary, offset) = extract_offset(self._event["summary"], self._offset)
+            (summary, offset) = extract_offset(
+                self._event.get("summary", ""), self._offset
+            )
             self._event["summary"] = summary
             self._offset_reached = is_offset_reached(
                 get_date(self._event["start"]), offset
