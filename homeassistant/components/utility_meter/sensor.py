@@ -36,6 +36,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.start import async_at_start
 from homeassistant.helpers.template import is_number
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
 from .const import (
@@ -196,7 +197,9 @@ async def async_setup_platform(
         )
         conf_meter_name = hass.data[DATA_UTILITY][meter].get(CONF_NAME, meter)
         conf_sensor_name = (
-            f"{meter} {conf_sensor_tariff}" if conf_sensor_tariff else conf_meter_name
+            f"{conf_meter_name} {conf_sensor_tariff}"
+            if conf_sensor_tariff
+            else conf_meter_name
         )
         conf_meter_type = hass.data[DATA_UTILITY][meter].get(CONF_METER_TYPE)
         conf_meter_offset = hass.data[DATA_UTILITY][meter][CONF_METER_OFFSET]
@@ -222,6 +225,7 @@ async def async_setup_platform(
             tariff_entity=conf_meter_tariff_entity,
             tariff=conf_sensor_tariff,
             unique_id=conf_sensor_unique_id,
+            legacy_meter_name=conf_meter_name,
         )
         meters.append(meter_sensor)
 
@@ -255,9 +259,17 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
         tariff_entity,
         tariff,
         unique_id,
+        legacy_meter_name=None,
     ):
         """Initialize the Utility Meter sensor."""
         self._attr_unique_id = unique_id
+        if legacy_meter_name:
+            slug = (
+                slugify(f"{parent_meter} {tariff}")
+                if tariff
+                else slugify(f"{legacy_meter_name}")
+            )
+            self.entity_id = f"sensor.{slug}"
         self._parent_meter = parent_meter
         self._sensor_source_id = source_entity
         self._state = None
