@@ -192,8 +192,10 @@ class PowerWallBackupReserveSensor(PowerWallEntity, SensorEntity):
         return f"{self.base_unique_id}_backup_reserve"
 
     @property
-    def native_value(self) -> int:
+    def native_value(self) -> int | None:
         """Get the current value in percentage."""
+        if self.data.backup_reserve is None:
+            return None
         return round(self.data.backup_reserve)
 
 
