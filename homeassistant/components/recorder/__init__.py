@@ -710,7 +710,11 @@ class Recorder(threading.Thread):
     @callback
     def _async_commit(self, now: datetime) -> None:
         """Queue a commit."""
-        if not self._database_lock_task and self._event_session_has_pending_writes():
+        if (
+            self._event_listener
+            and not self._database_lock_task
+            and self._event_session_has_pending_writes()
+        ):
             self.queue.put(COMMIT_TASK)
 
     @callback
