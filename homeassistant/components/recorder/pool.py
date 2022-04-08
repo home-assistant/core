@@ -14,7 +14,7 @@ from .const import DB_WORKER_PREFIX
 _LOGGER = logging.getLogger(__name__)
 
 # For debugging the MutexPool
-DEBUG_MUTEX_POOL = False
+DEBUG_MUTEX_POOL = True
 DEBUG_MUTEX_POOL_TRACE = False
 
 POOL_SIZE = 5
@@ -81,24 +81,23 @@ class MutexPool(StaticPool):  # type: ignore[misc]
     databases.
     """
 
-    _counter = 0
+    _reference_counter = 0
     pool_lock: threading.RLock
 
     def _do_return_conn(self, conn: Any) -> None:
         if DEBUG_MUTEX_POOL_TRACE:
             trace = traceback.extract_stack()
-            trace_msg = "".join(traceback.format_list(trace[:-1]))
+            trace_msg = "\n" + "".join(traceback.format_list(trace[:-1]))
         else:
             trace_msg = ""
 
         super()._do_return_conn(conn)
         if DEBUG_MUTEX_POOL:
-            self._counter -= 1
-            _LOGGER.error(
-                "%s return conn %s %s %s",
+            self._reference_counter -= 1
+            _LOGGER.debug(
+                "%s return conn ctr: %s%s",
                 threading.current_thread().name,
-                self._counter,
-                conn,
+                self._reference_counter,
                 trace_msg,
             )
         MutexPool.pool_lock.release()
@@ -112,18 +111,17 @@ class MutexPool(StaticPool):  # type: ignore[misc]
             trace_msg = ""
 
         if DEBUG_MUTEX_POOL:
-            _LOGGER.error("%s wait conn %s", threading.current_thread().name, trace_msg)
+            _LOGGER.debug("%s wait conn%s", threading.current_thread().name, trace_msg)
         # pylint: disable-next=consider-using-with
         got_lock = MutexPool.pool_lock.acquire(timeout=1)
         if not got_lock:
             raise SQLAlchemyError
         conn = super()._do_get()
         if DEBUG_MUTEX_POOL:
-            self._counter += 1
-            _LOGGER.error(
-                "%s get conn: %s %s",
+            self._reference_counter += 1
+            _LOGGER.debug(
+                "%s get conn: ctr: %s",
                 threading.current_thread().name,
-                self._counter,
-                conn,
+                self._reference_counter,
             )
         return conn
