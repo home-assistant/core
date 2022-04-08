@@ -10,9 +10,9 @@ from pyhap.accessory_driver import AccessoryDriver
 from pyhap.const import CATEGORY_OTHER
 from pyhap.util import callback as pyhap_callback
 
-from homeassistant.components import cover
+from homeassistant.components.cover import CoverDeviceClass, CoverEntityFeature
 from homeassistant.components.media_player import MediaPlayerDeviceClass
-from homeassistant.components.remote import SUPPORT_ACTIVITY
+from homeassistant.components.remote import RemoteEntityFeature
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_BATTERY_CHARGING,
@@ -134,23 +134,24 @@ def get_accessory(  # noqa: C901
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
 
         if device_class in (
-            cover.CoverDeviceClass.GARAGE,
-            cover.CoverDeviceClass.GATE,
-        ) and features & (cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE):
+            CoverDeviceClass.GARAGE,
+            CoverDeviceClass.GATE,
+        ) and features & (CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE):
             a_type = "GarageDoorOpener"
         elif (
-            device_class == cover.CoverDeviceClass.WINDOW
-            and features & cover.SUPPORT_SET_POSITION
+            device_class == CoverDeviceClass.WINDOW
+            and features & CoverEntityFeature.SET_POSITION
         ):
             a_type = "Window"
-        elif features & cover.SUPPORT_SET_POSITION:
+        elif features & CoverEntityFeature.SET_POSITION:
             a_type = "WindowCovering"
-        elif features & (cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE):
+        elif features & (CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE):
             a_type = "WindowCoveringBasic"
-        elif features & cover.SUPPORT_SET_TILT_POSITION:
+        elif features & CoverEntityFeature.SET_TILT_POSITION:
             # WindowCovering and WindowCoveringBasic both support tilt
             # only WindowCovering can handle the covers that are missing
-            # SUPPORT_SET_POSITION, SUPPORT_OPEN, and SUPPORT_CLOSE
+            # CoverEntityFeature.SET_POSITION, CoverEntityFeature.OPEN,
+            # and CoverEntityFeature.CLOSE
             a_type = "WindowCovering"
 
     elif state.domain == "fan":
@@ -214,7 +215,7 @@ def get_accessory(  # noqa: C901
     elif state.domain == "vacuum":
         a_type = "Vacuum"
 
-    elif state.domain == "remote" and features & SUPPORT_ACTIVITY:
+    elif state.domain == "remote" and features & RemoteEntityFeature.ACTIVITY:
         a_type = "ActivityRemote"
 
     elif state.domain in (

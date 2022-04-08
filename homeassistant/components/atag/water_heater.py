@@ -11,7 +11,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN, AtagEntity
 
-SUPPORT_FLAGS_HEATER = 0
 OPERATION_LIST = [STATE_OFF, STATE_ECO, STATE_PERFORMANCE]
 
 
@@ -29,7 +28,7 @@ class AtagWaterHeater(AtagEntity, WaterHeaterEntity):
     """Representation of an ATAG water heater."""
 
     _attr_operation_list = OPERATION_LIST
-    _attr_supported_features = SUPPORT_FLAGS_HEATER
+    _attr_supported_features = 0
     _attr_temperature_unit = TEMP_CELSIUS
 
     @property

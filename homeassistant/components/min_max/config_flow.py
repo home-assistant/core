@@ -16,7 +16,14 @@ from homeassistant.helpers.schema_config_entry_flow import (
 
 from .const import CONF_ENTITY_IDS, CONF_ROUND_DIGITS, DOMAIN
 
-_STATISTIC_MEASURES = ["last", "max", "mean", "min", "median"]
+_STATISTIC_MEASURES = [
+    {"value": "min", "label": "Minimum"},
+    {"value": "max", "label": "Maximum"},
+    {"value": "mean", "label": "Arithmetic mean"},
+    {"value": "median", "label": "Median"},
+    {"value": "last", "label": "Most recently updated"},
+]
+
 
 OPTIONS_SCHEMA = vol.Schema(
     {
