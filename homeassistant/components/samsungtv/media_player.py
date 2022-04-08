@@ -214,7 +214,9 @@ class SamsungTVDevice(MediaPlayerEntity):
             startup_tasks.append(self._async_startup_app_list())
 
         if self._dmr_device and not self._dmr_device.is_subscribed:
-            startup_tasks.append(self._dmr_device.async_subscribe_services())
+            startup_tasks.append(
+                self._dmr_device.async_subscribe_services(auto_resubscribe=True)
+            )
         if not self._dmr_device and self._ssdp_rendering_control_location:
             startup_tasks.append(self._async_startup_dmr())
 
