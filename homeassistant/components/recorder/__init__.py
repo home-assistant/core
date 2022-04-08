@@ -86,7 +86,7 @@ from .util import (
     end_incomplete_runs,
     is_second_sunday,
     move_away_broken_database,
-    perodic_db_cleanups,
+    periodic_db_cleanups,
     session_scope,
     setup_connection_for_dialect,
     validate_or_move_away_sqlite_database,
@@ -448,7 +448,7 @@ class PurgeTask(RecorderTask):
             # We always need to do the db cleanups after a purge
             # is finished to ensure the WAL checkpoint and other
             # tasks happen after a vacuum.
-            perodic_db_cleanups(instance)
+            periodic_db_cleanups(instance)
             return
         # Schedule a new purge task if this one didn't finish
         instance.queue.put(PurgeTask(self.purge_before, self.repack, self.apply_filter))
@@ -474,7 +474,7 @@ class PerodicCleanupTask(RecorderTask):
 
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
-        perodic_db_cleanups(instance)
+        periodic_db_cleanups(instance)
 
 
 @dataclass
@@ -891,7 +891,7 @@ class Recorder(threading.Thread):
     def async_nightly_tasks(self, now: datetime) -> None:
         """Trigger the purge."""
         if self.auto_purge:
-            # Purge will schedule the perodic cleanups
+            # Purge will schedule the periodic cleanups
             # after it completes to ensure it does not happen
             # until after the database is vacuumed
             repack = self.auto_repack and is_second_sunday(now)
@@ -948,7 +948,7 @@ class Recorder(threading.Thread):
                 self.hass, self._async_keep_alive, timedelta(seconds=KEEPALIVE_TIME)
             )
 
-        # If the commit interval is not 0, we need commit periodicly
+        # If the commit interval is not 0, we need to commit periodically
         if self.commit_interval:
             self._commit_listener = async_track_time_interval(
                 self.hass, self._async_commit, timedelta(seconds=self.commit_interval)
