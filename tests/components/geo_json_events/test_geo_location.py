@@ -2,6 +2,7 @@
 from unittest.mock import ANY, MagicMock, call, patch
 
 from aio_geojson_generic_client import GenericFeed
+from freezegun import freeze_time
 
 from homeassistant.components import geo_location
 from homeassistant.components.geo_json_events.geo_location import (
@@ -57,7 +58,7 @@ def _generate_mock_feed_entry(external_id, title, distance_to_home, coordinates)
     return feed_entry
 
 
-async def test_setup(hass, legacy_patchable_time):
+async def test_setup(hass):
     """Test the general setup of the platform."""
     # Set up some mock feed entries for this test.
     mock_entry_1 = _generate_mock_feed_entry("1234", "Title 1", 15.5, (-31.0, 150.0))
@@ -67,7 +68,7 @@ async def test_setup(hass, legacy_patchable_time):
 
     # Patching 'utcnow' to gain more control over the timed update.
     utcnow = dt_util.utcnow()
-    with patch("homeassistant.util.dt.utcnow", return_value=utcnow), patch(
+    with freeze_time(utcnow), patch(
         "aio_geojson_client.feed.GeoJsonFeed.update"
     ) as mock_feed_update:
         mock_feed_update.return_value = (
@@ -205,7 +206,7 @@ async def test_setup_race_condition(hass, legacy_patchable_time):
 
     # Patching 'utcnow' to gain more control over the timed update.
     utcnow = dt_util.utcnow()
-    with patch("homeassistant.util.dt.utcnow", return_value=utcnow), patch(
+    with freeze_time(utcnow), patch(
         "aio_geojson_client.feed.GeoJsonFeed.update"
     ) as mock_feed_update, assert_setup_component(1, geo_location.DOMAIN):
         assert await async_setup_component(hass, geo_location.DOMAIN, CONFIG)
