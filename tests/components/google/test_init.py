@@ -117,7 +117,10 @@ async def test_invalid_calendar_yaml(
     # Integration fails to setup
     assert await component_setup()
 
-    # XXX No config entries
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    entry = entries[0]
+    assert entry.state is ConfigEntryState.SETUP_ERROR
 
     assert not hass.states.get(TEST_YAML_ENTITY)
 
