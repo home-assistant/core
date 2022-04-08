@@ -97,6 +97,12 @@ async def test_full_flow(
     assert "data" in result
     data = result["data"]
     assert "token" in data
+    assert 0 < data["token"]["expires_in"] < 8 * 86400
+    assert (
+        datetime.datetime.now().timestamp()
+        <= data["token"]["expires_at"]
+        < (datetime.datetime.now() + datetime.timedelta(days=8)).timestamp()
+    )
     data["token"].pop("expires_at")
     data["token"].pop("expires_in")
     assert data == {
