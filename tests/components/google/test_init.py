@@ -114,7 +114,6 @@ async def test_invalid_calendar_yaml(
     setup_config_entry: MockConfigEntry,
 ) -> None:
     """Test setup with missing entity id fields fails to setup the config entry."""
-    # Integration fails to setup
     assert await component_setup()
 
     entries = hass.config_entries.async_entries(DOMAIN)
