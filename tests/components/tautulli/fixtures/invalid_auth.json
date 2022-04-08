@@ -2,6 +2,6 @@
   "response": {
     "result": "error",
     "message": "Invalid apikey",
-    "data": { }
+    "data": {}
   }
 }
