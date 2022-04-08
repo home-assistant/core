@@ -657,20 +657,19 @@ class Recorder(threading.Thread):
         self.event_session: Session | None = None
         self.get_session: Callable[[], Session] | None = None
         self._completed_first_database_setup: bool | None = None
+        self._event_listener: CALLBACK_TYPE | None = None
         self.async_migration_event = asyncio.Event()
         self.migration_in_progress = False
+        self._queue_watcher: CALLBACK_TYPE | None = None
         self._db_supports_row_number = True
         self._database_lock_task: DatabaseLockTask | None = None
         self._db_executor: DBInterruptibleThreadPoolExecutor | None = None
         self._exclude_attributes_by_domain = exclude_attributes_by_domain
 
-        self._event_listener: CALLBACK_TYPE | None = None
         self._keep_alive_listener: CALLBACK_TYPE | None = None
         self._commit_listener: CALLBACK_TYPE | None = None
         self._periodic_listener: CALLBACK_TYPE | None = None
         self._nightly_listener: CALLBACK_TYPE | None = None
-        self._queue_watcher: CALLBACK_TYPE | None = None
-
         self.enabled = True
 
     def set_enable(self, enable: bool) -> None:
@@ -892,7 +891,7 @@ class Recorder(threading.Thread):
     def async_nightly_tasks(self, now: datetime) -> None:
         """Trigger the purge."""
         if self.auto_purge:
-            # Purge will schedule the periodic cleanups
+            # Purge will schedule the perodic cleanups
             # after it completes to ensure it does not happen
             # until after the database is vacuumed
             repack = self.auto_repack and is_second_sunday(now)
@@ -945,14 +944,12 @@ class Recorder(threading.Thread):
         # If the db is using a socket connection, we need to keep alive
         # to prevent errors from unexpected disconnects
         if not self._using_sqlite():
-            _LOGGER.debug("Starting keep-alive for remote database")
             self._keep_alive_listener = async_track_time_interval(
                 self.hass, self._async_keep_alive, timedelta(seconds=KEEPALIVE_TIME)
             )
 
         # If the commit interval is not 0, we need commit periodicly
         if self.commit_interval:
-            _LOGGER.debug("Using commit interval of %s", self.commit_interval)
             self._commit_listener = async_track_time_interval(
                 self.hass, self._async_commit, timedelta(seconds=self.commit_interval)
             )
