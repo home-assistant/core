@@ -838,6 +838,8 @@ class EventBus:
 
         event = Event(event_type, event_data, origin, time_fired, context)
 
+        _LOGGER.debug("Bus:Handling %s", event)
+
         if not listeners:
             return
 
