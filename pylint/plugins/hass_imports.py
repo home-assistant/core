@@ -37,6 +37,12 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
             constant=re.compile(r"^DEVICE_CLASS_(\w*)$"),
         ),
     ],
+    "homeassistant.components.camera": [
+        ObsoleteImportMatch(
+            reason="replaced by CameraEntityFeature enum",
+            constant=re.compile(r"^SUPPORT_(\w*)$"),
+        ),
+    ],
     "homeassistant.components.climate": [
         ObsoleteImportMatch(
             reason="replaced by ClimateEntityFeature enum",
@@ -121,6 +127,18 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
         ObsoleteImportMatch(
             reason="replaced by SensorStateClass enum",
             constant=re.compile(r"^STATE_CLASS_(\w*)$"),
+        ),
+    ],
+    "homeassistant.components.siren": [
+        ObsoleteImportMatch(
+            reason="replaced by SirenEntityFeature enum",
+            constant=re.compile(r"^SUPPORT_(\w*)$"),
+        ),
+    ],
+    "homeassistant.components.siren.const": [
+        ObsoleteImportMatch(
+            reason="replaced by SirenEntityFeature enum",
+            constant=re.compile(r"^SUPPORT_(\w*)$"),
         ),
     ],
     "homeassistant.components.switch": [
