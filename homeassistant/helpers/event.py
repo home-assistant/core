@@ -1464,6 +1464,11 @@ def async_track_utc_time_change(
     # We do not have to wrap the function with time pattern matching logic
     # if no pattern given
     if all(val is None for val in (hour, minute, second)):
+        # Previously this relied on EVENT_TIME_FIRED which
+        # which meant it would not fire right away because
+        # the caller would always be misaligned with the call
+        # time vs the fire time by < 1s. To preserve this
+        # misalignment we use async_track_time_interval here
         return async_track_time_interval(hass, action, timedelta(seconds=1))
 
     job = HassJob(action)
