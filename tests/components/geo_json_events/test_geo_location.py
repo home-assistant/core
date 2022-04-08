@@ -187,7 +187,7 @@ async def test_setup_with_custom_location(hass):
             )
 
 
-async def test_setup_race_condition(hass, legacy_patchable_time):
+async def test_setup_race_condition(hass):
     """Test a particular race condition experienced."""
     # 1. Feed returns 1 entry -> Feed manager creates 1 entity.
     # 2. Feed returns error -> Feed manager removes 1 entity.
