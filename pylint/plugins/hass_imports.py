@@ -129,6 +129,18 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
             constant=re.compile(r"^STATE_CLASS_(\w*)$"),
         ),
     ],
+    "homeassistant.components.siren": [
+        ObsoleteImportMatch(
+            reason="replaced by SirenEntityFeature enum",
+            constant=re.compile(r"^SUPPORT_(\w*)$"),
+        ),
+    ],
+    "homeassistant.components.siren.const": [
+        ObsoleteImportMatch(
+            reason="replaced by SirenEntityFeature enum",
+            constant=re.compile(r"^SUPPORT_(\w*)$"),
+        ),
+    ],
     "homeassistant.components.switch": [
         ObsoleteImportMatch(
             reason="replaced by SwitchDeviceClass enum",
