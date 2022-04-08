@@ -269,9 +269,6 @@ EVENT_SERVICE_REGISTERED: Final = "service_registered"
 EVENT_SERVICE_REMOVED: Final = "service_removed"
 EVENT_STATE_CHANGED: Final = "state_changed"
 EVENT_THEMES_UPDATED: Final = "themes_updated"
-EVENT_TIMER_OUT_OF_SYNC: Final = "timer_out_of_sync"
-EVENT_TIME_CHANGED: Final = "time_changed"
-
 
 # #### DEVICE CLASSES ####
 # DEVICE_CLASS_* below are deprecated as of 2021.12

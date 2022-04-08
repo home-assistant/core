@@ -40,7 +40,6 @@ from homeassistant.const import (
     DEVICE_DEFAULT_NAME,
     EVENT_HOMEASSISTANT_CLOSE,
     EVENT_STATE_CHANGED,
-    EVENT_TIME_CHANGED,
     STATE_OFF,
     STATE_ON,
 )
@@ -314,9 +313,7 @@ async def async_test_home_assistant(loop, load_registries=True):
     async def mock_async_start():
         """Start the mocking."""
         # We only mock time during tests and we want to track tasks
-        with patch("homeassistant.core._async_create_timer"), patch.object(
-            hass, "async_stop_track_tasks"
-        ):
+        with patch.object(hass, "async_stop_track_tasks"):
             await orig_start()
 
     hass.async_start = mock_async_start
@@ -385,8 +382,6 @@ def async_fire_time_changed(
     """Fire a time changed event."""
     if datetime_ is None:
         datetime_ = date_util.utcnow()
-
-    hass.bus.async_fire(EVENT_TIME_CHANGED, {"now": date_util.as_utc(datetime_)})
 
     for task in list(hass.loop._scheduled):
         if not isinstance(task, asyncio.TimerHandle):

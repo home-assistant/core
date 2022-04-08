@@ -82,9 +82,7 @@ async def test_sync_entities(mock_conf, hass, cloud_prefs):
         assert len(mock_request_sync.mock_calls) == 1
 
 
-async def test_google_update_expose_trigger_sync(
-    hass, legacy_patchable_time, cloud_prefs
-):
+async def test_google_update_expose_trigger_sync(hass, cloud_prefs):
     """Test Google config responds to updating exposed entities."""
     config = CloudGoogleConfig(
         hass,

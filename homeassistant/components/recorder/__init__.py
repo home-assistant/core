@@ -30,7 +30,6 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
     EVENT_STATE_CHANGED,
-    EVENT_TIME_CHANGED,
     MATCH_ALL,
 )
 from homeassistant.core import (
@@ -775,9 +774,6 @@ class Recorder(threading.Thread):
     @callback
     def _async_event_filter(self, event: Event) -> bool:
         """Filter events."""
-        if event.event_type == EVENT_TIME_CHANGED:
-            return False
-
         if event.event_type in self.exclude_t:
             return False
 
@@ -948,7 +944,7 @@ class Recorder(threading.Thread):
                 self.hass, self._async_keep_alive, timedelta(seconds=KEEPALIVE_TIME)
             )
 
-        # If the commit interval is not 0, we need commit periodically
+        # If the commit interval is not 0, we need to commit periodically
         if self.commit_interval:
             self._commit_listener = async_track_time_interval(
                 self.hass, self._async_commit, timedelta(seconds=self.commit_interval)
