@@ -661,12 +661,6 @@ def mock_async_zeroconf(mock_zeroconf):
 
 
 @pytest.fixture
-def legacy_patchable_time():
-    """Allow time to be patchable by using event listeners instead of asyncio loop."""
-    yield
-
-
-@pytest.fixture
 def enable_custom_integrations(hass):
     """Enable custom integrations defined in the test dir."""
     hass.data.pop(loader.DATA_CUSTOM_COMPONENTS)
