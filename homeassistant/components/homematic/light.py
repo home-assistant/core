@@ -10,9 +10,8 @@ from homeassistant.components.light import (
     COLOR_MODE_BRIGHTNESS,
     COLOR_MODE_COLOR_TEMP,
     COLOR_MODE_HS,
-    SUPPORT_EFFECT,
-    SUPPORT_TRANSITION,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -85,9 +84,9 @@ class HMLight(HMDevice, LightEntity):
     @property
     def supported_features(self):
         """Flag supported features."""
-        features = SUPPORT_TRANSITION
+        features = LightEntityFeature.TRANSITION
         if "PROGRAM" in self._hmdevice.WRITENODE:
-            features |= SUPPORT_EFFECT
+            features |= LightEntityFeature.EFFECT
         return features
 
     @property
@@ -109,14 +108,14 @@ class HMLight(HMDevice, LightEntity):
     @property
     def effect_list(self):
         """Return the list of supported effects."""
-        if not self.supported_features & SUPPORT_EFFECT:
+        if not self.supported_features & LightEntityFeature.EFFECT:
             return None
         return self._hmdevice.get_effect_list()
 
     @property
     def effect(self):
         """Return the current color change program of the light."""
-        if not self.supported_features & SUPPORT_EFFECT:
+        if not self.supported_features & LightEntityFeature.EFFECT:
             return None
         return self._hmdevice.get_effect()
 
@@ -164,5 +163,5 @@ class HMLight(HMDevice, LightEntity):
 
         if COLOR_MODE_HS in self.supported_color_modes:
             self._data.update({"COLOR": None})
-        if self.supported_features & SUPPORT_EFFECT:
+        if self.supported_features & LightEntityFeature.EFFECT:
             self._data.update({"PROGRAM": None})

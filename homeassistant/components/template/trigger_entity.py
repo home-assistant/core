@@ -4,14 +4,28 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_ICON, CONF_NAME, CONF_UNIQUE_ID
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import (
+    ATTR_ENTITY_PICTURE,
+    ATTR_FRIENDLY_NAME,
+    ATTR_ICON,
+    CONF_DEVICE_CLASS,
+    CONF_ICON,
+    CONF_NAME,
+    CONF_UNIQUE_ID,
+)
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import TriggerUpdateCoordinator
 from .const import CONF_ATTRIBUTES, CONF_AVAILABILITY, CONF_PICTURE
+
+CONF_TO_ATTRIBUTE = {
+    CONF_ICON: ATTR_ICON,
+    CONF_NAME: ATTR_FRIENDLY_NAME,
+    CONF_PICTURE: ATTR_ENTITY_PICTURE,
+}
 
 
 class TriggerEntity(CoordinatorEntity[TriggerUpdateCoordinator]):
@@ -45,10 +59,10 @@ class TriggerEntity(CoordinatorEntity[TriggerUpdateCoordinator]):
         self._to_render_complex: list[str] = []
 
         for itm in (
-            CONF_NAME,
-            CONF_ICON,
-            CONF_PICTURE,
             CONF_AVAILABILITY,
+            CONF_ICON,
+            CONF_NAME,
+            CONF_PICTURE,
         ):
             if itm not in config:
                 continue
@@ -114,6 +128,21 @@ class TriggerEntity(CoordinatorEntity[TriggerUpdateCoordinator]):
         await super().async_added_to_hass()
         if self.coordinator.data is not None:
             self._process_data()
+
+    def restore_attributes(self, last_state: State) -> None:
+        """Restore attributes."""
+        for conf_key, attr in CONF_TO_ATTRIBUTE.items():
+            if conf_key not in self._config or attr not in last_state.attributes:
+                continue
+            self._rendered[conf_key] = last_state.attributes[attr]
+
+        if CONF_ATTRIBUTES in self._config:
+            extra_state_attributes = {}
+            for attr in self._config[CONF_ATTRIBUTES]:
+                if attr not in last_state.attributes:
+                    continue
+                extra_state_attributes[attr] = last_state.attributes[attr]
+            self._rendered[CONF_ATTRIBUTES] = extra_state_attributes
 
     @callback
     def _process_data(self) -> None:

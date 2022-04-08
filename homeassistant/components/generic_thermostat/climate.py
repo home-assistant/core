@@ -7,7 +7,11 @@ import math
 
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
+from homeassistant.components.climate import (
+    PLATFORM_SCHEMA,
+    ClimateEntity,
+    ClimateEntityFeature,
+)
 from homeassistant.components.climate.const import (
     ATTR_PRESET_MODE,
     CURRENT_HVAC_COOL,
@@ -23,8 +27,6 @@ from homeassistant.components.climate.const import (
     PRESET_HOME,
     PRESET_NONE,
     PRESET_SLEEP,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -73,7 +75,6 @@ CONF_HOT_TOLERANCE = "hot_tolerance"
 CONF_KEEP_ALIVE = "keep_alive"
 CONF_INITIAL_HVAC_MODE = "initial_hvac_mode"
 CONF_PRECISION = "precision"
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE
 
 CONF_PRESETS = {
     p: f"{p}_temp"
@@ -210,9 +211,9 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         self._target_temp = target_temp
         self._unit = unit
         self._unique_id = unique_id
-        self._support_flags = SUPPORT_FLAGS
+        self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
         if len(presets):
-            self._support_flags = SUPPORT_FLAGS | SUPPORT_PRESET_MODE
+            self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
             self._attr_preset_modes = [PRESET_NONE] + list(presets.keys())
         else:
             self._attr_preset_modes = [PRESET_NONE]
@@ -523,11 +524,6 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
             return None
 
         return self.hass.states.is_state(self.heater_entity_id, STATE_ON)
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return self._support_flags
 
     async def _async_heater_turn_on(self):
         """Turn heater toggleable device on."""

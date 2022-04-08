@@ -10,8 +10,8 @@ import async_timeout
 from pydeconz import DeconzSession, errors, group, light, sensor
 from pydeconz.alarm_system import AlarmSystem as DeconzAlarmSystem
 from pydeconz.group import Group as DeconzGroup
-from pydeconz.light import DeconzLight
-from pydeconz.sensor import DeconzSensor
+from pydeconz.light import LightBase as DeconzLight
+from pydeconz.sensor import SensorBase as DeconzSensor
 
 from homeassistant.config_entries import SOURCE_HASSIO, ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT

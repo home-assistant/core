@@ -97,7 +97,7 @@ def test_validate_or_move_away_sqlite_database(hass, tmpdir, caplog):
 
 async def test_last_run_was_recently_clean(hass):
     """Test we can check if the last recorder run was recently clean."""
-    await async_init_recorder_component(hass)
+    await async_init_recorder_component(hass, {recorder.CONF_COMMIT_INTERVAL: 1})
     await hass.async_block_till_done()
 
     cursor = hass.data[DATA_INSTANCE].engine.raw_connection().cursor()
@@ -550,11 +550,11 @@ def test_end_incomplete_runs(hass_recorder, caplog):
     assert "Ended unfinished session" in caplog.text
 
 
-def test_perodic_db_cleanups(hass_recorder):
-    """Test perodic db cleanups."""
+def test_periodic_db_cleanups(hass_recorder):
+    """Test periodic db cleanups."""
     hass = hass_recorder()
     with patch.object(hass.data[DATA_INSTANCE].engine, "connect") as connect_mock:
-        util.perodic_db_cleanups(hass.data[DATA_INSTANCE])
+        util.periodic_db_cleanups(hass.data[DATA_INSTANCE])
 
     text_obj = connect_mock.return_value.__enter__.return_value.execute.mock_calls[0][
         1
@@ -568,7 +568,9 @@ async def test_write_lock_db(hass, tmp_path):
     from sqlalchemy.exc import OperationalError
 
     # Use file DB, in memory DB cannot do write locks.
-    config = {recorder.CONF_DB_URL: "sqlite:///" + str(tmp_path / "pytest.db")}
+    config = {
+        recorder.CONF_DB_URL: "sqlite:///" + str(tmp_path / "pytest.db?timeout=0.1")
+    }
     await async_init_recorder_component(hass, config)
     await hass.async_block_till_done()
 

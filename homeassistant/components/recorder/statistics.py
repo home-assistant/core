@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING, Any, Literal
 from sqlalchemy import bindparam, func
 from sqlalchemy.exc import SQLAlchemyError, StatementError
 from sqlalchemy.ext import baked
-from sqlalchemy.orm.scoping import scoped_session
+from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.expression import literal_column, true
 import voluptuous as vol
 
@@ -121,8 +121,6 @@ QUERY_STATISTIC_META_ID = [
 ]
 
 STATISTICS_BAKERY = "recorder_statistics_bakery"
-STATISTICS_META_BAKERY = "recorder_statistics_meta_bakery"
-STATISTICS_SHORT_TERM_BAKERY = "recorder_statistics_short_term_bakery"
 
 
 # Convert pressure and temperature statistics from the native unit used for statistics
@@ -187,8 +185,6 @@ class ValidationIssue:
 def async_setup(hass: HomeAssistant) -> None:
     """Set up the history hooks."""
     hass.data[STATISTICS_BAKERY] = baked.bakery()
-    hass.data[STATISTICS_META_BAKERY] = baked.bakery()
-    hass.data[STATISTICS_SHORT_TERM_BAKERY] = baked.bakery()
 
     def _entity_id_changed(event: Event) -> None:
         """Handle entity_id changed."""
@@ -230,7 +226,7 @@ def get_start_time() -> datetime:
 
 def _update_or_add_metadata(
     hass: HomeAssistant,
-    session: scoped_session,
+    session: Session,
     new_metadata: StatisticMetaData,
 ) -> int:
     """Get metadata_id for a statistic_id.
@@ -280,7 +276,7 @@ def _update_or_add_metadata(
 
 
 def _find_duplicates(
-    session: scoped_session, table: type[Statistics | StatisticsShortTerm]
+    session: Session, table: type[Statistics | StatisticsShortTerm]
 ) -> tuple[list[int], list[dict]]:
     """Find duplicated statistics."""
     subquery = (
@@ -345,7 +341,7 @@ def _find_duplicates(
 
 
 def _delete_duplicates_from_table(
-    session: scoped_session, table: type[Statistics | StatisticsShortTerm]
+    session: Session, table: type[Statistics | StatisticsShortTerm]
 ) -> tuple[int, list[dict]]:
     """Identify and delete duplicated statistics from a specified table."""
     all_non_identical_duplicates: list[dict] = []
@@ -365,7 +361,7 @@ def _delete_duplicates_from_table(
     return (total_deleted_rows, all_non_identical_duplicates)
 
 
-def delete_duplicates(instance: Recorder, session: scoped_session) -> None:
+def delete_duplicates(instance: Recorder, session: Session) -> None:
     """Identify and delete duplicated statistics.
 
     A backup will be made of duplicated statistics before it is deleted.
@@ -409,7 +405,7 @@ def delete_duplicates(instance: Recorder, session: scoped_session) -> None:
 
 
 def compile_hourly_statistics(
-    instance: Recorder, session: scoped_session, start: datetime
+    instance: Recorder, session: Session, start: datetime
 ) -> None:
     """Compile hourly statistics.
 
@@ -422,7 +418,7 @@ def compile_hourly_statistics(
 
     # Compute last hour's average, min, max
     summary: dict[str, StatisticData] = {}
-    baked_query = instance.hass.data[STATISTICS_SHORT_TERM_BAKERY](
+    baked_query = instance.hass.data[STATISTICS_BAKERY](
         lambda session: session.query(*QUERY_STATISTICS_SUMMARY_MEAN)
     )
 
@@ -481,7 +477,7 @@ def compile_hourly_statistics(
                         "sum": _sum,
                     }
     else:
-        baked_query = instance.hass.data[STATISTICS_SHORT_TERM_BAKERY](
+        baked_query = instance.hass.data[STATISTICS_BAKERY](
             lambda session: session.query(*QUERY_STATISTICS_SUMMARY_SUM_LEGACY)
         )
 
@@ -580,7 +576,7 @@ def compile_statistics(instance: Recorder, start: datetime) -> bool:
 
 
 def _adjust_sum_statistics(
-    session: scoped_session,
+    session: Session,
     table: type[Statistics | StatisticsShortTerm],
     metadata_id: int,
     start_time: datetime,
@@ -604,7 +600,7 @@ def _adjust_sum_statistics(
 
 
 def _insert_statistics(
-    session: scoped_session,
+    session: Session,
     table: type[Statistics | StatisticsShortTerm],
     metadata_id: int,
     statistic: StatisticData,
@@ -621,7 +617,7 @@ def _insert_statistics(
 
 
 def _update_statistics(
-    session: scoped_session,
+    session: Session,
     table: type[Statistics | StatisticsShortTerm],
     stat_id: int,
     statistic: StatisticData,
@@ -649,7 +645,7 @@ def _update_statistics(
 
 def get_metadata_with_session(
     hass: HomeAssistant,
-    session: scoped_session,
+    session: Session,
     *,
     statistic_ids: list[str] | tuple[str] | None = None,
     statistic_type: Literal["mean"] | Literal["sum"] | None = None,
@@ -664,7 +660,7 @@ def get_metadata_with_session(
     """
 
     # Fetch metatadata from the database
-    baked_query = hass.data[STATISTICS_META_BAKERY](
+    baked_query = hass.data[STATISTICS_BAKERY](
         lambda session: session.query(*QUERY_STATISTIC_META)
     )
     if statistic_ids is not None:
@@ -824,16 +820,13 @@ def _statistics_during_period_query(
     hass: HomeAssistant,
     end_time: datetime | None,
     statistic_ids: list[str] | None,
-    bakery: Any,
-    base_query: Iterable,
+    baked_query: baked.BakedQuery,
     table: type[Statistics | StatisticsShortTerm],
 ) -> Callable:
     """Prepare a database query for statistics during a given period.
 
     This prepares a baked query, so we don't insert the parameters yet.
     """
-    baked_query = hass.data[bakery](lambda session: session.query(*base_query))
-
     baked_query += lambda q: q.filter(table.start >= bindparam("start_time"))
 
     if end_time is not None:
@@ -970,17 +963,18 @@ def statistics_during_period(
         if statistic_ids is not None:
             metadata_ids = [metadata_id for metadata_id, _ in metadata.values()]
 
+        bakery = hass.data[STATISTICS_BAKERY]
         if period == "5minute":
-            bakery = STATISTICS_SHORT_TERM_BAKERY
-            base_query = QUERY_STATISTICS_SHORT_TERM
+            baked_query = bakery(
+                lambda session: session.query(*QUERY_STATISTICS_SHORT_TERM)
+            )
             table = StatisticsShortTerm
         else:
-            bakery = STATISTICS_BAKERY
-            base_query = QUERY_STATISTICS
+            baked_query = bakery(lambda session: session.query(*QUERY_STATISTICS))
             table = Statistics
 
         baked_query = _statistics_during_period_query(
-            hass, end_time, statistic_ids, bakery, base_query, table
+            hass, end_time, statistic_ids, baked_query, table
         )
 
         stats = execute(
@@ -1029,14 +1023,13 @@ def _get_last_statistics(
         if not metadata:
             return {}
 
+        bakery = hass.data[STATISTICS_BAKERY]
         if table == StatisticsShortTerm:
-            bakery = STATISTICS_SHORT_TERM_BAKERY
-            base_query = QUERY_STATISTICS_SHORT_TERM
+            baked_query = bakery(
+                lambda session: session.query(*QUERY_STATISTICS_SHORT_TERM)
+            )
         else:
-            bakery = STATISTICS_BAKERY
-            base_query = QUERY_STATISTICS
-
-        baked_query = hass.data[bakery](lambda session: session.query(*base_query))
+            baked_query = bakery(lambda session: session.query(*QUERY_STATISTICS))
 
         baked_query += lambda q: q.filter_by(metadata_id=bindparam("metadata_id"))
         metadata_id = metadata[statistic_id][0]
@@ -1085,7 +1078,7 @@ def get_last_short_term_statistics(
 
 
 def _statistics_at_time(
-    session: scoped_session,
+    session: Session,
     metadata_ids: set[int],
     table: type[Statistics | StatisticsShortTerm],
     start_time: datetime,
@@ -1118,7 +1111,7 @@ def _statistics_at_time(
 
 def _sorted_statistics_to_dict(
     hass: HomeAssistant,
-    session: scoped_session,
+    session: Session,
     stats: list,
     statistic_ids: list[str] | None,
     _metadata: dict[str, tuple[int, StatisticMetaData]],
@@ -1201,7 +1194,7 @@ def validate_statistics(hass: HomeAssistant) -> dict[str, list[ValidationIssue]]
 
 
 def _statistics_exists(
-    session: scoped_session,
+    session: Session,
     table: type[Statistics | StatisticsShortTerm],
     metadata_id: int,
     start: datetime,

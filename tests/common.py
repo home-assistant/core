@@ -905,26 +905,43 @@ def assert_setup_component(count, domain=None):
 def init_recorder_component(hass, add_config=None):
     """Initialize the recorder."""
     config = dict(add_config) if add_config else {}
-    config[recorder.CONF_DB_URL] = "sqlite://"  # In memory DB
+    if recorder.CONF_DB_URL not in config:
+        config[recorder.CONF_DB_URL] = "sqlite://"  # In memory DB
+        if recorder.CONF_COMMIT_INTERVAL not in config:
+            config[recorder.CONF_COMMIT_INTERVAL] = 0
 
-    with patch("homeassistant.components.recorder.migration.migrate_schema"):
+    with patch(
+        "homeassistant.components.recorder.ALLOW_IN_MEMORY_DB",
+        True,
+    ), patch("homeassistant.components.recorder.migration.migrate_schema"):
         assert setup_component(hass, recorder.DOMAIN, {recorder.DOMAIN: config})
         assert recorder.DOMAIN in hass.config.components
-    _LOGGER.info("In-memory recorder successfully started")
+    _LOGGER.info(
+        "Test recorder successfully started, database location: %s",
+        config[recorder.CONF_DB_URL],
+    )
 
 
 async def async_init_recorder_component(hass, add_config=None):
     """Initialize the recorder asynchronously."""
-    config = add_config or {}
+    config = dict(add_config) if add_config else {}
     if recorder.CONF_DB_URL not in config:
-        config[recorder.CONF_DB_URL] = "sqlite://"
+        config[recorder.CONF_DB_URL] = "sqlite://"  # In memory DB
+        if recorder.CONF_COMMIT_INTERVAL not in config:
+            config[recorder.CONF_COMMIT_INTERVAL] = 0
 
-    with patch("homeassistant.components.recorder.migration.migrate_schema"):
+    with patch(
+        "homeassistant.components.recorder.ALLOW_IN_MEMORY_DB",
+        True,
+    ), patch("homeassistant.components.recorder.migration.migrate_schema"):
         assert await async_setup_component(
             hass, recorder.DOMAIN, {recorder.DOMAIN: config}
         )
         assert recorder.DOMAIN in hass.config.components
-    _LOGGER.info("In-memory recorder successfully started")
+    _LOGGER.info(
+        "Test recorder successfully started, database location: %s",
+        config[recorder.CONF_DB_URL],
+    )
 
 
 def mock_restore_cache(hass, states):
