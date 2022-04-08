@@ -2,6 +2,7 @@
 import contextlib
 from datetime import timedelta
 import logging
+from typing import Any
 
 import sqlalchemy
 from sqlalchemy import ForeignKeyConstraint, MetaData, Table, func, text
@@ -43,8 +44,9 @@ def raise_if_exception_missing_str(ex, match_substrs):
     raise ex
 
 
-def get_schema_version(instance):
+def get_schema_version(instance: Any) -> int:
     """Get the schema version."""
+    assert instance.get_session is not None
     with session_scope(session=instance.get_session()) as session:
         res = (
             session.query(SchemaChanges)
@@ -62,13 +64,14 @@ def get_schema_version(instance):
         return current_version
 
 
-def schema_is_current(current_version):
+def schema_is_current(current_version: int) -> bool:
     """Check if the schema is current."""
     return current_version == SCHEMA_VERSION
 
 
-def migrate_schema(instance, current_version):
+def migrate_schema(instance: Any, current_version: int) -> None:
     """Check if the schema needs to be upgraded."""
+    assert instance.get_session is not None
     _LOGGER.warning("Database is about to upgrade. Schema version: %s", current_version)
     for version in range(current_version, SCHEMA_VERSION):
         new_version = version + 1

@@ -109,8 +109,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     device_registry = await hass.helpers.device_registry.async_get_registry()
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(CONNECTION_ZIGBEE, str(zha_gateway.application_controller.ieee))},  # type: ignore[attr-defined]
-        identifiers={(DOMAIN, str(zha_gateway.application_controller.ieee))},  # type: ignore[attr-defined]
+        connections={(CONNECTION_ZIGBEE, str(zha_gateway.application_controller.ieee))},
+        identifiers={(DOMAIN, str(zha_gateway.application_controller.ieee))},
         name="Zigbee Coordinator",
         manufacturer="ZHA",
         model=zha_gateway.radio_description,
@@ -120,8 +120,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     async def async_zha_shutdown(event):
         """Handle shutdown tasks."""
-        await zha_data[DATA_ZHA_GATEWAY].shutdown()
-        await zha_data[DATA_ZHA_GATEWAY].async_update_device_storage()
+        zha_gateway: ZHAGateway = zha_data[DATA_ZHA_GATEWAY]
+        await zha_gateway.shutdown()
+        await zha_gateway.async_update_device_storage()
 
     zha_data[DATA_ZHA_SHUTDOWN_TASK] = hass.bus.async_listen_once(
         ha_const.EVENT_HOMEASSISTANT_STOP, async_zha_shutdown
@@ -132,8 +133,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload ZHA config entry."""
-    await hass.data[DATA_ZHA][DATA_ZHA_GATEWAY].shutdown()
-    await hass.data[DATA_ZHA][DATA_ZHA_GATEWAY].async_update_device_storage()
+    zha_gateway: ZHAGateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    await zha_gateway.shutdown()
+    await zha_gateway.async_update_device_storage()
 
     GROUP_PROBE.cleanup()
     api.async_unload_api(hass)
@@ -153,7 +155,8 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 
 async def async_load_entities(hass: HomeAssistant) -> None:
     """Load entities after integration was setup."""
-    await hass.data[DATA_ZHA][DATA_ZHA_GATEWAY].async_initialize_devices_and_entities()
+    zha_gateway: ZHAGateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    await zha_gateway.async_initialize_devices_and_entities()
     to_setup = hass.data[DATA_ZHA][DATA_ZHA_PLATFORM_LOADED]
     results = await asyncio.gather(*to_setup, return_exceptions=True)
     for res in results:

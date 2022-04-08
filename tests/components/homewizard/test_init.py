@@ -108,7 +108,7 @@ async def test_init_accepts_and_migrates_old_entry(aioclient_mock, hass):
         config_entry=original_entry,
         original_name="Switch Disabled",
         suggested_object_id="socket_disabled",
-        disabled_by=er.DISABLED_USER,
+        disabled_by=er.RegistryEntryDisabler.USER,
     )
     # Update some user-customs
     ent_reg.async_update_entity(old_entity_active_power.entity_id, name="new_name")
@@ -158,7 +158,7 @@ async def test_init_accepts_and_migrates_old_entry(aioclient_mock, hass):
     assert new_entity_disabled_sensor.name is None
     assert new_entity_disabled_sensor.original_name == "Switch Disabled"
     assert new_entity_disabled_sensor.unique_id == "socket_disabled_unique_id"
-    assert new_entity_disabled_sensor.disabled_by == er.DISABLED_USER
+    assert new_entity_disabled_sensor.disabled_by == er.RegistryEntryDisabler.USER
 
 
 async def test_load_detect_api_disabled(aioclient_mock, hass):

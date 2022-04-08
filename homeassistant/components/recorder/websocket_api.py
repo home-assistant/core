@@ -82,7 +82,8 @@ async def ws_get_statistics_metadata(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """Get metadata for a list of statistic_ids."""
-    statistic_ids = await hass.async_add_executor_job(
+    instance: Recorder = hass.data[DATA_INSTANCE]
+    statistic_ids = await instance.async_add_executor_job(
         list_statistic_ids, hass, msg.get("statistic_ids")
     )
     connection.send_result(msg["id"], statistic_ids)

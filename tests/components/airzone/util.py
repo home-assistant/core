@@ -48,7 +48,7 @@ HVAC_MOCK = {
                     API_ON: 0,
                     API_MAX_TEMP: 30,
                     API_MIN_TEMP: 15,
-                    API_SET_POINT: 19.5,
+                    API_SET_POINT: 19.1,
                     API_ROOM_TEMP: 19.6,
                     API_MODES: [1, 4, 2, 3, 5],
                     API_MODE: 3,
@@ -66,10 +66,10 @@ HVAC_MOCK = {
                     API_SYSTEM_ID: 1,
                     API_ZONE_ID: 2,
                     API_NAME: "Dorm Ppal",
-                    API_ON: 0,
+                    API_ON: 1,
                     API_MAX_TEMP: 30,
                     API_MIN_TEMP: 15,
-                    API_SET_POINT: 19.5,
+                    API_SET_POINT: 19.2,
                     API_ROOM_TEMP: 21.1,
                     API_MODE: 3,
                     API_COLD_STAGES: 1,
@@ -79,17 +79,17 @@ HVAC_MOCK = {
                     API_HUMIDITY: 39,
                     API_UNITS: 0,
                     API_ERRORS: [],
-                    API_AIR_DEMAND: 0,
+                    API_AIR_DEMAND: 1,
                     API_FLOOR_DEMAND: 0,
                 },
                 {
                     API_SYSTEM_ID: 1,
                     API_ZONE_ID: 3,
                     API_NAME: "Dorm #1",
-                    API_ON: 0,
+                    API_ON: 1,
                     API_MAX_TEMP: 30,
                     API_MIN_TEMP: 15,
-                    API_SET_POINT: 19.5,
+                    API_SET_POINT: 19.3,
                     API_ROOM_TEMP: 20.8,
                     API_MODE: 3,
                     API_COLD_STAGES: 1,
@@ -109,7 +109,7 @@ HVAC_MOCK = {
                     API_ON: 0,
                     API_MAX_TEMP: 86,
                     API_MIN_TEMP: 59,
-                    API_SET_POINT: 67.1,
+                    API_SET_POINT: 66.92,
                     API_ROOM_TEMP: 70.16,
                     API_MODE: 3,
                     API_COLD_STAGES: 1,
@@ -150,14 +150,14 @@ HVAC_MOCK = {
 
 async def async_init_integration(
     hass: HomeAssistant,
-):
+) -> None:
     """Set up the Airzone integration in Home Assistant."""
 
     entry = MockConfigEntry(domain=DOMAIN, data=CONFIG)
     entry.add_to_hass(hass)
 
     with patch(
-        "aioairzone.localapi_device.AirzoneLocalApi.get_hvac",
+        "homeassistant.components.airzone.AirzoneLocalApi.get_hvac",
         return_value=HVAC_MOCK,
     ):
         await hass.config_entries.async_setup(entry.entry_id)

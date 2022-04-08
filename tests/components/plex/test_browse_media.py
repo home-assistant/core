@@ -204,6 +204,8 @@ async def test_browse_media(
     assert msg["success"]
     result = msg["result"]
     assert result[ATTR_MEDIA_CONTENT_TYPE] == "hub"
+    assert result["title"] == "Continue Watching"
+    assert result["children"][0]["media_content_id"].endswith("?resume=1")
 
     requests_mock.get(
         f"{mock_plex_server.url_in_use}/hubs/sections/3?includeStations=1",

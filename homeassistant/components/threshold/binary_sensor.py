@@ -151,8 +151,10 @@ class ThresholdSensor(BinarySensorEntity):
             _update_sensor_state()
             self.async_write_ha_state()
 
-        async_track_state_change_event(
-            hass, [entity_id], async_threshold_sensor_state_listener
+        self.async_on_remove(
+            async_track_state_change_event(
+                hass, [entity_id], async_threshold_sensor_state_listener
+            )
         )
         _update_sensor_state()
 

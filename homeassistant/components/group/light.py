@@ -30,11 +30,9 @@ from homeassistant.components.light import (
     COLOR_MODE_BRIGHTNESS,
     COLOR_MODE_ONOFF,
     PLATFORM_SCHEMA,
-    SUPPORT_EFFECT,
-    SUPPORT_FLASH,
-    SUPPORT_TRANSITION,
     SUPPORT_WHITE_VALUE,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -74,7 +72,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 SUPPORT_GROUP_LIGHT = (
-    SUPPORT_EFFECT | SUPPORT_FLASH | SUPPORT_TRANSITION | SUPPORT_WHITE_VALUE
+    LightEntityFeature.EFFECT
+    | LightEntityFeature.FLASH
+    | LightEntityFeature.TRANSITION
+    | SUPPORT_WHITE_VALUE
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -109,7 +110,7 @@ async def async_setup_entry(
     entities = er.async_validate_entity_ids(
         registry, config_entry.options[CONF_ENTITIES]
     )
-    mode = config_entry.options[CONF_ALL]
+    mode = config_entry.options.get(CONF_ALL, False)
 
     async_add_entities(
         [LightGroup(config_entry.entry_id, config_entry.title, entities, mode)]

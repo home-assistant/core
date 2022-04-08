@@ -22,8 +22,7 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "not_intellifire_device":"Not an IntelliFire Device."
+      "not_intellifire_device": "Not an IntelliFire Device."
     }
   }
 }
-

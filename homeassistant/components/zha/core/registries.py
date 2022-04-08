@@ -4,6 +4,7 @@ from __future__ import annotations
 import collections
 from collections.abc import Callable
 import dataclasses
+from typing import TYPE_CHECKING
 
 import attr
 from zigpy import zcl
@@ -15,8 +16,11 @@ from homeassistant.const import Platform
 
 # importing channels updates registries
 from . import channels as zha_channels  # noqa: F401 pylint: disable=unused-import
-from .decorators import CALLABLE_T, DictRegistry, SetRegistry
-from .typing import ChannelType
+from .decorators import DictRegistry, SetRegistry
+from .typing import CALLABLE_T, ChannelType
+
+if TYPE_CHECKING:
+    from .channels.base import ClientChannel, ZigbeeChannel
 
 GROUP_ENTITY_DOMAINS = [Platform.LIGHT, Platform.SWITCH, Platform.FAN]
 
@@ -98,8 +102,8 @@ DEVICE_CLASS = {
 }
 DEVICE_CLASS = collections.defaultdict(dict, DEVICE_CLASS)
 
-CLIENT_CHANNELS_REGISTRY = DictRegistry()
-ZIGBEE_CHANNEL_REGISTRY = DictRegistry()
+CLIENT_CHANNELS_REGISTRY: DictRegistry[type[ClientChannel]] = DictRegistry()
+ZIGBEE_CHANNEL_REGISTRY: DictRegistry[type[ZigbeeChannel]] = DictRegistry()
 
 
 def set_or_callable(value):

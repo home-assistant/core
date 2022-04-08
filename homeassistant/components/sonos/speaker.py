@@ -63,6 +63,7 @@ from .media import SonosMedia
 from .statistics import ActivityStatistics, EventStatistics
 
 NEVER_TIME = -1200.0
+RESUB_COOLDOWN_SECONDS = 10.0
 EVENT_CHARGING = {
     "CHARGING": True,
     "NOT_CHARGING": False,
@@ -126,6 +127,7 @@ class SonosSpeaker:
         self._last_event_cache: dict[str, Any] = {}
         self.activity_stats: ActivityStatistics = ActivityStatistics(self.zone_name)
         self.event_stats: EventStatistics = EventStatistics(self.zone_name)
+        self._resub_cooldown_expires_at: float | None = None
 
         # Scheduled callback handles
         self._poll_timer: Callable | None = None
@@ -503,6 +505,16 @@ class SonosSpeaker:
     @callback
     def speaker_activity(self, source):
         """Track the last activity on this speaker, set availability and resubscribe."""
+        if self._resub_cooldown_expires_at:
+            if time.monotonic() < self._resub_cooldown_expires_at:
+                _LOGGER.debug(
+                    "Activity on %s from %s while in cooldown, ignoring",
+                    self.zone_name,
+                    source,
+                )
+                return
+            self._resub_cooldown_expires_at = None
+
         _LOGGER.debug("Activity on %s from %s", self.zone_name, source)
         self._last_activity = time.monotonic()
         self.activity_stats.activity(source, self._last_activity)
@@ -542,6 +554,10 @@ class SonosSpeaker:
         """Handle removal of speaker when unavailable."""
         if not self.available:
             return
+
+        if self._resub_cooldown_expires_at is None and not self.hass.is_stopping:
+            self._resub_cooldown_expires_at = time.monotonic() + RESUB_COOLDOWN_SECONDS
+            _LOGGER.debug("Starting resubscription cooldown for %s", self.zone_name)
 
         self.available = False
         self.async_write_entity_states()

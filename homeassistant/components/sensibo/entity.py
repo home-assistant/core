@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Any
 
 import async_timeout
+from pysensibo.model import MotionSensor, SensiboDevice
 
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
@@ -11,7 +12,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, LOGGER, SENSIBO_ERRORS, TIMEOUT
-from .coordinator import MotionSensor, SensiboDataUpdateCoordinator
+from .coordinator import SensiboDataUpdateCoordinator
 
 
 class SensiboBaseEntity(CoordinatorEntity[SensiboDataUpdateCoordinator]):
@@ -28,7 +29,7 @@ class SensiboBaseEntity(CoordinatorEntity[SensiboDataUpdateCoordinator]):
         self._client = coordinator.client
 
     @property
-    def device_data(self) -> dict[str, Any]:
+    def device_data(self) -> SensiboDevice:
         """Return data for device."""
         return self.coordinator.data.parsed[self._device_id]
 
@@ -44,15 +45,15 @@ class SensiboDeviceBaseEntity(SensiboBaseEntity):
         """Initiate Sensibo Number."""
         super().__init__(coordinator, device_id)
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.device_data["id"])},
-            name=self.device_data["name"],
-            connections={(CONNECTION_NETWORK_MAC, self.device_data["mac"])},
+            identifiers={(DOMAIN, self.device_data.id)},
+            name=self.device_data.name,
+            connections={(CONNECTION_NETWORK_MAC, self.device_data.mac)},
             manufacturer="Sensibo",
             configuration_url="https://home.sensibo.com/",
-            model=self.device_data["model"],
-            sw_version=self.device_data["fw_ver"],
-            hw_version=self.device_data["fw_type"],
-            suggested_area=self.device_data["name"],
+            model=self.device_data.model,
+            sw_version=self.device_data.fw_ver,
+            hw_version=self.device_data.fw_type,
+            suggested_area=self.device_data.name,
         )
 
     async def async_send_command(
@@ -108,7 +109,7 @@ class SensiboMotionBaseEntity(SensiboBaseEntity):
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, sensor_id)},
-            name=f"{self.device_data['name']} Motion Sensor {name}",
+            name=f"{self.device_data.name} Motion Sensor {name}",
             via_device=(DOMAIN, device_id),
             manufacturer="Sensibo",
             configuration_url="https://home.sensibo.com/",
@@ -120,4 +121,4 @@ class SensiboMotionBaseEntity(SensiboBaseEntity):
     @property
     def sensor_data(self) -> MotionSensor:
         """Return data for device."""
-        return self.device_data["motion_sensors"][self._sensor_id]
+        return self.device_data.motion_sensors[self._sensor_id]

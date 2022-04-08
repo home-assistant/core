@@ -2,8 +2,6 @@
   "config": {
     "step": {
       "user": {
-        "title": "PECO Outage Counter",
-        "description": "Please choose your county below.",
         "data": {
           "county": "County"
         }
