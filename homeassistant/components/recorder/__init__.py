@@ -881,15 +881,6 @@ class Recorder(threading.Thread):
     @callback
     def _async_recorder_ready(self) -> None:
         """Finish start and mark recorder ready."""
-        assert self.engine is not None
-        if self.engine.dialect.name != "sqlite":
-            self._keep_alive_listener = async_track_time_interval(
-                self.hass, self._async_keep_alive, timedelta(seconds=KEEPALIVE_TIME)
-            )
-        if self.commit_interval:
-            self._commit_listener = async_track_time_interval(
-                self.hass, self._async_commit, timedelta(seconds=self.commit_interval)
-            )
         self._async_setup_periodic_tasks()
         self.async_recorder_ready.set()
 
@@ -942,6 +933,21 @@ class Recorder(threading.Thread):
         if self.hass.is_stopping or not self.get_session:
             # Home Assistant is shutting down
             return
+
+        assert self.engine is not None
+
+        # If the db is using a socket connection, we need to keep alive
+        # to prevent errors from unexpected disconnects
+        if self.engine.dialect.name != "sqlite":
+            self._keep_alive_listener = async_track_time_interval(
+                self.hass, self._async_keep_alive, timedelta(seconds=KEEPALIVE_TIME)
+            )
+
+        # If the commit interval is not 0, we need commit perodicly
+        if self.commit_interval:
+            self._commit_listener = async_track_time_interval(
+                self.hass, self._async_commit, timedelta(seconds=self.commit_interval)
+            )
 
         # Run nightly tasks at 4:12am
         self._nightly_listener = async_track_time_change(
