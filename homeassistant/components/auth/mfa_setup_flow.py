@@ -50,12 +50,12 @@ async def async_setup(hass):
     """Init mfa setup flow manager."""
     hass.data[DATA_SETUP_FLOW_MGR] = MfaFlowManager(hass)
 
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_SETUP_MFA, websocket_setup_mfa, SCHEMA_WS_SETUP_MFA
+    websocket_api.async_register_command(
+        hass, WS_TYPE_SETUP_MFA, websocket_setup_mfa, SCHEMA_WS_SETUP_MFA
     )
 
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_DEPOSE_MFA, websocket_depose_mfa, SCHEMA_WS_DEPOSE_MFA
+    websocket_api.async_register_command(
+        hass, WS_TYPE_DEPOSE_MFA, websocket_depose_mfa, SCHEMA_WS_DEPOSE_MFA
     )
 
 

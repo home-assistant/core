@@ -21,7 +21,8 @@
                     "path": "\u30a2\u30d7\u30ea\u30b1\u30fc\u30b7\u30e7\u30f3\u306e\u30d1\u30b9",
                     "port": "\u30dd\u30fc\u30c8\u756a\u53f7",
                     "ssl": "SSL\u3092\u4f7f\u7528",
-                    "username": "\u30e6\u30fc\u30b6\u30fc\u540d"
+                    "username": "\u30e6\u30fc\u30b6\u30fc\u540d",
+                    "verify_ssl": "SSL\u8a3c\u660e\u66f8\u3092\u78ba\u8a8d\u3059\u308b"
                 }
             }
         }

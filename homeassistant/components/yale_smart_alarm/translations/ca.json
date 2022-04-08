@@ -5,6 +5,7 @@
             "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament"
         },
         "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
             "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida"
         },
         "step": {
@@ -22,6 +23,19 @@
                     "name": "Nom",
                     "password": "Contrasenya",
                     "username": "Nom d'usuari"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "code_format_mismatch": "El codi no cont\u00e9 el nombre de d\u00edgits adequat"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "code": "Codi predeterminat per als panys, en cas que no se'n configuri cap",
+                    "lock_code_digits": "Nombre de d\u00edgits del codi PIN dels panys"
                 }
             }
         }

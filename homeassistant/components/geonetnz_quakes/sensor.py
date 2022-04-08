@@ -4,8 +4,10 @@ from __future__ import annotations
 import logging
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt
 
 from .const import DOMAIN, FEED
@@ -27,7 +29,9 @@ DEFAULT_UNIT_OF_MEASUREMENT = "quakes"
 PARALLEL_UPDATES = 0
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up the GeoNet NZ Quakes Feed platform."""
     manager = hass.data[DOMAIN][FEED][entry.entry_id]
     sensor = GeonetnzQuakesSensor(entry.entry_id, entry.unique_id, entry.title, manager)

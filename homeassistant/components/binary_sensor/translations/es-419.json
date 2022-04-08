@@ -2,6 +2,7 @@
     "device_automation": {
         "condition_type": {
             "is_bat_low": "{entity_name} la bater\u00eda est\u00e1 baja",
+            "is_co": "{entity_name} est\u00e1 detectando mon\u00f3xido de carbono",
             "is_cold": "{entity_name} est\u00e1 fr\u00edo",
             "is_connected": "{entity_name} est\u00e1 conectado",
             "is_gas": "{entity_name} est\u00e1 detectando gas",
@@ -11,12 +12,14 @@
             "is_moist": "{entity_name} est\u00e1 h\u00famedo",
             "is_motion": "{entity_name} est\u00e1 detectando movimiento",
             "is_moving": "{entity_name} se est\u00e1 moviendo",
+            "is_no_co": "{entity_name} no detecta mon\u00f3xido de carbono",
             "is_no_gas": "{entity_name} no detecta gas",
             "is_no_light": "{entity_name} no detecta luz",
             "is_no_motion": "{entity_name} no detecta movimiento",
             "is_no_problem": "{entity_name} no detecta el problema",
             "is_no_smoke": "{entity_name} no detecta humo",
             "is_no_sound": "{entity_name} no detecta sonido",
+            "is_no_update": "{entity_name} est\u00e1 actualizado",
             "is_no_vibration": "{entity_name} no detecta vibraciones",
             "is_not_bat_low": "{entity_name} bater\u00eda est\u00e1 normal",
             "is_not_cold": "{entity_name} no est\u00e1 fr\u00edo",
@@ -30,6 +33,8 @@
             "is_not_plugged_in": "{entity_name} est\u00e1 desconectado",
             "is_not_powered": "{entity_name} no tiene encendido",
             "is_not_present": "{entity_name} no est\u00e1 presente",
+            "is_not_running": "{entity_name} no se est\u00e1 ejecutando",
+            "is_not_tampered": "{entity_name} no detecta la manipulaci\u00f3n",
             "is_not_unsafe": "{entity_name} es seguro",
             "is_occupied": "{entity_name} est\u00e1 ocupado",
             "is_off": "{entity_name} est\u00e1 apagado",
@@ -39,6 +44,7 @@
             "is_powered": "{entity_name} est\u00e1 encendido",
             "is_present": "{entity_name} est\u00e1 presente",
             "is_problem": "{entity_name} est\u00e1 detectando un problema",
+            "is_running": "{entity_name} se est\u00e1 ejecutando",
             "is_smoke": "{entity_name} est\u00e1 detectando humo",
             "is_sound": "{entity_name} est\u00e1 detectando sonido",
             "is_unsafe": "{entity_name} es inseguro",
@@ -89,6 +95,19 @@
             "vibration": "{entity_name} comenz\u00f3 a detectar vibraciones"
         }
     },
+    "device_class": {
+        "cold": "fr\u00edo",
+        "gas": "gas",
+        "heat": "calor",
+        "moisture": "humedad",
+        "motion": "movimiento",
+        "occupancy": "ocupaci\u00f3n",
+        "power": "energ\u00eda",
+        "problem": "problema",
+        "smoke": "humo",
+        "sound": "sonido",
+        "vibration": "vibraci\u00f3n"
+    },
     "state": {
         "_": {
             "off": "Desactivado",
@@ -101,6 +120,10 @@
         "battery_charging": {
             "off": "No esta cargando",
             "on": "Cargando"
+        },
+        "co": {
+            "off": "Despejado",
+            "on": "Detectado"
         },
         "cold": {
             "off": "Normal",
@@ -166,6 +189,10 @@
             "off": "OK",
             "on": "Problema"
         },
+        "running": {
+            "off": "No se est\u00e1 ejecutando",
+            "on": "Corriendo"
+        },
         "safety": {
             "off": "Seguro",
             "on": "Inseguro"
@@ -177,6 +204,10 @@
         "sound": {
             "off": "Despejado",
             "on": "Detectado"
+        },
+        "update": {
+            "off": "Actualizado",
+            "on": "Actualizaci\u00f3n disponible"
         },
         "vibration": {
             "off": "Despejado",

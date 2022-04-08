@@ -14,7 +14,7 @@
                     "device_key": "Chiave del dispositivo",
                     "host": "Host",
                     "port": "Porta",
-                    "verify_ssl": "Verificare il certificato SSL"
+                    "verify_ssl": "Verifica il certificato SSL"
                 }
             }
         }

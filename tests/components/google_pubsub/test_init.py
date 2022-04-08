@@ -42,10 +42,9 @@ async def test_nested():
 @pytest.fixture(autouse=True, name="mock_client")
 def mock_client_fixture():
     """Mock the pubsub client."""
-    with mock.patch(f"{GOOGLE_PUBSUB_PATH}.pubsub_v1") as client:
-        client.PublisherClient = mock.MagicMock()
+    with mock.patch(f"{GOOGLE_PUBSUB_PATH}.PublisherClient") as client:
         setattr(
-            client.PublisherClient,
+            client,
             "from_service_account_json",
             mock.MagicMock(return_value=mock.MagicMock()),
         )
@@ -83,10 +82,10 @@ async def test_minimal_config(hass, mock_client):
     await hass.async_block_till_done()
     assert hass.bus.listen.called
     assert hass.bus.listen.call_args_list[0][0][0] == EVENT_STATE_CHANGED
-    assert mock_client.PublisherClient.from_service_account_json.call_count == 1
-    assert mock_client.PublisherClient.from_service_account_json.call_args[0][
-        0
-    ] == os.path.join(hass.config.config_dir, "creds")
+    assert mock_client.from_service_account_json.call_count == 1
+    assert mock_client.from_service_account_json.call_args[0][0] == os.path.join(
+        hass.config.config_dir, "creds"
+    )
 
 
 async def test_full_config(hass, mock_client):
@@ -110,10 +109,10 @@ async def test_full_config(hass, mock_client):
     await hass.async_block_till_done()
     assert hass.bus.listen.called
     assert hass.bus.listen.call_args_list[0][0][0] == EVENT_STATE_CHANGED
-    assert mock_client.PublisherClient.from_service_account_json.call_count == 1
-    assert mock_client.PublisherClient.from_service_account_json.call_args[0][
-        0
-    ] == os.path.join(hass.config.config_dir, "creds")
+    assert mock_client.from_service_account_json.call_count == 1
+    assert mock_client.from_service_account_json.call_args[0][0] == os.path.join(
+        hass.config.config_dir, "creds"
+    )
 
 
 def make_event(entity_id):
@@ -154,7 +153,7 @@ async def test_allowlist(hass, mock_client):
             "include_entities": ["binary_sensor.included"],
         },
     )
-    publish_client = mock_client.PublisherClient.from_service_account_json("path")
+    publish_client = mock_client.from_service_account_json("path")
 
     tests = [
         FilterTest("climate.excluded", False),
@@ -184,7 +183,7 @@ async def test_denylist(hass, mock_client):
             "exclude_entities": ["binary_sensor.excluded"],
         },
     )
-    publish_client = mock_client.PublisherClient.from_service_account_json("path")
+    publish_client = mock_client.from_service_account_json("path")
 
     tests = [
         FilterTest("climate.excluded", False),
@@ -216,7 +215,7 @@ async def test_filtered_allowlist(hass, mock_client):
             "exclude_entities": ["light.excluded"],
         },
     )
-    publish_client = mock_client.PublisherClient.from_service_account_json("path")
+    publish_client = mock_client.from_service_account_json("path")
 
     tests = [
         FilterTest("light.included", True),
@@ -246,7 +245,7 @@ async def test_filtered_denylist(hass, mock_client):
             "exclude_entities": ["light.excluded"],
         },
     )
-    publish_client = mock_client.PublisherClient.from_service_account_json("path")
+    publish_client = mock_client.from_service_account_json("path")
 
     tests = [
         FilterTest("climate.excluded", False),

@@ -26,20 +26,17 @@ ZigpyGroupType = zigpy.group.Group
 ZigpyZdoType = zigpy.zdo.ZDO
 
 if TYPE_CHECKING:
-    from homeassistant.components.zha.core import channels
-    import homeassistant.components.zha.core.channels
-    import homeassistant.components.zha.core.channels.base as base_channels
-    import homeassistant.components.zha.core.device
-    import homeassistant.components.zha.core.gateway
-    import homeassistant.components.zha.core.group
     import homeassistant.components.zha.entity
+
+    from . import channels, device, gateway, group
+    from .channels import base as base_channels
 
     ChannelType = base_channels.ZigbeeChannel
     ChannelsType = channels.Channels
     ChannelPoolType = channels.ChannelPool
     ClientChannelType = base_channels.ClientChannel
     ZDOChannelType = base_channels.ZDOChannel
-    ZhaDeviceType = homeassistant.components.zha.core.device.ZHADevice
+    ZhaDeviceType = device.ZHADevice
     ZhaEntityType = homeassistant.components.zha.entity.ZhaEntity
-    ZhaGatewayType = homeassistant.components.zha.core.gateway.ZHAGateway
-    ZhaGroupType = homeassistant.components.zha.core.group.ZHAGroup
+    ZhaGatewayType = gateway.ZHAGateway
+    ZhaGroupType = group.ZHAGroup

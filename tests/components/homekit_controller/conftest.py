@@ -10,6 +10,8 @@ import homeassistant.util.dt as dt_util
 
 from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 
+pytest.register_assert_rewrite("tests.components.homekit_controller.common")
+
 
 @pytest.fixture
 def utcnow(request):
@@ -25,7 +27,10 @@ def utcnow(request):
 def controller(hass):
     """Replace aiohomekit.Controller with an instance of aiohomekit.testing.FakeController."""
     instance = FakeController()
-    with unittest.mock.patch("aiohomekit.Controller", return_value=instance):
+    with unittest.mock.patch(
+        "homeassistant.components.homekit_controller.utils.Controller",
+        return_value=instance,
+    ):
         yield instance
 
 

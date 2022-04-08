@@ -6,17 +6,11 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
 from .const import CONF_STATION, DOMAIN
-
-DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Required(CONF_STATION): cv.string,
-    }
-)
 
 
 class TVWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -36,17 +30,9 @@ class TVWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return str(err)
         return "connected"
 
-    async def async_step_import(self, config: dict):
-        """Import a configuration from config.yaml."""
-
-        self.context.update(
-            {"title_placeholders": {CONF_STATION: f"YAML import {DOMAIN}"}}
-        )
-
-        self._async_abort_entries_match({CONF_STATION: config[CONF_STATION]})
-        return await self.async_step_user(user_input=config)
-
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, str] | None = None
+    ) -> FlowResult:
         """Handle the initial step."""
         errors = {}
 
@@ -75,6 +61,11 @@ class TVWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=DATA_SCHEMA,
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_API_KEY): cv.string,
+                    vol.Required(CONF_STATION): cv.string,
+                }
+            ),
             errors=errors,
         )

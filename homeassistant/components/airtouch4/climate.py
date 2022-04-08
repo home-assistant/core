@@ -1,8 +1,9 @@
 """AirTouch 4 component to control of AirTouch 4 Climate Devices."""
+from __future__ import annotations
 
 import logging
 
-from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
 from homeassistant.components.climate.const import (
     FAN_AUTO,
     FAN_DIFFUSE,
@@ -16,17 +17,16 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_FAN_ONLY,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
-    SUPPORT_FAN_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
 AT_TO_HA_STATE = {
     "Heat": HVAC_MODE_HEAT,
     "Cool": HVAC_MODE_COOL,
@@ -63,14 +63,21 @@ HA_FAN_SPEED_TO_AT = {value: key for key, value in AT_TO_HA_FAN_SPEED.items()}
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Airtouch 4."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
     info = coordinator.data
-    entities = [
+    entities: list[ClimateEntity] = [
         AirtouchGroup(coordinator, group["group_number"], info)
         for group in info["groups"]
-    ] + [AirtouchAC(coordinator, ac["ac_number"], info) for ac in info["acs"]]
+    ]
+    entities.extend(
+        AirtouchAC(coordinator, ac["ac_number"], info) for ac in info["acs"]
+    )
 
     _LOGGER.debug(" Found entities %s", entities)
 
@@ -80,7 +87,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class AirtouchAC(CoordinatorEntity, ClimateEntity):
     """Representation of an AirTouch 4 ac."""
 
-    _attr_supported_features = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
+    )
     _attr_temperature_unit = TEMP_CELSIUS
 
     def __init__(self, coordinator, ac_number, info):
@@ -194,7 +203,7 @@ class AirtouchAC(CoordinatorEntity, ClimateEntity):
 class AirtouchGroup(CoordinatorEntity, ClimateEntity):
     """Representation of an AirTouch 4 group."""
 
-    _attr_supported_features = SUPPORT_TARGET_TEMPERATURE
+    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
     _attr_temperature_unit = TEMP_CELSIUS
     _attr_hvac_modes = AT_GROUP_MODES
 

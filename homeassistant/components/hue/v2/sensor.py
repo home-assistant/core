@@ -12,10 +12,10 @@ from aiohue.v2.controllers.sensors import (
     TemperatureController,
     ZigbeeConnectivityController,
 )
-from aiohue.v2.models.connectivity import ZigbeeConnectivity
 from aiohue.v2.models.device_power import DevicePower
 from aiohue.v2.models.light_level import LightLevel
 from aiohue.v2.models.temperature import Temperature
+from aiohue.v2.models.zigbee_connectivity import ZigbeeConnectivity
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.sensor import (

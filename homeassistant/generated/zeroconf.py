@@ -37,6 +37,11 @@ ZEROCONF = {
             }
         }
     ],
+    "_airport._tcp.local.": [
+        {
+            "domain": "apple_tv"
+        }
+    ],
     "_api._udp.local.": [
         {
             "domain": "guardian"
@@ -76,6 +81,11 @@ ZEROCONF = {
     "_bond._tcp.local.": [
         {
             "domain": "bond"
+        }
+    ],
+    "_companion-link._tcp.local.": [
+        {
+            "domain": "apple_tv"
         }
     ],
     "_daap._tcp.local.": [
@@ -134,6 +144,10 @@ ZEROCONF = {
     "_hap._tcp.local.": [
         {
             "domain": "homekit_controller"
+        },
+        {
+            "domain": "zwave_me",
+            "name": "*z.wave-me*"
         }
     ],
     "_homekit._tcp.local.": [
@@ -162,6 +176,10 @@ ZEROCONF = {
             }
         },
         {
+            "domain": "pure_energie",
+            "name": "smartbridge*"
+        },
+        {
             "domain": "rachio",
             "name": "rachio*"
         },
@@ -179,6 +197,11 @@ ZEROCONF = {
             "domain": "hue"
         }
     ],
+    "_hwenergy._tcp.local.": [
+        {
+            "domain": "homewizard"
+        }
+    ],
     "_ipp._tcp.local.": [
         {
             "domain": "ipp"
@@ -190,6 +213,10 @@ ZEROCONF = {
         }
     ],
     "_kizbox._tcp.local.": [
+        {
+            "domain": "overkiz",
+            "name": "gateway*"
+        },
         {
             "domain": "somfy",
             "name": "gateway*"
@@ -297,6 +324,11 @@ ZEROCONF = {
             }
         }
     ],
+    "_sleep-proxy._udp.local.": [
+        {
+            "domain": "apple_tv"
+        }
+    ],
     "_sonos._tcp.local.": [
         {
             "domain": "sonos"
@@ -345,6 +377,11 @@ ZEROCONF = {
         {
             "domain": "kodi"
         }
+    ],
+    "_zwave-js-server._tcp.local.": [
+        {
+            "domain": "zwave_js"
+        }
     ]
 }
 
@@ -363,12 +400,18 @@ HOMEKIT = {
     "Iota": "abode",
     "LIFX": "lifx",
     "MYQ": "myq",
-    "NL*": "nanoleaf",
+    "NL29": "nanoleaf",
+    "NL42": "nanoleaf",
+    "NL47": "nanoleaf",
+    "NL48": "nanoleaf",
+    "NL52": "nanoleaf",
+    "NL59": "nanoleaf",
     "Netatmo Relay": "netatmo",
     "PowerView": "hunterdouglas_powerview",
     "Presence": "netatmo",
     "Rachio": "rachio",
     "SPK5": "rainmachine",
+    "Sensibo": "sensibo",
     "Smart Bridge": "lutron_caseta",
     "Socket": "wemo",
     "TRADFRI": "tradfri",

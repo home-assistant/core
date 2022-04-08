@@ -28,7 +28,7 @@
                     "username": "\u30e6\u30fc\u30b6\u30fc\u540d",
                     "verify_ssl": "SSL\u8a3c\u660e\u66f8\u3092\u78ba\u8a8d\u3059\u308b"
                 },
-                "description": "{name} ({host})\u3092\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7\u3057\u307e\u3059\u304b?",
+                "description": "{name} ({host})\u3092\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7\u3057\u307e\u3059\u304b\uff1f",
                 "title": "Synology DSM"
             },
             "reauth": {
@@ -64,6 +64,7 @@
             "init": {
                 "data": {
                     "scan_interval": "\u30b9\u30ad\u30e3\u30f3\u306e\u9593\u306e\u5206\u6570",
+                    "snap_profile_type": "\u30ab\u30e1\u30e9\u30b9\u30ca\u30c3\u30d7\u30b7\u30e7\u30c3\u30c8\u306e\u54c1\u8cea\u30ec\u30d9\u30eb\uff080:\u9ad8 1:\u4e2d 2:\u4f4e\uff09",
                     "timeout": "\u30bf\u30a4\u30e0\u30a2\u30a6\u30c8(\u79d2)"
                 }
             }

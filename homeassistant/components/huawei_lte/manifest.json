@@ -15,5 +15,6 @@
     }
   ],
   "codeowners": ["@scop", "@fphammerle"],
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "loggers": ["huawei_lte_api"]
 }

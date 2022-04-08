@@ -5,9 +5,11 @@ from abc import abstractmethod
 from collections.abc import Callable
 import json
 import logging
+from typing import Any, Protocol, final
 
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CONFIGURATION_URL,
     ATTR_MANUFACTURER,
@@ -19,12 +21,17 @@ from homeassistant.const import (
     CONF_DEVICE,
     CONF_ENTITY_CATEGORY,
     CONF_ICON,
+    CONF_MODEL,
     CONF_NAME,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
 )
-from homeassistant.core import callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -33,11 +40,21 @@ from homeassistant.helpers.entity import (
     ENTITY_CATEGORIES_SCHEMA,
     DeviceInfo,
     Entity,
+    EntityCategory,
     async_generate_entity_id,
 )
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType
 
-from . import DATA_MQTT, debug_info, publish, subscription
+from . import (
+    DATA_MQTT,
+    PLATFORMS,
+    MqttValueTemplate,
+    async_publish,
+    debug_info,
+    subscription,
+)
 from .const import (
     ATTR_DISCOVERY_HASH,
     ATTR_DISCOVERY_PAYLOAD,
@@ -46,13 +63,15 @@ from .const import (
     CONF_ENCODING,
     CONF_QOS,
     CONF_TOPIC,
+    DATA_MQTT_RELOAD_NEEDED,
+    DEFAULT_ENCODING,
     DEFAULT_PAYLOAD_AVAILABLE,
     DEFAULT_PAYLOAD_NOT_AVAILABLE,
     DOMAIN,
     MQTT_CONNECTED,
     MQTT_DISCONNECTED,
 )
-from .debug_info import log_messages
+from .debug_info import log_message, log_messages
 from .discovery import (
     MQTT_DISCOVERY_DONE,
     MQTT_DISCOVERY_NEW,
@@ -60,8 +79,12 @@ from .discovery import (
     clear_discovery_hash,
     set_discovery_hash,
 )
-from .models import ReceiveMessage
-from .subscription import async_subscribe_topics, async_unsubscribe_topics
+from .models import PublishPayloadType, ReceiveMessage
+from .subscription import (
+    async_prepare_subscribe_topics,
+    async_subscribe_topics,
+    async_unsubscribe_topics,
+)
 from .util import valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
@@ -84,7 +107,6 @@ CONF_JSON_ATTRS_TEMPLATE = "json_attributes_template"
 CONF_IDENTIFIERS = "identifiers"
 CONF_CONNECTIONS = "connections"
 CONF_MANUFACTURER = "manufacturer"
-CONF_MODEL = "model"
 CONF_SW_VERSION = "sw_version"
 CONF_VIA_DEVICE = "via_device"
 CONF_DEPRECATED_VIA_HUB = "via_hub"
@@ -200,6 +222,20 @@ MQTT_ENTITY_COMMON_SCHEMA = MQTT_AVAILABILITY_SCHEMA.extend(
 )
 
 
+class SetupEntity(Protocol):
+    """Protocol type for async_setup_entities."""
+
+    async def __call__(
+        self,
+        hass: HomeAssistant,
+        async_add_entities: AddEntitiesCallback,
+        config: ConfigType,
+        config_entry: ConfigEntry | None = None,
+        discovery_data: dict[str, Any] | None = None,
+    ) -> None:
+        """Define setup_entities type."""
+
+
 async def async_setup_entry_helper(hass, domain, async_setup, schema):
     """Set up entity, automation or tag creation dynamically through MQTT discovery."""
 
@@ -220,6 +256,26 @@ async def async_setup_entry_helper(hass, domain, async_setup, schema):
     async_dispatcher_connect(
         hass, MQTT_DISCOVERY_NEW.format(domain, "mqtt"), async_discover
     )
+
+
+async def async_setup_platform_helper(
+    hass: HomeAssistant,
+    platform_domain: str,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    async_setup_entities: SetupEntity,
+) -> None:
+    """Return true if platform setup should be aborted."""
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+    if not bool(hass.config_entries.async_entries(DOMAIN)):
+        hass.data[DATA_MQTT_RELOAD_NEEDED] = None
+        _LOGGER.warning(
+            "MQTT integration is not setup, skipping setup of manually configured "
+            "MQTT %s",
+            platform_domain,
+        )
+        return
+    await async_setup_entities(hass, async_add_entities, config)
 
 
 def init_entity_id_from_config(hass, entity, config, entity_id_format):
@@ -244,26 +300,29 @@ class MqttAttributes(Entity):
     async def async_added_to_hass(self) -> None:
         """Subscribe MQTT events."""
         await super().async_added_to_hass()
+        self._attributes_prepare_subscribe_topics()
         await self._attributes_subscribe_topics()
+
+    def attributes_prepare_discovery_update(self, config: dict):
+        """Handle updated discovery message."""
+        self._attributes_config = config
+        self._attributes_prepare_subscribe_topics()
 
     async def attributes_discovery_update(self, config: dict):
         """Handle updated discovery message."""
-        self._attributes_config = config
         await self._attributes_subscribe_topics()
 
-    async def _attributes_subscribe_topics(self):
+    def _attributes_prepare_subscribe_topics(self):
         """(Re)Subscribe to topics."""
-        attr_tpl = self._attributes_config.get(CONF_JSON_ATTRS_TEMPLATE)
-        if attr_tpl is not None:
-            attr_tpl.hass = self.hass
+        attr_tpl = MqttValueTemplate(
+            self._attributes_config.get(CONF_JSON_ATTRS_TEMPLATE), entity=self
+        ).async_render_with_possible_json_value
 
         @callback
         @log_messages(self.hass, self.entity_id)
         def attributes_message_received(msg: ReceiveMessage) -> None:
             try:
-                payload = msg.payload
-                if attr_tpl is not None:
-                    payload = attr_tpl.async_render_with_possible_json_value(payload)
+                payload = attr_tpl(msg.payload)
                 json_dict = json.loads(payload) if isinstance(payload, str) else None
                 if isinstance(json_dict, dict):
                     filtered_dict = {
@@ -281,7 +340,7 @@ class MqttAttributes(Entity):
                 _LOGGER.warning("Erroneous JSON: %s", payload)
                 self._attributes = None
 
-        self._attributes_sub_state = await async_subscribe_topics(
+        self._attributes_sub_state = async_prepare_subscribe_topics(
             self.hass,
             self._attributes_sub_state,
             {
@@ -289,13 +348,18 @@ class MqttAttributes(Entity):
                     "topic": self._attributes_config.get(CONF_JSON_ATTRS_TOPIC),
                     "msg_callback": attributes_message_received,
                     "qos": self._attributes_config.get(CONF_QOS),
+                    "encoding": self._attributes_config[CONF_ENCODING] or None,
                 }
             },
         )
 
+    async def _attributes_subscribe_topics(self):
+        """(Re)Subscribe to topics."""
+        await async_subscribe_topics(self.hass, self._attributes_sub_state)
+
     async def async_will_remove_from_hass(self):
         """Unsubscribe when removed."""
-        self._attributes_sub_state = await async_unsubscribe_topics(
+        self._attributes_sub_state = async_unsubscribe_topics(
             self.hass, self._attributes_sub_state
         )
 
@@ -318,6 +382,7 @@ class MqttAvailability(Entity):
     async def async_added_to_hass(self) -> None:
         """Subscribe MQTT events."""
         await super().async_added_to_hass()
+        self._availability_prepare_subscribe_topics()
         await self._availability_subscribe_topics()
         self.async_on_remove(
             async_dispatcher_connect(self.hass, MQTT_CONNECTED, self.async_mqtt_connect)
@@ -328,9 +393,13 @@ class MqttAvailability(Entity):
             )
         )
 
-    async def availability_discovery_update(self, config: dict):
+    def availability_prepare_discovery_update(self, config: dict):
         """Handle updated discovery message."""
         self._availability_setup_from_config(config)
+        self._availability_prepare_subscribe_topics()
+
+    async def availability_discovery_update(self, config: dict):
+        """Handle updated discovery message."""
         await self._availability_subscribe_topics()
 
     def _availability_setup_from_config(self, config):
@@ -351,22 +420,15 @@ class MqttAvailability(Entity):
                     CONF_AVAILABILITY_TEMPLATE: avail.get(CONF_VALUE_TEMPLATE),
                 }
 
-        for (
-            topic,  # pylint: disable=unused-variable
-            avail_topic_conf,
-        ) in self._avail_topics.items():
-            tpl = avail_topic_conf[CONF_AVAILABILITY_TEMPLATE]
-            if tpl is None:
-                avail_topic_conf[CONF_AVAILABILITY_TEMPLATE] = lambda value: value
-            else:
-                tpl.hass = self.hass
-                avail_topic_conf[
-                    CONF_AVAILABILITY_TEMPLATE
-                ] = tpl.async_render_with_possible_json_value
+        for avail_topic_conf in self._avail_topics.values():
+            avail_topic_conf[CONF_AVAILABILITY_TEMPLATE] = MqttValueTemplate(
+                avail_topic_conf[CONF_AVAILABILITY_TEMPLATE],
+                entity=self,
+            ).async_render_with_possible_json_value
 
         self._avail_config = config
 
-    async def _availability_subscribe_topics(self):
+    def _availability_prepare_subscribe_topics(self):
         """(Re)Subscribe to topics."""
 
         @callback
@@ -398,11 +460,15 @@ class MqttAvailability(Entity):
             for topic in self._avail_topics
         }
 
-        self._availability_sub_state = await async_subscribe_topics(
+        self._availability_sub_state = async_prepare_subscribe_topics(
             self.hass,
             self._availability_sub_state,
             topics,
         )
+
+    async def _availability_subscribe_topics(self):
+        """(Re)Subscribe to topics."""
+        await async_subscribe_topics(self.hass, self._availability_sub_state)
 
     @callback
     def async_mqtt_connect(self):
@@ -412,7 +478,7 @@ class MqttAvailability(Entity):
 
     async def async_will_remove_from_hass(self):
         """Unsubscribe when removed."""
-        self._availability_sub_state = await async_unsubscribe_topics(
+        self._availability_sub_state = async_unsubscribe_topics(
             self.hass, self._availability_sub_state
         )
 
@@ -430,23 +496,25 @@ class MqttAvailability(Entity):
         return self._available_latest
 
 
-async def cleanup_device_registry(hass, device_id):
+async def cleanup_device_registry(hass, device_id, config_entry_id):
     """Remove device registry entry if there are no remaining entities or triggers."""
     # Local import to avoid circular dependencies
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     from . import device_trigger, tag
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
     if (
         device_id
-        and not hass.helpers.entity_registry.async_entries_for_device(
+        and not er.async_entries_for_device(
             entity_registry, device_id, include_disabled_entities=False
         )
         and not await device_trigger.async_get_triggers(hass, device_id)
         and not tag.async_has_tags(hass, device_id)
     ):
-        device_registry.async_remove_device(device_id)
+        device_registry.async_update_device(
+            device_id, remove_config_entry_id=config_entry_id
+        )
 
 
 class MqttDiscoveryUpdate(Entity):
@@ -473,13 +541,12 @@ class MqttDiscoveryUpdate(Entity):
             Remove entity from entity registry if it is registered, this also removes the state.
             If the entity is not in the entity registry, just remove the state.
             """
-            entity_registry = (
-                await self.hass.helpers.entity_registry.async_get_registry()
-            )
-            if entity_registry.async_is_registered(self.entity_id):
-                entity_entry = entity_registry.async_get(self.entity_id)
+            entity_registry = er.async_get(self.hass)
+            if entity_entry := entity_registry.async_get(self.entity_id):
                 entity_registry.async_remove(self.entity_id)
-                await cleanup_device_registry(self.hass, entity_entry.device_id)
+                await cleanup_device_registry(
+                    self.hass, entity_entry.device_id, entity_entry.config_entry_id
+                )
             else:
                 await self.async_remove(force_remove=True)
 
@@ -505,9 +572,7 @@ class MqttDiscoveryUpdate(Entity):
                 else:
                     # Non-empty, unchanged payload: Ignore to avoid changing states
                     _LOGGER.info("Ignoring unchanged update for: %s", self.entity_id)
-            async_dispatcher_send(
-                self.hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
-            )
+            self.async_send_discovery_done()
 
         if discovery_hash:
             debug_info.add_entity_discovery_data(
@@ -520,15 +585,29 @@ class MqttDiscoveryUpdate(Entity):
                 MQTT_DISCOVERY_UPDATED.format(discovery_hash),
                 discovery_callback,
             )
-            async_dispatcher_send(
-                self.hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
-            )
+
+    @callback
+    def async_send_discovery_done(self) -> None:
+        """Acknowledge a discovery message has been handled."""
+        discovery_hash = (
+            self._discovery_data[ATTR_DISCOVERY_HASH] if self._discovery_data else None
+        )
+        if not discovery_hash:
+            return
+        async_dispatcher_send(
+            self.hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
+        )
 
     async def async_removed_from_registry(self) -> None:
         """Clear retained discovery topic in broker."""
         if not self._removed_from_hass:
+            # Stop subscribing to discovery updates to not trigger when we clear the
+            # discovery topic
+            self._cleanup_discovery_on_remove()
+
+            # Clear the discovery topic so the entity is not rediscovered after a restart
             discovery_topic = self._discovery_data[ATTR_DISCOVERY_TOPIC]
-            publish(self.hass, discovery_topic, "", retain=True)
+            await async_publish(self.hass, discovery_topic, "", retain=True)
 
     @callback
     def add_to_platform_abort(self) -> None:
@@ -548,7 +627,6 @@ class MqttDiscoveryUpdate(Entity):
     def _cleanup_discovery_on_remove(self) -> None:
         """Stop listening to signal and cleanup discovery data."""
         if self._discovery_data and not self._removed_from_hass:
-            debug_info.remove_entity_data(self.hass, self.entity_id)
             clear_discovery_hash(self.hass, self._discovery_data[ATTR_DISCOVERY_HASH])
             self._removed_from_hass = True
 
@@ -599,10 +677,10 @@ class MqttEntityDeviceInfo(Entity):
         self._device_config = device_config
         self._config_entry = config_entry
 
-    async def device_info_discovery_update(self, config: dict):
+    def device_info_discovery_update(self, config: dict):
         """Handle updated discovery message."""
         self._device_config = config.get(CONF_DEVICE)
-        device_registry = await self.hass.helpers.device_registry.async_get_registry()
+        device_registry = dr.async_get(self.hass)
         config_entry_id = self._config_entry.entry_id
         device_info = self.device_info
 
@@ -652,30 +730,67 @@ class MqttEntity(
             self.hass, self, self._config, self._entity_id_format
         )
 
+    @final
     async def async_added_to_hass(self):
-        """Subscribe mqtt events."""
+        """Subscribe to MQTT events."""
         await super().async_added_to_hass()
+        self._prepare_subscribe_topics()
         await self._subscribe_topics()
+        await self.mqtt_async_added_to_hass()
+        self.async_send_discovery_done()
+
+    async def mqtt_async_added_to_hass(self):
+        """Call before the discovery message is acknowledged.
+
+        To be extended by subclasses.
+        """
 
     async def discovery_update(self, discovery_payload):
         """Handle updated discovery message."""
         config = self.config_schema()(discovery_payload)
         self._config = config
         self._setup_from_config(self._config)
+
+        # Prepare MQTT subscriptions
+        self.attributes_prepare_discovery_update(config)
+        self.availability_prepare_discovery_update(config)
+        self.device_info_discovery_update(config)
+        self._prepare_subscribe_topics()
+
+        # Finalize MQTT subscriptions
         await self.attributes_discovery_update(config)
         await self.availability_discovery_update(config)
-        await self.device_info_discovery_update(config)
         await self._subscribe_topics()
         self.async_write_ha_state()
 
     async def async_will_remove_from_hass(self):
         """Unsubscribe when removed."""
-        self._sub_state = await subscription.async_unsubscribe_topics(
+        self._sub_state = subscription.async_unsubscribe_topics(
             self.hass, self._sub_state
         )
         await MqttAttributes.async_will_remove_from_hass(self)
         await MqttAvailability.async_will_remove_from_hass(self)
         await MqttDiscoveryUpdate.async_will_remove_from_hass(self)
+        debug_info.remove_entity_data(self.hass, self.entity_id)
+
+    async def async_publish(
+        self,
+        topic: str,
+        payload: PublishPayloadType,
+        qos: int = 0,
+        retain: bool = False,
+        encoding: str = DEFAULT_ENCODING,
+    ):
+        """Publish message to an MQTT topic."""
+        log_message(self.hass, self.entity_id, topic, payload, qos, retain)
+        await async_publish(
+            self.hass,
+            topic,
+            payload,
+            qos,
+            retain,
+            encoding,
+        )
 
     @staticmethod
     @abstractmethod
@@ -684,6 +799,10 @@ class MqttEntity(
 
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""
+
+    @abstractmethod
+    def _prepare_subscribe_topics(self):
+        """(Re)Subscribe to topics."""
 
     @abstractmethod
     async def _subscribe_topics(self):
@@ -695,7 +814,7 @@ class MqttEntity(
         return self._config[CONF_ENABLED_BY_DEFAULT]
 
     @property
-    def entity_category(self) -> str | None:
+    def entity_category(self) -> EntityCategory | None:
         """Return the entity category if any."""
         return self._config.get(CONF_ENTITY_CATEGORY)
 
@@ -718,3 +837,29 @@ class MqttEntity(
     def unique_id(self):
         """Return a unique ID."""
         return self._unique_id
+
+
+@callback
+def async_removed_from_device(
+    hass: HomeAssistant, event: Event, mqtt_device_id: str, config_entry_id: str
+) -> bool:
+    """Check if the passed event indicates MQTT was removed from a device."""
+    device_id = event.data["device_id"]
+    if event.data["action"] not in ("remove", "update"):
+        return False
+
+    if device_id != mqtt_device_id:
+        return False
+
+    if event.data["action"] == "update":
+        if "config_entries" not in event.data["changes"]:
+            return False
+        device_registry = dr.async_get(hass)
+        if not (device_entry := device_registry.async_get(device_id)):
+            # The device is already removed, do cleanup when we get "remove" event
+            return False
+        if config_entry_id in device_entry.config_entries:
+            # Not removed from device
+            return False
+
+    return True

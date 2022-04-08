@@ -5,9 +5,11 @@
         },
         "error": {
             "bad_auth": "Autentikasi tidak valid",
+            "invalid_auth": "Autentikasi tidak valid",
             "invalid_pin": "PIN yang diberikan tidak valid",
             "network_error": "Terjadi kesalahan jaringan",
             "no_panel_online": "Tidak ada panel kontrol Elmax online yang ditemukan.",
+            "unknown": "Kesalahan yang tidak diharapkan",
             "unknown_error": "Terjadi kesalahan tak terduga"
         },
         "step": {

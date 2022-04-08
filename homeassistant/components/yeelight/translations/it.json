@@ -21,7 +21,7 @@
                 "data": {
                     "host": "Host"
                 },
-                "description": "Se lasci l'host vuoto, il rilevamento verr\u00e0 utilizzato per trovare i dispositivi."
+                "description": "Se lasci l'host vuoto, il rilevamento sar\u00e0 utilizzato per trovare i dispositivi."
             }
         }
     },
@@ -35,7 +35,7 @@
                     "transition": "Tempo di transizione (ms)",
                     "use_music_mode": "Abilita la modalit\u00e0 musica"
                 },
-                "description": "Se lasci il modello vuoto, verr\u00e0 rilevato automaticamente."
+                "description": "Se lasci il modello vuoto, sar\u00e0 rilevato automaticamente."
             }
         }
     }

@@ -54,16 +54,16 @@
                     "mode": "Obliczenia",
                     "show_on_map": "Poka\u017c na mapie"
                 },
-                "description": "Skonfiguruj publiczny czujnik pogody dla obszaru.",
-                "title": "Netatmo publiczny czujnik pogody"
+                "description": "Skonfiguruj publiczny sensor pogody dla obszaru.",
+                "title": "Publiczny sensor pogody Netatmo"
             },
             "public_weather_areas": {
                 "data": {
                     "new_area": "Nazwa obszaru",
                     "weather_areas": "Obszary pogodowe"
                 },
-                "description": "Skonfiguruj publiczne czujniki pogody.",
-                "title": "Netatmo publiczny czujnik pogody"
+                "description": "Skonfiguruj publiczne sensory pogody.",
+                "title": "Publiczny sensor pogody Netatmo"
             }
         }
     }

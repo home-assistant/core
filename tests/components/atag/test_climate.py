@@ -6,6 +6,7 @@ from homeassistant.components.climate import (
     ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
+    DOMAIN as CLIMATE_DOMAIN,
     HVAC_MODE_HEAT,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,
@@ -49,7 +50,7 @@ async def test_setting_climate(
     await init_integration(hass, aioclient_mock)
     with patch("pyatag.entities.Climate.set_temp") as mock_set_temp:
         await hass.services.async_call(
-            Platform.CLIMATE,
+            CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
             {ATTR_ENTITY_ID: CLIMATE_ID, ATTR_TEMPERATURE: 15},
             blocking=True,
@@ -59,7 +60,7 @@ async def test_setting_climate(
 
     with patch("pyatag.entities.Climate.set_preset_mode") as mock_set_preset:
         await hass.services.async_call(
-            Platform.CLIMATE,
+            CLIMATE_DOMAIN,
             SERVICE_SET_PRESET_MODE,
             {ATTR_ENTITY_ID: CLIMATE_ID, ATTR_PRESET_MODE: PRESET_AWAY},
             blocking=True,
@@ -69,7 +70,7 @@ async def test_setting_climate(
 
     with patch("pyatag.entities.Climate.set_hvac_mode") as mock_set_hvac:
         await hass.services.async_call(
-            Platform.CLIMATE,
+            CLIMATE_DOMAIN,
             SERVICE_SET_HVAC_MODE,
             {ATTR_ENTITY_ID: CLIMATE_ID, ATTR_HVAC_MODE: HVAC_MODE_HEAT},
             blocking=True,

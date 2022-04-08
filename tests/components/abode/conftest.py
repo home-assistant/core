@@ -7,7 +7,7 @@ from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 
 
 @pytest.fixture(autouse=True)
-def requests_mock_fixture(requests_mock):
+def requests_mock_fixture(requests_mock) -> None:
     """Fixture to provide a requests mocker."""
     # Mocks the login response for abodepy.
     requests_mock.post(CONST.LOGIN_URL, text=load_fixture("login.json", "abode"))

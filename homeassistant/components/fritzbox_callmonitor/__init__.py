@@ -2,10 +2,11 @@
 import logging
 
 from fritzconnection.core.exceptions import FritzConnectionException, FritzSecurityError
-from fritzconnection.core.logger import fritzlogger
 from requests.exceptions import ConnectionError as RequestsConnectionError
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .base import FritzBoxPhonebook
@@ -20,15 +21,8 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-level = _LOGGER.getEffectiveLevel()
-_LOGGER.info(
-    "Setting logging level of fritzconnection: %s", logging.getLevelName(level)
-)
-fritzlogger.set_level(level)
-fritzlogger.enable()
 
-
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up the fritzbox_callmonitor platforms."""
     fritzbox_phonebook = FritzBoxPhonebook(
         host=config_entry.data[CONF_HOST],
@@ -66,7 +60,7 @@ async def async_setup_entry(hass, config_entry):
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unloading the fritzbox_callmonitor platforms."""
 
     unload_ok = await hass.config_entries.async_unload_platforms(
@@ -81,6 +75,6 @@ async def async_unload_entry(hass, config_entry):
     return unload_ok
 
 
-async def update_listener(hass, config_entry):
+async def update_listener(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Update listener to reload after option has changed."""
     await hass.config_entries.async_reload(config_entry.entry_id)

@@ -76,7 +76,7 @@ async def async_setup_entry(
                     )
                 )
 
-    async_add_entities(entities, False)
+    async_add_entities(entities)
 
 
 class DevoloMultiLevelDeviceEntity(DevoloDeviceEntity, SensorEntity):

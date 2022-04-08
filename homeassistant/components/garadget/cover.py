@@ -1,4 +1,6 @@
 """Platform for the Garadget cover component."""
+from __future__ import annotations
+
 import logging
 
 import requests
@@ -15,8 +17,11 @@ from homeassistant.const import (
     STATE_CLOSED,
     STATE_OPEN,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import track_utc_time_change
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,10 +60,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Garadget covers."""
     covers = []
-    devices = config.get(CONF_COVERS)
+    devices = config[CONF_COVERS]
 
     for device_id, device_config in devices.items():
         args = {

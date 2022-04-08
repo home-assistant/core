@@ -20,8 +20,9 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.util import dt as dt_util
 
+from . import init_integration
+
 from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
-from tests.components.mazda import init_integration
 
 FIXTURE_USER_INPUT = {
     CONF_EMAIL: "example@example.com",
@@ -156,6 +157,19 @@ async def test_unload_config_entry(hass: HomeAssistant) -> None:
     await hass.config_entries.async_unload(entries[0].entry_id)
     await hass.async_block_till_done()
     assert entries[0].state is ConfigEntryState.NOT_LOADED
+
+
+async def test_init_electric_vehicle(hass):
+    """Test initialization of the integration with an electric vehicle."""
+    client_mock = await init_integration(hass, electric_vehicle=True)
+
+    client_mock.get_vehicles.assert_called_once()
+    client_mock.get_vehicle_status.assert_called_once()
+    client_mock.get_ev_vehicle_status.assert_called_once()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].state is ConfigEntryState.LOADED
 
 
 async def test_device_nickname(hass):

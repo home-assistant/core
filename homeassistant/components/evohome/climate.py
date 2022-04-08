@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import datetime as dt
 import logging
 
-from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
 from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO,
     HVAC_MODE_HEAT,
@@ -13,12 +13,11 @@ from homeassistant.components.climate.const import (
     PRESET_ECO,
     PRESET_HOME,
     PRESET_NONE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import PRECISION_TENTHS
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 from . import (
@@ -76,7 +75,10 @@ STATE_ATTRS_ZONES = ["zoneId", "activeFaults", "setpointStatus", "temperatureSta
 
 
 async def async_setup_platform(
-    hass: HomeAssistant, config: ConfigType, async_add_entities, discovery_info=None
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Create the evohome Controller, and its Zones, if any."""
     if discovery_info is None:
@@ -163,7 +165,9 @@ class EvoZone(EvoChild, EvoClimateEntity):
             self._precision = self._evo_device.setpointCapabilities["valueResolution"]
 
         self._preset_modes = list(HA_PRESET_TO_EVO)
-        self._supported_features = SUPPORT_PRESET_MODE | SUPPORT_TARGET_TEMPERATURE
+        self._attr_supported_features = (
+            ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
+        )
 
     async def async_zone_svc_request(self, service: dict, data: dict) -> None:
         """Process a service request (setpoint override) for a zone."""
@@ -324,7 +328,9 @@ class EvoController(EvoClimateEntity):
         self._preset_modes = [
             TCS_PRESET_TO_HA[m] for m in modes if m in list(TCS_PRESET_TO_HA)
         ]
-        self._supported_features = SUPPORT_PRESET_MODE if self._preset_modes else 0
+        self._attr_supported_features = (
+            ClimateEntityFeature.PRESET_MODE if self._preset_modes else 0
+        )
 
     async def async_tcs_svc_request(self, service: dict, data: dict) -> None:
         """Process a service request (system mode) for a controller.

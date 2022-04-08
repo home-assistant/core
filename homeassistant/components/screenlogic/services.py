@@ -37,10 +37,11 @@ def async_load_screenlogic_services(hass: HomeAssistant):
         return [
             entry_id
             for entry_id in await async_extract_config_entry_ids(hass, service_call)
-            if hass.config_entries.async_get_entry(entry_id).domain == DOMAIN
+            if (entry := hass.config_entries.async_get_entry(entry_id))
+            and entry.domain == DOMAIN
         ]
 
-    async def async_set_color_mode(service_call: ServiceCall):
+    async def async_set_color_mode(service_call: ServiceCall) -> None:
         if not (
             screenlogic_entry_ids := await extract_screenlogic_config_entry_ids(
                 service_call

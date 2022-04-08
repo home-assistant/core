@@ -20,8 +20,11 @@ from homeassistant.const import (
     STATE_OPEN,
     TEMP_CELSIUS,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .device import EnOceanEntity
 
@@ -84,7 +87,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up an EnOcean sensor device."""
     dev_id = config[CONF_ID]
     dev_name = config[CONF_NAME]
@@ -160,7 +168,7 @@ class EnOceanPowerSensor(EnOceanSensor):
             # this packet reports the current value
             raw_val = packet.parsed["MR"]["raw_value"]
             divisor = packet.parsed["DIV"]["raw_value"]
-            self._attr_native_value = raw_val / (10 ** divisor)
+            self._attr_native_value = raw_val / (10**divisor)
             self.schedule_update_ha_state()
 
 

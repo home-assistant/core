@@ -60,6 +60,10 @@
             "off": "\u00cd lagi",
             "on": "Vandam\u00e1l"
         },
+        "running": {
+            "off": "Ekki \u00ed gangi",
+            "on": "\u00cd gangi"
+        },
         "safety": {
             "off": "\u00d6ruggt",
             "on": "\u00d3\u00f6ruggt"

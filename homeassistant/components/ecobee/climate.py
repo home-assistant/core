@@ -5,7 +5,7 @@ import collections
 
 import voluptuous as vol
 
-from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
@@ -22,13 +22,8 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_OFF,
     PRESET_AWAY,
     PRESET_NONE,
-    SUPPORT_AUX_HEAT,
-    SUPPORT_FAN_MODE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_HUMIDITY,
-    SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
@@ -37,9 +32,11 @@ from homeassistant.const import (
     STATE_ON,
     TEMP_FAHRENHEIT,
 )
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.temperature import convert
 
 from .const import _LOGGER, DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
@@ -166,15 +163,19 @@ SET_FAN_MIN_ON_TIME_SCHEMA = vol.Schema(
 
 
 SUPPORT_FLAGS = (
-    SUPPORT_TARGET_TEMPERATURE
-    | SUPPORT_PRESET_MODE
-    | SUPPORT_AUX_HEAT
-    | SUPPORT_TARGET_TEMPERATURE_RANGE
-    | SUPPORT_FAN_MODE
+    ClimateEntityFeature.TARGET_TEMPERATURE
+    | ClimateEntityFeature.PRESET_MODE
+    | ClimateEntityFeature.AUX_HEAT
+    | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+    | ClimateEntityFeature.FAN_MODE
 )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the ecobee thermostat."""
 
     data = hass.data[DOMAIN]
@@ -198,7 +199,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     platform = entity_platform.async_get_current_platform()
 
-    def create_vacation_service(service):
+    def create_vacation_service(service: ServiceCall) -> None:
         """Create a vacation on the target thermostat."""
         entity_id = service.data[ATTR_ENTITY_ID]
 
@@ -208,7 +209,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 thermostat.schedule_update_ha_state(True)
                 break
 
-    def delete_vacation_service(service):
+    def delete_vacation_service(service: ServiceCall) -> None:
         """Delete a vacation on the target thermostat."""
         entity_id = service.data[ATTR_ENTITY_ID]
         vacation_name = service.data[ATTR_VACATION_NAME]
@@ -219,7 +220,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 thermostat.schedule_update_ha_state(True)
                 break
 
-    def fan_min_on_time_set_service(service):
+    def fan_min_on_time_set_service(service: ServiceCall) -> None:
         """Set the minimum fan on time on the target thermostats."""
         entity_id = service.data.get(ATTR_ENTITY_ID)
         fan_min_on_time = service.data[ATTR_FAN_MIN_ON_TIME]
@@ -236,7 +237,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
             thermostat.schedule_update_ha_state(True)
 
-    def resume_program_set_service(service):
+    def resume_program_set_service(service: ServiceCall) -> None:
         """Resume the program on the target thermostats."""
         entity_id = service.data.get(ATTR_ENTITY_ID)
         resume_all = service.data.get(ATTR_RESUME_ALL)
@@ -354,7 +355,7 @@ class Thermostat(ClimateEntity):
     def supported_features(self):
         """Return the list of supported features."""
         if self.has_humidifier_control:
-            return SUPPORT_FLAGS | SUPPORT_TARGET_HUMIDITY
+            return SUPPORT_FLAGS | ClimateEntityFeature.TARGET_HUMIDITY
         return SUPPORT_FLAGS
 
     @property
@@ -514,7 +515,7 @@ class Thermostat(ClimateEntity):
         """Return current HVAC action.
 
         Ecobee returns a CSV string with different equipment that is active.
-        We are prioritizing any heating/cooling equipment, otherwase look at
+        We are prioritizing any heating/cooling equipment, otherwise look at
         drying/fanning. Idle if nothing going on.
 
         We are unable to map all actions to HA equivalents.

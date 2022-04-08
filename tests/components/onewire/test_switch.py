@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -83,7 +84,7 @@ async def test_owserver_switch(
             expected_entity[ATTR_STATE] = STATE_ON
 
         await hass.services.async_call(
-            Platform.SWITCH,
+            SWITCH_DOMAIN,
             SERVICE_TOGGLE,
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,

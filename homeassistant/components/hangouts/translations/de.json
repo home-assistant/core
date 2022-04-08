@@ -14,7 +14,6 @@
                 "data": {
                     "2fa": "2FA PIN"
                 },
-                "description": "Leer",
                 "title": "2-Faktor-Authentifizierung"
             },
             "user": {

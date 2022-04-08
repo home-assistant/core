@@ -11,8 +11,8 @@
                     "app_id": "App ID",
                     "app_secret": "\u30b7\u30fc\u30af\u30ec\u30c3\u30c8"
                 },
-                "description": "[StarLine\u958b\u767a\u8005\u30a2\u30ab\u30a6\u30f3\u30c8](https://my.starline.ru/developer)\u306e\u30a2\u30d7\u30ea\u30b1\u30fc\u30b7\u30e7\u30f3ID\u3068\u30b7\u30fc\u30af\u30ec\u30c3\u30c8\u30b3\u30fc\u30c9",
-                "title": "\u30a2\u30d7\u30ea\u30b1\u30fc\u30b7\u30e7\u30f3\u8cc7\u683c\u60c5\u5831"
+                "description": "[StarLine developer account](https://my.starline.ru/developer)\u306e\u30a2\u30d7\u30ea\u30b1\u30fc\u30b7\u30e7\u30f3ID\u3068\u30b7\u30fc\u30af\u30ec\u30c3\u30c8\u30b3\u30fc\u30c9",
+                "title": "\u30a2\u30d7\u30ea\u30b1\u30fc\u30b7\u30e7\u30f3\u8a8d\u8a3c\u60c5\u5831"
             },
             "auth_captcha": {
                 "data": {
@@ -34,7 +34,7 @@
                     "username": "\u30e6\u30fc\u30b6\u30fc\u540d"
                 },
                 "description": "StarLine\u30a2\u30ab\u30a6\u30f3\u30c8\u306e\u30e1\u30fc\u30eb\u30a2\u30c9\u30ec\u30b9\u3068\u30d1\u30b9\u30ef\u30fc\u30c9",
-                "title": "\u30e6\u30fc\u30b6\u30fc\u306e\u8cc7\u683c\u60c5\u5831"
+                "title": "\u30e6\u30fc\u30b6\u30fc\u306e\u8a8d\u8a3c\u60c5\u5831"
             }
         }
     }

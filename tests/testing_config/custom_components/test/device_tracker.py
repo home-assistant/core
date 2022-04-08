@@ -18,7 +18,7 @@ class MockScannerEntity(ScannerEntity):
         self.connected = False
         self._hostname = "test.hostname.org"
         self._ip_address = "0.0.0.0"
-        self._mac_address = "ad:de:ef:be:ed:fe:"
+        self._mac_address = "ad:de:ef:be:ed:fe"
 
     @property
     def source_type(self):

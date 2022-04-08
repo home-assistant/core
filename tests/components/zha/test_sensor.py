@@ -241,6 +241,12 @@ async def async_test_powerconfiguration(hass, cluster, entity_id):
     assert hass.states.get(entity_id).attributes["battery_voltage"] == 2.0
 
 
+async def async_test_device_temperature(hass, cluster, entity_id):
+    """Test temperature sensor."""
+    await send_attributes_report(hass, cluster, {0: 2900})
+    assert_state(hass, entity_id, "29.0", TEMP_CELSIUS)
+
+
 @pytest.mark.parametrize(
     "cluster_id, entity_suffix, test_func, report_count, read_plug, unsupported_attrs",
     (
@@ -301,7 +307,7 @@ async def async_test_powerconfiguration(hass, cluster, entity_id):
                 "metering_device_type": 0x00,
                 "multiplier": 1,
                 "status": 0x00,
-                "summa_formatting": 0b1_0111_010,
+                "summation_formatting": 0b1_0111_010,
                 "unit_of_measure": 0x01,
             },
             {"instaneneous_demand"},
@@ -348,6 +354,14 @@ async def async_test_powerconfiguration(hass, cluster, entity_id):
                 "battery_voltage": 29,
                 "battery_quantity": 3,
             },
+            None,
+        ),
+        (
+            general.DeviceTemperature.cluster_id,
+            "device_temperature",
+            async_test_device_temperature,
+            1,
+            None,
             None,
         ),
     ),
@@ -800,7 +814,7 @@ async def test_se_summation_uom(
         "metering_device_type": 0x00,
         "multiplier": 1,
         "status": 0x00,
-        "summa_formatting": 0b1_0111_010,
+        "summation_formatting": 0b1_0111_010,
         "unit_of_measure": raw_uom,
     }
     await zha_device_joined(zigpy_device)

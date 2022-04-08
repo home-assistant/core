@@ -2,18 +2,16 @@
 import json
 import logging
 import os
-import socket
 
 from androidtv import state_detection_rules_validator
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_HOST, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.device_registry import format_mac
 
-from . import async_connect_androidtv
+from . import async_connect_androidtv, get_androidtv_mac
 from .const import (
     CONF_ADB_SERVER_IP,
     CONF_ADB_SERVER_PORT,
@@ -21,7 +19,6 @@ from .const import (
     CONF_APPS,
     CONF_EXCLUDE_UNNAMED_APPS,
     CONF_GET_SOURCES,
-    CONF_MIGRATION_OPTIONS,
     CONF_SCREENCAP,
     CONF_STATE_DETECTION_RULES,
     CONF_TURN_OFF_COMMAND,
@@ -60,22 +57,10 @@ def _is_file(value):
     return os.path.isfile(file_in) and os.access(file_in, os.R_OK)
 
 
-def _get_ip(host):
-    """Get the ip address from the host name."""
-    try:
-        return socket.gethostbyname(host)
-    except socket.gaierror:
-        return None
-
-
 class AndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
-
-    def __init__(self):
-        """Initialize AndroidTV config flow."""
-        self._import_options = None
 
     @callback
     def _show_setup_form(self, user_input=None, error=None):
@@ -124,9 +109,15 @@ class AndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return RESULT_CONN_ERROR, None
 
         dev_prop = aftv.device_properties
-        unique_id = format_mac(
-            dev_prop.get(PROP_ETHMAC) or dev_prop.get(PROP_WIFIMAC, "")
+        _LOGGER.info(
+            "Android TV at %s: %s = %r, %s = %r",
+            user_input[CONF_HOST],
+            PROP_ETHMAC,
+            dev_prop.get(PROP_ETHMAC),
+            PROP_WIFIMAC,
+            dev_prop.get(PROP_WIFIMAC),
         )
+        unique_id = get_androidtv_mac(dev_prop)
         await aftv.adb_close()
         return None, unique_id
 
@@ -137,24 +128,17 @@ class AndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             host = user_input[CONF_HOST]
             adb_key = user_input.get(CONF_ADBKEY)
-            adb_server = user_input.get(CONF_ADB_SERVER_IP)
-
-            if adb_key and adb_server:
-                return self._show_setup_form(user_input, "key_and_server")
+            if CONF_ADB_SERVER_IP in user_input:
+                if adb_key:
+                    return self._show_setup_form(user_input, "key_and_server")
+            else:
+                user_input.pop(CONF_ADB_SERVER_PORT, None)
 
             if adb_key:
-                isfile = await self.hass.async_add_executor_job(_is_file, adb_key)
-                if not isfile:
+                if not await self.hass.async_add_executor_job(_is_file, adb_key):
                     return self._show_setup_form(user_input, "adbkey_not_file")
 
-            ip_address = await self.hass.async_add_executor_job(_get_ip, host)
-            if not ip_address:
-                return self._show_setup_form(user_input, "invalid_host")
-
             self._async_abort_entries_match({CONF_HOST: host})
-            if ip_address != host:
-                self._async_abort_entries_match({CONF_HOST: ip_address})
-
             error, unique_id = await self._async_check_connection(user_input)
             if error is None:
                 if not unique_id:
@@ -164,25 +148,12 @@ class AndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
-                    title=user_input.get(CONF_NAME) or host,
+                    title=host,
                     data=user_input,
-                    options=self._import_options,
                 )
 
         user_input = user_input or {}
         return self._show_setup_form(user_input, error)
-
-    async def async_step_import(self, import_config=None):
-        """Import a config entry."""
-        for entry in self._async_current_entries():
-            if entry.data[CONF_HOST] == import_config[CONF_HOST]:
-                _LOGGER.warning(
-                    "Host [%s] already configured. This yaml configuration has already been imported. Please remove it",
-                    import_config[CONF_HOST],
-                )
-                return self.async_abort(reason="already_configured")
-        self._import_options = import_config.pop(CONF_MIGRATION_OPTIONS, None)
-        return await self.async_step_user(import_config)
 
     @staticmethod
     @callback

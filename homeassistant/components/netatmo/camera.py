@@ -8,7 +8,7 @@ import aiohttp
 import pyatmo
 import voluptuous as vol
 
-from homeassistant.components.camera import SUPPORT_STREAM, Camera
+from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
@@ -55,9 +55,6 @@ async def async_setup_entry(
     """Set up the Netatmo camera platform."""
     data_handler = hass.data[DOMAIN][entry.entry_id][DATA_HANDLER]
 
-    await data_handler.register_data_class(
-        CAMERA_DATA_CLASS_NAME, CAMERA_DATA_CLASS_NAME, None
-    )
     data_class = data_handler.data.get(CAMERA_DATA_CLASS_NAME)
 
     if not data_class or not data_class.raw_data:
@@ -114,6 +111,8 @@ async def async_setup_entry(
 
 class NetatmoCamera(NetatmoBase, Camera):
     """Representation of a Netatmo camera."""
+
+    _attr_supported_features = CameraEntityFeature.STREAM
 
     def __init__(
         self,
@@ -219,11 +218,6 @@ class NetatmoCamera(NetatmoBase, Camera):
     def available(self) -> bool:
         """Return True if entity is available."""
         return bool(self._alim_status == "on" or self._status == "disconnected")
-
-    @property
-    def supported_features(self) -> int:
-        """Return supported features."""
-        return SUPPORT_STREAM
 
     @property
     def brand(self) -> str:

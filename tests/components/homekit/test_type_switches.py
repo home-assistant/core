@@ -451,10 +451,13 @@ async def test_input_select_switch(hass, hk_driver, events, domain):
     assert acc.select_chars["option3"].value is False
 
 
-async def test_button_switch(hass, hk_driver, events):
-    """Test switch accessory from a button entity."""
-    domain = "button"
-    entity_id = "button.test"
+@pytest.mark.parametrize(
+    "domain",
+    ["button", "input_button"],
+)
+async def test_button_switch(hass, hk_driver, events, domain):
+    """Test switch accessory from a (input) button entity."""
+    entity_id = f"{domain}.test"
 
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()

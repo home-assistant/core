@@ -1,0 +1,47 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "already_in_progress": "El flux de configuraci\u00f3 ja est\u00e0 en curs",
+            "error_pairing": "Connectat per\u00f2 no vinculat a TV LG webOS"
+        },
+        "error": {
+            "cannot_connect": "No s'ha pogut connectar, engega el televisor i comprova l'adre\u00e7a IP"
+        },
+        "flow_title": "Smart TV LG webOS",
+        "step": {
+            "pairing": {
+                "description": "Fes clic a envia i accepta la sol\u00b7licitud de vinculaci\u00f3 del televisor.\n\n![Image](/static/images/config_webos.png)",
+                "title": "Vinculaci\u00f3 de TV webOS"
+            },
+            "user": {
+                "data": {
+                    "host": "Amfitri\u00f3",
+                    "name": "Nom"
+                },
+                "description": "Enc\u00e9n el televisor, omple els camps i fes clic a envia",
+                "title": "Connexi\u00f3 a TV webOS"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "webostv.turn_on": "Es demani que el dispositiu s'engegui"
+        }
+    },
+    "options": {
+        "error": {
+            "cannot_retrieve": "No es pot obtenir la llista de fonts. Assegura't que el dispositiu est\u00e0 enc\u00e8s",
+            "script_not_found": "No s'ha trobat l'script"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "sources": "Llista de fonts"
+                },
+                "description": "Selecci\u00f3 de fonts activades",
+                "title": "Opcions de Smart TV webOS"
+            }
+        }
+    }
+}

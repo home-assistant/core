@@ -73,7 +73,8 @@
         "oauth2_authorize_url_timeout": "Timeout generating authorize URL.",
         "oauth2_no_url_available": "No URL available. For information about this error, [check the help section]({docs_url})",
         "reauth_successful": "Re-authentication was successful",
-        "unknown_authorize_url_generation": "Unknown error generating an authorize URL."
+        "unknown_authorize_url_generation": "Unknown error generating an authorize URL.",
+        "cloud_not_connected": "Not connected to Home Assistant Cloud."
       }
     }
   }

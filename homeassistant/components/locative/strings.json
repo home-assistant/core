@@ -7,6 +7,7 @@
       }
     },
     "abort": {
+      "cloud_not_connected": "[%key:common::config_flow::abort::cloud_not_connected%]",
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "webhook_not_internet_accessible": "[%key:common::config_flow::abort::webhook_not_internet_accessible%]"
     },

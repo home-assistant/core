@@ -1,11 +1,9 @@
 """Support for deCONZ lights."""
-
 from __future__ import annotations
 
-from collections.abc import ValuesView
 from typing import Any
 
-from pydeconz.group import DeconzGroup as Group
+from pydeconz.group import Group
 from pydeconz.light import (
     ALERT_LONG,
     ALERT_SHORT,
@@ -31,10 +29,8 @@ from homeassistant.components.light import (
     EFFECT_COLORLOOP,
     FLASH_LONG,
     FLASH_SHORT,
-    SUPPORT_EFFECT,
-    SUPPORT_FLASH,
-    SUPPORT_TRANSITION,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -62,11 +58,12 @@ async def async_setup_entry(
     gateway.entities[DOMAIN] = set()
 
     @callback
-    def async_add_light(
-        lights: list[Light] | ValuesView[Light] = gateway.api.lights.values(),
-    ) -> None:
+    def async_add_light(lights: list[Light] | None = None) -> None:
         """Add light from deCONZ."""
         entities = []
+
+        if lights is None:
+            lights = gateway.api.lights.values()
 
         for light in lights:
             if (
@@ -88,14 +85,15 @@ async def async_setup_entry(
     )
 
     @callback
-    def async_add_group(
-        groups: list[Group] | ValuesView[Group] = gateway.api.groups.values(),
-    ) -> None:
+    def async_add_group(groups: list[Group] | None = None) -> None:
         """Add group from deCONZ."""
         if not gateway.option_allow_deconz_groups:
             return
 
         entities = []
+
+        if groups is None:
+            groups = list(gateway.api.groups.values())
 
         for group in groups:
             if not group.lights:
@@ -148,11 +146,11 @@ class DeconzBaseLight(DeconzDevice, LightEntity):
             self._attr_supported_color_modes.add(COLOR_MODE_ONOFF)
 
         if device.brightness is not None:
-            self._attr_supported_features |= SUPPORT_FLASH
-            self._attr_supported_features |= SUPPORT_TRANSITION
+            self._attr_supported_features |= LightEntityFeature.FLASH
+            self._attr_supported_features |= LightEntityFeature.TRANSITION
 
         if device.effect is not None:
-            self._attr_supported_features |= SUPPORT_EFFECT
+            self._attr_supported_features |= LightEntityFeature.EFFECT
             self._attr_effect_list = [EFFECT_COLORLOOP]
 
     @property
@@ -199,7 +197,7 @@ class DeconzBaseLight(DeconzDevice, LightEntity):
         """Turn on light."""
         data: dict[str, bool | float | int | str | tuple[float, float]] = {"on": True}
 
-        if attr_brightness := kwargs.get(ATTR_BRIGHTNESS):
+        if (attr_brightness := kwargs.get(ATTR_BRIGHTNESS)) is not None:
             data["brightness"] = attr_brightness
 
         if attr_color_temp := kwargs.get(ATTR_COLOR_TEMP):
@@ -215,7 +213,7 @@ class DeconzBaseLight(DeconzDevice, LightEntity):
         if ATTR_XY_COLOR in kwargs:
             data["xy"] = kwargs[ATTR_XY_COLOR]
 
-        if attr_transition := kwargs.get(ATTR_TRANSITION):
+        if (attr_transition := kwargs.get(ATTR_TRANSITION)) is not None:
             data["transition_time"] = int(attr_transition * 10)
         elif "IKEA" in self._device.manufacturer:
             data["transition_time"] = 0
@@ -236,9 +234,9 @@ class DeconzBaseLight(DeconzDevice, LightEntity):
 
         data: dict[str, bool | int | str] = {"on": False}
 
-        if ATTR_TRANSITION in kwargs:
+        if (attr_transition := kwargs.get(ATTR_TRANSITION)) is not None:
             data["brightness"] = 0
-            data["transition_time"] = int(kwargs[ATTR_TRANSITION] * 10)
+            data["transition_time"] = int(attr_transition * 10)
 
         if (alert := FLASH_TO_DECONZ.get(kwargs.get(ATTR_FLASH, ""))) is not None:
             data["alert"] = alert

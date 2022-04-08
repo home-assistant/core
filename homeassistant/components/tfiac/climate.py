@@ -1,4 +1,6 @@
 """Climate platform that offers a climate device for the TFIAC protocol."""
+from __future__ import annotations
+
 from concurrent import futures
 from datetime import timedelta
 import logging
@@ -6,7 +8,11 @@ import logging
 from pytfiac import Tfiac
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
+from homeassistant.components.climate import (
+    PLATFORM_SCHEMA,
+    ClimateEntity,
+    ClimateEntityFeature,
+)
 from homeassistant.components.climate.const import (
     FAN_AUTO,
     FAN_HIGH,
@@ -18,16 +24,16 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_FAN_ONLY,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
-    SUPPORT_FAN_MODE,
-    SUPPORT_SWING_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
     SWING_BOTH,
     SWING_HORIZONTAL,
     SWING_OFF,
     SWING_VERTICAL,
 )
 from homeassistant.const import ATTR_TEMPERATURE, CONF_HOST, TEMP_FAHRENHEIT
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
@@ -52,8 +58,6 @@ HVAC_MAP_REV = {v: k for k, v in HVAC_MAP.items()}
 SUPPORT_FAN = [FAN_AUTO, FAN_HIGH, FAN_MEDIUM, FAN_LOW]
 SUPPORT_SWING = [SWING_OFF, SWING_HORIZONTAL, SWING_VERTICAL, SWING_BOTH]
 
-SUPPORT_FLAGS = SUPPORT_FAN_MODE | SUPPORT_SWING_MODE | SUPPORT_TARGET_TEMPERATURE
-
 CURR_TEMP = "current_temp"
 TARGET_TEMP = "target_temp"
 OPERATION_MODE = "operation"
@@ -62,7 +66,12 @@ SWING_MODE = "swing_mode"
 ON_MODE = "is_on"
 
 
-async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_devices: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the TFIAC climate device."""
     tfiac_client = Tfiac(config[CONF_HOST])
     try:
@@ -75,6 +84,12 @@ async def async_setup_platform(hass, config, async_add_devices, discovery_info=N
 
 class TfiacClimate(ClimateEntity):
     """TFIAC class."""
+
+    _attr_supported_features = (
+        ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.SWING_MODE
+        | ClimateEntityFeature.TARGET_TEMPERATURE
+    )
 
     def __init__(self, hass, client):
         """Init class."""
@@ -93,11 +108,6 @@ class TfiacClimate(ClimateEntity):
             self._available = True
         except futures.TimeoutError:
             self._available = False
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_FLAGS
 
     @property
     def min_temp(self):

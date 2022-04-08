@@ -7,14 +7,14 @@
         },
         "error": {
             "cannot_connect": "No se pudo conectar",
-            "invalid_pin_code": "El c\u00f3digo PIN que ha introducido no es v\u00e1lido"
+            "invalid_pin_code": "El c\u00f3digo PIN que has introducido no es v\u00e1lido"
         },
         "step": {
             "pairing": {
                 "data": {
                     "pin": "C\u00f3digo PIN"
                 },
-                "description": "Introduzca el PIN que aparece en su Televisor",
+                "description": "Introduce el PIN que aparece en tu Televisor",
                 "title": "Emparejamiento"
             },
             "user": {

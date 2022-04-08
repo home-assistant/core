@@ -156,7 +156,6 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="confirm",
             description_placeholders={CONF_NAME: self._title},
-            data_schema=vol.Schema({}),
         )
 
     async def async_step_zeroconf(

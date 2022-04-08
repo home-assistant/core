@@ -1,4 +1,7 @@
 """Support for XBee Zigbee sensors."""
+# pylint: disable=import-error
+from __future__ import annotations
+
 from binascii import hexlify
 import logging
 
@@ -7,6 +10,9 @@ from xbee_helper.exceptions import ZigBeeException, ZigBeeTxFailure
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.const import CONF_TYPE, TEMP_CELSIUS
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN, PLATFORM_SCHEMA, XBeeAnalogIn, XBeeAnalogInConfig, XBeeConfig
 
@@ -25,14 +31,19 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the XBee Zigbee platform.
 
     Uses the 'type' config value to work out which type of Zigbee sensor we're
     dealing with and instantiates the relevant classes to handle it.
     """
     zigbee_device = hass.data[DOMAIN]
-    typ = config.get(CONF_TYPE)
+    typ = config[CONF_TYPE]
 
     try:
         sensor_class, config_class = TYPE_CLASSES[typ]

@@ -5,8 +5,12 @@ from typing import Any, Union
 
 from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
-from aiohue.v2.controllers.sensors import LightLevelController, MotionController
-from aiohue.v2.models.resource import SensingService
+from aiohue.v2.controllers.sensors import (
+    LightLevel,
+    LightLevelController,
+    Motion,
+    MotionController,
+)
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -19,6 +23,8 @@ from .const import DOMAIN
 from .v2.entity import HueBaseEntity
 
 ControllerType = Union[LightLevelController, MotionController]
+
+SensingService = Union[LightLevel, Motion]
 
 
 async def async_setup_entry(

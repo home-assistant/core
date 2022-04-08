@@ -1,4 +1,6 @@
 """Support for Mikrotik routers as device tracker."""
+from __future__ import annotations
+
 import logging
 
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
@@ -6,11 +8,11 @@ from homeassistant.components.device_tracker.const import (
     DOMAIN as DEVICE_TRACKER,
     SOURCE_TYPE_ROUTER,
 )
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
@@ -22,11 +24,15 @@ _LOGGER = logging.getLogger(__name__)
 FILTER_ATTRS = ("ip_address", "mac_address")
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up device tracker for Mikrotik component."""
     hub = hass.data[DOMAIN][config_entry.entry_id]
 
-    tracked = {}
+    tracked: dict[str, MikrotikHubTracker] = {}
 
     registry = await entity_registry.async_get_registry(hass)
 
@@ -129,17 +135,6 @@ class MikrotikHubTracker(ScannerEntity):
         if self.is_connected:
             return {k: v for k, v in self.device.attrs.items() if k not in FILTER_ATTRS}
         return None
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return a client description for device registry."""
-        # We only get generic info from device discovery and so don't want
-        # to override API specific info that integrations can provide
-        return DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, self.device.mac)},
-            default_name=self.name,
-            identifiers={(DOMAIN, self.device.mac)},
-        )
 
     async def async_added_to_hass(self):
         """Client entity created."""

@@ -93,6 +93,14 @@ class OneWireHub:
         if self.type == CONF_TYPE_SYSBUS:
             mount_dir = config_entry.data[CONF_MOUNT_DIR]
             _LOGGER.debug("Initializing using SysBus %s", mount_dir)
+            _LOGGER.warning(
+                "Using the 1-Wire integration via SysBus is deprecated and will be removed "
+                "in Home Assistant Core 2022.6; this integration is being adjusted to comply "
+                "with Architectural Decision Record 0019, more information can be found here: "
+                "https://github.com/home-assistant/architecture/blob/master/adr/0019-GPIO.md "
+                "Access via OWServer is still supported"
+            )
+
             await self.check_mount_dir(mount_dir)
         elif self.type == CONF_TYPE_OWSERVER:
             host = config_entry.data[CONF_HOST]

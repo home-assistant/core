@@ -11,8 +11,8 @@ from zigpy.zcl.clusters import hvac
 from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
     ATTR_PRESET_MODE,
-    SUPPORT_SET_SPEED,
     FanEntity,
+    FanEntityFeature,
     NotValidPresetModeError,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -56,7 +56,7 @@ async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-):
+) -> None:
     """Set up the Zigbee Home Automation fan from config entry."""
     entities_to_create = hass.data[DATA_ZHA][Platform.FAN]
 
@@ -76,24 +76,19 @@ async def async_setup_entry(
 class BaseFan(FanEntity):
     """Base representation of a ZHA fan."""
 
+    _attr_supported_features = FanEntityFeature.SET_SPEED
+
     @property
     def preset_modes(self) -> list[str]:
         """Return the available preset modes."""
         return PRESET_MODES
 
     @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return SUPPORT_SET_SPEED
-
-    @property
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
         return int_states_in_range(SPEED_RANGE)
 
-    async def async_turn_on(
-        self, speed=None, percentage=None, preset_mode=None, **kwargs
-    ) -> None:
+    async def async_turn_on(self, percentage=None, preset_mode=None, **kwargs) -> None:
         """Turn the entity on."""
         if percentage is None:
             percentage = DEFAULT_ON_PERCENTAGE

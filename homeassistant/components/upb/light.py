@@ -3,12 +3,16 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_FLASH,
     ATTR_TRANSITION,
-    SUPPORT_BRIGHTNESS,
+    COLOR_MODE_BRIGHTNESS,
+    COLOR_MODE_ONOFF,
     SUPPORT_FLASH,
     SUPPORT_TRANSITION,
     LightEntity,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import UpbAttachedEntity
 from .const import DOMAIN, UPB_BLINK_RATE_SCHEMA, UPB_BRIGHTNESS_RATE_SCHEMA
@@ -18,7 +22,11 @@ SERVICE_LIGHT_FADE_STOP = "light_fade_stop"
 SERVICE_LIGHT_BLINK = "light_blink"
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the UPB light based on a config entry."""
 
     upb = hass.data[DOMAIN][config_entry.entry_id]["upb"]
@@ -49,10 +57,22 @@ class UpbLight(UpbAttachedEntity, LightEntity):
         self._brightness = self._element.status
 
     @property
+    def color_mode(self) -> str:
+        """Return the color mode of the light."""
+        if self._element.dimmable:
+            return COLOR_MODE_BRIGHTNESS
+        return COLOR_MODE_ONOFF
+
+    @property
+    def supported_color_modes(self) -> set[str]:
+        """Flag supported color modes."""
+        return {self.color_mode}
+
+    @property
     def supported_features(self):
         """Flag supported features."""
         if self._element.dimmable:
-            return SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION | SUPPORT_FLASH
+            return SUPPORT_TRANSITION | SUPPORT_FLASH
         return SUPPORT_FLASH
 
     @property

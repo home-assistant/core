@@ -1,0 +1,17 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "unknown": "Beklenmeyen hata"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "IP Adresi",
+                    "password": "Parola",
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}

@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
-            "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u88dd\u7f6e\u3002"
+            "single_instance_allowed": "\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210\u3001\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u88dd\u7f6e\u3002"
         },
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
@@ -36,9 +36,9 @@
             },
             "user": {
                 "data": {
-                    "modem_type": "\u6578\u64da\u6a5f\u985e\u578b\u3002"
+                    "modem_type": "\u6578\u64da\u6a5f\u985e\u5225\u3002"
                 },
-                "description": "\u9078\u64c7 Insteon \u6578\u64da\u6a5f\u985e\u578b\u3002",
+                "description": "\u9078\u64c7 Insteon \u6578\u64da\u6a5f\u985e\u5225\u3002",
                 "title": "Insteon"
             }
         }

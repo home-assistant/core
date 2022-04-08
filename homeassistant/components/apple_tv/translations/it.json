@@ -69,7 +69,7 @@
                 "data": {
                     "start_off": "Non accendere il dispositivo all'avvio di Home Assistant"
                 },
-                "description": "Configurare le impostazioni generali del dispositivo"
+                "description": "Configura le impostazioni generali del dispositivo"
             }
         }
     },

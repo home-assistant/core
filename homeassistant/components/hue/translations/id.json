@@ -69,7 +69,8 @@
                 "data": {
                     "allow_hue_groups": "Izinkan grup Hue",
                     "allow_hue_scenes": "Izinkan skenario Hue",
-                    "allow_unreachable": "Izinkan bohlam yang tidak dapat dijangkau untuk melaporkan statusnya dengan benar"
+                    "allow_unreachable": "Izinkan bohlam yang tidak dapat dijangkau untuk melaporkan statusnya dengan benar",
+                    "ignore_availability": "Abaikan status konektivitas untuk perangkat yang diberikan"
                 }
             }
         }

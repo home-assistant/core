@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Awaitable, Callable
-from typing import TYPE_CHECKING, cast
+from typing import cast
 
 from aioguardian import Client
 from aioguardian.errors import GuardianError
@@ -12,7 +12,6 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
     ATTR_DEVICE_ID,
-    ATTR_ENTITY_ID,
     CONF_DEVICE_ID,
     CONF_FILENAME,
     CONF_IP_ADDRESS,
@@ -22,11 +21,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import (
-    config_validation as cv,
-    device_registry as dr,
-    entity_registry as er,
-)
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.update_coordinator import (
@@ -71,41 +66,26 @@ SERVICES = (
     SERVICE_NAME_UPGRADE_FIRMWARE,
 )
 
-SERVICE_BASE_SCHEMA = vol.All(
-    cv.deprecated(ATTR_ENTITY_ID),
-    vol.Schema(
-        {
-            vol.Optional(ATTR_DEVICE_ID): cv.string,
-            vol.Optional(ATTR_ENTITY_ID): cv.entity_id,
-        }
-    ),
-    cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_ENTITY_ID),
+SERVICE_BASE_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_DEVICE_ID): cv.string,
+    }
 )
 
-SERVICE_PAIR_UNPAIR_SENSOR_SCHEMA = vol.All(
-    cv.deprecated(ATTR_ENTITY_ID),
-    vol.Schema(
-        {
-            vol.Optional(ATTR_DEVICE_ID): cv.string,
-            vol.Optional(ATTR_ENTITY_ID): cv.entity_id,
-            vol.Required(CONF_UID): cv.string,
-        }
-    ),
-    cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_ENTITY_ID),
+SERVICE_PAIR_UNPAIR_SENSOR_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_DEVICE_ID): cv.string,
+        vol.Required(CONF_UID): cv.string,
+    }
 )
 
-SERVICE_UPGRADE_FIRMWARE_SCHEMA = vol.All(
-    cv.deprecated(ATTR_ENTITY_ID),
-    vol.Schema(
-        {
-            vol.Optional(ATTR_DEVICE_ID): cv.string,
-            vol.Optional(ATTR_ENTITY_ID): cv.entity_id,
-            vol.Optional(CONF_URL): cv.url,
-            vol.Optional(CONF_PORT): cv.port,
-            vol.Optional(CONF_FILENAME): cv.string,
-        },
-    ),
-    cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_ENTITY_ID),
+SERVICE_UPGRADE_FIRMWARE_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_DEVICE_ID): cv.string,
+        vol.Optional(CONF_URL): cv.url,
+        vol.Optional(CONF_PORT): cv.port,
+        vol.Optional(CONF_FILENAME): cv.string,
+    },
 )
 
 
@@ -115,14 +95,6 @@ PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
 @callback
 def async_get_entry_id_for_service_call(hass: HomeAssistant, call: ServiceCall) -> str:
     """Get the entry ID related to a service call (by device ID)."""
-    if ATTR_ENTITY_ID in call.data:
-        entity_registry = er.async_get(hass)
-        entity_registry_entry = entity_registry.async_get(call.data[ATTR_ENTITY_ID])
-        if TYPE_CHECKING:
-            assert entity_registry_entry
-            assert entity_registry_entry.config_entry_id
-        return entity_registry_entry.config_entry_id
-
     device_id = call.data[CONF_DEVICE_ID]
     device_registry = dr.async_get(hass)
 

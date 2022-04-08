@@ -5,6 +5,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from . import config_flow
 from .const import DOMAIN
@@ -24,7 +25,7 @@ CONFIG_SCHEMA = vol.Schema(
 PLATFORMS = [Platform.CLIMATE]
 
 
-async def async_setup(hass, config) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Ambiclimate components."""
     if DOMAIN not in config:
         return True

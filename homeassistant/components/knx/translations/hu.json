@@ -14,7 +14,8 @@
                     "individual_address": "A kapcsolat egy\u00e9ni c\u00edme",
                     "local_ip": "Helyi IP c\u00edm (hagyja \u00fcresen, ha nem biztos benne)",
                     "port": "Port",
-                    "route_back": "\u00datvonal (route) vissza / NAT m\u00f3d"
+                    "route_back": "\u00datvonal (route) vissza / NAT m\u00f3d",
+                    "tunneling_type": "KNX alag\u00fat t\u00edpusa"
                 },
                 "description": "Adja meg az alag\u00fatkezel\u0151 (tunneling) eszk\u00f6z csatlakoz\u00e1si adatait."
             },
@@ -59,7 +60,8 @@
                     "host": "C\u00edm",
                     "local_ip": "Helyi IP c\u00edm (hagyja \u00fcresen, ha nem biztos benne)",
                     "port": "Port",
-                    "route_back": "\u00datvonal (route) vissza / NAT m\u00f3d"
+                    "route_back": "\u00datvonal (route) vissza / NAT m\u00f3d",
+                    "tunneling_type": "KNX alag\u00fat t\u00edpusa"
                 }
             }
         }

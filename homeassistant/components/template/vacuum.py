@@ -1,4 +1,6 @@
 """Support for Template vacuums."""
+from __future__ import annotations
+
 import logging
 
 import voluptuous as vol
@@ -19,16 +21,8 @@ from homeassistant.components.vacuum import (
     STATE_IDLE,
     STATE_PAUSED,
     STATE_RETURNING,
-    SUPPORT_BATTERY,
-    SUPPORT_CLEAN_SPOT,
-    SUPPORT_FAN_SPEED,
-    SUPPORT_LOCATE,
-    SUPPORT_PAUSE,
-    SUPPORT_RETURN_HOME,
-    SUPPORT_START,
-    SUPPORT_STATE,
-    SUPPORT_STOP,
     StateVacuumEntity,
+    VacuumEntityFeature,
 )
 from homeassistant.const import (
     CONF_ENTITY_ID,
@@ -37,11 +31,13 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DOMAIN
 from .template_entity import (
@@ -117,7 +113,12 @@ async def _async_create_entities(hass, config):
     return vacuums
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the template vacuums."""
     async_add_entities(await _async_create_entities(hass, config))
 
@@ -133,78 +134,68 @@ class TemplateVacuum(TemplateEntity, StateVacuumEntity):
         unique_id,
     ):
         """Initialize the vacuum."""
-        super().__init__(config=config)
+        super().__init__(
+            hass, config=config, fallback_name=object_id, unique_id=unique_id
+        )
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, object_id, hass=hass
         )
-        self._name = friendly_name = config.get(CONF_FRIENDLY_NAME, object_id)
+        friendly_name = self._attr_name
 
         self._template = config.get(CONF_VALUE_TEMPLATE)
         self._battery_level_template = config.get(CONF_BATTERY_LEVEL_TEMPLATE)
         self._fan_speed_template = config.get(CONF_FAN_SPEED_TEMPLATE)
-        self._supported_features = SUPPORT_START
+        self._supported_features = VacuumEntityFeature.START
 
         self._start_script = Script(hass, config[SERVICE_START], friendly_name, DOMAIN)
 
         self._pause_script = None
         if pause_action := config.get(SERVICE_PAUSE):
             self._pause_script = Script(hass, pause_action, friendly_name, DOMAIN)
-            self._supported_features |= SUPPORT_PAUSE
+            self._supported_features |= VacuumEntityFeature.PAUSE
 
         self._stop_script = None
         if stop_action := config.get(SERVICE_STOP):
             self._stop_script = Script(hass, stop_action, friendly_name, DOMAIN)
-            self._supported_features |= SUPPORT_STOP
+            self._supported_features |= VacuumEntityFeature.STOP
 
         self._return_to_base_script = None
         if return_to_base_action := config.get(SERVICE_RETURN_TO_BASE):
             self._return_to_base_script = Script(
                 hass, return_to_base_action, friendly_name, DOMAIN
             )
-            self._supported_features |= SUPPORT_RETURN_HOME
+            self._supported_features |= VacuumEntityFeature.RETURN_HOME
 
         self._clean_spot_script = None
         if clean_spot_action := config.get(SERVICE_CLEAN_SPOT):
             self._clean_spot_script = Script(
                 hass, clean_spot_action, friendly_name, DOMAIN
             )
-            self._supported_features |= SUPPORT_CLEAN_SPOT
+            self._supported_features |= VacuumEntityFeature.CLEAN_SPOT
 
         self._locate_script = None
         if locate_action := config.get(SERVICE_LOCATE):
             self._locate_script = Script(hass, locate_action, friendly_name, DOMAIN)
-            self._supported_features |= SUPPORT_LOCATE
+            self._supported_features |= VacuumEntityFeature.LOCATE
 
         self._set_fan_speed_script = None
         if set_fan_speed_action := config.get(SERVICE_SET_FAN_SPEED):
             self._set_fan_speed_script = Script(
                 hass, set_fan_speed_action, friendly_name, DOMAIN
             )
-            self._supported_features |= SUPPORT_FAN_SPEED
+            self._supported_features |= VacuumEntityFeature.FAN_SPEED
 
         self._state = None
         self._battery_level = None
         self._fan_speed = None
 
         if self._template:
-            self._supported_features |= SUPPORT_STATE
+            self._supported_features |= VacuumEntityFeature.STATE
         if self._battery_level_template:
-            self._supported_features |= SUPPORT_BATTERY
-
-        self._unique_id = unique_id
+            self._supported_features |= VacuumEntityFeature.BATTERY
 
         # List of valid fan speeds
         self._fan_speed_list = config[CONF_FAN_SPEED_LIST]
-
-    @property
-    def name(self):
-        """Return the display name of this vacuum."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return the unique id of this vacuum."""
-        return self._unique_id
 
     @property
     def supported_features(self) -> int:

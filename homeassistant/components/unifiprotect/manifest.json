@@ -1,0 +1,58 @@
+{
+  "domain": "unifiprotect",
+  "name": "UniFi Protect",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/unifiprotect",
+  "requirements": ["pyunifiprotect==3.2.0", "unifi-discovery==1.1.2"],
+  "dependencies": ["http"],
+  "codeowners": ["@briis", "@AngellusMortis", "@bdraco"],
+  "quality_scale": "platinum",
+  "iot_class": "local_push",
+  "dhcp": [
+    {
+      "macaddress": "B4FBE4*"
+    },
+    {
+      "macaddress": "802AA8*"
+    },
+    {
+      "macaddress": "F09FC2*"
+    },
+    {
+      "macaddress": "68D79A*"
+    },
+    {
+      "macaddress": "18E829*"
+    },
+    {
+      "macaddress": "245A4C*"
+    },
+    {
+      "macaddress": "784558*"
+    },
+    {
+      "macaddress": "E063DA*"
+    },
+    {
+      "macaddress": "265A4C*"
+    },
+    {
+      "macaddress": "74ACB9*"
+    }
+  ],
+  "ssdp": [
+    {
+      "manufacturer": "Ubiquiti Networks",
+      "modelDescription": "UniFi Dream Machine"
+    },
+    {
+      "manufacturer": "Ubiquiti Networks",
+      "modelDescription": "UniFi Dream Machine Pro"
+    },
+    {
+      "manufacturer": "Ubiquiti Networks",
+      "modelDescription": "UniFi Dream Machine SE"
+    }
+  ],
+  "loggers": ["pyunifiprotect", "unifi_discovery"]
+}

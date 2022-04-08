@@ -8,7 +8,7 @@ import logging
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
-):
+) -> None:
     """Add kostal plenticore Switch."""
     plenticore = hass.data[DOMAIN][entry.entry_id]
 
@@ -69,6 +69,8 @@ async def async_setup_entry(
 
 class PlenticoreDataSwitch(CoordinatorEntity, SwitchEntity, ABC):
     """Representation of a Plenticore Switch."""
+
+    _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(
         self,

@@ -7,14 +7,16 @@ from aiohttp.hdrs import AUTHORIZATION
 import requests
 import voluptuous as vol
 
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["camera", "binary_sensor", "sensor"]
+PLATFORMS = [Platform.CAMERA, Platform.BINARY_SENSOR, Platform.SENSOR]
 
 DOMAIN = "bloomsky"
 
@@ -27,7 +29,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the BloomSky integration."""
     api_key = config[DOMAIN][CONF_API_KEY]
 

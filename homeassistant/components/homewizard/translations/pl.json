@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "api_not_enabled": "Interfejs API nie jest w\u0142\u0105czony. W\u0142\u0105cz API w ustawieniach aplikacji HomeWizard Energy.",
+            "device_not_supported": "To urz\u0105dzenie nie jest obs\u0142ugiwane",
+            "invalid_discovery_parameters": "Wykryto nieobs\u0142ugiwan\u0105 wersj\u0119 API",
+            "unknown_error": "Nieoczekiwany b\u0142\u0105d"
+        },
+        "step": {
+            "discovery_confirm": {
+                "description": "Czy chcesz skonfigurowa\u0107 {product_type} ({serial}) pod adresem {ip_address}?",
+                "title": "Potwierdzenie"
+            },
+            "user": {
+                "data": {
+                    "ip_address": "Adres IP"
+                },
+                "description": "Wprowad\u017a adres IP urz\u0105dzenia HomeWizard Energy, aby zintegrowa\u0107 go z Home Assistantem.",
+                "title": "Konfiguracja urz\u0105dzenia"
+            }
+        }
+    }
+}

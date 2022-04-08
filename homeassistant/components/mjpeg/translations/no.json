@@ -1,0 +1,42 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_auth": "Ugyldig godkjenning"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "mjpeg_url": "URL-adresse for MJPEG",
+                    "name": "Navn",
+                    "password": "Passord",
+                    "still_image_url": "URL-adresse for stillbilde",
+                    "username": "Brukernavn",
+                    "verify_ssl": "Verifisere SSL-sertifikat"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "already_configured": "Enheten er allerede konfigurert",
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_auth": "Ugyldig godkjenning"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "mjpeg_url": "URL-adresse for MJPEG",
+                    "name": "Navn",
+                    "password": "Passord",
+                    "still_image_url": "URL-adresse for stillbilde",
+                    "username": "Brukernavn",
+                    "verify_ssl": "Verifisere SSL-sertifikat"
+                }
+            }
+        }
+    }
+}

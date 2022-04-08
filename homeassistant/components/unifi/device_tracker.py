@@ -1,7 +1,7 @@
 """Track both clients and devices using UniFi Network."""
 from datetime import timedelta
 
-from aiounifi.api import SOURCE_DATA, SOURCE_EVENT
+from aiounifi.api import SOURCE_DATA
 from aiounifi.events import (
     ACCESS_POINT_UPGRADED,
     GATEWAY_UPGRADED,
@@ -18,15 +18,13 @@ from aiounifi.events import (
 from homeassistant.components.device_tracker import DOMAIN
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.components.device_tracker.const import SOURCE_TYPE_ROUTER
-from homeassistant.const import ATTR_NAME
-from homeassistant.core import callback
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
-from .const import ATTR_MANUFACTURER, DOMAIN as UNIFI_DOMAIN
+from .const import DOMAIN as UNIFI_DOMAIN
 from .unifi_client import UniFiClient
 from .unifi_entity_base import UniFiBase
 
@@ -71,7 +69,11 @@ WIRELESS_CONNECTION = (
 )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up device tracker for UniFi Network integration."""
     controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
     controller.entities[DOMAIN] = {CLIENT_TRACKER: set(), DEVICE_TRACKER: set()}
@@ -149,19 +151,14 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
         super().__init__(client, controller)
 
         self.heartbeat_check = False
-        self._is_connected = False
         self._controller_connection_state_changed = False
-        self._only_listen_to_event_source = False
 
-        if client.last_seen:
-            self._is_connected = (
-                self.is_wired == client.is_wired
-                and dt_util.utcnow()
-                - dt_util.utc_from_timestamp(float(client.last_seen))
-                < controller.option_detection_time
-            )
-
-        self.schedule_update = self._is_connected
+        self._last_seen = client.last_seen or 0
+        self.schedule_update = self._is_connected = (
+            self.is_wired == client.is_wired
+            and dt_util.utcnow() - dt_util.utc_from_timestamp(float(self._last_seen))
+            < controller.option_detection_time
+        )
 
     async def async_added_to_hass(self) -> None:
         """Watch object when added."""
@@ -194,30 +191,16 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
 
             if self.controller.available:
                 self.schedule_update = True
-                self._only_listen_to_event_source = False
 
             else:
                 self.controller.async_heartbeat(self.unique_id)
-
-        elif self.client.last_updated == SOURCE_EVENT:
-            self._only_listen_to_event_source = True
-            if (self.is_wired and self.client.event.event in WIRED_CONNECTION) or (
-                not self.is_wired and self.client.event.event in WIRELESS_CONNECTION
-            ):
-                self._is_connected = True
-                self.schedule_update = False
-                self.controller.async_heartbeat(self.unique_id)
-                self.heartbeat_check = False
-
-            # Ignore extra scheduled update from wired bug
-            elif not self.heartbeat_check:
-                self.schedule_update = True
+                super().async_update_callback()
 
         elif (
-            not self._only_listen_to_event_source
-            and self.client.last_updated == SOURCE_DATA
+            self.client.last_updated == SOURCE_DATA
             and self.is_wired == self.client.is_wired
         ):
+            self._last_seen = self.client.last_seen
             self._is_connected = True
             self.schedule_update = True
 
@@ -228,13 +211,18 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
             )
             self.heartbeat_check = True
 
-        super().async_update_callback()
+            super().async_update_callback()
 
     @callback
     def _make_disconnected(self, *_):
         """No heart beat by device."""
         self._is_connected = False
         self.async_write_ha_state()
+
+    @property
+    def device_info(self) -> None:
+        """Return no device info."""
+        return None
 
     @property
     def is_connected(self):
@@ -359,13 +347,6 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
             self._is_connected = True
             self.schedule_update = True
 
-        elif (
-            self.device.last_updated == SOURCE_EVENT
-            and self.device.event.event in DEVICE_UPGRADED
-        ):
-            self.hass.async_create_task(self.async_update_device_registry())
-            return
-
         if self.schedule_update:
             self.schedule_update = False
             self.controller.async_heartbeat(
@@ -405,28 +386,6 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
     def available(self) -> bool:
         """Return if controller is available."""
         return not self.device.disabled and self.controller.available
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return a device description for device registry."""
-        info = DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, self.device.mac)},
-            manufacturer=ATTR_MANUFACTURER,
-            model=self.device.model,
-            sw_version=self.device.version,
-        )
-
-        if self.device.name:
-            info[ATTR_NAME] = self.device.name
-
-        return info
-
-    async def async_update_device_registry(self) -> None:
-        """Update device registry."""
-        device_registry = dr.async_get(self.hass)
-        device_registry.async_get_or_create(
-            config_entry_id=self.controller.config_entry.entry_id, **self.device_info
-        )
 
     @property
     def extra_state_attributes(self):

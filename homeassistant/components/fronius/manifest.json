@@ -11,5 +11,6 @@
   "iot_class": "local_polling",
   "name": "Fronius",
   "quality_scale": "platinum",
-  "requirements": ["pyfronius==0.7.1"]
+  "requirements": ["pyfronius==0.7.1"],
+  "loggers": ["pyfronius"]
 }

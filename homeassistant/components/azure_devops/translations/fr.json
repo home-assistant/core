@@ -6,7 +6,7 @@
         },
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
-            "invalid_auth": "Authentification invalide",
+            "invalid_auth": "Authentification non valide",
             "project_error": "Impossible d'obtenir les informations sur le projet."
         },
         "flow_title": "{project_url}",

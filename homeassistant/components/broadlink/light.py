@@ -14,6 +14,9 @@ from homeassistant.components.light import (
     COLOR_MODE_UNKNOWN,
     LightEntity,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .entity import BroadlinkEntity
@@ -25,12 +28,16 @@ BROADLINK_COLOR_MODE_WHITE = 1
 BROADLINK_COLOR_MODE_SCENES = 2
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Broadlink light."""
     device = hass.data[DOMAIN].devices[config_entry.entry_id]
     lights = []
 
-    if device.api.type == "LB1":
+    if device.api.type in {"LB1", "LB2"}:
         lights.append(BroadlinkLight(device))
 
     async_add_entities(lights)

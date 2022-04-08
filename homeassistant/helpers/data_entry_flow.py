@@ -6,11 +6,13 @@ from typing import Any
 
 from aiohttp import web
 import voluptuous as vol
+import voluptuous_serialize
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
-import homeassistant.helpers.config_validation as cv
+
+from . import config_validation as cv
 
 
 class _BaseFlowManagerView(HomeAssistantView):
@@ -31,10 +33,8 @@ class _BaseFlowManagerView(HomeAssistantView):
             data.pop("data")
             return data
 
-        if result["type"] != data_entry_flow.RESULT_TYPE_FORM:
+        if "data_schema" not in result:
             return result
-
-        import voluptuous_serialize  # pylint: disable=import-outside-toplevel
 
         data = result.copy()
 
@@ -69,7 +69,7 @@ class FlowManagerIndexView(_BaseFlowManagerView):
 
         try:
             result = await self._flow_mgr.async_init(
-                handler,  # type: ignore
+                handler,  # type: ignore[arg-type]
                 context={
                     "source": config_entries.SOURCE_USER,
                     "show_advanced_options": data["show_advanced_options"],

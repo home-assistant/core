@@ -7,5 +7,6 @@
   "after_dependencies": ["discovery"],
   "codeowners": ["@danielhiversen", "@syssi"],
   "zeroconf": ["_miio._udp.local."],
-  "iot_class": "local_push"
+  "iot_class": "local_push",
+  "loggers": ["xiaomi_gateway"]
 }

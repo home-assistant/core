@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections import deque
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
 from itertools import islice
 import logging
 from time import time
@@ -74,7 +74,7 @@ class NetatmoDataClass:
     name: str
     interval: int
     next_scan: float
-    subscriptions: list[CALLBACK_TYPE]
+    subscriptions: list[CALLBACK_TYPE | None]
 
 
 class NetatmoDataHandler:
@@ -105,7 +105,19 @@ class NetatmoDataHandler:
             )
         )
 
-    async def async_update(self, event_time: timedelta) -> None:
+        await asyncio.gather(
+            *[
+                self.register_data_class(data_class, data_class, None)
+                for data_class in (
+                    CLIMATE_TOPOLOGY_CLASS_NAME,
+                    CAMERA_DATA_CLASS_NAME,
+                    WEATHERSTATION_DATA_CLASS_NAME,
+                    HOMECOACH_DATA_CLASS_NAME,
+                )
+            ]
+        )
+
+    async def async_update(self, event_time: datetime) -> None:
         """
         Update device.
 
@@ -172,7 +184,7 @@ class NetatmoDataHandler:
         self,
         data_class_name: str,
         data_class_entry: str,
-        update_callback: CALLBACK_TYPE,
+        update_callback: CALLBACK_TYPE | None,
         **kwargs: Any,
     ) -> None:
         """Register data class."""

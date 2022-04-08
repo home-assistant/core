@@ -21,7 +21,8 @@
                     "path": "\u015acie\u017cka aplikacji",
                     "port": "Port",
                     "ssl": "U\u017cyj SSL",
-                    "username": "Nazwa u\u017cytkownika"
+                    "username": "Nazwa u\u017cytkownika",
+                    "verify_ssl": "Weryfikacja certyfikatu SSL"
                 }
             }
         }

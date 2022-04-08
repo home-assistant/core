@@ -11,8 +11,8 @@ from homeassistant.components.climate import (
     HVAC_MODE_OFF,
     PLATFORM_SCHEMA,
     ClimateEntity,
+    ClimateEntityFeature,
 )
-from homeassistant.components.climate.const import SUPPORT_TARGET_TEMPERATURE
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_HOST,
@@ -22,7 +22,10 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,7 +47,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the heatmiser thermostat."""
 
     heatmiser_v3_thermostat = heatmiser.HeatmiserThermostat
@@ -68,6 +76,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class HeatmiserV3Thermostat(ClimateEntity):
     """Representation of a HeatmiserV3 thermostat."""
 
+    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+
     def __init__(self, therm, device, uh1):
         """Initialize the thermostat."""
         self.therm = therm(device[CONF_ID], "prt", uh1)
@@ -79,11 +89,6 @@ class HeatmiserV3Thermostat(ClimateEntity):
         self.dcb = None
         self._hvac_mode = HVAC_MODE_HEAT
         self._temperature_unit = None
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_TARGET_TEMPERATURE
 
     @property
     def name(self):

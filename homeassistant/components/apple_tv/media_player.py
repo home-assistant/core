@@ -13,7 +13,11 @@ from pyatv.const import (
 )
 from pyatv.helpers import is_streamable
 
-from homeassistant.components.media_player import BrowseMedia, MediaPlayerEntity
+from homeassistant.components.media_player import (
+    BrowseMedia,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
+)
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_APP,
     MEDIA_TYPE_MUSIC,
@@ -22,22 +26,8 @@ from homeassistant.components.media_player.const import (
     REPEAT_MODE_ALL,
     REPEAT_MODE_OFF,
     REPEAT_MODE_ONE,
-    SUPPORT_BROWSE_MEDIA,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_REPEAT_SET,
-    SUPPORT_SEEK,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_SHUFFLE_SET,
-    SUPPORT_STOP,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_NAME,
     STATE_IDLE,
@@ -46,7 +36,8 @@ from homeassistant.const import (
     STATE_PLAYING,
     STATE_STANDBY,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
 from . import AppleTVEntity
@@ -58,49 +49,55 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
 
 # We always consider these to be supported
-SUPPORT_BASE = SUPPORT_TURN_ON | SUPPORT_TURN_OFF
+SUPPORT_BASE = MediaPlayerEntityFeature.TURN_ON | MediaPlayerEntityFeature.TURN_OFF
 
 # This is the "optimistic" view of supported features and will be returned until the
 # actual set of supported feature have been determined (will always be all or a subset
 # of these).
 SUPPORT_APPLE_TV = (
     SUPPORT_BASE
-    | SUPPORT_BROWSE_MEDIA
-    | SUPPORT_PLAY_MEDIA
-    | SUPPORT_PAUSE
-    | SUPPORT_PLAY
-    | SUPPORT_SEEK
-    | SUPPORT_STOP
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_VOLUME_SET
-    | SUPPORT_VOLUME_STEP
-    | SUPPORT_REPEAT_SET
-    | SUPPORT_SHUFFLE_SET
+    | MediaPlayerEntityFeature.BROWSE_MEDIA
+    | MediaPlayerEntityFeature.PLAY_MEDIA
+    | MediaPlayerEntityFeature.PAUSE
+    | MediaPlayerEntityFeature.PLAY
+    | MediaPlayerEntityFeature.SEEK
+    | MediaPlayerEntityFeature.STOP
+    | MediaPlayerEntityFeature.NEXT_TRACK
+    | MediaPlayerEntityFeature.PREVIOUS_TRACK
+    | MediaPlayerEntityFeature.VOLUME_SET
+    | MediaPlayerEntityFeature.VOLUME_STEP
+    | MediaPlayerEntityFeature.REPEAT_SET
+    | MediaPlayerEntityFeature.SHUFFLE_SET
 )
 
 
 # Map features in pyatv to Home Assistant
 SUPPORT_FEATURE_MAPPING = {
-    FeatureName.PlayUrl: SUPPORT_PLAY_MEDIA,
-    FeatureName.StreamFile: SUPPORT_PLAY_MEDIA,
-    FeatureName.Pause: SUPPORT_PAUSE,
-    FeatureName.Play: SUPPORT_PLAY,
-    FeatureName.SetPosition: SUPPORT_SEEK,
-    FeatureName.Stop: SUPPORT_STOP,
-    FeatureName.Next: SUPPORT_NEXT_TRACK,
-    FeatureName.Previous: SUPPORT_PREVIOUS_TRACK,
-    FeatureName.VolumeUp: SUPPORT_VOLUME_STEP,
-    FeatureName.VolumeDown: SUPPORT_VOLUME_STEP,
-    FeatureName.SetRepeat: SUPPORT_REPEAT_SET,
-    FeatureName.SetShuffle: SUPPORT_SHUFFLE_SET,
-    FeatureName.SetVolume: SUPPORT_VOLUME_SET,
-    FeatureName.AppList: SUPPORT_BROWSE_MEDIA | SUPPORT_SELECT_SOURCE,
-    FeatureName.LaunchApp: SUPPORT_BROWSE_MEDIA | SUPPORT_SELECT_SOURCE,
+    FeatureName.PlayUrl: MediaPlayerEntityFeature.PLAY_MEDIA,
+    FeatureName.StreamFile: MediaPlayerEntityFeature.PLAY_MEDIA,
+    FeatureName.Pause: MediaPlayerEntityFeature.PAUSE,
+    FeatureName.Play: MediaPlayerEntityFeature.PLAY,
+    FeatureName.SetPosition: MediaPlayerEntityFeature.SEEK,
+    FeatureName.Stop: MediaPlayerEntityFeature.STOP,
+    FeatureName.Next: MediaPlayerEntityFeature.NEXT_TRACK,
+    FeatureName.Previous: MediaPlayerEntityFeature.PREVIOUS_TRACK,
+    FeatureName.VolumeUp: MediaPlayerEntityFeature.VOLUME_STEP,
+    FeatureName.VolumeDown: MediaPlayerEntityFeature.VOLUME_STEP,
+    FeatureName.SetRepeat: MediaPlayerEntityFeature.REPEAT_SET,
+    FeatureName.SetShuffle: MediaPlayerEntityFeature.SHUFFLE_SET,
+    FeatureName.SetVolume: MediaPlayerEntityFeature.VOLUME_SET,
+    FeatureName.AppList: MediaPlayerEntityFeature.BROWSE_MEDIA
+    | MediaPlayerEntityFeature.SELECT_SOURCE,
+    FeatureName.LaunchApp: MediaPlayerEntityFeature.BROWSE_MEDIA
+    | MediaPlayerEntityFeature.SELECT_SOURCE,
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Load Apple TV media player based on a config entry."""
     name = config_entry.data[CONF_NAME]
     manager = hass.data[DOMAIN][config_entry.unique_id]
@@ -156,15 +153,15 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
         except exceptions.ProtocolError:
             _LOGGER.exception("Failed to update app list")
         else:
-            self._app_list = {app.name: app.identifier for app in apps}
+            self._app_list = {
+                app.name: app.identifier
+                for app in sorted(apps, key=lambda app: app.name.lower())
+            }
             self.async_write_ha_state()
 
     @callback
     def async_device_disconnected(self):
         """Handle when connection was lost to device."""
-        self.atv.push_updater.stop()
-        self.atv.push_updater.listener = None
-        self.atv.power.listener = None
         self._attr_supported_features = SUPPORT_APPLE_TV
 
     @property
