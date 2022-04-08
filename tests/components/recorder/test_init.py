@@ -13,6 +13,7 @@ from homeassistant.components import recorder
 from homeassistant.components.recorder import (
     CONF_AUTO_PURGE,
     CONF_AUTO_REPACK,
+    CONF_COMMIT_INTERVAL,
     CONF_DB_URL,
     CONFIG_SCHEMA,
     DOMAIN,
@@ -186,7 +187,7 @@ async def test_saving_many_states(
 ):
     """Test we expire after many commits."""
     instance = await async_setup_recorder_instance(
-        hass, {recorder.CONF_COMMIT_INTERVAL: 1}
+        hass, {recorder.CONF_COMMIT_INTERVAL: 0}
     )
 
     entity_id = "test.recorder"
@@ -825,7 +826,7 @@ def test_auto_purge_disabled(hass_recorder):
     dt_util.set_default_time_zone(tz)
 
     # Purging is scheduled to happen at 4:12am every day. We want
-    # to verify that when auto purge is disabled perodic db cleanups
+    # to verify that when auto purge is disabled periodic db cleanups
     # are still scheduled
     #
     # The clock is started at 4:15am then advanced forward below
@@ -1208,7 +1209,9 @@ async def test_database_corruption_while_running(hass, tmpdir, caplog):
     test_db_file = await hass.async_add_executor_job(_create_tmpdir_for_test_db)
     dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
 
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: dburl}})
+    assert await async_setup_component(
+        hass, DOMAIN, {DOMAIN: {CONF_DB_URL: dburl, CONF_COMMIT_INTERVAL: 0}}
+    )
     await hass.async_block_till_done()
     caplog.clear()
 
@@ -1299,7 +1302,10 @@ def test_entity_id_filter(hass_recorder):
 async def test_database_lock_and_unlock(hass: HomeAssistant, tmp_path):
     """Test writing events during lock getting written after unlocking."""
     # Use file DB, in memory DB cannot do write locks.
-    config = {recorder.CONF_DB_URL: "sqlite:///" + str(tmp_path / "pytest.db")}
+    config = {
+        recorder.CONF_COMMIT_INTERVAL: 0,
+        recorder.CONF_DB_URL: "sqlite:///" + str(tmp_path / "pytest.db"),
+    }
     await async_init_recorder_component(hass, config)
     await hass.async_block_till_done()
 
@@ -1311,7 +1317,7 @@ async def test_database_lock_and_unlock(hass: HomeAssistant, tmp_path):
 
     event_type = "EVENT_TEST"
     event_data = {"test_attr": 5, "test_attr_10": "nice"}
-    hass.bus.fire(event_type, event_data)
+    hass.bus.async_fire(event_type, event_data)
     task = asyncio.create_task(async_wait_recording_done(hass, instance))
 
     # Recording can't be finished while lock is held
@@ -1333,7 +1339,10 @@ async def test_database_lock_and_unlock(hass: HomeAssistant, tmp_path):
 async def test_database_lock_and_overflow(hass: HomeAssistant, tmp_path):
     """Test writing events during lock leading to overflow the queue causes the database to unlock."""
     # Use file DB, in memory DB cannot do write locks.
-    config = {recorder.CONF_DB_URL: "sqlite:///" + str(tmp_path / "pytest.db")}
+    config = {
+        recorder.CONF_COMMIT_INTERVAL: 0,
+        recorder.CONF_DB_URL: "sqlite:///" + str(tmp_path / "pytest.db"),
+    }
     await async_init_recorder_component(hass, config)
     await hass.async_block_till_done()
 
@@ -1402,3 +1411,42 @@ async def test_in_memory_database(hass, caplog):
         hass, recorder.DOMAIN, {recorder.DOMAIN: {recorder.CONF_DB_URL: "sqlite://"}}
     )
     assert "In-memory SQLite database is not supported" in caplog.text
+
+
+async def test_database_connection_keep_alive(
+    hass: HomeAssistant,
+    async_setup_recorder_instance: SetupRecorderInstanceT,
+    caplog: pytest.LogCaptureFixture,
+):
+    """Test we keep alive socket based dialects."""
+    with patch(
+        "homeassistant.components.recorder.Recorder._using_sqlite", return_value=False
+    ):
+        instance = await async_setup_recorder_instance(hass)
+        # We have to mock this since we don't have a mock
+        # MySQL server available in tests.
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await instance.async_recorder_ready.wait()
+
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=recorder.KEEPALIVE_TIME)
+    )
+    await async_wait_recording_done(hass, instance)
+    assert "Sending keepalive" in caplog.text
+
+
+async def test_database_connection_keep_alive_disabled_on_sqlite(
+    hass: HomeAssistant,
+    async_setup_recorder_instance: SetupRecorderInstanceT,
+    caplog: pytest.LogCaptureFixture,
+):
+    """Test we do not do keep alive for sqlite."""
+    instance = await async_setup_recorder_instance(hass)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await instance.async_recorder_ready.wait()
+
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=recorder.KEEPALIVE_TIME)
+    )
+    await async_wait_recording_done(hass, instance)
+    assert "Sending keepalive" not in caplog.text
