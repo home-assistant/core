@@ -48,7 +48,10 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     if status is None:
         raise InvalidAuth
 
-    return {"title": status.get("name"), "unique_id": status["serial"]}
+    if status.get("serial") is None:
+        raise CannotConnect
+
+    return {"title": status.get("serial"), "unique_id": status.get("serial")}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

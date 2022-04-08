@@ -1,4 +1,4 @@
-"""Test the OpenGarage config flow."""
+"""Test the ReisingerBridge config flow."""
 from unittest.mock import patch
 
 import aiohttp
@@ -26,7 +26,11 @@ async def test_form(hass: HomeAssistant) -> None:
 
     with patch(
         "reisingerdrive.OpenReisinger.update_state",
-        return_value={"name": "Name of the device", "mac": "unique"},
+        return_value={
+            "name": "SerialNoOfDrive",
+            "mac": "unique",
+            "serial": "SerialNoOfDrive",
+        },
     ), patch(
         "homeassistant.components.reisingerbridge.async_setup_entry",
         return_value=True,
@@ -34,19 +38,17 @@ async def test_form(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "device_name": "S5000Left",
                 "host": "http://1.1.1.1",
-                "device_key": "asrpiaADsas",
+                "device_key": "DeviceVerificationKey",
             },
         )
         await hass.async_block_till_done()
 
     assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result2["title"] == "Name of the device"
+    assert result2["title"] == "SerialNoOfDrive"
     assert result2["data"] == {
-        "device_name": "S5000Left",
         "host": "http://1.1.1.1",
-        "device_key": "asrpiaADsas",
+        "device_key": "DeviceVerificationKey",
         "port": 80,
     }
     assert len(mock_setup_entry.mock_calls) == 1
@@ -64,7 +66,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"host": "http://1.1.1.1", "device_key": "asrpiaADsas"},
+            {"host": "http://1.1.1.1", "device_key": "DeviceVerificationKey"},
         )
 
     assert result2["type"] == RESULT_TYPE_FORM
@@ -83,7 +85,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"host": "http://1.1.1.1", "device_key": "asrpiaADsas"},
+            {"host": "http://1.1.1.1", "device_key": "DeviceVerificationKey"},
         )
 
     assert result2["type"] == RESULT_TYPE_FORM
@@ -102,7 +104,7 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"host": "http://1.1.1.1", "device_key": "asrpiaADsas"},
+            {"host": "http://1.1.1.1", "device_key": "DeviceVerificationKey"},
         )
 
     assert result2["type"] == RESULT_TYPE_FORM
@@ -117,26 +119,49 @@ async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
             "device_name": "S5000Left",
             "host": "http://1.1.1.1",
             "port": 80,
-            "device_key": "asrpiaADsas",
+            "device_key": "DeviceVerificationKey",
+            "serial": "SerialNoOfDrive",
+            "unique_id": "SerialNoOfDrive",
         },
-        unique_id="unique",
+        unique_id="SerialNoOfDrive",
     )
     first_entry.add_to_hass(hass)
 
     with patch(
         "reisingerdrive.OpenReisinger.update_state",
-        return_value={"name": "Name of the device", "mac": "unique"},
+        return_value={
+            "name": "SerialNoOfDrive",
+            "host": "http://1.1.1.1",
+            "mac": "unique",
+            "serial": "SerialNoOfDrive",
+            "device_name": "S5000Left",
+            "device_key": "DeviceVerificationKey",
+            "unique_id": "SerialNoOfDrive",
+        },
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={
-                "device_name": "S5000Left",
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["errors"] is None
+
+    with patch(
+        "reisingerdrive.OpenReisinger.update_state",
+        return_value={
+            "name": "Name of the device",
+            "serial": "SerialNoOfDrive",
+        },
+    ), patch(
+        "homeassistant.components.reisingerbridge.async_setup_entry",
+        return_value=True,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
                 "host": "http://1.1.1.1",
-                "device_key": "asrpiaADsas",
-                "port": 80,
+                "device_key": "DeviceVerificationKey",
             },
         )
+        await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
-    assert result["reason"] == "already_configured"
+    assert result2["type"] == RESULT_TYPE_ABORT
