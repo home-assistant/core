@@ -705,7 +705,8 @@ class Recorder(threading.Thread):
     @callback
     def _async_keep_alive(self, now: datetime) -> None:
         """Queue a keep alive."""
-        self.queue.put(KEEP_ALIVE_TASK)
+        if self._event_listener:
+            self.queue.put(KEEP_ALIVE_TASK)
 
     @callback
     def _async_commit(self, now: datetime) -> None:
