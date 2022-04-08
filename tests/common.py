@@ -313,9 +313,7 @@ async def async_test_home_assistant(loop, load_registries=True):
     async def mock_async_start():
         """Start the mocking."""
         # We only mock time during tests and we want to track tasks
-        with patch("homeassistant.core._async_create_timer"), patch.object(
-            hass, "async_stop_track_tasks"
-        ):
+        with patch.object(hass, "async_stop_track_tasks"):
             await orig_start()
 
     hass.async_start = mock_async_start

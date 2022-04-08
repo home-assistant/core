@@ -1065,12 +1065,10 @@ async def test_start_taking_too_long(loop, caplog):
     try:
         with patch.object(
             hass, "async_block_till_done", side_effect=asyncio.TimeoutError
-        ), patch("homeassistant.core._async_create_timer") as mock_timer:
+        ):
             await hass.async_start()
 
         assert hass.state == ha.CoreState.running
-        assert len(mock_timer.mock_calls) == 1
-        assert mock_timer.mock_calls[0][1][0] is hass
         assert "Something is blocking Home Assistant" in caplog.text
 
     finally:
