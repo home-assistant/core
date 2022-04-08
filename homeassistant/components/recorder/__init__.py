@@ -86,7 +86,7 @@ from .util import (
     end_incomplete_runs,
     is_second_sunday,
     move_away_broken_database,
-    periodic_db_cleanups,
+    perodic_db_cleanups,
     session_scope,
     setup_connection_for_dialect,
     validate_or_move_away_sqlite_database,
@@ -448,7 +448,7 @@ class PurgeTask(RecorderTask):
             # We always need to do the db cleanups after a purge
             # is finished to ensure the WAL checkpoint and other
             # tasks happen after a vacuum.
-            periodic_db_cleanups(instance)
+            perodic_db_cleanups(instance)
             return
         # Schedule a new purge task if this one didn't finish
         instance.queue.put(PurgeTask(self.purge_before, self.repack, self.apply_filter))
@@ -474,7 +474,7 @@ class PerodicCleanupTask(RecorderTask):
 
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
-        periodic_db_cleanups(instance)
+        perodic_db_cleanups(instance)
 
 
 @dataclass
@@ -1158,62 +1158,62 @@ class Recorder(threading.Thread):
             return
 
         self.event_session.add(dbevent)
-        if event.event_type != EVENT_STATE_CHANGED:
-            return
-
-        try:
-            dbstate = States.from_event(event)
-            shared_attrs = StateAttributes.shared_attrs_from_event(
-                event, self._exclude_attributes_by_domain
-            )
-        except (TypeError, ValueError) as ex:
-            _LOGGER.warning(
-                "State is not JSON serializable: %s: %s",
-                event.data.get("new_state"),
-                ex,
-            )
-            return
-
-        dbstate.attributes = None
-
-        # Matching attributes found in the pending commit
-        if pending_attributes := self._pending_state_attributes.get(shared_attrs):
-            dbstate.state_attributes = pending_attributes
-        # Matching attributes id found in the cache
-        elif attributes_id := self._state_attributes_ids.get(shared_attrs):
-            dbstate.attributes_id = attributes_id
-        else:
-            attr_hash = StateAttributes.hash_shared_attrs(shared_attrs)
-            # Matching attributes found in the database
-            if (
-                attributes := self.event_session.query(StateAttributes.attributes_id)
-                .filter(StateAttributes.hash == attr_hash)
-                .filter(StateAttributes.shared_attrs == shared_attrs)
-                .first()
-            ):
-                dbstate.attributes_id = attributes[0]
-                self._state_attributes_ids[shared_attrs] = attributes[0]
-            # No matching attributes found, save them in the DB
-            else:
-                dbstate_attributes = StateAttributes(
-                    shared_attrs=shared_attrs, hash=attr_hash
+        if event.event_type == EVENT_STATE_CHANGED:
+            try:
+                dbstate = States.from_event(event)
+                shared_attrs = StateAttributes.shared_attrs_from_event(
+                    event, self._exclude_attributes_by_domain
                 )
-                dbstate.state_attributes = dbstate_attributes
-                self._pending_state_attributes[shared_attrs] = dbstate_attributes
-                self.event_session.add(dbstate_attributes)
+            except (TypeError, ValueError) as ex:
+                _LOGGER.warning(
+                    "State is not JSON serializable: %s: %s",
+                    event.data.get("new_state"),
+                    ex,
+                )
+                return
 
-        if old_state := self._old_states.pop(dbstate.entity_id, None):
-            if old_state.state_id:
-                dbstate.old_state_id = old_state.state_id
+            dbstate.attributes = None
+
+            # Matching attributes found in the pending commit
+            if pending_attributes := self._pending_state_attributes.get(shared_attrs):
+                dbstate.state_attributes = pending_attributes
+            # Matching attributes id found in the cache
+            elif attributes_id := self._state_attributes_ids.get(shared_attrs):
+                dbstate.attributes_id = attributes_id
             else:
-                dbstate.old_state = old_state
-        if event.data.get("new_state"):
-            self._old_states[dbstate.entity_id] = dbstate
-            self._pending_expunge.append(dbstate)
-        else:
-            dbstate.state = None
-        dbstate.event = dbevent
-        self.event_session.add(dbstate)
+                attr_hash = StateAttributes.hash_shared_attrs(shared_attrs)
+                # Matching attributes found in the database
+                if (
+                    attributes := self.event_session.query(
+                        StateAttributes.attributes_id
+                    )
+                    .filter(StateAttributes.hash == attr_hash)
+                    .filter(StateAttributes.shared_attrs == shared_attrs)
+                    .first()
+                ):
+                    dbstate.attributes_id = attributes[0]
+                    self._state_attributes_ids[shared_attrs] = attributes[0]
+                # No matching attributes found, save them in the DB
+                else:
+                    dbstate_attributes = StateAttributes(
+                        shared_attrs=shared_attrs, hash=attr_hash
+                    )
+                    dbstate.state_attributes = dbstate_attributes
+                    self._pending_state_attributes[shared_attrs] = dbstate_attributes
+                    self.event_session.add(dbstate_attributes)
+
+            if old_state := self._old_states.pop(dbstate.entity_id, None):
+                if old_state.state_id:
+                    dbstate.old_state_id = old_state.state_id
+                else:
+                    dbstate.old_state = old_state
+            if event.data.get("new_state"):
+                self._old_states[dbstate.entity_id] = dbstate
+                self._pending_expunge.append(dbstate)
+            else:
+                dbstate.state = None
+            dbstate.event = dbevent
+            self.event_session.add(dbstate)
 
     def _handle_database_error(self, err: Exception) -> bool:
         """Handle a database error that may result in moving away the corrupt db."""
