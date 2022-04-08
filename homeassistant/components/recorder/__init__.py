@@ -1172,7 +1172,6 @@ class Recorder(threading.Thread):
                 return
 
             dbstate.attributes = None
-
             # Matching attributes found in the pending commit
             if pending_attributes := self._pending_state_attributes.get(shared_attrs):
                 dbstate.state_attributes = pending_attributes
