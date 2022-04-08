@@ -69,4 +69,4 @@ async def test_temperature_convert(hass):
     assert state.state == "rainy"
 
     data = state.attributes
-    assert data.get(ATTR_WEATHER_TEMPERATURE) == -24
+    assert data.get(ATTR_WEATHER_TEMPERATURE) == -24.4

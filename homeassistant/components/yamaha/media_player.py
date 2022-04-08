@@ -7,22 +7,12 @@ import requests
 import rxv
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_MUSIC,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SELECT_SOUND_MODE,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_STOP,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
+from homeassistant.components.media_player import (
+    PLATFORM_SCHEMA,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
 )
+from homeassistant.components.media_player.const import MEDIA_TYPE_MUSIC
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -73,13 +63,13 @@ DATA_YAMAHA = "yamaha_known_receivers"
 DEFAULT_NAME = "Yamaha Receiver"
 
 SUPPORT_YAMAHA = (
-    SUPPORT_VOLUME_SET
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-    | SUPPORT_SELECT_SOURCE
-    | SUPPORT_PLAY
-    | SUPPORT_SELECT_SOUND_MODE
+    MediaPlayerEntityFeature.VOLUME_SET
+    | MediaPlayerEntityFeature.VOLUME_MUTE
+    | MediaPlayerEntityFeature.TURN_ON
+    | MediaPlayerEntityFeature.TURN_OFF
+    | MediaPlayerEntityFeature.SELECT_SOURCE
+    | MediaPlayerEntityFeature.PLAY
+    | MediaPlayerEntityFeature.SELECT_SOUND_MODE
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -332,11 +322,13 @@ class YamahaDevice(MediaPlayerEntity):
 
         supports = self._playback_support
         mapping = {
-            "play": (SUPPORT_PLAY | SUPPORT_PLAY_MEDIA),
-            "pause": SUPPORT_PAUSE,
-            "stop": SUPPORT_STOP,
-            "skip_f": SUPPORT_NEXT_TRACK,
-            "skip_r": SUPPORT_PREVIOUS_TRACK,
+            "play": (
+                MediaPlayerEntityFeature.PLAY | MediaPlayerEntityFeature.PLAY_MEDIA
+            ),
+            "pause": MediaPlayerEntityFeature.PAUSE,
+            "stop": MediaPlayerEntityFeature.STOP,
+            "skip_f": MediaPlayerEntityFeature.NEXT_TRACK,
+            "skip_r": MediaPlayerEntityFeature.PREVIOUS_TRACK,
         }
         for attr, feature in mapping.items():
             if getattr(supports, attr, False):

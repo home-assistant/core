@@ -43,11 +43,14 @@ async def async_setup_events(gateway: DeconzGateway) -> None:
 
     @callback
     def async_add_sensor(
-        sensors: AncillaryControl | Switch = gateway.api.sensors.values(),
+        sensors: AncillaryControl | Switch | None = None,
     ) -> None:
         """Create DeconzEvent."""
         new_events = []
         known_events = {event.unique_id for event in gateway.events}
+
+        if sensors is None:
+            sensors = gateway.api.sensors.values()
 
         for sensor in sensors:
 
@@ -130,7 +133,7 @@ class DeconzEvent(DeconzBase):
         data = {
             CONF_ID: self.event_id,
             CONF_UNIQUE_ID: self.serial,
-            CONF_EVENT: self._device.state,
+            CONF_EVENT: self._device.button_event,
         }
 
         if self.device_id:

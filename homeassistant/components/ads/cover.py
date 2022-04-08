@@ -8,11 +8,8 @@ from homeassistant.components.cover import (
     ATTR_POSITION,
     DEVICE_CLASSES_SCHEMA,
     PLATFORM_SCHEMA,
-    SUPPORT_CLOSE,
-    SUPPORT_OPEN,
-    SUPPORT_SET_POSITION,
-    SUPPORT_STOP,
     CoverEntity,
+    CoverEntityFeature,
 )
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME
 from homeassistant.core import HomeAssistant
@@ -117,11 +114,13 @@ class AdsCover(AdsEntity, CoverEntity):
         self._ads_var_close = ads_var_close
         self._ads_var_stop = ads_var_stop
         self._attr_device_class = device_class
-        self._attr_supported_features = SUPPORT_OPEN | SUPPORT_CLOSE
+        self._attr_supported_features = (
+            CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
+        )
         if ads_var_stop is not None:
-            self._attr_supported_features |= SUPPORT_STOP
+            self._attr_supported_features |= CoverEntityFeature.STOP
         if ads_var_pos_set is not None:
-            self._attr_supported_features |= SUPPORT_SET_POSITION
+            self._attr_supported_features |= CoverEntityFeature.SET_POSITION
 
     async def async_added_to_hass(self):
         """Register device notification."""

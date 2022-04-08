@@ -25,6 +25,7 @@ from homeassistant.helpers import (
     template,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -119,7 +120,7 @@ def area_mock(hass):
         unique_id="config-in-own-area-id",
         platform="test",
         area_id="own-area",
-        entity_category="config",
+        entity_category=EntityCategory.CONFIG,
     )
     hidden_entity_in_own_area = ent_reg.RegistryEntry(
         entity_id="light.hidden_in_own_area",
@@ -139,7 +140,7 @@ def area_mock(hass):
         unique_id="config-in-area-id",
         platform="test",
         device_id=device_in_area.id,
-        entity_category="config",
+        entity_category=EntityCategory.CONFIG,
     )
     hidden_entity_in_area = ent_reg.RegistryEntry(
         entity_id="light.hidden_in_area",
@@ -173,7 +174,7 @@ def area_mock(hass):
         unique_id="config-no-area-id",
         platform="test",
         device_id=device_no_area.id,
-        entity_category="config",
+        entity_category=EntityCategory.CONFIG,
     )
     hidden_entity_no_area = ent_reg.RegistryEntry(
         entity_id="light.hidden_no_area",
@@ -421,6 +422,22 @@ async def test_service_call_entry_id(hass):
     assert dict(calls[0].data) == {"entity_id": ["hello.world"]}
 
 
+@pytest.mark.parametrize("target", ("all", "none"))
+async def test_service_call_all_none(hass, target):
+    """Test service call targeting all."""
+    calls = async_mock_service(hass, "test_domain", "test_service")
+
+    config = {
+        "service": "test_domain.test_service",
+        "target": {"entity_id": target},
+    }
+
+    await service.async_call_from_config(hass, config)
+    await hass.async_block_till_done()
+
+    assert dict(calls[0].data) == {"entity_id": target}
+
+
 async def test_extract_entity_ids(hass):
     """Test extract_entity_ids method."""
     hass.states.async_set("light.Bowl", STATE_ON)
@@ -551,6 +568,20 @@ async def test_call_with_required_features(hass, mock_entities):
     ]
     actual = [call[0][0] for call in test_service_mock.call_args_list]
     assert all(entity in actual for entity in expected)
+
+    # Test we raise if we target entity ID that does not support the service
+    test_service_mock.reset_mock()
+    with pytest.raises(exceptions.HomeAssistantError):
+        await service.entity_service_call(
+            hass,
+            [Mock(entities=mock_entities)],
+            test_service_mock,
+            ha.ServiceCall(
+                "test_domain", "test_service", {"entity_id": "light.living_room"}
+            ),
+            required_features=[SUPPORT_A],
+        )
+    assert test_service_mock.call_count == 0
 
 
 async def test_call_with_both_required_features(hass, mock_entities):

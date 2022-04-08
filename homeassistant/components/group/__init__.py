@@ -28,8 +28,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback, split_entity_id
-from homeassistant.helpers import start
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er, start
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_change_event
@@ -39,6 +38,8 @@ from homeassistant.helpers.integration_platform import (
 from homeassistant.helpers.reload import async_reload_integration_platforms
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
+
+from .const import CONF_HIDE_MEMBERS
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 
@@ -64,8 +65,10 @@ PLATFORMS = [
     Platform.COVER,
     Platform.FAN,
     Platform.LIGHT,
+    Platform.LOCK,
     Platform.MEDIA_PLAYER,
     Platform.NOTIFY,
+    Platform.SWITCH,
 ]
 
 REG_KEY = f"{DOMAIN}_registry"
@@ -236,6 +239,25 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await hass.config_entries.async_unload_platforms(
         entry, (entry.options["group_type"],)
     )
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Remove a config entry."""
+    # Unhide the group members
+    registry = er.async_get(hass)
+
+    if not entry.options[CONF_HIDE_MEMBERS]:
+        return
+
+    for member in entry.options[CONF_ENTITIES]:
+        if not (entity_id := er.async_resolve_entity_id(registry, member)):
+            continue
+        if (entity_entry := registry.async_get(entity_id)) is None:
+            continue
+        if entity_entry.hidden_by != er.RegistryEntryHider.INTEGRATION:
+            continue
+
+        registry.async_update_entity(entity_id, hidden_by=None)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -432,7 +454,7 @@ class GroupEntity(Entity):
             self.async_update_group_state()
             self.async_write_ha_state()
 
-        start.async_at_start(self.hass, _update_at_start)
+        self.async_on_remove(start.async_at_start(self.hass, _update_at_start))
 
     @callback
     def async_defer_or_update_ha_state(self) -> None:
@@ -667,7 +689,7 @@ class Group(Entity):
 
     async def async_added_to_hass(self):
         """Handle addition to Home Assistant."""
-        start.async_at_start(self.hass, self._async_start)
+        self.async_on_remove(start.async_at_start(self.hass, self._async_start))
 
     async def async_will_remove_from_hass(self):
         """Handle removal from Home Assistant."""

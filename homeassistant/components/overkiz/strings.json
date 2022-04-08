@@ -16,6 +16,7 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "server_in_maintenance": "Server is down for maintenance",
+      "too_many_attempts": "Too many attempts with an invalid token, temporarily banned",
       "too_many_requests": "Too many requests, try again later",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },

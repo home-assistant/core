@@ -12,7 +12,7 @@ from random import randint
 
 from zigpy.zcl.clusters.hvac import Fan as F, Thermostat as T
 
-from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
@@ -35,10 +35,6 @@ from homeassistant.components.climate.const import (
     PRESET_COMFORT,
     PRESET_ECO,
     PRESET_NONE,
-    SUPPORT_FAN_MODE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -155,15 +151,15 @@ class Thermostat(ZhaEntity, ClimateEntity):
         self._thrm = self.cluster_channels.get(CHANNEL_THERMOSTAT)
         self._preset = PRESET_NONE
         self._presets = []
-        self._supported_flags = SUPPORT_TARGET_TEMPERATURE
+        self._supported_flags = ClimateEntityFeature.TARGET_TEMPERATURE
         self._fan = self.cluster_channels.get(CHANNEL_FAN)
 
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        if self._thrm.local_temp is None:
+        if self._thrm.local_temperature is None:
             return None
-        return self._thrm.local_temp / ZCL_TEMP
+        return self._thrm.local_temperature / ZCL_TEMP
 
     @property
     def extra_state_attributes(self):
@@ -272,7 +268,7 @@ class Thermostat(ZhaEntity, ClimateEntity):
     @property
     def hvac_modes(self) -> tuple[str, ...]:
         """Return the list of available HVAC operation modes."""
-        return SEQ_OF_OPERATION.get(self._thrm.ctrl_seqe_of_oper, (HVAC_MODE_OFF,))
+        return SEQ_OF_OPERATION.get(self._thrm.ctrl_sequence_of_oper, (HVAC_MODE_OFF,))
 
     @property
     def precision(self):
@@ -294,9 +290,9 @@ class Thermostat(ZhaEntity, ClimateEntity):
         """Return the list of supported features."""
         features = self._supported_flags
         if HVAC_MODE_HEAT_COOL in self.hvac_modes:
-            features |= SUPPORT_TARGET_TEMPERATURE_RANGE
+            features |= ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         if self._fan is not None:
-            self._supported_flags |= SUPPORT_FAN_MODE
+            self._supported_flags |= ClimateEntityFeature.FAN_MODE
         return features
 
     @property
@@ -513,7 +509,7 @@ class SinopeTechnologiesThermostat(Thermostat):
         """Initialize ZHA Thermostat instance."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
         self._presets = [PRESET_AWAY, PRESET_NONE]
-        self._supported_flags |= SUPPORT_PRESET_MODE
+        self._supported_flags |= ClimateEntityFeature.PRESET_MODE
         self._manufacturer_ch = self.cluster_channels["sinope_manufacturer_specific"]
 
     @property
@@ -601,6 +597,8 @@ class CentralitePearl(ZenWithinThermostat):
         "_TZE200_2atgpdho",
         "_TZE200_pvvbommb",
         "_TZE200_4eeyebrt",
+        "_TZE200_cpmgn2cf",
+        "_TZE200_9sfg7gm0",
         "_TYST11_ckud7u2l",
         "_TYST11_ywdxldoj",
         "_TYST11_cwnjrr72",
@@ -622,7 +620,7 @@ class MoesThermostat(Thermostat):
             PRESET_BOOST,
             PRESET_COMPLEX,
         ]
-        self._supported_flags |= SUPPORT_PRESET_MODE
+        self._supported_flags |= ClimateEntityFeature.PRESET_MODE
 
     @property
     def hvac_modes(self) -> tuple[str, ...]:
@@ -703,7 +701,7 @@ class BecaThermostat(Thermostat):
             PRESET_BOOST,
             PRESET_TEMP_MANUAL,
         ]
-        self._supported_flags |= SUPPORT_PRESET_MODE
+        self._supported_flags |= ClimateEntityFeature.PRESET_MODE
 
     @property
     def hvac_modes(self) -> tuple[str, ...]:
@@ -776,7 +774,10 @@ class StelproFanHeater(Thermostat):
 @STRICT_MATCH(
     channel_names=CHANNEL_THERMOSTAT,
     manufacturers={
-        "_TZE200_hue3yfsn",
+        "_TZE200_e9ba97vf",  # TV01-ZG
+        "_TZE200_husqqvux",  # TSL-TRV-TV01ZG
+        "_TZE200_hue3yfsn",  # TV02-ZG
+        "_TZE200_kly8gjlz",  # TV05-ZG
     },
 )
 class ZONNSMARTThermostat(Thermostat):
@@ -799,7 +800,7 @@ class ZONNSMARTThermostat(Thermostat):
             PRESET_SCHEDULE,
             self.PRESET_FROST,
         ]
-        self._supported_flags |= SUPPORT_PRESET_MODE
+        self._supported_flags |= ClimateEntityFeature.PRESET_MODE
 
     async def async_attribute_updated(self, record):
         """Handle attribute update from device."""
