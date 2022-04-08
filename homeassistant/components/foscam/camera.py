@@ -6,9 +6,12 @@ import asyncio
 from libpyfoscam import FoscamCamera
 import voluptuous as vol
 
-from homeassistant.components.camera import SUPPORT_STREAM, Camera
+from homeassistant.components.camera import Camera, CameraEntityFeature
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import CONF_RTSP_PORT, CONF_STREAM, LOGGER, SERVICE_PTZ, SERVICE_PTZ_PRESET
 
@@ -42,7 +45,11 @@ ATTR_PRESET_NAME = "preset_name"
 PTZ_GOTO_PRESET_COMMAND = "ptz_goto_preset"
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Add a Foscam IP camera from a config entry."""
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
@@ -99,6 +106,8 @@ class HassFoscamCamera(Camera):
         self._unique_id = config_entry.entry_id
         self._rtsp_port = config_entry.data[CONF_RTSP_PORT]
         self._motion_status = False
+        if self._rtsp_port:
+            self._attr_supported_features = CameraEntityFeature.STREAM
 
     async def async_added_to_hass(self):
         """Handle entity addition to hass."""
@@ -137,14 +146,6 @@ class HassFoscamCamera(Camera):
             return None
 
         return response
-
-    @property
-    def supported_features(self):
-        """Return supported features."""
-        if self._rtsp_port:
-            return SUPPORT_STREAM
-
-        return None
 
     async def stream_source(self):
         """Return the stream source."""

@@ -1,8 +1,13 @@
 """Support for HomeMatic binary sensors."""
+from __future__ import annotations
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import ATTR_DISCOVER_DEVICES, ATTR_DISCOVERY_TYPE, DISCOVER_BATTERY
 from .entity import HMDevice
@@ -29,12 +34,17 @@ SENSOR_TYPES_CLASS = {
 }
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the HomeMatic binary sensor platform."""
     if discovery_info is None:
         return
 
-    devices = []
+    devices: list[BinarySensorEntity] = []
     for conf in discovery_info[ATTR_DISCOVER_DEVICES]:
         if discovery_info[ATTR_DISCOVERY_TYPE] == DISCOVER_BATTERY:
             devices.append(HMBatterySensor(conf))

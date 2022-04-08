@@ -4,7 +4,7 @@ from __future__ import annotations
 from pyinsteon.constants import ThermostatMode
 from pyinsteon.operating_flag import CELSIUS
 
-from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
@@ -19,14 +19,12 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
-    SUPPORT_FAN_MODE,
-    SUPPORT_TARGET_HUMIDITY,
-    SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import SIGNAL_ADD_ENTITIES
 from .insteon_entity import InsteonEntity
@@ -54,15 +52,13 @@ HVAC_MODES = {
     3: HVAC_MODE_HEAT_COOL,
 }
 FAN_MODES = {4: HVAC_MODE_AUTO, 8: HVAC_MODE_FAN_ONLY}
-SUPPORTED_FEATURES = (
-    SUPPORT_FAN_MODE
-    | SUPPORT_TARGET_HUMIDITY
-    | SUPPORT_TARGET_TEMPERATURE
-    | SUPPORT_TARGET_TEMPERATURE_RANGE
-)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Insteon climate entities from a config entry."""
 
     @callback
@@ -84,10 +80,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class InsteonClimateEntity(InsteonEntity, ClimateEntity):
     """A Class for an Insteon climate entity."""
 
-    @property
-    def supported_features(self):
-        """Return the supported features for this entity."""
-        return SUPPORTED_FEATURES
+    _attr_supported_features = (
+        ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.TARGET_HUMIDITY
+        | ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+    )
 
     @property
     def temperature_unit(self) -> str:

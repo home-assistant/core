@@ -1,11 +1,13 @@
 """Component to make instant statistics about your history."""
+from __future__ import annotations
+
 import datetime
 import logging
 import math
 
 import voluptuous as vol
 
-from homeassistant.components.recorder import history
+from homeassistant.components.recorder import get_instance, history
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_ENTITY_ID,
@@ -16,11 +18,13 @@ from homeassistant.const import (
     PERCENTAGE,
     TIME_HOURS,
 )
-from homeassistant.core import CoreState, callback
+from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.reload import async_setup_reload_service
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 from . import DOMAIN, PLATFORMS
@@ -74,7 +78,12 @@ PLATFORM_SCHEMA = vol.All(
 
 
 # noinspection PyUnusedLocal
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the History Stats sensor."""
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
 
@@ -97,8 +106,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             )
         ]
     )
-
-    return True
 
 
 class HistoryStatsSensor(SensorEntity):
@@ -218,21 +225,23 @@ class HistoryStatsSensor(SensorEntity):
             # Don't compute anything as the value cannot have changed
             return
 
-        await self.hass.async_add_executor_job(
+        await get_instance(self.hass).async_add_executor_job(
             self._update, start, end, now_timestamp, start_timestamp, end_timestamp
         )
 
     def _update(self, start, end, now_timestamp, start_timestamp, end_timestamp):
         # Get history between start and end
         history_list = history.state_changes_during_period(
-            self.hass, start, end, str(self._entity_id)
+            self.hass, start, end, str(self._entity_id), no_attributes=True
         )
 
         if self._entity_id not in history_list:
             return
 
         # Get the first state
-        last_state = history.get_state(self.hass, start, self._entity_id)
+        last_state = history.get_state(
+            self.hass, start, self._entity_id, no_attributes=True
+        )
         last_state = last_state is not None and last_state in self._entity_states
         last_time = start_timestamp
         elapsed = 0

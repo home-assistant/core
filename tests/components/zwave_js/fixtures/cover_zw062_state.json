@@ -6,11 +6,11 @@
   "status": 4,
   "ready": true,
   "deviceClass": {
-    "basic": {"key": 4, "label":"Routing Slave"},
-    "generic": {"key": 64, "label":"Entry Control"},
-    "specific": {"key": 7, "label":"Secure Barrier Add-on"},
+    "basic": { "key": 4, "label": "Routing Slave" },
+    "generic": { "key": 64, "label": "Entry Control" },
+    "specific": { "key": 7, "label": "Secure Barrier Add-on" },
     "mandatorySupportedCCs": [],
-    "mandatoryControlCCs": []
+    "mandatoryControlledCCs": []
   },
   "isListening": true,
   "isFrequentListening": false,
@@ -55,20 +55,7 @@
     }
   },
   "label": "ZW062",
-  "neighbors": [
-    1,
-    8,
-    11,
-    15,
-    19,
-    21,
-    22,
-    24,
-    25,
-    26,
-    27,
-    29
-  ],
+  "neighbors": [1, 8, 11, 15, 19, 21, 22, 24, 25, 26, 27, 29],
   "interviewAttempts": 1,
   "endpoints": [
     {
@@ -899,9 +886,7 @@
         "writeable": false,
         "label": "Z-Wave chip firmware versions"
       },
-      "value": [
-        "1.12"
-      ]
+      "value": ["1.12"]
     },
     {
       "endpoint": 0,
@@ -917,5 +902,6 @@
         "label": "Z-Wave chip hardware version"
       }
     }
-  ]
+  ],
+  "isControllerNode": false
 }

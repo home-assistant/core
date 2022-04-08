@@ -4,17 +4,21 @@ from __future__ import annotations
 from collections.abc import Iterator
 import logging
 import re
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from soco import SoCo
 from soco.data_structures import DidlFavorite
+from soco.events_base import Event as SonosEvent
 from soco.exceptions import SoCoException
 
-from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import SONOS_FAVORITES_UPDATED
+from .helpers import soco_error
 from .household_coordinator import SonosHouseholdCoordinator
+
+if TYPE_CHECKING:
+    from .speaker import SonosSpeaker
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,6 +37,10 @@ class SonosFavorites(SonosHouseholdCoordinator):
         favorites = self._favorites.copy()
         return iter(favorites)
 
+    def lookup_by_item_id(self, item_id: str) -> DidlFavorite | None:
+        """Return the favorite object with the provided item_id."""
+        return next((fav for fav in self._favorites if fav.item_id == item_id), None)
+
     async def async_update_entities(
         self, soco: SoCo, update_id: int | None = None
     ) -> None:
@@ -47,46 +55,43 @@ class SonosFavorites(SonosHouseholdCoordinator):
             self.hass, f"{SONOS_FAVORITES_UPDATED}-{self.household_id}"
         )
 
-    @callback
-    def async_handle_event(self, event_id: str, container_ids: str, soco: SoCo) -> None:
-        """Create a task to update from an event callback."""
+    async def async_process_event(
+        self, event: SonosEvent, speaker: SonosSpeaker
+    ) -> None:
+        """Process the event payload in an async lock and update entities."""
+        event_id = event.variables["favorites_update_id"]
+        container_ids = event.variables["container_update_i_ds"]
         if not (match := re.search(r"FV:2,(\d+)", container_ids)):
             return
 
         container_id = int(match.groups()[0])
         event_id = int(event_id.split(",")[-1])
 
-        self.hass.async_create_task(
-            self.async_process_event(event_id, container_id, soco)
-        )
-
-    async def async_process_event(
-        self, event_id: int, container_id: int, soco: SoCo
-    ) -> None:
-        """Process the event payload in an async lock and update entities."""
         async with self.cache_update_lock:
-            last_poll_id = self.last_polled_ids.get(soco.uid)
+            last_poll_id = self.last_polled_ids.get(speaker.uid)
             if (
                 self.last_processed_event_id
                 and event_id <= self.last_processed_event_id
             ):
                 # Skip updates if this event_id has already been seen
                 if not last_poll_id:
-                    self.last_polled_ids[soco.uid] = container_id
+                    self.last_polled_ids[speaker.uid] = container_id
                 return
 
             if last_poll_id and container_id <= last_poll_id:
                 return
 
+            speaker.event_stats.process(event)
             _LOGGER.debug(
                 "New favorites event %s from %s (was %s)",
                 event_id,
-                soco,
+                speaker.soco,
                 self.last_processed_event_id,
             )
             self.last_processed_event_id = event_id
-            await self.async_update_entities(soco, container_id)
+            await self.async_update_entities(speaker.soco, container_id)
 
+    @soco_error()
     def update_cache(self, soco: SoCo, update_id: int | None = None) -> bool:
         """Update cache of known favorites and return if cache has changed."""
         new_favorites = soco.music_library.get_sonos_favorites()

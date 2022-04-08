@@ -1,12 +1,17 @@
 """Support for Fibaro binary sensors."""
+from __future__ import annotations
+
 from homeassistant.components.binary_sensor import (
-    DOMAIN,
+    ENTITY_ID_FORMAT,
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_ICON
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import FIBARO_DEVICES, FibaroDevice
+from .const import DOMAIN
 
 SENSOR_TYPES = {
     "com.fibaro.floodSensor": ["Flood", "mdi:water", "flood"],
@@ -23,15 +28,18 @@ SENSOR_TYPES = {
 }
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Perform the setup for Fibaro controller devices."""
-    if discovery_info is None:
-        return
-
-    add_entities(
+    async_add_entities(
         [
             FibaroBinarySensor(device)
-            for device in hass.data[FIBARO_DEVICES]["binary_sensor"]
+            for device in hass.data[DOMAIN][entry.entry_id][FIBARO_DEVICES][
+                "binary_sensor"
+            ]
         ],
         True,
     )
@@ -44,9 +52,8 @@ class FibaroBinarySensor(FibaroDevice, BinarySensorEntity):
         """Initialize the binary_sensor."""
         self._state = None
         super().__init__(fibaro_device)
-        self.entity_id = f"{DOMAIN}.{self.ha_id}"
+        self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
         stype = None
-        devconf = fibaro_device.device_config
         if fibaro_device.type in SENSOR_TYPES:
             stype = fibaro_device.type
         elif fibaro_device.baseType in SENSOR_TYPES:
@@ -57,9 +64,6 @@ class FibaroBinarySensor(FibaroDevice, BinarySensorEntity):
         else:
             self._device_class = None
             self._icon = None
-        # device_config overrides:
-        self._device_class = devconf.get(CONF_DEVICE_CLASS, self._device_class)
-        self._icon = devconf.get(CONF_ICON, self._icon)
 
     @property
     def icon(self):

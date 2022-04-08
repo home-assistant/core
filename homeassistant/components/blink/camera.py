@@ -4,8 +4,11 @@ from __future__ import annotations
 import logging
 
 from homeassistant.components.camera import Camera
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DEFAULT_BRAND, DOMAIN, SERVICE_TRIGGER
 
@@ -15,7 +18,9 @@ ATTR_VIDEO_CLIP = "video"
 ATTR_IMAGE = "image"
 
 
-async def async_setup_entry(hass, config, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, config: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up a Blink Camera."""
     data = hass.data[DOMAIN][config.entry_id]
     entities = [

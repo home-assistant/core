@@ -16,6 +16,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_ON,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .common import setup_platform
@@ -23,7 +24,7 @@ from .common import setup_platform
 DEVICE_ID = "light.living_room_lamp"
 
 
-async def test_entity_registry(hass):
+async def test_entity_registry(hass: HomeAssistant) -> None:
     """Tests that the devices are registered in the entity registry."""
     await setup_platform(hass, LIGHT_DOMAIN)
     entity_registry = er.async_get(hass)
@@ -32,7 +33,7 @@ async def test_entity_registry(hass):
     assert entry.unique_id == "741385f4388b2637df4c6b398fe50581"
 
 
-async def test_attributes(hass):
+async def test_attributes(hass: HomeAssistant) -> None:
     """Test the light attributes are correct."""
     await setup_platform(hass, LIGHT_DOMAIN)
 
@@ -49,7 +50,7 @@ async def test_attributes(hass):
     assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 19
 
 
-async def test_switch_off(hass):
+async def test_switch_off(hass: HomeAssistant) -> None:
     """Test the light can be turned off."""
     await setup_platform(hass, LIGHT_DOMAIN)
 
@@ -61,7 +62,7 @@ async def test_switch_off(hass):
         mock_switch_off.assert_called_once()
 
 
-async def test_switch_on(hass):
+async def test_switch_on(hass: HomeAssistant) -> None:
     """Test the light can be turned on."""
     await setup_platform(hass, LIGHT_DOMAIN)
 
@@ -73,7 +74,7 @@ async def test_switch_on(hass):
         mock_switch_on.assert_called_once()
 
 
-async def test_set_brightness(hass):
+async def test_set_brightness(hass: HomeAssistant) -> None:
     """Test the brightness can be set."""
     await setup_platform(hass, LIGHT_DOMAIN)
 
@@ -89,7 +90,7 @@ async def test_set_brightness(hass):
         mock_set_level.assert_called_once_with(39)
 
 
-async def test_set_color(hass):
+async def test_set_color(hass: HomeAssistant) -> None:
     """Test the color can be set."""
     await setup_platform(hass, LIGHT_DOMAIN)
 
@@ -104,7 +105,7 @@ async def test_set_color(hass):
         mock_set_color.assert_called_once_with((240.0, 100.0))
 
 
-async def test_set_color_temp(hass):
+async def test_set_color_temp(hass: HomeAssistant) -> None:
     """Test the color temp can be set."""
     await setup_platform(hass, LIGHT_DOMAIN)
 

@@ -23,6 +23,12 @@ from tests.common import (
 )
 
 
+@pytest.fixture(autouse=True)
+def set_utc(hass):
+    """Set timezone to UTC."""
+    hass.config.set_time_zone("UTC")
+
+
 async def test_valid_config(hass):
     """Test configuration."""
     assert await async_setup_component(
@@ -1043,9 +1049,7 @@ async def test_flux_with_multiple_lights(
 
     def event_date(hass, event, now=None):
         if event == SUN_EVENT_SUNRISE:
-            print(f"sunrise {sunrise_time}")
             return sunrise_time
-        print(f"sunset {sunset_time}")
         return sunset_time
 
     with patch(

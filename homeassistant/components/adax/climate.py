@@ -10,7 +10,7 @@ from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
-    SUPPORT_TARGET_TEMPERATURE,
+    ClimateEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -68,7 +68,7 @@ class AdaxDevice(ClimateEntity):
     _attr_hvac_modes = [HVAC_MODE_HEAT, HVAC_MODE_OFF]
     _attr_max_temp = 35
     _attr_min_temp = 5
-    _attr_supported_features = SUPPORT_TARGET_TEMPERATURE
+    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
     _attr_target_temperature_step = PRECISION_WHOLE
     _attr_temperature_unit = TEMP_CELSIUS
 
@@ -131,7 +131,7 @@ class LocalAdaxDevice(ClimateEntity):
     _attr_hvac_mode = HVAC_MODE_HEAT
     _attr_max_temp = 35
     _attr_min_temp = 5
-    _attr_supported_features = SUPPORT_TARGET_TEMPERATURE
+    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
     _attr_target_temperature_step = PRECISION_WHOLE
     _attr_temperature_unit = TEMP_CELSIUS
 
@@ -146,8 +146,7 @@ class LocalAdaxDevice(ClimateEntity):
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
-        if temperature is None:
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
         await self._adax_data_handler.set_target_temperature(temperature)
 

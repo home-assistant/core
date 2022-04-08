@@ -1,5 +1,7 @@
 """Provides the constants needed for component."""
 
+from enum import IntEnum
+
 # All activity disabled / Device is off/standby
 HVAC_MODE_OFF = "off"
 
@@ -133,6 +135,21 @@ SERVICE_SET_HVAC_MODE = "set_hvac_mode"
 SERVICE_SET_SWING_MODE = "set_swing_mode"
 SERVICE_SET_TEMPERATURE = "set_temperature"
 
+
+class ClimateEntityFeature(IntEnum):
+    """Supported features of the climate entity."""
+
+    TARGET_TEMPERATURE = 1
+    TARGET_TEMPERATURE_RANGE = 2
+    TARGET_HUMIDITY = 4
+    FAN_MODE = 8
+    PRESET_MODE = 16
+    SWING_MODE = 32
+    AUX_HEAT = 64
+
+
+# These SUPPORT_* constants are deprecated as of Home Assistant 2022.5.
+# Pleease use the ClimateEntityFeature enum instead.
 SUPPORT_TARGET_TEMPERATURE = 1
 SUPPORT_TARGET_TEMPERATURE_RANGE = 2
 SUPPORT_TARGET_HUMIDITY = 4

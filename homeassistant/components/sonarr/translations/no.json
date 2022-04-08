@@ -12,7 +12,7 @@
         "flow_title": "{name}",
         "step": {
             "reauth_confirm": {
-                "description": "Sonarr-integrasjonen m\u00e5 autentiseres p\u00e5 nytt med Sonarr API vert p\u00e5: {host}",
+                "description": "Sonarr-integrasjonen m\u00e5 re-autentiseres manuelt med Sonarr API som er vert for: {url}",
                 "title": "Godkjenne integrering p\u00e5 nytt"
             },
             "user": {
@@ -22,6 +22,7 @@
                     "host": "Vert",
                     "port": "Port",
                     "ssl": "Bruker et SSL-sertifikat",
+                    "url": "URL",
                     "verify_ssl": "Verifisere SSL-sertifikat"
                 }
             }

@@ -13,7 +13,9 @@
             "is_on": "{entity_name} staat aan"
         },
         "trigger_type": {
+            "changed_states": "{entity_name} in- of uitgeschakeld",
             "target_humidity_changed": "{entity_name} doel luchtvochtigheid gewijzigd",
+            "toggled": "{entity_name} in- of uitgeschakeld",
             "turned_off": "{entity_name} is uitgeschakeld",
             "turned_on": "{entity_name} is ingeschakeld"
         }

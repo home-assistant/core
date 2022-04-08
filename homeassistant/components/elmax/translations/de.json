@@ -5,9 +5,11 @@
         },
         "error": {
             "bad_auth": "Ung\u00fcltige Authentifizierung",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
             "invalid_pin": "Die angegebene Pin ist ung\u00fcltig",
             "network_error": "Ein Netzwerkfehler ist aufgetreten",
             "no_panel_online": "Es wurde kein Elmax-Bedienfeld gefunden, das online ist.",
+            "unknown": "Unerwarteter Fehler",
             "unknown_error": "Ein unerwarteter Fehler ist aufgetreten"
         },
         "step": {

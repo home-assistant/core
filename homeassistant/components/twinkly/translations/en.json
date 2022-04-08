@@ -12,7 +12,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Host (or IP address) of your twinkly device"
+                    "host": "Host"
                 },
                 "description": "Set up your Twinkly led string",
                 "title": "Twinkly"

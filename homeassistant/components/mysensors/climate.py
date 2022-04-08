@@ -4,21 +4,22 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components import mysensors
-from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
-    DOMAIN,
     HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
-    SUPPORT_FAN_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -54,7 +55,7 @@ async def async_setup_entry(
         """Discover and add a MySensors climate."""
         mysensors.setup_mysensors_platform(
             hass,
-            DOMAIN,
+            Platform.CLIMATE,
             discovery_info,
             MySensorsHVAC,
             async_add_entities=async_add_entities,
@@ -65,7 +66,7 @@ async def async_setup_entry(
         config_entry.entry_id,
         async_dispatcher_connect(
             hass,
-            MYSENSORS_DISCOVERY.format(config_entry.entry_id, DOMAIN),
+            MYSENSORS_DISCOVERY.format(config_entry.entry_id, Platform.CLIMATE),
             async_discover,
         ),
     )
@@ -80,14 +81,14 @@ class MySensorsHVAC(mysensors.device.MySensorsEntity, ClimateEntity):
         features = 0
         set_req = self.gateway.const.SetReq
         if set_req.V_HVAC_SPEED in self._values:
-            features = features | SUPPORT_FAN_MODE
+            features = features | ClimateEntityFeature.FAN_MODE
         if (
             set_req.V_HVAC_SETPOINT_COOL in self._values
             and set_req.V_HVAC_SETPOINT_HEAT in self._values
         ):
-            features = features | SUPPORT_TARGET_TEMPERATURE_RANGE
+            features = features | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         else:
-            features = features | SUPPORT_TARGET_TEMPERATURE
+            features = features | ClimateEntityFeature.TARGET_TEMPERATURE
         return features
 
     @property

@@ -1,4 +1,5 @@
 """The command_line component."""
+from __future__ import annotations
 
 import logging
 import subprocess
@@ -6,7 +7,9 @@ import subprocess
 _LOGGER = logging.getLogger(__name__)
 
 
-def call_shell_with_timeout(command, timeout, *, log_return_code=True):
+def call_shell_with_timeout(
+    command: str, timeout: int, *, log_return_code: bool = True
+) -> int:
     """Run a shell command with a timeout.
 
     If log_return_code is set to False, it will not print an error if a non-zero
@@ -30,7 +33,7 @@ def call_shell_with_timeout(command, timeout, *, log_return_code=True):
         return -1
 
 
-def check_output_or_log(command, timeout):
+def check_output_or_log(command: str, timeout: int) -> str | None:
     """Run a shell command with a timeout and return the output."""
     try:
         return_value = subprocess.check_output(

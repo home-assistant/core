@@ -11,20 +11,20 @@ from nuheat.util import (
     nuheat_to_fahrenheit,
 )
 
-from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
     HVAC_MODE_AUTO,
     HVAC_MODE_HEAT,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import event as event_helper
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -61,10 +61,12 @@ SCHEDULE_MODE_TO_PRESET_MODE_MAP = {
     value: key for key, value in PRESET_MODE_TO_SCHEDULE_MODE_MAP.items()
 }
 
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
-
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the NuHeat thermostat(s)."""
     thermostat, coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
@@ -80,6 +82,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class NuHeatThermostat(CoordinatorEntity, ClimateEntity):
     """Representation of a NuHeat Thermostat."""
 
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+    )
+
     def __init__(self, coordinator, thermostat, temperature_unit):
         """Initialize the thermostat."""
         super().__init__(coordinator)
@@ -92,11 +98,6 @@ class NuHeatThermostat(CoordinatorEntity, ClimateEntity):
     def name(self):
         """Return the name of the thermostat."""
         return self._thermostat.room
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_FLAGS
 
     @property
     def temperature_unit(self):

@@ -9,8 +9,9 @@ import httpx
 
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE, __version__
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.helpers.frame import warn_use
 from homeassistant.loader import bind_hass
+
+from .frame import warn_use
 
 DATA_ASYNC_CLIENT = "httpx_async_client"
 DATA_ASYNC_CLIENT_NOVERIFY = "httpx_async_client_noverify"
@@ -70,7 +71,7 @@ def create_async_httpx_client(
 
     original_aclose = client.aclose
 
-    client.aclose = warn_use(  # type: ignore
+    client.aclose = warn_use(  # type: ignore[assignment]
         client.aclose, "closes the Home Assistant httpx client"
     )
 

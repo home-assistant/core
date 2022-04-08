@@ -1,7 +1,7 @@
 """Provide tests for mysensors sensor platform."""
 from __future__ import annotations
 
-from typing import Callable
+from collections.abc import Callable
 
 from mysensors.sensor import Sensor
 import pytest
@@ -29,11 +29,10 @@ from tests.common import MockConfigEntry
 async def test_gps_sensor(
     hass: HomeAssistant,
     gps_sensor: Sensor,
-    integration: tuple[MockConfigEntry, Callable[[str], None]],
+    receive_message: Callable[[str], None],
 ) -> None:
     """Test a gps sensor."""
     entity_id = "sensor.gps_sensor_1_1"
-    _, receive_message = integration
 
     state = hass.states.get(entity_id)
 
@@ -59,7 +58,7 @@ async def test_gps_sensor(
 async def test_power_sensor(
     hass: HomeAssistant,
     power_sensor: Sensor,
-    integration: tuple[MockConfigEntry, Callable[[str], None]],
+    integration: MockConfigEntry,
 ) -> None:
     """Test a power sensor."""
     entity_id = "sensor.power_sensor_1_1"
@@ -76,7 +75,7 @@ async def test_power_sensor(
 async def test_energy_sensor(
     hass: HomeAssistant,
     energy_sensor: Sensor,
-    integration: tuple[MockConfigEntry, Callable[[str], None]],
+    integration: MockConfigEntry,
 ) -> None:
     """Test an energy sensor."""
     entity_id = "sensor.energy_sensor_1_1"
@@ -93,7 +92,7 @@ async def test_energy_sensor(
 async def test_sound_sensor(
     hass: HomeAssistant,
     sound_sensor: Sensor,
-    integration: tuple[MockConfigEntry, Callable[[str], None]],
+    integration: MockConfigEntry,
 ) -> None:
     """Test a sound sensor."""
     entity_id = "sensor.sound_sensor_1_1"
@@ -109,7 +108,7 @@ async def test_sound_sensor(
 async def test_distance_sensor(
     hass: HomeAssistant,
     distance_sensor: Sensor,
-    integration: tuple[MockConfigEntry, Callable[[str], None]],
+    integration: MockConfigEntry,
 ) -> None:
     """Test a distance sensor."""
     entity_id = "sensor.distance_sensor_1_1"
@@ -129,14 +128,13 @@ async def test_distance_sensor(
 async def test_temperature_sensor(
     hass: HomeAssistant,
     temperature_sensor: Sensor,
-    integration: tuple[MockConfigEntry, Callable[[str], None]],
+    receive_message: Callable[[str], None],
     unit_system: UnitSystem,
     unit: str,
 ) -> None:
     """Test a temperature sensor."""
     entity_id = "sensor.temperature_sensor_1_1"
     hass.config.units = unit_system
-    _, receive_message = integration
     temperature = "22.0"
     message_string = f"1;1;1;0;0;{temperature}\n"
 

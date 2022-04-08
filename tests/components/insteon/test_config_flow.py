@@ -507,11 +507,6 @@ async def test_options_remove_x10_device(hass: HomeAssistant):
     config_entry.add_to_hass(hass)
     result = await _options_init_form(hass, config_entry.entry_id, STEP_REMOVE_X10)
 
-    for device in config_entry.options[CONF_X10]:
-        housecode = device[CONF_HOUSECODE].upper()
-        unitcode = device[CONF_UNITCODE]
-        print(f"Housecode: {housecode}, Unitcode: {unitcode}")
-
     user_input = {CONF_DEVICE: "Housecode: C, Unitcode: 4"}
     result, _ = await _options_form(hass, result["flow_id"], user_input)
 
@@ -546,11 +541,6 @@ async def test_options_remove_x10_device_with_override(hass: HomeAssistant):
 
     config_entry.add_to_hass(hass)
     result = await _options_init_form(hass, config_entry.entry_id, STEP_REMOVE_X10)
-
-    for device in config_entry.options[CONF_X10]:
-        housecode = device[CONF_HOUSECODE].upper()
-        unitcode = device[CONF_UNITCODE]
-        print(f"Housecode: {housecode}, Unitcode: {unitcode}")
 
     user_input = {CONF_DEVICE: "Housecode: C, Unitcode: 4"}
     result, _ = await _options_form(hass, result["flow_id"], user_input)

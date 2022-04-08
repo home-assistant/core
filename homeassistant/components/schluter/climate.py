@@ -1,4 +1,6 @@
 """Support for Schluter thermostats."""
+from __future__ import annotations
+
 import logging
 
 from requests import RequestException
@@ -9,14 +11,17 @@ from homeassistant.components.climate import (
     SCAN_INTERVAL,
     TEMP_CELSIUS,
     ClimateEntity,
+    ClimateEntityFeature,
 )
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
     HVAC_MODE_HEAT,
-    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, CONF_SCAN_INTERVAL
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -31,7 +36,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Schluter thermostats."""
     if discovery_info is None:
         return
@@ -70,18 +80,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class SchluterThermostat(CoordinatorEntity, ClimateEntity):
     """Representation of a Schluter thermostat."""
 
+    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+
     def __init__(self, coordinator, serial_number, api, session_id):
         """Initialize the thermostat."""
         super().__init__(coordinator)
         self._serial_number = serial_number
         self._api = api
         self._session_id = session_id
-        self._support_flags = SUPPORT_TARGET_TEMPERATURE
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return self._support_flags
 
     @property
     def unique_id(self):

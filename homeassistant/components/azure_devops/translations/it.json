@@ -15,7 +15,7 @@
                 "data": {
                     "personal_access_token": "Token di accesso personale (PAT)"
                 },
-                "description": "Autenticazione non riuscita per {project_url}. Si prega di inserire le proprie credenziali attuali.",
+                "description": "Autenticazione non riuscita per {project_url}. Digita le tue credenziali attuali.",
                 "title": "Nuova autenticazione"
             },
             "user": {

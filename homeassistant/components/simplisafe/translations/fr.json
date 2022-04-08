@@ -7,7 +7,7 @@
         },
         "error": {
             "identifier_exists": "Compte d\u00e9j\u00e0 enregistr\u00e9",
-            "invalid_auth": "Authentification invalide",
+            "invalid_auth": "Authentification non valide",
             "still_awaiting_mfa": "En attente de clic sur le message \u00e9lectronique d'authentification multi facteur",
             "unknown": "Erreur inattendue"
         },
@@ -35,7 +35,7 @@
                     "auth_code": "Code d'autorisation",
                     "code": "Code (utilis\u00e9 dans l'interface Home Assistant)",
                     "password": "Mot de passe",
-                    "username": "Email"
+                    "username": "Courriel"
                 },
                 "description": "SimpliSafe s'authentifie avec Home Assistant via l'application Web SimpliSafe. En raison de limitations techniques, il y a une \u00e9tape manuelle \u00e0 la fin de ce processus ; veuillez vous assurer de lire la [documentation]( {docs_url} ) avant de commencer. \n\n 1. Cliquez sur [ici]( {url} ) pour ouvrir l'application Web SimpliSafe et saisissez vos informations d'identification. \n\n 2. Une fois le processus de connexion termin\u00e9, revenez ici et saisissez le code d'autorisation ci-dessous.",
                 "title": "Veuillez saisir vos informations"

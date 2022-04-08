@@ -4,9 +4,10 @@
   "documentation": "https://www.home-assistant.io/integrations/spotify",
   "requirements": ["spotipy==2.19.0"],
   "zeroconf": ["_spotify-connect._tcp.local."],
-  "dependencies": ["http"],
+  "dependencies": ["auth"],
   "codeowners": ["@frenck"],
   "config_flow": true,
   "quality_scale": "silver",
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "loggers": ["spotipy"]
 }

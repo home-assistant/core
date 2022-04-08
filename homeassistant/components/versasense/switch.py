@@ -1,7 +1,12 @@
 """Support for VersaSense actuator peripheral."""
+from __future__ import annotations
+
 import logging
 
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN
 from .const import (
@@ -18,7 +23,12 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up actuator platform."""
     if discovery_info is None:
         return None
@@ -27,7 +37,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     actuator_list = []
 
-    for entity_info in discovery_info:
+    for entity_info in discovery_info.values():
         peripheral = hass.data[DOMAIN][entity_info[KEY_PARENT_MAC]][
             entity_info[KEY_IDENTIFIER]
         ]

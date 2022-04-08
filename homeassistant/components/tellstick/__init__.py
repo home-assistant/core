@@ -14,10 +14,12 @@ from tellcorenet import TellCoreClient
 import voluptuous as vol
 
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -80,7 +82,7 @@ def _discover(hass, config, component_name, found_tellcore_devices):
     )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Tellstick component."""
 
     conf = config.get(DOMAIN, {})
@@ -168,6 +170,9 @@ class TellstickDevice(Entity):
     Contains the common logic for all Tellstick devices.
     """
 
+    _attr_assumed_state = True
+    _attr_should_poll = False
+
     def __init__(self, tellcore_device, signal_repetitions):
         """Init the Tellstick device."""
         self._signal_repetitions = signal_repetitions
@@ -178,30 +183,16 @@ class TellstickDevice(Entity):
 
         # Look up our corresponding tellcore device
         self._tellcore_device = tellcore_device
-        self._name = tellcore_device.name
+        self._attr_name = tellcore_device.name
+        self._attr_unique_id = tellcore_device.id
 
     async def async_added_to_hass(self):
         """Register callbacks."""
         self.async_on_remove(
-            self.hass.helpers.dispatcher.async_dispatcher_connect(
-                SIGNAL_TELLCORE_CALLBACK, self.update_from_callback
+            async_dispatcher_connect(
+                self.hass, SIGNAL_TELLCORE_CALLBACK, self.update_from_callback
             )
         )
-
-    @property
-    def should_poll(self):
-        """Tell Home Assistant not to poll this device."""
-        return False
-
-    @property
-    def assumed_state(self):
-        """Tellstick devices are always assumed state."""
-        return True
-
-    @property
-    def name(self):
-        """Return the name of the device as reported by tellcore."""
-        return self._name
 
     @property
     def is_on(self):

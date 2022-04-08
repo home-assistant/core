@@ -24,13 +24,13 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_TYPE,
 )
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, HomeAssistantError
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry
 from homeassistant.helpers.entity import get_capability
 from homeassistant.helpers.typing import ConfigType
 
-from . import DOMAIN
-from .const import ATTR_OPTIONS
+from .const import ATTR_OPTIONS, DOMAIN
 
 TRIGGER_TYPES = {"current_option_changed"}
 

@@ -8,11 +8,10 @@ from unittest.mock import Mock, patch
 import pytest
 
 from homeassistant import bootstrap, core, runner
-from homeassistant.bootstrap import SIGNAL_BOOTSTRAP_INTEGRATONS
 import homeassistant.config as config_util
+from homeassistant.const import SIGNAL_BOOTSTRAP_INTEGRATONS
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-import homeassistant.util.dt as dt_util
 
 from tests.common import (
     MockModule,
@@ -23,7 +22,6 @@ from tests.common import (
     mock_integration,
 )
 
-ORIG_TIMEZONE = dt_util.DEFAULT_TIME_ZONE
 VERSION_PATH = os.path.join(get_test_config_dir(), config_util.VERSION_FILE)
 
 

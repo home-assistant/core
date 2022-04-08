@@ -1,4 +1,6 @@
 """Support for Cisco IOS Routers."""
+from __future__ import annotations
+
 import logging
 import re
 
@@ -11,7 +13,9 @@ from homeassistant.components.device_tracker import (
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +31,7 @@ PLATFORM_SCHEMA = vol.All(
 )
 
 
-def get_scanner(hass, config):
+def get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner | None:
     """Validate the configuration and return a Cisco scanner."""
     scanner = CiscoDeviceScanner(config[DOMAIN])
 

@@ -198,7 +198,7 @@ async def test_multiple_servers_with_selection(
     hass,
     mock_plex_calls,
     requests_mock,
-    plextv_resources_base,
+    plextv_resources_two_servers,
     current_request_with_host,
 ):
     """Test creating an entry with multiple servers available."""
@@ -210,9 +210,7 @@ async def test_multiple_servers_with_selection(
 
     requests_mock.get(
         "https://plex.tv/api/resources",
-        text=plextv_resources_base.format(
-            first_server_enabled=1, second_server_enabled=1
-        ),
+        text=plextv_resources_two_servers,
     )
     with patch("plexauth.PlexAuth.initiate_auth"), patch(
         "plexauth.PlexAuth.token", return_value=MOCK_TOKEN
@@ -231,7 +229,9 @@ async def test_multiple_servers_with_selection(
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={CONF_SERVER: MOCK_SERVERS[0][CONF_SERVER]},
+            user_input={
+                CONF_SERVER_IDENTIFIER: MOCK_SERVERS[0][CONF_SERVER_IDENTIFIER]
+            },
         )
         assert result["type"] == "create_entry"
 
@@ -250,47 +250,11 @@ async def test_multiple_servers_with_selection(
         assert result["data"][PLEX_SERVER_CONFIG][CONF_TOKEN] == MOCK_TOKEN
 
 
-async def test_only_non_present_servers(
-    hass,
-    mock_plex_calls,
-    requests_mock,
-    plextv_resources_base,
-    current_request_with_host,
-):
-    """Test creating an entry with one server available."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    assert result["type"] == "form"
-    assert result["step_id"] == "user"
-
-    requests_mock.get(
-        "https://plex.tv/api/resources",
-        text=plextv_resources_base.format(
-            first_server_enabled=0, second_server_enabled=0
-        ),
-    )
-    with patch("plexauth.PlexAuth.initiate_auth"), patch(
-        "plexauth.PlexAuth.token", return_value=MOCK_TOKEN
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
-        )
-        assert result["type"] == "external"
-
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
-        assert result["type"] == "external_done"
-
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
-        assert result["type"] == "form"
-        assert result["step_id"] == "select_server"
-
-
 async def test_adding_last_unconfigured_server(
     hass,
     mock_plex_calls,
     requests_mock,
-    plextv_resources_base,
+    plextv_resources_two_servers,
     current_request_with_host,
 ):
     """Test automatically adding last unconfigured server when multiple servers on account."""
@@ -310,9 +274,7 @@ async def test_adding_last_unconfigured_server(
 
     requests_mock.get(
         "https://plex.tv/api/resources",
-        text=plextv_resources_base.format(
-            first_server_enabled=1, second_server_enabled=1
-        ),
+        text=plextv_resources_two_servers,
     )
 
     with patch("plexauth.PlexAuth.initiate_auth"), patch(
@@ -349,7 +311,7 @@ async def test_all_available_servers_configured(
     entry,
     requests_mock,
     plextv_account,
-    plextv_resources_base,
+    plextv_resources_two_servers,
     current_request_with_host,
 ):
     """Test when all available servers are already configured."""
@@ -372,9 +334,7 @@ async def test_all_available_servers_configured(
     requests_mock.get("https://plex.tv/users/account", text=plextv_account)
     requests_mock.get(
         "https://plex.tv/api/resources",
-        text=plextv_resources_base.format(
-            first_server_enabled=1, second_server_enabled=1
-        ),
+        text=plextv_resources_two_servers,
     )
 
     with patch("plexauth.PlexAuth.initiate_auth"), patch(

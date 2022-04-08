@@ -369,7 +369,7 @@ class RainMachineZone(RainMachineActivitySwitch):
 
     async def async_start_zone(self, *, zone_run_time: int) -> None:
         """Start a particular zone for a certain amount of time."""
-        await self.async_turn_off(duration=zone_run_time)
+        await self.async_turn_on(duration=zone_run_time)
 
     async def async_stop_zone(self) -> None:
         """Stop a zone."""

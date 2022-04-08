@@ -14,7 +14,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Anfitri\u00f3n"
+                    "host": "Host"
                 },
                 "description": "Configura tu ventilador de Modern Forms para que se integre con Home Assistant."
             },

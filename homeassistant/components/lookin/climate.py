@@ -1,15 +1,13 @@
 """The lookin integration climate platform."""
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
-from datetime import timedelta
 import logging
 from typing import Any, Final, cast
 
 from aiolookin import Climate, MeteoSensor
 from aiolookin.models import UDPCommandType, UDPEvent
 
-from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
     FAN_AUTO,
@@ -22,23 +20,23 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_FAN_ONLY,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
-    SUPPORT_FAN_MODE,
-    SUPPORT_SWING_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
     SWING_BOTH,
     SWING_OFF,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, TEMP_CELSIUS
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    PRECISION_WHOLE,
+    TEMP_CELSIUS,
+    Platform,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN
+from .const import DOMAIN, TYPE_TO_PLATFORM
+from .coordinator import LookinDataUpdateCoordinator
 from .entity import LookinCoordinatorEntity
 from .models import LookinData
-
-SUPPORT_FLAGS: int = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE | SUPPORT_SWING_MODE
 
 LOOKIN_FAN_MODE_IDX_TO_HASS: Final = [FAN_AUTO, FAN_LOW, FAN_MIDDLE, FAN_HIGH]
 LOOKIN_SWING_MODE_IDX_TO_HASS: Final = [SWING_OFF, SWING_BOTH]
@@ -77,30 +75,10 @@ async def async_setup_entry(
     entities = []
 
     for remote in lookin_data.devices:
-        if remote["Type"] != "EF":
+        if TYPE_TO_PLATFORM.get(remote["Type"]) != Platform.CLIMATE:
             continue
         uuid = remote["UUID"]
-
-        def _wrap_async_update(
-            uuid: str,
-        ) -> Callable[[], Coroutine[None, Any, Climate]]:
-            """Create a function to capture the uuid cell variable."""
-
-            async def _async_update() -> Climate:
-                return await lookin_data.lookin_protocol.get_conditioner(uuid)
-
-            return _async_update
-
-        coordinator = DataUpdateCoordinator(
-            hass,
-            LOGGER,
-            name=f"{config_entry.title} {uuid}",
-            update_method=_wrap_async_update(uuid),
-            update_interval=timedelta(
-                seconds=60
-            ),  # Updates are pushed (fallback is polling)
-        )
-        await coordinator.async_refresh()
+        coordinator = lookin_data.device_coordinators[uuid]
         device: Climate = coordinator.data
         entities.append(
             ConditionerEntity(
@@ -117,9 +95,13 @@ async def async_setup_entry(
 class ConditionerEntity(LookinCoordinatorEntity, ClimateEntity):
     """An aircon or heat pump."""
 
-    _attr_current_humidity: float | None = None  # type: ignore
+    _attr_current_humidity: float | None = None  # type: ignore[assignment]
     _attr_temperature_unit = TEMP_CELSIUS
-    _attr_supported_features: int = SUPPORT_FLAGS
+    _attr_supported_features: int = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.SWING_MODE
+    )
     _attr_fan_modes: list[str] = LOOKIN_FAN_MODE_IDX_TO_HASS
     _attr_swing_modes: list[str] = LOOKIN_SWING_MODE_IDX_TO_HASS
     _attr_hvac_modes: list[str] = LOOKIN_HVAC_MODE_IDX_TO_HASS
@@ -132,7 +114,7 @@ class ConditionerEntity(LookinCoordinatorEntity, ClimateEntity):
         uuid: str,
         device: Climate,
         lookin_data: LookinData,
-        coordinator: DataUpdateCoordinator,
+        coordinator: LookinDataUpdateCoordinator,
     ) -> None:
         """Init the ConditionerEntity."""
         super().__init__(coordinator, uuid, device, lookin_data)
@@ -169,8 +151,7 @@ class ConditionerEntity(LookinCoordinatorEntity, ClimateEntity):
             # an educated guess.
             #
             meteo_data: MeteoSensor = self._meteo_coordinator.data
-            current_temp = meteo_data.temperature
-            if not current_temp:
+            if not (current_temp := meteo_data.temperature):
                 self._climate.hvac_mode = lookin_index.index(HVAC_MODE_AUTO)
             elif current_temp >= self._climate.temp_celsius:
                 self._climate.hvac_mode = lookin_index.index(HVAC_MODE_COOL)

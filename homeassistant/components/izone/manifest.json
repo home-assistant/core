@@ -8,5 +8,6 @@
   "homekit": {
     "models": ["iZone"]
   },
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "loggers": ["pizone"]
 }

@@ -22,9 +22,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import WallboxCoordinator
+from . import WallboxCoordinator, WallboxEntity
 from .const import (
     CONF_ADDED_ENERGY_KEY,
     CONF_ADDED_RANGE_KEY,
@@ -32,9 +31,11 @@ from .const import (
     CONF_CHARGING_SPEED_KEY,
     CONF_COST_KEY,
     CONF_CURRENT_MODE_KEY,
+    CONF_DATA_KEY,
     CONF_DEPOT_PRICE_KEY,
     CONF_MAX_AVAILABLE_POWER_KEY,
     CONF_MAX_CHARGING_CURRENT_KEY,
+    CONF_SERIAL_NUMBER_KEY,
     CONF_STATE_OF_CHARGE_KEY,
     CONF_STATUS_DESCRIPTION_KEY,
     DOMAIN,
@@ -147,11 +148,10 @@ async def async_setup_entry(
     )
 
 
-class WallboxSensor(CoordinatorEntity, SensorEntity):
+class WallboxSensor(WallboxEntity, SensorEntity):
     """Representation of the Wallbox portal."""
 
     entity_description: WallboxSensorEntityDescription
-    coordinator: WallboxCoordinator
 
     def __init__(
         self,
@@ -163,19 +163,14 @@ class WallboxSensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_name = f"{entry.title} {description.name}"
+        self._attr_unique_id = f"{description.key}-{coordinator.data[CONF_DATA_KEY][CONF_SERIAL_NUMBER_KEY]}"
 
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         if (sensor_round := self.entity_description.precision) is not None:
-            try:
-                return cast(
-                    StateType,
-                    round(
-                        self.coordinator.data[self.entity_description.key], sensor_round
-                    ),
-                )
-            except TypeError:
-                _LOGGER.debug("Cannot format %s", self._attr_name)
-                return None
+            return cast(
+                StateType,
+                round(self.coordinator.data[self.entity_description.key], sensor_round),
+            )
         return cast(StateType, self.coordinator.data[self.entity_description.key])

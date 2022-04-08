@@ -46,7 +46,7 @@
                     "include_or_exclude": "Includere o escludere app?",
                     "volume_step": "Dimensione del passo del volume"
                 },
-                "description": "Se si dispone di una Smart TV, \u00e8 possibile filtrare l'elenco di origine scegliendo le app da includere o escludere in esso.",
+                "description": "Se disponi di una Smart TV, puoi filtrare l'elenco di origine scegliendo le app da includere o escludere in esso.",
                 "title": "Aggiornamento delle Opzioni del Dispositivo SmartCast VIZIO"
             }
         }

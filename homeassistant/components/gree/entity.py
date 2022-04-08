@@ -7,7 +7,7 @@ from .bridge import DeviceDataUpdateCoordinator
 from .const import DOMAIN
 
 
-class GreeEntity(CoordinatorEntity):
+class GreeEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
     """Generic Gree entity (base class)."""
 
     def __init__(self, coordinator: DeviceDataUpdateCoordinator, desc: str) -> None:

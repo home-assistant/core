@@ -161,7 +161,7 @@ def calculate_trend(indices: list[float]) -> str:
     """Calculate the "moving average" of a set of indices."""
     index_range = np.arange(0, len(indices))
     index_array = np.array(indices)
-    linear_fit = np.polyfit(index_range, index_array, 1)  # type: ignore
+    linear_fit = np.polyfit(index_range, index_array, 1)  # type: ignore[no-untyped-call]
     slope = round(linear_fit[0], 2)
 
     if slope > 0:

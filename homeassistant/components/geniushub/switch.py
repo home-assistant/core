@@ -1,4 +1,6 @@
 """Support for Genius Hub switch/outlet devices."""
+from __future__ import annotations
+
 from datetime import timedelta
 
 import voluptuous as vol
@@ -6,7 +8,8 @@ import voluptuous as vol
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import ATTR_DURATION, DOMAIN, GeniusZone
 
@@ -23,7 +26,10 @@ SET_SWITCH_OVERRIDE_SCHEMA = {
 
 
 async def async_setup_platform(
-    hass: HomeAssistant, config: ConfigType, async_add_entities, discovery_info=None
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Genius Hub switch entities."""
     if discovery_info is None:

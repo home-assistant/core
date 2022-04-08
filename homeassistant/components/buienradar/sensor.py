@@ -25,6 +25,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -117,24 +118,28 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         name="Humidity",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:water-percent",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="temperature",
         name="Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="groundtemperature",
         name="Ground temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="windspeed",
         name="Wind speed",
         native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
         icon="mdi:weather-windy",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="windforce",
@@ -158,11 +163,13 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         name="Pressure",
         native_unit_of_measurement=PRESSURE_HPA,
         icon="mdi:gauge",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="visibility",
         name="Visibility",
         native_unit_of_measurement=LENGTH_KILOMETERS,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="windgust",
@@ -175,12 +182,14 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         name="Precipitation",
         native_unit_of_measurement=PRECIPITATION_MILLIMETERS_PER_HOUR,
         icon="mdi:weather-pouring",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="irradiance",
         name="Irradiance",
         native_unit_of_measurement=IRRADIATION_WATTS_PER_SQUARE_METER,
         icon="mdi:sunglasses",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="precipitation_forecast_average",
@@ -726,7 +735,7 @@ class BrSensor(SensorEntity):
             or sensor_type.endswith("_5d")
         ):
 
-            # update forcasting sensors:
+            # update forecasting sensors:
             fcday = 0
             if sensor_type.endswith("_2d"):
                 fcday = 1

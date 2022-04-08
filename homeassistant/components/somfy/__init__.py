@@ -18,6 +18,7 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
 )
+from homeassistant.helpers.typing import ConfigType
 
 from . import api, config_flow
 from .const import COORDINATOR, DOMAIN
@@ -52,7 +53,7 @@ PLATFORMS = [
 ]
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Somfy component."""
     hass.data[DOMAIN] = {}
     domain_config = config.get(DOMAIN, {})

@@ -4,7 +4,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_OFF, Platform
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 
 from . import (
@@ -63,7 +63,7 @@ async def test_binary_sensor_empty(
 
     expected_entities = mock_vehicle[Platform.BINARY_SENSOR]
     assert len(entity_registry.entities) == len(expected_entities)
-    check_entities_no_data(hass, entity_registry, expected_entities, STATE_OFF)
+    check_entities_no_data(hass, entity_registry, expected_entities, STATE_UNKNOWN)
 
 
 @pytest.mark.usefixtures("fixtures_with_invalid_upstream_exception")

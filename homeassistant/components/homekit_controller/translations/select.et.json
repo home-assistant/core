@@ -1,0 +1,9 @@
+{
+    "state": {
+        "homekit_controller__ecobee_mode": {
+            "away": "Eemal",
+            "home": "Kodus",
+            "sleep": "Unere\u017eiim"
+        }
+    }
+}

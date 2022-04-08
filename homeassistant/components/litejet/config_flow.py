@@ -25,7 +25,7 @@ class LiteJetOptionsFlow(config_entries.OptionsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> dict[str, Any]:
+    ) -> FlowResult:
         """Manage LiteJet options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)

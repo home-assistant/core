@@ -1,15 +1,21 @@
 """Support for FutureNow Ethernet unit outputs as Lights."""
+from __future__ import annotations
+
 import pyfnip
 import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    COLOR_MODE_BRIGHTNESS,
+    COLOR_MODE_ONOFF,
     PLATFORM_SCHEMA,
-    SUPPORT_BRIGHTNESS,
     LightEntity,
 )
 from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 CONF_DRIVER = "driver"
 CONF_DRIVER_FNIP6X10AD = "FNIP6x10ad"
@@ -33,7 +39,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the light platform for each FutureNow unit."""
     lights = []
     for channel, device_config in config[CONF_DEVICES].items():
@@ -96,11 +107,16 @@ class FutureNowLight(LightEntity):
         return self._brightness
 
     @property
-    def supported_features(self):
-        """Flag supported features."""
+    def color_mode(self) -> str:
+        """Return the color mode of the light."""
         if self._dimmable:
-            return SUPPORT_BRIGHTNESS
-        return 0
+            return COLOR_MODE_BRIGHTNESS
+        return COLOR_MODE_ONOFF
+
+    @property
+    def supported_color_modes(self) -> set[str] | None:
+        """Flag supported color modes."""
+        return {self.color_mode}
 
     def turn_on(self, **kwargs):
         """Turn the light on."""

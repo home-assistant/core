@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado"
+        },
+        "error": {
+            "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado",
+            "cannot_connect": "Falha ao conectar"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "O nome para esta conex\u00e3o velbus",
+                    "port": "String de conex\u00e3o"
+                },
+                "title": "Defina o tipo de conex\u00e3o velbus"
+            }
+        }
+    }
+}

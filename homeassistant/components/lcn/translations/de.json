@@ -2,7 +2,7 @@
     "device_automation": {
         "trigger_type": {
             "fingerprint": "Fingerabdruckcode empfangen",
-            "send_keys": "Sendeschl\u00fcssel empfangen",
+            "send_keys": "Sende Tasten empfangen",
             "transmitter": "Sendercode empfangen",
             "transponder": "Transpondercode empfangen"
         }

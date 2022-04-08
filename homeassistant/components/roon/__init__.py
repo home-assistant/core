@@ -1,12 +1,14 @@
 """Roon (www.roonlabs.com) component."""
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN
 from .server import RoonServer
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a roonserver from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     host = entry.data[CONF_HOST]
@@ -26,7 +28,7 @@ async def async_setup_entry(hass, entry):
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     roonserver = hass.data[DOMAIN].pop(entry.entry_id)
     return await roonserver.async_reset()

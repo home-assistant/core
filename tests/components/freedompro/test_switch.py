@@ -5,6 +5,7 @@ from unittest.mock import ANY, patch
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SERVICE_TURN_ON
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, STATE_OFF, STATE_ON
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.util.dt import utcnow
 
 from tests.common import async_fire_time_changed
@@ -61,7 +62,7 @@ async def test_switch_set_off(hass, init_integration):
         "homeassistant.components.freedompro.get_states",
         return_value=states_response,
     ):
-        await hass.helpers.entity_component.async_update_entity(entity_id)
+        await async_update_entity(hass, entity_id)
         async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
         await hass.async_block_till_done()
 

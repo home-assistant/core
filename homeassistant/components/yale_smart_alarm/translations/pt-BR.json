@@ -1,0 +1,43 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "A conta j\u00e1 foi configurada",
+            "reauth_successful": "A reautentica\u00e7\u00e3o foi bem-sucedida"
+        },
+        "error": {
+            "cannot_connect": "Falha ao conectar",
+            "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "area_id": "ID da \u00e1rea",
+                    "name": "Nome",
+                    "password": "Senha",
+                    "username": "Usu\u00e1rio"
+                }
+            },
+            "user": {
+                "data": {
+                    "area_id": "ID da \u00e1rea",
+                    "name": "Nome",
+                    "password": "Senha",
+                    "username": "Usu\u00e1rio"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "code_format_mismatch": "O c\u00f3digo n\u00e3o corresponde ao n\u00famero necess\u00e1rio de d\u00edgitos"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "code": "C\u00f3digo padr\u00e3o para fechaduras, usado se nenhuma for dada",
+                    "lock_code_digits": "N\u00famero de d\u00edgitos no c\u00f3digo PIN para fechaduras"
+                }
+            }
+        }
+    }
+}

@@ -1,7 +1,15 @@
 """Support for Open-Meteo."""
 from __future__ import annotations
 
-from open_meteo import Forecast, OpenMeteo, OpenMeteoError
+from open_meteo import (
+    DailyParameters,
+    Forecast,
+    OpenMeteo,
+    OpenMeteoError,
+    PrecipitationUnit,
+    TemperatureUnit,
+    WindSpeedUnit,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CONF_ZONE, Platform
@@ -20,8 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     open_meteo = OpenMeteo(session=session)
 
     async def async_update_forecast() -> Forecast:
-        zone = hass.states.get(entry.data[CONF_ZONE])
-        if zone is None:
+        if (zone := hass.states.get(entry.data[CONF_ZONE])) is None:
             raise UpdateFailed(f"Zone '{entry.data[CONF_ZONE]}' not found")
 
         try:
@@ -29,6 +36,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 latitude=zone.attributes[ATTR_LATITUDE],
                 longitude=zone.attributes[ATTR_LONGITUDE],
                 current_weather=True,
+                daily=[
+                    DailyParameters.PRECIPITATION_SUM,
+                    DailyParameters.TEMPERATURE_2M_MAX,
+                    DailyParameters.TEMPERATURE_2M_MIN,
+                    DailyParameters.WEATHER_CODE,
+                    DailyParameters.WIND_DIRECTION_10M_DOMINANT,
+                    DailyParameters.WIND_SPEED_10M_MAX,
+                ],
+                precipitation_unit=PrecipitationUnit.MILLIMETERS,
+                temperature_unit=TemperatureUnit.CELSIUS,
+                timezone="UTC",
+                wind_speed_unit=WindSpeedUnit.KILOMETERS_PER_HOUR,
             )
         except OpenMeteoError as err:
             raise UpdateFailed("Open-Meteo API communication error") from err

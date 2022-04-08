@@ -15,8 +15,8 @@
             },
             "local": {
                 "data": {
-                    "wifi_pswd": "WiFi \u5bc6\u7801",
-                    "wifi_ssid": "WiFi \u540d\u79f0 (SSID)"
+                    "wifi_pswd": "Wi-Fi \u5bc6\u7801",
+                    "wifi_ssid": "Wi-Fi \u540d\u79f0 (SSID)"
                 }
             },
             "user": {

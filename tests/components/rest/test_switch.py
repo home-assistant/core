@@ -21,8 +21,6 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component
 
-"""Tests for setting up the REST switch platform."""
-
 NAME = "foo"
 DEVICE_CLASS = SwitchDeviceClass.SWITCH
 METHOD = "post"
@@ -101,7 +99,6 @@ async def test_setup_query_params(hass, aioclient_mock):
         )
         await hass.async_block_till_done()
 
-    print(aioclient_mock)
     assert aioclient_mock.call_count == 1
 
 

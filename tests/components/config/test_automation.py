@@ -81,6 +81,43 @@ async def test_update_device_config(hass, hass_client, setup_automation):
 
 
 @pytest.mark.parametrize("automation_config", ({},))
+async def test_update_remove_key_device_config(hass, hass_client, setup_automation):
+    """Test updating device config while removing a key."""
+    with patch.object(config, "SECTIONS", ["automation"]):
+        await async_setup_component(hass, "config", {})
+
+    client = await hass_client()
+
+    orig_data = [{"id": "sun", "key": "value"}, {"id": "moon", "key": "value"}]
+
+    def mock_read(path):
+        """Mock reading data."""
+        return orig_data
+
+    written = []
+
+    def mock_write(path, data):
+        """Mock writing data."""
+        written.append(data)
+
+    with patch("homeassistant.components.config._read", mock_read), patch(
+        "homeassistant.components.config._write", mock_write
+    ), patch("homeassistant.config.async_hass_config_yaml", return_value={}):
+        resp = await client.post(
+            "/api/config/automation/config/moon",
+            data=json.dumps({"trigger": [], "action": [], "condition": []}),
+        )
+
+    assert resp.status == HTTPStatus.OK
+    result = await resp.json()
+    assert result == {"result": "ok"}
+
+    assert list(orig_data[1]) == ["id", "trigger", "condition", "action"]
+    assert orig_data[1] == {"id": "moon", "trigger": [], "condition": [], "action": []}
+    assert written[0] == orig_data
+
+
+@pytest.mark.parametrize("automation_config", ({},))
 async def test_bad_formatted_automations(hass, hass_client, setup_automation):
     """Test that we handle automations without ID."""
     with patch.object(config, "SECTIONS", ["automation"]):

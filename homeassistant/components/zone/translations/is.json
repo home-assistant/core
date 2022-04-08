@@ -1,0 +1,14 @@
+{
+    "config": {
+        "step": {
+            "init": {
+                "data": {
+                    "latitude": "Breiddargr\u00e1\u00f0a",
+                    "longitude": "Lengdargr\u00e1\u00f0a",
+                    "name": "Heiti"
+                }
+            }
+        },
+        "title": "Sv\u00e6\u00f0i"
+    }
+}

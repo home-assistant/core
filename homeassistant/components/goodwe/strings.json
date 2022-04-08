@@ -1,0 +1,20 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "GoodWe inverter",
+        "description": "Connect to inverter",
+        "data": {
+          "host": "[%key:common::config_flow::data::ip%]"
+        }
+      }
+    },
+    "error": {
+      "connection_error": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]"
+    }
+  }
+}

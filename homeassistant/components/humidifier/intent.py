@@ -13,7 +13,7 @@ from . import (
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_MODE,
     SERVICE_TURN_ON,
-    SUPPORT_MODES,
+    HumidifierEntityFeature,
 )
 
 INTENT_HUMIDITY = "HassHumidifierSetpoint"
@@ -90,7 +90,7 @@ class SetModeHandler(intent.IntentHandler):
 
         service_data = {ATTR_ENTITY_ID: state.entity_id}
 
-        intent.async_test_feature(state, SUPPORT_MODES, "modes")
+        intent.async_test_feature(state, HumidifierEntityFeature.MODES, "modes")
         mode = slots["mode"]["value"]
 
         if mode not in state.attributes.get(ATTR_AVAILABLE_MODES, []):

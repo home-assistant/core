@@ -7,6 +7,8 @@ LOGGER = logging.getLogger(__package__)
 
 DOMAIN = "deconz"
 
+HASSIO_CONFIGURATION_URL = "homeassistant://hassio/ingress/core_deconz"
+
 CONF_BRIDGE_ID = "bridgeid"
 CONF_GROUP_ID_BASE = "group_id_base"
 
@@ -23,6 +25,7 @@ CONF_MASTER_GATEWAY = "master"
 PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.CLIMATE,
     Platform.COVER,
     Platform.FAN,

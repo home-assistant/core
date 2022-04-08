@@ -8,14 +8,20 @@ import voluptuous as vol
 
 from homeassistant import exceptions
 from homeassistant.const import CONF_ATTRIBUTE, CONF_FOR, CONF_PLATFORM, MATCH_ALL
-from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, State, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    HassJob,
+    HomeAssistant,
+    State,
+    callback,
+)
 from homeassistant.helpers import (
     config_validation as cv,
     entity_registry as er,
     template,
 )
 from homeassistant.helpers.event import (
-    Event,
     async_track_same_state,
     async_track_state_change_event,
     process_state_match,
@@ -71,7 +77,7 @@ async def async_validate_trigger_config(
         config = TRIGGER_STATE_SCHEMA(config)
 
     registry = er.async_get(hass)
-    config[CONF_ENTITY_ID] = er.async_resolve_entity_ids(
+    config[CONF_ENTITY_ID] = er.async_validate_entity_ids(
         registry, cv.entity_ids_or_uuids(config[CONF_ENTITY_ID])
     )
 

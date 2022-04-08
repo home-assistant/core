@@ -1,5 +1,5 @@
 """Tests for the sensors provided by the RDW integration."""
-from homeassistant.components.binary_sensor import DEVICE_CLASS_PROBLEM
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.rdw.const import DOMAIN
 from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_FRIENDLY_NAME, ATTR_ICON
 from homeassistant.core import HomeAssistant
@@ -33,7 +33,7 @@ async def test_vehicle_binary_sensors(
     assert entry.unique_id == "11ZKZ3_pending_recall"
     assert state.state == "off"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Pending Recall"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_PROBLEM
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == BinarySensorDeviceClass.PROBLEM
     assert ATTR_ICON not in state.attributes
 
     assert entry.device_id

@@ -39,8 +39,7 @@ async def check_migration(hass: core.HomeAssistant, entry: ConfigEntry) -> None:
         data[CONF_API_KEY] = data.pop(CONF_USERNAME)
         hass.config_entries.async_update_entry(entry, data=data)
 
-    conf_api_version = entry.data.get(CONF_API_VERSION, 1)
-    if conf_api_version == 1:
+    if (conf_api_version := entry.data.get(CONF_API_VERSION, 1)) == 1:
         # a bridge might have upgraded firmware since last run so
         # we discover its capabilities at every startup
         websession = aiohttp_client.async_get_clientsession(hass)
@@ -76,7 +75,6 @@ async def handle_v2_migration(hass: core.HomeAssistant, entry: ConfigEntry) -> N
     """Perform migration of devices and entities to V2 Id's."""
     host = entry.data[CONF_HOST]
     api_key = entry.data[CONF_API_KEY]
-    websession = aiohttp_client.async_get_clientsession(hass)
     dev_reg = async_get_device_registry(hass)
     ent_reg = async_get_entity_registry(hass)
     LOGGER.info("Start of migration of devices and entities to support API schema 2")
@@ -93,7 +91,7 @@ async def handle_v2_migration(hass: core.HomeAssistant, entry: ConfigEntry) -> N
             dev_ids[normalized_mac] = hass_dev.id
 
     # initialize bridge connection just for the migration
-    async with HueBridgeV2(host, api_key, websession) as api:
+    async with HueBridgeV2(host, api_key) as api:
 
         sensor_class_mapping = {
             SensorDeviceClass.BATTERY.value: ResourceTypes.DEVICE_POWER,
