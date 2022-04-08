@@ -1,10 +1,12 @@
 """Support for Radarr."""
 from __future__ import annotations
 
+from collections.abc import Callable
+from copy import deepcopy
+from dataclasses import dataclass
 from datetime import datetime
-from typing import cast
+from typing import Any
 
-from aiopyarr.models.radarr import RadarrCalendar, RadarrMovie
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -33,44 +35,45 @@ from . import RadarrEntity
 from .const import DOMAIN, LOGGER
 from .coordinator import RadarrDataUpdateCoordinator
 
-SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
+
+@dataclass
+class RadarrSensorEntityDescription(SensorEntityDescription):
+    """Class to describe a Radarr sensor."""
+
+    value: Callable[[RadarrDataUpdateCoordinator, str], Any] = lambda val, _: val
+
+
+SENSOR_TYPES: tuple[RadarrSensorEntityDescription, ...] = (
+    RadarrSensorEntityDescription(
         key="diskspace",
         name="Disk Space",
         native_unit_of_measurement=DATA_GIGABYTES,
         icon="mdi:harddisk",
-        entity_registry_enabled_default=False,
+        value=lambda coordinator, name: get_space(  # pylint:disable=unnecessary-lambda
+            coordinator, name
+        ),
     ),
-    SensorEntityDescription(
-        key="upcoming",
-        name="Upcoming",
-        native_unit_of_measurement="Movies",
-        icon="mdi:television",
-    ),
-    SensorEntityDescription(
-        key="wanted",
-        name="Wanted",
-        native_unit_of_measurement="Movies",
-        icon="mdi:television",
-    ),
-    SensorEntityDescription(
+    RadarrSensorEntityDescription(
         key="movies",
         name="Movies",
         native_unit_of_measurement="Movies",
         icon="mdi:television",
         entity_registry_enabled_default=False,
+        value=lambda coordinator, _: coordinator.movies,
     ),
-    SensorEntityDescription(
+    RadarrSensorEntityDescription(
         key="commands",
         name="Commands",
         native_unit_of_measurement="Commands",
         icon="mdi:code-braces",
+        value=lambda coordinator, _: len(coordinator.commands),
     ),
-    SensorEntityDescription(
+    RadarrSensorEntityDescription(
         key="status",
         name="Status",
         native_unit_of_measurement="Status",
         icon="mdi:information",
+        value=lambda coordinator, _: coordinator.system_status.version,
     ),
 )
 
@@ -82,7 +85,7 @@ BYTE_SIZES = [
     DATA_MEGABYTES,
     DATA_GIGABYTES,
 ]
-# Deprecated in Home Assistant 2022.4
+# Deprecated in Home Assistant 2022.5
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
@@ -109,11 +112,7 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Radarr platform."""
-    # deprecated in 2022.4
-    if "wanted" in config[CONF_MONITORED_CONDITIONS]:
-        LOGGER.warning(
-            "Wanted is not a valid condition option. Please remove it from your config"
-        )
+    # deprecated in 2022.5
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=config
@@ -127,86 +126,61 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Radarr sensors based on a config entry."""
-    async_add_entities(
-        RadarrSensor(hass.data[DOMAIN][entry.entry_id], description)
-        for description in SENSOR_TYPES
-        if description.key != "wanted"
-    )
+    coordinator: RadarrDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    entities = []
+    for description in SENSOR_TYPES:
+        if description.key in "diskspace":
+            for mount in coordinator.disk_space:
+                desc = deepcopy(description)
+                name = mount.path.rsplit("/")[-1].rsplit("\\")[-1]
+                desc.key = f"{description.key}_{name}"
+                desc.name = f"{description.name} {name.capitalize()}"
+                entities.append(RadarrSensor(coordinator, desc, name))
+        else:
+            entities.append(RadarrSensor(coordinator, description))
+    async_add_entities(entities)
 
 
 class RadarrSensor(RadarrEntity, SensorEntity):
     """Implementation of the Radarr sensor."""
 
     coordinator: RadarrDataUpdateCoordinator
+    entity_description: RadarrSensorEntityDescription
 
     def __init__(
         self,
         coordinator: RadarrDataUpdateCoordinator,
-        description: SensorEntityDescription,
+        description: RadarrSensorEntityDescription,
+        folder_name: str = "",
     ) -> None:
         """Create Radarr entity."""
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_name = f"Radarr {description.name}"
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.name}"
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
+        self.folder_name = folder_name
 
     @property
-    def extra_state_attributes(self) -> dict[str, StateType | datetime]:
+    def extra_state_attributes(self) -> dict[str, StateType | datetime] | None:
         """Return the state attributes of the sensor."""
-        if self.entity_description.key == "commands":
-            return {cmd.name: cmd.status for cmd in self.coordinator.commands}
-        if self.entity_description.key == "diskspace":
-            return self.get_strings(cast(str, self.native_unit_of_measurement))
-        if self.entity_description.key == "movies":
-            return {to_key(movie): movie.hasFile for movie in self.coordinator.movies}
         if self.entity_description.key == "status":
             return self.coordinator.system_status.attributes
-        return {to_key(movie): movie.releaseDate for movie in self.coordinator.calendar}
+        return None
 
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        if self.entity_description.key == "diskspace":
-            space = 0
-            for mount in self.coordinator.rootfolder:
-                space += mount.freeSpace
-            return f"{to_unit(space, cast(str, self.native_unit_of_measurement)):.2f}"
-        if self.entity_description.key == "upcoming":
-            return len(self.coordinator.calendar)
-        if self.entity_description.key == "commands":
-            return len(self.coordinator.commands)
-        if self.entity_description.key == "movies":
-            return len(self.coordinator.movies)
-        return self.coordinator.system_status.version
-
-    def get_strings(self, unit: str) -> dict[str, StateType | datetime]:
-        """Get diskspace interpolated strings."""
-        attrs: dict[str, StateType | datetime] = {}
-        last_entry = None
-        for mnt in self.coordinator.disk_space:
-            for space in self.coordinator.rootfolder:
-                if (
-                    last_entry != space.freeSpace
-                    and mnt.freeSpace * 0.99 <= space.freeSpace <= mnt.freeSpace * 1.01
-                ):
-                    last_entry = space.freeSpace
-                    mnt.freeSpace = space.freeSpace
-                    attrs[mnt.path] = "{:.2f}/{:.2f}{} ({:.2f}%)".format(
-                        to_unit(space.freeSpace, unit),
-                        to_unit(mnt.totalSpace, unit),
-                        unit,
-                        0
-                        if mnt.totalSpace == 0
-                        else space.freeSpace / mnt.totalSpace * 100,
-                    )
-        return attrs
+        return self.entity_description.value(self.coordinator, self.folder_name)
 
 
-def to_key(movie: RadarrMovie | RadarrCalendar) -> str:
-    """Get key."""
-    return f"{movie.title} ({movie.year})"
-
-
-def to_unit(value: int, unit: str = DATA_GIGABYTES) -> float:
-    """Convert bytes to give unit."""
-    return cast(float, value / 1024 ** BYTE_SIZES.index(unit))
+def get_space(coordinator: RadarrDataUpdateCoordinator, name: str) -> str:
+    """Get space."""
+    LOGGER.warning(name)
+    for mount in coordinator.disk_space:
+        LOGGER.warning(mount.path)
+    space = [
+        mount.freeSpace / 1024 ** BYTE_SIZES.index(DATA_GIGABYTES)
+        for mount in coordinator.disk_space
+        if name in mount.path
+    ]
+    return f"{space[0]:.2f}"

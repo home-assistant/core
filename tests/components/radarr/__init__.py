@@ -4,11 +4,7 @@ from unittest.mock import patch
 
 from aiohttp.client_exceptions import ClientError
 
-from homeassistant.components.radarr.const import (
-    CONF_UPCOMING_DAYS,
-    DEFAULT_UPCOMING_DAYS,
-    DOMAIN,
-)
+from homeassistant.components.radarr.const import DOMAIN
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
@@ -57,6 +53,7 @@ def mock_connection(
     url: str = URL,
     error: bool = False,
     invalid_auth: bool = False,
+    windows: bool = False,
 ) -> None:
     """Mock radarr connection."""
     if error:
@@ -80,28 +77,23 @@ def mock_connection(
     )
 
     aioclient_mock.get(
-        f"{url}/api/v3/calendar",
-        text=load_fixture("radarr/calendar.json"),
-        headers={"Content-Type": CONTENT_TYPE_JSON},
-    )
-
-    aioclient_mock.get(
         f"{url}/api/v3/command",
         text=load_fixture("radarr/command.json"),
         headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 
-    aioclient_mock.get(
-        f"{url}/api/v3/rootfolder",
-        text=load_fixture("radarr/rootfolder.json"),
-        headers={"Content-Type": CONTENT_TYPE_JSON},
-    )
-
-    aioclient_mock.get(
-        f"{url}/api/v3/diskspace",
-        text=load_fixture("radarr/diskspace.json"),
-        headers={"Content-Type": CONTENT_TYPE_JSON},
-    )
+    if windows:
+        aioclient_mock.get(
+            f"{url}/api/v3/rootfolder",
+            text=load_fixture("radarr/rootfolder-windows.json"),
+            headers={"Content-Type": CONTENT_TYPE_JSON},
+        )
+    else:
+        aioclient_mock.get(
+            f"{url}/api/v3/rootfolder",
+            text=load_fixture("radarr/rootfolder-linux.json"),
+            headers={"Content-Type": CONTENT_TYPE_JSON},
+        )
 
     aioclient_mock.get(
         f"{url}/api/v3/movie",
@@ -124,8 +116,6 @@ def mock_connection_invalid_auth(
 ) -> None:
     """Mock radarr invalid auth errors."""
     aioclient_mock.get(f"{url}/api/v3/system/status", status=HTTPStatus.UNAUTHORIZED)
-    aioclient_mock.get(f"{url}/api/v3/diskspace", status=HTTPStatus.UNAUTHORIZED)
-    aioclient_mock.get(f"{url}/api/v3/calendar", status=HTTPStatus.UNAUTHORIZED)
     aioclient_mock.get(f"{url}/api/v3/command", status=HTTPStatus.UNAUTHORIZED)
     aioclient_mock.get(f"{url}/api/v3/movie", status=HTTPStatus.UNAUTHORIZED)
     aioclient_mock.get(f"{url}/api/v3/rootfolder", status=HTTPStatus.UNAUTHORIZED)
@@ -138,12 +128,6 @@ def mock_connection_server_error(
     """Mock radarr server errors."""
     aioclient_mock.get(
         f"{url}/api/v3/system/status", status=HTTPStatus.INTERNAL_SERVER_ERROR
-    )
-    aioclient_mock.get(
-        f"{url}/api/v3/diskspace", status=HTTPStatus.INTERNAL_SERVER_ERROR
-    )
-    aioclient_mock.get(
-        f"{url}/api/v3/calendar", status=HTTPStatus.INTERNAL_SERVER_ERROR
     )
     aioclient_mock.get(f"{url}/api/v3/command", status=HTTPStatus.INTERNAL_SERVER_ERROR)
     aioclient_mock.get(f"{url}/api/v3/movie", status=HTTPStatus.INTERNAL_SERVER_ERROR)
@@ -161,6 +145,7 @@ async def setup_integration(
     skip_entry_setup: bool = False,
     connection_error: bool = False,
     invalid_auth: bool = False,
+    windows: bool = False,
 ) -> MockConfigEntry:
     """Set up the radarr integration in Home Assistant."""
     entry = MockConfigEntry(
@@ -171,7 +156,6 @@ async def setup_integration(
             CONF_API_KEY: api_key,
             CONF_VERIFY_SSL: False,
         },
-        options={CONF_UPCOMING_DAYS: DEFAULT_UPCOMING_DAYS},
     )
 
     entry.add_to_hass(hass)
@@ -181,6 +165,7 @@ async def setup_integration(
         url=url,
         error=connection_error,
         invalid_auth=invalid_auth,
+        windows=windows,
     )
 
     if not skip_entry_setup:
@@ -213,7 +198,6 @@ def create_entry(hass: HomeAssistant) -> MockConfigEntry:
             CONF_API_KEY: API_KEY,
             CONF_VERIFY_SSL: False,
         },
-        options={CONF_UPCOMING_DAYS: DEFAULT_UPCOMING_DAYS},
     )
 
     entry.add_to_hass(hass)

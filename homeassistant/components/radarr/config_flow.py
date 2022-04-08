@@ -9,7 +9,7 @@ from aiopyarr.models.host_configuration import PyArrHostConfiguration
 from aiopyarr.radarr_client import RadarrClient
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
+from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
@@ -18,18 +18,11 @@ from homeassistant.const import (
     CONF_URL,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import (
-    CONF_UPCOMING_DAYS,
-    DEFAULT_NAME,
-    DEFAULT_UPCOMING_DAYS,
-    DEFAULT_URL,
-    DOMAIN,
-    LOGGER,
-)
+from .const import DEFAULT_NAME, DEFAULT_URL, DOMAIN, LOGGER
 
 
 class RadarrConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -40,12 +33,6 @@ class RadarrConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the flow."""
         self.entry: ConfigEntry | None = None
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
-        """Get the options flow for this handler."""
-        return RadarrOptionsFlowHandler(config_entry)
 
     async def async_step_reauth(self, _: dict[str, str | bool]) -> FlowResult:
         """Handle configuration by re-auth."""
@@ -97,7 +84,6 @@ class RadarrConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=DEFAULT_NAME,
                     data=user_input,
-                    options={CONF_UPCOMING_DAYS: DEFAULT_UPCOMING_DAYS},
                 )
 
         user_input = user_input or {}
@@ -138,7 +124,6 @@ class RadarrConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_API_KEY: config[CONF_API_KEY],
                 CONF_VERIFY_SSL: False,
             },
-            options={CONF_UPCOMING_DAYS: int(config.get("days", 7))},
         )
 
 
@@ -159,29 +144,3 @@ async def validate_input(
         return await radarr.async_try_zeroconf()
     await radarr.async_get_system_status()
     return None
-
-
-class RadarrOptionsFlowHandler(OptionsFlow):
-    """Handle Radarr client options."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
-
-    async def async_step_init(
-        self, user_input: dict[str, int] | None = None
-    ) -> FlowResult:
-        """Manage Radarr options."""
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
-
-        options = {
-            vol.Optional(
-                CONF_UPCOMING_DAYS,
-                default=self.config_entry.options.get(
-                    CONF_UPCOMING_DAYS, DEFAULT_UPCOMING_DAYS
-                ),
-            ): int,
-        }
-
-        return self.async_show_form(step_id="init", data_schema=vol.Schema(options))

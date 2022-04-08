@@ -1,5 +1,5 @@
 """The tests for Radarr sensor platform."""
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from homeassistant.components.radarr.sensor import SENSOR_TYPES
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT
@@ -22,15 +22,9 @@ async def test_sensors(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker)
     async_fire_time_changed(hass, next_update)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.radarr_disk_space")
+    state = hass.states.get("sensor.radarr_disk_space_downloads")
     assert state.state == "263.10"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "GB"
-    assert state.attributes.get("D:\\") == "263.10/5216.31GB (5.04%)"
-    assert len(state.attributes) == 4
-    state = hass.states.get("sensor.radarr_upcoming")
-    assert state.state == "1"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "Movies"
-    assert state.attributes.get("string (2020)") == datetime(2021, 12, 3, 0, 0)
     state = hass.states.get("sensor.radarr_commands")
     assert state.state == "1"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "Commands"
@@ -40,4 +34,11 @@ async def test_sensors(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker)
     state = hass.states.get("sensor.radarr_movies")
     assert state.state == "1"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "Movies"
-    assert state.attributes.get("string (0)") is True
+
+
+async def test_windows(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker):
+    """Test for successfully setting up the Radarr platform on Windows."""
+    await setup_integration(hass, aioclient_mock, windows=True)
+
+    state = hass.states.get("sensor.radarr_disk_space_tv")
+    assert state.state == "263.10"

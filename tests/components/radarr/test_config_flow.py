@@ -4,12 +4,7 @@ from unittest.mock import AsyncMock, patch
 from aiopyarr import ArrException
 
 from homeassistant import data_entry_flow
-from homeassistant.components.radarr.const import (
-    CONF_UPCOMING_DAYS,
-    DEFAULT_NAME,
-    DEFAULT_UPCOMING_DAYS,
-    DOMAIN,
-)
+from homeassistant.components.radarr.const import DEFAULT_NAME, DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_SOURCE, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
@@ -230,26 +225,3 @@ async def test_full_user_flow_implementation(
     assert result["title"] == DEFAULT_NAME
     assert result["data"] == CONF_DATA
     assert result["data"][CONF_URL] == "http://192.168.1.189:7887/test"
-
-
-async def test_options_flow(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker):
-    """Test updating options."""
-    with patch("homeassistant.components.radarr.PLATFORMS", []):
-        entry = await setup_integration(hass, aioclient_mock)
-
-    assert entry.options[CONF_UPCOMING_DAYS] == DEFAULT_UPCOMING_DAYS
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "init"
-
-    with patch_async_setup_entry():
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            user_input={CONF_UPCOMING_DAYS: 2},
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["data"][CONF_UPCOMING_DAYS] == 2
