@@ -27,14 +27,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up a configured Air Purifier by creating the Fan entity."""
     client = hass.data[DOMAIN][config_entry.entry_id]
-
-    initial_data = {
-        "unique_id": config_entry.unique_id,
-        "name": config_entry.title,
-        "model": config_entry.data[CONF_MODEL],
-    }
-
-    entity = PurifierEntity(client, initial_data)
+    entity = PurifierEntity(client, config_entry)
     async_add_entities([entity])
 
 
@@ -48,13 +41,13 @@ class PurifierEntity(FanEntity):
     speeds = [FanSpeed.Speed1, FanSpeed.Speed2, FanSpeed.Speed3, FanSpeed.Turbo]
     speed_count: int = len(speeds)
 
-    def __init__(self, client: ReliableClient, initial_data: dict[str, Any]) -> None:
+    def __init__(self, client: ReliableClient, config_entry: ConfigEntry) -> None:
         """Initialize a PurifierEntity."""
         self._client = client
         self._status: Status | None = None
         # If the device is turned off or not reachable for other reasons, we want the
         # integration to be able to start up anyway and just be unavailable.
-        self._initial_data = initial_data
+        self._config_entry = config_entry
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to device status updates."""
@@ -72,14 +65,14 @@ class PurifierEntity(FanEntity):
     def unique_id(self):
         """Return the unique ID for this purifier."""
         if self._status is None:
-            return self._initial_data["unique_id"]
+            return self._config_entry.unique_id
         return self._status.device_id
 
     @property
     def name(self):
         """Return the purifier's name."""
         if self._status is None:
-            return self._initial_data["name"]
+            return self._config_entry.title
         return self._status.name
 
     @property
@@ -104,7 +97,7 @@ class PurifierEntity(FanEntity):
             "identifiers": {(DOMAIN, self.unique_id)},
             "name": self.name,
             "manufacturer": "Philips",
-            "model": self._initial_data["model"],
+            "model": self._config_entry.data[CONF_MODEL],
         }
         _LOGGER.debug("Device info: %s", str(info))
         return info
