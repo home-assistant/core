@@ -20,6 +20,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_ENTITY_ID,
     CONF_NAME,
@@ -376,6 +377,26 @@ class StatisticsSensor(SensorEntity):
     @property
     def device_class(self) -> Literal[SensorDeviceClass.TIMESTAMP] | None:
         """Return the class of this device."""
+        if self._state_characteristic in (
+            # Group of characteristics which have
+            # the same definition space as the source entity
+            STAT_AVERAGE_LINEAR,
+            STAT_AVERAGE_STEP,
+            STAT_AVERAGE_TIMELESS,
+            STAT_CHANGE,
+            STAT_DISTANCE_95P,
+            STAT_DISTANCE_99P,
+            STAT_DISTANCE_ABSOLUTE,
+            STAT_MEAN,
+            STAT_MEDIAN,
+            STAT_NOISINESS,
+            STAT_STANDARD_DEVIATION,
+            STAT_TOTAL,
+            STAT_VALUE_MAX,
+            STAT_VALUE_MIN,
+        ):
+            _state = self.hass.states.get(self._source_entity_id)
+            return None if _state is None else _state.attributes.get(ATTR_DEVICE_CLASS)
         if self._state_characteristic in STATS_DATETIME:
             return SensorDeviceClass.TIMESTAMP
         return None
