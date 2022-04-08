@@ -1461,6 +1461,11 @@ def async_track_utc_time_change(
     local: bool = False,
 ) -> CALLBACK_TYPE:
     """Add a listener that will fire if time matches a pattern."""
+    # We do not have to wrap the function with time pattern matching logic
+    # if no pattern given
+    if all(val is None for val in (hour, minute, second)):
+        return async_track_time_interval(hass, action, timedelta(seconds=1))
+
     job = HassJob(action)
     matching_seconds = dt_util.parse_time_expression(second, 0, 59)
     matching_minutes = dt_util.parse_time_expression(minute, 0, 59)
