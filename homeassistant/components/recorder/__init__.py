@@ -948,7 +948,7 @@ class Recorder(threading.Thread):
                 self.hass, self._async_keep_alive, timedelta(seconds=KEEPALIVE_TIME)
             )
 
-        # If the commit interval is not 0, we need commit periodically
+        # If the commit interval is not 0, we need to commit periodically
         if self.commit_interval:
             self._commit_listener = async_track_time_interval(
                 self.hass, self._async_commit, timedelta(seconds=self.commit_interval)
