@@ -150,20 +150,24 @@ class DeconzAlarmControlPanel(DeconzDevice, AlarmControlPanelEntity):
     @property
     def state(self) -> str | None:
         """Return the state of the control panel."""
-        return DECONZ_TO_ALARM_STATE.get(self._device.panel)
+        return DECONZ_TO_ALARM_STATE.get(str(self._device.panel))
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
-        await self.alarm_system.arm_away(code)
+        if code:
+            await self.alarm_system.arm_away(code)
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
-        await self.alarm_system.arm_stay(code)
+        if code:
+            await self.alarm_system.arm_stay(code)
 
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
-        await self.alarm_system.arm_night(code)
+        if code:
+            await self.alarm_system.arm_night(code)
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
-        await self.alarm_system.disarm(code)
+        if code:
+            await self.alarm_system.disarm(code)
