@@ -194,7 +194,7 @@ class ZWaveHumidifier(ZWaveBaseEntity, HumidifierEntity):
     @property
     def target_humidity(self) -> int | None:
         """Return the humidity we try to reach."""
-        if not (self._setpoint and self._setpoint.value):
+        if not self._setpoint or self._setpoint.value is None:
             return None
         return int(self._setpoint.value)
 
