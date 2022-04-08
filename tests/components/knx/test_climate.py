@@ -172,6 +172,8 @@ async def test_update_entity(hass: HomeAssistant, knx: KNXTestKit, mock_ha):
                 ClimateSchema.CONF_TEMPERATURE_ADDRESS: "1/2/3",
                 ClimateSchema.CONF_TARGET_TEMPERATURE_ADDRESS: "1/2/4",
                 ClimateSchema.CONF_TARGET_TEMPERATURE_STATE_ADDRESS: "1/2/5",
+                ClimateSchema.CONF_OPERATION_MODE_ADDRESS: "1/2/6",
+                ClimateSchema.CONF_OPERATION_MODE_STATE_ADDRESS: "1/2/7",
             }
         }
     )
@@ -181,11 +183,13 @@ async def test_update_entity(hass: HomeAssistant, knx: KNXTestKit, mock_ha):
 
     await hass.async_block_till_done()
     # read states state updater
+    await knx.assert_read("1/2/7")
     await knx.assert_read("1/2/3")
-    await knx.assert_read("1/2/5")
     # StateUpdater initialize state
+    await knx.receive_response("1/2/7", True)
     await knx.receive_response("1/2/3", (0x01,))
     # StateUpdater semaphore allows 2 concurrent requests
+    await knx.assert_read("1/2/5")
 
     # verify update entity retriggers group value reads to the bus
     await hass.services.async_call(
@@ -197,6 +201,7 @@ async def test_update_entity(hass: HomeAssistant, knx: KNXTestKit, mock_ha):
 
     await knx.assert_read("1/2/3")
     await knx.assert_read("1/2/5")
+    await knx.assert_read("1/2/7")
 
 
 async def test_command_value_idle_mode(hass: HomeAssistant, knx: KNXTestKit):
