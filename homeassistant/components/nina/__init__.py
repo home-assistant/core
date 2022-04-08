@@ -1,7 +1,6 @@
 """The Nina integration."""
 from __future__ import annotations
 
-import datetime as dt
 from types import MappingProxyType
 from typing import Any
 
