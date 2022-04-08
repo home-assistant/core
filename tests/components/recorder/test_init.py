@@ -1317,7 +1317,7 @@ async def test_database_lock_and_unlock(hass: HomeAssistant, tmp_path):
 
     event_type = "EVENT_TEST"
     event_data = {"test_attr": 5, "test_attr_10": "nice"}
-    hass.bus.fire(event_type, event_data)
+    hass.bus.async_fire(event_type, event_data)
     task = asyncio.create_task(async_wait_recording_done(hass, instance))
 
     # Recording can't be finished while lock is held
@@ -1411,3 +1411,42 @@ async def test_in_memory_database(hass, caplog):
         hass, recorder.DOMAIN, {recorder.DOMAIN: {recorder.CONF_DB_URL: "sqlite://"}}
     )
     assert "In-memory SQLite database is not supported" in caplog.text
+
+
+async def test_database_connection_keep_alive(
+    hass: HomeAssistant,
+    async_setup_recorder_instance: SetupRecorderInstanceT,
+    caplog: pytest.LogCaptureFixture,
+):
+    """Test we keep alive socket based dialects."""
+    with patch(
+        "homeassistant.components.recorder.Recorder._using_sqlite", return_value=False
+    ):
+        instance = await async_setup_recorder_instance(hass)
+        # We have to mock this since we don't have a mock
+        # MySQL server available in tests.
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await instance.async_recorder_ready.wait()
+
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=recorder.KEEPALIVE_TIME)
+    )
+    await async_wait_recording_done(hass, instance)
+    assert "Sending keepalive" in caplog.text
+
+
+async def test_database_connection_keep_alive_disabled_on_sqlite(
+    hass: HomeAssistant,
+    async_setup_recorder_instance: SetupRecorderInstanceT,
+    caplog: pytest.LogCaptureFixture,
+):
+    """Test we do not do keep alive for sqlite."""
+    instance = await async_setup_recorder_instance(hass)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await instance.async_recorder_ready.wait()
+
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=recorder.KEEPALIVE_TIME)
+    )
+    await async_wait_recording_done(hass, instance)
+    assert "Sending keepalive" not in caplog.text

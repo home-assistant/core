@@ -933,23 +933,27 @@ class Recorder(threading.Thread):
         self.queue.put(ExternalStatisticsTask(metadata, stats))
 
     @callback
+    def _using_sqlite(self) -> bool:
+        return bool(self.engine and self.engine.dialect.name == "sqlite")
+
+    @callback
     def _async_setup_periodic_tasks(self) -> None:
         """Prepare periodic tasks."""
         if self.hass.is_stopping or not self.get_session:
             # Home Assistant is shutting down
             return
 
-        assert self.engine is not None
-
         # If the db is using a socket connection, we need to keep alive
         # to prevent errors from unexpected disconnects
-        if self.engine.dialect.name != "sqlite":
+        if not self._using_sqlite():
+            _LOGGER.debug("Starting keep-alive for remote database")
             self._keep_alive_listener = async_track_time_interval(
                 self.hass, self._async_keep_alive, timedelta(seconds=KEEPALIVE_TIME)
             )
 
         # If the commit interval is not 0, we need commit periodicly
         if self.commit_interval:
+            _LOGGER.debug("Using commit interval of %s", self.commit_interval)
             self._commit_listener = async_track_time_interval(
                 self.hass, self._async_commit, timedelta(seconds=self.commit_interval)
             )
@@ -1344,7 +1348,7 @@ class Recorder(threading.Thread):
 
     async def lock_database(self) -> bool:
         """Lock database so it can be backed up safely."""
-        if not self.engine or self.engine.dialect.name != "sqlite":
+        if not self._using_sqlite():
             _LOGGER.debug(
                 "Not a SQLite database or not connected, locking not necessary"
             )
@@ -1373,7 +1377,7 @@ class Recorder(threading.Thread):
 
         Returns true if database lock has been held throughout the process.
         """
-        if not self.engine or self.engine.dialect.name != "sqlite":
+        if not self._using_sqlite():
             _LOGGER.debug(
                 "Not a SQLite database or not connected, unlocking not necessary"
             )
