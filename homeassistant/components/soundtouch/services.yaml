@@ -69,7 +69,7 @@ remove_zone_slave:
           domain: media_player
     slaves:
       name: Slaves
-      description: Name of slave(s) entities to remove from the existing zone.
+      description: Name of slave entities to remove from the existing zone.
       required: true
       selector:
         entity:
