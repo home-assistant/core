@@ -8,7 +8,12 @@ import logging
 from typing import Any
 
 import zigpy.exceptions
-from zigpy.zcl.foundation import CommandSchema, ConfigureReportingResponseRecord, Status
+from zigpy.zcl.foundation import (
+    CommandSchema,
+    ConfigureReportingResponseRecord,
+    Status,
+    ZCLAttributeDef,
+)
 
 from homeassistant.const import ATTR_COMMAND
 from homeassistant.core import callback
@@ -112,7 +117,11 @@ class ZigbeeChannel(LogMixin):
         if not hasattr(self, "_value_attribute") and self.REPORT_CONFIG:
             attr = self.REPORT_CONFIG[0].get("attr")
             if isinstance(attr, str):
-                self.value_attribute = self.cluster.attributes_by_name.get(attr)
+                attribute: ZCLAttributeDef = self.cluster.attributes_by_name.get(attr)
+                if attribute is not None:
+                    self.value_attribute = attribute.id
+                else:
+                    self.value_attribute = None
             else:
                 self.value_attribute = attr
         self._status = ChannelStatus.CREATED
