@@ -86,7 +86,7 @@ from .util import (
     end_incomplete_runs,
     is_second_sunday,
     move_away_broken_database,
-    periodic_db_cleanups,
+    perodic_db_cleanups,
     session_scope,
     setup_connection_for_dialect,
     validate_or_move_away_sqlite_database,
@@ -448,7 +448,7 @@ class PurgeTask(RecorderTask):
             # We always need to do the db cleanups after a purge
             # is finished to ensure the WAL checkpoint and other
             # tasks happen after a vacuum.
-            periodic_db_cleanups(instance)
+            perodic_db_cleanups(instance)
             return
         # Schedule a new purge task if this one didn't finish
         instance.queue.put(PurgeTask(self.purge_before, self.repack, self.apply_filter))
@@ -474,7 +474,7 @@ class PerodicCleanupTask(RecorderTask):
 
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
-        periodic_db_cleanups(instance)
+        perodic_db_cleanups(instance)
 
 
 @dataclass

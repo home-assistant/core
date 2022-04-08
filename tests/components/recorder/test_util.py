@@ -550,11 +550,11 @@ def test_end_incomplete_runs(hass_recorder, caplog):
     assert "Ended unfinished session" in caplog.text
 
 
-def test_periodic_db_cleanups(hass_recorder):
+def test_perodic_db_cleanups(hass_recorder):
     """Test perodic db cleanups."""
     hass = hass_recorder()
     with patch.object(hass.data[DATA_INSTANCE].engine, "connect") as connect_mock:
-        util.periodic_db_cleanups(hass.data[DATA_INSTANCE])
+        util.perodic_db_cleanups(hass.data[DATA_INSTANCE])
 
     text_obj = connect_mock.return_value.__enter__.return_value.execute.mock_calls[0][
         1
