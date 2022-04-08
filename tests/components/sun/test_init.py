@@ -108,10 +108,10 @@ async def test_setting_rising(hass):
     )
 
 
-async def test_state_change(hass, legacy_patchable_time, caplog):
+async def test_state_change(hass, caplog):
     """Test if the state changes at next setting/rising."""
     now = datetime(2016, 6, 1, 8, 0, 0, tzinfo=dt_util.UTC)
-    with patch("homeassistant.helpers.condition.dt_util.utcnow", return_value=now):
+    with freeze_time(now):
         await async_setup_component(
             hass, sun.DOMAIN, {sun.DOMAIN: {sun.CONF_ELEVATION: 0}}
         )
@@ -217,9 +217,7 @@ async def test_state_change_count(hass):
     assert len(events) < 721
 
 
-async def test_setup_and_remove_config_entry(
-    hass: ha.HomeAssistant, legacy_patchable_time
-) -> None:
+async def test_setup_and_remove_config_entry(hass: ha.HomeAssistant) -> None:
     """Test setting up and removing a config entry."""
     # Setup the config entry
     config_entry = MockConfigEntry(domain=sun.DOMAIN)
