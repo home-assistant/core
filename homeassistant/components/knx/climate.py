@@ -153,12 +153,6 @@ class KNXClimate(KnxEntity, ClimateEntity):
         )
         self.default_hvac_mode: str = config[ClimateSchema.CONF_DEFAULT_CONTROLLER_MODE]
 
-    async def async_update(self) -> None:
-        """Request a state update from KNX bus."""
-        await self._device.sync()
-        if self._device.mode is not None:
-            await self._device.mode.sync()
-
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
