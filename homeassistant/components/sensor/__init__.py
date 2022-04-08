@@ -5,7 +5,7 @@ from collections.abc import Callable, Mapping
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta, timezone
-from decimal import Decimal, InvalidOperation as DecimalInvalidOperation
+from decimal import Decimal
 import logging
 from math import floor, log10
 from typing import Any, Final, cast, final
@@ -560,9 +560,6 @@ class SensorExtraStoredData(ExtraStoredData):
             pass
         except KeyError:
             # native_value is a dict, but does not have all values
-            return None
-        except DecimalInvalidOperation:
-            # native value couldn't be cast back to Decimal
             return None
 
         return cls(native_value, native_unit_of_measurement)

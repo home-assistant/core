@@ -252,10 +252,17 @@ class UtilitySensorExtraStoredData(SensorExtraStoredData):
 
         try:
             last_period: Decimal = Decimal(restored["last_period"])
+            last_reset: datetime | None = dt_util.parse_datetime(restored["last_reset"])
+            status: str = restored["status"]
+
         except InvalidOperation:
             return None
-        last_reset: datetime | None = dt_util.parse_datetime(restored["last_reset"])
-        status: str = restored["status"]
+        except TypeError:
+            # restored is not a dict
+            return None
+        except KeyError:
+            # restored is a dict, but does not have all values
+            return None
 
         return cls(
             extra.native_value,
@@ -473,7 +480,7 @@ class UtilityMeterSensor(RestoreSensor):
                     dt_util.parse_datetime(state.attributes.get(ATTR_LAST_RESET))
                 )
                 if state.attributes.get(ATTR_STATUS) == COLLECTING:
-                    # Fake cancellation function to init the meter in similar state
+                    # Null lambda to allow cancelling the collection on tariff change
                     self._collecting = lambda: None
 
         @callback
