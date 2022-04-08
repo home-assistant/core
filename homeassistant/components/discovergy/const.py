@@ -8,7 +8,12 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import ENERGY_KILO_WATT_HOUR, POWER_WATT, VOLUME_CUBIC_METERS
+from homeassistant.const import (
+    ELECTRIC_POTENTIAL_VOLT,
+    ENERGY_KILO_WATT_HOUR,
+    POWER_WATT,
+    VOLUME_CUBIC_METERS,
+)
 
 DOMAIN = "discovergy"
 MANUFACTURER = "Discovergy"
@@ -35,6 +40,7 @@ GAS_SENSORS: tuple[SensorEntityDescription, ...] = (
 )
 
 ELECTRICITY_SENSORS: tuple[SensorEntityDescription, ...] = (
+    # power sensors
     SensorEntityDescription(
         key="power",
         name="Total power",
@@ -66,6 +72,56 @@ ELECTRICITY_SENSORS: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
     ),
+    SensorEntityDescription(
+        key="phase1Power",
+        name="Phase 1 power",
+        native_unit_of_measurement=POWER_WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="phase2Power",
+        name="Phase 2 power",
+        native_unit_of_measurement=POWER_WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="phase3Power",
+        name="Phase 3 power",
+        native_unit_of_measurement=POWER_WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    # voltage sensors
+    SensorEntityDescription(
+        key="phase1Voltage",
+        name="Phase 1 voltage",
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="phase2Voltage",
+        name="Phase 2 voltage",
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="phase3Voltage",
+        name="Phase 3 voltage",
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    # energy sensors
     SensorEntityDescription(
         key="energy",
         name="Total consumption",
