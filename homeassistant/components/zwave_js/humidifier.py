@@ -162,7 +162,9 @@ class ZWaveHumidifier(ZWaveBaseEntity, HumidifierEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on device."""
-        mode = int(self._current_mode.value)
+        if (value := self._current_mode.value) is None:
+            return
+        mode = int(value)
         if mode == HumidityControlMode.OFF:
             new_mode = self.entity_description.on_mode
         elif mode == self.entity_description.inverse_mode:
@@ -174,7 +176,9 @@ class ZWaveHumidifier(ZWaveBaseEntity, HumidifierEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off device."""
-        mode = int(self._current_mode.value)
+        if (value := self._current_mode.value) is None:
+            return
+        mode = int(value)
         if mode == HumidityControlMode.AUTO:
             if self._supports_inverse_mode():
                 new_mode = self.entity_description.inverse_mode
@@ -190,7 +194,7 @@ class ZWaveHumidifier(ZWaveBaseEntity, HumidifierEntity):
     @property
     def target_humidity(self) -> int | None:
         """Return the humidity we try to reach."""
-        if not self._setpoint:
+        if not (self._setpoint and self._setpoint.value):
             return None
         return int(self._setpoint.value)
 
