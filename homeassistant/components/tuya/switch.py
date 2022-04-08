@@ -138,6 +138,16 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             device_class=SwitchDeviceClass.OUTLET,
         ),
         SwitchEntityDescription(
+            key=DPCode.SWITCH_7,
+            name="Switch 7",
+            device_class=SwitchDeviceClass.OUTLET,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_8,
+            name="Switch 8",
+            device_class=SwitchDeviceClass.OUTLET,
+        ),
+        SwitchEntityDescription(
             key=DPCode.SWITCH_USB1,
             name="USB 1",
         ),

@@ -32,7 +32,7 @@
                     "host": "Hostitel",
                     "name": "Jm\u00e9no"
                 },
-                "description": "P\u0159\u00edstupov\u00fd token je pot\u0159eba pouze pro televizory. Pokud konfigurujete televizor a nem\u00e1te [%key:common:common::config_flow::data::access_token%], ponechte jej pr\u00e1zdn\u00e9, abyste mohli proj\u00edt procesem p\u00e1rov\u00e1n\u00ed.",
+                "description": "P\u0159\u00edstupov\u00fd token je pot\u0159eba pouze pro televizory. Pokud konfigurujete televizor a nem\u00e1te P\u0159\u00edstupov\u00fd token, ponechte jej pr\u00e1zdn\u00e9, abyste mohli proj\u00edt procesem p\u00e1rov\u00e1n\u00ed.",
                 "title": "Za\u0159\u00edzen\u00ed VIZIO SmartCast"
             }
         }

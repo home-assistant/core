@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
@@ -9,6 +10,13 @@
             "unknown": "Unerwarteter Fehler"
         },
         "step": {
+            "reauth_validate": {
+                "data": {
+                    "password": "Passwort"
+                },
+                "description": "Die Sense-Integration muss dein Konto {email} erneut authentifizieren.",
+                "title": "Integration erneut authentifizieren"
+            },
             "user": {
                 "data": {
                     "email": "E-Mail",
@@ -16,6 +24,12 @@
                     "timeout": "Zeit\u00fcberschreitung"
                 },
                 "title": "Stelle eine Verbindung zu deinem Sense Energy Monitor her"
+            },
+            "validation": {
+                "data": {
+                    "code": "Verifizierungs-Code"
+                },
+                "title": "Sense Multi-Faktor-Authentifizierung"
             }
         }
     }

@@ -2,45 +2,54 @@
 from __future__ import annotations
 
 import asyncio
-import collections
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any, NamedTuple
 
+import zigpy.endpoint
 import zigpy.exceptions
+import zigpy.group
+from zigpy.types.named import EUI64
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import async_entries_for_device
 
 from .helpers import LogMixin
-from .typing import (
-    ZhaDeviceType,
-    ZhaGatewayType,
-    ZhaGroupType,
-    ZigpyEndpointType,
-    ZigpyGroupType,
-)
+
+if TYPE_CHECKING:
+    from .device import ZHADevice
+    from .gateway import ZHAGateway
 
 _LOGGER = logging.getLogger(__name__)
 
-GroupMember = collections.namedtuple("GroupMember", "ieee endpoint_id")
-GroupEntityReference = collections.namedtuple(
-    "GroupEntityReference", "name original_name entity_id"
-)
+
+class GroupMember(NamedTuple):
+    """Describes a group member."""
+
+    ieee: EUI64
+    endpoint_id: int
+
+
+class GroupEntityReference(NamedTuple):
+    """Reference to a group entity."""
+
+    name: str
+    original_name: str
+    entity_id: int
 
 
 class ZHAGroupMember(LogMixin):
     """Composite object that represents a device endpoint in a Zigbee group."""
 
     def __init__(
-        self, zha_group: ZhaGroupType, zha_device: ZhaDeviceType, endpoint_id: int
+        self, zha_group: ZHAGroup, zha_device: ZHADevice, endpoint_id: int
     ) -> None:
         """Initialize the group member."""
-        self._zha_group: ZhaGroupType = zha_group
-        self._zha_device: ZhaDeviceType = zha_device
-        self._endpoint_id: int = endpoint_id
+        self._zha_group = zha_group
+        self._zha_device = zha_device
+        self._endpoint_id = endpoint_id
 
     @property
-    def group(self) -> ZhaGroupType:
+    def group(self) -> ZHAGroup:
         """Return the group this member belongs to."""
         return self._zha_group
 
@@ -50,12 +59,12 @@ class ZHAGroupMember(LogMixin):
         return self._endpoint_id
 
     @property
-    def endpoint(self) -> ZigpyEndpointType:
+    def endpoint(self) -> zigpy.endpoint.Endpoint:
         """Return the endpoint for this group member."""
         return self._zha_device.device.endpoints.get(self.endpoint_id)
 
     @property
-    def device(self) -> ZhaDeviceType:
+    def device(self) -> ZHADevice:
         """Return the zha device for this group member."""
         return self._zha_device
 
@@ -101,11 +110,11 @@ class ZHAGroupMember(LogMixin):
                 str(ex),
             )
 
-    def log(self, level: int, msg: str, *args) -> None:
+    def log(self, level: int, msg: str, *args: Any, **kwargs) -> None:
         """Log a message."""
         msg = f"[%s](%s): {msg}"
         args = (f"0x{self._zha_group.group_id:04x}", self.endpoint_id) + args
-        _LOGGER.log(level, msg, *args)
+        _LOGGER.log(level, msg, *args, **kwargs)
 
 
 class ZHAGroup(LogMixin):
@@ -114,13 +123,13 @@ class ZHAGroup(LogMixin):
     def __init__(
         self,
         hass: HomeAssistant,
-        zha_gateway: ZhaGatewayType,
-        zigpy_group: ZigpyGroupType,
+        zha_gateway: ZHAGateway,
+        zigpy_group: zigpy.group.Group,
     ) -> None:
         """Initialize the group."""
-        self.hass: HomeAssistant = hass
-        self._zigpy_group: ZigpyGroupType = zigpy_group
-        self._zha_gateway: ZhaGatewayType = zha_gateway
+        self.hass = hass
+        self._zha_gateway = zha_gateway
+        self._zigpy_group = zigpy_group
 
     @property
     def name(self) -> str:
@@ -133,7 +142,7 @@ class ZHAGroup(LogMixin):
         return self._zigpy_group.group_id
 
     @property
-    def endpoint(self) -> ZigpyEndpointType:
+    def endpoint(self) -> zigpy.endpoint.Endpoint:
         """Return the endpoint for this group."""
         return self._zigpy_group.endpoint
 
@@ -192,7 +201,7 @@ class ZHAGroup(LogMixin):
                 all_entity_ids.append(entity_reference["entity_id"])
         return all_entity_ids
 
-    def get_domain_entity_ids(self, domain) -> list[str]:
+    def get_domain_entity_ids(self, domain: str) -> list[str]:
         """Return entity ids from the entity domain for this group."""
         domain_entity_ids: list[str] = []
         for member in self.members:
@@ -217,8 +226,8 @@ class ZHAGroup(LogMixin):
         group_info["members"] = [member.member_info for member in self.members]
         return group_info
 
-    def log(self, level: int, msg: str, *args):
+    def log(self, level: int, msg: str, *args: Any, **kwargs) -> None:
         """Log a message."""
         msg = f"[%s](%s): {msg}"
         args = (self.name, self.group_id) + args
-        _LOGGER.log(level, msg, *args)
+        _LOGGER.log(level, msg, *args, **kwargs)

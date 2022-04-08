@@ -12,10 +12,9 @@ from homeassistant.components.button import (
     ButtonEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ENTITY_CATEGORY_CONFIG
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .common import AvmWrapper
@@ -41,28 +40,28 @@ BUTTONS: Final = [
         key="firmware_update",
         name="Firmware Update",
         device_class=ButtonDeviceClass.UPDATE,
-        entity_category=ENTITY_CATEGORY_CONFIG,
+        entity_category=EntityCategory.CONFIG,
         press_action=lambda avm_wrapper: avm_wrapper.async_trigger_firmware_update(),
     ),
     FritzButtonDescription(
         key="reboot",
         name="Reboot",
         device_class=ButtonDeviceClass.RESTART,
-        entity_category=ENTITY_CATEGORY_CONFIG,
+        entity_category=EntityCategory.CONFIG,
         press_action=lambda avm_wrapper: avm_wrapper.async_trigger_reboot(),
     ),
     FritzButtonDescription(
         key="reconnect",
         name="Reconnect",
         device_class=ButtonDeviceClass.RESTART,
-        entity_category=ENTITY_CATEGORY_CONFIG,
+        entity_category=EntityCategory.CONFIG,
         press_action=lambda avm_wrapper: avm_wrapper.async_trigger_reconnect(),
     ),
     FritzButtonDescription(
         key="cleanup",
         name="Cleanup",
         icon="mdi:broom",
-        entity_category=ENTITY_CATEGORY_CONFIG,
+        entity_category=EntityCategory.CONFIG,
         press_action=lambda avm_wrapper: avm_wrapper.async_trigger_cleanup(),
     ),
 ]

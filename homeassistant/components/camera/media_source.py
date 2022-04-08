@@ -47,8 +47,16 @@ class CameraMediaSource(MediaSource):
         if not camera:
             raise Unresolvable(f"Could not resolve media item: {item.identifier}")
 
-        if camera.frontend_stream_type != STREAM_TYPE_HLS:
-            raise Unresolvable("Camera does not support HLS streaming.")
+        if (stream_type := camera.frontend_stream_type) is None:
+            return PlayMedia(
+                f"/api/camera_proxy_stream/{camera.entity_id}", camera.content_type
+            )
+
+        if stream_type != STREAM_TYPE_HLS:
+            raise Unresolvable("Camera does not support MJPEG or HLS streaming.")
+
+        if "stream" not in self.hass.config.components:
+            raise Unresolvable("Stream integration not loaded")
 
         try:
             url = await _async_stream_endpoint_url(self.hass, camera, HLS_PROVIDER)
@@ -65,16 +73,24 @@ class CameraMediaSource(MediaSource):
         if item.identifier:
             raise BrowseError("Unknown item")
 
-        if "stream" not in self.hass.config.components:
-            raise BrowseError("Stream integration is not loaded")
+        can_stream_hls = "stream" in self.hass.config.components
 
         # Root. List cameras.
         component: EntityComponent = self.hass.data[DOMAIN]
         children = []
+        not_shown = 0
         for camera in component.entities:
             camera = cast(Camera, camera)
+            stream_type = camera.frontend_stream_type
 
-            if camera.frontend_stream_type != STREAM_TYPE_HLS:
+            if stream_type is None:
+                content_type = camera.content_type
+
+            elif can_stream_hls and stream_type == STREAM_TYPE_HLS:
+                content_type = FORMAT_CONTENT_TYPE[HLS_PROVIDER]
+
+            else:
+                not_shown += 1
                 continue
 
             children.append(
@@ -82,7 +98,7 @@ class CameraMediaSource(MediaSource):
                     domain=DOMAIN,
                     identifier=camera.entity_id,
                     media_class=MEDIA_CLASS_VIDEO,
-                    media_content_type=FORMAT_CONTENT_TYPE[HLS_PROVIDER],
+                    media_content_type=content_type,
                     title=camera.name,
                     thumbnail=f"/api/camera_proxy/{camera.entity_id}",
                     can_play=True,
@@ -100,4 +116,5 @@ class CameraMediaSource(MediaSource):
             can_expand=True,
             children_media_class=MEDIA_CLASS_VIDEO,
             children=children,
+            not_shown=not_shown,
         )

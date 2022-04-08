@@ -14,6 +14,7 @@ from tests.common import MockConfigEntry
 
 DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
     host="10.10.2.3",
+    addresses=["10.10.2.3"],
     hostname="mock_hostname",
     name="mock_name",
     port=None,

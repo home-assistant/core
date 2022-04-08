@@ -7,6 +7,7 @@ from aiohttp import ClientError
 from pyoverkiz.exceptions import (
     BadCredentialsException,
     MaintenanceException,
+    TooManyAttemptsBannedException,
     TooManyRequestsException,
 )
 import pytest
@@ -33,6 +34,7 @@ MOCK_GATEWAY2_RESPONSE = [Mock(id=TEST_GATEWAY_ID2)]
 
 FAKE_ZERO_CONF_INFO = ZeroconfServiceInfo(
     host="192.168.0.51",
+    addresses=["192.168.0.51"],
     port=443,
     hostname=f"gateway-{TEST_GATEWAY_ID}.local.",
     type="_kizbox._tcp.local.",
@@ -85,6 +87,7 @@ async def test_form(hass: HomeAssistant) -> None:
         (TimeoutError, "cannot_connect"),
         (ClientError, "cannot_connect"),
         (MaintenanceException, "server_in_maintenance"),
+        (TooManyAttemptsBannedException, "too_many_attempts"),
         (Exception, "unknown"),
     ],
 )

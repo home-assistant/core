@@ -66,6 +66,7 @@
                     "debug": "Enged\u00e9lyezze a hibakeres\u00e9st",
                     "device": "V\u00e1lassza ki a konfigur\u00e1lni k\u00edv\u00e1nt eszk\u00f6zt",
                     "event_code": "\u00cdrja be a hozz\u00e1adni k\u00edv\u00e1nt esem\u00e9ny k\u00f3dj\u00e1t",
+                    "protocols": "Protokollok",
                     "remove_device": "V\u00e1lassza ki a t\u00f6r\u00f6lni k\u00edv\u00e1nt eszk\u00f6zt"
                 },
                 "title": "Rfxtrx opci\u00f3k"

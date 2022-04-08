@@ -50,7 +50,7 @@ async def async_setup_entry(
         | FluxMusicPixelsPerSegmentNumber
         | FluxMusicSegmentsNumber
     ] = []
-    name = entry.data[CONF_NAME]
+    name = entry.data.get(CONF_NAME, entry.title)
     base_unique_id = entry.unique_id or entry.entry_id
 
     if device.pixels_per_segment is not None:
@@ -92,7 +92,9 @@ async def async_setup_entry(
         async_add_entities(entities)
 
 
-class FluxSpeedNumber(FluxEntity, CoordinatorEntity, NumberEntity):
+class FluxSpeedNumber(
+    FluxEntity, CoordinatorEntity[FluxLedUpdateCoordinator], NumberEntity
+):
     """Defines a flux_led speed number."""
 
     _attr_min_value = 1
@@ -122,7 +124,9 @@ class FluxSpeedNumber(FluxEntity, CoordinatorEntity, NumberEntity):
         await self.coordinator.async_request_refresh()
 
 
-class FluxConfigNumber(FluxEntity, CoordinatorEntity, NumberEntity):
+class FluxConfigNumber(
+    FluxEntity, CoordinatorEntity[FluxLedUpdateCoordinator], NumberEntity
+):
     """Base class for flux config numbers."""
 
     _attr_entity_category = EntityCategory.CONFIG

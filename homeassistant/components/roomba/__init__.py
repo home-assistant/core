@@ -1,5 +1,6 @@
 """The roomba component."""
 import asyncio
+from functools import partial
 import logging
 
 import async_timeout
@@ -42,12 +43,15 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             },
         )
 
-    roomba = RoombaFactory.create_roomba(
-        address=config_entry.data[CONF_HOST],
-        blid=config_entry.data[CONF_BLID],
-        password=config_entry.data[CONF_PASSWORD],
-        continuous=config_entry.options[CONF_CONTINUOUS],
-        delay=config_entry.options[CONF_DELAY],
+    roomba = await hass.async_add_executor_job(
+        partial(
+            RoombaFactory.create_roomba,
+            address=config_entry.data[CONF_HOST],
+            blid=config_entry.data[CONF_BLID],
+            password=config_entry.data[CONF_PASSWORD],
+            continuous=config_entry.options[CONF_CONTINUOUS],
+            delay=config_entry.options[CONF_DELAY],
+        )
     )
 
     try:

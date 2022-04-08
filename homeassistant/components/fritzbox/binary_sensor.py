@@ -13,8 +13,8 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ENTITY_CATEGORY_CONFIG
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import FritzBoxEntity
@@ -49,7 +49,7 @@ BINARY_SENSOR_TYPES: Final[tuple[FritzBinarySensorEntityDescription, ...]] = (
         key="lock",
         name="Button Lock on Device",
         device_class=BinarySensorDeviceClass.LOCK,
-        entity_category=ENTITY_CATEGORY_CONFIG,
+        entity_category=EntityCategory.CONFIG,
         suitable=lambda device: device.lock is not None,
         is_on=lambda device: not device.lock,
     ),
@@ -57,7 +57,7 @@ BINARY_SENSOR_TYPES: Final[tuple[FritzBinarySensorEntityDescription, ...]] = (
         key="device_lock",
         name="Button Lock via UI",
         device_class=BinarySensorDeviceClass.LOCK,
-        entity_category=ENTITY_CATEGORY_CONFIG,
+        entity_category=EntityCategory.CONFIG,
         suitable=lambda device: device.device_lock is not None,
         is_on=lambda device: not device.device_lock,
     ),

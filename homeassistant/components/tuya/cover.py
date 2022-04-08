@@ -9,14 +9,10 @@ from tuya_iot import TuyaDevice, TuyaDeviceManager
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
-    SUPPORT_CLOSE,
-    SUPPORT_OPEN,
-    SUPPORT_SET_POSITION,
-    SUPPORT_SET_TILT_POSITION,
-    SUPPORT_STOP,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityDescription,
+    CoverEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -158,7 +154,10 @@ async def async_setup_entry(
             device = hass_data.device_manager.device_map[device_id]
             if descriptions := COVERS.get(device.category):
                 for description in descriptions:
-                    if description.key in device.status:
+                    if (
+                        description.key in device.function
+                        or description.key in device.status_range
+                    ):
                         entities.append(
                             TuyaCoverEntity(
                                 device, hass_data.device_manager, description
@@ -197,22 +196,24 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         # Check if this cover is based on a switch or has controls
         if self.find_dpcode(description.key, prefer_function=True):
             if device.function[description.key].type == "Boolean":
-                self._attr_supported_features |= SUPPORT_OPEN | SUPPORT_CLOSE
+                self._attr_supported_features |= (
+                    CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
+                )
             elif enum_type := self.find_dpcode(
                 description.key, dptype=DPType.ENUM, prefer_function=True
             ):
                 if description.open_instruction_value in enum_type.range:
-                    self._attr_supported_features |= SUPPORT_OPEN
+                    self._attr_supported_features |= CoverEntityFeature.OPEN
                 if description.close_instruction_value in enum_type.range:
-                    self._attr_supported_features |= SUPPORT_CLOSE
+                    self._attr_supported_features |= CoverEntityFeature.CLOSE
                 if description.stop_instruction_value in enum_type.range:
-                    self._attr_supported_features |= SUPPORT_STOP
+                    self._attr_supported_features |= CoverEntityFeature.STOP
 
         # Determine type to use for setting the position
         if int_type := self.find_dpcode(
             description.set_position, dptype=DPType.INTEGER, prefer_function=True
         ):
-            self._attr_supported_features |= SUPPORT_SET_POSITION
+            self._attr_supported_features |= CoverEntityFeature.SET_POSITION
             self._set_position = int_type
             # Set as default, unless overwritten below
             self._current_position = int_type
@@ -229,7 +230,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
             dptype=DPType.INTEGER,
             prefer_function=True,
         ):
-            self._attr_supported_features |= SUPPORT_SET_TILT_POSITION
+            self._attr_supported_features |= CoverEntityFeature.SET_TILT_POSITION
             self._tilt = int_type
 
     @property

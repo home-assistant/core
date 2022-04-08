@@ -50,7 +50,7 @@ def is_installed(package: str) -> bool:
         # was aborted while in progress see
         # https://github.com/home-assistant/core/issues/47699
         if installed_version is None:
-            _LOGGER.error("Installed version for %s resolved to None", req.project_name)  # type: ignore
+            _LOGGER.error("Installed version for %s resolved to None", req.project_name)  # type: ignore[unreachable]
             return False
         return installed_version in req
     except PackageNotFoundError:

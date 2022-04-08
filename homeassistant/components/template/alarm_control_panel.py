@@ -12,11 +12,7 @@ from homeassistant.components.alarm_control_panel import (
     FORMAT_TEXT,
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     AlarmControlPanelEntity,
-)
-from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_HOME,
-    SUPPORT_ALARM_ARM_NIGHT,
+    AlarmControlPanelEntityFeature,
 )
 from homeassistant.const import (
     ATTR_CODE,
@@ -173,13 +169,19 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity):
         """Return the list of supported features."""
         supported_features = 0
         if self._arm_night_script is not None:
-            supported_features = supported_features | SUPPORT_ALARM_ARM_NIGHT
+            supported_features = (
+                supported_features | AlarmControlPanelEntityFeature.ARM_NIGHT
+            )
 
         if self._arm_home_script is not None:
-            supported_features = supported_features | SUPPORT_ALARM_ARM_HOME
+            supported_features = (
+                supported_features | AlarmControlPanelEntityFeature.ARM_HOME
+            )
 
         if self._arm_away_script is not None:
-            supported_features = supported_features | SUPPORT_ALARM_ARM_AWAY
+            supported_features = (
+                supported_features | AlarmControlPanelEntityFeature.ARM_AWAY
+            )
 
         return supported_features
 
@@ -220,7 +222,7 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity):
             )
         await super().async_added_to_hass()
 
-    async def _async_alarm_arm(self, state, script=None, code=None):
+    async def _async_alarm_arm(self, state, script, code):
         """Arm the panel to specified state with supplied script."""
         optimistic_set = False
 
@@ -228,10 +230,7 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity):
             self._state = state
             optimistic_set = True
 
-        if script is not None:
-            await script.async_run({ATTR_CODE: code}, context=self._context)
-        else:
-            _LOGGER.error("No script action defined for %s", state)
+        await script.async_run({ATTR_CODE: code}, context=self._context)
 
         if optimistic_set:
             self.async_write_ha_state()

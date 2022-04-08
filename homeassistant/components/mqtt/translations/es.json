@@ -2,28 +2,28 @@
     "config": {
         "abort": {
             "already_configured": "El servicio ya est\u00e1 configurado",
-            "single_instance_allowed": "S\u00f3lo se permite una \u00fanica configuraci\u00f3n de MQTT."
+            "single_instance_allowed": "Ya est\u00e1 configurado. S\u00f3lo se permite una \u00fanica configuraci\u00f3n."
         },
         "error": {
-            "cannot_connect": "No se puede conectar con el agente"
+            "cannot_connect": "No se puede conectar"
         },
         "step": {
             "broker": {
                 "data": {
-                    "broker": "Agente",
+                    "broker": "Br\u00f3ker",
                     "discovery": "Habilitar descubrimiento",
                     "password": "Contrase\u00f1a",
                     "port": "Puerto",
                     "username": "Usuario"
                 },
-                "description": "Por favor, introduce la informaci\u00f3n de tu agente MQTT"
+                "description": "Por favor, introduzca la informaci\u00f3n de conexi\u00f3n de su br\u00f3ker MQTT."
             },
             "hassio_confirm": {
                 "data": {
                     "discovery": "Habilitar descubrimiento"
                 },
-                "description": "\u00bfQuieres configurar Home Assistant para conectar con el broker de MQTT proporcionado por el complemento Supervisor {addon}?",
-                "title": "MQTT Broker a trav\u00e9s del complemento Supervisor"
+                "description": "\u00bfDesea configurar Home Assistant para conectar con el br\u00f3ker de MQTT proporcionado por el complemento {addon}?",
+                "title": "Br\u00f3ker MQTT a trav\u00e9s de complemento de Home Assistant"
             }
         }
     },
@@ -52,19 +52,19 @@
     "options": {
         "error": {
             "bad_birth": "Tema de nacimiento inv\u00e1lido.",
-            "bad_will": "Tema deseado inv\u00e1lido.",
+            "bad_will": "Tema de voluntad inv\u00e1lido.",
             "cannot_connect": "No se pudo conectar"
         },
         "step": {
             "broker": {
                 "data": {
-                    "broker": "Agente",
+                    "broker": "Br\u00f3ker",
                     "password": "Contrase\u00f1a",
                     "port": "Puerto",
                     "username": "Usuario"
                 },
-                "description": "Por favor, introduce la informaci\u00f3n de tu agente MQTT.",
-                "title": "Opciones para el Broker"
+                "description": "Por favor, introduzca la informaci\u00f3n de conexi\u00f3n de su br\u00f3ker MQTT.",
+                "title": "Opciones del br\u00f3ker"
             },
             "options": {
                 "data": {
@@ -74,14 +74,14 @@
                     "birth_retain": "Retenci\u00f3n del mensaje de nacimiento",
                     "birth_topic": "Tema del mensaje de nacimiento",
                     "discovery": "Habilitar descubrimiento",
-                    "will_enable": "Habilitar mensaje de nacimiento",
-                    "will_payload": "Enviar\u00e1 la carga",
-                    "will_qos": "El mensaje usar\u00e1 el QoS",
-                    "will_retain": "Retendr\u00e1 el mensaje",
-                    "will_topic": "Enviar\u00e1 un mensaje al tema"
+                    "will_enable": "Habilitar mensaje de voluntad",
+                    "will_payload": "Carga del mensaje de voluntad",
+                    "will_qos": "QoS del mensaje de voluntad",
+                    "will_retain": "Retenci\u00f3n del mensaje de voluntad",
+                    "will_topic": "Tema del mensaje de voluntad"
                 },
-                "description": "Por favor, selecciona las opciones para MQTT.",
-                "title": "Opciones para MQTT"
+                "description": "Descubrimiento - Si el descubrimiento est\u00e1 habilitado (recomendado), Home Assistant descubrir\u00e1 autom\u00e1ticamente los dispositivos y entidades que publiquen su configuraci\u00f3n en el br\u00f3ker MQTT. Si el descubrimiento est\u00e1 deshabilitado, toda la configuraci\u00f3n debe hacerse manualmente.\nMensaje de nacimiento - El mensaje de nacimiento se enviar\u00e1 cada vez que Home Assistant se (re)conecte al br\u00f3ker MQTT.\nMensaje de voluntad - El mensaje de voluntad se enviar\u00e1 cada vez que Home Assistant pierda su conexi\u00f3n con el br\u00f3ker, tanto en el caso de una desconexi\u00f3n limpia (por ejemplo, el cierre de Home Assistant) como en el caso de una desconexi\u00f3n no limpia (por ejemplo, el cierre de Home Assistant o la p\u00e9rdida de su conexi\u00f3n de red).",
+                "title": "Opciones de MQTT"
             }
         }
     }

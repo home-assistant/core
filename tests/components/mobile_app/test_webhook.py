@@ -1,4 +1,5 @@
 """Webhook tests for mobile_app."""
+from binascii import unhexlify
 from http import HTTPStatus
 from unittest.mock import patch
 
@@ -22,7 +23,29 @@ from .const import CALL_SERVICE, FIRE_EVENT, REGISTER_CLEARTEXT, RENDER_TEMPLATE
 from tests.common import async_mock_service
 
 
-def encrypt_payload(secret_key, payload):
+def encrypt_payload(secret_key, payload, encode_json=True):
+    """Return a encrypted payload given a key and dictionary of data."""
+    try:
+        from nacl.encoding import Base64Encoder
+        from nacl.secret import SecretBox
+    except (ImportError, OSError):
+        pytest.skip("libnacl/libsodium is not installed")
+        return
+
+    import json
+
+    prepped_key = unhexlify(secret_key)
+
+    if encode_json:
+        payload = json.dumps(payload)
+    payload = payload.encode("utf-8")
+
+    return (
+        SecretBox(prepped_key).encrypt(payload, encoder=Base64Encoder).decode("utf-8")
+    )
+
+
+def encrypt_payload_legacy(secret_key, payload, encode_json=True):
     """Return a encrypted payload given a key and dictionary of data."""
     try:
         from nacl.encoding import Base64Encoder
@@ -38,7 +61,9 @@ def encrypt_payload(secret_key, payload):
     prepped_key = prepped_key[:keylen]
     prepped_key = prepped_key.ljust(keylen, b"\0")
 
-    payload = json.dumps(payload).encode("utf-8")
+    if encode_json:
+        payload = json.dumps(payload)
+    payload = payload.encode("utf-8")
 
     return (
         SecretBox(prepped_key).encrypt(payload, encoder=Base64Encoder).decode("utf-8")
@@ -46,6 +71,27 @@ def encrypt_payload(secret_key, payload):
 
 
 def decrypt_payload(secret_key, encrypted_data):
+    """Return a decrypted payload given a key and a string of encrypted data."""
+    try:
+        from nacl.encoding import Base64Encoder
+        from nacl.secret import SecretBox
+    except (ImportError, OSError):
+        pytest.skip("libnacl/libsodium is not installed")
+        return
+
+    import json
+
+    prepped_key = unhexlify(secret_key)
+
+    decrypted_data = SecretBox(prepped_key).decrypt(
+        encrypted_data, encoder=Base64Encoder
+    )
+    decrypted_data = decrypted_data.decode("utf-8")
+
+    return json.loads(decrypted_data)
+
+
+def decrypt_payload_legacy(secret_key, encrypted_data):
     """Return a decrypted payload given a key and a string of encrypted data."""
     try:
         from nacl.encoding import Base64Encoder
@@ -271,6 +317,181 @@ async def test_webhook_handle_decryption(webhook_client, create_registrations):
     decrypted_data = decrypt_payload(key, webhook_json["encrypted_data"])
 
     assert decrypted_data == {"one": "Hello world"}
+
+
+async def test_webhook_handle_decryption_legacy(webhook_client, create_registrations):
+    """Test that we can encrypt/decrypt properly."""
+    key = create_registrations[0]["secret"]
+    data = encrypt_payload_legacy(key, RENDER_TEMPLATE["data"])
+
+    container = {"type": "render_template", "encrypted": True, "encrypted_data": data}
+
+    resp = await webhook_client.post(
+        "/api/webhook/{}".format(create_registrations[0]["webhook_id"]), json=container
+    )
+
+    assert resp.status == HTTPStatus.OK
+
+    webhook_json = await resp.json()
+    assert "encrypted_data" in webhook_json
+
+    decrypted_data = decrypt_payload_legacy(key, webhook_json["encrypted_data"])
+
+    assert decrypted_data == {"one": "Hello world"}
+
+
+async def test_webhook_handle_decryption_fail(
+    webhook_client, create_registrations, caplog
+):
+    """Test that we can encrypt/decrypt properly."""
+    key = create_registrations[0]["secret"]
+
+    # Send valid data
+    data = encrypt_payload(key, RENDER_TEMPLATE["data"])
+    container = {"type": "render_template", "encrypted": True, "encrypted_data": data}
+    resp = await webhook_client.post(
+        "/api/webhook/{}".format(create_registrations[0]["webhook_id"]), json=container
+    )
+
+    assert resp.status == HTTPStatus.OK
+    webhook_json = await resp.json()
+    decrypted_data = decrypt_payload(key, webhook_json["encrypted_data"])
+    assert decrypted_data == {"one": "Hello world"}
+    caplog.clear()
+
+    # Send invalid JSON data
+    data = encrypt_payload(key, "{not_valid", encode_json=False)
+    container = {"type": "render_template", "encrypted": True, "encrypted_data": data}
+    resp = await webhook_client.post(
+        "/api/webhook/{}".format(create_registrations[0]["webhook_id"]), json=container
+    )
+
+    assert resp.status == HTTPStatus.OK
+    webhook_json = await resp.json()
+    assert decrypt_payload(key, webhook_json["encrypted_data"]) == {}
+    assert "Ignoring invalid encrypted payload" in caplog.text
+    caplog.clear()
+
+    # Break the key, and send JSON data
+    data = encrypt_payload(key[::-1], RENDER_TEMPLATE["data"])
+    container = {"type": "render_template", "encrypted": True, "encrypted_data": data}
+    resp = await webhook_client.post(
+        "/api/webhook/{}".format(create_registrations[0]["webhook_id"]), json=container
+    )
+
+    assert resp.status == HTTPStatus.OK
+    webhook_json = await resp.json()
+    assert decrypt_payload(key, webhook_json["encrypted_data"]) == {}
+    assert "Ignoring encrypted payload because unable to decrypt" in caplog.text
+
+
+async def test_webhook_handle_decryption_legacy_fail(
+    webhook_client, create_registrations, caplog
+):
+    """Test that we can encrypt/decrypt properly."""
+    key = create_registrations[0]["secret"]
+
+    # Send valid data using legacy method
+    data = encrypt_payload_legacy(key, RENDER_TEMPLATE["data"])
+    container = {"type": "render_template", "encrypted": True, "encrypted_data": data}
+    resp = await webhook_client.post(
+        "/api/webhook/{}".format(create_registrations[0]["webhook_id"]), json=container
+    )
+
+    assert resp.status == HTTPStatus.OK
+    webhook_json = await resp.json()
+    decrypted_data = decrypt_payload_legacy(key, webhook_json["encrypted_data"])
+    assert decrypted_data == {"one": "Hello world"}
+    caplog.clear()
+
+    # Send invalid JSON data
+    data = encrypt_payload_legacy(key, "{not_valid", encode_json=False)
+    container = {"type": "render_template", "encrypted": True, "encrypted_data": data}
+    resp = await webhook_client.post(
+        "/api/webhook/{}".format(create_registrations[0]["webhook_id"]), json=container
+    )
+
+    assert resp.status == HTTPStatus.OK
+    webhook_json = await resp.json()
+    assert decrypt_payload_legacy(key, webhook_json["encrypted_data"]) == {}
+    assert "Ignoring invalid encrypted payload" in caplog.text
+    caplog.clear()
+
+    # Break the key, and send JSON data
+    data = encrypt_payload_legacy(key[::-1], RENDER_TEMPLATE["data"])
+    container = {"type": "render_template", "encrypted": True, "encrypted_data": data}
+    resp = await webhook_client.post(
+        "/api/webhook/{}".format(create_registrations[0]["webhook_id"]), json=container
+    )
+
+    assert resp.status == HTTPStatus.OK
+    webhook_json = await resp.json()
+    assert decrypt_payload_legacy(key, webhook_json["encrypted_data"]) == {}
+    assert "Ignoring encrypted payload because unable to decrypt" in caplog.text
+
+
+async def test_webhook_handle_decryption_legacy_upgrade(
+    webhook_client, create_registrations
+):
+    """Test that we can encrypt/decrypt properly."""
+    key = create_registrations[0]["secret"]
+
+    # Send using legacy method
+    data = encrypt_payload_legacy(key, RENDER_TEMPLATE["data"])
+
+    container = {"type": "render_template", "encrypted": True, "encrypted_data": data}
+
+    resp = await webhook_client.post(
+        "/api/webhook/{}".format(create_registrations[0]["webhook_id"]), json=container
+    )
+
+    assert resp.status == HTTPStatus.OK
+
+    webhook_json = await resp.json()
+    assert "encrypted_data" in webhook_json
+
+    decrypted_data = decrypt_payload_legacy(key, webhook_json["encrypted_data"])
+
+    assert decrypted_data == {"one": "Hello world"}
+
+    # Send using new method
+    data = encrypt_payload(key, RENDER_TEMPLATE["data"])
+
+    container = {"type": "render_template", "encrypted": True, "encrypted_data": data}
+
+    resp = await webhook_client.post(
+        "/api/webhook/{}".format(create_registrations[0]["webhook_id"]), json=container
+    )
+
+    assert resp.status == HTTPStatus.OK
+
+    webhook_json = await resp.json()
+    assert "encrypted_data" in webhook_json
+
+    decrypted_data = decrypt_payload(key, webhook_json["encrypted_data"])
+
+    assert decrypted_data == {"one": "Hello world"}
+
+    # Send using legacy method - no longer possible
+    data = encrypt_payload_legacy(key, RENDER_TEMPLATE["data"])
+
+    container = {"type": "render_template", "encrypted": True, "encrypted_data": data}
+
+    resp = await webhook_client.post(
+        "/api/webhook/{}".format(create_registrations[0]["webhook_id"]), json=container
+    )
+
+    assert resp.status == HTTPStatus.OK
+
+    webhook_json = await resp.json()
+    assert "encrypted_data" in webhook_json
+
+    # The response should be empty, encrypted with the new method
+    with pytest.raises(Exception):
+        decrypt_payload_legacy(key, webhook_json["encrypted_data"])
+    decrypted_data = decrypt_payload(key, webhook_json["encrypted_data"])
+
+    assert decrypted_data == {}
 
 
 async def test_webhook_requires_encryption(webhook_client, create_registrations):

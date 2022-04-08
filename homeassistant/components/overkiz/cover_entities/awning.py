@@ -7,11 +7,8 @@ from pyoverkiz.enums import OverkizCommand, OverkizState
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    DEVICE_CLASS_AWNING,
-    SUPPORT_CLOSE,
-    SUPPORT_OPEN,
-    SUPPORT_SET_POSITION,
-    SUPPORT_STOP,
+    CoverDeviceClass,
+    CoverEntityFeature,
 )
 
 from .generic_cover import COMMANDS_STOP, OverkizGenericCover
@@ -20,7 +17,7 @@ from .generic_cover import COMMANDS_STOP, OverkizGenericCover
 class Awning(OverkizGenericCover):
     """Representation of an Overkiz awning."""
 
-    _attr_device_class = DEVICE_CLASS_AWNING
+    _attr_device_class = CoverDeviceClass.AWNING
 
     @property
     def supported_features(self) -> int:
@@ -28,16 +25,16 @@ class Awning(OverkizGenericCover):
         supported_features: int = super().supported_features
 
         if self.executor.has_command(OverkizCommand.SET_DEPLOYMENT):
-            supported_features |= SUPPORT_SET_POSITION
+            supported_features |= CoverEntityFeature.SET_POSITION
 
         if self.executor.has_command(OverkizCommand.DEPLOY):
-            supported_features |= SUPPORT_OPEN
+            supported_features |= CoverEntityFeature.OPEN
 
             if self.executor.has_command(*COMMANDS_STOP):
-                supported_features |= SUPPORT_STOP
+                supported_features |= CoverEntityFeature.STOP
 
         if self.executor.has_command(OverkizCommand.UNDEPLOY):
-            supported_features |= SUPPORT_CLOSE
+            supported_features |= CoverEntityFeature.CLOSE
 
         return supported_features
 
@@ -56,9 +53,8 @@ class Awning(OverkizGenericCover):
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        position = kwargs.get(ATTR_POSITION, 0)
         await self.executor.async_execute_command(
-            OverkizCommand.SET_DEPLOYMENT, position
+            OverkizCommand.SET_DEPLOYMENT, kwargs[ATTR_POSITION]
         )
 
     async def async_open_cover(self, **kwargs: Any) -> None:

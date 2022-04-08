@@ -11,7 +11,7 @@
             "unknown": "Erro inesperado",
             "wrong_version": "Seu powerwall usa uma vers\u00e3o de software que n\u00e3o \u00e9 compat\u00edvel. Considere atualizar ou relatar este problema para que ele possa ser resolvido."
         },
-        "flow_title": "{name} ( {ip_address})",
+        "flow_title": "{name} ({ip_address})",
         "step": {
             "confirm_discovery": {
                 "description": "Deseja configurar {name} ({ip_address})?",

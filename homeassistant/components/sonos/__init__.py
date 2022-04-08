@@ -182,9 +182,13 @@ class SonosDiscoveryManager:
             soco = SoCo(ip_address)
             # Ensure that the player is available and UID is cached
             uid = soco.uid
+            # Abort early if the device is not visible
+            if not soco.is_visible:
+                return None
             _ = soco.volume
             return soco
         except NotSupportedException as exc:
+            # pylint: disable-next=used-before-assignment
             _LOGGER.debug("Device %s is not supported, ignoring: %s", uid, exc)
             self.data.discovery_ignored.add(ip_address)
         except (OSError, SoCoException) as ex:
@@ -240,8 +244,7 @@ class SonosDiscoveryManager:
                 None,
             )
             if not known_uid:
-                soco = self._create_soco(ip_addr, SoCoCreationSource.CONFIGURED)
-                if soco and soco.is_visible:
+                if soco := self._create_soco(ip_addr, SoCoCreationSource.CONFIGURED):
                     self._discovered_player(soco)
 
         self.data.hosts_heartbeat = call_later(
@@ -249,8 +252,7 @@ class SonosDiscoveryManager:
         )
 
     def _discovered_ip(self, ip_address):
-        soco = self._create_soco(ip_address, SoCoCreationSource.DISCOVERED)
-        if soco and soco.is_visible:
+        if soco := self._create_soco(ip_address, SoCoCreationSource.DISCOVERED):
             self._discovered_player(soco)
 
     async def _async_create_discovered_player(self, uid, discovered_ip, boot_seqnum):
@@ -343,7 +345,6 @@ class SonosDiscoveryManager:
                 )
             )
             await self.hass.async_add_executor_job(self._manual_hosts)
-            return
 
         self.entry.async_on_unload(
             await ssdp.async_register_callback(

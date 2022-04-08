@@ -15,12 +15,7 @@ from aiohomekit.utils import clamp_enum_to_char
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
-)
-from homeassistant.components.media_player.const import (
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_STOP,
+    MediaPlayerEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -89,23 +84,23 @@ class HomeKitTelevision(HomeKitEntity, MediaPlayerEntity):
         features = 0
 
         if self.service.has(CharacteristicsTypes.ACTIVE_IDENTIFIER):
-            features |= SUPPORT_SELECT_SOURCE
+            features |= MediaPlayerEntityFeature.SELECT_SOURCE
 
         if self.service.has(CharacteristicsTypes.TARGET_MEDIA_STATE):
             if TargetMediaStateValues.PAUSE in self.supported_media_states:
-                features |= SUPPORT_PAUSE
+                features |= MediaPlayerEntityFeature.PAUSE
 
             if TargetMediaStateValues.PLAY in self.supported_media_states:
-                features |= SUPPORT_PLAY
+                features |= MediaPlayerEntityFeature.PLAY
 
             if TargetMediaStateValues.STOP in self.supported_media_states:
-                features |= SUPPORT_STOP
+                features |= MediaPlayerEntityFeature.STOP
 
         if (
             self.service.has(CharacteristicsTypes.REMOTE_KEY)
             and RemoteKeyValues.PLAY_PAUSE in self.supported_remote_keys
         ):
-            features |= SUPPORT_PAUSE | SUPPORT_PLAY
+            features |= MediaPlayerEntityFeature.PAUSE | MediaPlayerEntityFeature.PLAY
 
         return features
 

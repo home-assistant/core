@@ -6,7 +6,11 @@ from typing import Any
 
 from tuya_iot import TuyaDevice, TuyaDeviceManager
 
-from homeassistant.components.climate import ClimateEntity, ClimateEntityDescription
+from homeassistant.components.climate import (
+    ClimateEntity,
+    ClimateEntityDescription,
+    ClimateEntityFeature,
+)
 from homeassistant.components.climate.const import (
     HVAC_MODE_COOL,
     HVAC_MODE_DRY,
@@ -14,10 +18,6 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
-    SUPPORT_FAN_MODE,
-    SUPPORT_SWING_MODE,
-    SUPPORT_TARGET_HUMIDITY,
-    SUPPORT_TARGET_TEMPERATURE,
     SWING_BOTH,
     SWING_HORIZONTAL,
     SWING_OFF,
@@ -167,8 +167,12 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         self._attr_temperature_unit = TEMP_CELSIUS
 
         # Figure out current temperature, use preferred unit or what is available
-        celsius_type = self.find_dpcode(DPCode.TEMP_CURRENT, dptype=DPType.INTEGER)
-        farhenheit_type = self.find_dpcode(DPCode.TEMP_CURRENT_F, dptype=DPType.INTEGER)
+        celsius_type = self.find_dpcode(
+            (DPCode.TEMP_CURRENT, DPCode.UPPER_TEMP), dptype=DPType.INTEGER
+        )
+        farhenheit_type = self.find_dpcode(
+            (DPCode.TEMP_CURRENT_F, DPCode.UPPER_TEMP_F), dptype=DPType.INTEGER
+        )
         if farhenheit_type and (
             prefered_temperature_unit == TEMP_FAHRENHEIT
             or (prefered_temperature_unit == TEMP_CELSIUS and not celsius_type)
@@ -197,7 +201,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         # Get integer type data for the dpcode to set temperature, use
         # it to define min, max & step temperatures
         if self._set_temperature:
-            self._attr_supported_features |= SUPPORT_TARGET_TEMPERATURE
+            self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
             self._attr_max_temp = self._set_temperature.max_scaled
             self._attr_min_temp = self._set_temperature.min_scaled
             self._attr_target_temperature_step = self._set_temperature.step_scaled
@@ -223,7 +227,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         if int_type := self.find_dpcode(
             DPCode.HUMIDITY_SET, dptype=DPType.INTEGER, prefer_function=True
         ):
-            self._attr_supported_features |= SUPPORT_TARGET_HUMIDITY
+            self._attr_supported_features |= ClimateEntityFeature.TARGET_HUMIDITY
             self._set_humidity = int_type
             self._attr_min_humidity = int(int_type.min_scaled)
             self._attr_max_humidity = int(int_type.max_scaled)
@@ -239,7 +243,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
             dptype=DPType.ENUM,
             prefer_function=True,
         ):
-            self._attr_supported_features |= SUPPORT_FAN_MODE
+            self._attr_supported_features |= ClimateEntityFeature.FAN_MODE
             self._attr_fan_modes = enum_type.range
 
         # Determine swing modes
@@ -252,7 +256,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
             ),
             prefer_function=True,
         ):
-            self._attr_supported_features |= SUPPORT_SWING_MODE
+            self._attr_supported_features |= ClimateEntityFeature.SWING_MODE
             self._attr_swing_modes = [SWING_OFF]
             if self.find_dpcode((DPCode.SHAKE, DPCode.SWING), prefer_function=True):
                 self._attr_swing_modes.append(SWING_ON)
@@ -360,6 +364,13 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         temperature = self.device.status.get(self._current_temperature.dpcode)
         if temperature is None:
             return None
+
+        if self._current_temperature.scale == 0 and self._current_temperature.step != 1:
+            # The current temperature can have a scale of 0 or 1 and is used for
+            # rounding, Home Assistant doesn't need to round but we will always
+            # need to divide the value by 10^1 in case of 0 as scale.
+            # https://developer.tuya.com/en/docs/iot/shift-temperature-scale-follow-the-setting-of-app-account-center?id=Ka9qo7so58efq#title-7-Round%20values
+            temperature = temperature / 10
 
         return self._current_temperature.scale_value(temperature)
 

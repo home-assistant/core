@@ -1,18 +1,30 @@
 """Generic Hue Entity Model."""
 from __future__ import annotations
 
+from typing import TYPE_CHECKING, Union
+
 from aiohue.v2.controllers.base import BaseResourcesController
 from aiohue.v2.controllers.events import EventType
-from aiohue.v2.models.clip import CLIPResource
-from aiohue.v2.models.connectivity import ConnectivityServiceStatus
 from aiohue.v2.models.resource import ResourceTypes
+from aiohue.v2.models.zigbee_connectivity import ConnectivityServiceStatus
 
 from homeassistant.core import callback
+from homeassistant.helpers.device_registry import async_get as async_get_device_registry
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.entity_registry import async_get as async_get_entity_registry
 
 from ..bridge import HueBridge
 from ..const import CONF_IGNORE_AVAILABILITY, DOMAIN
+
+if TYPE_CHECKING:
+    from aiohue.v2.models.device_power import DevicePower
+    from aiohue.v2.models.grouped_light import GroupedLight
+    from aiohue.v2.models.light import Light
+    from aiohue.v2.models.light_level import LightLevel
+    from aiohue.v2.models.motion import Motion
+
+    HueResource = Union[Light, DevicePower, GroupedLight, LightLevel, Motion]
+
 
 RESOURCE_TYPE_NAMES = {
     # a simple mapping of hue resource type to Hass name
@@ -30,7 +42,7 @@ class HueBaseEntity(Entity):
         self,
         bridge: HueBridge,
         controller: BaseResourcesController,
-        resource: CLIPResource,
+        resource: HueResource,
     ) -> None:
         """Initialize a generic Hue resource entity."""
         self.bridge = bridge
@@ -122,19 +134,23 @@ class HueBaseEntity(Entity):
         # used in subclasses
 
     @callback
-    def _handle_event(self, event_type: EventType, resource: CLIPResource) -> None:
+    def _handle_event(self, event_type: EventType, resource: HueResource) -> None:
         """Handle status event for this resource (or it's parent)."""
-        if event_type == EventType.RESOURCE_DELETED and resource.id == self.resource.id:
-            self.logger.debug("Received delete for %s", self.entity_id)
-            # non-device bound entities like groups and scenes need to be removed here
-            # all others will be be removed by device setup in case of device removal
-            ent_reg = async_get_entity_registry(self.hass)
-            ent_reg.async_remove(self.entity_id)
-        else:
-            self.logger.debug("Received status update for %s", self.entity_id)
-            self._check_availability()
-            self.on_update()
-            self.async_write_ha_state()
+        if event_type == EventType.RESOURCE_DELETED:
+            # remove any services created for zones/rooms
+            # regular devices are removed automatically by the logic in device.py.
+            if resource.type in [ResourceTypes.ROOM, ResourceTypes.ZONE]:
+                dev_reg = async_get_device_registry(self.hass)
+                if device := dev_reg.async_get_device({(DOMAIN, resource.id)}):
+                    dev_reg.async_remove_device(device.id)
+            if resource.type in [ResourceTypes.GROUPED_LIGHT, ResourceTypes.SCENE]:
+                ent_reg = async_get_entity_registry(self.hass)
+                ent_reg.async_remove(self.entity_id)
+            return
+        self.logger.debug("Received status update for %s", self.entity_id)
+        self._check_availability()
+        self.on_update()
+        self.async_write_ha_state()
 
     @callback
     def _check_availability(self):

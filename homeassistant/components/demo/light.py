@@ -16,8 +16,8 @@ from homeassistant.components.light import (
     COLOR_MODE_RGBW,
     COLOR_MODE_RGBWW,
     COLOR_MODE_WHITE,
-    SUPPORT_EFFECT,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -149,7 +149,7 @@ class DemoLight(LightEntity):
             supported_color_modes = SUPPORT_DEMO
         self._color_modes = supported_color_modes
         if self._effect_list is not None:
-            self._features |= SUPPORT_EFFECT
+            self._features |= LightEntityFeature.EFFECT
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -195,17 +195,17 @@ class DemoLight(LightEntity):
         return self._color_mode
 
     @property
-    def hs_color(self) -> tuple:
+    def hs_color(self) -> tuple[float, float]:
         """Return the hs color value."""
         return self._hs_color
 
     @property
-    def rgbw_color(self) -> tuple:
+    def rgbw_color(self) -> tuple[int, int, int, int]:
         """Return the rgbw color value."""
         return self._rgbw_color
 
     @property
-    def rgbww_color(self) -> tuple:
+    def rgbww_color(self) -> tuple[int, int, int, int, int]:
         """Return the rgbww color value."""
         return self._rgbww_color
 

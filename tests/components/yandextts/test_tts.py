@@ -14,7 +14,7 @@ import homeassistant.components.tts as tts
 from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component, async_mock_service
-from tests.components.tts.test_init import (  # noqa: F401, pylint: disable=unused-import
+from tests.components.tts.conftest import (  # noqa: F401, pylint: disable=unused-import
     mutagen_mock,
 )
 

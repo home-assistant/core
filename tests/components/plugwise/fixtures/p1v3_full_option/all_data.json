@@ -1,18 +1,16 @@
 [
   {
-    "active_device": false,
-    "cooling_present": null,
-    "gateway_id": "e950c7d5e1ee407a858e2a8b5016c8b3",
-    "heater_id": null,
-    "single_master_thermostat": null,
     "smile_name": "P1",
+    "gateway_id": "e950c7d5e1ee407a858e2a8b5016c8b3",
     "notifications": {}
   },
   {
     "e950c7d5e1ee407a858e2a8b5016c8b3": {
       "class": "gateway",
       "fw": "3.3.9",
+      "hw": "AME Smile 2.0 board",
       "location": "cd3e822288064775a7c4afcdd70bdda2",
+      "mac_address": "012345670001",
       "model": "P1",
       "name": "P1",
       "vendor": "Plugwise B.V.",

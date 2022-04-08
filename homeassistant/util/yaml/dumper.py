@@ -24,7 +24,7 @@ def save_yaml(path: str, data: dict) -> None:
 
 
 # From: https://gist.github.com/miracle2k/3184458
-def represent_odict(  # type: ignore
+def represent_odict(  # type: ignore[no-untyped-def]
     dumper, tag, mapping, flow_style=None
 ) -> yaml.MappingNode:
     """Like BaseRepresenter.represent_mapping but does not issue the sort()."""

@@ -5,30 +5,16 @@ import logging
 
 import RFXtrx as rfxtrxmod
 
-from homeassistant.components.cover import (
-    SUPPORT_CLOSE,
-    SUPPORT_CLOSE_TILT,
-    SUPPORT_OPEN,
-    SUPPORT_OPEN_TILT,
-    SUPPORT_STOP,
-    SUPPORT_STOP_TILT,
-    CoverEntity,
-)
+from homeassistant.components.cover import CoverEntity, CoverEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OPEN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import (
-    DEFAULT_SIGNAL_REPETITIONS,
-    DeviceTuple,
-    RfxtrxCommandEntity,
-    async_setup_platform_entry,
-)
+from . import DeviceTuple, RfxtrxCommandEntity, async_setup_platform_entry
 from .const import (
     COMMAND_OFF_LIST,
     COMMAND_ON_LIST,
-    CONF_SIGNAL_REPETITIONS,
     CONF_VENETIAN_BLIND_MODE,
     CONST_VENETIAN_BLIND_MODE_EU,
     CONST_VENETIAN_BLIND_MODE_US,
@@ -59,7 +45,6 @@ async def async_setup_entry(
             RfxtrxCover(
                 event.device,
                 device_id,
-                entity_info.get(CONF_SIGNAL_REPETITIONS, DEFAULT_SIGNAL_REPETITIONS),
                 venetian_blind_mode=entity_info.get(CONF_VENETIAN_BLIND_MODE),
                 event=event if auto else None,
             )
@@ -79,12 +64,11 @@ class RfxtrxCover(RfxtrxCommandEntity, CoverEntity):
         self,
         device: rfxtrxmod.RFXtrxDevice,
         device_id: DeviceTuple,
-        signal_repetitions: int,
         event: rfxtrxmod.RFXtrxEvent = None,
         venetian_blind_mode: bool | None = None,
     ) -> None:
         """Initialize the RFXtrx cover device."""
-        super().__init__(device, device_id, signal_repetitions, event)
+        super().__init__(device, device_id, event)
         self._venetian_blind_mode = venetian_blind_mode
 
     async def async_added_to_hass(self):
@@ -99,14 +83,18 @@ class RfxtrxCover(RfxtrxCommandEntity, CoverEntity):
     @property
     def supported_features(self):
         """Flag supported features."""
-        supported_features = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP
+        supported_features = (
+            CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
+        )
 
         if self._venetian_blind_mode in (
             CONST_VENETIAN_BLIND_MODE_US,
             CONST_VENETIAN_BLIND_MODE_EU,
         ):
             supported_features |= (
-                SUPPORT_OPEN_TILT | SUPPORT_CLOSE_TILT | SUPPORT_STOP_TILT
+                CoverEntityFeature.OPEN_TILT
+                | CoverEntityFeature.CLOSE_TILT
+                | CoverEntityFeature.STOP_TILT
             )
 
         return supported_features

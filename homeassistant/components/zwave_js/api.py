@@ -60,8 +60,8 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
+from .config_validation import BITMASK_SCHEMA
 from .const import (
-    BITMASK_SCHEMA,
     CONF_DATA_COLLECTION_OPTED_IN,
     DATA_CLIENT,
     DOMAIN,
@@ -367,6 +367,7 @@ async def websocket_network_status(
 ) -> None:
     """Get the status of the Z-Wave JS network."""
     controller = client.driver.controller
+    await controller.async_get_state()
     data = {
         "client": {
             "ws_server_url": client.ws_server_url,
@@ -393,6 +394,7 @@ async def websocket_network_status(
             "suc_node_id": controller.suc_node_id,
             "supports_timers": controller.supports_timers,
             "is_heal_network_active": controller.is_heal_network_active,
+            "inclusion_state": controller.inclusion_state,
             "nodes": list(client.driver.controller.nodes),
         },
     }
@@ -462,6 +464,7 @@ async def websocket_node_status(
         "ready": node.ready,
         "zwave_plus_version": node.zwave_plus_version,
         "highest_security_class": node.highest_security_class,
+        "is_controller_node": node.is_controller_node,
     }
     connection.send_result(
         msg[ID],
@@ -493,6 +496,7 @@ async def websocket_node_metadata(
         "wakeup": node.device_config.metadata.wakeup,
         "reset": node.device_config.metadata.reset,
         "device_database_url": node.device_database_url,
+        "comments": node.device_config.metadata.comments,
     }
     connection.send_result(
         msg[ID],

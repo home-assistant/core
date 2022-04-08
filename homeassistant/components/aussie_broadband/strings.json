@@ -13,7 +13,7 @@
           "services": "Services"
         }
       },
-      "reauth": {
+      "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
         "description": "Update password for {username}",
         "data": {

@@ -16,6 +16,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import SONOS_CREATE_BATTERY, SONOS_CREATE_MIC_SENSOR
 from .entity import SonosEntity
+from .helpers import soco_error
 from .speaker import SonosSpeaker
 
 ATTR_BATTERY_POWER_SOURCE = "power_source"
@@ -99,7 +100,13 @@ class SonosMicrophoneSensorEntity(SonosEntity, BinarySensorEntity):
         self._attr_name = f"{self.speaker.zone_name} Microphone"
 
     async def _async_fallback_poll(self) -> None:
-        """Stub for abstract class implementation. Not a pollable attribute."""
+        """Handle polling when subscription fails."""
+        await self.hass.async_add_executor_job(self.poll_state)
+
+    @soco_error()
+    def poll_state(self) -> None:
+        """Poll the current state of the microphone."""
+        self.speaker.mic_enabled = self.soco.mic_enabled
 
     @property
     def is_on(self) -> bool:

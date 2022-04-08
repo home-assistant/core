@@ -122,8 +122,7 @@ def _async_get_diagnostics(
 
         devices = data["devices"] = []
         for device_id in connection.devices.values():
-            device = device_registry.async_get(device_id)
-            if not device:
+            if not (device := device_registry.async_get(device_id)):
                 continue
             devices.append(_async_get_diagnostics_for_device(hass, device))
 

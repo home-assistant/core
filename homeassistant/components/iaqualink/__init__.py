@@ -71,9 +71,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Aqualink component."""
-    conf = config.get(DOMAIN)
-
-    if conf is not None:
+    if (conf := config.get(DOMAIN)) is not None:
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,

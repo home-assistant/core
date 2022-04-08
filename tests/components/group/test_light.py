@@ -2,6 +2,7 @@
 import unittest.mock
 from unittest.mock import MagicMock, patch
 
+import async_timeout
 import pytest
 
 from homeassistant import config as hass_config
@@ -48,6 +49,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -67,6 +69,7 @@ async def test_default_state(hass):
                 "entities": ["light.kitchen", "light.bedroom"],
                 "name": "Bedroom Group",
                 "unique_id": "unique_identifier",
+                "all": "false",
             }
         },
     )
@@ -101,6 +104,7 @@ async def test_state_reporting(hass):
             LIGHT_DOMAIN: {
                 "platform": DOMAIN,
                 "entities": ["light.test1", "light.test2"],
+                "all": "false",
             }
         },
     )
@@ -122,6 +126,49 @@ async def test_state_reporting(hass):
     hass.states.async_set("light.test2", STATE_OFF)
     await hass.async_block_till_done()
     assert hass.states.get("light.light_group").state == STATE_OFF
+
+    hass.states.async_set("light.test1", STATE_UNAVAILABLE)
+    hass.states.async_set("light.test2", STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+    assert hass.states.get("light.light_group").state == STATE_UNAVAILABLE
+
+
+async def test_state_reporting_all(hass):
+    """Test the state reporting."""
+    await async_setup_component(
+        hass,
+        LIGHT_DOMAIN,
+        {
+            LIGHT_DOMAIN: {
+                "platform": DOMAIN,
+                "entities": ["light.test1", "light.test2"],
+                "all": "true",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    hass.states.async_set("light.test1", STATE_ON)
+    hass.states.async_set("light.test2", STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+    assert hass.states.get("light.light_group").state == STATE_UNKNOWN
+
+    hass.states.async_set("light.test1", STATE_ON)
+    hass.states.async_set("light.test2", STATE_OFF)
+    await hass.async_block_till_done()
+    assert hass.states.get("light.light_group").state == STATE_OFF
+
+    hass.states.async_set("light.test1", STATE_OFF)
+    hass.states.async_set("light.test2", STATE_OFF)
+    await hass.async_block_till_done()
+    assert hass.states.get("light.light_group").state == STATE_OFF
+
+    hass.states.async_set("light.test1", STATE_ON)
+    hass.states.async_set("light.test2", STATE_ON)
+    await hass.async_block_till_done()
+    assert hass.states.get("light.light_group").state == STATE_ON
 
     hass.states.async_set("light.test1", STATE_UNAVAILABLE)
     hass.states.async_set("light.test2", STATE_UNAVAILABLE)
@@ -154,6 +201,7 @@ async def test_brightness(hass, enable_custom_integrations):
                 {
                     "platform": DOMAIN,
                     "entities": ["light.test1", "light.test2"],
+                    "all": "false",
                 },
             ]
         },
@@ -224,6 +272,7 @@ async def test_color_hs(hass, enable_custom_integrations):
                 {
                     "platform": DOMAIN,
                     "entities": ["light.test1", "light.test2"],
+                    "all": "false",
                 },
             ]
         },
@@ -295,6 +344,7 @@ async def test_color_rgb(hass, enable_custom_integrations):
                 {
                     "platform": DOMAIN,
                     "entities": ["light.test1", "light.test2"],
+                    "all": "false",
                 },
             ]
         },
@@ -366,6 +416,7 @@ async def test_color_rgbw(hass, enable_custom_integrations):
                 {
                     "platform": DOMAIN,
                     "entities": ["light.test1", "light.test2"],
+                    "all": "false",
                 },
             ]
         },
@@ -437,6 +488,7 @@ async def test_color_rgbww(hass, enable_custom_integrations):
                 {
                     "platform": DOMAIN,
                     "entities": ["light.test1", "light.test2"],
+                    "all": "false",
                 },
             ]
         },
@@ -488,6 +540,7 @@ async def test_white_value(hass):
             LIGHT_DOMAIN: {
                 "platform": DOMAIN,
                 "entities": ["light.test1", "light.test2"],
+                "all": "false",
             }
         },
     )
@@ -547,6 +600,7 @@ async def test_white(hass, enable_custom_integrations):
                 {
                     "platform": DOMAIN,
                     "entities": ["light.test1", "light.test2"],
+                    "all": "false",
                 },
             ]
         },
@@ -602,6 +656,7 @@ async def test_color_temp(hass, enable_custom_integrations):
                 {
                     "platform": DOMAIN,
                     "entities": ["light.test1", "light.test2"],
+                    "all": "false",
                 },
             ]
         },
@@ -673,6 +728,7 @@ async def test_emulated_color_temp_group(hass, enable_custom_integrations):
                 {
                     "platform": DOMAIN,
                     "entities": ["light.test1", "light.test2", "light.test3"],
+                    "all": "false",
                 },
             ]
         },
@@ -738,6 +794,7 @@ async def test_min_max_mireds(hass, enable_custom_integrations):
                 {
                     "platform": DOMAIN,
                     "entities": ["light.test1", "light.test2"],
+                    "all": "false",
                 },
             ]
         },
@@ -783,6 +840,7 @@ async def test_effect_list(hass):
             LIGHT_DOMAIN: {
                 "platform": DOMAIN,
                 "entities": ["light.test1", "light.test2"],
+                "all": "false",
             }
         },
     )
@@ -842,6 +900,7 @@ async def test_effect(hass):
             LIGHT_DOMAIN: {
                 "platform": DOMAIN,
                 "entities": ["light.test1", "light.test2", "light.test3"],
+                "all": "false",
             }
         },
     )
@@ -908,6 +967,7 @@ async def test_supported_color_modes(hass, enable_custom_integrations):
                 {
                     "platform": DOMAIN,
                     "entities": ["light.test1", "light.test2", "light.test3"],
+                    "all": "false",
                 },
             ]
         },
@@ -956,6 +1016,7 @@ async def test_color_mode(hass, enable_custom_integrations):
                 {
                     "platform": DOMAIN,
                     "entities": ["light.test1", "light.test2", "light.test3"],
+                    "all": "false",
                 },
             ]
         },
@@ -1050,6 +1111,7 @@ async def test_color_mode2(hass, enable_custom_integrations):
                         "light.test5",
                         "light.test6",
                     ],
+                    "all": "false",
                 },
             ]
         },
@@ -1081,6 +1143,7 @@ async def test_supported_features(hass):
             LIGHT_DOMAIN: {
                 "platform": DOMAIN,
                 "entities": ["light.test1", "light.test2"],
+                "all": "false",
             }
         },
     )
@@ -1156,6 +1219,7 @@ async def test_service_calls(hass, enable_custom_integrations, supported_color_m
                         "light.ceiling_lights",
                         "light.kitchen_lights",
                     ],
+                    "all": "false",
                 },
             ]
         },
@@ -1268,6 +1332,7 @@ async def test_service_call_effect(hass):
                         "light.ceiling_lights",
                         "light.kitchen_lights",
                     ],
+                    "all": "false",
                 },
             ]
         },
@@ -1368,6 +1433,7 @@ async def test_reload(hass):
                         "light.ceiling_lights",
                         "light.kitchen_lights",
                     ],
+                    "all": "false",
                 },
             ]
         },
@@ -1470,21 +1536,23 @@ async def test_reload_with_base_integration_platform_not_setup(hass):
 
 async def test_nested_group(hass):
     """Test nested light group."""
-    hass.states.async_set("light.kitchen", "on")
     await async_setup_component(
         hass,
         LIGHT_DOMAIN,
         {
             LIGHT_DOMAIN: [
+                {"platform": "demo"},
                 {
                     "platform": DOMAIN,
                     "entities": ["light.bedroom_group"],
                     "name": "Nested Group",
+                    "all": "false",
                 },
                 {
                     "platform": DOMAIN,
-                    "entities": ["light.kitchen", "light.bedroom"],
+                    "entities": ["light.bed_light", "light.kitchen_lights"],
                     "name": "Bedroom Group",
+                    "all": "false",
                 },
             ]
         },
@@ -1496,9 +1564,25 @@ async def test_nested_group(hass):
     state = hass.states.get("light.bedroom_group")
     assert state is not None
     assert state.state == STATE_ON
-    assert state.attributes.get(ATTR_ENTITY_ID) == ["light.kitchen", "light.bedroom"]
+    assert state.attributes.get(ATTR_ENTITY_ID) == [
+        "light.bed_light",
+        "light.kitchen_lights",
+    ]
 
     state = hass.states.get("light.nested_group")
     assert state is not None
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_ENTITY_ID) == ["light.bedroom_group"]
+
+    # Test controlling the nested group
+    async with async_timeout.timeout(0.5):
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TOGGLE,
+            {ATTR_ENTITY_ID: "light.nested_group"},
+            blocking=True,
+        )
+    assert hass.states.get("light.bed_light").state == STATE_OFF
+    assert hass.states.get("light.kitchen_lights").state == STATE_OFF
+    assert hass.states.get("light.bedroom_group").state == STATE_OFF
+    assert hass.states.get("light.nested_group").state == STATE_OFF

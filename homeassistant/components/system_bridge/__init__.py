@@ -289,7 +289,7 @@ async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-class SystemBridgeEntity(CoordinatorEntity):
+class SystemBridgeEntity(CoordinatorEntity[SystemBridgeDataUpdateCoordinator]):
     """Defines a base System Bridge entity."""
 
     def __init__(

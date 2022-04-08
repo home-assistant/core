@@ -74,6 +74,7 @@ MESSAGE_RETRIES = 8
 UNAVAILABLE_GRACE = 90
 
 FIX_MAC_FW = AwesomeVersion("3.70")
+SWITCH_PRODUCT_IDS = [70, 71, 89]
 
 SERVICE_LIFX_SET_STATE = "set_state"
 
@@ -202,9 +203,6 @@ async def async_setup_entry(
     platform = entity_platform.async_get_current_platform()
     lifx_manager = LIFXManager(hass, platform, config_entry, async_add_entities)
     hass.data[DATA_LIFX_MANAGER] = lifx_manager
-
-    # This is to clean up old litter. Can be removed in Home Assistant 2022.5.
-    await lifx_manager.remove_empty_devices()
 
     for interface in interfaces:
         lifx_manager.start_discovery(interface)
@@ -396,14 +394,18 @@ class LIFXManager:
             # Read initial state
             ack = AwaitAioLIFX().wait
 
-            # Used to populate sw_version
-            # no need to wait as we do not
-            # need it until later
-            bulb.get_hostfirmware()
+            # Get the product info first so that LIFX Switches
+            # can be ignored.
+            version_resp = await ack(bulb.get_version)
+            if version_resp and bulb.product in SWITCH_PRODUCT_IDS:
+                _LOGGER.warning(
+                    "(Switch) action=skip_discovery, reason=unsupported, serial=%s, ip_addr=%s, type='LIFX Switch'",
+                    str(bulb.mac_addr).replace(":", ""),
+                    bulb.ip_addr,
+                )
+                return False
 
             color_resp = await ack(bulb.get_color)
-            if color_resp:
-                version_resp = await ack(bulb.get_version)
 
             if color_resp is None or version_resp is None:
                 _LOGGER.error("Failed to initialize %s", bulb.ip_addr)
@@ -433,14 +435,15 @@ class LIFXManager:
             entity.registered = False
             entity.async_write_ha_state()
 
-    async def entity_registry_updated(self, event):
+    @callback
+    def entity_registry_updated(self, event):
         """Handle entity registry updated."""
         if event.data["action"] == "remove":
-            await self.remove_empty_devices()
+            self.remove_empty_devices()
 
-    async def remove_empty_devices(self):
+    def remove_empty_devices(self):
         """Remove devices with no entities."""
-        entity_reg = await er.async_get_registry(self.hass)
+        entity_reg = er.async_get(self.hass)
         device_reg = dr.async_get(self.hass)
         device_list = dr.async_entries_for_config_entry(
             device_reg, self.config_entry.entry_id
@@ -451,7 +454,9 @@ class LIFXManager:
                 device_entry.id,
                 include_disabled_entities=True,
             ):
-                device_reg.async_remove_device(device_entry.id)
+                device_reg.async_update_device(
+                    device_entry.id, remove_config_entry_id=self.config_entry.entry_id
+                )
 
 
 class AwaitAioLIFX:

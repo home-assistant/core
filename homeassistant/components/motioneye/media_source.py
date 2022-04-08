@@ -134,8 +134,7 @@ class MotionEyeMediaSource(MediaSource):
     def _get_device_or_raise(self, device_id: str) -> dr.DeviceEntry:
         """Get a config entry from a URL."""
         device_registry = dr.async_get(self.hass)
-        device = device_registry.async_get(device_id)
-        if not device:
+        if not (device := device_registry.async_get(device_id)):
             raise MediaSourceError(f"Unable to find device with id: {device_id}")
         return device
 

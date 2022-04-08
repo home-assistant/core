@@ -176,6 +176,10 @@ ZEROCONF = {
             }
         },
         {
+            "domain": "pure_energie",
+            "name": "smartbridge*"
+        },
+        {
             "domain": "rachio",
             "name": "rachio*"
         },
@@ -373,6 +377,11 @@ ZEROCONF = {
         {
             "domain": "kodi"
         }
+    ],
+    "_zwave-js-server._tcp.local.": [
+        {
+            "domain": "zwave_js"
+        }
     ]
 }
 
@@ -391,7 +400,12 @@ HOMEKIT = {
     "Iota": "abode",
     "LIFX": "lifx",
     "MYQ": "myq",
-    "NL*": "nanoleaf",
+    "NL29": "nanoleaf",
+    "NL42": "nanoleaf",
+    "NL47": "nanoleaf",
+    "NL48": "nanoleaf",
+    "NL52": "nanoleaf",
+    "NL59": "nanoleaf",
     "Netatmo Relay": "netatmo",
     "PowerView": "hunterdouglas_powerview",
     "Presence": "netatmo",

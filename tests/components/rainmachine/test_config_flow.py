@@ -149,6 +149,7 @@ async def test_step_homekit_zeroconf_ip_already_exists(
             context={"source": source},
             data=zeroconf.ZeroconfServiceInfo(
                 host="192.168.1.100",
+                addresses=["192.168.1.100"],
                 hostname="mock_hostname",
                 name="mock_name",
                 port=None,
@@ -174,6 +175,7 @@ async def test_step_homekit_zeroconf_ip_change(hass, client, config_entry, sourc
             context={"source": source},
             data=zeroconf.ZeroconfServiceInfo(
                 host="192.168.1.2",
+                addresses=["192.168.1.2"],
                 hostname="mock_hostname",
                 name="mock_name",
                 port=None,
@@ -202,6 +204,7 @@ async def test_step_homekit_zeroconf_new_controller_when_some_exist(
             context={"source": source},
             data=zeroconf.ZeroconfServiceInfo(
                 host="192.168.1.100",
+                addresses=["192.168.1.100"],
                 hostname="mock_hostname",
                 name="mock_name",
                 port=None,
@@ -249,6 +252,7 @@ async def test_discovery_by_homekit_and_zeroconf_same_time(hass, client):
             context={"source": config_entries.SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
                 host="192.168.1.100",
+                addresses=["192.168.1.100"],
                 hostname="mock_hostname",
                 name="mock_name",
                 port=None,
@@ -268,6 +272,7 @@ async def test_discovery_by_homekit_and_zeroconf_same_time(hass, client):
             context={"source": config_entries.SOURCE_HOMEKIT},
             data=zeroconf.ZeroconfServiceInfo(
                 host="192.168.1.100",
+                addresses=["192.168.1.100"],
                 hostname="mock_hostname",
                 name="mock_name",
                 port=None,

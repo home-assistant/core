@@ -203,6 +203,7 @@ def test_integration_properties(hass):
                 {"hostname": "tesla_*", "macaddress": "4CFCAA*"},
                 {"hostname": "tesla_*", "macaddress": "044EAF*"},
                 {"hostname": "tesla_*", "macaddress": "98ED5C*"},
+                {"registered_devices": True},
             ],
             "usb": [
                 {"vid": "10C4", "pid": "EA60"},
@@ -233,6 +234,7 @@ def test_integration_properties(hass):
         {"hostname": "tesla_*", "macaddress": "4CFCAA*"},
         {"hostname": "tesla_*", "macaddress": "044EAF*"},
         {"hostname": "tesla_*", "macaddress": "98ED5C*"},
+        {"registered_devices": True},
     ]
     assert integration.usb == [
         {"vid": "10C4", "pid": "EA60"},

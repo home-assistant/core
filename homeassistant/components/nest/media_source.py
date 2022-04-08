@@ -134,8 +134,7 @@ class NestEventMediaStore(EventMediaStore):
         """Load data."""
         if self._data is None:
             self._devices = await self._get_devices()
-            data = await self._store.async_load()
-            if data is None:
+            if (data := await self._store.async_load()) is None:
                 _LOGGER.debug("Loaded empty event store")
                 self._data = {}
             elif isinstance(data, dict):
@@ -340,15 +339,21 @@ class NestMediaSource(MediaSource):
         media_id: MediaId | None = parse_media_id(item.identifier)
         if not media_id:
             raise Unresolvable("No identifier specified for MediaSourceItem")
-        if not media_id.event_token:
-            raise Unresolvable(
-                "Identifier missing an event_token: %s" % item.identifier
-            )
         devices = await self.devices()
         if not (device := devices.get(media_id.device_id)):
             raise Unresolvable(
                 "Unable to find device with identifier: %s" % item.identifier
             )
+        if not media_id.event_token:
+            # The device resolves to the most recent event if available
+            if not (
+                last_event_id := await _async_get_recent_event_id(media_id, device)
+            ):
+                raise Unresolvable(
+                    "Unable to resolve recent event for device: %s" % item.identifier
+                )
+            media_id = last_event_id
+
         # Infer content type from the device, since it only supports one
         # snapshot type (either jpg or mp4 clip)
         content_type = EventImageType.IMAGE.content_type
@@ -385,6 +390,7 @@ class NestMediaSource(MediaSource):
                         device_id=last_event_id.device_id,
                         event_token=last_event_id.event_token,
                     )
+                    browse_device.can_play = True
                 browse_root.children.append(browse_device)
             return browse_root
 

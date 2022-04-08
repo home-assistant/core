@@ -82,10 +82,10 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         async_start_discovery(self.hass)
         return self.async_abort(reason="discovery_started")
 
-    async def async_step_discovery(
+    async def async_step_integration_discovery(
         self, discovery_info: DiscoveryInfoType
     ) -> FlowResult:
-        """Handle discovery."""
+        """Handle integration discovery."""
         self._discovered_device = discovery_info
         mac = _async_unifi_mac_from_hass(discovery_info["hw_addr"])
         await self.async_set_unique_id(mac)
@@ -115,9 +115,6 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 if new_host:
                     self.hass.config_entries.async_update_entry(
                         entry, data={**entry.data, CONF_HOST: new_host}
-                    )
-                    self.hass.async_create_task(
-                        self.hass.config_entries.async_reload(entry.entry_id)
                     )
                 return self.async_abort(reason="already_configured")
             if entry_host in (direct_connect_domain, source_ip) or (

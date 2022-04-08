@@ -20,11 +20,10 @@ from homeassistant.components.fan import (
     SERVICE_SET_PERCENTAGE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    SUPPORT_DIRECTION,
-    SUPPORT_OSCILLATE,
-    SUPPORT_SET_SPEED,
     FanEntity,
+    FanEntityFeature,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
@@ -35,7 +34,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import Event, HomeAssistant, State, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -48,10 +47,16 @@ from .util import (
     states_equal,
 )
 
-SUPPORTED_FLAGS = {SUPPORT_SET_SPEED, SUPPORT_DIRECTION, SUPPORT_OSCILLATE}
+SUPPORTED_FLAGS = {
+    FanEntityFeature.SET_SPEED,
+    FanEntityFeature.DIRECTION,
+    FanEntityFeature.OSCILLATE,
+}
 
 DEFAULT_NAME = "Fan Group"
 
+# No limit on parallel updates to enable a group calling another group
+PARALLEL_UPDATES = 0
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -70,10 +75,24 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Group Cover platform."""
+    """Set up the Fan Group platform."""
     async_add_entities(
         [FanGroup(config.get(CONF_UNIQUE_ID), config[CONF_NAME], config[CONF_ENTITIES])]
     )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Initialize Fan Group config entry."""
+    registry = er.async_get(hass)
+    entities = er.async_validate_entity_ids(
+        registry, config_entry.options[CONF_ENTITIES]
+    )
+
+    async_add_entities([FanGroup(config_entry.entry_id, config_entry.title, entities)])
 
 
 class FanGroup(GroupEntity, FanEntity):
@@ -174,24 +193,29 @@ class FanGroup(GroupEntity, FanEntity):
         if percentage == 0:
             await self.async_turn_off()
         await self._async_call_supported_entities(
-            SERVICE_SET_PERCENTAGE, SUPPORT_SET_SPEED, {ATTR_PERCENTAGE: percentage}
+            SERVICE_SET_PERCENTAGE,
+            FanEntityFeature.SET_SPEED,
+            {ATTR_PERCENTAGE: percentage},
         )
 
     async def async_oscillate(self, oscillating: bool) -> None:
         """Oscillate the fan."""
         await self._async_call_supported_entities(
-            SERVICE_OSCILLATE, SUPPORT_OSCILLATE, {ATTR_OSCILLATING: oscillating}
+            SERVICE_OSCILLATE,
+            FanEntityFeature.OSCILLATE,
+            {ATTR_OSCILLATING: oscillating},
         )
 
     async def async_set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
         await self._async_call_supported_entities(
-            SERVICE_SET_DIRECTION, SUPPORT_DIRECTION, {ATTR_DIRECTION: direction}
+            SERVICE_SET_DIRECTION,
+            FanEntityFeature.DIRECTION,
+            {ATTR_DIRECTION: direction},
         )
 
     async def async_turn_on(
         self,
-        speed: str | None = None,
         percentage: int | None = None,
         preset_mode: str | None = None,
         **kwargs: Any,
@@ -252,7 +276,9 @@ class FanGroup(GroupEntity, FanEntity):
         self._is_on = any(state.state == STATE_ON for state in on_states)
         self._attr_assumed_state |= not states_equal(on_states)
 
-        percentage_states = self._async_states_by_support_flag(SUPPORT_SET_SPEED)
+        percentage_states = self._async_states_by_support_flag(
+            FanEntityFeature.SET_SPEED
+        )
         self._percentage = reduce_attribute(percentage_states, ATTR_PERCENTAGE)
         self._attr_assumed_state |= not attribute_equal(
             percentage_states, ATTR_PERCENTAGE
@@ -270,9 +296,11 @@ class FanGroup(GroupEntity, FanEntity):
             self._speed_count = 100
 
         self._set_attr_most_frequent(
-            "_oscillating", SUPPORT_OSCILLATE, ATTR_OSCILLATING
+            "_oscillating", FanEntityFeature.OSCILLATE, ATTR_OSCILLATING
         )
-        self._set_attr_most_frequent("_direction", SUPPORT_DIRECTION, ATTR_DIRECTION)
+        self._set_attr_most_frequent(
+            "_direction", FanEntityFeature.DIRECTION, ATTR_DIRECTION
+        )
 
         self._supported_features = reduce(
             ior, [feature for feature in SUPPORTED_FLAGS if self._fans[feature]], 0

@@ -228,13 +228,13 @@ async def async_start(  # noqa: C901
                 if config_entries_key not in hass.data[CONFIG_ENTRY_IS_SETUP]:
                     if component == "device_automation":
                         # Local import to avoid circular dependencies
-                        # pylint: disable=import-outside-toplevel
+                        # pylint: disable-next=import-outside-toplevel
                         from . import device_automation
 
                         await device_automation.async_setup_entry(hass, config_entry)
                     elif component == "tag":
                         # Local import to avoid circular dependencies
-                        # pylint: disable=import-outside-toplevel
+                        # pylint: disable-next=import-outside-toplevel
                         from . import tag
 
                         await tag.async_setup_entry(hass, config_entry)

@@ -7,7 +7,7 @@ from typing import Any, Final, cast
 from aiolookin import Climate, MeteoSensor
 from aiolookin.models import UDPCommandType, UDPEvent
 
-from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
     FAN_AUTO,
@@ -20,9 +20,6 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_FAN_ONLY,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
-    SUPPORT_FAN_MODE,
-    SUPPORT_SWING_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
     SWING_BOTH,
     SWING_OFF,
 )
@@ -40,8 +37,6 @@ from .const import DOMAIN, TYPE_TO_PLATFORM
 from .coordinator import LookinDataUpdateCoordinator
 from .entity import LookinCoordinatorEntity
 from .models import LookinData
-
-SUPPORT_FLAGS: int = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE | SUPPORT_SWING_MODE
 
 LOOKIN_FAN_MODE_IDX_TO_HASS: Final = [FAN_AUTO, FAN_LOW, FAN_MIDDLE, FAN_HIGH]
 LOOKIN_SWING_MODE_IDX_TO_HASS: Final = [SWING_OFF, SWING_BOTH]
@@ -100,9 +95,13 @@ async def async_setup_entry(
 class ConditionerEntity(LookinCoordinatorEntity, ClimateEntity):
     """An aircon or heat pump."""
 
-    _attr_current_humidity: float | None = None  # type: ignore
+    _attr_current_humidity: float | None = None  # type: ignore[assignment]
     _attr_temperature_unit = TEMP_CELSIUS
-    _attr_supported_features: int = SUPPORT_FLAGS
+    _attr_supported_features: int = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.SWING_MODE
+    )
     _attr_fan_modes: list[str] = LOOKIN_FAN_MODE_IDX_TO_HASS
     _attr_swing_modes: list[str] = LOOKIN_SWING_MODE_IDX_TO_HASS
     _attr_hvac_modes: list[str] = LOOKIN_HVAC_MODE_IDX_TO_HASS
@@ -152,8 +151,7 @@ class ConditionerEntity(LookinCoordinatorEntity, ClimateEntity):
             # an educated guess.
             #
             meteo_data: MeteoSensor = self._meteo_coordinator.data
-            current_temp = meteo_data.temperature
-            if not current_temp:
+            if not (current_temp := meteo_data.temperature):
                 self._climate.hvac_mode = lookin_index.index(HVAC_MODE_AUTO)
             elif current_temp >= self._climate.temp_celsius:
                 self._climate.hvac_mode = lookin_index.index(HVAC_MODE_COOL)

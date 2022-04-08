@@ -20,11 +20,10 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import PLATFORMS, MqttValueTemplate, subscription
+from . import MqttValueTemplate, subscription
 from .. import mqtt
 from .const import (
     CONF_COMMAND_TOPIC,
@@ -32,16 +31,14 @@ from .const import (
     CONF_QOS,
     CONF_RETAIN,
     CONF_STATE_TOPIC,
-    DOMAIN,
+    PAYLOAD_NONE,
 )
 from .debug_info import log_messages
-from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
-
-MQTT_SWITCH_ATTRIBUTES_BLOCKED = frozenset(
-    {
-        switch.ATTR_CURRENT_POWER_W,
-        switch.ATTR_TODAY_ENERGY_KWH,
-    }
+from .mixins import (
+    MQTT_ENTITY_COMMON_SCHEMA,
+    MqttEntity,
+    async_setup_entry_helper,
+    async_setup_platform_helper,
 )
 
 DEFAULT_NAME = "MQTT Switch"
@@ -50,8 +47,6 @@ DEFAULT_PAYLOAD_OFF = "OFF"
 DEFAULT_OPTIMISTIC = False
 CONF_STATE_ON = "state_on"
 CONF_STATE_OFF = "state_off"
-
-PAYLOAD_NONE = "None"
 
 PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
     {
@@ -76,8 +71,9 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up MQTT switch through configuration.yaml."""
-    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
-    await _async_setup_entity(hass, async_add_entities, config)
+    await async_setup_platform_helper(
+        hass, switch.DOMAIN, config, async_add_entities, _async_setup_entity
+    )
 
 
 async def async_setup_entry(
@@ -103,7 +99,6 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
     """Representation of a switch that can be toggled using MQTT."""
 
     _entity_id_format = switch.ENTITY_ID_FORMAT
-    _attributes_extra_blocked = MQTT_SWITCH_ATTRIBUTES_BLOCKED
 
     def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the MQTT switch."""

@@ -68,11 +68,11 @@ def find_coordinates(
 
     # Check if entity_state is a zone
     zone_entity = hass.states.get(f"zone.{entity_state.state}")
-    if has_location(zone_entity):  # type: ignore
+    if has_location(zone_entity):  # type: ignore[arg-type]
         _LOGGER.debug(
-            "%s is in %s, getting zone location", name, zone_entity.entity_id  # type: ignore
+            "%s is in %s, getting zone location", name, zone_entity.entity_id  # type: ignore[union-attr]
         )
-        return _get_location_from_attributes(zone_entity)  # type: ignore
+        return _get_location_from_attributes(zone_entity)  # type: ignore[arg-type]
 
     # Check if entity_state is a friendly name of a zone
     if (zone_coords := resolve_zone(hass, entity_state.state)) is not None:

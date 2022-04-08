@@ -9,6 +9,7 @@ import io
 import logging
 import mimetypes
 import os
+from pathlib import Path
 import re
 from typing import TYPE_CHECKING, Optional, cast
 
@@ -16,6 +17,7 @@ from aiohttp import web
 import mutagen
 from mutagen.id3 import ID3, TextFrame as ID3Text
 import voluptuous as vol
+import yarl
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.media_player.const import (
@@ -39,9 +41,11 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_prepare_setup_platform
+from homeassistant.util.network import normalize_url
 from homeassistant.util.yaml import load_yaml
+
+from .const import DOMAIN
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -69,7 +73,6 @@ CONF_FIELDS = "fields"
 DEFAULT_CACHE = True
 DEFAULT_CACHE_DIR = "tts"
 DEFAULT_TIME_MEMORY = 300
-DOMAIN = "tts"
 
 MEM_CACHE_FILENAME = "filename"
 MEM_CACHE_VOICE = "voice"
@@ -91,6 +94,16 @@ def _deprecated_platform(value):
     return value
 
 
+def valid_base_url(value: str) -> str:
+    """Validate base url, return value."""
+    url = yarl.URL(cv.url(value))
+
+    if url.path != "/":
+        raise vol.Invalid("Path should be empty")
+
+    return normalize_url(value)
+
+
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_PLATFORM): vol.All(cv.string, _deprecated_platform),
@@ -99,7 +112,7 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_TIME_MEMORY, default=DEFAULT_TIME_MEMORY): vol.All(
             vol.Coerce(int), vol.Range(min=60, max=57600)
         ),
-        vol.Optional(CONF_BASE_URL): cv.string,
+        vol.Optional(CONF_BASE_URL): valid_base_url,
         vol.Optional(CONF_SERVICE_NAME): cv.string,
     }
 )
@@ -135,12 +148,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _LOGGER.exception("Error on cache init")
         return False
 
+    hass.data[DOMAIN] = tts
     hass.http.register_view(TextToSpeechView(tts))
     hass.http.register_view(TextToSpeechUrlView(tts))
 
     # Load service descriptions from tts/services.yaml
-    integration = await async_get_integration(hass, DOMAIN)
-    services_yaml = integration.file_path / "services.yaml"
+    services_yaml = Path(__file__).parent / "services.yaml"
     services_dict = cast(
         dict, await hass.async_add_executor_job(load_yaml, str(services_yaml))
     )
@@ -343,7 +356,9 @@ class SpeechManager:
 
         This method is a coroutine.
         """
-        provider = self.providers[engine]
+        if (provider := self.providers.get(engine)) is None:
+            raise HomeAssistantError(f"Provider {engine} not found")
+
         msg_hash = hashlib.sha1(bytes(message, "utf-8")).hexdigest()
         use_cache = cache if cache is not None else self.use_cache
 

@@ -4,6 +4,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from asyncio import gather
 from collections.abc import Mapping
+from datetime import datetime, timedelta
 from http import HTTPStatus
 import logging
 import pprint
@@ -19,13 +20,11 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import Context, HomeAssistant, State, callback
-from homeassistant.helpers import start
-from homeassistant.helpers.area_registry import AreaEntry
-from homeassistant.helpers.device_registry import DeviceEntry
-from homeassistant.helpers.entity_registry import RegistryEntry
+from homeassistant.helpers import area_registry, device_registry, entity_registry, start
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.storage import Store
+from homeassistant.util.dt import utcnow
 
 from . import trait
 from .const import (
@@ -46,51 +45,33 @@ SYNC_DELAY = 15
 _LOGGER = logging.getLogger(__name__)
 
 
-async def _get_entity_and_device(
+@callback
+def _get_registry_entries(
     hass: HomeAssistant, entity_id: str
-) -> tuple[RegistryEntry, DeviceEntry] | None:
-    """Fetch the entity and device entries for a entity_id."""
-    dev_reg, ent_reg = await gather(
-        hass.helpers.device_registry.async_get_registry(),
-        hass.helpers.entity_registry.async_get_registry(),
-    )
+) -> tuple[device_registry.DeviceEntry, area_registry.AreaEntry]:
+    """Get registry entries."""
+    ent_reg = entity_registry.async_get(hass)
+    dev_reg = device_registry.async_get(hass)
+    area_reg = area_registry.async_get(hass)
 
-    if not (entity_entry := ent_reg.async_get(entity_id)):
-        return None, None
-    device_entry = dev_reg.devices.get(entity_entry.device_id)
-    return entity_entry, device_entry
+    if (entity_entry := ent_reg.async_get(entity_id)) and entity_entry.device_id:
+        device_entry = dev_reg.devices.get(entity_entry.device_id)
+    else:
+        device_entry = None
 
-
-async def _get_area(
-    hass: HomeAssistant,
-    entity_entry: RegistryEntry | None,
-    device_entry: DeviceEntry | None,
-) -> AreaEntry | None:
-    """Calculate the area for an entity."""
     if entity_entry and entity_entry.area_id:
         area_id = entity_entry.area_id
     elif device_entry and device_entry.area_id:
         area_id = device_entry.area_id
     else:
-        return None
+        area_id = None
 
-    area_reg = await hass.helpers.area_registry.async_get_registry()
-    return area_reg.areas.get(area_id)
+    if area_id is not None:
+        area_entry = area_reg.async_get_area(area_id)
+    else:
+        area_entry = None
 
-
-async def _get_device_info(device_entry: DeviceEntry | None) -> dict[str, str] | None:
-    """Retrieve the device info for a device."""
-    if not device_entry:
-        return None
-
-    device_info = {}
-    if device_entry.manufacturer:
-        device_info["manufacturer"] = device_entry.manufacturer
-    if device_entry.model:
-        device_info["model"] = device_entry.model
-    if device_entry.sw_version:
-        device_info["swVersion"] = device_entry.sw_version
-    return device_info
+    return device_entry, area_entry
 
 
 class AbstractConfig(ABC):
@@ -104,6 +85,7 @@ class AbstractConfig(ABC):
         self._store = None
         self._google_sync_unsub = {}
         self._local_sdk_active = False
+        self._local_last_active: datetime | None = None
 
     async def async_initialize(self):
         """Perform async initialization of config."""
@@ -148,6 +130,15 @@ class AbstractConfig(ABC):
     def should_report_state(self):
         """Return if states should be proactively reported."""
         return False
+
+    @property
+    def is_local_connected(self) -> bool:
+        """Return if local is connected."""
+        return (
+            self._local_last_active is not None
+            # We get a reachable devices intent every minute.
+            and self._local_last_active > utcnow() - timedelta(seconds=70)
+        )
 
     def get_local_agent_user_id(self, webhook_id):
         """Return the user ID to be used for actions received via the local SDK.
@@ -336,10 +327,16 @@ class AbstractConfig(ABC):
         # pylint: disable=import-outside-toplevel
         from . import smart_home
 
+        self._local_last_active = utcnow()
         payload = await request.json()
 
         if _LOGGER.isEnabledFor(logging.DEBUG):
-            _LOGGER.debug("Received local message:\n%s\n", pprint.pformat(payload))
+            _LOGGER.debug(
+                "Received local message from %s (JS %s):\n%s\n",
+                request.remote,
+                request.headers.get("HA-Cloud-Version", "unknown"),
+                pprint.pformat(payload),
+            )
 
         if not self.enabled:
             return json_response(smart_home.turned_off_response(payload))
@@ -546,60 +543,71 @@ class GoogleEntity:
             trait.might_2fa(domain, features, device_class) for trait in self.traits()
         )
 
-    async def sync_serialize(self, agent_user_id):
+    def sync_serialize(self, agent_user_id, instance_uuid):
         """Serialize entity for a SYNC response.
 
         https://developers.google.com/actions/smarthome/create-app#actiondevicessync
         """
         state = self.state
-
+        traits = self.traits()
         entity_config = self.config.entity_config.get(state.entity_id, {})
         name = (entity_config.get(CONF_NAME) or state.name).strip()
-        domain = state.domain
-        device_class = state.attributes.get(ATTR_DEVICE_CLASS)
-        entity_entry, device_entry = await _get_entity_and_device(
-            self.hass, state.entity_id
-        )
 
-        traits = self.traits()
+        # Find entity/device/area registry entries
+        device_entry, area_entry = _get_registry_entries(self.hass, self.entity_id)
 
-        device_type = get_google_type(domain, device_class)
-
+        # Build the device info
         device = {
             "id": state.entity_id,
             "name": {"name": name},
             "attributes": {},
             "traits": [trait.name for trait in traits],
             "willReportState": self.config.should_report_state,
-            "type": device_type,
+            "type": get_google_type(
+                state.domain, state.attributes.get(ATTR_DEVICE_CLASS)
+            ),
         }
 
-        # use aliases
+        # Add aliases
         if aliases := entity_config.get(CONF_ALIASES):
             device["name"]["nicknames"] = [name] + aliases
 
+        # Add local SDK info if enabled
         if self.config.is_local_sdk_active and self.should_expose_local():
             device["otherDeviceIds"] = [{"deviceId": self.entity_id}]
             device["customData"] = {
                 "webhookId": self.config.get_local_webhook_id(agent_user_id),
                 "httpPort": self.hass.http.server_port,
                 "httpSSL": self.hass.config.api.use_ssl,
-                "uuid": await self.hass.helpers.instance_id.async_get(),
+                "uuid": instance_uuid,
                 "baseUrl": get_url(self.hass, prefer_external=True),
                 "proxyDeviceId": agent_user_id,
             }
 
+        # Add trait sync attributes
         for trt in traits:
             device["attributes"].update(trt.sync_attributes())
 
+        # Add roomhint
         if room := entity_config.get(CONF_ROOM_HINT):
             device["roomHint"] = room
-        else:
-            area = await _get_area(self.hass, entity_entry, device_entry)
-            if area and area.name:
-                device["roomHint"] = area.name
+        elif area_entry and area_entry.name:
+            device["roomHint"] = area_entry.name
 
-        if device_info := await _get_device_info(device_entry):
+        # Add deviceInfo
+        if not device_entry:
+            return device
+
+        device_info = {}
+
+        if device_entry.manufacturer:
+            device_info["manufacturer"] = device_entry.manufacturer
+        if device_entry.model:
+            device_info["model"] = device_entry.model
+        if device_entry.sw_version:
+            device_info["swVersion"] = device_entry.sw_version
+
+        if device_info:
             device["deviceInfo"] = device_info
 
         return device

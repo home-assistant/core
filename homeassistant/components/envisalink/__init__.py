@@ -137,6 +137,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         keep_alive,
         hass.loop,
         connection_timeout,
+        False,
     )
     hass.data[DATA_EVL] = controller
 
@@ -182,12 +183,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         async_dispatcher_send(hass, SIGNAL_PARTITION_UPDATE, data)
 
     @callback
-    def async_zone_bypass_update(data):
-        """Handle zone bypass status updates."""
-        _LOGGER.debug("Envisalink sent a zone bypass update event. Updating zones")
-        async_dispatcher_send(hass, SIGNAL_ZONE_BYPASS_UPDATE, data)
-
-    @callback
     def stop_envisalink(event):
         """Shutdown envisalink connection and thread on exit."""
         _LOGGER.info("Shutting down Envisalink")
@@ -206,7 +201,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     controller.callback_login_failure = async_login_fail_callback
     controller.callback_login_timeout = async_connection_fail_callback
     controller.callback_login_success = async_connection_success_callback
-    controller.callback_zone_bypass_update = async_zone_bypass_update
 
     _LOGGER.info("Start envisalink")
     controller.start()
@@ -240,13 +234,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 hass, Platform.BINARY_SENSOR, "envisalink", {CONF_ZONES: zones}, config
             )
         )
-        # Only DSC panels support getting zone bypass status
-        if panel_type == PANEL_TYPE_DSC:
-            hass.async_create_task(
-                async_load_platform(
-                    hass, "switch", "envisalink", {CONF_ZONES: zones}, config
-                )
-            )
+
+        # Zone bypass switches are not currently created due to an issue with some panels.
+        # These switches will be re-added in the future after some further refactoring of the integration.
 
     hass.services.async_register(
         DOMAIN, SERVICE_CUSTOM_FUNCTION, handle_custom_function, schema=SERVICE_SCHEMA

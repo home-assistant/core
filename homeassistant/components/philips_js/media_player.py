@@ -7,6 +7,7 @@ from homeassistant.components.media_player import (
     BrowseMedia,
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
+    MediaPlayerEntityFeature,
 )
 from homeassistant.components.media_player.const import (
     MEDIA_CLASS_APP,
@@ -16,19 +17,6 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_APPS,
     MEDIA_TYPE_CHANNEL,
     MEDIA_TYPE_CHANNELS,
-    SUPPORT_BROWSE_MEDIA,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_STOP,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
 )
 from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.config_entries import ConfigEntry
@@ -42,18 +30,18 @@ from . import LOGGER as _LOGGER, PhilipsTVDataUpdateCoordinator
 from .const import DOMAIN
 
 SUPPORT_PHILIPS_JS = (
-    SUPPORT_TURN_OFF
-    | SUPPORT_VOLUME_STEP
-    | SUPPORT_VOLUME_SET
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_SELECT_SOURCE
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_PLAY_MEDIA
-    | SUPPORT_BROWSE_MEDIA
-    | SUPPORT_PLAY
-    | SUPPORT_PAUSE
-    | SUPPORT_STOP
+    MediaPlayerEntityFeature.TURN_OFF
+    | MediaPlayerEntityFeature.VOLUME_STEP
+    | MediaPlayerEntityFeature.VOLUME_SET
+    | MediaPlayerEntityFeature.VOLUME_MUTE
+    | MediaPlayerEntityFeature.SELECT_SOURCE
+    | MediaPlayerEntityFeature.NEXT_TRACK
+    | MediaPlayerEntityFeature.PREVIOUS_TRACK
+    | MediaPlayerEntityFeature.PLAY_MEDIA
+    | MediaPlayerEntityFeature.BROWSE_MEDIA
+    | MediaPlayerEntityFeature.PLAY
+    | MediaPlayerEntityFeature.PAUSE
+    | MediaPlayerEntityFeature.STOP
 )
 
 CONF_ON_ACTION = "turn_on_action"
@@ -79,10 +67,11 @@ async def async_setup_entry(
     )
 
 
-class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
+class PhilipsTVMediaPlayer(
+    CoordinatorEntity[PhilipsTVDataUpdateCoordinator], MediaPlayerEntity
+):
     """Representation of a Philips TV exposing the JointSpace API."""
 
-    _coordinator: PhilipsTVDataUpdateCoordinator
     _attr_device_class = MediaPlayerDeviceClass.TV
 
     def __init__(
@@ -91,7 +80,6 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     ) -> None:
         """Initialize the Philips TV."""
         self._tv = coordinator.api
-        self._coordinator = coordinator
         self._sources = {}
         self._channels = {}
         self._supports = SUPPORT_PHILIPS_JS
@@ -125,10 +113,10 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     def supported_features(self):
         """Flag media player features that are supported."""
         supports = self._supports
-        if self._coordinator.turn_on or (
+        if self.coordinator.turn_on or (
             self._tv.on and self._tv.powerstate is not None
         ):
-            supports |= SUPPORT_TURN_ON
+            supports |= MediaPlayerEntityFeature.TURN_ON
         return supports
 
     @property
@@ -170,7 +158,7 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
             await self._tv.setPowerState("On")
             self._state = STATE_ON
         else:
-            await self._coordinator.turn_on.async_run(self.hass, self._context)
+            await self.coordinator.turn_on.async_run(self.hass, self._context)
         await self._async_update_soon()
 
     async def async_turn_off(self):
@@ -425,7 +413,7 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         """Return root media objects."""
 
         return BrowseMedia(
-            title="Library",
+            title="Philips TV",
             media_class=MEDIA_CLASS_DIRECTORY,
             media_content_id="",
             media_content_type="",

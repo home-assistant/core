@@ -134,6 +134,10 @@
             "off": "Niet aan het opladen",
             "on": "Opladen"
         },
+        "carbon_monoxide": {
+            "off": "Niet gedetecteerd",
+            "on": "Gedetecteerd"
+        },
         "co": {
             "off": "Niet gedetecteerd",
             "on": "Gedetecteerd"

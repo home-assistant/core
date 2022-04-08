@@ -13,6 +13,7 @@ from homeassistant.components import siren
 from homeassistant.components.siren import (
     TURN_ON_SCHEMA,
     SirenEntity,
+    SirenEntityFeature,
     process_turn_on_params,
 )
 from homeassistant.components.siren.const import (
@@ -20,11 +21,6 @@ from homeassistant.components.siren.const import (
     ATTR_DURATION,
     ATTR_TONE,
     ATTR_VOLUME_LEVEL,
-    SUPPORT_DURATION,
-    SUPPORT_TONES,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_SET,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -36,10 +32,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import PLATFORMS, MqttCommandTemplate, MqttValueTemplate, subscription
+from . import MqttCommandTemplate, MqttValueTemplate, subscription
 from .. import mqtt
 from .const import (
     CONF_COMMAND_TEMPLATE,
@@ -48,12 +43,17 @@ from .const import (
     CONF_QOS,
     CONF_RETAIN,
     CONF_STATE_TOPIC,
-    DOMAIN,
+    CONF_STATE_VALUE_TEMPLATE,
     PAYLOAD_EMPTY_JSON,
     PAYLOAD_NONE,
 )
 from .debug_info import log_messages
-from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
+from .mixins import (
+    MQTT_ENTITY_COMMON_SCHEMA,
+    MqttEntity,
+    async_setup_entry_helper,
+    async_setup_platform_helper,
+)
 
 DEFAULT_NAME = "MQTT Siren"
 DEFAULT_PAYLOAD_ON = "ON"
@@ -66,7 +66,6 @@ CONF_AVAILABLE_TONES = "available_tones"
 CONF_COMMAND_OFF_TEMPLATE = "command_off_template"
 CONF_STATE_ON = "state_on"
 CONF_STATE_OFF = "state_off"
-CONF_STATE_VALUE_TEMPLATE = "state_value_template"
 CONF_SUPPORT_DURATION = "support_duration"
 CONF_SUPPORT_VOLUME_SET = "support_volume_set"
 
@@ -100,12 +99,12 @@ MQTT_SIREN_ATTRIBUTES_BLOCKED = frozenset(
     }
 )
 
-SUPPORTED_BASE = SUPPORT_TURN_OFF | SUPPORT_TURN_ON
+SUPPORTED_BASE = SirenEntityFeature.TURN_OFF | SirenEntityFeature.TURN_ON
 
 SUPPORTED_ATTRIBUTES = {
-    ATTR_DURATION: SUPPORT_DURATION,
-    ATTR_TONE: SUPPORT_TONES,
-    ATTR_VOLUME_LEVEL: SUPPORT_VOLUME_SET,
+    ATTR_DURATION: SirenEntityFeature.DURATION,
+    ATTR_TONE: SirenEntityFeature.TONES,
+    ATTR_VOLUME_LEVEL: SirenEntityFeature.VOLUME_SET,
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -118,8 +117,9 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up MQTT siren through configuration.yaml."""
-    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
-    await _async_setup_entity(hass, async_add_entities, config)
+    await async_setup_platform_helper(
+        hass, siren.DOMAIN, config, async_add_entities, _async_setup_entity
+    )
 
 
 async def async_setup_entry(
@@ -178,16 +178,16 @@ class MqttSiren(MqttEntity, SirenEntity):
         self._state_off = state_off if state_off else config[CONF_PAYLOAD_OFF]
 
         if config[CONF_SUPPORT_DURATION]:
-            self._supported_features |= SUPPORT_DURATION
+            self._supported_features |= SirenEntityFeature.DURATION
             self._attr_extra_state_attributes[ATTR_DURATION] = None
 
         if config.get(CONF_AVAILABLE_TONES):
-            self._supported_features |= SUPPORT_TONES
+            self._supported_features |= SirenEntityFeature.TONES
             self._attr_available_tones = config[CONF_AVAILABLE_TONES]
             self._attr_extra_state_attributes[ATTR_TONE] = None
 
         if config[CONF_SUPPORT_VOLUME_SET]:
-            self._supported_features |= SUPPORT_VOLUME_SET
+            self._supported_features |= SirenEntityFeature.VOLUME_SET
             self._attr_extra_state_attributes[ATTR_VOLUME_LEVEL] = None
 
         self._optimistic = config[CONF_OPTIMISTIC] or CONF_STATE_TOPIC not in config
