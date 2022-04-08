@@ -150,10 +150,9 @@ class ZWaveHumidifier(ZWaveBaseEntity, HumidifierEntity):
     @property
     def is_on(self) -> bool | None:
         """Return True if entity is on."""
-        return int(self._current_mode.value) in [
-            self.entity_description.on_mode,
-            HumidityControlMode.AUTO,
-        ]
+        if (value := self._current_mode.value) is None:
+            return None
+        return int(value) in [self.entity_description.on_mode, HumidityControlMode.AUTO]
 
     def _supports_inverse_mode(self) -> bool:
         return (
