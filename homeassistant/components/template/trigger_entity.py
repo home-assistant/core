@@ -1,6 +1,7 @@
 """Trigger entity."""
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 import logging
 from typing import Any
@@ -17,15 +18,15 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template
-from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
+from homeassistant.helpers.restore_state import (
+    ExtraStoredData,
+    RestoreEntity,
+    RestoreStateData,
+)
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import (
-    TriggerUpdateCoordinator,
-    convert_attribute_from_string,
-    convert_attribute_to_string,
-)
-from .const import CONF_ATTRIBUTES, CONF_AVAILABILITY, CONF_PICTURE
+from . import TemplateJSONDecoder, TemplateJSONEncoder, TriggerUpdateCoordinator
+from .const import CONF_ATTRIBUTES, CONF_AVAILABILITY, CONF_PICTURE, CONF_RESTORE
 
 CONF_TO_ATTRIBUTE = {
     CONF_ICON: ATTR_ICON,
@@ -34,7 +35,7 @@ CONF_TO_ATTRIBUTE = {
 }
 
 
-class TriggerEntity(CoordinatorEntity[TriggerUpdateCoordinator]):
+class TriggerEntity(CoordinatorEntity[TriggerUpdateCoordinator], RestoreEntity):
     """Template entity based on trigger data."""
 
     domain: str
@@ -46,6 +47,8 @@ class TriggerEntity(CoordinatorEntity[TriggerUpdateCoordinator]):
         hass: HomeAssistant,
         coordinator: TriggerUpdateCoordinator,
         config: dict,
+        save_additional_attributes: list[str] | None = None,
+        always_save_state: bool = False,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
@@ -78,15 +81,22 @@ class TriggerEntity(CoordinatorEntity[TriggerUpdateCoordinator]):
             else:
                 self._to_render_simple.append(itm)
 
+        self._extra_save_rendered: list = [CONF_AVAILABILITY]
         if self.extra_template_keys is not None:
             self._to_render_simple.extend(self.extra_template_keys)
+            self._extra_save_rendered.extend(list(self.extra_template_keys))
 
         if self.extra_template_keys_complex is not None:
             self._to_render_complex.extend(self.extra_template_keys_complex)
+            self._extra_save_rendered.extend(list(self.extra_template_keys_complex))
 
         # We make a copy so our initial render is 'unknown' and not 'unavailable'
         self._rendered = dict(self._static_rendered)
         self._parse_result = {CONF_AVAILABILITY}
+        self._save_extra_data: bool = True
+        self._extra_save_data: list = save_additional_attributes or []
+        self.restore = config.get(CONF_RESTORE, False)
+        self._always_save_state = always_save_state
 
     @property
     def name(self):
@@ -128,8 +138,28 @@ class TriggerEntity(CoordinatorEntity[TriggerUpdateCoordinator]):
         """Return extra attributes."""
         return self._rendered.get(CONF_ATTRIBUTES)
 
+    @property
+    def save_extra_data(self) -> bool:
+        """Return if extra attributes data is to be saved or not."""
+        return self._save_extra_data
+
+    async def async_internal_added_to_hass(self) -> None:
+        """Register this entity as a restorable entity."""
+        _, data = await asyncio.gather(
+            super().async_internal_added_to_hass(),
+            RestoreStateData.async_get_instance(self.hass),
+        )
+        if not self.restore and not self._always_save_state:
+            # Remove this entity for saving state and remove from
+            # last_states if entity does not need to be restored
+            # nor does its state always have to be saved irrespective
+            # of restore.
+            data.entities.pop(self.entity_id)
+            data.last_states.pop(self.entity_id, None)
+
     async def async_added_to_hass(self) -> None:
         """Handle being added to Home Assistant."""
+        await self.restore_entity()
         template.attach(self.hass, self._config)
         await super().async_added_to_hass()
         if self.coordinator.data is not None:
@@ -149,6 +179,78 @@ class TriggerEntity(CoordinatorEntity[TriggerUpdateCoordinator]):
                     continue
                 extra_state_attributes[attr] = last_state.attributes[attr]
             self._rendered[CONF_ATTRIBUTES] = extra_state_attributes
+
+    async def restore_entity(
+        self,
+    ) -> tuple[State | None, dict[str, Any] | None]:
+        """Restore the entity."""
+
+        if not self.restore:
+            return None, None
+
+        if (last_sensor_state := await self.async_get_last_state()) is None:
+            logging.getLogger(f"{__package__}.{self.entity_id.split('.')[0]}").debug(
+                "No state found to restore for entity %s", self.entity_id
+            )
+            return None, None
+
+        # Restore all attributes.
+        logging.getLogger(f"{__package__}.{self.entity_id.split('.')[0]}").debug(
+            "Restoring entity %s", self.entity_id
+        )
+        self.restore_attributes(last_sensor_state)
+
+        if (last_sensor_data := await self.async_get_last_rendered_data()) is None:
+            logging.getLogger(f"{__package__}.{self.entity_id.split('.')[0]}").debug(
+                "No extra data found to restore for entity %s", self.entity_id
+            )
+            return last_sensor_state, None
+
+        for attribute in self._extra_save_rendered:
+            try:
+                value = last_sensor_data[attribute]
+            except KeyError:
+                logging.getLogger(
+                    f"{__package__}.{self.entity_id.split('.')[0]}"
+                ).debug(
+                    "Did not retrieve value for rendered attribute %s for entity %s",
+                    attribute,
+                    self.entity_id,
+                )
+                continue
+
+            self._rendered[attribute] = value
+            logging.getLogger(f"{__package__}.{self.entity_id.split('.')[0]}").debug(
+                "Restored rendered attribute %s with value %s for entity %s",
+                attribute,
+                value,
+                self.entity_id,
+            )
+
+        for attribute in self._extra_save_data:
+            try:
+                value = last_sensor_data[attribute]
+            except KeyError:
+                logging.getLogger(
+                    f"{__package__}.{self.entity_id.split('.')[0]}"
+                ).debug(
+                    "Did not retrieve value for attribute %s for entity %s",
+                    attribute,
+                    self.entity_id,
+                )
+                continue
+
+            setattr(self, attribute, value)
+            logging.getLogger(f"{__package__}.{self.entity_id.split('.')[0]}").debug(
+                "Restored additional attribute %s with value %s for entity %s",
+                attribute,
+                value,
+                self.entity_id,
+            )
+
+        self.async_write_ha_state()
+
+        return last_sensor_state, last_sensor_data
 
     @callback
     def _process_data(self) -> None:
@@ -189,184 +291,42 @@ class TriggerEntity(CoordinatorEntity[TriggerUpdateCoordinator]):
         self._process_data()
         self.async_write_ha_state()
 
+    def async_write_ha_state(self) -> None:
+        """Write state to state machine.
 
-class TriggerRestoreEntity(TriggerEntity, RestoreEntity):
-    """Trigger Entity that restores data."""
-
-    def __init__(self, *args, **kwargs) -> None:
-        """Template Restore Entity init."""
-        super().__init__(*args, **kwargs)
-        self._restore: bool = False
-        self._save_state: bool = True
-        self._additional_data: list[str] = []
-
-    @property
-    def restore(self) -> bool:
-        """Retrieve restore."""
-        return self._restore or False
-
-    @restore.setter
-    def restore(self, restore: bool) -> None:
-        """Set restore."""
-        self._restore = restore
-
-    @property
-    def save_state(self) -> bool:
-        """Retrieve save state."""
-        return self._save_state if hasattr(self, "_save_state") else True
-
-    @property
-    def additional_data(self) -> list[str]:
-        """Return additional data list."""
-        return self._additional_data or []
-
-    def add_additional_data(self, attribute: str) -> None:
-        """Add attribute to additional data list."""
-        if not hasattr(self, "_additional_data"):
-            self._additional_data = []
-
-        self._additional_data.append(attribute)
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._process_data()
-        self._save_state = False
-        self.async_write_ha_state()
-        self._save_state = True
-
-    async def restore_entity(
-        self,
-    ) -> tuple[State | None, dict[str, Any] | None]:
-        """Restore the entity."""
-
-        if not self.restore:
-            return None, None
-
-        if (last_sensor_state := await self.async_get_last_state()) is None:
-            logging.getLogger(f"{__package__}.{self.entity_id.split('.')[0]}").debug(
-                "No state found to restore for entity %s", self.entity_id
-            )
-            return None, None
-
-        if (last_sensor_data := await self.async_get_last_rendered_data()) is None:
-            logging.getLogger(f"{__package__}.{self.entity_id.split('.')[0]}").debug(
-                "No extra data found to restore for entity %s", self.entity_id
-            )
-            return last_sensor_state, None
-
-        # Restore all attributes.
-        logging.getLogger(f"{__package__}.{self.entity_id.split('.')[0]}").debug(
-            "Restoring entity %s", self.entity_id
-        )
-
-        def restore_rendered(self, last_sensor_data: dict[str, Any], key: str) -> None:
-            """Update self._rendered with stored value."""
-
-            try:
-                value = last_sensor_data[key]
-            except KeyError:
-                logging.getLogger(
-                    f"{__package__}.{self.entity_id.split('.')[0]}"
-                ).debug(
-                    "Did not retrieve value for attribute %s for entity %s",
-                    key,
-                    self.entity_id,
-                )
-                return
-
-            self._rendered[key] = value
-            logging.getLogger(f"{__package__}.{self.entity_id.split('.')[0]}").debug(
-                "Restored additional attribute %s with value %s for entity %s",
-                key,
-                value,
-                self.entity_id,
-            )
-
-        for key in self._to_render_simple:
-            restore_rendered(self, last_sensor_data, key)
-
-        for key in self._to_render_complex:
-            restore_rendered(self, last_sensor_data, key)
-
-        if CONF_ATTRIBUTES in last_sensor_data:
-            for key in self._config.get(CONF_ATTRIBUTES, {}):
-                try:
-                    value = last_sensor_data[CONF_ATTRIBUTES][key]
-                except KeyError:
-                    logging.getLogger(
-                        f"{__package__}.{self.entity_id.split('.')[0]}"
-                    ).debug(
-                        "Did not retrieve value for attribute %s for entity %s",
-                        key,
-                        self.entity_id,
-                    )
-                    continue
-
-                self._rendered.setdefault(CONF_ATTRIBUTES, {})
-                self._rendered[CONF_ATTRIBUTES][key] = value
-                logging.getLogger(
-                    f"{__package__}.{self.entity_id.split('.')[0]}"
-                ).debug(
-                    "Restored attribute %s with value %s for entity %s",
-                    key,
-                    value,
-                    self.entity_id,
-                )
-
-        for attribute in self.additional_data:
-            try:
-                value = last_sensor_data[attribute]
-            except KeyError:
-                logging.getLogger(
-                    f"{__package__}.{self.entity_id.split('.')[0]}"
-                ).debug(
-                    "Did not retrieve value for additional attribute %s for entity %s",
-                    attribute,
-                    self.entity_id,
-                )
-                continue
-
-            setattr(self, attribute, value)
-            logging.getLogger(f"{__package__}.{self.entity_id.split('.')[0]}").debug(
-                "Restored additional attribute %s with value %s for entity %s",
-                attribute,
-                value,
-                self.entity_id,
-            )
+        Disable saving state and re-enable again after writing state.
+        If there is any uncaught error due to faulty attribute we thus
+        ensure that this faulty attribute will not be saved.
+        """
 
         try:
-            self.async_write_ha_state()
+            self._save_extra_data = False
+            super().async_write_ha_state()
+            self._save_extra_data = True
         except (TypeError, ValueError) as exc:
             # Writing state resulted in an issue. Stop storing states for now.
-            self._save_state = False
+            self._save_extra_data = False
             logging.getLogger(f"{__package__}.{self.entity_id.split('.')[0]}").error(
-                "Restored state for entity %s results in exception: %s",
+                "Writing state to state machine for entity %s results in exception: %s",
                 self.entity_id,
                 exc,
             )
 
-        return last_sensor_state, last_sensor_data
-
-    async def async_added_to_hass(self) -> None:
-        """Handle being added to Home Assistant."""
-        await self.restore_entity()
-        await super().async_added_to_hass()
-
     @property
     def extra_restore_state_data(self) -> TriggerExtraStoredData | None:
         """Return sensor specific state data to be restored."""
-        return (
-            TriggerExtraStoredData(self, self._rendered)
-            if self.restore
-            else TriggerExtraStoredData(self, None)
+        return TriggerExtraStoredData(
+            self,
+            self._rendered,
+            self._config.get(CONF_ATTRIBUTES, {}),
+            self._extra_save_data,
         )
 
     async def async_get_last_rendered_data(self) -> dict[str, Any] | None:
         """Restore native_value and native_unit_of_measurement."""
         if (restored_last_extra_data := await self.async_get_last_extra_data()) is None:
             return None
-        return TriggerExtraStoredData(self, None).from_dict(
+        return TriggerExtraStoredData(self, {}, {}, []).from_dict(
             restored_last_extra_data.as_dict()
         )
 
@@ -375,13 +335,15 @@ class TriggerRestoreEntity(TriggerEntity, RestoreEntity):
 class TriggerExtraStoredData(ExtraStoredData):
     """Object to hold extra stored data."""
 
-    trigger_entity: TriggerRestoreEntity
-    rendered_values: dict[str, Any] | None
+    trigger_entity: TriggerEntity
+    rendered_values: dict[str, Any]
+    attributes: dict
+    extra_save_data: list
 
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the sensor data."""
 
-        if not self.trigger_entity.save_state:
+        if not self.trigger_entity.save_extra_data:
             # Only store not to restore data
             logging.getLogger(f"{__package__}").debug(
                 "Storing of data disabled for entity %s",
@@ -391,33 +353,34 @@ class TriggerExtraStoredData(ExtraStoredData):
 
         dict_values: dict[str, Any] = {}
 
-        if self.rendered_values is not None:
-            for key, value in self.rendered_values.items():
-                value = convert_attribute_to_string(value)
-                logging.getLogger(f"{__package__}").info(
-                    "Storing attribute %s with value %s for entity %s",
-                    key,
-                    value,
-                    self.trigger_entity.entity_id,
-                )
-                dict_values.update({key: value})
+        for key, value in self.rendered_values.items():
+            if key in self.attributes:
+                continue
 
-        if self.trigger_entity is not None:
-            for attribute in self.trigger_entity.additional_data:
-                try:
-                    value = convert_attribute_to_string(
-                        getattr(self.trigger_entity, attribute)
-                    )
-                except AttributeError:
-                    continue
+            value = TemplateJSONEncoder().default(value)
+            logging.getLogger(f"{__package__}").info(
+                "Storing attribute %s with value %s for entity %s",
+                key,
+                value,
+                self.trigger_entity.entity_id,
+            )
+            dict_values.update({key: value})
 
-                logging.getLogger(f"{__package__}").info(
-                    "Storing additional attribute %s with value %s for entity %s",
-                    attribute,
-                    value,
-                    self.trigger_entity.entity_id,
+        for attribute in self.extra_save_data:
+            try:
+                value = TemplateJSONEncoder().default(
+                    getattr(self.trigger_entity, attribute)
                 )
-                dict_values.update({attribute: value})
+            except AttributeError:
+                continue
+
+            logging.getLogger(f"{__package__}").info(
+                "Storing additional attribute %s with value %s for entity %s",
+                attribute,
+                value,
+                self.trigger_entity.entity_id,
+            )
+            dict_values.update({attribute: value})
 
         return dict_values
 
@@ -426,7 +389,7 @@ class TriggerExtraStoredData(ExtraStoredData):
         dict_values: dict[str, Any] = {}
 
         for key, value in restored.items():
-            value = convert_attribute_from_string(value)
+            value = TemplateJSONDecoder().default(value)
             logging.getLogger(f"{__package__}").info(
                 "Retrieved attribute %s with value %s for entity %s",
                 key,

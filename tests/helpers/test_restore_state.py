@@ -348,6 +348,30 @@ async def test_state_saved_on_remove(hass):
     assert set(state.attributes["complicated"]["value"]) == {1, 2, now.isoformat()}
 
 
+async def test_removing_invalid_entity_id(hass):
+    """Test that we save entity state on removal."""
+    entity = RestoreEntity()
+    entity.hass = hass
+    entity.entity_id = "input_boolean.b0"
+    await entity.async_internal_added_to_hass()
+
+    now = dt_util.utcnow()
+    hass.states.async_set(
+        "input_boolean.b0", "on", {"complicated": {"value": {1, 2, now}}}
+    )
+
+    data = await RestoreStateData.async_get_instance(hass)
+
+    # No last states should currently be saved
+    assert not data.last_states
+
+    data.entities.pop("input_boolean.b0")  # Remove entity.
+
+    await entity.async_remove()
+
+    assert not data.last_states
+
+
 async def test_restoring_invalid_entity_id(hass, hass_storage):
     """Test restoring invalid entity IDs."""
     entity = RestoreEntity()

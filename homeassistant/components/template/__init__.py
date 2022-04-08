@@ -3,8 +3,9 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, time, timedelta
 import logging
+from typing import Any
 
 from homeassistant import config as conf_util
 from homeassistant.const import (
@@ -16,10 +17,10 @@ from homeassistant.core import CoreState, Event, HomeAssistant, ServiceCall, cal
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     discovery,
-    restore_state,
     trigger as trigger_helper,
     update_coordinator,
 )
+from homeassistant.helpers.json import ExtendedJSONEncoder
 from homeassistant.helpers.reload import async_reload_integration_platforms
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration
@@ -49,10 +50,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         if conf is None:
             return
-
-        # Save persistent state so that upon reload it can be retrieved.
-        _LOGGER.debug("Saving %s states for reload", DOMAIN)
-        await restore_state.RestoreStateData.async_save_persistent_states(hass)
 
         await async_reload_integration_platforms(hass, DOMAIN, PLATFORMS)
 
@@ -108,46 +105,43 @@ async def _process_config(hass: HomeAssistant, hass_config: ConfigType) -> None:
         hass.data[DOMAIN] = await asyncio.gather(*coordinator_tasks)
 
 
-def convert_attribute_to_string(attribute):
-    """Convert attribute to string for storing as JSON."""
+class TemplateJSONEncoder(ExtendedJSONEncoder):
+    """Template JSONEncoder that supports Home Assistant objects."""
 
-    if isinstance(attribute, (date, datetime)):
-        attribute = {
-            "__type": str(type(attribute)),
-            "isoformat": attribute.isoformat(),
-        }
-    elif isinstance(attribute, timedelta):
-        attribute = {
-            "__type": str(type(attribute)),
-            "repr": {
-                "days": attribute.days,
-                "seconds": attribute.seconds,
-                "microseconds": attribute.microseconds,
-            },
-        }
+    def default(self, o: Any) -> Any:
+        """Convert attribute to string for storing as JSON."""
 
-    return attribute
+        if isinstance(o, datetime):
+            return {"__type": str(type(o)), "isoformat": o.isoformat()}
+        if isinstance(o, (date, time, timedelta)):
+            return super().default(o)
+
+        return o
 
 
-def convert_attribute_from_string(attribute):
-    """Convert attribute that was stored as string back into class."""
+class TemplateJSONDecoder:
+    """Template JSONDecoder that supports Home Assistant objects."""
 
-    try:
-        type_ = attribute["__type"]
-        if type_ == "<class 'datetime.datetime'>":
-            attribute = dt_util.parse_datetime(attribute["isoformat"])
-        elif type_ == "<class 'datetime.date'>":
-            attribute = dt_util.parse_date(attribute["isoformat"])
-        elif type_ == "<class 'datetime.timedelta'>":
-            attribute = timedelta(
-                days=attribute["repr"]["days"],
-                seconds=attribute["repr"]["seconds"],
-                microseconds=attribute["repr"]["microseconds"],
-            )
-    except (TypeError, KeyError):
-        pass
+    @staticmethod
+    def default(attribute: Any) -> Any:
+        """Convert attribute that was stored as string back into class."""
 
-    return attribute
+        if isinstance(attribute, dict):
+            try:
+                type_ = attribute["__type"]
+                if type_ == "<class 'datetime.datetime'>":
+                    return dt_util.parse_datetime(attribute["isoformat"])
+                if type_ == "<class 'datetime.time'>":
+                    return dt_util.parse_time(attribute["isoformat"])
+                if type_ == "<class 'datetime.date'>":
+                    return dt_util.parse_date(attribute["isoformat"])
+                if type_ == "<class 'datetime.timedelta'>":
+                    return timedelta(seconds=attribute["total_seconds"])
+
+            except (TypeError, KeyError):
+                pass
+
+        return attribute
 
 
 class TriggerUpdateCoordinator(update_coordinator.DataUpdateCoordinator):

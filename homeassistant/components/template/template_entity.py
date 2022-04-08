@@ -1,6 +1,7 @@
 """TemplateEntity utility class."""
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
 import contextlib
 from dataclasses import dataclass
@@ -28,10 +29,14 @@ from homeassistant.helpers.event import (
     TrackTemplateResult,
     async_track_template_result,
 )
-from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
+from homeassistant.helpers.restore_state import (
+    ExtraStoredData,
+    RestoreEntity,
+    RestoreStateData,
+)
 from homeassistant.helpers.template import Template, result_as_boolean
 
-from . import convert_attribute_from_string, convert_attribute_to_string
+from . import TemplateJSONDecoder, TemplateJSONEncoder
 from .const import (
     CONF_ATTRIBUTE_TEMPLATES,
     CONF_ATTRIBUTES,
@@ -218,7 +223,7 @@ class _TemplateAttribute:
         return
 
 
-class TemplateEntity(Entity):
+class TemplateEntity(RestoreEntity):
     """Entity that uses templates to calculate attributes."""
 
     _attr_available = True
@@ -237,25 +242,33 @@ class TemplateEntity(Entity):
         config=None,
         fallback_name=None,
         unique_id=None,
+        save_additional_attributes: list[str] | None = None,
+        always_save_state: bool = False,
     ):
         """Template Entity."""
-        self._template_attrs = {}
-        self._async_update = None
+        self._template_attrs: dict = {}
+        self._async_update: Callable | None = None
         self._attr_extra_state_attributes = {}
         self._self_ref_update_count = 0
         self._attr_unique_id = unique_id
+        self._save_extra_data: bool = True
+        self._extra_save_data: list = save_additional_attributes or []
+        self._always_save_state = always_save_state
+
         if config is None:
             self._attribute_templates = attribute_templates
             self._availability_template = availability_template
             self._icon_template = icon_template
             self._entity_picture_template = entity_picture_template
             self._friendly_name_template = None
+            self.restore = False
         else:
             self._attribute_templates = config.get(CONF_ATTRIBUTES)
             self._availability_template = config.get(CONF_AVAILABILITY)
             self._icon_template = config.get(CONF_ICON)
             self._entity_picture_template = config.get(CONF_PICTURE)
             self._friendly_name_template = config.get(CONF_NAME)
+            self.restore = config.get(CONF_RESTORE)
 
         # Try to render the name as it can influence the entity ID
         self._attr_name = fallback_name
@@ -279,6 +292,11 @@ class TemplateEntity(Entity):
             self._icon_template.hass = hass
             with contextlib.suppress(TemplateError):
                 self._attr_icon = self._icon_template.async_render(parse_result=False)
+
+    @property
+    def save_extra_data(self) -> bool:
+        """Return if extra attributes data is to be saved or not."""
+        return self._save_extra_data
 
     @callback
     def _update_available(self, result):
@@ -304,8 +322,22 @@ class TemplateEntity(Entity):
             self._attr_extra_state_attributes[attribute_key] = attr_result
 
         self.add_template_attribute(
-            attribute_key, attribute_template, None, _update_attribute
+            attribute_key, attribute_template, None, _update_attribute, False, False
         )
+
+    async def async_internal_added_to_hass(self) -> None:
+        """Register this entity as a restorable entity."""
+        _, data = await asyncio.gather(
+            super().async_internal_added_to_hass(),
+            RestoreStateData.async_get_instance(self.hass),
+        )
+        if not self.restore and not self._always_save_state:
+            # Remove this entity for saving state and remove from
+            # last_states if entity does not need to be restored
+            # nor does its state always have to be saved irrespective
+            # of restore.
+            data.entities.pop(self.entity_id, None)
+            data.last_states.pop(self.entity_id, None)
 
     def add_template_attribute(
         self,
@@ -314,6 +346,7 @@ class TemplateEntity(Entity):
         validator: Callable[[Any], Any] = None,
         on_update: Callable[[Any], None] | None = None,
         none_on_template_error: bool = False,
+        save_attribute: bool = True,
     ) -> None:
         """
         Call in the constructor to add a template linked to a attribute.
@@ -340,6 +373,8 @@ class TemplateEntity(Entity):
         )
         self._template_attrs.setdefault(template, [])
         self._template_attrs[template].append(template_attribute)
+        if save_attribute and not template.is_static:
+            self._extra_save_data.append(attribute)
 
     @callback
     def _handle_results(
@@ -429,83 +464,13 @@ class TemplateEntity(Entity):
         ):
             self.add_template_attribute("_attr_name", self._friendly_name_template)
 
-    async def async_added_to_hass(self) -> None:
-        """Run when entity about to be added to hass."""
-
-        self._add_all_template_attributes()
-
-        if self.hass.state == CoreState.running:
-            await self._async_template_startup()
-            return
-
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_START, self._async_template_startup
-        )
-
-    async def async_update(self) -> None:
-        """Call for forced update."""
-        self._async_update()
-
-
-class TemplateRestoreEntity(RestoreEntity, TemplateEntity):
-    """Template Entity that restores data."""
-
-    def __init__(self, *args, **kwargs) -> None:
-        """Template Restore Entity init."""
-        super().__init__(*args, **kwargs)
-        self._restore: bool = False
-        self._save_state: bool = True
-        self._additional_data: list[str] = []
-
-    def add_template_attribute(
-        self, attribute: str, template: Template, *args, **kwargs
-    ):
-        """Store attribute to allow restore and setup template."""
-
-        super().add_template_attribute(attribute, template, *args, **kwargs)
-        if not template.is_static:
-            self.add_additional_data(attribute)
-
-    @callback
-    def _handle_results(self, *args, **kwargs) -> None:
-        # Do not save state if handle result fails.
-        self._save_state = False
-        super()._handle_results(*args, **kwargs)
-        self._save_state = True
-
-    @property
-    def restore(self) -> bool:
-        """Retrieve restore."""
-        return self._restore or False
-
-    @restore.setter
-    def restore(self, restore: bool) -> None:
-        """Set restore."""
-        self._restore = restore
-
-    @property
-    def save_state(self) -> bool:
-        """Retrieve save state."""
-        return self._save_state
-
-    @property
-    def additional_data(self) -> list[str]:
-        """Return additional data list."""
-        return self._additional_data or []
-
-    def add_additional_data(self, attribute: str) -> None:
-        """Add attribute to additional data list."""
-        if not hasattr(self, "_additional_data"):
-            self._additional_data = []
-
-        self._additional_data.append(attribute)
-
     async def restore_entity(
         self,
     ) -> tuple[State | None, dict[str, Any] | None]:
         """Restore the entity."""
 
         if not self.restore:
+            _LOGGER.debug("Not restoring entity %s", self.entity_id)
             return None, None
 
         if (last_sensor_state := await self.async_get_last_state()) is None:
@@ -545,7 +510,7 @@ class TemplateRestoreEntity(RestoreEntity, TemplateEntity):
             )
             return last_sensor_state, None
 
-        for attribute in self.additional_data:
+        for attribute in self._extra_save_data:
             try:
                 value = last_sensor_data[attribute]
             except KeyError:
@@ -564,36 +529,9 @@ class TemplateRestoreEntity(RestoreEntity, TemplateEntity):
                 self.entity_id,
             )
 
-        try:
-            self.async_write_ha_state()
-        except (TypeError, ValueError) as exc:
-            # Writing state resulted in an issue. Stop storing states for now.
-            self._save_state = False
-            _LOGGER.error(
-                "Restored state for entity %s results in exception: %s",
-                self.entity_id,
-                exc,
-            )
+        self.async_write_ha_state()
 
         return (last_sensor_state, last_sensor_data)
-
-    @property
-    def extra_restore_state_data(self) -> TemplateExtraStoredData | None:
-        """Return sensor specific state data for persistent saving."""
-        return (
-            TemplateExtraStoredData(self, self.additional_data)
-            if self.restore
-            else TemplateExtraStoredData(self, [])
-        )
-
-    async def async_get_last_template_data(self) -> dict[str, Any] | None:
-        """Return the persistent saved data."""
-
-        if (restored_last_extra_data := await self.async_get_last_extra_data()) is None:
-            return None
-        return TemplateExtraStoredData(self, self.additional_data).from_dict(
-            restored_last_extra_data.as_dict()
-        )
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
@@ -610,17 +548,57 @@ class TemplateRestoreEntity(RestoreEntity, TemplateEntity):
             EVENT_HOMEASSISTANT_START, self._async_template_startup
         )
 
+    async def async_update(self) -> None:
+        """Call for forced update."""
+        if self._async_update is not None:
+            self._async_update()
+
+    def async_write_ha_state(self) -> None:
+        """Write state to state machine.
+
+        Disable saving state and re-enable again after writing state.
+        If there is any uncaught error due to faulty attribute we thus
+        ensure that this faulty attribute will not be saved.
+        """
+
+        try:
+            self._save_extra_data = False
+            super().async_write_ha_state()
+            self._save_extra_data = True
+        except (TypeError, ValueError) as exc:
+            # Writing state resulted in an issue. Stop storing states for now.
+            self._save_extra_data = False
+            _LOGGER.error(
+                "Writing state to state machine for entity %s results in exception: %s",
+                self.entity_id,
+                exc,
+            )
+
+    @property
+    def extra_restore_state_data(self) -> TemplateExtraStoredData | None:
+        """Return sensor specific state data for persistent saving."""
+        return TemplateExtraStoredData(self, self._extra_save_data)
+
+    async def async_get_last_template_data(self) -> dict[str, Any] | None:
+        """Return the persistent saved data."""
+
+        if (restored_last_extra_data := await self.async_get_last_extra_data()) is None:
+            return None
+        return TemplateExtraStoredData(self, []).from_dict(
+            restored_last_extra_data.as_dict()
+        )
+
 
 @dataclass
 class TemplateExtraStoredData(ExtraStoredData):
     """Object to hold extra stored data."""
 
-    template_entity: TemplateRestoreEntity
+    template_entity: TemplateEntity
     additional_data: list[str]
 
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the sensor data."""
-        if not self.template_entity.save_state:
+        if not self.template_entity.save_extra_data:
             # Only store not to restore data
             _LOGGER.debug(
                 "Storing of data disabled for entity %s",
@@ -631,7 +609,7 @@ class TemplateExtraStoredData(ExtraStoredData):
         store_attributes: dict[str, Any] = {}
         for attribute in self.additional_data:
             try:
-                value = convert_attribute_to_string(
+                value = TemplateJSONEncoder().default(
                     getattr(self.template_entity, attribute)
                 )
             except AttributeError:
@@ -651,7 +629,7 @@ class TemplateExtraStoredData(ExtraStoredData):
         """Initialize a stored sensor state from a dict."""
         store_attributes: dict[str, Any] = {}
         for attribute, value in restored.items():
-            value = convert_attribute_from_string(value)
+            value = TemplateJSONDecoder().default(value)
 
             _LOGGER.info(
                 "Retrieved additional attribute %s with value %s for entity %s",

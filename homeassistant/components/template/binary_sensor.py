@@ -1,7 +1,6 @@
 """Support for exposing a templated binary sensor."""
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import datetime, timedelta
 from functools import partial
 import logging
@@ -42,7 +41,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later, async_track_point_in_utc_time
-from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
@@ -192,7 +190,7 @@ async def async_setup_platform(
     )
 
 
-class BinarySensorTemplate(TemplateEntity, BinarySensorEntity, RestoreEntity):
+class BinarySensorTemplate(TemplateEntity, BinarySensorEntity):
     """A virtual binary sensor that triggers from another sensor."""
 
     def __init__(
@@ -202,7 +200,9 @@ class BinarySensorTemplate(TemplateEntity, BinarySensorEntity, RestoreEntity):
         unique_id: str | None,
     ) -> None:
         """Initialize the Template binary sensor."""
-        super().__init__(hass, config=config, unique_id=unique_id)
+        super().__init__(
+            hass, config=config, unique_id=unique_id, always_save_state=True
+        )
         if (object_id := config.get(CONF_OBJECT_ID)) is not None:
             self.entity_id = async_generate_entity_id(
                 ENTITY_ID_FORMAT, object_id, hass=hass
@@ -293,7 +293,7 @@ class BinarySensorTemplate(TemplateEntity, BinarySensorEntity, RestoreEntity):
         return self._device_class
 
 
-class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity, RestoreEntity):
+class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity):
     """Sensor entity based on trigger data."""
 
     domain = BINARY_SENSOR_DOMAIN
@@ -306,7 +306,13 @@ class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity, RestoreEntity
         config: dict,
     ) -> None:
         """Initialize the entity."""
-        super().__init__(hass, coordinator, config)
+        super().__init__(
+            hass,
+            coordinator,
+            config,
+            always_save_state=True,
+            save_additional_attributes=["_auto_off_time"],
+        )
 
         for key in (CONF_DELAY_ON, CONF_DELAY_OFF, CONF_AUTO_OFF):
             if isinstance(config.get(key), template.Template):
@@ -323,8 +329,7 @@ class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity, RestoreEntity
         await super().async_added_to_hass()
         if (
             (last_state := await self.async_get_last_state()) is not None
-            and (extra_data := await self.async_get_last_binary_sensor_data())
-            is not None
+            and (extra_data := await self.async_get_last_rendered_data()) is not None
             and last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
             # The trigger might have fired already while we waited for stored data,
             # then we should not restore state
@@ -337,7 +342,9 @@ class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity, RestoreEntity
                 return
 
             if (
-                auto_off_time := extra_data.auto_off_time
+                auto_off_time := extra_data.get(
+                    "_auto_off_time", extra_data.get("auto_off_time")
+                )
             ) is not None and auto_off_time <= dt_util.utcnow():
                 # It's already past the saved auto off time
                 self._state = False
@@ -433,55 +440,3 @@ class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity, RestoreEntity
         self._auto_off_cancel = async_track_point_in_utc_time(
             self.hass, _auto_off, self._auto_off_time
         )
-
-    @property
-    def extra_restore_state_data(self) -> AutoOffExtraStoredData:
-        """Return specific state data to be restored."""
-        return AutoOffExtraStoredData(self._auto_off_time)
-
-    async def async_get_last_binary_sensor_data(
-        self,
-    ) -> AutoOffExtraStoredData | None:
-        """Restore auto_off_time."""
-        if (restored_last_extra_data := await self.async_get_last_extra_data()) is None:
-            return None
-        return AutoOffExtraStoredData.from_dict(restored_last_extra_data.as_dict())
-
-
-@dataclass
-class AutoOffExtraStoredData(ExtraStoredData):
-    """Object to hold extra stored data."""
-
-    auto_off_time: datetime | None
-
-    def as_dict(self) -> dict[str, Any]:
-        """Return a dict representation of additional data."""
-        auto_off_time: datetime | None | dict[str, str] = self.auto_off_time
-        if isinstance(auto_off_time, datetime):
-            auto_off_time = {
-                "__type": str(type(auto_off_time)),
-                "isoformat": auto_off_time.isoformat(),
-            }
-        return {
-            "auto_off_time": auto_off_time,
-        }
-
-    @classmethod
-    def from_dict(cls, restored: dict[str, Any]) -> AutoOffExtraStoredData | None:
-        """Initialize a stored binary sensor state from a dict."""
-        try:
-            auto_off_time = restored["auto_off_time"]
-        except KeyError:
-            return None
-        try:
-            type_ = auto_off_time["__type"]
-            if type_ == "<class 'datetime.datetime'>":
-                auto_off_time = dt_util.parse_datetime(auto_off_time["isoformat"])
-        except TypeError:
-            # native_value is not a dict
-            pass
-        except KeyError:
-            # native_value is a dict, but does not have all values
-            return None
-
-        return cls(auto_off_time)

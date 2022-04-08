@@ -22,7 +22,6 @@ from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -87,7 +86,7 @@ async def async_setup_platform(
     async_add_entities(await _async_create_entities(hass, config))
 
 
-class SwitchTemplate(TemplateEntity, SwitchEntity, RestoreEntity):
+class SwitchTemplate(TemplateEntity, SwitchEntity):
     """Representation of a Template switch."""
 
     def __init__(
@@ -98,14 +97,19 @@ class SwitchTemplate(TemplateEntity, SwitchEntity, RestoreEntity):
         unique_id,
     ):
         """Initialize the Template switch."""
+        self._template = config.get(CONF_VALUE_TEMPLATE)
         super().__init__(
-            hass, config=config, fallback_name=object_id, unique_id=unique_id
+            hass,
+            config=config,
+            fallback_name=object_id,
+            unique_id=unique_id,
+            always_save_state=self._template is None,
         )
+
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, object_id, hass=hass
         )
         friendly_name = self._attr_name
-        self._template = config.get(CONF_VALUE_TEMPLATE)
         self._on_script = Script(hass, config[ON_ACTION], friendly_name, DOMAIN)
         self._off_script = Script(hass, config[OFF_ACTION], friendly_name, DOMAIN)
         self._state = False

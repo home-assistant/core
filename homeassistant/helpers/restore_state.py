@@ -241,17 +241,16 @@ class RestoreStateData:
         # When an entity is being removed from hass, store its last state. This
         # allows us to support state restoration if the entity is removed, then
         # re-added while hass is still running.
-        state = self.hass.states.get(entity_id)
-        # To fully mimic all the attribute data types when loaded from storage,
-        # we're going to serialize it to JSON and then re-load it.
-        if state is not None:
-            state = State.from_dict(_encode_complex(state.as_dict()))
-        if state is not None:
-            self.last_states[entity_id] = StoredState(
-                state, extra_data, dt_util.utcnow()
-            )
-
-        self.entities.pop(entity_id)
+        if self.entities.pop(entity_id, None) is not None:
+            state = self.hass.states.get(entity_id)
+            # To fully mimic all the attribute data types when loaded from storage,
+            # we're going to serialize it to JSON and then re-load it.
+            if state is not None:
+                state = State.from_dict(_encode_complex(state.as_dict()))
+            if state is not None:
+                self.last_states[entity_id] = StoredState(
+                    state, extra_data, dt_util.utcnow()
+                )
 
 
 def _encode(value: Any) -> Any:
