@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from abc import ABC
 from collections import OrderedDict
+import ipaddress
 from typing import Any, ClassVar, Final
 
 import voluptuous as vol
@@ -70,10 +71,18 @@ def ga_validator(value: Any) -> str | int:
 ga_list_validator = vol.All(cv.ensure_list, [ga_validator])
 
 ia_validator = vol.Any(
-    cv.matches_regex(IndividualAddress.ADDRESS_RE.pattern),
+    vol.All(str, str.strip, cv.matches_regex(IndividualAddress.ADDRESS_RE.pattern)),
     vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
     msg="value does not match pattern for KNX individual address '<area>.<line>.<device>' (eg.'1.1.100')",
 )
+
+
+def ip_v4_validator(value: Any) -> str:
+    """Validate that value is parsable as IPv4 address."""
+    try:
+        return str(ipaddress.IPv4Address(value))
+    except ipaddress.AddressValueError as ex:
+        raise vol.Invalid(f"value '{value}' is not a valid IPv4 address: {ex}") from ex
 
 
 def number_limit_sub_validator(entity_config: OrderedDict) -> OrderedDict:

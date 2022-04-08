@@ -584,7 +584,7 @@ async def test_configure_secure_knxkeys_file_not_found(hass: HomeAssistant):
         await hass.async_block_till_done()
         assert secure_knxkeys["type"] == RESULT_TYPE_FORM
         assert secure_knxkeys["errors"]
-        assert secure_knxkeys["errors"]["base"] == "file_not_found"
+        assert secure_knxkeys["errors"][CONF_KNX_KNXKEY_FILENAME] == "file_not_found"
 
 
 async def test_configure_secure_knxkeys_invalid_signature(hass: HomeAssistant):
@@ -613,7 +613,7 @@ async def test_configure_secure_knxkeys_invalid_signature(hass: HomeAssistant):
         await hass.async_block_till_done()
         assert secure_knxkeys["type"] == RESULT_TYPE_FORM
         assert secure_knxkeys["errors"]
-        assert secure_knxkeys["errors"]["base"] == "invalid_signature"
+        assert secure_knxkeys["errors"][CONF_KNX_KNXKEY_PASSWORD] == "invalid_signature"
 
 
 async def test_options_flow(
