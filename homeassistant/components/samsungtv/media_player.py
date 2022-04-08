@@ -204,7 +204,7 @@ class SamsungTVDevice(MediaPlayerEntity):
             )
 
         if self._attr_state != STATE_ON:
-            if self._dmr_device:
+            if self._dmr_device and self._dmr_device.is_subscribed:
                 await self._dmr_device.async_unsubscribe_services()
             return
 
