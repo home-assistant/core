@@ -198,6 +198,14 @@ async def async_test_stream(hass, info) -> dict[str, str]:
     """Verify that the stream is valid before we create an entity."""
     if not (stream_source := info.get(CONF_STREAM_SOURCE)):
         return {}
+    if not isinstance(stream_source, template_helper.Template):
+        stream_source = cv.template(stream_source)
+        stream_source.hass = hass
+    try:
+        stream_source = stream_source.async_render(parse_result=False)
+    except TemplateError as err:
+        _LOGGER.warning("Problem rendering template %s: %s", stream_source, err)
+        return {CONF_STREAM_SOURCE: "template_error"}
     try:
         # For RTSP streams, prefer TCP. This code is duplicated from
         # homeassistant.components.stream.__init__.py:create_stream()
