@@ -421,7 +421,7 @@ async def test_device_class(hass, yaml_config, config_entry_configs):
                 "utility_meter": {
                     "energy_bill": {
                         "source": "sensor.energy",
-                        "tariffs": ["onpeak", "midpeak", "offpeak"],
+                        "tariffs": ["onpeak", "midpeak", "offpeak", "superpeak"],
                     }
                 }
             },
@@ -436,7 +436,7 @@ async def test_device_class(hass, yaml_config, config_entry_configs):
                 "net_consumption": False,
                 "offset": 0,
                 "source": "sensor.energy",
-                "tariffs": ["onpeak", "midpeak", "offpeak"],
+                "tariffs": ["onpeak", "midpeak", "offpeak", "superpeak"],
             },
         ),
     ),
@@ -464,7 +464,7 @@ async def test_restore_state(hass, yaml_config, config_entry_config):
                 {
                     "native_value": {
                         "__type": "<class 'decimal.Decimal'>",
-                        "value": "3",
+                        "decimal_str": "3",
                     },
                     "native_unit_of_measurement": "kWh",
                     "last_reset": last_reset,
@@ -475,23 +475,37 @@ async def test_restore_state(hass, yaml_config, config_entry_config):
             (
                 State(
                     "sensor.energy_bill_midpeak",
-                    "error",
+                    "5",
+                    attributes={
+                        ATTR_STATUS: PAUSED,
+                        ATTR_LAST_RESET: last_reset,
+                        ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+                    },
                 ),
                 {
                     "native_value": {
                         "__type": "<class 'decimal.Decimal'>",
-                        "value": "dog",
+                        "decimal_str": "3",
                     },
                     "native_unit_of_measurement": "kWh",
-                    "last_reset": last_reset,
-                    "last_period": "cat",
-                    "status": "collecting",
                 },
             ),
             (
                 State(
                     "sensor.energy_bill_offpeak",
                     "6",
+                    attributes={
+                        ATTR_STATUS: COLLECTING,
+                        ATTR_LAST_RESET: last_reset,
+                        ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+                    },
+                ),
+                {},
+            ),
+            (
+                State(
+                    "sensor.energy_bill_superpeak",
+                    "error",
                     attributes={
                         ATTR_STATUS: COLLECTING,
                         ATTR_LAST_RESET: last_reset,
@@ -525,13 +539,16 @@ async def test_restore_state(hass, yaml_config, config_entry_config):
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
 
     state = hass.states.get("sensor.energy_bill_midpeak")
-    assert state.state == STATE_UNKNOWN
+    assert state.state == "5"
 
     state = hass.states.get("sensor.energy_bill_offpeak")
     assert state.state == "6"
     assert state.attributes.get("status") == COLLECTING
     assert state.attributes.get("last_reset") == last_reset
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
+
+    state = hass.states.get("sensor.energy_bill_superpeak")
+    assert state.state == STATE_UNKNOWN
 
     # utility_meter is loaded, now set sensors according to utility_meter:
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)

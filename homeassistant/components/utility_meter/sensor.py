@@ -254,9 +254,6 @@ class UtilitySensorExtraStoredData(SensorExtraStoredData):
             last_period: Decimal = Decimal(restored["last_period"])
             last_reset: datetime | None = dt_util.parse_datetime(restored["last_reset"])
             status: str = restored["status"]
-        except TypeError:
-            # restored is not a dict
-            return None
         except KeyError:
             # restored is a dict, but does not have all values
             return None
