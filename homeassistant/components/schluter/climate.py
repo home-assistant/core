@@ -11,12 +11,12 @@ from homeassistant.components.climate import (
     SCAN_INTERVAL,
     TEMP_CELSIUS,
     ClimateEntity,
+    ClimateEntityFeature,
 )
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
     HVAC_MODE_HEAT,
-    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
@@ -80,18 +80,14 @@ async def async_setup_platform(
 class SchluterThermostat(CoordinatorEntity, ClimateEntity):
     """Representation of a Schluter thermostat."""
 
+    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+
     def __init__(self, coordinator, serial_number, api, session_id):
         """Initialize the thermostat."""
         super().__init__(coordinator)
         self._serial_number = serial_number
         self._api = api
         self._session_id = session_id
-        self._support_flags = SUPPORT_TARGET_TEMPERATURE
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return self._support_flags
 
     @property
     def unique_id(self):

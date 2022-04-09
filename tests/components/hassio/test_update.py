@@ -25,7 +25,11 @@ def mock_all(aioclient_mock, request):
         "http://127.0.0.1/info",
         json={
             "result": "ok",
-            "data": {"supervisor": "222", "homeassistant": "0.110.0", "hassos": None},
+            "data": {
+                "supervisor": "222",
+                "homeassistant": "0.110.0",
+                "hassos": "1.2.3",
+            },
         },
     )
     aioclient_mock.get(
@@ -133,6 +137,7 @@ def mock_all(aioclient_mock, request):
     aioclient_mock.get(
         "http://127.0.0.1/ingress/panels", json={"result": "ok", "data": {"panels": {}}}
     )
+    aioclient_mock.post("http://127.0.0.1/refresh_updates", json={"result": "ok"})
 
 
 @pytest.mark.parametrize(
@@ -482,3 +487,25 @@ async def test_not_release_notes(hass, aioclient_mock, hass_ws_client):
     )
     result = await client.receive_json()
     assert result["result"] is None
+
+
+async def test_no_os_entity(hass):
+    """Test handling where there is no os entity."""
+    with patch.dict(os.environ, MOCK_ENVIRON), patch(
+        "homeassistant.components.hassio.HassIO.get_info",
+        return_value={
+            "supervisor": "222",
+            "homeassistant": "0.110.0",
+            "hassos": None,
+        },
+    ):
+        result = await async_setup_component(
+            hass,
+            "hassio",
+            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+        )
+        assert result
+    await hass.async_block_till_done()
+
+    # Verify that the entity does not exist
+    assert not hass.states.get("update.home_assistant_operating_system_update")

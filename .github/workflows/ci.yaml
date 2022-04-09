@@ -155,7 +155,7 @@ jobs:
         uses: actions/checkout@v3.0.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v3.0.0
+        uses: actions/setup-python@v3.1.1
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: Generate partial Python venv restore key
@@ -235,7 +235,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v3.0.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v3.0.0
+        uses: actions/setup-python@v3.1.1
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -285,7 +285,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v3.0.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v3.0.0
+        uses: actions/setup-python@v3.1.1
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -336,7 +336,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v3.0.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v3.0.0
+        uses: actions/setup-python@v3.1.1
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -378,7 +378,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v3.0.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v3.0.0
+        uses: actions/setup-python@v3.1.1
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -435,10 +435,18 @@ jobs:
           . venv/bin/activate
           pre-commit run --hook-stage manual check-json --all-files
 
-      - name: Run prettier
+      - name: Run prettier (fully)
+        if: needs.changes.outputs.test_full_suite == 'true'
         run: |
           . venv/bin/activate
           pre-commit run --hook-stage manual prettier --all-files
+
+      - name: Run prettier (partially)
+        if: needs.changes.outputs.test_full_suite == 'false'
+        shell: bash
+        run: |
+          . venv/bin/activate
+          pre-commit run --hook-stage manual prettier --files {homeassistant,tests}/components/${{ needs.changes.outputs.integrations_glob }}/**/*
 
       - name: Register check executables problem matcher
         run: |
@@ -517,7 +525,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v3.0.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v3.0.0
+        uses: actions/setup-python@v3.1.1
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -840,9 +848,9 @@ jobs:
         uses: actions/download-artifact@v2
       - name: Upload coverage to Codecov (full coverage)
         if: needs.changes.outputs.test_full_suite == 'true'
-        uses: codecov/codecov-action@v2.1.0
+        uses: codecov/codecov-action@v3.0.0
         with:
           flags: full-suite
       - name: Upload coverage to Codecov (partial coverage)
         if: needs.changes.outputs.test_full_suite == 'false'
-        uses: codecov/codecov-action@v2.1.0
+        uses: codecov/codecov-action@v3.0.0

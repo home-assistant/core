@@ -6,9 +6,11 @@ import logging
 
 import async_timeout
 from herepy import NoRouteFoundError, RouteMode, RoutingApi, RoutingResponse
+import voluptuous as vol
 
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_UNIT_SYSTEM_IMPERIAL, Platform
 from homeassistant.core import HomeAssistant
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.location import find_coordinates
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt
@@ -64,32 +66,13 @@ class HereTravelTimeDataUpdateCoordinator(DataUpdateCoordinator):
 
     def _update(self) -> HERERoutingData | None:
         """Get the latest data from the HERE Routing API."""
-        if self.config.origin_entity_id is not None:
-            origin = find_coordinates(self.hass, self.config.origin_entity_id)
-        else:
-            origin = self.config.origin
-
-        if self.config.destination_entity_id is not None:
-            destination = find_coordinates(self.hass, self.config.destination_entity_id)
-        else:
-            destination = self.config.destination
-        if destination is not None and origin is not None:
-            here_formatted_destination = destination.split(",")
-            here_formatted_origin = origin.split(",")
-            arrival: str | None = None
-            departure: str | None = None
-            if self.config.arrival is not None:
-                arrival = convert_time_to_isodate(self.config.arrival)
-            if self.config.departure is not None:
-                departure = convert_time_to_isodate(self.config.departure)
-
-            if arrival is None and departure is None:
-                departure = "now"
+        try:
+            origin, destination, arrival, departure = self._prepare_parameters()
 
             _LOGGER.debug(
                 "Requesting route for origin: %s, destination: %s, route_mode: %s, mode: %s, traffic_mode: %s, arrival: %s, departure: %s",
-                here_formatted_origin,
-                here_formatted_destination,
+                origin,
+                destination,
                 RouteMode[self.config.route_mode],
                 RouteMode[self.config.travel_mode],
                 RouteMode[TRAFFIC_MODE_ENABLED],
@@ -98,8 +81,8 @@ class HereTravelTimeDataUpdateCoordinator(DataUpdateCoordinator):
             )
 
             response: RoutingResponse = self._api.public_transport_timetable(
-                here_formatted_origin,
-                here_formatted_destination,
+                origin,
+                destination,
                 True,
                 [
                     RouteMode[self.config.route_mode],
@@ -137,13 +120,59 @@ class HereTravelTimeDataUpdateCoordinator(DataUpdateCoordinator):
                     ATTR_DURATION_IN_TRAFFIC: traffic_time / 60,
                     ATTR_DISTANCE: distance,
                     ATTR_ROUTE: response.route_short,
-                    ATTR_ORIGIN: ",".join(here_formatted_origin),
-                    ATTR_DESTINATION: ",".join(here_formatted_destination),
+                    ATTR_ORIGIN: ",".join(origin),
+                    ATTR_DESTINATION: ",".join(destination),
                     ATTR_ORIGIN_NAME: waypoint[0]["mappedRoadName"],
                     ATTR_DESTINATION_NAME: waypoint[1]["mappedRoadName"],
                 }
             )
+        except InvalidCoordinatesException as ex:
+            _LOGGER.error("Could not call HERE api: %s", ex)
         return None
+
+    def _prepare_parameters(
+        self,
+    ) -> tuple[list[str], list[str], str | None, str | None]:
+        """Prepare parameters for the HERE api."""
+
+        if self.config.origin_entity_id is not None:
+            origin = find_coordinates(self.hass, self.config.origin_entity_id)
+        else:
+            origin = self.config.origin
+
+        if self.config.destination_entity_id is not None:
+            destination = find_coordinates(self.hass, self.config.destination_entity_id)
+        else:
+            destination = self.config.destination
+        if destination is None:
+            raise InvalidCoordinatesException("Destination must be configured")
+        try:
+            here_formatted_destination = destination.split(",")
+            vol.Schema(cv.gps(here_formatted_destination))
+        except (vol.Invalid) as ex:
+            raise InvalidCoordinatesException(
+                f"{destination} are not valid coordinates"
+            ) from ex
+        if origin is None:
+            raise InvalidCoordinatesException("Origin must be configured")
+        try:
+            here_formatted_origin = origin.split(",")
+            vol.Schema(cv.gps(here_formatted_origin))
+        except (AttributeError, vol.Invalid) as ex:
+            raise InvalidCoordinatesException(
+                f"{origin} are not valid coordinates"
+            ) from ex
+        arrival: str | None = None
+        departure: str | None = None
+        if self.config.arrival is not None:
+            arrival = convert_time_to_isodate(self.config.arrival)
+        if self.config.departure is not None:
+            departure = convert_time_to_isodate(self.config.departure)
+
+        if arrival is None and departure is None:
+            departure = "now"
+
+        return (here_formatted_origin, here_formatted_destination, arrival, departure)
 
 
 def build_hass_attribution(source_attribution: dict) -> str | None:
@@ -164,3 +193,7 @@ def convert_time_to_isodate(simple_time: time) -> str:
     if combined < datetime.now():
         combined = combined + timedelta(days=1)
     return combined.isoformat()
+
+
+class InvalidCoordinatesException(Exception):
+    """Coordinates for origin or destination are malformed."""

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import ValuesView
 from typing import Any
 
 from pydeconz.light import Lock
@@ -28,11 +27,12 @@ async def async_setup_entry(
     gateway.entities[DOMAIN] = set()
 
     @callback
-    def async_add_lock_from_light(
-        lights: list[Lock] | ValuesView[Lock] = gateway.api.lights.values(),
-    ) -> None:
+    def async_add_lock_from_light(lights: list[Lock] | None = None) -> None:
         """Add lock from deCONZ."""
         entities = []
+
+        if lights is None:
+            lights = list(gateway.api.lights.locks.values())
 
         for light in lights:
 
@@ -54,11 +54,12 @@ async def async_setup_entry(
     )
 
     @callback
-    def async_add_lock_from_sensor(
-        sensors: list[DoorLock] | ValuesView[DoorLock] = gateway.api.sensors.values(),
-    ) -> None:
+    def async_add_lock_from_sensor(sensors: list[DoorLock] | None = None) -> None:
         """Add lock from deCONZ."""
         entities = []
+
+        if sensors is None:
+            sensors = list(gateway.api.sensors.door_lock.values())
 
         for sensor in sensors:
 

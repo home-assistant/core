@@ -42,7 +42,7 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
-    SUPPORT_TARGET_TEMPERATURE,
+    ClimateEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE
@@ -112,7 +112,7 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
         super().__init__(coordinator, entry, system_zone_id, zone_data)
         self._attr_name = f"{zone_data[AZD_NAME]}"
         self._attr_unique_id = f"{entry.entry_id}_{system_zone_id}"
-        self._attr_supported_features = SUPPORT_TARGET_TEMPERATURE
+        self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
         self._attr_target_temperature_step = API_TEMPERATURE_STEP
         self._attr_max_temp = self.get_zone_value(AZD_TEMP_MAX)
         self._attr_min_temp = self.get_zone_value(AZD_TEMP_MIN)

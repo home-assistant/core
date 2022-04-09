@@ -10,7 +10,7 @@ from pymfy.api.devices.thermostat import (
     Thermostat,
 )
 
-from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
 from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
@@ -18,8 +18,6 @@ from homeassistant.components.climate.const import (
     PRESET_AWAY,
     PRESET_HOME,
     PRESET_SLEEP,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
@@ -69,6 +67,10 @@ async def async_setup_entry(
 class SomfyClimate(SomfyEntity, ClimateEntity):
     """Representation of a Somfy thermostat device."""
 
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+    )
+
     def __init__(self, coordinator, device_id):
         """Initialize the Somfy device."""
         super().__init__(coordinator, device_id)
@@ -78,11 +80,6 @@ class SomfyClimate(SomfyEntity, ClimateEntity):
     def _create_device(self):
         """Update the device with the latest data."""
         self._climate = Thermostat(self.device, self.coordinator.client)
-
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
     @property
     def temperature_unit(self):

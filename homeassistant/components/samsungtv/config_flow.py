@@ -469,6 +469,13 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self._async_set_unique_id_from_udn()
         self._async_update_and_abort_for_matching_unique_id()
         self._async_abort_if_host_already_in_progress()
+        if self._method == METHOD_LEGACY and discovery_info.ssdp_st in (
+            UPNP_SVC_RENDERING_CONTROL,
+            UPNP_SVC_MAIN_TV_AGENT,
+        ):
+            # The UDN we use for the unique id cannot be determined
+            # from device_info for legacy devices
+            return self.async_abort(reason="not_supported")
         self.context["title_placeholders"] = {"device": self._title}
         return await self.async_step_confirm()
 

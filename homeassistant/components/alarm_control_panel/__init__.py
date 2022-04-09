@@ -28,6 +28,11 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (  # noqa: F401
+    ATTR_CHANGED_BY,
+    ATTR_CODE_ARM_REQUIRED,
+    DOMAIN,
+    FORMAT_NUMBER,
+    FORMAT_TEXT,
     SUPPORT_ALARM_ARM_AWAY,
     SUPPORT_ALARM_ARM_CUSTOM_BYPASS,
     SUPPORT_ALARM_ARM_HOME,
@@ -39,13 +44,7 @@ from .const import (  # noqa: F401
 
 _LOGGER: Final = logging.getLogger(__name__)
 
-DOMAIN: Final = "alarm_control_panel"
 SCAN_INTERVAL: Final = timedelta(seconds=30)
-ATTR_CHANGED_BY: Final = "changed_by"
-FORMAT_TEXT: Final = "text"
-FORMAT_NUMBER: Final = "number"
-ATTR_CODE_ARM_REQUIRED: Final = "code_arm_required"
-
 ENTITY_ID_FORMAT: Final = DOMAIN + ".{}"
 
 ALARM_SERVICE_SCHEMA: Final = make_entity_service_schema(

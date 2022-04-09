@@ -209,6 +209,20 @@ class UpdateEntity(RestoreEntity):
         return EntityCategory.DIAGNOSTIC
 
     @property
+    def entity_picture(self) -> str | None:
+        """Return the entity picture to use in the frontend.
+
+        Update entities return the brand icon based on the integration
+        domain by default.
+        """
+        if self.platform is None:
+            return None
+
+        return (
+            f"https://brands.home-assistant.io/_/{self.platform.platform_name}/icon.png"
+        )
+
+    @property
     def in_progress(self) -> bool | int | None:
         """Update installation progress.
 
@@ -313,13 +327,15 @@ class UpdateEntity(RestoreEntity):
 
         if latest_version == self.__skipped_version:
             return STATE_OFF
+        if latest_version == installed_version:
+            return STATE_OFF
 
         try:
             newer = AwesomeVersion(latest_version) > installed_version
             return STATE_ON if newer else STATE_OFF
         except AwesomeVersionCompareException:
-            # Can't compare versions, fallback to exact match
-            return STATE_OFF if latest_version == installed_version else STATE_ON
+            # Can't compare versions, already tried exact match
+            return STATE_ON
 
     @final
     @property

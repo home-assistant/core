@@ -227,6 +227,27 @@ async def test_state(hass, yaml_config, config_entry_config):
 
 
 @pytest.mark.parametrize(
+    "yaml_config",
+    (
+        (
+            {
+                "utility_meter": {
+                    "energy_bill": {
+                        "source": "sensor.energy",
+                        "tariffs": ["onpeak", "onpeak"],
+                    }
+                }
+            },
+            None,
+        ),
+    ),
+)
+async def test_not_unique_tariffs(hass, yaml_config):
+    """Test utility sensor state initializtion."""
+    assert not await async_setup_component(hass, DOMAIN, yaml_config)
+
+
+@pytest.mark.parametrize(
     "yaml_config,config_entry_config",
     (
         (
