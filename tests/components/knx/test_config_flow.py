@@ -150,6 +150,26 @@ async def test_routing_setup_advanced(hass: HomeAssistant) -> None:
     assert result2["step_id"] == "routing"
     assert not result2["errors"]
 
+    # invalid user input
+    result_invalid_input = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        {
+            CONF_KNX_MCAST_GRP: "no_mcast_group",
+            CONF_KNX_MCAST_PORT: 3675,
+            CONF_KNX_INDIVIDUAL_ADDRESS: "not_a_valid_address",
+            CONF_KNX_LOCAL_IP: "no_local_ip",
+        },
+    )
+    await hass.async_block_till_done()
+    assert result_invalid_input["type"] == RESULT_TYPE_FORM
+    assert result_invalid_input["step_id"] == "routing"
+    assert result_invalid_input["errors"] == {
+        CONF_KNX_MCAST_GRP: "invalid_ip_address",
+        CONF_KNX_INDIVIDUAL_ADDRESS: "invalid_individual_address",
+        CONF_KNX_LOCAL_IP: "invalid_ip_address",
+    }
+
+    # valid user input
     with patch(
         "homeassistant.components.knx.async_setup_entry",
         return_value=True,
@@ -297,6 +317,36 @@ async def test_tunneling_setup_for_local_ip(hass: HomeAssistant) -> None:
     assert result2["step_id"] == "manual_tunnel"
     assert not result2["errors"]
 
+    # invalid host ip address
+    result_invalid_host = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        {
+            CONF_KNX_TUNNELING_TYPE: CONF_KNX_LABEL_TUNNELING_UDP,
+            CONF_HOST: "asdf",
+            CONF_PORT: 3675,
+            CONF_KNX_LOCAL_IP: "192.168.1.112",
+        },
+    )
+    await hass.async_block_till_done()
+    assert result_invalid_host["type"] == RESULT_TYPE_FORM
+    assert result_invalid_host["step_id"] == "manual_tunnel"
+    assert result_invalid_host["errors"] == {CONF_HOST: "invalid_ip_address"}
+    # invalid local ip address
+    result_invalid_local = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        {
+            CONF_KNX_TUNNELING_TYPE: CONF_KNX_LABEL_TUNNELING_UDP,
+            CONF_HOST: "192.168.0.2",
+            CONF_PORT: 3675,
+            CONF_KNX_LOCAL_IP: "asdf",
+        },
+    )
+    await hass.async_block_till_done()
+    assert result_invalid_local["type"] == RESULT_TYPE_FORM
+    assert result_invalid_local["step_id"] == "manual_tunnel"
+    assert result_invalid_local["errors"] == {CONF_KNX_LOCAL_IP: "invalid_ip_address"}
+
+    # valid user input
     with patch(
         "homeassistant.components.knx.async_setup_entry",
         return_value=True,
