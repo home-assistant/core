@@ -91,7 +91,7 @@ aio_geojson_geonetnz_volcano==0.6
 aio_geojson_nsw_rfs_incidents==0.4
 
 # homeassistant.components.gdacs
-aio_georss_gdacs==0.5
+aio_georss_gdacs==0.7
 
 # homeassistant.components.airzone
 aioairzone==0.3.3
