@@ -54,8 +54,5 @@
       "modelDescription": "UniFi Dream Machine SE"
     }
   ],
-  "loggers": [
-    "pyunifiprotect",
-    "unifi_discovery"
-  ]
+  "loggers": ["pyunifiprotect", "unifi_discovery"]
 }
