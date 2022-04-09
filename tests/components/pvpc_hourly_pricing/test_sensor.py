@@ -64,7 +64,11 @@ async def test_multi_sensor_migration(
     with caplog.at_level(logging.WARNING):
         with freeze_time(mock_data["return_time"]):
             assert await hass.config_entries.async_setup(config_entry_1.entry_id)
-            assert len(caplog.messages) == 2
+            assert any("Migrating PVPC" in message for message in caplog.messages)
+            assert any(
+                "Old PVPC Sensor sensor.test_pvpc_2 is removed" in message
+                for message in caplog.messages
+            )
 
             # check migration with removal of extra sensors
             assert len(entity_reg.entities) == 1
