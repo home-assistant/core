@@ -11,7 +11,7 @@ from aiohttp.hdrs import AUTHORIZATION
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.components.scene import Scene
+from homeassistant.components.scene import ATTR_TRANSITION, Scene
 from homeassistant.const import CONF_PLATFORM, CONF_TIMEOUT, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -68,6 +68,19 @@ async def async_setup_platform(
     _LOGGER.error("HTTP error %d on %s", scenes_resp.status, url)
 
 
+def map_to_lifx_request(service_args):
+    """Map options from home assistant service call to lifx request."""
+    body = {}
+
+    if (
+        ATTR_TRANSITION in service_args
+        and service_args.get(ATTR_TRANSITION) is not None
+    ):
+        body["duration"] = service_args.get(ATTR_TRANSITION)
+
+    return body
+
+
 class LifxCloudScene(Scene):
     """Representation of a LIFX Cloud scene."""
 
@@ -91,7 +104,9 @@ class LifxCloudScene(Scene):
         try:
             httpsession = async_get_clientsession(self.hass)
             async with async_timeout.timeout(self._timeout):
-                await httpsession.put(url, headers=self._headers)
+                await httpsession.put(
+                    url, headers=self._headers, json=map_to_lifx_request(kwargs)
+                )
 
         except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.exception("Error on %s", url)
