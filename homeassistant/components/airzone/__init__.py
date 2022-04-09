@@ -65,7 +65,7 @@ class AirzoneEntity(CoordinatorEntity[AirzoneUpdateCoordinator]):
         return value
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry):
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Migrate old entry."""
     _LOGGER.debug("Migrating from version %s", config_entry.version)
 
