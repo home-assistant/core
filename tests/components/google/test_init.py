@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 import datetime
+import time
 from typing import Any
 from unittest.mock import Mock, call, patch
 
@@ -29,6 +30,7 @@ from .conftest import (
 )
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 # Typing helpers
 HassApi = Callable[[], Awaitable[dict[str, Any]]]
@@ -469,3 +471,37 @@ async def test_scan_calendars(
     assert state
     assert state.name == "Calendar 2"
     assert state.state == STATE_OFF
+
+
+@pytest.mark.parametrize(
+    "config_entry_token_expiry", [datetime.datetime.max.timestamp() + 1]
+)
+async def test_invalid_token_expiry_in_config_entry(
+    hass: HomeAssistant,
+    component_setup: ComponentSetup,
+    setup_config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Exercise case in issue #69623 with invalid token expiration persisted."""
+
+    # The token is refreshed and new expiration values are returned
+    expires_in = 86400
+    expires_at = time.time() + expires_in
+    aioclient_mock.post(
+        "https://oauth2.googleapis.com/token",
+        json={
+            "refresh_token": "some-refresh-token",
+            "access_token": "some-updated-token",
+            "expires_at": expires_at,
+            "expires_in": expires_in,
+        },
+    )
+
+    assert await component_setup()
+
+    # Verify token expiration values are updated
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].state is ConfigEntryState.LOADED
+    assert entries[0].data["token"]["access_token"] == "some-updated-token"
+    assert entries[0].data["token"]["expires_in"] == expires_in
