@@ -33,9 +33,7 @@ from .conftest import (
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
-EXPIRED_TOKEN_TIMESTAMP = (
-    datetime.datetime.now() + datetime.timedelta(minutes=-5)
-).timestamp()
+EXPIRED_TOKEN_TIMESTAMP = datetime.datetime(2022, 4, 8).timestamp()
 
 # Typing helpers
 HassApi = Callable[[], Awaitable[dict[str, Any]]]
