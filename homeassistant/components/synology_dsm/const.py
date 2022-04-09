@@ -6,14 +6,12 @@ from dataclasses import dataclass
 from synology_dsm.api.core.security import SynoCoreSecurity
 from synology_dsm.api.core.upgrade import SynoCoreUpgrade
 from synology_dsm.api.storage.storage import SynoStorage
-from synology_dsm.api.surveillance_station import SynoSurveillanceStation
 from synology_dsm.api.surveillance_station.const import SNAPSHOT_PROFILE_BALANCED
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntityDescription,
 )
-from homeassistant.components.switch import SwitchEntityDescription
 from homeassistant.const import Platform
 from homeassistant.helpers.entity import EntityCategory, EntityDescription
 
@@ -82,13 +80,6 @@ class SynologyDSMBinarySensorEntityDescription(
     """Describes Synology DSM binary sensor entity."""
 
 
-@dataclass
-class SynologyDSMSwitchEntityDescription(
-    SwitchEntityDescription, SynologyDSMEntityDescription
-):
-    """Describes Synology DSM switch entity."""
-
-
 # Binary sensors
 UPGRADE_BINARY_SENSORS: tuple[SynologyDSMBinarySensorEntityDescription, ...] = (
     SynologyDSMBinarySensorEntityDescription(
@@ -125,15 +116,5 @@ STORAGE_DISK_BINARY_SENSORS: tuple[SynologyDSMBinarySensorEntityDescription, ...
         name="Below Min Remaining Life",
         device_class=BinarySensorDeviceClass.SAFETY,
         entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-)
-
-# Switch
-SURVEILLANCE_SWITCH: tuple[SynologyDSMSwitchEntityDescription, ...] = (
-    SynologyDSMSwitchEntityDescription(
-        api_key=SynoSurveillanceStation.HOME_MODE_API_KEY,
-        key="home_mode",
-        name="Home Mode",
-        icon="mdi:home-account",
     ),
 )
