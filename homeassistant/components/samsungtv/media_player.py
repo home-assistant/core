@@ -214,13 +214,19 @@ class SamsungTVDevice(MediaPlayerEntity):
             )
 
         if self._attr_state != STATE_ON:
+            if self._dmr_device and self._dmr_device.is_subscribed:
+                await self._dmr_device.async_unsubscribe_services()
             return
 
-        startup_tasks: list[Coroutine[Any, Any, None]] = []
+        startup_tasks: list[Coroutine[Any, Any, Any]] = []
 
         if not self._app_list_event.is_set():
             startup_tasks.append(self._async_startup_app_list())
 
+        if self._dmr_device and not self._dmr_device.is_subscribed:
+            startup_tasks.append(
+                self._dmr_device.async_subscribe_services(auto_resubscribe=True)
+            )
         if not self._dmr_device and self._ssdp_rendering_control_location:
             startup_tasks.append(self._async_startup_dmr())
 
