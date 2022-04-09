@@ -132,7 +132,7 @@ async def token_scopes() -> list[str]:
 
 
 @pytest.fixture
-async def token_expiry() -> datetime.datetime:
+def token_expiry() -> datetime.datetime:
     """Expiration time for credentials used in the test."""
     return utcnow() + datetime.timedelta(days=7)
 
