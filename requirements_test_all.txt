@@ -249,7 +249,7 @@ amberelectric==1.0.4
 ambiclimate==0.2.1
 
 # homeassistant.components.androidtv
-androidtv[async]==0.0.66
+androidtv[async]==0.0.67
 
 # homeassistant.components.apprise
 apprise==0.9.7
