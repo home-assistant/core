@@ -60,7 +60,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(CONF_HOST): str,
                     vol.Required(CONF_PORT, default=DEFAULT_LOCAL_API_PORT): int,
-                    vol.Optional(CONF_ID, default=DEFAULT_SYSTEM_ID): int,
+                    vol.Required(CONF_ID, default=DEFAULT_SYSTEM_ID): int,
                 }
             ),
             errors=errors,
