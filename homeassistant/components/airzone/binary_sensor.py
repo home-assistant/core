@@ -10,7 +10,6 @@ from aioairzone.const import (
     AZD_ERRORS,
     AZD_FLOOR_DEMAND,
     AZD_NAME,
-    AZD_POWER,
     AZD_PROBLEMS,
     AZD_SYSTEMS,
     AZD_ZONES,
@@ -39,11 +38,6 @@ class AirzoneBinarySensorEntityDescription(BinarySensorEntityDescription):
 
 
 SYSTEM_BINARY_SENSOR_TYPES: Final[tuple[AirzoneBinarySensorEntityDescription, ...]] = (
-    AirzoneBinarySensorEntityDescription(
-        device_class=BinarySensorDeviceClass.POWER,
-        key=AZD_POWER,
-        name="Power",
-    ),
     AirzoneBinarySensorEntityDescription(
         attributes={
             "errors": AZD_ERRORS,

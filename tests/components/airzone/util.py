@@ -155,7 +155,7 @@ HVAC_SYSTEMS_MOCK = {
     API_SYSTEMS: [
         {
             API_SYSTEM_ID: 1,
-            API_POWER: 1,
+            API_POWER: 0,
             API_SYSTEM_FIRMWARE: "3.31",
             API_SYSTEM_TYPE: 1,
         }
