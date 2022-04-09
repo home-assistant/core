@@ -1,10 +1,13 @@
 """Support for Lidarr."""
 from __future__ import annotations
 
+from collections.abc import Callable
+from copy import deepcopy
+from dataclasses import dataclass
 from datetime import datetime
-from typing import cast
+from typing import Any
 
-from aiopyarr import Diskspace, LidarrQueueItem
+from aiopyarr import LidarrQueueItem
 from aiopyarr.models.lidarr import LidarrAlbum, LidarrCalendar
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
@@ -18,42 +21,51 @@ from . import LidarrEntity
 from .const import BYTE_SIZES, DEFAULT_NAME, DOMAIN
 from .coordinator import LidarrDataUpdateCoordinator
 
-SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
+
+@dataclass
+class LidarrSensorEntityDescription(SensorEntityDescription):
+    """Class to describe a Lidarr sensor."""
+
+    value: Callable[[LidarrDataUpdateCoordinator, str], Any] = lambda val, _: val
+
+
+SENSOR_TYPES: tuple[LidarrSensorEntityDescription, ...] = (
+    LidarrSensorEntityDescription(
         key="commands",
         name="Commands",
         native_unit_of_measurement="Commands",
         icon="mdi:code-braces",
+        value=lambda coordinator, _: coordinator.commands,
     ),
-    SensorEntityDescription(
+    LidarrSensorEntityDescription(
         key="diskspace",
         name="Disk Space",
         native_unit_of_measurement=DATA_GIGABYTES,
         icon="mdi:harddisk",
+        value=lambda coordinator, name: get_space(  # pylint:disable=unnecessary-lambda
+            coordinator, name
+        ),
     ),
-    SensorEntityDescription(
+    LidarrSensorEntityDescription(
         key="queue",
         name="Queue",
         native_unit_of_measurement="Albums",
         icon="mdi:music",
+        value=lambda coordinator, _: coordinator.queue.totalRecords,
     ),
-    SensorEntityDescription(
+    LidarrSensorEntityDescription(
         key="status",
         name="Status",
         native_unit_of_measurement="Status",
         icon="mdi:information",
+        value=lambda coordinator, _: coordinator.system_status.version,
     ),
-    SensorEntityDescription(
+    LidarrSensorEntityDescription(
         key="wanted",
         name="Wanted",
         native_unit_of_measurement="Albums",
         icon="mdi:music",
-    ),
-    SensorEntityDescription(
-        key="upcoming",
-        name="Upcoming",
-        native_unit_of_measurement="Albums",
-        icon="mdi:music",
+        value=lambda coordinator, _: coordinator.wanted.totalRecords,
     ),
 )
 
@@ -66,58 +78,64 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Lidarr sensors based on a config entry."""
-    async_add_entities(
-        LidarrSensor(hass.data[DOMAIN][entry.entry_id], description)
-        for description in SENSOR_TYPES
-    )
+    coordinator: LidarrDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    entities = []
+    for description in SENSOR_TYPES:
+        if description.key == "diskspace":
+            for mount in coordinator.disk_space:
+                desc = deepcopy(description)
+                name = mount.path.rsplit("/")[-1].rsplit("\\")[-1]
+                desc.key = f"{description.key}_{name}"
+                desc.name = f"{description.name} {name.capitalize()}"
+                entities.append(LidarrSensor(coordinator, desc, name))
+        else:
+            entities.append(LidarrSensor(coordinator, description))
+    async_add_entities(entities)
 
 
 class LidarrSensor(LidarrEntity, SensorEntity):
     """Implementation of the Lidarr sensor."""
 
-    coordinator: LidarrDataUpdateCoordinator
+    entity_description: LidarrSensorEntityDescription
 
     def __init__(
         self,
         coordinator: LidarrDataUpdateCoordinator,
-        description: SensorEntityDescription,
+        description: LidarrSensorEntityDescription,
+        ext_name: str = "",
     ) -> None:
         """Create Lidarr entity."""
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_name = f"{DEFAULT_NAME} {description.name}"
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
+        self.ext_name = ext_name
 
     @property
-    def extra_state_attributes(self) -> dict[str, StateType | datetime]:
+    def extra_state_attributes(self) -> dict[str, StateType | datetime] | None:
         """Return the state attributes of the sensor."""
-        if self.entity_description.key == "commands":
-            return {c.name: c.status for c in self.coordinator.commands}
-        if self.entity_description.key == "diskspace":
-            return {m.path: mnt_str(m) for m in self.coordinator.disk_space}
         if self.entity_description.key == "queue":
             return {i.title: queue_str(i) for i in self.coordinator.queue.records}
         if self.entity_description.key == "status":
             return self.coordinator.system_status.attributes
-        if self.entity_description.key == "upcoming":
-            return to_attr(self.coordinator.calendar)
-        return to_attr(self.coordinator.wanted.records)
+        if self.entity_description.key == "wanted":
+            return to_attr(self.coordinator.wanted.records)
+        return None
 
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        if self.entity_description.key == "commands":
-            return len(self.coordinator.commands)
-        if self.entity_description.key == "diskspace":
-            fre = sum(m.freeSpace for m in self.coordinator.disk_space)
-            return f"{to_unit(fre, cast(str, self.native_unit_of_measurement)):.2f}"
-        if self.entity_description.key == "queue":
-            return self.coordinator.queue.totalRecords
-        if self.entity_description.key == "status":
-            return self.coordinator.system_status.version
-        if self.entity_description.key == "upcoming":
-            return len(self.coordinator.calendar)
-        return self.coordinator.wanted.totalRecords
+        return self.entity_description.value(self.coordinator, self.ext_name)
+
+
+def get_space(coordinator: LidarrDataUpdateCoordinator, name: str) -> str:
+    """Get space."""
+    space = [
+        mount.freeSpace / 1024 ** BYTE_SIZES.index(DATA_GIGABYTES)
+        for mount in coordinator.disk_space
+        if name in mount.path
+    ]
+    return f"{space[0]:.2f}"
 
 
 def to_attr(
@@ -139,23 +157,12 @@ def to_attr(
     }
 
 
-def to_unit(value: int = 0, unit: str = DATA_GIGABYTES) -> float:
-    """Convert bytes to give unit."""
-    return value / cast(int, 1024 ** BYTE_SIZES.index(unit))
-
-
-def mnt_str(mount: Diskspace, unit: str = DATA_GIGABYTES) -> str:
-    """Return string description of mount."""
-    return "{:.2f}/{:.2f}{} ({:.2f}%)".format(
-        to_unit(mount.freeSpace, unit),
-        to_unit(mount.totalSpace, unit),
-        unit,
-        mount.freeSpace / mount.totalSpace * 100 if mount.totalSpace else 0,
-    )
-
-
 def queue_str(item: LidarrQueueItem) -> str:
     """Return string description of queue item."""
-    if item.sizeleft > 0 and item.timeleft == "00:00:00":
+    if (
+        item.sizeleft > 0
+        and item.timeleft == "00:00:00"
+        or not hasattr(item, "trackedDownloadState")
+    ):
         return "stopped"
     return item.trackedDownloadState

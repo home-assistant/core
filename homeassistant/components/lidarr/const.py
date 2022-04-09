@@ -28,7 +28,6 @@ BYTE_SIZES = [
 
 # Config Keys
 CONF_MAX_RECORDS = "max_records"
-CONF_UPCOMING_DAYS = "upcoming_days"
 
 # Defaults
 DEFAULT_DAYS = "1"
@@ -36,7 +35,6 @@ DEFAULT_HOST = "localhost"
 DEFAULT_NAME = "Lidarr"
 DEFAULT_UNIT = DATA_GIGABYTES
 DEFAULT_MAX_RECORDS = 1000
-DEFAULT_UPCOMING_DAYS = 7
 DEFAULT_URL = "http://127.0.0.1:8686"
 
 DOMAIN: Final = "lidarr"

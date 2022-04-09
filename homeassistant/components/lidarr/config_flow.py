@@ -16,10 +16,8 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
     CONF_MAX_RECORDS,
-    CONF_UPCOMING_DAYS,
     DEFAULT_MAX_RECORDS,
     DEFAULT_NAME,
-    DEFAULT_UPCOMING_DAYS,
     DEFAULT_URL,
     DOMAIN,
 )
@@ -91,7 +89,6 @@ class LidarrConfigFlow(ConfigFlow, domain=DOMAIN):
                     title=DEFAULT_NAME,
                     data=user_input,
                     options={
-                        CONF_UPCOMING_DAYS: DEFAULT_UPCOMING_DAYS,
                         CONF_MAX_RECORDS: DEFAULT_MAX_RECORDS,
                     },
                 )
@@ -148,12 +145,6 @@ class LidarrOptionsFlowHandler(OptionsFlow):
             return self.async_create_entry(title="", data=user_input)
 
         options = {
-            vol.Optional(
-                CONF_UPCOMING_DAYS,
-                default=self.config_entry.options.get(
-                    CONF_UPCOMING_DAYS, DEFAULT_UPCOMING_DAYS
-                ),
-            ): int,
             vol.Optional(
                 CONF_MAX_RECORDS,
                 default=self.config_entry.options.get(

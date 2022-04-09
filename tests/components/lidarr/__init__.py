@@ -3,9 +3,7 @@ from aiopyarr.lidarr_client import LidarrClient
 
 from homeassistant.components.lidarr.const import (
     CONF_MAX_RECORDS,
-    CONF_UPCOMING_DAYS,
     DEFAULT_MAX_RECORDS,
-    DEFAULT_UPCOMING_DAYS,
     DEFAULT_URL,
     DOMAIN,
 )
@@ -65,10 +63,7 @@ def create_entry(hass: HomeAssistant) -> MockConfigEntry:
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=CONF_DATA,
-        options={
-            CONF_UPCOMING_DAYS: DEFAULT_UPCOMING_DAYS,
-            CONF_MAX_RECORDS: DEFAULT_MAX_RECORDS,
-        },
+        options={CONF_MAX_RECORDS: DEFAULT_MAX_RECORDS},
     )
 
     entry.add_to_hass(hass)
