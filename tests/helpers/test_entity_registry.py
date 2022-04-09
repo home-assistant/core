@@ -1133,6 +1133,24 @@ async def test_entity_max_length_exceeded(hass, registry):
     assert exc_info.value.max_length == 64
     assert exc_info.value.value == long_domain_name
 
+    # Try again but force a number to get added to the entity ID
+    long_entity_id_name = (
+        "1234567890123456789012345678901234567890123456789012345678901234567890"
+        "1234567890123456789012345678901234567890123456789012345678901234567890"
+        "1234567890123456789012345678901234567890123456789012345678901234567890"
+        "1234567890123456789012345678901234567"
+    )
+
+    known = []
+    new_id = registry.async_generate_entity_id("sensor", long_entity_id_name, known)
+    assert new_id == "sensor." + long_entity_id_name[: 255 - 7]
+    known.append(new_id)
+    new_id = registry.async_generate_entity_id("sensor", long_entity_id_name, known)
+    assert new_id == "sensor." + long_entity_id_name[: 255 - 7 - 2] + "_2"
+    known.append(new_id)
+    new_id = registry.async_generate_entity_id("sensor", long_entity_id_name, known)
+    assert new_id == "sensor." + long_entity_id_name[: 255 - 7 - 2] + "_3"
+
 
 async def test_resolve_entity_ids(hass, registry):
     """Test resolving entity IDs."""
