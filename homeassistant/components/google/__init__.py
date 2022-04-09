@@ -185,8 +185,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass, entry
         )
     )
-    assert isinstance(implementation, DeviceAuth)
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
+    # Force a token refresh to fix a bug where tokens were persisted with
+    # expires_in (relative time delta) and expires_at (absolute time) swapped.
+    if session.token["expires_at"] >= datetime(2070, 1, 1).timestamp():
+        session.token["expires_in"] = 0
+        session.token["expires_at"] = datetime.now().timestamp()
+        await session.async_ensure_token_valid()
+
     required_scope = hass.data[DOMAIN][DATA_CONFIG][CONF_CALENDAR_ACCESS].scope
     if required_scope not in session.token.get("scope", []):
         raise ConfigEntryAuthFailed(
