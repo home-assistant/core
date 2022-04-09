@@ -166,13 +166,13 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                _host = ip_v4_validator(user_input[CONF_HOST])
+                _host = ip_v4_validator(user_input[CONF_HOST], multicast=False)
             except vol.Invalid:
                 errors[CONF_HOST] = "invalid_ip_address"
 
             if _local_ip := user_input.get(CONF_KNX_LOCAL_IP):
                 try:
-                    _local_ip = ip_v4_validator(_local_ip)
+                    _local_ip = ip_v4_validator(_local_ip, multicast=False)
                 except vol.Invalid:
                     errors[CONF_KNX_LOCAL_IP] = "invalid_ip_address"
 
@@ -327,12 +327,12 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             except vol.Invalid:
                 errors[CONF_KNX_INDIVIDUAL_ADDRESS] = "invalid_individual_address"
             try:
-                ip_v4_validator(_multicast_group)
+                ip_v4_validator(_multicast_group, multicast=True)
             except vol.Invalid:
                 errors[CONF_KNX_MCAST_GRP] = "invalid_ip_address"
             if _local_ip := user_input.get(CONF_KNX_LOCAL_IP):
                 try:
-                    ip_v4_validator(_local_ip)
+                    ip_v4_validator(_local_ip, multicast=False)
                 except vol.Invalid:
                     errors[CONF_KNX_LOCAL_IP] = "invalid_ip_address"
 

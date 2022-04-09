@@ -77,12 +77,21 @@ ia_validator = vol.Any(
 )
 
 
-def ip_v4_validator(value: Any) -> str:
-    """Validate that value is parsable as IPv4 address."""
+def ip_v4_validator(value: Any, multicast: bool | None = None) -> str:
+    """
+    Validate that value is parsable as IPv4 address.
+
+    Optionally check if address is in a reserved multicast block or is explicitly not.
+    """
     try:
-        return str(ipaddress.IPv4Address(value))
+        address = ipaddress.IPv4Address(value)
     except ipaddress.AddressValueError as ex:
         raise vol.Invalid(f"value '{value}' is not a valid IPv4 address: {ex}") from ex
+    if multicast is not None and address.is_multicast != multicast:
+        raise vol.Invalid(
+            f"value '{value}' is not a valid IPv4 {'multicast' if multicast else 'unicast'} address"
+        )
+    return str(address)
 
 
 def number_limit_sub_validator(entity_config: OrderedDict) -> OrderedDict:

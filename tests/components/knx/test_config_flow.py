@@ -154,7 +154,7 @@ async def test_routing_setup_advanced(hass: HomeAssistant) -> None:
     result_invalid_input = await hass.config_entries.flow.async_configure(
         result2["flow_id"],
         {
-            CONF_KNX_MCAST_GRP: "no_mcast_group",
+            CONF_KNX_MCAST_GRP: "10.1.2.3",  # no valid multicast group
             CONF_KNX_MCAST_PORT: 3675,
             CONF_KNX_INDIVIDUAL_ADDRESS: "not_a_valid_address",
             CONF_KNX_LOCAL_IP: "no_local_ip",
@@ -322,7 +322,7 @@ async def test_tunneling_setup_for_local_ip(hass: HomeAssistant) -> None:
         result2["flow_id"],
         {
             CONF_KNX_TUNNELING_TYPE: CONF_KNX_LABEL_TUNNELING_UDP,
-            CONF_HOST: "asdf",
+            CONF_HOST: DEFAULT_MCAST_GRP,  # multicast addresses are invalid
             CONF_PORT: 3675,
             CONF_KNX_LOCAL_IP: "192.168.1.112",
         },
