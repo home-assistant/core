@@ -2,6 +2,7 @@
 from http import HTTPStatus
 from unittest.mock import Mock, patch
 
+from freezegun import freeze_time
 import pytest
 
 from homeassistant.components.cloud import GACTIONS_SCHEMA
@@ -82,49 +83,48 @@ async def test_sync_entities(mock_conf, hass, cloud_prefs):
         assert len(mock_request_sync.mock_calls) == 1
 
 
-async def test_google_update_expose_trigger_sync(
-    hass, legacy_patchable_time, cloud_prefs
-):
+async def test_google_update_expose_trigger_sync(hass, cloud_prefs):
     """Test Google config responds to updating exposed entities."""
-    config = CloudGoogleConfig(
-        hass,
-        GACTIONS_SCHEMA({}),
-        "mock-user-id",
-        cloud_prefs,
-        Mock(claims={"cognito:username": "abcdefghjkl"}),
-    )
-    await config.async_initialize()
-    await config.async_connect_agent_user("mock-user-id")
-
-    with patch.object(config, "async_sync_entities") as mock_sync, patch.object(
-        ga_helpers, "SYNC_DELAY", 0
-    ):
-        await cloud_prefs.async_update_google_entity_config(
-            entity_id="light.kitchen", should_expose=True
+    with freeze_time(utcnow()):
+        config = CloudGoogleConfig(
+            hass,
+            GACTIONS_SCHEMA({}),
+            "mock-user-id",
+            cloud_prefs,
+            Mock(claims={"cognito:username": "abcdefghjkl"}),
         )
-        await hass.async_block_till_done()
-        async_fire_time_changed(hass, utcnow())
-        await hass.async_block_till_done()
+        await config.async_initialize()
+        await config.async_connect_agent_user("mock-user-id")
 
-    assert len(mock_sync.mock_calls) == 1
+        with patch.object(config, "async_sync_entities") as mock_sync, patch.object(
+            ga_helpers, "SYNC_DELAY", 0
+        ):
+            await cloud_prefs.async_update_google_entity_config(
+                entity_id="light.kitchen", should_expose=True
+            )
+            await hass.async_block_till_done()
+            async_fire_time_changed(hass, utcnow())
+            await hass.async_block_till_done()
 
-    with patch.object(config, "async_sync_entities") as mock_sync, patch.object(
-        ga_helpers, "SYNC_DELAY", 0
-    ):
-        await cloud_prefs.async_update_google_entity_config(
-            entity_id="light.kitchen", should_expose=False
-        )
-        await cloud_prefs.async_update_google_entity_config(
-            entity_id="binary_sensor.door", should_expose=True
-        )
-        await cloud_prefs.async_update_google_entity_config(
-            entity_id="sensor.temp", should_expose=True
-        )
-        await hass.async_block_till_done()
-        async_fire_time_changed(hass, utcnow())
-        await hass.async_block_till_done()
+        assert len(mock_sync.mock_calls) == 1
 
-    assert len(mock_sync.mock_calls) == 1
+        with patch.object(config, "async_sync_entities") as mock_sync, patch.object(
+            ga_helpers, "SYNC_DELAY", 0
+        ):
+            await cloud_prefs.async_update_google_entity_config(
+                entity_id="light.kitchen", should_expose=False
+            )
+            await cloud_prefs.async_update_google_entity_config(
+                entity_id="binary_sensor.door", should_expose=True
+            )
+            await cloud_prefs.async_update_google_entity_config(
+                entity_id="sensor.temp", should_expose=True
+            )
+            await hass.async_block_till_done()
+            async_fire_time_changed(hass, utcnow())
+            await hass.async_block_till_done()
+
+        assert len(mock_sync.mock_calls) == 1
 
 
 async def test_google_entity_registry_sync(hass, mock_cloud_login, cloud_prefs):
