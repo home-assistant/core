@@ -138,7 +138,7 @@ def token_expiry() -> datetime.datetime:
 
 
 @pytest.fixture
-async def creds(
+def creds(
     token_scopes: list[str], token_expiry: datetime.datetime
 ) -> OAuth2Credentials:
     """Fixture that defines creds used in the test."""
@@ -163,7 +163,7 @@ async def storage() -> YieldFixture[FakeStorage]:
 
 
 @pytest.fixture
-async def config_entry_token_expiry(token_expiry: datetime.datetime) -> float:
+def config_entry_token_expiry(token_expiry: datetime.datetime) -> float:
     """Fixture for token expiration value stored in the config entry."""
     return token_expiry.timestamp()
 
