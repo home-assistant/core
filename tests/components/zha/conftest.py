@@ -54,6 +54,7 @@ def zigpy_app_controller():
     app.ieee.return_value = zigpy.types.EUI64.convert("00:15:8d:00:02:32:4f:32")
     type(app).nwk = PropertyMock(return_value=zigpy.types.NWK(0x0000))
     type(app).devices = PropertyMock(return_value={})
+    type(app).state = PropertyMock(return_value={})
     return app
 
 
