@@ -34,7 +34,7 @@ test_response = json.loads(
     json.dumps(
         {
             CONF_CHARGING_POWER_KEY: 0,
-            CONF_STATUS_ID_KEY: 161,
+            CONF_STATUS_ID_KEY: 193,
             CONF_MAX_AVAILABLE_POWER_KEY: 25.2,
             CONF_CHARGING_SPEED_KEY: 0,
             CONF_ADDED_RANGE_KEY: 150,

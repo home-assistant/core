@@ -36,7 +36,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.SENSOR, Platform.NUMBER, Platform.LOCK]
+PLATFORMS = [Platform.SENSOR, Platform.NUMBER, Platform.LOCK, Platform.SWITCH]
 UPDATE_INTERVAL = 30
 
 # Translation of StatusId based on Wallbox portal code:
@@ -167,6 +167,24 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def async_set_lock_unlock(self, lock: bool) -> None:
         """Set wallbox to locked or unlocked."""
         await self.hass.async_add_executor_job(self._set_lock_unlock, lock)
+        await self.async_request_refresh()
+
+    def _pause_charger(self, pause: bool) -> None:
+        """Set wallbox to pause or resume."""
+        try:
+            self._authenticate()
+            if pause:
+                self._wallbox.pauseChargingSession(self._station)
+            else:
+                self._wallbox.resumeChargingSession(self._station)
+        except requests.exceptions.HTTPError as wallbox_connection_error:
+            if wallbox_connection_error.response.status_code == 403:
+                raise InvalidAuth from wallbox_connection_error
+            raise ConnectionError from wallbox_connection_error
+
+    async def async_pause_charger(self, pause: bool) -> None:
+        """Set wallbox to pause or resume."""
+        await self.hass.async_add_executor_job(self._pause_charger, pause)
         await self.async_request_refresh()
 
 
