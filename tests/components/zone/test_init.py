@@ -549,7 +549,10 @@ async def test_state(hass):
     state = hass.states.get("zone.test_zone")
     assert state
     assert state.state == "2"
-    assert state.attributes[ATTR_ENTITY_ID] == ["person.person2", "person.person1"]
+    assert sorted(state.attributes[ATTR_ENTITY_ID]) == [
+        "person.person1",
+        "person.person2",
+    ]
 
     state = hass.states.get("zone.home")
     assert state
