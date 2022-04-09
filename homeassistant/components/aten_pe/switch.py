@@ -99,7 +99,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
         switches.append(AtenSwitch(dev, info, mac, outlet.id, outlet.name))
 
     async_add_entities(switches, True)
-    return True
 
 
 class AtenSwitch(SwitchEntity):

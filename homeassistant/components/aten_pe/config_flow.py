@@ -2,12 +2,14 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from atenpdu import AtenPE, AtenPEError
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_USERNAME
+from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
     CONF_AUTH_KEY,
@@ -27,13 +29,6 @@ class AtenPEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def _host_in_configuration_exists(self, host, port) -> bool:
-        """Return True if host exists in configuration."""
-        for entry in self.hass.config_entries.async_entries(DOMAIN):
-            if entry.data.get(CONF_HOST) == host and entry.data.get(CONF_PORT) == port:
-                return True
-        return False
-
     async def _test_connection(self, host, port, config):
         """Check if we can connect to the device."""
         dev = AtenPE(
@@ -48,10 +43,11 @@ class AtenPEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             await self.hass.async_add_executor_job(dev.initialize)
             await dev.deviceMAC()
-            return True
         except AtenPEError:
             _LOGGER.error("Could not connect to device at %s:%s", host, port)
-        return False
+            return False
+
+        return True
 
     async def async_step_user(self, user_input=None):
         """Step when user initializes a integration."""
@@ -67,8 +63,7 @@ class AtenPEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 else:
                     title = f"{host}:{port}"
                 return self.async_create_entry(title=title, data=user_input)
-            else:
-                errors[CONF_HOST] = "cannot_connect"
+            errors[CONF_HOST] = "cannot_connect"
         else:
             user_input = {}
 
@@ -102,10 +97,6 @@ class AtenPEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, user_input=None):
+    async def async_step_import(self, user_input: dict[str, Any] | None) -> FlowResult:
         """Import a config entry."""
-        host = user_input.get(CONF_HOST)
-        port = user_input.get(CONF_PORT)
-        if self._host_in_configuration_exists(host, port):
-            return self.async_abort(reason="already_configured")
         return await self.async_step_user(user_input)
