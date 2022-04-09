@@ -3303,28 +3303,32 @@ async def test_track_sunrise(hass):
         )
 
     # run tests
-    async_fire_time_changed(hass, next_rising - offset)
-    await hass.async_block_till_done()
-    assert len(runs) == 0
-    assert len(offset_runs) == 0
+    with freeze_time(next_rising - offset):
+        async_fire_time_changed(hass, next_rising - offset)
+        await hass.async_block_till_done()
+        assert len(runs) == 0
+        assert len(offset_runs) == 0
 
-    async_fire_time_changed(hass, next_rising)
-    await hass.async_block_till_done()
-    assert len(runs) == 1
-    assert len(offset_runs) == 0
+    with freeze_time(next_rising):
+        async_fire_time_changed(hass, next_rising)
+        await hass.async_block_till_done()
+        assert len(runs) == 1
+        assert len(offset_runs) == 0
 
-    async_fire_time_changed(hass, next_rising + offset)
-    await hass.async_block_till_done()
-    assert len(runs) == 1
-    assert len(offset_runs) == 1
+    with freeze_time(next_rising + offset):
+        async_fire_time_changed(hass, next_rising + offset)
+        await hass.async_block_till_done()
+        assert len(runs) == 1
+        assert len(offset_runs) == 1
 
     unsub()
     unsub2()
 
-    async_fire_time_changed(hass, next_rising + offset)
-    await hass.async_block_till_done()
-    assert len(runs) == 1
-    assert len(offset_runs) == 1
+    with freeze_time(next_rising + offset):
+        async_fire_time_changed(hass, next_rising + offset)
+        await hass.async_block_till_done()
+        assert len(runs) == 1
+        assert len(offset_runs) == 1
 
 
 async def test_track_sunrise_update_location(hass):
@@ -3359,9 +3363,10 @@ async def test_track_sunrise_update_location(hass):
         async_track_sunrise(hass, callback(lambda: runs.append(1)))
 
     # Mimic sunrise
-    async_fire_time_changed(hass, next_rising)
-    await hass.async_block_till_done()
-    assert len(runs) == 1
+    with freeze_time(next_rising):
+        async_fire_time_changed(hass, next_rising)
+        await hass.async_block_till_done()
+        assert len(runs) == 1
 
     # Move!
     with freeze_time(utc_now):
@@ -3374,10 +3379,11 @@ async def test_track_sunrise_update_location(hass):
     )
 
     # Mimic sunrise
-    async_fire_time_changed(hass, next_rising)
-    await hass.async_block_till_done()
-    # Did not increase
-    assert len(runs) == 1
+    with freeze_time(next_rising):
+        async_fire_time_changed(hass, next_rising)
+        await hass.async_block_till_done()
+        # Did not increase
+        assert len(runs) == 1
 
     # Get next sunrise
     mod = -1
@@ -3389,10 +3395,11 @@ async def test_track_sunrise_update_location(hass):
             break
         mod += 1
 
-    # Mimic sunrise at new location
-    async_fire_time_changed(hass, next_rising)
-    await hass.async_block_till_done()
-    assert len(runs) == 2
+    with freeze_time(next_rising):
+        # Mimic sunrise at new location
+        async_fire_time_changed(hass, next_rising)
+        await hass.async_block_till_done()
+        assert len(runs) == 2
 
 
 async def test_track_sunset(hass):
@@ -3435,28 +3442,32 @@ async def test_track_sunset(hass):
         )
 
     # Run tests
-    async_fire_time_changed(hass, next_setting - offset)
-    await hass.async_block_till_done()
-    assert len(runs) == 0
-    assert len(offset_runs) == 0
+    with freeze_time(next_setting - offset):
+        async_fire_time_changed(hass, next_setting - offset)
+        await hass.async_block_till_done()
+        assert len(runs) == 0
+        assert len(offset_runs) == 0
 
-    async_fire_time_changed(hass, next_setting)
-    await hass.async_block_till_done()
-    assert len(runs) == 1
-    assert len(offset_runs) == 0
+    with freeze_time(next_setting):
+        async_fire_time_changed(hass, next_setting)
+        await hass.async_block_till_done()
+        assert len(runs) == 1
+        assert len(offset_runs) == 0
 
-    async_fire_time_changed(hass, next_setting + offset)
-    await hass.async_block_till_done()
-    assert len(runs) == 1
-    assert len(offset_runs) == 1
+    with freeze_time(next_setting + offset):
+        async_fire_time_changed(hass, next_setting + offset)
+        await hass.async_block_till_done()
+        assert len(runs) == 1
+        assert len(offset_runs) == 1
 
     unsub()
     unsub2()
 
-    async_fire_time_changed(hass, next_setting + offset)
-    await hass.async_block_till_done()
-    assert len(runs) == 1
-    assert len(offset_runs) == 1
+    with freeze_time(next_setting + offset):
+        async_fire_time_changed(hass, next_setting + offset)
+        await hass.async_block_till_done()
+        assert len(runs) == 1
+        assert len(offset_runs) == 1
 
 
 async def test_async_track_time_change(hass):
