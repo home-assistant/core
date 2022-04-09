@@ -61,6 +61,13 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
+        key="outdoor_air_temperature",
+        name="Outdoor Air Temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
         key="water_temperature",
         name="Water Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
@@ -267,7 +274,7 @@ async def async_setup_entry(
     """Set up the Smile sensors from a config entry."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    entities: list[PlugwiseSensorEnity] = []
+    entities: list[PlugwiseSensorEntity] = []
     for device_id, device in coordinator.data.devices.items():
         for description in SENSORS:
             if (
@@ -277,7 +284,7 @@ async def async_setup_entry(
                 continue
 
             entities.append(
-                PlugwiseSensorEnity(
+                PlugwiseSensorEntity(
                     coordinator,
                     device_id,
                     description,
@@ -287,7 +294,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class PlugwiseSensorEnity(PlugwiseEntity, SensorEntity):
+class PlugwiseSensorEntity(PlugwiseEntity, SensorEntity):
     """Represent Plugwise Sensors."""
 
     def __init__(

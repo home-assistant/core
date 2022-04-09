@@ -11,7 +11,8 @@
                 "data": {
                     "host": "H\u00f4te",
                     "port": "Port"
-                }
+                },
+                "description": "Configurer l'int\u00e9gration Airzone."
             }
         }
     }

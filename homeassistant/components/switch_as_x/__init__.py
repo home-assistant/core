@@ -11,11 +11,10 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.event import async_track_entity_registry_updated_event
 
+from .const import CONF_TARGET_DOMAIN
 from .light import LightSwitch
 
 __all__ = ["LightSwitch"]
-
-DOMAIN = "switch_as_x"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,7 +71,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             # If the tracked switch is no longer in the device, remove our config entry
             # from the device
             if (
-                not (entity_entry := registry.async_get(data["entity_id"]))
+                not (entity_entry := registry.async_get(data[CONF_ENTITY_ID]))
                 or not device_registry.async_get(device_id)
                 or entity_entry.device_id == device_id
             ):
@@ -91,12 +90,31 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     device_id = async_add_to_device(hass, entry, entity_id)
 
-    hass.config_entries.async_setup_platforms(entry, (entry.options["target_domain"],))
+    hass.config_entries.async_setup_platforms(
+        entry, (entry.options[CONF_TARGET_DOMAIN],)
+    )
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(
-        entry, (entry.options["target_domain"],)
+        entry, (entry.options[CONF_TARGET_DOMAIN],)
     )
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Unload a config entry."""
+    # Unhide the wrapped entry if registered
+    registry = er.async_get(hass)
+    try:
+        entity_id = er.async_validate_entity_id(registry, entry.options[CONF_ENTITY_ID])
+    except vol.Invalid:
+        # The source entity has been removed from the entity registry
+        return
+
+    if not (entity_entry := registry.async_get(entity_id)):
+        return
+
+    if entity_entry.hidden_by == er.RegistryEntryHider.INTEGRATION:
+        registry.async_update_entity(entity_id, hidden_by=None)

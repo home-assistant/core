@@ -101,7 +101,7 @@
                     "allow_deconz_groups": "\u5141\u8a31 deCONZ \u71c8\u5149\u7fa4\u7d44",
                     "allow_new_devices": "\u5141\u8a31\u81ea\u52d5\u5316\u65b0\u589e\u88dd\u7f6e"
                 },
-                "description": "\u8a2d\u5b9a deCONZ \u53ef\u8996\u88dd\u7f6e\u985e\u578b",
+                "description": "\u8a2d\u5b9a deCONZ \u53ef\u8996\u88dd\u7f6e\u985e\u5225",
                 "title": "deCONZ \u9078\u9805"
             }
         }

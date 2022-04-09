@@ -54,6 +54,7 @@ from homeassistant.helpers.script import (
     CONF_MAX,
     CONF_MAX_EXCEEDED,
     Script,
+    script_stack_cv,
 )
 from homeassistant.helpers.script_variables import ScriptVariables
 from homeassistant.helpers.service import (
@@ -504,6 +505,10 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
                 self.hass.bus.async_fire(
                     EVENT_AUTOMATION_TRIGGERED, event_data, context=trigger_context
                 )
+
+            # Make a new empty script stack; automations are allowed
+            # to recursively trigger themselves
+            script_stack_cv.set([])
 
             try:
                 with trace_path("action"):

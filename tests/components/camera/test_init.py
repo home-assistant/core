@@ -58,7 +58,7 @@ async def mock_stream_source_fixture():
         return_value=STREAM_SOURCE,
     ) as mock_stream_source, patch(
         "homeassistant.components.camera.Camera.supported_features",
-        return_value=camera.SUPPORT_STREAM,
+        return_value=camera.CameraEntityFeature.STREAM,
     ):
         yield mock_stream_source
 
@@ -71,7 +71,7 @@ async def mock_hls_stream_source_fixture():
         return_value=HLS_STREAM_SOURCE,
     ) as mock_hls_stream_source, patch(
         "homeassistant.components.camera.Camera.supported_features",
-        return_value=camera.SUPPORT_STREAM,
+        return_value=camera.CameraEntityFeature.STREAM,
     ):
         yield mock_hls_stream_source
 
@@ -106,28 +106,6 @@ async def test_get_image_from_camera(hass, image_mock_url):
 
     assert mock_camera.called
     assert image.content == b"Test"
-
-
-async def test_legacy_async_get_image_signature_warns_only_once(
-    hass, image_mock_url, caplog
-):
-    """Test that we only warn once when we encounter a legacy async_get_image function signature."""
-
-    async def _legacy_async_camera_image(self):
-        return b"Image"
-
-    with patch(
-        "homeassistant.components.demo.camera.DemoCamera.async_camera_image",
-        new=_legacy_async_camera_image,
-    ):
-        image = await camera.async_get_image(hass, "camera.demo_camera")
-        assert image.content == b"Image"
-        assert "does not support requesting width and height" in caplog.text
-        caplog.clear()
-
-        image = await camera.async_get_image(hass, "camera.demo_camera")
-        assert image.content == b"Image"
-        assert "does not support requesting width and height" not in caplog.text
 
 
 async def test_get_image_from_camera_with_width_height(hass, image_mock_url):

@@ -20,38 +20,17 @@
       "model": "Lisa",
       "name": "Zone Lisa Bios",
       "vendor": "Plugwise",
-      "lower_bound": 0,
+      "lower_bound": 0.0,
       "upper_bound": 99.9,
       "resolution": 0.01,
-      "preset_modes": [
-        "home",
-        "asleep",
-        "away",
-        "vacation",
-        "no_frost"
-      ],
+      "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
       "active_preset": "away",
       "presets": {
-        "home": [
-          20.0,
-          22.0
-        ],
-        "asleep": [
-          17.0,
-          24.0
-        ],
-        "away": [
-          15.0,
-          25.0
-        ],
-        "vacation": [
-          15.0,
-          28.0
-        ],
-        "no_frost": [
-          10.0,
-          30.0
-        ]
+        "home": [20.0, 22.0],
+        "asleep": [17.0, 24.0],
+        "away": [15.0, 25.0],
+        "vacation": [15.0, 28.0],
+        "no_frost": [10.0, 30.0]
       },
       "available_schedules": [
         "CV Roan",
@@ -66,7 +45,7 @@
       "mode": "heat",
       "sensors": {
         "temperature": 16.5,
-        "setpoint": 13,
+        "setpoint": 13.0,
         "battery": 67
       }
     },
@@ -79,7 +58,7 @@
       "model": "Tom/Floor",
       "name": "Floor kraan",
       "vendor": "Plugwise",
-      "lower_bound": 0,
+      "lower_bound": 0.0,
       "upper_bound": 100.0,
       "resolution": 0.01,
       "sensors": {
@@ -98,12 +77,12 @@
       "model": "Tom/Floor",
       "name": "Bios Cv Thermostatic Radiator ",
       "vendor": "Plugwise",
-      "lower_bound": 0,
+      "lower_bound": 0.0,
       "upper_bound": 100.0,
       "resolution": 0.01,
       "sensors": {
         "temperature": 17.2,
-        "setpoint": 13,
+        "setpoint": 13.0,
         "battery": 62,
         "temperature_difference": -0.2,
         "valve_position": 0.0
@@ -118,38 +97,17 @@
       "model": "Lisa",
       "name": "Zone Lisa WK",
       "vendor": "Plugwise",
-      "lower_bound": 0,
+      "lower_bound": 0.0,
       "upper_bound": 99.9,
       "resolution": 0.01,
-      "preset_modes": [
-        "home",
-        "asleep",
-        "away",
-        "vacation",
-        "no_frost"
-      ],
+      "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
       "active_preset": "home",
       "presets": {
-        "home": [
-          20.0,
-          22.0
-        ],
-        "asleep": [
-          17.0,
-          24.0
-        ],
-        "away": [
-          15.0,
-          25.0
-        ],
-        "vacation": [
-          15.0,
-          28.0
-        ],
-        "no_frost": [
-          10.0,
-          30.0
-        ]
+        "home": [20.0, 22.0],
+        "asleep": [17.0, 24.0],
+        "away": [15.0, 25.0],
+        "vacation": [15.0, 28.0],
+        "no_frost": [10.0, 30.0]
       },
       "available_schedules": [
         "CV Roan",
@@ -178,6 +136,8 @@
       "name": "Adam",
       "vendor": "Plugwise B.V.",
       "zigbee_mac_address": "ABCD012345670101",
+      "regulation_mode": "heating",
+      "regulation_modes": [],
       "binary_sensors": {
         "plugwise_notification": true
       },
@@ -194,12 +154,12 @@
       "model": "Tom/Floor",
       "name": "Thermostatic Radiator Jessie",
       "vendor": "Plugwise",
-      "lower_bound": 0,
+      "lower_bound": 0.0,
       "upper_bound": 100.0,
       "resolution": 0.01,
       "sensors": {
         "temperature": 17.1,
-        "setpoint": 15,
+        "setpoint": 15.0,
         "battery": 62,
         "temperature_difference": 0.1,
         "valve_position": 0.0
@@ -255,9 +215,6 @@
       "model": "Unknown",
       "name": "OnOff",
       "vendor": null,
-      "lower_bound": 10,
-      "upper_bound": 90,
-      "resolution": 1,
       "binary_sensors": {
         "heating_state": true
       },
@@ -360,38 +317,17 @@
       "model": "Lisa",
       "name": "Zone Thermostat Jessie",
       "vendor": "Plugwise",
-      "lower_bound": 0,
+      "lower_bound": 0.0,
       "upper_bound": 99.9,
       "resolution": 0.01,
-      "preset_modes": [
-        "home",
-        "asleep",
-        "away",
-        "vacation",
-        "no_frost"
-      ],
+      "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
       "active_preset": "asleep",
       "presets": {
-        "home": [
-          20.0,
-          22.0
-        ],
-        "asleep": [
-          17.0,
-          24.0
-        ],
-        "away": [
-          15.0,
-          25.0
-        ],
-        "vacation": [
-          15.0,
-          28.0
-        ],
-        "no_frost": [
-          10.0,
-          30.0
-        ]
+        "home": [20.0, 22.0],
+        "asleep": [17.0, 24.0],
+        "away": [15.0, 25.0],
+        "vacation": [15.0, 28.0],
+        "no_frost": [10.0, 30.0]
       },
       "available_schedules": [
         "CV Roan",
@@ -406,7 +342,7 @@
       "mode": "auto",
       "sensors": {
         "temperature": 17.2,
-        "setpoint": 15,
+        "setpoint": 15.0,
         "battery": 37
       }
     },
@@ -419,12 +355,12 @@
       "model": "Tom/Floor",
       "name": "Thermostatic Radiator Badkamer",
       "vendor": "Plugwise",
-      "lower_bound": 0,
+      "lower_bound": 0.0,
       "upper_bound": 100.0,
       "resolution": 0.01,
       "sensors": {
         "temperature": 19.1,
-        "setpoint": 14,
+        "setpoint": 14.0,
         "battery": 51,
         "temperature_difference": -0.4,
         "valve_position": 0.0
@@ -439,38 +375,17 @@
       "model": "Lisa",
       "name": "Zone Thermostat Badkamer",
       "vendor": "Plugwise",
-      "lower_bound": 0,
+      "lower_bound": 0.0,
       "upper_bound": 99.9,
       "resolution": 0.01,
-      "preset_modes": [
-        "home",
-        "asleep",
-        "away",
-        "vacation",
-        "no_frost"
-      ],
+      "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
       "active_preset": "away",
       "presets": {
-        "home": [
-          20.0,
-          22.0
-        ],
-        "asleep": [
-          17.0,
-          24.0
-        ],
-        "away": [
-          15.0,
-          25.0
-        ],
-        "vacation": [
-          15.0,
-          28.0
-        ],
-        "no_frost": [
-          10.0,
-          30.0
-        ]
+        "home": [20.0, 22.0],
+        "asleep": [17.0, 24.0],
+        "away": [15.0, 25.0],
+        "vacation": [15.0, 28.0],
+        "no_frost": [10.0, 30.0]
       },
       "available_schedules": [
         "CV Roan",
@@ -485,7 +400,7 @@
       "mode": "auto",
       "sensors": {
         "temperature": 18.9,
-        "setpoint": 14,
+        "setpoint": 14.0,
         "battery": 92
       }
     },
@@ -519,38 +434,17 @@
       "model": "Tom/Floor",
       "name": "CV Kraan Garage",
       "vendor": "Plugwise",
-      "lower_bound": 0,
+      "lower_bound": 0.0,
       "upper_bound": 100.0,
       "resolution": 0.01,
-      "preset_modes": [
-        "home",
-        "asleep",
-        "away",
-        "vacation",
-        "no_frost"
-      ],
+      "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
       "active_preset": "no_frost",
       "presets": {
-        "home": [
-          20.0,
-          22.0
-        ],
-        "asleep": [
-          17.0,
-          24.0
-        ],
-        "away": [
-          15.0,
-          25.0
-        ],
-        "vacation": [
-          15.0,
-          28.0
-        ],
-        "no_frost": [
-          10.0,
-          30.0
-        ]
+        "home": [20.0, 22.0],
+        "asleep": [17.0, 24.0],
+        "away": [15.0, 25.0],
+        "vacation": [15.0, 28.0],
+        "no_frost": [10.0, 30.0]
       },
       "available_schedules": [
         "CV Roan",

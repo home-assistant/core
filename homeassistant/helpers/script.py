@@ -110,6 +110,7 @@ ATTR_MAX = "max"
 
 DATA_SCRIPTS = "helpers.script"
 DATA_SCRIPT_BREAKPOINTS = "helpers.script_breakpoints"
+DATA_NEW_SCRIPT_RUNS_NOT_ALLOWED = "helpers.script_not_allowed"
 RUN_ID_ANY = "*"
 NODE_ANY = "*"
 
@@ -859,12 +860,13 @@ class _QueuedScriptRun(_ScriptRun):
                 {lock_task, stop_task}, return_when=asyncio.FIRST_COMPLETED
             )
         except asyncio.CancelledError:
-            lock_task.cancel()
             self._finish()
             raise
+        else:
+            self.lock_acquired = lock_task.done() and not lock_task.cancelled()
         finally:
+            lock_task.cancel()
             stop_task.cancel()
-        self.lock_acquired = lock_task.done() and not lock_task.cancelled()
 
         # If we've been told to stop, then just finish up. Otherwise, we've acquired the
         # lock so we can go ahead and start the run.
@@ -883,6 +885,7 @@ class _QueuedScriptRun(_ScriptRun):
 
 async def _async_stop_scripts_after_shutdown(hass, point_in_time):
     """Stop running Script objects started after shutdown."""
+    hass.data[DATA_NEW_SCRIPT_RUNS_NOT_ALLOWED] = None
     running_scripts = [
         script for script in hass.data[DATA_SCRIPTS] if script["instance"].is_running
     ]
@@ -1192,6 +1195,12 @@ class Script:
             )
             context = Context()
 
+        # Prevent spawning new script runs when Home Assistant is shutting down
+        if DATA_NEW_SCRIPT_RUNS_NOT_ALLOWED in self._hass.data:
+            self._log("Home Assistant is shutting down, starting script blocked")
+            return
+
+        # Prevent spawning new script runs if not allowed by script mode
         if self.is_running:
             if self.script_mode == SCRIPT_MODE_SINGLE:
                 if self._max_exceeded != "SILENT":
@@ -1238,7 +1247,7 @@ class Script:
             and id(self) in script_stack
         ):
             script_execution_set("disallowed_recursion_detected")
-            _LOGGER.warning("Disallowed recursion detected")
+            self._log("Disallowed recursion detected", level=logging.WARNING)
             return
 
         if self.script_mode != SCRIPT_MODE_QUEUED:

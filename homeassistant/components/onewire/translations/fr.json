@@ -28,16 +28,23 @@
             "device_not_selected": "S\u00e9lectionnez les appareils \u00e0 configurer"
         },
         "step": {
+            "ack_no_options": {
+                "description": "Il n'y a pas d'option pour l'impl\u00e9mentation de SysBus"
+            },
             "configure_device": {
                 "data": {
                     "precision": "Pr\u00e9cision du capteur"
                 },
-                "description": "Choisissez la pr\u00e9cision du capteur pour {sensor_id}"
+                "description": "S\u00e9lectionnez la pr\u00e9cision du capteur pour {sensor_id}",
+                "title": "Pr\u00e9cision du capteur OneWire"
             },
             "device_selection": {
                 "data": {
-                    "device_selection": "S\u00e9lectionnez les appareils \u00e0 configurer."
-                }
+                    "clear_device_options": "Effacer toutes les configurations de l'appareil",
+                    "device_selection": "S\u00e9lectionnez les appareils \u00e0 configurer"
+                },
+                "description": "S\u00e9lectionnez les \u00e9tapes de configuration \u00e0 traiter",
+                "title": "Options de l'appareil OneWire"
             }
         }
     }

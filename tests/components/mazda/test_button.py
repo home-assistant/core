@@ -8,7 +8,7 @@ from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, ATTR_ICON
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from tests.components.mazda import init_integration
+from . import init_integration
 
 
 async def test_button_setup_non_electric_vehicle(hass) -> None:

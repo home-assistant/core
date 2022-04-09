@@ -8,7 +8,7 @@ from pyunifiprotect.data import Light
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    SUPPORT_BRIGHTNESS,
+    COLOR_MODE_BRIGHTNESS,
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -59,7 +59,8 @@ class ProtectLight(ProtectDeviceEntity, LightEntity):
     device: Light
 
     _attr_icon = "mdi:spotlight-beam"
-    _attr_supported_features = SUPPORT_BRIGHTNESS
+    _attr_color_mode = COLOR_MODE_BRIGHTNESS
+    _attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
 
     @callback
     def _async_update_device_from_protect(self) -> None:

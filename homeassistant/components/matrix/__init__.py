@@ -243,7 +243,10 @@ class MatrixBot:
                 room.update_aliases()
                 self._aliases_fetched_for.add(room.room_id)
 
-            if room_id_or_alias in room.aliases:
+            if (
+                room_id_or_alias in room.aliases
+                or room_id_or_alias == room.canonical_alias
+            ):
                 _LOGGER.debug(
                     "Already in room %s (known as %s)", room.room_id, room_id_or_alias
                 )

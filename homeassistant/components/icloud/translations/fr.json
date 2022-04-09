@@ -6,7 +6,7 @@
             "reauth_successful": "La r\u00e9-authentification a r\u00e9ussi"
         },
         "error": {
-            "invalid_auth": "Authentification invalide",
+            "invalid_auth": "Authentification non valide",
             "send_verification_code": "\u00c9chec de l'envoi du code de v\u00e9rification",
             "validate_verification_code": "Impossible de v\u00e9rifier votre code de v\u00e9rification, choisissez un appareil de confiance et recommencez la v\u00e9rification"
         },

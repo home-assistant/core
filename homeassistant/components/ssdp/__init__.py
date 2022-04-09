@@ -449,7 +449,7 @@ class Scanner:
         failed_listeners = []
         for idx, result in enumerate(results):
             if isinstance(result, Exception):
-                _LOGGER.warning(
+                _LOGGER.debug(
                     "Failed to setup listener for %s: %s",
                     self._ssdp_listeners[idx].source,
                     result,

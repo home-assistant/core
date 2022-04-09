@@ -4,11 +4,12 @@ from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_ICON
 from homeassistant.helpers import entity_registry as er
 
 from tests.components.sleepiq.conftest import (
-    BED_ID,
     BED_NAME,
     BED_NAME_LOWER,
+    SLEEPER_L_ID,
     SLEEPER_L_NAME,
     SLEEPER_L_NAME_LOWER,
+    SLEEPER_R_ID,
     SLEEPER_R_NAME,
     SLEEPER_R_NAME_LOWER,
     setup_platform,
@@ -34,7 +35,7 @@ async def test_sleepnumber_sensors(hass, mock_asyncsleepiq):
         f"sensor.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_L_NAME_LOWER}_sleepnumber"
     )
     assert entry
-    assert entry.unique_id == f"{BED_ID}_{SLEEPER_L_NAME}_sleep_number"
+    assert entry.unique_id == f"{SLEEPER_L_ID}_sleep_number"
 
     state = hass.states.get(
         f"sensor.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_R_NAME_LOWER}_sleepnumber"
@@ -50,7 +51,7 @@ async def test_sleepnumber_sensors(hass, mock_asyncsleepiq):
         f"sensor.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_R_NAME_LOWER}_sleepnumber"
     )
     assert entry
-    assert entry.unique_id == f"{BED_ID}_{SLEEPER_R_NAME}_sleep_number"
+    assert entry.unique_id == f"{SLEEPER_R_ID}_sleep_number"
 
 
 async def test_pressure_sensors(hass, mock_asyncsleepiq):
@@ -72,7 +73,7 @@ async def test_pressure_sensors(hass, mock_asyncsleepiq):
         f"sensor.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_L_NAME_LOWER}_pressure"
     )
     assert entry
-    assert entry.unique_id == f"{BED_ID}_{SLEEPER_L_NAME}_pressure"
+    assert entry.unique_id == f"{SLEEPER_L_ID}_pressure"
 
     state = hass.states.get(
         f"sensor.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_R_NAME_LOWER}_pressure"
@@ -88,4 +89,4 @@ async def test_pressure_sensors(hass, mock_asyncsleepiq):
         f"sensor.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_R_NAME_LOWER}_pressure"
     )
     assert entry
-    assert entry.unique_id == f"{BED_ID}_{SLEEPER_R_NAME}_pressure"
+    assert entry.unique_id == f"{SLEEPER_R_ID}_pressure"

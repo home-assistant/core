@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import ValuesView
 from typing import Any
 
 from pydeconz.group import Scene as PydeconzScene
@@ -27,12 +26,12 @@ async def async_setup_entry(
     gateway.entities[DOMAIN] = set()
 
     @callback
-    def async_add_scene(
-        scenes: list[PydeconzScene]
-        | ValuesView[PydeconzScene] = gateway.api.scenes.values(),
-    ) -> None:
+    def async_add_scene(scenes: list[PydeconzScene] | None = None) -> None:
         """Add scene from deCONZ."""
         entities = []
+
+        if scenes is None:
+            scenes = list(gateway.api.scenes.values())
 
         for scene in scenes:
 

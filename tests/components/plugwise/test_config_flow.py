@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from plugwise.exceptions import (
     ConnectionFailedError,
     InvalidAuthentication,
+    InvalidSetupError,
     PlugwiseException,
 )
 import pytest
@@ -223,6 +224,7 @@ async def test_zercoconf_discovery_update_configuration(hass: HomeAssistant) -> 
     "side_effect,reason",
     [
         (InvalidAuthentication, "invalid_auth"),
+        (InvalidSetupError, "invalid_setup"),
         (ConnectionFailedError, "cannot_connect"),
         (PlugwiseException, "cannot_connect"),
         (RuntimeError, "unknown"),

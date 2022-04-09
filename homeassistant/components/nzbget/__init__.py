@@ -154,7 +154,7 @@ async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> Non
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-class NZBGetEntity(CoordinatorEntity):
+class NZBGetEntity(CoordinatorEntity[NZBGetDataUpdateCoordinator]):
     """Defines a base NZBGet entity."""
 
     def __init__(

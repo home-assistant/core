@@ -1,10 +1,20 @@
 {
     "config": {
         "step": {
+            "binary_sensor": {
+                "data": {
+                    "all": "Alle Entit\u00e4ten",
+                    "entities": "Mitglieder",
+                    "name": "Name"
+                },
+                "description": "Wenn \"alle Entit\u00e4ten\" aktiviert ist, ist der Status der Gruppe nur dann eingeschaltet, wenn alle Mitglieder eingeschaltet sind. Wenn \"alle Entit\u00e4ten\" deaktiviert ist, ist der Status der Gruppe eingeschaltet, wenn irgendein Mitglied eingeschaltet ist.",
+                "title": "Neue Gruppe"
+            },
             "cover": {
                 "data": {
-                    "entities": "Gruppenmitglieder",
-                    "name": "Gruppenname"
+                    "entities": "Mitglieder",
+                    "name": "Name",
+                    "title": "Neue Gruppe"
                 },
                 "description": "Gruppenoptionen ausw\u00e4hlen"
             },
@@ -16,8 +26,9 @@
             },
             "fan": {
                 "data": {
-                    "entities": "Gruppenmitglieder",
-                    "name": "Gruppenname"
+                    "entities": "Mitglieder",
+                    "name": "Name",
+                    "title": "Neue Gruppe"
                 },
                 "description": "Gruppenoptionen ausw\u00e4hlen"
             },
@@ -35,8 +46,9 @@
             },
             "light": {
                 "data": {
-                    "entities": "Gruppenmitglieder",
-                    "name": "Gruppenname"
+                    "entities": "Mitglieder",
+                    "name": "Name",
+                    "title": "Neue Gruppe"
                 },
                 "description": "Gruppenoptionen ausw\u00e4hlen"
             },
@@ -48,8 +60,9 @@
             },
             "media_player": {
                 "data": {
-                    "entities": "Gruppenmitglieder",
-                    "name": "Gruppenname"
+                    "entities": "Mitglieder",
+                    "name": "Name",
+                    "title": "Neue Gruppe"
                 },
                 "description": "Gruppenoptionen ausw\u00e4hlen"
             },
@@ -58,6 +71,42 @@
                     "entities": "Gruppenmitglieder"
                 },
                 "description": "Gruppenoptionen ausw\u00e4hlen"
+            },
+            "user": {
+                "data": {
+                    "group_type": "Gruppentyp"
+                },
+                "title": "Neue Gruppe"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "binary_sensor_options": {
+                "data": {
+                    "all": "Alle Entit\u00e4ten",
+                    "entities": "Mitglieder"
+                }
+            },
+            "cover_options": {
+                "data": {
+                    "entities": "Mitglieder"
+                }
+            },
+            "fan_options": {
+                "data": {
+                    "entities": "Mitglieder"
+                }
+            },
+            "light_options": {
+                "data": {
+                    "entities": "Mitglieder"
+                }
+            },
+            "media_player_options": {
+                "data": {
+                    "entities": "Mitglieder"
+                }
             }
         }
     },

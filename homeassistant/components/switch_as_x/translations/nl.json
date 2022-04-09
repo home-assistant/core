@@ -3,10 +3,12 @@
         "step": {
             "init": {
                 "data": {
+                    "entity_id": "Entiteit wijzigen",
                     "target_domain": "Type"
                 },
                 "title": "Schakel een..."
             }
         }
-    }
+    },
+    "title": "Schakelen als X"
 }

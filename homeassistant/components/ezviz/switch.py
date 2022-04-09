@@ -39,7 +39,6 @@ async def async_setup_entry(
 class EzvizSwitch(EzvizEntity, SwitchEntity):
     """Representation of a Ezviz sensor."""
 
-    coordinator: EzvizDataUpdateCoordinator
     _attr_device_class = SwitchDeviceClass.SWITCH
 
     def __init__(

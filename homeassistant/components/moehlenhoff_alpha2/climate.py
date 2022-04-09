@@ -1,15 +1,13 @@
 """Support for Alpha2 room control unit via Alpha2 base."""
 import logging
 
-from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_COOL,
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
@@ -38,13 +36,14 @@ async def async_setup_entry(
 
 
 # https://developers.home-assistant.io/docs/core/entity/climate/
-class Alpha2Climate(CoordinatorEntity, ClimateEntity):
+class Alpha2Climate(CoordinatorEntity[Alpha2BaseCoordinator], ClimateEntity):
     """Alpha2 ClimateEntity."""
 
-    coordinator: Alpha2BaseCoordinator
     target_temperature_step = 0.2
 
-    _attr_supported_features = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+    )
     _attr_hvac_modes = [HVAC_MODE_HEAT, HVAC_MODE_COOL]
     _attr_temperature_unit = TEMP_CELSIUS
     _attr_preset_modes = [PRESET_AUTO, PRESET_DAY, PRESET_NIGHT]

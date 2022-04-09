@@ -35,7 +35,8 @@ class SleepIQDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
     async def _async_update_data(self) -> None:
         tasks = [self.client.fetch_bed_statuses()] + [
-            bed.foundation.update_lights() for bed in self.client.beds.values()
+            bed.foundation.update_foundation_status()
+            for bed in self.client.beds.values()
         ]
         await asyncio.gather(*tasks)
 

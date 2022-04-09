@@ -231,7 +231,7 @@ class Battery(Sensor):
         return cls(unique_id, zha_device, channels, **kwargs)
 
     @staticmethod
-    def formatter(value: int) -> int:
+    def formatter(value: int) -> int:  # pylint: disable=arguments-differ
         """Return the state of the entity."""
         # per zcl specs battery percent is reported at 200% ¯\_(ツ)_/¯
         if not isinstance(value, numbers.Number) or value == -1:
@@ -391,8 +391,7 @@ class Illuminance(Sensor):
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
     _unit = LIGHT_LUX
 
-    @staticmethod
-    def formatter(value: int) -> float:
+    def formatter(self, value: int) -> float:
         """Convert illumination data."""
         return round(pow(10, ((value - 1) / 10000)), 1)
 

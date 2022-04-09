@@ -125,10 +125,8 @@ async def async_setup_entry(
     )
 
 
-class ElecPriceSensor(CoordinatorEntity, SensorEntity):
+class ElecPriceSensor(CoordinatorEntity[ElecPricesDataUpdateCoordinator], SensorEntity):
     """Class to hold the prices of electricity as a sensor."""
-
-    coordinator: ElecPricesDataUpdateCoordinator
 
     def __init__(
         self,

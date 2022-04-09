@@ -9,10 +9,8 @@ from .const import DOMAIN, MANUFACTURER, MODEL
 from .coordinator import YaleDataUpdateCoordinator
 
 
-class YaleEntity(CoordinatorEntity, Entity):
+class YaleEntity(CoordinatorEntity[YaleDataUpdateCoordinator], Entity):
     """Base implementation for Yale device."""
-
-    coordinator: YaleDataUpdateCoordinator
 
     def __init__(self, coordinator: YaleDataUpdateCoordinator, data: dict) -> None:
         """Initialize an Yale device."""
@@ -28,10 +26,8 @@ class YaleEntity(CoordinatorEntity, Entity):
         )
 
 
-class YaleAlarmEntity(CoordinatorEntity, Entity):
+class YaleAlarmEntity(CoordinatorEntity[YaleDataUpdateCoordinator], Entity):
     """Base implementation for Yale Alarm device."""
-
-    coordinator: YaleDataUpdateCoordinator
 
     def __init__(self, coordinator: YaleDataUpdateCoordinator) -> None:
         """Initialize an Yale device."""

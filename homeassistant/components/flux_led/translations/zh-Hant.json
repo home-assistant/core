@@ -27,7 +27,7 @@
                 "data": {
                     "custom_effect_colors": "\u81ea\u8a02\u7279\u6548\uff1a1 \u5230 16 \u7a2e [R,G,B] \u984f\u8272\u3002\u4f8b\u5982\uff1a[255,0,255]\u3001[60,128,0]",
                     "custom_effect_speed_pct": "\u81ea\u8a02\u7279\u6548\uff1a\u984f\u8272\u5207\u63db\u7684\u901f\u5ea6\u767e\u5206\u6bd4\u3002",
-                    "custom_effect_transition": "\u81ea\u8a02\u7279\u6548\uff1a\u984f\u8272\u9593\u7684\u8f49\u63db\u985e\u578b\u3002",
+                    "custom_effect_transition": "\u81ea\u8a02\u7279\u6548\uff1a\u984f\u8272\u9593\u7684\u8f49\u63db\u985e\u5225\u3002",
                     "mode": "\u9078\u64c7\u4eae\u5ea6\u6a21\u5f0f\u3002"
                 }
             }

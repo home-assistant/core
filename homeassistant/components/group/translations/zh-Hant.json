@@ -1,10 +1,20 @@
 {
     "config": {
         "step": {
+            "binary_sensor": {
+                "data": {
+                    "all": "\u6240\u6709\u5be6\u9ad4",
+                    "entities": "\u6210\u54e1",
+                    "name": "\u540d\u7a31"
+                },
+                "description": "\u5047\u5982\u958b\u555f \"\u6240\u6709\u5be6\u9ad4\"\uff0c\u50c5\u65bc\u7576\u6240\u6709\u6210\u54e1\u90fd\u70ba\u958b\u555f\u6642\u3001\u88dd\u614b\u624d\u6703\u986f\u793a\u70ba\u958b\u555f\u3002\u5047\u5982 \"\u6240\u6709\u5be6\u9ad4\" \u70ba\u95dc\u9589\u3001\u5247\u4efb\u4f55\u6210\u54e1\u958b\u59cb\u6642\uff0c\u7686\u6703\u986f\u793a\u70ba\u958b\u555f\u3002",
+                "title": "\u65b0\u589e\u7fa4\u7d44"
+            },
             "cover": {
                 "data": {
-                    "entities": "\u7fa4\u7d44\u6210\u54e1",
-                    "name": "\u7fa4\u7d44\u540d\u7a31"
+                    "entities": "\u6210\u54e1",
+                    "name": "\u540d\u7a31",
+                    "title": "\u65b0\u589e\u7fa4\u7d44"
                 },
                 "description": "\u9078\u64c7\u7fa4\u7d44\u9078\u9805"
             },
@@ -16,8 +26,9 @@
             },
             "fan": {
                 "data": {
-                    "entities": "\u7fa4\u7d44\u6210\u54e1",
-                    "name": "\u7fa4\u7d44\u540d\u7a31"
+                    "entities": "\u6210\u54e1",
+                    "name": "\u540d\u7a31",
+                    "title": "\u65b0\u589e\u7fa4\u7d44"
                 },
                 "description": "\u9078\u64c7\u7fa4\u7d44\u9078\u9805"
             },
@@ -29,14 +40,15 @@
             },
             "init": {
                 "data": {
-                    "group_type": "\u7fa4\u7d44\u985e\u578b"
+                    "group_type": "\u7fa4\u7d44\u985e\u5225"
                 },
-                "description": "\u9078\u64c7\u7fa4\u7d44\u985e\u578b"
+                "description": "\u9078\u64c7\u7fa4\u7d44\u985e\u5225"
             },
             "light": {
                 "data": {
-                    "entities": "\u7fa4\u7d44\u6210\u54e1",
-                    "name": "\u7fa4\u7d44\u540d\u7a31"
+                    "entities": "\u6210\u54e1",
+                    "name": "\u540d\u7a31",
+                    "title": "\u65b0\u589e\u7fa4\u7d44"
                 },
                 "description": "\u9078\u64c7\u7fa4\u7d44\u9078\u9805"
             },
@@ -48,8 +60,9 @@
             },
             "media_player": {
                 "data": {
-                    "entities": "\u7fa4\u7d44\u6210\u54e1",
-                    "name": "\u7fa4\u7d44\u540d\u7a31"
+                    "entities": "\u6210\u54e1",
+                    "name": "\u540d\u7a31",
+                    "title": "\u65b0\u589e\u7fa4\u7d44"
                 },
                 "description": "\u9078\u64c7\u7fa4\u7d44\u9078\u9805"
             },
@@ -58,6 +71,42 @@
                     "entities": "\u7fa4\u7d44\u6210\u54e1"
                 },
                 "description": "\u9078\u64c7\u7fa4\u7d44\u9078\u9805"
+            },
+            "user": {
+                "data": {
+                    "group_type": "\u7fa4\u7d44\u985e\u5225"
+                },
+                "title": "\u65b0\u589e\u7fa4\u7d44"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "binary_sensor_options": {
+                "data": {
+                    "all": "\u6240\u6709\u5be6\u9ad4",
+                    "entities": "\u6210\u54e1"
+                }
+            },
+            "cover_options": {
+                "data": {
+                    "entities": "\u6210\u54e1"
+                }
+            },
+            "fan_options": {
+                "data": {
+                    "entities": "\u6210\u54e1"
+                }
+            },
+            "light_options": {
+                "data": {
+                    "entities": "\u6210\u54e1"
+                }
+            },
+            "media_player_options": {
+                "data": {
+                    "entities": "\u6210\u54e1"
+                }
             }
         }
     },

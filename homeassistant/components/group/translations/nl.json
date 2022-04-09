@@ -1,10 +1,20 @@
 {
     "config": {
         "step": {
+            "binary_sensor": {
+                "data": {
+                    "all": "Alle entiteiten",
+                    "entities": "Leden",
+                    "name": "Naam"
+                },
+                "description": "Als \"alle entiteiten\" is ingeschakeld, is de groep alleen ingeschakeld als alle leden zijn ingeschakeld. Als \"all entities\" is uitgeschakeld, is de groep ingeschakeld als een lid is ingeschakeld.",
+                "title": "Nieuwe groep"
+            },
             "cover": {
                 "data": {
-                    "entities": "Groepsleden",
-                    "name": "Groepsnaam"
+                    "entities": "Leden",
+                    "name": "Naam",
+                    "title": "Nieuwe groep"
                 },
                 "description": "Selecteer groepsopties"
             },
@@ -16,8 +26,9 @@
             },
             "fan": {
                 "data": {
-                    "entities": "Groepsleden",
-                    "name": "Groepsnaam"
+                    "entities": "Leden",
+                    "name": "Naam",
+                    "title": "Nieuwe groep"
                 },
                 "description": "Selecteer groepsopties"
             },
@@ -35,8 +46,9 @@
             },
             "light": {
                 "data": {
-                    "entities": "Groepsleden",
-                    "name": "Groepsnaam"
+                    "entities": "Leden",
+                    "name": "Naam",
+                    "title": "Nieuwe groep"
                 },
                 "description": "Selecteer groepsopties"
             },
@@ -48,8 +60,9 @@
             },
             "media_player": {
                 "data": {
-                    "entities": "Groepsleden",
-                    "name": "Groepsnaam"
+                    "entities": "Leden",
+                    "name": "Naam",
+                    "title": "Nieuwe groep"
                 },
                 "description": "Selecteer groepsopties"
             },
@@ -58,6 +71,42 @@
                     "entities": "Groepsleden"
                 },
                 "description": "Selecteer groepsopties"
+            },
+            "user": {
+                "data": {
+                    "group_type": "Groepstype"
+                },
+                "title": "Nieuwe groep"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "binary_sensor_options": {
+                "data": {
+                    "all": "Alle entiteiten",
+                    "entities": "Leden"
+                }
+            },
+            "cover_options": {
+                "data": {
+                    "entities": "Leden"
+                }
+            },
+            "fan_options": {
+                "data": {
+                    "entities": "Leden"
+                }
+            },
+            "light_options": {
+                "data": {
+                    "entities": "Leden"
+                }
+            },
+            "media_player_options": {
+                "data": {
+                    "entities": "Leden"
+                }
             }
         }
     },

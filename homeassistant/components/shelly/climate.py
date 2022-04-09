@@ -3,13 +3,16 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Mapping
-import logging
-from typing import Any, Final, cast
+from typing import Any, cast
 
 from aioshelly.block_device import Block
 import async_timeout
 
-from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN, ClimateEntity
+from homeassistant.components.climate import (
+    DOMAIN as CLIMATE_DOMAIN,
+    ClimateEntity,
+    ClimateEntityFeature,
+)
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
@@ -17,8 +20,6 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
     PRESET_NONE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
@@ -34,11 +35,10 @@ from .const import (
     BLOCK,
     DATA_CONFIG_ENTRY,
     DOMAIN,
+    LOGGER,
     SHTRV_01_TEMPERATURE_SETTINGS,
 )
 from .utils import get_device_entry_gen
-
-_LOGGER: Final = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -81,7 +81,7 @@ async def async_setup_climate_entities(
             sensor_block = block
 
     if sensor_block and device_block:
-        _LOGGER.debug("Setup online climate device %s", wrapper.name)
+        LOGGER.debug("Setup online climate device %s", wrapper.name)
         async_add_entities([BlockSleepingClimate(wrapper, sensor_block, device_block)])
 
 
@@ -103,8 +103,8 @@ async def async_restore_climate_entities(
         if entry.domain != CLIMATE_DOMAIN:
             continue
 
-        _LOGGER.debug("Setup sleeping climate device %s", wrapper.name)
-        _LOGGER.debug("Found entry %s [%s]", entry.original_name, entry.domain)
+        LOGGER.debug("Setup sleeping climate device %s", wrapper.name)
+        LOGGER.debug("Found entry %s [%s]", entry.original_name, entry.domain)
         async_add_entities([BlockSleepingClimate(wrapper, None, None, entry)])
         break
 
@@ -120,7 +120,9 @@ class BlockSleepingClimate(
     _attr_icon = "mdi:thermostat"
     _attr_max_temp = SHTRV_01_TEMPERATURE_SETTINGS["max"]
     _attr_min_temp = SHTRV_01_TEMPERATURE_SETTINGS["min"]
-    _attr_supported_features: int = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
+    _attr_supported_features: int = (
+        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+    )
     _attr_target_temperature_step = SHTRV_01_TEMPERATURE_SETTINGS["step"]
     _attr_temperature_unit = TEMP_CELSIUS
 
@@ -242,14 +244,14 @@ class BlockSleepingClimate(
 
     async def set_state_full_path(self, **kwargs: Any) -> Any:
         """Set block state (HTTP request)."""
-        _LOGGER.debug("Setting state for entity %s, state: %s", self.name, kwargs)
+        LOGGER.debug("Setting state for entity %s, state: %s", self.name, kwargs)
         try:
             async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
                 return await self.wrapper.device.http_request(
                     "get", f"thermostat/{self._channel}", kwargs
                 )
         except (asyncio.TimeoutError, OSError) as err:
-            _LOGGER.error(
+            LOGGER.error(
                 "Setting state for entity %s failed, state: %s, error: %s",
                 self.name,
                 kwargs,
@@ -287,7 +289,7 @@ class BlockSleepingClimate(
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
-        _LOGGER.info("Restoring entity %s", self.name)
+        LOGGER.info("Restoring entity %s", self.name)
 
         last_state = await self.async_get_last_state()
 
@@ -316,7 +318,7 @@ class BlockSleepingClimate(
                 self.block = block
 
         if self.device_block and self.block:
-            _LOGGER.debug("Entity %s attached to blocks", self.name)
+            LOGGER.debug("Entity %s attached to blocks", self.name)
 
             assert self.block.channel
 

@@ -11,7 +11,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import ICON_OCCUPIED, SENSOR_TYPES
+from .const import ENTITY_TYPES, ICON_OCCUPIED
 
 
 def device_from_bed(bed: SleepIQBed) -> DeviceInfo:
@@ -77,5 +77,5 @@ class SleepIQSleeperEntity(SleepIQBedEntity):
         self.sleeper = sleeper
         super().__init__(coordinator, bed)
 
-        self._attr_name = f"SleepNumber {bed.name} {sleeper.name} {SENSOR_TYPES[name]}"
-        self._attr_unique_id = f"{bed.id}_{sleeper.name}_{name}"
+        self._attr_name = f"SleepNumber {bed.name} {sleeper.name} {ENTITY_TYPES[name]}"
+        self._attr_unique_id = f"{sleeper.sleeper_id}_{name}"

@@ -37,7 +37,14 @@ from .const import DATA_CLIENT, DATA_COORDINATOR, DATA_VEHICLES, DOMAIN, SERVICE
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.BUTTON, Platform.DEVICE_TRACKER, Platform.LOCK, Platform.SENSOR]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.DEVICE_TRACKER,
+    Platform.LOCK,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 
 async def with_timeout(task, timeout_seconds=10):
@@ -111,6 +118,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             _LOGGER.warning(
                 "The mazda.%s service is deprecated and has been replaced by a button entity; "
                 "Please use the button entity instead",
+                service_call.service,
+            )
+
+        if service_call.service in ("start_charging", "stop_charging"):
+            _LOGGER.warning(
+                "The mazda.%s service is deprecated and has been replaced by a switch entity; "
+                "Please use the charging switch entity instead",
                 service_call.service,
             )
 
@@ -207,17 +221,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Register services
     for service in SERVICES:
-        if service == "send_poi":
-            hass.services.async_register(
-                DOMAIN,
-                service,
-                async_handle_service_call,
-                schema=service_schema_send_poi,
-            )
-        else:
-            hass.services.async_register(
-                DOMAIN, service, async_handle_service_call, schema=service_schema
-            )
+        hass.services.async_register(
+            DOMAIN,
+            service,
+            async_handle_service_call,
+            schema=service_schema_send_poi if service == "send_poi" else service_schema,
+        )
 
     return True
 
