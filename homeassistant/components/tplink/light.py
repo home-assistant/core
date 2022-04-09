@@ -101,7 +101,7 @@ RANDOM_EFFECT_DICT: Final = {
         cv.ensure_list_csv, [vol.Coerce(int)], HSV_SEQUENCE
     ),
     vol.Optional("random_seed", default=100): vol.All(
-        vol.Coerce(int), vol.Range(min=1, max=100)
+        vol.Coerce(int), vol.Range(min=1, max=600)
     ),
     vol.Optional("backgrounds"): vol.All(
         cv.ensure_list,
