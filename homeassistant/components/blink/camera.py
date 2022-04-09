@@ -90,8 +90,8 @@ class BlinkCamera(Camera):
         try:
             return self._camera.image_from_cache.content
         except ChunkedEncodingError:
-            _LOGGER.info("Could not retrieve image for %s", self._camera.name)
+            _LOGGER.debug("Could not retrieve image for %s", self._camera.name)
             return b""
         except TypeError:
-            _LOGGER.info("No cached image for %s", self._camera.name)
+            _LOGGER.debug("No cached image for %s", self._camera.name)
             return b""
