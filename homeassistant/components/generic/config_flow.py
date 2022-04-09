@@ -322,7 +322,7 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
         # abort if we've already got this one.
         if self.check_for_existing(import_config):
             return self.async_abort(reason="already_exists")
-        # Don't bother testing the still or stream details on yaml import.
+        # Don't bother testing the still or stream details on yaml import
         still_url = import_config.get(CONF_STILL_IMAGE_URL)
         stream_url = import_config.get(CONF_STREAM_SOURCE)
         name = import_config.get(
