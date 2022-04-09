@@ -175,7 +175,12 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
             try:
                 self._state = Decimal(state.state)
             except (DecimalException, ValueError) as err:
-                _LOGGER.warning("Could not restore last state: %s", err)
+                _LOGGER.warning(
+                    "%s could not restore last state %s: %s",
+                    self.entity_id,
+                    state.state,
+                    err,
+                )
             else:
                 self._attr_device_class = state.attributes.get(ATTR_DEVICE_CLASS)
                 if self._unit_of_measurement is None:
