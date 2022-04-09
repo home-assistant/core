@@ -523,6 +523,7 @@ async def test_smart_strip_custom_random_effect(hass: HomeAssistant) -> None:
         {
             ATTR_ENTITY_ID: entity_id,
             "init_states": [340, 20, 50],
+            "random_seed": 600,
         },
         blocking=True,
     )
@@ -539,7 +540,7 @@ async def test_smart_strip_custom_random_effect(hass: HomeAssistant) -> None:
             "transition": 0,
             "type": "random",
             "init_states": [[340, 20, 50]],
-            "random_seed": 100,
+            "random_seed": 600,
         }
     )
     strip.set_custom_effect.reset_mock()
