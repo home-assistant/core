@@ -44,6 +44,12 @@ import homeassistant.util.dt as dt_util
 from tests.common import MockConfigEntry, async_fire_time_changed, mock_restore_cache
 
 
+@pytest.fixture(autouse=True)
+def set_utc(hass):
+    """Set timezone to UTC."""
+    hass.config.set_time_zone("UTC")
+
+
 @pytest.mark.parametrize(
     "yaml_config,config_entry_config",
     (
