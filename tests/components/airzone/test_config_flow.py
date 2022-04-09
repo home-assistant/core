@@ -7,7 +7,7 @@ from aiohttp.client_exceptions import ClientConnectorError, ClientResponseError
 from homeassistant import data_entry_flow
 from homeassistant.components.airzone.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_ID, CONF_PORT
 from homeassistant.core import HomeAssistant
 
 from .util import CONFIG, HVAC_MOCK
@@ -53,6 +53,7 @@ async def test_form(hass: HomeAssistant) -> None:
         assert result["title"] == f"Airzone {CONFIG[CONF_HOST]}:{CONFIG[CONF_PORT]}"
         assert result["data"][CONF_HOST] == CONFIG[CONF_HOST]
         assert result["data"][CONF_PORT] == CONFIG[CONF_PORT]
+        assert result["data"][CONF_ID] == CONFIG[CONF_ID]
 
         assert len(mock_setup_entry.mock_calls) == 1
 
@@ -60,7 +61,7 @@ async def test_form(hass: HomeAssistant) -> None:
 async def test_form_duplicated_id(hass: HomeAssistant) -> None:
     """Test setting up duplicated entry."""
 
-    entry = MockConfigEntry(domain=DOMAIN, data=CONFIG)
+    entry = MockConfigEntry(domain=DOMAIN, data=CONFIG, version=2)
     entry.add_to_hass(hass)
 
     with patch(

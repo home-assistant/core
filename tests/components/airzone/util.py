@@ -27,7 +27,7 @@ from aioairzone.const import (
 )
 
 from homeassistant.components.airzone import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_ID, CONF_PORT
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -35,6 +35,7 @@ from tests.common import MockConfigEntry
 CONFIG = {
     CONF_HOST: "192.168.1.100",
     CONF_PORT: 3000,
+    CONF_ID: 0,
 }
 
 HVAC_MOCK = {
@@ -153,7 +154,7 @@ async def async_init_integration(
 ) -> None:
     """Set up the Airzone integration in Home Assistant."""
 
-    entry = MockConfigEntry(domain=DOMAIN, data=CONFIG)
+    entry = MockConfigEntry(domain=DOMAIN, data=CONFIG, version=2)
     entry.add_to_hass(hass)
 
     with patch(

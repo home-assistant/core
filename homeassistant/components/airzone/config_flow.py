@@ -10,15 +10,17 @@ from aiohttp.client_exceptions import ClientConnectorError
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_ID, CONF_PORT
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
 
-from .const import DEFAULT_LOCAL_API_PORT, DOMAIN
+from .const import DEFAULT_LOCAL_API_PORT, DEFAULT_SYSTEM_ID, DOMAIN
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle config flow for an Airzone device."""
+
+    VERSION = 2
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -31,6 +33,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 {
                     CONF_HOST: user_input[CONF_HOST],
                     CONF_PORT: user_input[CONF_PORT],
+                    CONF_ID: user_input[CONF_ID],
                 }
             )
 
@@ -39,6 +42,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 ConnectionOptions(
                     user_input[CONF_HOST],
                     user_input[CONF_PORT],
+                    user_input[CONF_ID],
                 ),
             )
 
@@ -56,6 +60,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(CONF_HOST): str,
                     vol.Required(CONF_PORT, default=DEFAULT_LOCAL_API_PORT): int,
+                    vol.Optional(CONF_ID, default=DEFAULT_SYSTEM_ID): int,
                 }
             ),
             errors=errors,

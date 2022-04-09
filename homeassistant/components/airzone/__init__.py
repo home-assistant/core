@@ -1,6 +1,7 @@
 """The Airzone integration."""
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from aioairzone.common import ConnectionOptions
@@ -15,16 +16,18 @@ from aioairzone.const import (
 from aioairzone.localapi import AirzoneLocalApi
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT, Platform
+from homeassistant.const import CONF_HOST, CONF_ID, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, MANUFACTURER
+from .const import DEFAULT_SYSTEM_ID, DOMAIN, MANUFACTURER
 from .coordinator import AirzoneUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.CLIMATE, Platform.SENSOR]
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class AirzoneEntity(CoordinatorEntity[AirzoneUpdateCoordinator]):
@@ -62,11 +65,28 @@ class AirzoneEntity(CoordinatorEntity[AirzoneUpdateCoordinator]):
         return value
 
 
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry):
+    """Migrate old entry."""
+    _LOGGER.debug("Migrating from version %s", config_entry.version)
+
+    if config_entry.version == 1:
+        new = {**config_entry.data}
+        new[CONF_ID] = DEFAULT_SYSTEM_ID
+
+        config_entry.version = 2
+        hass.config_entries.async_update_entry(config_entry, data=new)
+
+    _LOGGER.info("Migration to version %s successful", config_entry.version)
+
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Airzone from a config entry."""
     options = ConnectionOptions(
         entry.data[CONF_HOST],
         entry.data[CONF_PORT],
+        entry.data[CONF_ID],
     )
 
     airzone = AirzoneLocalApi(aiohttp_client.async_get_clientsession(hass), options)
