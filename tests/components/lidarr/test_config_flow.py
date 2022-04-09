@@ -9,7 +9,7 @@ from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_SOURCE
 from homeassistant.core import HomeAssistant
 
-from . import CONF_DATA, MOCK_USER_INPUT, create_entry, mock_connection
+from . import API_KEY, CONF_DATA, MOCK_USER_INPUT, create_entry, mock_connection
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 
@@ -29,10 +29,14 @@ async def test_flow_user_form(
         DOMAIN,
         context={CONF_SOURCE: SOURCE_USER},
     )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input=MOCK_USER_INPUT,
-    )
+    with patch(
+        "homeassistant.components.lidarr.config_flow.LidarrClient.async_try_zeroconf",
+        return_value=("/api/v3", API_KEY, ""),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=MOCK_USER_INPUT,
+        )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
     assert result["data"] == CONF_DATA

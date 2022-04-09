@@ -51,12 +51,6 @@ def mock_connection(
         headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 
-    aioclient_mock.get(
-        f"{url[:21]}/initialize.js",
-        text=load_fixture("lidarr/initialize.js"),
-        headers={"Content-Type": "application/javascript"},
-    )
-
 
 def create_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Create Efergy entry in Home Assistant."""
