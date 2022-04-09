@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from freezegun import freeze_time
 from prayer_times_calculator.exceptions import InvalidResponseError
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import islamic_prayer_times
@@ -19,6 +20,12 @@ from . import (
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+
+
+@pytest.fixture(autouse=True)
+def set_utc(hass):
+    """Set timezone to UTC."""
+    hass.config.set_time_zone("UTC")
 
 
 async def test_setup_with_config(hass):

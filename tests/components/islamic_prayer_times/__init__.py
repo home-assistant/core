@@ -44,4 +44,4 @@ NEW_PRAYER_TIMES_TIMESTAMPS = {
     "Midnight": datetime(2020, 1, 1, 00, 43, 0),
 }
 
-NOW = datetime(2020, 1, 1, 00, 00, 0, tzinfo=dt_util.get_time_zone("US/Pacific"))
+NOW = datetime(2020, 1, 1, 00, 00, 0, tzinfo=dt_util.UTC)

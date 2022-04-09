@@ -2,6 +2,7 @@
 from unittest.mock import patch
 
 from freezegun import freeze_time
+import pytest
 
 from homeassistant.components import islamic_prayer_times
 import homeassistant.util.dt as dt_util
@@ -9,6 +10,12 @@ import homeassistant.util.dt as dt_util
 from . import NOW, PRAYER_TIMES, PRAYER_TIMES_TIMESTAMPS
 
 from tests.common import MockConfigEntry
+
+
+@pytest.fixture(autouse=True)
+def set_utc(hass):
+    """Set timezone to UTC."""
+    hass.config.set_time_zone("UTC")
 
 
 async def test_islamic_prayer_times_sensors(hass):
