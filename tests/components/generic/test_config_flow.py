@@ -147,6 +147,7 @@ async def test_form_only_svg_whitespace(hass, fakeimgbytes_svg, user_flow):
         ("sample2_jpeg_odd_header.jpg"),
         ("sample3_jpeg_odd_header.jpg"),
         ("sample4_K5-60mileAnim-320x240.gif"),
+        ("sample5_webp.webp"),
     ],
 )
 async def test_form_only_still_sample(hass, user_flow, image_file):
