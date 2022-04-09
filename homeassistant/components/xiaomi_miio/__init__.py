@@ -407,6 +407,7 @@ async def async_setup_gateway_entry(hass: HomeAssistant, entry: ConfigEntry) -> 
 
     def update_data_factory(sub_device):
         """Create update function for a subdevice."""
+
         async def async_update_data():
             """Fetch data from the subdevice."""
             try:

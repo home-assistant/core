@@ -134,7 +134,9 @@ async def async_setup_entry(
         sub_devices = gateway.devices
         for sub_device in sub_devices.values():
             if sub_device.device_type == "LightBulb":
-                coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR][sub_device.sid]
+                coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR][
+                    sub_device.sid
+                ]
                 entities.append(
                     XiaomiGatewayBulb(coordinator, sub_device, config_entry)
                 )
