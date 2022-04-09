@@ -1092,15 +1092,13 @@ def get_latest_short_term_statistics(
         baked_query = hass.data[STATISTICS_BAKERY](
             lambda session: session.query(
                 *QUERY_STATISTICS_SHORT_TERM,
-                func.max(StatisticsShortTerm.metadata_id, StatisticsShortTerm.start),
+                func.max(StatisticsShortTerm.start),
             )
         )
         baked_query += lambda q: q.filter(
             StatisticsShortTerm.metadata_id.in_(bindparam("metadata_ids"))
         )
-        baked_query += lambda q: q.order_by(
-            StatisticsShortTerm.metadata_id, StatisticsShortTerm.start.desc()
-        )
+        baked_query += lambda q: q.group_by(StatisticsShortTerm.metadata_id)
         metadata_ids = [
             metadata[statistic_id][0]
             for statistic_id in statistic_ids
