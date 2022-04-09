@@ -324,16 +324,7 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
         # abort if we've already got this one.
         if self.check_for_existing(import_config):
             return self.async_abort(reason="already_exists")
-        errors, still_format = await async_test_still(self.hass, import_config)
-        if errors.get(CONF_STILL_IMAGE_URL) == "template_error":
-            _LOGGER.warning(
-                "Could not render template, but it could be that "
-                "referenced entities are still initialising. "
-                "Continuing assuming that imported YAML template is valid"
-            )
-            errors.pop(CONF_STILL_IMAGE_URL)
-            still_format = import_config.get(CONF_CONTENT_TYPE, "image/jpeg")
-        errors = errors | await async_test_stream(self.hass, import_config)
+        # Don't bother testing the still or stream details on yaml import.
         still_url = import_config.get(CONF_STILL_IMAGE_URL)
         stream_url = import_config.get(CONF_STREAM_SOURCE)
         name = import_config.get(
@@ -341,15 +332,10 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         if CONF_LIMIT_REFETCH_TO_URL_CHANGE not in import_config:
             import_config[CONF_LIMIT_REFETCH_TO_URL_CHANGE] = False
-        if not errors:
-            import_config[CONF_CONTENT_TYPE] = still_format
-            await self.async_set_unique_id(self.flow_id)
-            return self.async_create_entry(title=name, data={}, options=import_config)
-        _LOGGER.error(
-            "Error importing generic IP camera platform config: unexpected error '%s'",
-            list(errors.values()),
-        )
-        return self.async_abort(reason="unknown")
+        still_format = import_config.get(CONF_CONTENT_TYPE, "image/jpeg")
+        import_config[CONF_CONTENT_TYPE] = still_format
+        await self.async_set_unique_id(self.flow_id)
+        return self.async_create_entry(title=name, data={}, options=import_config)
 
 
 class GenericOptionsFlowHandler(OptionsFlow):
