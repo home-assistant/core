@@ -1,19 +1,27 @@
 """Support for myStrom switches/plugs."""
 from __future__ import annotations
 
+from contextlib import suppress
 import logging
 
 from pymystrom.exceptions import MyStromConnectionError
 from pymystrom.switch import MyStromSwitch as _MyStromSwitch
 import voluptuous as vol
 
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_HOST, CONF_NAME, POWER_WATT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util import convert
 
 DEFAULT_NAME = "myStrom Switch"
 
@@ -44,13 +52,17 @@ async def async_setup_platform(
         _LOGGER.error("No route to myStrom plug: %s", host)
         raise PlatformNotReady() from err
 
-    async_add_entities([MyStromSwitch(plug, name)])
+    entities: list[Entity] = []
+    switch = MyStromSwitch(plug, name)
+    entities.append(switch)
+    entities.append(MyStromPowerSensor(plug, switch))
+    async_add_entities(entities)
 
 
 class MyStromSwitch(SwitchEntity):
     """Representation of a myStrom switch/plug."""
 
-    def __init__(self, plug, name):
+    def __init__(self, plug: _MyStromSwitch, name):
         """Initialize the myStrom switch/plug."""
         self._name = name
         self.plug = plug
@@ -70,7 +82,7 @@ class MyStromSwitch(SwitchEntity):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return self.plug._mac  # pylint: disable=protected-access
+        return self.plug.mac
 
     @property
     def available(self):
@@ -101,3 +113,28 @@ class MyStromSwitch(SwitchEntity):
             if self._available:
                 self._available = False
                 _LOGGER.error("No route to myStrom plug")
+
+
+class MyStromPowerSensor(SensorEntity):
+    """Representation of a MySwitch Power Sensor."""
+
+    _attr_device_class = SensorDeviceClass.POWER
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_native_unit_of_measurement = POWER_WATT
+
+    def __init__(self, plug: _MyStromSwitch, mystrom_device: MyStromSwitch) -> None:
+        """Initialize the sensor."""
+        self._plug = plug
+        self._icon = "mdi:lightning-bolt"
+        self._attr_name = f"{mystrom_device.name} Power"
+        self._attr_unique_id = f"{mystrom_device.unique_id}_power"
+
+    def update(self):
+        """Update the state."""
+        with suppress(KeyError, ValueError):
+            self._attr_native_value = convert(self._plug.consumption, float)
+
+    @property
+    def icon(self):
+        """Return the icon to use for device if any."""
+        return self._icon
