@@ -61,6 +61,7 @@ MATCH_ALL: Final = "*"
 # Entity target all constant
 ENTITY_MATCH_NONE: Final = "none"
 ENTITY_MATCH_ALL: Final = "all"
+ENTITY_MATCH_ANY: Final = "any"
 
 # If no name is specified
 DEVICE_DEFAULT_NAME: Final = "Unnamed Device"
@@ -172,6 +173,7 @@ CONF_LIGHTS: Final = "lights"
 CONF_LOCATION: Final = "location"
 CONF_LONGITUDE: Final = "longitude"
 CONF_MAC: Final = "mac"
+CONF_MATCH: Final = "match"
 CONF_MAXIMUM: Final = "maximum"
 CONF_MEDIA_DIRS: Final = "media_dirs"
 CONF_METHOD: Final = "method"

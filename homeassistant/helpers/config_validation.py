@@ -49,6 +49,7 @@ from homeassistant.const import (
     CONF_EVENT_DATA_TEMPLATE,
     CONF_FOR,
     CONF_ID,
+    CONF_MATCH,
     CONF_PLATFORM,
     CONF_REPEAT,
     CONF_SCAN_INTERVAL,
@@ -68,6 +69,7 @@ from homeassistant.const import (
     CONF_WAIT_TEMPLATE,
     CONF_WHILE,
     ENTITY_MATCH_ALL,
+    ENTITY_MATCH_ANY,
     ENTITY_MATCH_NONE,
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
@@ -1105,6 +1107,9 @@ STATE_CONDITION_BASE_SCHEMA = {
     **CONDITION_BASE_SCHEMA,
     vol.Required(CONF_CONDITION): "state",
     vol.Required(CONF_ENTITY_ID): entity_ids_or_uuids,
+    vol.Optional(CONF_MATCH, default=ENTITY_MATCH_ALL): vol.All(
+        vol.Lower, vol.Any(ENTITY_MATCH_ALL, ENTITY_MATCH_ANY)
+    ),
     vol.Optional(CONF_ATTRIBUTE): str,
     vol.Optional(CONF_FOR): positive_time_period,
     # To support use_trigger_value in automation
