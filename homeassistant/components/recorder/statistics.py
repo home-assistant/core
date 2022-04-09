@@ -225,9 +225,9 @@ def get_start_time() -> datetime:
 
 
 def _update_or_add_metadata(
-    hass: HomeAssistant,
     session: Session,
     new_metadata: StatisticMetaData,
+    old_metadata_dict: dict[str, tuple[int, StatisticMetaData]],
 ) -> int:
     """Get metadata_id for a statistic_id.
 
@@ -237,9 +237,6 @@ def _update_or_add_metadata(
     Updating metadata source is not possible.
     """
     statistic_id = new_metadata["statistic_id"]
-    old_metadata_dict = get_metadata_with_session(
-        hass, session, statistic_ids=[statistic_id]
-    )
     if not old_metadata_dict:
         meta = StatisticsMeta.from_meta(new_metadata)
         session.add(meta)
@@ -557,8 +554,14 @@ def compile_statistics(instance: Recorder, start: datetime) -> bool:
         session=instance.get_session(),  # type: ignore[misc]
         exception_filter=_filter_unique_constraint_integrity_error(instance),
     ) as session:
+        statistic_ids = [stats["meta"]["statistic_id"] for stats in platform_stats]
+        old_metadata_dict = get_metadata_with_session(
+            instance.hass, session, statistic_ids=statistic_ids
+        )
         for stats in platform_stats:
-            metadata_id = _update_or_add_metadata(instance.hass, session, stats["meta"])
+            metadata_id = _update_or_add_metadata(
+                session, stats["meta"], old_metadata_dict
+            )
             _insert_statistics(
                 session,
                 StatisticsShortTerm,
@@ -1077,6 +1080,49 @@ def get_last_short_term_statistics(
     )
 
 
+def get_latest_short_term_statistics(
+    hass: HomeAssistant, statistic_ids: list[str], convert_units: bool
+) -> dict[str, list[dict]]:
+    """Return the latest short term statistics for statistic_ids."""
+    with session_scope(hass=hass) as session:
+        # Fetch metadata for the given statistic_id
+        metadata = get_metadata_with_session(hass, session, statistic_ids=statistic_ids)
+        if not metadata:
+            return {}
+        baked_query = hass.data[STATISTICS_BAKERY](
+            lambda session: session.query(
+                *QUERY_STATISTICS_SHORT_TERM,
+                func.max(StatisticsShortTerm.metadata_id, StatisticsShortTerm.start),
+            )
+        )
+        baked_query += lambda q: q.filter(
+            StatisticsShortTerm.metadata_id.in_(bindparam("metadata_ids"))
+        )
+        baked_query += lambda q: q.order_by(
+            StatisticsShortTerm.metadata_id, StatisticsShortTerm.start.desc()
+        )
+        metadata_ids = [
+            metadata[statistic_id][0]
+            for statistic_id in statistic_ids
+            if statistic_id in metadata
+        ]
+        stats = execute(baked_query(session).params(metadata_ids=metadata_ids))
+        if not stats:
+            return {}
+
+        # Return statistics combined with metadata
+        return _sorted_statistics_to_dict(
+            hass,
+            session,
+            stats,
+            statistic_ids,
+            metadata,
+            convert_units,
+            StatisticsShortTerm,
+            None,
+        )
+
+
 def _statistics_at_time(
     session: Session,
     metadata_ids: set[int],
@@ -1288,7 +1334,10 @@ def add_external_statistics(
         session=instance.get_session(),  # type: ignore[misc]
         exception_filter=_filter_unique_constraint_integrity_error(instance),
     ) as session:
-        metadata_id = _update_or_add_metadata(instance.hass, session, metadata)
+        old_metadata_dict = get_metadata_with_session(
+            instance.hass, session, statistic_ids=[metadata["statistic_id"]]
+        )
+        metadata_id = _update_or_add_metadata(session, metadata, old_metadata_dict)
         for stat in statistics:
             if stat_id := _statistics_exists(
                 session, Statistics, metadata_id, stat["start"]
