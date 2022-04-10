@@ -311,8 +311,7 @@ class BMWConnectedDriveAccount:
         )
         try:
             self.account.update_vehicle_states()
-            for listener in self._update_listeners:
-                listener()
+            self.notify_listeners()
         except OSError as exception:
             _LOGGER.error(
                 "Could not connect to the BMW Connected Drive portal. "
@@ -323,6 +322,11 @@ class BMWConnectedDriveAccount:
     def add_update_listener(self, listener: Callable[[], None]) -> None:
         """Add a listener for update notifications."""
         self._update_listeners.append(listener)
+
+    def notify_listeners(self) -> None:
+        """Notify all listeners."""
+        for listener in self._update_listeners:
+            listener()
 
 
 class BMWConnectedDriveBaseEntity(Entity):
