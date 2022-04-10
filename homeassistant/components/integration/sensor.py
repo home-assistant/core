@@ -166,7 +166,7 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
         self._attr_state_class = SensorStateClass.TOTAL
         self._attr_icon = "mdi:chart-histogram"
         self._attr_should_poll = False
-        self._attr_extra_state_attributes = {ATTR_SOURCE_ID: self._sensor_source_id}
+        self._attr_extra_state_attributes = {ATTR_SOURCE_ID: source_entity}
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
