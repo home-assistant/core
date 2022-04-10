@@ -19,7 +19,7 @@
                     "username": "Email"
                 },
                 "description": "Configure a integra\u00e7\u00e3o do ViCare. Para gerar a chave de API, acesse https://developer.viessmann.com",
-                "title": "{name}"
+                "title": "Setup a new Viessmann device"
             }
         }
     }

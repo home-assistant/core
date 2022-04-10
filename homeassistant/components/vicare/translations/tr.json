@@ -19,7 +19,7 @@
                     "username": "E-posta"
                 },
                 "description": "ViCare entegrasyonunu ayarlay\u0131n. API anahtar\u0131 olu\u015fturmak i\u00e7in https://developer.viessmann.com adresine gidin.",
-                "title": "{name}"
+                "title": "Setup a new Viessmann device"
             }
         }
     }

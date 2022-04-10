@@ -19,7 +19,7 @@
                     "username": "Adres e-mail"
                 },
                 "description": "Skonfiguruj integracj\u0119 ViCare. Aby wygenerowa\u0107 klucz API wejd\u017a na https://developer.viessmann.com",
-                "title": "{name}"
+                "title": "Setup a new Viessmann device"
             }
         }
     }

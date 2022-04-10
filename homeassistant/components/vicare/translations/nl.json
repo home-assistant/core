@@ -19,7 +19,7 @@
                     "username": "E-mail"
                 },
                 "description": "ViCare integratie instellen. Ga naar https://developer.viessmann.com om een API-sleutel te genereren.",
-                "title": "{name}"
+                "title": "Setup a new Viessmann device"
             }
         }
     }

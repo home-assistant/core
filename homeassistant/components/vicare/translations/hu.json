@@ -19,7 +19,7 @@
                     "username": "E-mail"
                 },
                 "description": "A ViCare integr\u00e1ci\u00f3 be\u00e1ll\u00edt\u00e1sa. Az API-kulcs gener\u00e1l\u00e1s\u00e1hoz keresse fel a https://developer.viessmann.com webhelyet.",
-                "title": "{name}"
+                "title": "Setup a new Viessmann device"
             }
         }
     }

@@ -19,7 +19,7 @@
                     "username": "Email"
                 },
                 "description": "Set up ViCare integration. To generate API key go to https://developer.viessmann.com",
-                "title": "{name}"
+                "title": "Setup a new Viessmann device"
             }
         }
     }

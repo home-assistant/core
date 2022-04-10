@@ -19,7 +19,7 @@
                     "username": "E-Mail"
                 },
                 "description": "Richte die ViCare-Integration ein. Um einen API-Schl\u00fcssel zu generieren, gehe auf https://developer.viessmann.com",
-                "title": "{name}"
+                "title": "Setup a new Viessmann device"
             }
         }
     }
