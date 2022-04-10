@@ -3509,7 +3509,7 @@ async def test_validate_action_config(hass):
         },
         cv.SCRIPT_ACTION_VARIABLES: {"variables": {"hello": "world"}},
         cv.SCRIPT_ACTION_STOP: {"stop": "Stop it right there buddy..."},
-        cv.SCRIPT_ACTION_FAIL: {"fail": "Stand up, and try again!"},
+        cv.SCRIPT_ACTION_ERROR: {"error": "Stand up, and try again!"},
     }
     expected_templates = {
         cv.SCRIPT_ACTION_CHECK_CONDITION: None,
@@ -3815,8 +3815,8 @@ async def test_stop_action(hass, caplog):
     )
 
 
-async def test_fail_action(hass, caplog):
-    """Test if automation fails on calling the fail action."""
+async def test_error_action(hass, caplog):
+    """Test if automation fails on calling the error action."""
     event = "test_event"
     events = async_capture_events(hass, event)
 
@@ -3826,7 +3826,7 @@ async def test_fail_action(hass, caplog):
             {"event": event},
             {
                 "alias": alias,
-                "fail": "Epic one...",
+                "error": "Epic one...",
             },
             {"event": event},
         ]
@@ -3836,7 +3836,7 @@ async def test_fail_action(hass, caplog):
     await script_obj.async_run(context=Context())
     await hass.async_block_till_done()
 
-    assert "Fail script sequence: Epic one..." in caplog.text
+    assert "Test Name: Error script sequence: Epic one..." in caplog.text
     caplog.clear()
     assert len(events) == 1
 
@@ -3844,7 +3844,7 @@ async def test_fail_action(hass, caplog):
         {
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
             "1": [
-                {"error_type": script._AbortScript, "result": {"fail": "Epic one..."}}
+                {"error_type": script._AbortScript, "result": {"error": "Epic one..."}}
             ],
         },
         expected_script_execution="aborted",

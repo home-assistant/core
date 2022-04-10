@@ -44,10 +44,10 @@ from homeassistant.const import (
     CONF_DOMAIN,
     CONF_ENTITY_ID,
     CONF_ENTITY_NAMESPACE,
+    CONF_ERROR,
     CONF_EVENT,
     CONF_EVENT_DATA,
     CONF_EVENT_DATA_TEMPLATE,
-    CONF_FAIL,
     CONF_FOR,
     CONF_ID,
     CONF_PLATFORM,
@@ -1429,10 +1429,10 @@ _SCRIPT_STOP_SCHEMA = vol.Schema(
     }
 )
 
-_SCRIPT_FAIL_SCHEMA = vol.Schema(
+_SCRIPT_ERROR_SCHEMA = vol.Schema(
     {
         **SCRIPT_ACTION_BASE_SCHEMA,
-        vol.Optional(CONF_FAIL): vol.Any(None, string),
+        vol.Optional(CONF_ERROR): vol.Any(None, string),
     }
 )
 
@@ -1448,7 +1448,7 @@ SCRIPT_ACTION_CHOOSE = "choose"
 SCRIPT_ACTION_WAIT_FOR_TRIGGER = "wait_for_trigger"
 SCRIPT_ACTION_VARIABLES = "variables"
 SCRIPT_ACTION_STOP = "stop"
-SCRIPT_ACTION_FAIL = "fail"
+SCRIPT_ACTION_ERROR = "error"
 
 
 def determine_script_action(action: dict[str, Any]) -> str:
@@ -1489,8 +1489,8 @@ def determine_script_action(action: dict[str, Any]) -> str:
     if CONF_STOP in action:
         return SCRIPT_ACTION_STOP
 
-    if CONF_FAIL in action:
-        return SCRIPT_ACTION_FAIL
+    if CONF_ERROR in action:
+        return SCRIPT_ACTION_ERROR
 
     raise ValueError("Unable to determine action")
 
@@ -1508,7 +1508,7 @@ ACTION_TYPE_SCHEMAS: dict[str, Callable[[Any], dict]] = {
     SCRIPT_ACTION_WAIT_FOR_TRIGGER: _SCRIPT_WAIT_FOR_TRIGGER_SCHEMA,
     SCRIPT_ACTION_VARIABLES: _SCRIPT_SET_SCHEMA,
     SCRIPT_ACTION_STOP: _SCRIPT_STOP_SCHEMA,
-    SCRIPT_ACTION_FAIL: _SCRIPT_FAIL_SCHEMA,
+    SCRIPT_ACTION_ERROR: _SCRIPT_ERROR_SCHEMA,
 }
 
 

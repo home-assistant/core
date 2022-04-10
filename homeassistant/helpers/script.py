@@ -33,10 +33,10 @@ from homeassistant.const import (
     CONF_DELAY,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
+    CONF_ERROR,
     CONF_EVENT,
     CONF_EVENT_DATA,
     CONF_EVENT_DATA_TEMPLATE,
-    CONF_FAIL,
     CONF_MODE,
     CONF_REPEAT,
     CONF_SCENE,
@@ -231,7 +231,7 @@ STATIC_VALIDATION_ACTION_TYPES = (
     cv.SCRIPT_ACTION_FIRE_EVENT,
     cv.SCRIPT_ACTION_ACTIVATE_SCENE,
     cv.SCRIPT_ACTION_VARIABLES,
-    cv.SCRIPT_ACTION_FAIL,
+    cv.SCRIPT_ACTION_ERROR,
     cv.SCRIPT_ACTION_STOP,
 )
 
@@ -852,12 +852,12 @@ class _ScriptRun:
         trace_set_result(stop=stop)
         raise _StopScript(stop)
 
-    async def _async_fail_step(self):
-        """Abort and fail script execution."""
-        fail = self._action[CONF_FAIL]
-        self._log("Fail script sequence: %s", fail)
-        trace_set_result(fail=fail)
-        raise _AbortScript(fail)
+    async def _async_error_step(self):
+        """Abort and error script execution."""
+        error = self._action[CONF_ERROR]
+        self._log("Error script sequence: %s", error)
+        trace_set_result(error=error)
+        raise _AbortScript(error)
 
     async def _async_run_script(self, script: Script) -> None:
         """Execute a script."""
