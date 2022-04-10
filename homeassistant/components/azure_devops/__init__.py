@@ -1,6 +1,7 @@
 """Support for Azure DevOps."""
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -64,32 +65,39 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         list[DevOpsBuild], list[DevOpsWorkItemValue] | None
     ]:
         """Fetch data from Azure DevOps."""
-        async with async_timeout.timeout(20):
-            try:
-                builds: list[DevOpsBuild] = await client.get_builds(
-                    entry.data[CONF_ORG],
-                    entry.data[CONF_PROJECT],
-                    BUILDS_QUERY,
-                )
-                if pat is not None:
-                    wiql_result: DevOpsWiqlResult = await client.get_work_items_ids_all(
+        try:
+            async with async_timeout.timeout(20):
+                try:
+                    builds: list[DevOpsBuild] = await client.get_builds(
                         entry.data[CONF_ORG],
                         entry.data[CONF_PROJECT],
+                        BUILDS_QUERY,
                     )
-                    if wiql_result:
-                        ids: list[int] = [item.id for item in wiql_result.work_items]
-                        work_items: list[DevOpsWorkItemValue] = (
-                            await client.get_work_items(
+                    if pat is not None:
+                        wiql_result: DevOpsWiqlResult = (
+                            await client.get_work_items_ids_all(
                                 entry.data[CONF_ORG],
                                 entry.data[CONF_PROJECT],
-                                ids,
                             )
-                        ).value
-                        return builds, work_items
+                        )
+                        if wiql_result:
+                            ids: list[int] = [
+                                item.id for item in wiql_result.work_items
+                            ]
+                            work_items: list[DevOpsWorkItemValue] = (
+                                await client.get_work_items(
+                                    entry.data[CONF_ORG],
+                                    entry.data[CONF_PROJECT],
+                                    ids,
+                                )
+                            ).value
+                            return builds, work_items
 
-                return builds, None
-            except (aiohttp.ClientError, aiohttp.ClientError) as exception:
-                raise UpdateFailed from exception
+                    return builds, None
+                except (aiohttp.ClientError, aiohttp.ClientError) as exception:
+                    raise UpdateFailed from exception
+        except (asyncio.TimeoutError) as exception:
+            raise UpdateFailed from exception
 
     coordinator = DataUpdateCoordinator(
         hass,
