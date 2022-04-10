@@ -24,7 +24,7 @@
                     "declination": "Declinazione (0 = Orizzontale, 90 = Verticale)",
                     "modules power": "Potenza di picco totale in Watt dei tuoi moduli solari"
                 },
-                "description": "Questi valori consentono di modificare il risultato di Solar.Forecast. Fare riferimento alla documentazione se un campo non \u00e8 chiaro."
+                "description": "Questi valori consentono di modificare il risultato di Solar.Forecast. Fai riferimento alla documentazione se un campo non \u00e8 chiaro."
             }
         }
     }

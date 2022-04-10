@@ -1,11 +1,15 @@
 """Support for monitoring OctoPrint 3D printers."""
+from __future__ import annotations
+
+from datetime import timedelta
 import logging
-import time
+from typing import cast
 
-from aiohttp.hdrs import CONTENT_TYPE
-import requests
+from pyoctoprintapi import ApiError, OctoprintClient, PrinterOffline
 import voluptuous as vol
+from yarl import URL
 
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_BINARY_SENSORS,
@@ -16,22 +20,21 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SENSORS,
     CONF_SSL,
-    CONTENT_TYPE_JSON,
-    PERCENTAGE,
-    TEMP_CELSIUS,
-    TIME_SECONDS,
+    CONF_VERIFY_SSL,
+    Platform,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.discovery import load_platform
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import slugify as util_slugify
+import homeassistant.util.dt as dt_util
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_BED = "bed"
-CONF_NUMBER_OF_TOOLS = "number_of_tools"
-
-DEFAULT_NAME = "OctoPrint"
-DOMAIN = "octoprint"
 
 
 def has_all_unique_names(value):
@@ -51,11 +54,15 @@ def ensure_valid_path(value):
     return value
 
 
-BINARY_SENSOR_TYPES = {
-    # API Endpoint, Group, Key, unit
-    "Printing": ["printer", "state", "printing", None],
-    "Printing Error": ["printer", "state", "error", None],
-}
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR]
+DEFAULT_NAME = "OctoPrint"
+CONF_NUMBER_OF_TOOLS = "number_of_tools"
+CONF_BED = "bed"
+
+BINARY_SENSOR_TYPES = [
+    "Printing",
+    "Printing Error",
+]
 
 BINARY_SENSOR_SCHEMA = vol.Schema(
     {
@@ -66,26 +73,13 @@ BINARY_SENSOR_SCHEMA = vol.Schema(
     }
 )
 
-SENSOR_TYPES = {
-    # API Endpoint, Group, Key, unit, icon
-    "Temperatures": ["printer", "temperature", "*", TEMP_CELSIUS],
-    "Current State": ["printer", "state", "text", None, "mdi:printer-3d"],
-    "Job Percentage": [
-        "job",
-        "progress",
-        "completion",
-        PERCENTAGE,
-        "mdi:file-percent",
-    ],
-    "Time Remaining": [
-        "job",
-        "progress",
-        "printTimeLeft",
-        TIME_SECONDS,
-        "mdi:clock-end",
-    ],
-    "Time Elapsed": ["job", "progress", "printTime", TIME_SECONDS, "mdi:clock-start"],
-}
+SENSOR_TYPES = [
+    "Temperatures",
+    "Current State",
+    "Job Percentage",
+    "Time Remaining",
+    "Time Elapsed",
+]
 
 SENSOR_SCHEMA = vol.Schema(
     {
@@ -97,208 +91,174 @@ SENSOR_SCHEMA = vol.Schema(
 )
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.All(
-            cv.ensure_list,
-            [
-                vol.Schema(
-                    {
-                        vol.Required(CONF_API_KEY): cv.string,
-                        vol.Required(CONF_HOST): cv.string,
-                        vol.Optional(CONF_SSL, default=False): cv.boolean,
-                        vol.Optional(CONF_PORT, default=80): cv.port,
-                        vol.Optional(CONF_PATH, default="/"): ensure_valid_path,
-                        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-                        vol.Optional(CONF_NUMBER_OF_TOOLS, default=0): cv.positive_int,
-                        vol.Optional(CONF_BED, default=False): cv.boolean,
-                        vol.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
-                        vol.Optional(
-                            CONF_BINARY_SENSORS, default={}
-                        ): BINARY_SENSOR_SCHEMA,
-                    }
-                )
-            ],
-            has_all_unique_names,
-        )
-    },
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.All(
+                cv.ensure_list,
+                [
+                    vol.Schema(
+                        {
+                            vol.Required(CONF_API_KEY): cv.string,
+                            vol.Required(CONF_HOST): cv.string,
+                            vol.Optional(CONF_SSL, default=False): cv.boolean,
+                            vol.Optional(CONF_PORT, default=80): cv.port,
+                            vol.Optional(CONF_PATH, default="/"): ensure_valid_path,
+                            # Following values are not longer used in the configuration of the integration
+                            # and are here for historical purposes
+                            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+                            vol.Optional(
+                                CONF_NUMBER_OF_TOOLS, default=0
+                            ): cv.positive_int,
+                            vol.Optional(CONF_BED, default=False): cv.boolean,
+                            vol.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
+                            vol.Optional(
+                                CONF_BINARY_SENSORS, default={}
+                            ): BINARY_SENSOR_SCHEMA,
+                        }
+                    )
+                ],
+                has_all_unique_names,
+            )
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
 
-def setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the OctoPrint component."""
-    printers = hass.data[DOMAIN] = {}
-    success = False
-
     if DOMAIN not in config:
-        # Skip the setup if there is no configuration present
         return True
 
-    for printer in config[DOMAIN]:
-        name = printer[CONF_NAME]
-        protocol = "https" if printer[CONF_SSL] else "http"
-        base_url = (
-            f"{protocol}://{printer[CONF_HOST]}:{printer[CONF_PORT]}"
-            f"{printer[CONF_PATH]}api/"
-        )
-        api_key = printer[CONF_API_KEY]
-        number_of_tools = printer[CONF_NUMBER_OF_TOOLS]
-        bed = printer[CONF_BED]
-        try:
-            octoprint_api = OctoPrintAPI(base_url, api_key, bed, number_of_tools)
-            printers[base_url] = octoprint_api
-            octoprint_api.get("printer")
-            octoprint_api.get("job")
-        except requests.exceptions.RequestException as conn_err:
-            _LOGGER.error("Error setting up OctoPrint API: %r", conn_err)
-            continue
+    domain_config = config[DOMAIN]
 
-        sensors = printer[CONF_SENSORS][CONF_MONITORED_CONDITIONS]
-        load_platform(
+    for conf in domain_config:
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data={
+                    CONF_API_KEY: conf[CONF_API_KEY],
+                    CONF_HOST: conf[CONF_HOST],
+                    CONF_PATH: conf[CONF_PATH],
+                    CONF_PORT: conf[CONF_PORT],
+                    CONF_SSL: conf[CONF_SSL],
+                },
+            )
+        )
+
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up OctoPrint from a config entry."""
+
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = {}
+
+    if CONF_VERIFY_SSL not in entry.data:
+        data = {**entry.data, CONF_VERIFY_SSL: True}
+        hass.config_entries.async_update_entry(entry, data=data)
+
+    verify_ssl = entry.data[CONF_VERIFY_SSL]
+    websession = async_get_clientsession(hass, verify_ssl=verify_ssl)
+    client = OctoprintClient(
+        entry.data[CONF_HOST],
+        websession,
+        entry.data[CONF_PORT],
+        entry.data[CONF_SSL],
+        entry.data[CONF_PATH],
+    )
+
+    client.set_api_key(entry.data[CONF_API_KEY])
+
+    coordinator = OctoprintDataUpdateCoordinator(hass, client, entry, 30)
+
+    await coordinator.async_config_entry_first_refresh()
+
+    hass.data[DOMAIN][entry.entry_id] = {
+        "coordinator": coordinator,
+        "client": client,
+    }
+
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+    if unload_ok:
+        hass.data[DOMAIN].pop(entry.entry_id)
+
+    return unload_ok
+
+
+class OctoprintDataUpdateCoordinator(DataUpdateCoordinator):
+    """Class to manage fetching Octoprint data."""
+
+    config_entry: ConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        octoprint: OctoprintClient,
+        config_entry: ConfigEntry,
+        interval: int,
+    ) -> None:
+        """Initialize."""
+        super().__init__(
             hass,
-            "sensor",
-            DOMAIN,
-            {"name": name, "base_url": base_url, "sensors": sensors},
-            config,
+            _LOGGER,
+            name=f"octoprint-{config_entry.entry_id}",
+            update_interval=timedelta(seconds=interval),
         )
-        b_sensors = printer[CONF_BINARY_SENSORS][CONF_MONITORED_CONDITIONS]
-        load_platform(
-            hass,
-            "binary_sensor",
-            DOMAIN,
-            {"name": name, "base_url": base_url, "sensors": b_sensors},
-            config,
-        )
-        success = True
+        self.config_entry = config_entry
+        self._octoprint = octoprint
+        self._printer_offline = False
+        self.data = {"printer": None, "job": None, "last_read_time": None}
 
-    return success
-
-
-class OctoPrintAPI:
-    """Simple JSON wrapper for OctoPrint's API."""
-
-    def __init__(self, api_url, key, bed, number_of_tools):
-        """Initialize OctoPrint API and set headers needed later."""
-        self.api_url = api_url
-        self.headers = {CONTENT_TYPE: CONTENT_TYPE_JSON, "X-Api-Key": key}
-        self.printer_last_reading = [{}, None]
-        self.job_last_reading = [{}, None]
-        self.job_available = False
-        self.printer_available = False
-        self.printer_error_logged = False
-        self.available = False
-        self.available_error_logged = False
-        self.job_error_logged = False
-        self.bed = bed
-        self.number_of_tools = number_of_tools
-
-    def get_tools(self):
-        """Get the list of tools that temperature is monitored on."""
-        tools = []
-        if self.number_of_tools > 0:
-            for tool_number in range(0, self.number_of_tools):
-                tools.append(f"tool{tool_number!s}")
-        if self.bed:
-            tools.append("bed")
-        if not self.bed and self.number_of_tools == 0:
-            temps = self.printer_last_reading[0].get("temperature")
-            if temps is not None:
-                tools = temps.keys()
-        return tools
-
-    def get(self, endpoint):
-        """Send a get request, and return the response as a dict."""
-        # Only query the API at most every 30 seconds
-        now = time.time()
-        if endpoint == "job":
-            last_time = self.job_last_reading[1]
-            if last_time is not None and now - last_time < 30.0:
-                return self.job_last_reading[0]
-        elif endpoint == "printer":
-            last_time = self.printer_last_reading[1]
-            if last_time is not None and now - last_time < 30.0:
-                return self.printer_last_reading[0]
-
-        url = self.api_url + endpoint
+    async def _async_update_data(self):
+        """Update data via API."""
+        printer = None
         try:
-            response = requests.get(url, headers=self.headers, timeout=9)
-            response.raise_for_status()
-            if endpoint == "job":
-                self.job_last_reading[0] = response.json()
-                self.job_last_reading[1] = time.time()
-                self.job_available = True
-            elif endpoint == "printer":
-                self.printer_last_reading[0] = response.json()
-                self.printer_last_reading[1] = time.time()
-                self.printer_available = True
+            job = await self._octoprint.get_job_info()
+        except ApiError as err:
+            raise UpdateFailed(err) from err
 
-            self.available = self.printer_available and self.job_available
-            if self.available:
-                self.job_error_logged = False
-                self.printer_error_logged = False
-                self.available_error_logged = False
+        # If octoprint is on, but the printer is disconnected
+        # printer will return a 409, so continue using the last
+        # reading if there is one
+        try:
+            printer = await self._octoprint.get_printer_info()
+        except PrinterOffline:
+            if not self._printer_offline:
+                _LOGGER.debug("Unable to retrieve printer information: Printer offline")
+                self._printer_offline = True
+        except ApiError as err:
+            raise UpdateFailed(err) from err
+        else:
+            self._printer_offline = False
 
-            return response.json()
+        return {"job": job, "printer": printer, "last_read_time": dt_util.utcnow()}
 
-        except requests.ConnectionError as exc_con:
-            log_string = f"Failed to connect to Octoprint server. Error: {exc_con}"
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Device info."""
+        unique_id = cast(str, self.config_entry.unique_id)
+        configuration_url = URL.build(
+            scheme=self.config_entry.data[CONF_SSL] and "https" or "http",
+            host=self.config_entry.data[CONF_HOST],
+            port=self.config_entry.data[CONF_PORT],
+            path=self.config_entry.data[CONF_PATH],
+        )
 
-            if not self.available_error_logged:
-                _LOGGER.error(log_string)
-                self.job_available = False
-                self.printer_available = False
-                self.available_error_logged = True
-
-            return None
-
-        except requests.HTTPError as ex_http:
-            status_code = ex_http.response.status_code
-
-            log_string = f"Failed to update OctoPrint status. Error: {ex_http}"
-            # Only log the first failure
-            if endpoint == "job":
-                log_string = f"Endpoint: job {log_string}"
-                if not self.job_error_logged:
-                    _LOGGER.error(log_string)
-                    self.job_error_logged = True
-                    self.job_available = False
-            elif endpoint == "printer":
-                if (
-                    status_code == 409
-                ):  # octoprint returns HTTP 409 when printer is not connected (and many other states)
-                    self.printer_available = False
-                else:
-                    log_string = f"Endpoint: printer {log_string}"
-                    if not self.printer_error_logged:
-                        _LOGGER.error(log_string)
-                        self.printer_error_logged = True
-                        self.printer_available = False
-
-            self.available = False
-
-            return None
-
-    def update(self, sensor_type, end_point, group, tool=None):
-        """Return the value for sensor_type from the provided endpoint."""
-        response = self.get(end_point)
-        if response is not None:
-            return get_value_from_json(response, sensor_type, group, tool)
-
-        return response
-
-
-def get_value_from_json(json_dict, sensor_type, group, tool):
-    """Return the value for sensor_type from the JSON."""
-    if group not in json_dict:
-        return None
-
-    if sensor_type in json_dict[group]:
-        if sensor_type == "target" and json_dict[sensor_type] is None:
-            return 0
-
-        return json_dict[group][sensor_type]
-
-    if tool is not None and sensor_type in json_dict[group][tool]:
-        return json_dict[group][tool][sensor_type]
-
-    return None
+        return DeviceInfo(
+            identifiers={(DOMAIN, unique_id)},
+            manufacturer="OctoPrint",
+            name="OctoPrint",
+            configuration_url=str(configuration_url),
+        )

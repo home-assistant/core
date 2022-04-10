@@ -1,0 +1,166 @@
+{
+  "version": 1,
+  "minor_version": 1,
+  "key": "trace.saved_traces",
+  "data": {
+    "script.sun": [
+      {
+        "extended_dict": {
+          "last_step": "sequence/0",
+          "run_id": "6bd24c3b715333fd2192c9501b77664a",
+          "state": "stopped",
+          "script_execution": "error",
+          "timestamp": {
+            "start": "2021-10-14T06:48:18.037973+00:00",
+            "finish": "2021-10-14T06:48:18.039367+00:00"
+          },
+          "domain": "script",
+          "item_id": "sun",
+          "error": "Unable to find service test.automation",
+          "trace": {
+            "sequence/0": [
+              {
+                "path": "sequence/0",
+                "timestamp": "2021-10-14T06:48:18.038692+00:00",
+                "changed_variables": {
+                  "this": {
+                    "entity_id": "script.sun",
+                    "state": "off",
+                    "attributes": {
+                      "last_triggered": null,
+                      "mode": "single",
+                      "current": 0,
+                      "friendly_name": "sun"
+                    },
+                    "last_changed": "2021-10-14T06:48:18.023069+00:00",
+                    "last_updated": "2021-10-14T06:48:18.023069+00:00",
+                    "context": {
+                      "id": "0c28537a7a55a0c43360fda5c86fb63a",
+                      "parent_id": null,
+                      "user_id": null
+                    }
+                  },
+                  "context": {
+                    "id": "436e5cbeb27415fae813d302e2acb168",
+                    "parent_id": null,
+                    "user_id": null
+                  }
+                },
+                "error": "Unable to find service test.automation",
+                "result": {
+                  "params": {
+                    "domain": "test",
+                    "service": "automation",
+                    "service_data": {},
+                    "target": {}
+                  },
+                  "running_script": false,
+                  "limit": 10
+                }
+              }
+            ]
+          },
+          "config": {
+            "sequence": {
+              "service": "test.automation"
+            }
+          },
+          "blueprint_inputs": null,
+          "context": {
+            "id": "436e5cbeb27415fae813d302e2acb168",
+            "parent_id": null,
+            "user_id": null
+          }
+        },
+        "short_dict": {
+          "last_step": "sequence/0",
+          "run_id": "6bd24c3b715333fd2192c9501b77664a",
+          "state": "stopped",
+          "script_execution": "error",
+          "timestamp": {
+            "start": "2021-10-14T06:48:18.037973+00:00",
+            "finish": "2021-10-14T06:48:18.039367+00:00"
+          },
+          "domain": "script",
+          "item_id": "sun",
+          "error": "Unable to find service test.automation"
+        }
+      }
+    ],
+    "script.moon": [
+      {
+        "extended_dict": {
+          "last_step": "sequence/0",
+          "run_id": "76912f5a7f5e7be2300f92523fd3edf7",
+          "state": "stopped",
+          "script_execution": "finished",
+          "timestamp": {
+            "start": "2021-10-14T06:48:18.045937+00:00",
+            "finish": "2021-10-14T06:48:18.047293+00:00"
+          },
+          "domain": "script",
+          "item_id": "moon",
+          "trace": {
+            "sequence/0": [
+              {
+                "path": "sequence/0",
+                "timestamp": "2021-10-14T06:48:18.046659+00:00",
+                "changed_variables": {
+                  "this": {
+                    "entity_id": "script.moon",
+                    "state": "off",
+                    "attributes": {
+                      "last_triggered": null,
+                      "mode": "single",
+                      "current": 0,
+                      "friendly_name": "moon"
+                    },
+                    "last_changed": "2021-10-14T06:48:18.023671+00:00",
+                    "last_updated": "2021-10-14T06:48:18.023671+00:00",
+                    "context": {
+                      "id": "3dcdb3daa596e44bfd10b407f3078ec0",
+                      "parent_id": null,
+                      "user_id": null
+                    }
+                  },
+                  "context": {
+                    "id": "436e5cbeb27415fae813d302e2acb168",
+                    "parent_id": null,
+                    "user_id": null
+                  }
+                },
+                "result": {
+                  "event": "another_event",
+                  "event_data": {}
+                }
+              }
+            ]
+          },
+          "config": {
+            "sequence": {
+              "event": "another_event"
+            }
+          },
+          "blueprint_inputs": null,
+          "context": {
+            "id": "436e5cbeb27415fae813d302e2acb168",
+            "parent_id": null,
+            "user_id": null
+          }
+        },
+        "short_dict": {
+          "last_step": "sequence/0",
+          "run_id": "76912f5a7f5e7be2300f92523fd3edf7",
+          "state": "stopped",
+          "script_execution": "finished",
+          "timestamp": {
+            "start": "2021-10-14T06:48:18.045937+00:00",
+            "finish": "2021-10-14T06:48:18.047293+00:00"
+          },
+          "domain": "script",
+          "item_id": "moon"
+        }
+      }
+    ]
+  }
+}

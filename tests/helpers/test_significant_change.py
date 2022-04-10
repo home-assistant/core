@@ -1,7 +1,7 @@
 """Test significant change helper."""
 import pytest
 
-from homeassistant.components.sensor import DEVICE_CLASS_BATTERY
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import State
 from homeassistant.helpers import significant_change
@@ -26,7 +26,7 @@ async def checker_fixture(hass):
 async def test_signicant_change(hass, checker):
     """Test initialize helper works."""
     ent_id = "test_domain.test_entity"
-    attrs = {ATTR_DEVICE_CLASS: DEVICE_CLASS_BATTERY}
+    attrs = {ATTR_DEVICE_CLASS: SensorDeviceClass.BATTERY}
 
     assert checker.async_is_significant_change(State(ent_id, "100", attrs))
 
@@ -50,7 +50,7 @@ async def test_signicant_change(hass, checker):
 async def test_significant_change_extra(hass, checker):
     """Test extra significant checker works."""
     ent_id = "test_domain.test_entity"
-    attrs = {ATTR_DEVICE_CLASS: DEVICE_CLASS_BATTERY}
+    attrs = {ATTR_DEVICE_CLASS: SensorDeviceClass.BATTERY}
 
     assert checker.async_is_significant_change(State(ent_id, "100", attrs), extra_arg=1)
     assert checker.async_is_significant_change(State(ent_id, "200", attrs), extra_arg=1)

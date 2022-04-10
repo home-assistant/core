@@ -7,14 +7,16 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_OCCUPANCY,
     PLATFORM_SCHEMA,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
 from homeassistant.const import CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DEFAULT_ENTITY_NAMESPACE, DOMAIN as SKYBELL_DOMAIN, SkybellDevice
 
@@ -25,12 +27,12 @@ BINARY_SENSOR_TYPES: dict[str, BinarySensorEntityDescription] = {
     "button": BinarySensorEntityDescription(
         key="device:sensor:button",
         name="Button",
-        device_class=DEVICE_CLASS_OCCUPANCY,
+        device_class=BinarySensorDeviceClass.OCCUPANCY,
     ),
     "motion": BinarySensorEntityDescription(
         key="device:sensor:motion",
         name="Motion",
-        device_class=DEVICE_CLASS_MOTION,
+        device_class=BinarySensorDeviceClass.MOTION,
     ),
 }
 
@@ -47,9 +49,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the platform for a Skybell device."""
-    skybell = hass.data.get(SKYBELL_DOMAIN)
+    skybell = hass.data[SKYBELL_DOMAIN]
 
     binary_sensors = [
         SkybellBinarySensor(device, BINARY_SENSOR_TYPES[sensor_type])

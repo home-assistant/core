@@ -6,6 +6,15 @@
         },
         "error": {
             "not_found": "Tidak ada perangkat yang ditemukan di jaringan"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "code": "Kode stasiun"
+                },
+                "description": "Masukkan kode stasiun Meteoclimatic (misalnya, ESCAT4300000043206B)",
+                "title": "Meteoclimatic"
+            }
         }
     }
 }

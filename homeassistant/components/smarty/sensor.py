@@ -4,14 +4,12 @@ from __future__ import annotations
 import datetime as dt
 import logging
 
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import (
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_TIMESTAMP,
-    TEMP_CELSIUS,
-)
-from homeassistant.core import callback
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.const import TEMP_CELSIUS
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 from . import DOMAIN, SIGNAL_UPDATE_SMARTY
@@ -19,7 +17,12 @@ from . import DOMAIN, SIGNAL_UPDATE_SMARTY
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Smarty Sensor Platform."""
     smarty = hass.data[DOMAIN]["api"]
     name = hass.data[DOMAIN]["name"]
@@ -39,40 +42,17 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class SmartySensor(SensorEntity):
     """Representation of a Smarty Sensor."""
 
+    _attr_should_poll = False
+
     def __init__(
         self, name: str, device_class: str, smarty, unit_of_measurement: str = ""
     ):
         """Initialize the entity."""
-        self._name = name
-        self._state: dt.datetime | None = None
-        self._sensor_type = device_class
-        self._unit_of_measurement = unit_of_measurement
+        self._attr_name = name
+        self._attr_native_value = None
+        self._attr_device_class = device_class
+        self._attr_native_unit_of_measurement = unit_of_measurement
         self._smarty = smarty
-
-    @property
-    def should_poll(self) -> bool:
-        """Do not poll."""
-        return False
-
-    @property
-    def device_class(self):
-        """Return the device class of the sensor."""
-        return self._sensor_type
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit this state is expressed in."""
-        return self._unit_of_measurement
 
     async def async_added_to_hass(self):
         """Call to update."""
@@ -91,15 +71,15 @@ class SupplyAirTemperatureSensor(SmartySensor):
         """Supply Air Temperature Init."""
         super().__init__(
             name=f"{name} Supply Air Temperature",
-            device_class=DEVICE_CLASS_TEMPERATURE,
+            device_class=SensorDeviceClass.TEMPERATURE,
             unit_of_measurement=TEMP_CELSIUS,
             smarty=smarty,
         )
 
     def update(self) -> None:
         """Update state."""
-        _LOGGER.debug("Updating sensor %s", self._name)
-        self._state = self._smarty.supply_air_temperature
+        _LOGGER.debug("Updating sensor %s", self._attr_name)
+        self._attr_native_value = self._smarty.supply_air_temperature
 
 
 class ExtractAirTemperatureSensor(SmartySensor):
@@ -109,15 +89,15 @@ class ExtractAirTemperatureSensor(SmartySensor):
         """Supply Air Temperature Init."""
         super().__init__(
             name=f"{name} Extract Air Temperature",
-            device_class=DEVICE_CLASS_TEMPERATURE,
+            device_class=SensorDeviceClass.TEMPERATURE,
             unit_of_measurement=TEMP_CELSIUS,
             smarty=smarty,
         )
 
     def update(self) -> None:
         """Update state."""
-        _LOGGER.debug("Updating sensor %s", self._name)
-        self._state = self._smarty.extract_air_temperature
+        _LOGGER.debug("Updating sensor %s", self._attr_name)
+        self._attr_native_value = self._smarty.extract_air_temperature
 
 
 class OutdoorAirTemperatureSensor(SmartySensor):
@@ -127,15 +107,15 @@ class OutdoorAirTemperatureSensor(SmartySensor):
         """Outdoor Air Temperature Init."""
         super().__init__(
             name=f"{name} Outdoor Air Temperature",
-            device_class=DEVICE_CLASS_TEMPERATURE,
+            device_class=SensorDeviceClass.TEMPERATURE,
             unit_of_measurement=TEMP_CELSIUS,
             smarty=smarty,
         )
 
     def update(self) -> None:
         """Update state."""
-        _LOGGER.debug("Updating sensor %s", self._name)
-        self._state = self._smarty.outdoor_air_temperature
+        _LOGGER.debug("Updating sensor %s", self._attr_name)
+        self._attr_native_value = self._smarty.outdoor_air_temperature
 
 
 class SupplyFanSpeedSensor(SmartySensor):
@@ -152,8 +132,8 @@ class SupplyFanSpeedSensor(SmartySensor):
 
     def update(self) -> None:
         """Update state."""
-        _LOGGER.debug("Updating sensor %s", self._name)
-        self._state = self._smarty.supply_fan_speed
+        _LOGGER.debug("Updating sensor %s", self._attr_name)
+        self._attr_native_value = self._smarty.supply_fan_speed
 
 
 class ExtractFanSpeedSensor(SmartySensor):
@@ -170,8 +150,8 @@ class ExtractFanSpeedSensor(SmartySensor):
 
     def update(self) -> None:
         """Update state."""
-        _LOGGER.debug("Updating sensor %s", self._name)
-        self._state = self._smarty.extract_fan_speed
+        _LOGGER.debug("Updating sensor %s", self._attr_name)
+        self._attr_native_value = self._smarty.extract_fan_speed
 
 
 class FilterDaysLeftSensor(SmartySensor):
@@ -181,7 +161,7 @@ class FilterDaysLeftSensor(SmartySensor):
         """Filter Days Left Init."""
         super().__init__(
             name=f"{name} Filter Days Left",
-            device_class=DEVICE_CLASS_TIMESTAMP,
+            device_class=SensorDeviceClass.TIMESTAMP,
             unit_of_measurement=None,
             smarty=smarty,
         )
@@ -189,8 +169,8 @@ class FilterDaysLeftSensor(SmartySensor):
 
     def update(self) -> None:
         """Update state."""
-        _LOGGER.debug("Updating sensor %s", self._name)
+        _LOGGER.debug("Updating sensor %s", self._attr_name)
         days_left = self._smarty.filter_timer
         if days_left is not None and days_left != self._days_left:
-            self._state = dt_util.now() + dt.timedelta(days=days_left)
+            self._attr_native_value = dt_util.now() + dt.timedelta(days=days_left)
             self._days_left = days_left

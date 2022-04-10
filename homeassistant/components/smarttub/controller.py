@@ -10,6 +10,7 @@ from smarttub import APIError, LoginFailed, SmartTub
 from smarttub.api import Account
 
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -75,7 +76,7 @@ class SmartTubController:
 
         await self.coordinator.async_refresh()
 
-        await self.async_register_devices(entry)
+        self.async_register_devices(entry)
 
         return True
 
@@ -107,9 +108,10 @@ class SmartTubController:
             ATTR_ERRORS: errors,
         }
 
-    async def async_register_devices(self, entry):
+    @callback
+    def async_register_devices(self, entry):
         """Register devices with the device registry for all spas."""
-        device_registry = await dr.async_get_registry(self._hass)
+        device_registry = dr.async_get(self._hass)
         for spa in self.spas:
             device_registry.async_get_or_create(
                 config_entry_id=entry.entry_id,

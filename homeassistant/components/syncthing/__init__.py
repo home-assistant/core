@@ -10,6 +10,7 @@ from homeassistant.const import (
     CONF_URL,
     CONF_VERIFY_SSL,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -23,7 +24,7 @@ from .const import (
     SERVER_UNAVAILABLE,
 )
 
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 

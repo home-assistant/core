@@ -4,19 +4,50 @@ from datetime import timedelta
 
 import somecomfort
 
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.util import Throttle
 
-from .const import _LOGGER, CONF_DEV_ID, CONF_LOC_ID, DOMAIN
+from .const import (
+    _LOGGER,
+    CONF_COOL_AWAY_TEMPERATURE,
+    CONF_DEV_ID,
+    CONF_HEAT_AWAY_TEMPERATURE,
+    CONF_LOC_ID,
+    DOMAIN,
+)
 
 UPDATE_LOOP_SLEEP_TIME = 5
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=300)
-PLATFORMS = ["climate"]
+PLATFORMS = [Platform.CLIMATE, Platform.SENSOR]
+
+MIGRATE_OPTIONS_KEYS = {CONF_COOL_AWAY_TEMPERATURE, CONF_HEAT_AWAY_TEMPERATURE}
 
 
-async def async_setup_entry(hass, config):
+@callback
+def _async_migrate_data_to_options(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> None:
+    if not MIGRATE_OPTIONS_KEYS.intersection(config_entry.data):
+        return
+    hass.config_entries.async_update_entry(
+        config_entry,
+        data={
+            k: v for k, v in config_entry.data.items() if k not in MIGRATE_OPTIONS_KEYS
+        },
+        options={
+            **config_entry.options,
+            **{k: config_entry.data.get(k) for k in MIGRATE_OPTIONS_KEYS},
+        },
+    )
+
+
+async def async_setup_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
     """Set up the Honeywell thermostat."""
+    _async_migrate_data_to_options(hass, config)
+
     username = config.data[CONF_USERNAME]
     password = config.data[CONF_PASSWORD]
 
@@ -30,14 +61,13 @@ async def async_setup_entry(hass, config):
     loc_id = config.data.get(CONF_LOC_ID)
     dev_id = config.data.get(CONF_DEV_ID)
 
-    devices = []
+    devices = {}
 
     for location in client.locations_by_id.values():
-        for device in location.devices_by_id.values():
-            if (not loc_id or location.locationid == loc_id) and (
-                not dev_id or device.deviceid == dev_id
-            ):
-                devices.append(device)
+        if not loc_id or location.locationid == loc_id:
+            for device in location.devices_by_id.values():
+                if not dev_id or device.deviceid == dev_id:
+                    devices[device.deviceid] = device
 
     if len(devices) == 0:
         _LOGGER.debug("No devices found")
@@ -54,12 +84,12 @@ async def async_setup_entry(hass, config):
     return True
 
 
-async def update_listener(hass, config) -> None:
+async def update_listener(hass: HomeAssistant, config: ConfigEntry) -> None:
     """Update listener."""
     await hass.config_entries.async_reload(config.entry_id)
 
 
-async def async_unload_entry(hass, config):
+async def async_unload_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
     """Unload the config config and platforms."""
     unload_ok = await hass.config_entries.async_unload_platforms(config, PLATFORMS)
     if unload_ok:
@@ -107,23 +137,30 @@ class HoneywellData:
         if self._client is None:
             return False
 
-        devices = [
+        refreshed_devices = [
             device
             for location in self._client.locations_by_id.values()
             for device in location.devices_by_id.values()
         ]
 
-        if len(devices) == 0:
-            _LOGGER.error("Failed to find any devices")
+        if len(refreshed_devices) == 0:
+            _LOGGER.error("Failed to find any devices after retry")
             return False
 
-        self.devices = devices
+        for updated_device in refreshed_devices:
+            if updated_device.deviceid in self.devices:
+                self.devices[updated_device.deviceid] = updated_device
+            else:
+                _LOGGER.info(
+                    "New device with ID %s detected, reload the honeywell integration if you want to access it in Home Assistant"
+                )
+
         await self._hass.config_entries.async_reload(self._config.entry_id)
         return True
 
     async def _refresh_devices(self):
         """Refresh each enabled device."""
-        for device in self.devices:
+        for device in self.devices.values():
             await self._hass.async_add_executor_job(device.refresh)
             await asyncio.sleep(UPDATE_LOOP_SLEEP_TIME)
 
@@ -143,11 +180,16 @@ class HoneywellData:
             ) as exp:
                 retries -= 1
                 if retries == 0:
+                    _LOGGER.error(
+                        "Ran out of retry attempts (3 attempts allocated). Error: %s",
+                        exp,
+                    )
                     raise exp
 
                 result = await self._retry()
 
                 if not result:
+                    _LOGGER.error("Retry result was empty. Error: %s", exp)
                     raise exp
 
-                _LOGGER.error("SomeComfort update failed, Retrying - Error: %s", exp)
+                _LOGGER.info("SomeComfort update failed, retrying. Error: %s", exp)

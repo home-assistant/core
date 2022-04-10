@@ -15,7 +15,7 @@
                 "title": "Nie uda\u0142o si\u0119 zaimportowa\u0107 konfiguracji mostka Cas\u00e9ta."
             },
             "link": {
-                "description": "Aby sparowa\u0107 z {name} ({host}), po przes\u0142aniu tego formularza naci\u015bnij czarny przycisk z ty\u0142u mostka.",
+                "description": "Aby sparowa\u0107 z {name} ({host}), po zatwierdzeniu tego formularza naci\u015bnij czarny przycisk z ty\u0142u mostka.",
                 "title": "Sparuj z mostkiem"
             },
             "user": {

@@ -14,7 +14,7 @@
                     "origin": "Opprinnelse",
                     "region": "Region"
                 },
-                "description": "For opprinnelse og destinasjon, skriv inn adressen eller GPS-koordinatene til stedet (GPS-koordinatene m\u00e5 v\u00e6re atskilt med komma). Du kan ogs\u00e5 angi en enhets-ID som gir denne informasjonen i sin tilstand, en enhets-id med breddegrad og lengdegrad eller attributt navn."
+                "description": "For opprinnelse og destinasjon, skriv inn adressen eller GPS-koordinatene til stedet (GPS-koordinatene m\u00e5 v\u00e6re atskilt med komma). Du kan ogs\u00e5 angi en entitets-ID som gir denne informasjonen i sin tilstand, en entitets-id med breddegrad og lengdegrad eller attributt navn."
             }
         }
     },

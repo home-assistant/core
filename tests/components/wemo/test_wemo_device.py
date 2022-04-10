@@ -17,7 +17,7 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
-from .conftest import MOCK_HOST
+from .conftest import MOCK_FIRMWARE_VERSION, MOCK_HOST, MOCK_SERIAL_NUMBER
 
 from tests.common import async_fire_time_changed
 
@@ -26,8 +26,8 @@ asyncio.set_event_loop_policy(runner.HassEventLoopPolicy(True))
 
 @pytest.fixture
 def pywemo_model():
-    """Pywemo Dimmer models use the light platform (WemoDimmer class)."""
-    return "Dimmer"
+    """Pywemo LightSwitch models use the switch platform."""
+    return "LightSwitchLongPress"
 
 
 async def test_async_register_device_longpress_fails(hass, pywemo_device):
@@ -152,6 +152,20 @@ async def test_async_update_data_subscribed(
     pywemo_device.get_state.reset_mock()
     await device._async_update_data()
     pywemo_device.get_state.assert_not_called()
+
+
+async def test_device_info(hass, wemo_entity):
+    """Verify the DeviceInfo data is set properly."""
+    dr = device_registry.async_get(hass)
+    device_entries = list(dr.devices.values())
+
+    assert len(device_entries) == 1
+    assert device_entries[0].connections == {
+        ("upnp", f"uuid:LightSwitch-1_0-{MOCK_SERIAL_NUMBER}")
+    }
+    assert device_entries[0].manufacturer == "Belkin"
+    assert device_entries[0].model == "LightSwitch"
+    assert device_entries[0].sw_version == MOCK_FIRMWARE_VERSION
 
 
 class TestInsight:

@@ -10,12 +10,18 @@
         },
         "flow_title": "Konfigurace Tuya",
         "step": {
+            "login": {
+                "data": {
+                    "country_code": "K\u00f3d zem\u011b"
+                }
+            },
             "user": {
                 "data": {
-                    "country_code": "K\u00f3d zem\u011b va\u0161eho \u00fa\u010dtu (nap\u0159. 1 pro USA nebo 86 pro \u010c\u00ednu)",
+                    "country_code": "Zem\u011b",
                     "password": "Heslo",
                     "platform": "Aplikace, ve kter\u00e9 m\u00e1te zaregistrovan\u00fd \u00fa\u010det",
-                    "username": "U\u017eivatelsk\u00e9 jm\u00e9no"
+                    "region": "Region",
+                    "username": "\u00da\u010det"
                 },
                 "description": "Zadejte sv\u00e9 p\u0159ihla\u0161ovac\u00ed \u00fadaje k Tuya.",
                 "title": "Tuya"

@@ -10,6 +10,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.data_entry_flow import FlowResult
 
 from .const import CONF_ENDPOINT, DOMAIN
 
@@ -92,16 +93,16 @@ class SongpalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data={CONF_NAME: self.conf.name, CONF_ENDPOINT: self.conf.endpoint},
         )
 
-    async def async_step_ssdp(self, discovery_info):
+    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
         """Handle a discovered Songpal device."""
-        await self.async_set_unique_id(discovery_info[ssdp.ATTR_UPNP_UDN])
+        await self.async_set_unique_id(discovery_info.upnp[ssdp.ATTR_UPNP_UDN])
         self._abort_if_unique_id_configured()
 
         _LOGGER.debug("Discovered: %s", discovery_info)
 
-        friendly_name = discovery_info[ssdp.ATTR_UPNP_FRIENDLY_NAME]
-        parsed_url = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION])
-        scalarweb_info = discovery_info["X_ScalarWebAPI_DeviceInfo"]
+        friendly_name = discovery_info.upnp[ssdp.ATTR_UPNP_FRIENDLY_NAME]
+        parsed_url = urlparse(discovery_info.ssdp_location)
+        scalarweb_info = discovery_info.upnp["X_ScalarWebAPI_DeviceInfo"]
         endpoint = scalarweb_info["X_ScalarWebAPI_BaseURL"]
         service_types = scalarweb_info["X_ScalarWebAPI_ServiceList"][
             "X_ScalarWebAPI_ServiceType"

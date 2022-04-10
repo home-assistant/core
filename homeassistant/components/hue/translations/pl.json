@@ -35,6 +35,10 @@
     },
     "device_automation": {
         "trigger_subtype": {
+            "1": "pierwszy",
+            "2": "drugi",
+            "3": "trzeci",
+            "4": "czwarty",
             "button_1": "pierwszy",
             "button_2": "drugi",
             "button_3": "trzeci",
@@ -47,11 +51,16 @@
             "turn_on": "w\u0142\u0105cznik"
         },
         "trigger_type": {
+            "double_short_release": "przycisk \"{subtype}\" zostanie zwolniony",
+            "initial_press": "przycisk \"{subtype}\" zostanie lekko naci\u015bni\u0119ty",
+            "long_release": "przycisk \"{subtype}\" zostanie zwolniony po d\u0142ugim naci\u015bni\u0119ciu",
             "remote_button_long_release": "przycisk \"{subtype}\" zostanie zwolniony po d\u0142ugim naci\u015bni\u0119ciu",
             "remote_button_short_press": "przycisk \"{subtype}\" zostanie naci\u015bni\u0119ty",
             "remote_button_short_release": "przycisk \"{subtype}\" zostanie zwolniony",
             "remote_double_button_long_press": "oba przyciski \"{subtype}\" zostan\u0105 zwolnione po d\u0142ugim naci\u015bni\u0119ciu",
-            "remote_double_button_short_press": "oba przyciski \"{subtype}\" zostan\u0105 zwolnione"
+            "remote_double_button_short_press": "oba przyciski \"{subtype}\" zostan\u0105 zwolnione",
+            "repeat": "przycisk \"{subtype}\" zostanie przytrzymany",
+            "short_release": "przycisk \"{subtype}\" zostanie zwolniony po kr\u00f3tkim naci\u015bni\u0119ciu"
         }
     },
     "options": {
@@ -59,7 +68,9 @@
             "init": {
                 "data": {
                     "allow_hue_groups": "Zezwalaj na grupowanie Hue",
-                    "allow_unreachable": "Zezwalaj nieosi\u0105galnym \u017car\u00f3wkom na poprawne raportowanie ich stanu"
+                    "allow_hue_scenes": "Zezwalaj na sceny dla Hue",
+                    "allow_unreachable": "Zezwalaj nieosi\u0105galnym \u017car\u00f3wkom na poprawne raportowanie ich stanu",
+                    "ignore_availability": "Ignoruj stan po\u0142\u0105czenia dla danych urz\u0105dze\u0144"
                 }
             }
         }

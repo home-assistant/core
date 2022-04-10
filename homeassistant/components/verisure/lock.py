@@ -55,10 +55,8 @@ async def async_setup_entry(
     )
 
 
-class VerisureDoorlock(CoordinatorEntity, LockEntity):
+class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEntity):
     """Representation of a Verisure doorlock."""
-
-    coordinator: VerisureDataUpdateCoordinator
 
     def __init__(
         self, coordinator: VerisureDataUpdateCoordinator, serial_number: str
@@ -70,7 +68,7 @@ class VerisureDoorlock(CoordinatorEntity, LockEntity):
         self._attr_unique_id = serial_number
 
         self.serial_number = serial_number
-        self._state = None
+        self._state: str | None = None
         self._digits = coordinator.entry.options.get(
             CONF_LOCK_CODE_DIGITS, DEFAULT_LOCK_CODE_DIGITS
         )
@@ -79,14 +77,15 @@ class VerisureDoorlock(CoordinatorEntity, LockEntity):
     def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         area = self.coordinator.data["locks"][self.serial_number]["area"]
-        return {
-            "name": area,
-            "suggested_area": area,
-            "manufacturer": "Verisure",
-            "model": "Lockguard Smartlock",
-            "identifiers": {(DOMAIN, self.serial_number)},
-            "via_device": (DOMAIN, self.coordinator.entry.data[CONF_GIID]),
-        }
+        return DeviceInfo(
+            name=area,
+            suggested_area=area,
+            manufacturer="Verisure",
+            model="Lockguard Smartlock",
+            identifiers={(DOMAIN, self.serial_number)},
+            via_device=(DOMAIN, self.coordinator.entry.data[CONF_GIID]),
+            configuration_url="https://mypages.verisure.com",
+        )
 
     @property
     def available(self) -> bool:

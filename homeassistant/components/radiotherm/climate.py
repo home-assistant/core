@@ -1,11 +1,17 @@
 """Support for Radio Thermostat wifi-enabled home thermostats."""
+from __future__ import annotations
+
 import logging
 from socket import timeout
 
 import radiotherm
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
+from homeassistant.components.climate import (
+    PLATFORM_SCHEMA,
+    ClimateEntity,
+    ClimateEntityFeature,
+)
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_COOL,
     CURRENT_HVAC_HEAT,
@@ -18,9 +24,6 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_OFF,
     PRESET_AWAY,
     PRESET_HOME,
-    SUPPORT_FAN_MODE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
@@ -29,7 +32,10 @@ from homeassistant.const import (
     STATE_ON,
     TEMP_FAHRENHEIT,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -100,10 +106,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE | SUPPORT_PRESET_MODE
-
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Radio Thermostat."""
     hosts = []
     if CONF_HOST in config:
@@ -131,6 +139,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class RadioThermostat(ClimateEntity):
     """Representation of a Radio Thermostat."""
 
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.PRESET_MODE
+    )
+
     def __init__(self, device, hold_temp):
         """Initialize the thermostat."""
         self.device = device
@@ -152,11 +166,6 @@ class RadioThermostat(ClimateEntity):
 
         # Fan circulate mode is only supported by the CT80 models.
         self._is_model_ct80 = isinstance(self.device, radiotherm.thermostat.CT80)
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_FLAGS
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -201,8 +210,7 @@ class RadioThermostat(ClimateEntity):
 
     def set_fan_mode(self, fan_mode):
         """Turn fan on/off."""
-        code = FAN_MODE_TO_CODE.get(fan_mode)
-        if code is not None:
+        if (code := FAN_MODE_TO_CODE.get(fan_mode)) is not None:
             self.device.fmode = code
 
     @property
@@ -322,8 +330,7 @@ class RadioThermostat(ClimateEntity):
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
-        if temperature is None:
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
 
         temperature = round_temp(temperature)

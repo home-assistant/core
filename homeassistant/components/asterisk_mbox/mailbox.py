@@ -1,12 +1,15 @@
 """Support for the Asterisk Voicemail interface."""
+from __future__ import annotations
+
 from functools import partial
 import logging
 
 from asterisk_mbox import ServerError
 
 from homeassistant.components.mailbox import CONTENT_TYPE_MPEG, Mailbox, StreamError
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN as ASTERISK_DOMAIN
 
@@ -16,7 +19,11 @@ SIGNAL_MESSAGE_REQUEST = "asterisk_mbox.message_request"
 SIGNAL_MESSAGE_UPDATE = "asterisk_mbox.message_updated"
 
 
-async def async_get_handler(hass, config, discovery_info=None):
+async def async_get_handler(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> Mailbox:
     """Set up the Asterix VM platform."""
     return AsteriskMailbox(hass, ASTERISK_DOMAIN)
 

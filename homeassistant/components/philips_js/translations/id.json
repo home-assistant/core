@@ -29,5 +29,14 @@
         "trigger_type": {
             "turn_on": "Perangkat diminta untuk dinyalakan"
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "allow_notify": "Izinkan penggunaan layanan notifikasi data."
+                }
+            }
+        }
     }
 }

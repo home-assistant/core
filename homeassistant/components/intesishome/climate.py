@@ -1,4 +1,6 @@
 """Support for IntesisHome and airconwithme Smart AC Controllers."""
+from __future__ import annotations
+
 import logging
 from random import randrange
 from typing import NamedTuple
@@ -6,7 +8,11 @@ from typing import NamedTuple
 from pyintesishome import IHAuthenticationError, IHConnectionError, IntesisHome
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
+from homeassistant.components.climate import (
+    PLATFORM_SCHEMA,
+    ClimateEntity,
+    ClimateEntityFeature,
+)
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
     HVAC_MODE_COOL,
@@ -18,10 +24,6 @@ from homeassistant.components.climate.const import (
     PRESET_BOOST,
     PRESET_COMFORT,
     PRESET_ECO,
-    SUPPORT_FAN_MODE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_SWING_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
     SWING_BOTH,
     SWING_HORIZONTAL,
     SWING_OFF,
@@ -34,10 +36,13 @@ from homeassistant.const import (
     CONF_USERNAME,
     TEMP_CELSIUS,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -98,7 +103,12 @@ MAP_STATE_ICONS = {
 }
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Create the IntesisHome climate devices."""
     ih_user = config[CONF_USERNAME]
     ih_pass = config[CONF_PASSWORD]
@@ -120,8 +130,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         _LOGGER.error("Error connecting to the %s server", device_type)
         raise PlatformNotReady from ex
 
-    ih_devices = controller.get_devices()
-    if ih_devices:
+    if ih_devices := controller.get_devices():
         async_add_entities(
             [
                 IntesisAC(ih_device_id, device, controller)
@@ -166,13 +175,13 @@ class IntesisAC(ClimateEntity):
         self._hvane = None
         self._power = False
         self._fan_speed = None
-        self._support = 0
+        self._attr_supported_features = 0
         self._power_consumption_heat = None
         self._power_consumption_cool = None
 
         # Setpoint support
         if controller.has_setpoint_control(ih_device_id):
-            self._support |= SUPPORT_TARGET_TEMPERATURE
+            self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
 
         # Setup swing list
         if controller.has_vertical_swing(ih_device_id):
@@ -182,20 +191,19 @@ class IntesisAC(ClimateEntity):
         if SWING_HORIZONTAL in self._swing_list and SWING_VERTICAL in self._swing_list:
             self._swing_list.append(SWING_BOTH)
         if len(self._swing_list) > 1:
-            self._support |= SUPPORT_SWING_MODE
+            self._attr_supported_features |= ClimateEntityFeature.SWING_MODE
 
         # Setup fan speeds
         self._fan_modes = controller.get_fan_speed_list(ih_device_id)
         if self._fan_modes:
-            self._support |= SUPPORT_FAN_MODE
+            self._attr_supported_features |= ClimateEntityFeature.FAN_MODE
 
         # Preset support
         if ih_device.get("climate_working_mode"):
-            self._support |= SUPPORT_PRESET_MODE
+            self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
 
         # Setup HVAC modes
-        modes = controller.get_mode_list(ih_device_id)
-        if modes:
+        if modes := controller.get_mode_list(ih_device_id):
             mode_list = [MAP_IH_TO_HVAC_MODE[mode] for mode in modes]
             self._hvac_mode_list.extend(mode_list)
         self._hvac_mode_list.append(HVAC_MODE_OFF)
@@ -259,13 +267,10 @@ class IntesisAC(ClimateEntity):
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
-        hvac_mode = kwargs.get(ATTR_HVAC_MODE)
-
-        if hvac_mode:
+        if hvac_mode := kwargs.get(ATTR_HVAC_MODE):
             await self.async_set_hvac_mode(hvac_mode)
 
-        if temperature:
+        if temperature := kwargs.get(ATTR_TEMPERATURE):
             _LOGGER.debug("Setting %s to %s degrees", self._device_type, temperature)
             await self._controller.set_temperature(self._device_id, temperature)
             self._target_temp = temperature
@@ -471,8 +476,3 @@ class IntesisAC(ClimateEntity):
     def target_temperature(self):
         """Return the current setpoint temperature if unit is on."""
         return self._target_temp
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return self._support

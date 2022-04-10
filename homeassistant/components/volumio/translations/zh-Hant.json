@@ -11,7 +11,7 @@
         "step": {
             "discovery_confirm": {
                 "description": "\u662f\u5426\u8981\u65b0\u589e Volumio (`{name}`) \u81f3 Home Assistant\uff1f",
-                "title": "\u5df2\u641c\u7d22\u5230\u7684 Volumio"
+                "title": "\u5df2\u767c\u73fe\u7684 Volumio"
             },
             "user": {
                 "data": {

@@ -9,7 +9,7 @@ from homematicip.base.enums import AbsenceType
 from homematicip.device import Switch
 from homematicip.functionalHomes import IndoorClimateHome
 
-from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
@@ -21,13 +21,12 @@ from homeassistant.components.climate.const import (
     PRESET_BOOST,
     PRESET_ECO,
     PRESET_NONE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN as HMIPC_DOMAIN, HomematicipGenericEntity
 from .hap import HomematicipHAP
@@ -44,7 +43,9 @@ HMIP_ECO_CM = "ECO"
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the HomematicIP climate from a config entry."""
     hap = hass.data[HMIPC_DOMAIN][config_entry.unique_id]
@@ -65,6 +66,10 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
     Cool mode is only available for floor heating systems, if basically enabled in the hmip app.
     """
 
+    _attr_supported_features = (
+        ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
+    )
+
     def __init__(self, hap: HomematicipHAP, device: AsyncHeatingGroup) -> None:
         """Initialize heating group."""
         device.modelType = "HmIP-Heating-Group"
@@ -76,23 +81,18 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device specific attributes."""
-        return {
-            "identifiers": {(HMIPC_DOMAIN, self._device.id)},
-            "name": self._device.label,
-            "manufacturer": "eQ-3",
-            "model": self._device.modelType,
-            "via_device": (HMIPC_DOMAIN, self._device.homeId),
-        }
+        return DeviceInfo(
+            identifiers={(HMIPC_DOMAIN, self._device.id)},
+            manufacturer="eQ-3",
+            model=self._device.modelType,
+            name=self._device.label,
+            via_device=(HMIPC_DOMAIN, self._device.homeId),
+        )
 
     @property
     def temperature_unit(self) -> str:
         """Return the unit of measurement."""
         return TEMP_CELSIUS
-
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_PRESET_MODE | SUPPORT_TARGET_TEMPERATURE
 
     @property
     def target_temperature(self) -> float:
@@ -207,8 +207,7 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
-        if temperature is None:
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
 
         if self.min_temp <= temperature <= self.max_temp:

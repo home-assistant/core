@@ -1,0 +1,8 @@
+{
+  "domain": "input_button",
+  "integration_type": "helper",
+  "name": "Input Button",
+  "documentation": "https://www.home-assistant.io/integrations/input_button",
+  "codeowners": ["@home-assistant/core"],
+  "quality_scale": "internal"
+}

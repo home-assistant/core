@@ -72,9 +72,3 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=create_schema(user_input), errors=errors
         )
-
-    async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
-        """Handle the import step."""
-        await self.async_set_unique_id(user_input[CONF_CLOUD_ID])
-        self._abort_if_unique_id_configured()
-        return await self.async_step_user(user_input)

@@ -1,4 +1,6 @@
 """Support for the EPH Controls Ember themostats."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
@@ -15,15 +17,17 @@ from pyephember.pyephember import (
 )
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
+from homeassistant.components.climate import (
+    PLATFORM_SCHEMA,
+    ClimateEntity,
+    ClimateEntityFeature,
+)
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
     HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
-    SUPPORT_AUX_HEAT,
-    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
@@ -31,7 +35,10 @@ from homeassistant.const import (
     CONF_USERNAME,
     TEMP_CELSIUS,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,7 +60,12 @@ EPH_TO_HA_STATE = {
 HA_STATE_TO_EPH = {value: key for key, value in EPH_TO_HA_STATE.items()}
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the ephember thermostat."""
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
@@ -84,9 +96,9 @@ class EphEmberThermostat(ClimateEntity):
     def supported_features(self):
         """Return the list of supported features."""
         if self._hot_water:
-            return SUPPORT_AUX_HEAT
+            return ClimateEntityFeature.AUX_HEAT
 
-        return SUPPORT_TARGET_TEMPERATURE | SUPPORT_AUX_HEAT
+        return ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.AUX_HEAT
 
     @property
     def name(self):
@@ -161,8 +173,7 @@ class EphEmberThermostat(ClimateEntity):
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
-        if temperature is None:
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
 
         if self._hot_water:

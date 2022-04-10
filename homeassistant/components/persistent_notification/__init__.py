@@ -3,17 +3,15 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-from typing import Any, cast
+from typing import Any
 
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.core import Context, HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
-from homeassistant.helpers.template import Template, is_template_string
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util import slugify
@@ -71,8 +69,7 @@ def async_create(
     context: Context | None = None,
 ) -> None:
     """Generate a notification."""
-    notifications = hass.data.get(DOMAIN)
-    if notifications is None:
+    if (notifications := hass.data.get(DOMAIN)) is None:
         notifications = hass.data[DOMAIN] = {}
 
     if notification_id is not None:
@@ -83,35 +80,10 @@ def async_create(
         )
         notification_id = entity_id.split(".")[1]
 
-    warn = False
-
-    attr: dict[str, str] = {}
+    attr: dict[str, str] = {ATTR_MESSAGE: message}
     if title is not None:
-        if is_template_string(title):
-            warn = True
-            try:
-                title = cast(
-                    str, Template(title, hass).async_render(parse_result=False)  # type: ignore[no-untyped-call]
-                )
-            except TemplateError as ex:
-                _LOGGER.error("Error rendering title %s: %s", title, ex)
-
         attr[ATTR_TITLE] = title
         attr[ATTR_FRIENDLY_NAME] = title
-
-    if is_template_string(message):
-        warn = True
-        try:
-            message = Template(message, hass).async_render(parse_result=False)  # type: ignore[no-untyped-call]
-        except TemplateError as ex:
-            _LOGGER.error("Error rendering message %s: %s", message, ex)
-
-    attr[ATTR_MESSAGE] = message
-
-    if warn:
-        _LOGGER.warning(
-            "Passing a template string to persistent_notification.async_create function is deprecated"
-        )
 
     hass.states.async_set(entity_id, STATE, attr, context=context)
 
@@ -134,8 +106,7 @@ def async_dismiss(
     hass: HomeAssistant, notification_id: str, *, context: Context | None = None
 ) -> None:
     """Remove a notification."""
-    notifications = hass.data.get(DOMAIN)
-    if notifications is None:
+    if (notifications := hass.data.get(DOMAIN)) is None:
         notifications = hass.data[DOMAIN] = {}
 
     entity_id = ENTITY_ID_FORMAT.format(slugify(notification_id))
@@ -209,7 +180,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         DOMAIN, "mark_read", mark_read_service, SCHEMA_SERVICE_NOTIFICATION
     )
 
-    hass.components.websocket_api.async_register_command(websocket_get_notifications)
+    websocket_api.async_register_command(hass, websocket_get_notifications)
 
     return True
 

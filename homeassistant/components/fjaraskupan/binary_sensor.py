@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from fjaraskupan import Device, State
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_PROBLEM,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -34,13 +34,13 @@ SENSORS = (
     EntityDescription(
         key="grease-filter",
         name="Grease Filter",
-        device_class=DEVICE_CLASS_PROBLEM,
+        device_class=BinarySensorDeviceClass.PROBLEM,
         is_on=lambda state: state.grease_filter_full,
     ),
     EntityDescription(
         key="carbon-filter",
         name="Carbon Filter",
-        device_class=DEVICE_CLASS_PROBLEM,
+        device_class=BinarySensorDeviceClass.PROBLEM,
         is_on=lambda state: state.carbon_filter_full,
     ),
 )
@@ -67,7 +67,7 @@ async def async_setup_entry(
     async_setup_entry_platform(hass, config_entry, async_add_entities, _constructor)
 
 
-class BinarySensor(CoordinatorEntity[State], BinarySensorEntity):
+class BinarySensor(CoordinatorEntity[DataUpdateCoordinator[State]], BinarySensorEntity):
     """Grease filter sensor."""
 
     entity_description: EntityDescription

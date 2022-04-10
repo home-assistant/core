@@ -1,15 +1,21 @@
 """Support for interface with a Gree climate systems."""
 from __future__ import annotations
 
-from homeassistant.components.switch import DEVICE_CLASS_SWITCH, SwitchEntity
-from homeassistant.core import callback
+from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import COORDINATORS, DISPATCH_DEVICE_DISCOVERED, DISPATCHERS, DOMAIN
 from .entity import GreeEntity
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Gree HVAC device from a config entry."""
 
     @callback
@@ -47,7 +53,7 @@ class GreePanelLightSwitchEntity(GreeEntity, SwitchEntity):
     @property
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
-        return DEVICE_CLASS_SWITCH
+        return SwitchDeviceClass.SWITCH
 
     @property
     def is_on(self) -> bool:
@@ -77,7 +83,7 @@ class GreeQuietModeSwitchEntity(GreeEntity, SwitchEntity):
     @property
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
-        return DEVICE_CLASS_SWITCH
+        return SwitchDeviceClass.SWITCH
 
     @property
     def is_on(self) -> bool:
@@ -107,7 +113,7 @@ class GreeFreshAirSwitchEntity(GreeEntity, SwitchEntity):
     @property
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
-        return DEVICE_CLASS_SWITCH
+        return SwitchDeviceClass.SWITCH
 
     @property
     def is_on(self) -> bool:
@@ -137,7 +143,7 @@ class GreeXFanSwitchEntity(GreeEntity, SwitchEntity):
     @property
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
-        return DEVICE_CLASS_SWITCH
+        return SwitchDeviceClass.SWITCH
 
     @property
     def is_on(self) -> bool:

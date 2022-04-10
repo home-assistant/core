@@ -8,6 +8,7 @@
             "is_playing": "{entity_name} \u00e8 in esecuzione"
         },
         "trigger_type": {
+            "changed_states": "{entity_name} ha cambiato stato",
             "idle": "{entity_name} diventa inattivo",
             "paused": "{entity_name} \u00e8 in pausa",
             "playing": "{entity_name} inizia l'esecuzione",

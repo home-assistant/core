@@ -1,0 +1,46 @@
+[
+  {
+    "idema": "3194U",
+    "lon": -3.724167,
+    "fint": "2021-01-08T14:00:00",
+    "prec": 1.3,
+    "alt": 664.0,
+    "lat": 40.45167,
+    "ubi": "MADRID  C. UNIVERSITARIA",
+    "hr": 98.0,
+    "tamin": 0.6,
+    "ta": 0.9,
+    "tamax": 1.0,
+    "tpr": 0.6
+  },
+  {
+    "idema": "3194Y",
+    "lon": -3.813369,
+    "fint": "2021-01-08T14:00:00",
+    "prec": 0.2,
+    "alt": 665.0,
+    "lat": 40.448437,
+    "ubi": "POZUELO DE ALARCON (AUTOM�TICA)",
+    "hr": 93.0,
+    "tamin": 0.5,
+    "ta": 0.6,
+    "tamax": 0.6
+  },
+  {
+    "idema": "3195",
+    "lon": -3.678095,
+    "fint": "2021-01-08T14:00:00",
+    "prec": 1.2,
+    "alt": 667.0,
+    "lat": 40.411804,
+    "ubi": "MADRID RETIRO",
+    "pres": 929.9,
+    "hr": 97.0,
+    "pres_nmar": 1009.9,
+    "tamin": -0.1,
+    "ta": 0.1,
+    "tamax": 0.2,
+    "tpr": -0.3,
+    "rviento": 132.0
+  }
+]

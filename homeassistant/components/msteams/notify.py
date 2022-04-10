@@ -52,17 +52,14 @@ class MSTeamsNotificationService(BaseNotificationService):
 
         teams_message.text(message)
 
-        if data is not None:
-            file_url = data.get(ATTR_FILE_URL)
+        if data is not None and (file_url := data.get(ATTR_FILE_URL)) is not None:
+            if not file_url.startswith("http"):
+                _LOGGER.error("URL should start with http or https")
+                return
 
-            if file_url is not None:
-                if not file_url.startswith("http"):
-                    _LOGGER.error("URL should start with http or https")
-                    return
-
-                message_section = pymsteams.cardsection()
-                message_section.addImage(file_url)
-                teams_message.addSection(message_section)
+            message_section = pymsteams.cardsection()
+            message_section.addImage(file_url)
+            teams_message.addSection(message_section)
         try:
             teams_message.send()
         except RuntimeError as err:

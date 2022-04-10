@@ -1,5 +1,9 @@
 """Support for interacting with Smappee Comport Plugs, Switches and Output Modules."""
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 
@@ -7,7 +11,11 @@ SWITCH_PREFIX = "Switch"
 ICON = "mdi:toggle-switch"
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Smappee Comfort Plugs."""
     smappee_base = hass.data[DOMAIN][config_entry.entry_id]
 
@@ -148,15 +156,15 @@ class SmappeeActuator(SwitchEntity):
         )
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info for this switch."""
-        return {
-            "identifiers": {(DOMAIN, self._service_location.device_serial_number)},
-            "name": self._service_location.service_location_name,
-            "manufacturer": "Smappee",
-            "model": self._service_location.device_model,
-            "sw_version": self._service_location.firmware_version,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._service_location.device_serial_number)},
+            manufacturer="Smappee",
+            model=self._service_location.device_model,
+            name=self._service_location.service_location_name,
+            sw_version=self._service_location.firmware_version,
+        )
 
     async def async_update(self):
         """Get the latest data from Smappee and update the state."""

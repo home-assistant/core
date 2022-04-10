@@ -1,5 +1,6 @@
 """Test the Shelly config flow."""
 import asyncio
+from http import HTTPStatus
 from unittest.mock import AsyncMock, Mock, patch
 
 import aiohttp
@@ -7,6 +8,7 @@ import aioshelly
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
+from homeassistant.components import zeroconf
 from homeassistant.components.shelly.const import DOMAIN
 
 from tests.common import MockConfigEntry
@@ -15,13 +17,19 @@ MOCK_SETTINGS = {
     "name": "Test name",
     "device": {"mac": "test-mac", "hostname": "test-host", "type": "SHSW-1"},
 }
-DISCOVERY_INFO = {
-    "host": "1.1.1.1",
-    "name": "shelly1pm-12345",
-    "properties": {"id": "shelly1pm-12345"},
-}
+DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
+    host="1.1.1.1",
+    addresses=["1.1.1.1"],
+    hostname="mock_hostname",
+    name="shelly1pm-12345",
+    port=None,
+    properties={zeroconf.ATTR_PROPERTIES_ID: "shelly1pm-12345"},
+    type="mock_type",
+)
 MOCK_CONFIG = {
-    "wifi": {"ap": {"ssid": "Test name"}},
+    "sys": {
+        "device": {"name": "Test name"},
+    },
 }
 
 
@@ -325,8 +333,14 @@ async def test_form_firmware_unsupported(hass):
 @pytest.mark.parametrize(
     "error",
     [
-        (aiohttp.ClientResponseError(Mock(), (), status=400), "cannot_connect"),
-        (aiohttp.ClientResponseError(Mock(), (), status=401), "invalid_auth"),
+        (
+            aiohttp.ClientResponseError(Mock(), (), status=HTTPStatus.BAD_REQUEST),
+            "cannot_connect",
+        ),
+        (
+            aiohttp.ClientResponseError(Mock(), (), status=HTTPStatus.UNAUTHORIZED),
+            "invalid_auth",
+        ),
         (asyncio.TimeoutError, "cannot_connect"),
         (ValueError, "unknown"),
     ],
@@ -480,7 +494,10 @@ async def test_zeroconf_sleeping_device(hass):
 @pytest.mark.parametrize(
     "error",
     [
-        (aiohttp.ClientResponseError(Mock(), (), status=400), "cannot_connect"),
+        (
+            aiohttp.ClientResponseError(Mock(), (), status=HTTPStatus.BAD_REQUEST),
+            "cannot_connect",
+        ),
         (asyncio.TimeoutError, "cannot_connect"),
     ],
 )

@@ -5,10 +5,13 @@ from haffmpeg.camera import CameraMjpeg
 from haffmpeg.tools import IMAGE_JPEG
 import voluptuous as vol
 
-from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_STREAM, Camera
+from homeassistant.components.camera import PLATFORM_SCHEMA, Camera, CameraEntityFeature
 from homeassistant.const import CONF_NAME
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import CONF_EXTRA_ARGUMENTS, CONF_INPUT, DATA_FFMPEG, async_get_image
 
@@ -24,13 +27,20 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up a FFmpeg camera."""
     async_add_entities([FFmpegCamera(hass, config)])
 
 
 class FFmpegCamera(Camera):
     """An implementation of an FFmpeg camera."""
+
+    _attr_supported_features = CameraEntityFeature.STREAM
 
     def __init__(self, hass, config):
         """Initialize a FFmpeg camera."""
@@ -40,11 +50,6 @@ class FFmpegCamera(Camera):
         self._name = config.get(CONF_NAME)
         self._input = config.get(CONF_INPUT)
         self._extra_arguments = config.get(CONF_EXTRA_ARGUMENTS)
-
-    @property
-    def supported_features(self):
-        """Return supported features."""
-        return SUPPORT_STREAM
 
     async def stream_source(self):
         """Return the stream source."""

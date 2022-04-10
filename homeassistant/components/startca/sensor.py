@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from http import HTTPStatus
 import logging
 from xml.parsers.expat import ExpatError
 
@@ -19,11 +20,13 @@ from homeassistant.const import (
     CONF_MONITORED_VARIABLES,
     CONF_NAME,
     DATA_GIGABYTES,
-    HTTP_OK,
     PERCENTAGE,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -123,7 +126,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the sensor platform."""
     websession = async_get_clientsession(hass)
     apikey = config[CONF_API_KEY]
@@ -186,16 +194,16 @@ class StartcaData:
         :param value: The value in bytes to convert to GB.
         :return: Converted GB value
         """
-        return float(value) * 10 ** -9
+        return float(value) * 10**-9
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self):
         """Get the Start.ca bandwidth data from the web service."""
         _LOGGER.debug("Updating Start.ca usage data")
         url = f"https://www.start.ca/support/usage/api?key={self.api_key}"
-        with async_timeout.timeout(REQUEST_TIMEOUT):
+        async with async_timeout.timeout(REQUEST_TIMEOUT):
             req = await self.websession.get(url)
-        if req.status != HTTP_OK:
+        if req.status != HTTPStatus.OK:
             _LOGGER.error("Request failed with status: %u", req.status)
             return False
 

@@ -28,6 +28,7 @@ from homeassistant.components.notify import (
     BaseNotificationService,
 )
 from homeassistant.const import ATTR_NAME, URL_ROOT
+from homeassistant.core import ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util import ensure_unique_string
@@ -178,17 +179,16 @@ def get_service(hass, config, discovery_info=None):
     def websocket_appkey(hass, connection, msg):
         connection.send_message(websocket_api.result_message(msg["id"], vapid_pub_key))
 
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_APPKEY, websocket_appkey, SCHEMA_WS_APPKEY
+    websocket_api.async_register_command(
+        hass, WS_TYPE_APPKEY, websocket_appkey, SCHEMA_WS_APPKEY
     )
 
     hass.http.register_view(HTML5PushRegistrationView(registrations, json_path))
     hass.http.register_view(HTML5PushCallbackView(registrations))
 
     gcm_api_key = config.get(ATTR_GCM_API_KEY)
-    gcm_sender_id = config.get(ATTR_GCM_SENDER_ID)
 
-    if gcm_sender_id is not None:
+    if config.get(ATTR_GCM_SENDER_ID) is not None:
         add_manifest_json_key(ATTR_GCM_SENDER_ID, config.get(ATTR_GCM_SENDER_ID))
 
     return HTML5NotificationService(
@@ -332,9 +332,7 @@ class HTML5PushCallbackView(HomeAssistantView):
     # https://auth0.com/docs/quickstart/backend/python
     def check_authorization_header(self, request):
         """Check the authorization header."""
-
-        auth = request.headers.get(AUTHORIZATION)
-        if not auth:
+        if not (auth := request.headers.get(AUTHORIZATION)):
             return self.json_message(
                 "Authorization header is expected", status_code=HTTPStatus.UNAUTHORIZED
             )
@@ -408,7 +406,7 @@ class HTML5NotificationService(BaseNotificationService):
         self.registrations = registrations
         self.registrations_json_path = json_path
 
-        async def async_dismiss_message(service):
+        async def async_dismiss_message(service: ServiceCall) -> None:
             """Handle dismissing notification message service calls."""
             kwargs = {}
 
@@ -463,9 +461,7 @@ class HTML5NotificationService(BaseNotificationService):
             ATTR_TITLE: kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT),
         }
 
-        data = kwargs.get(ATTR_DATA)
-
-        if data:
+        if data := kwargs.get(ATTR_DATA):
             # Pick out fields that should go into the notification directly vs
             # into the notification data dictionary.
 
@@ -496,9 +492,8 @@ class HTML5NotificationService(BaseNotificationService):
         if priority not in ["normal", "high"]:
             priority = DEFAULT_PRIORITY
         payload["timestamp"] = timestamp * 1000  # Javascript ms since epoch
-        targets = kwargs.get(ATTR_TARGET)
 
-        if not targets:
+        if not (targets := kwargs.get(ATTR_TARGET)):
             targets = self.registrations.keys()
 
         for target in list(targets):
@@ -538,7 +533,9 @@ class HTML5NotificationService(BaseNotificationService):
             if response.status_code == 410:
                 _LOGGER.info("Notification channel has expired")
                 reg = self.registrations.pop(target)
-                if not save_json(self.registrations_json_path, self.registrations):
+                try:
+                    save_json(self.registrations_json_path, self.registrations)
+                except HomeAssistantError:
                     self.registrations[target] = reg
                     _LOGGER.error("Error saving registration")
                 else:

@@ -53,7 +53,7 @@ class TwenteMilieuFlowHandler(ConfigFlow, domain=DOMAIN):
         twentemilieu = TwenteMilieu(
             post_code=user_input[CONF_POST_CODE],
             house_number=user_input[CONF_HOUSE_NUMBER],
-            house_letter=user_input.get(CONF_HOUSE_LETTER),
+            house_letter=user_input.get(CONF_HOUSE_LETTER, ""),
             session=session,
         )
 
@@ -66,7 +66,8 @@ class TwenteMilieuFlowHandler(ConfigFlow, domain=DOMAIN):
             errors["base"] = "invalid_address"
             return await self._show_setup_form(errors)
 
-        self._async_abort_entries_match({CONF_ID: unique_id})
+        await self.async_set_unique_id(str(unique_id))
+        self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
             title=str(unique_id),

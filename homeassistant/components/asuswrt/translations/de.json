@@ -36,7 +36,7 @@
                     "dnsmasq": "Der Speicherort der dnsmasq.leases-Dateien im Router",
                     "interface": "Schnittstelle, von der du Statistiken haben m\u00f6chtest (z.B. eth0, eth1 usw.)",
                     "require_ip": "Ger\u00e4te m\u00fcssen IP haben (f\u00fcr Zugangspunkt-Modus)",
-                    "track_unknown": "Unbekannte / unbenannte Ger\u00e4te tracken"
+                    "track_unknown": "Unbekannte / unbenannte Ger\u00e4te verfolgen"
                 },
                 "title": "AsusWRT Optionen"
             }

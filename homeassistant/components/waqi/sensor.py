@@ -1,4 +1,6 @@
 """Support for the World Air Quality Index service."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 import logging
@@ -7,17 +9,24 @@ import aiohttp
 import voluptuous as vol
 from waqiasync import WaqiClient
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_TEMPERATURE,
     ATTR_TIME,
     CONF_TOKEN,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,6 +52,9 @@ KEY_TO_ATTR = {
 
 ATTRIBUTION = "Data provided by the World Air Quality Index project"
 
+ATTR_ICON = "mdi:cloud"
+ATTR_UNIT = "AQI"
+
 CONF_LOCATIONS = "locations"
 CONF_STATIONS = "stations"
 
@@ -59,12 +71,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the requested World Air Quality Index locations."""
 
-    token = config.get(CONF_TOKEN)
+    token = config[CONF_TOKEN]
     station_filter = config.get(CONF_STATIONS)
-    locations = config.get(CONF_LOCATIONS)
+    locations = config[CONF_LOCATIONS]
 
     client = WaqiClient(token, async_get_clientsession(hass), timeout=TIMEOUT)
     dev = []
@@ -74,15 +91,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             _LOGGER.debug("The following stations were returned: %s", stations)
             for station in stations:
                 waqi_sensor = WaqiSensor(client, station)
-                if (
-                    not station_filter
-                    or {
-                        waqi_sensor.uid,
-                        waqi_sensor.url,
-                        waqi_sensor.station_name,
-                    }
-                    & set(station_filter)
-                ):
+                if not station_filter or {
+                    waqi_sensor.uid,
+                    waqi_sensor.url,
+                    waqi_sensor.station_name,
+                } & set(station_filter):
                     dev.append(waqi_sensor)
     except (
         aiohttp.client_exceptions.ClientConnectorError,
@@ -95,6 +108,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 class WaqiSensor(SensorEntity):
     """Implementation of a WAQI sensor."""
+
+    _attr_icon = ATTR_ICON
+    _attr_native_unit_of_measurement = ATTR_UNIT
+    _attr_device_class = SensorDeviceClass.AQI
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, client, station):
         """Initialize the sensor."""
@@ -124,11 +142,6 @@ class WaqiSensor(SensorEntity):
         return f"WAQI {self.url if self.url else self.uid}"
 
     @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return "mdi:cloud"
-
-    @property
     def native_value(self):
         """Return the state of the device."""
         if self._data is not None:
@@ -144,11 +157,6 @@ class WaqiSensor(SensorEntity):
     def unique_id(self):
         """Return unique ID."""
         return self.uid
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return "AQI"
 
     @property
     def extra_state_attributes(self):

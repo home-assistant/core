@@ -9,5 +9,6 @@
   "homekit": {},
   "dependencies": [],
   "codeowners": ["@hesselonline"],
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "loggers": ["wallbox"]
 }

@@ -1,0 +1,18 @@
+{
+  "device_health": {
+    "average_signal_category": "good",
+    "average_signal_strength": -39,
+    "battery_percentage": 100,
+    "battery_percentage_category": null,
+    "battery_voltage": null,
+    "battery_voltage_category": null,
+    "firmware": "1.2.3",
+    "firmware_out_of_date": false,
+    "id": 999999,
+    "latest_signal_category": "good",
+    "latest_signal_strength": -39,
+    "updated_at": "2017-09-30T07:05:03Z",
+    "wifi_is_ring_network": false,
+    "wifi_name": "ring_mock_wifi"
+  }
+}

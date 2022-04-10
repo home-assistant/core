@@ -1,14 +1,22 @@
 """Sensor for checking the battery level of Roomba."""
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.components.vacuum import STATE_DOCKED
-from homeassistant.const import DEVICE_CLASS_BATTERY, PERCENTAGE
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import PERCENTAGE
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
 
 from .const import BLID, DOMAIN, ROOMBA_SESSION
 from .irobot_base import IRobotEntity
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the iRobot Roomba vacuum cleaner."""
     domain_data = hass.data[DOMAIN][config_entry.entry_id]
     roomba = domain_data[ROOMBA_SESSION]
@@ -19,6 +27,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 class RoombaBattery(IRobotEntity, SensorEntity):
     """Class to hold Roomba Sensor basic info."""
+
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
     def name(self):
@@ -33,7 +43,7 @@ class RoombaBattery(IRobotEntity, SensorEntity):
     @property
     def device_class(self):
         """Return the device class of the sensor."""
-        return DEVICE_CLASS_BATTERY
+        return SensorDeviceClass.BATTERY
 
     @property
     def native_unit_of_measurement(self):

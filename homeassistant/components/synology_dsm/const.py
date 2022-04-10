@@ -9,30 +9,37 @@ from synology_dsm.api.core.utilization import SynoCoreUtilization
 from synology_dsm.api.dsm.information import SynoDSMInformation
 from synology_dsm.api.storage.storage import SynoStorage
 from synology_dsm.api.surveillance_station import SynoSurveillanceStation
+from synology_dsm.api.surveillance_station.const import SNAPSHOT_PROFILE_BALANCED
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_SAFETY,
-    DEVICE_CLASS_UPDATE,
+    BinarySensorDeviceClass,
     BinarySensorEntityDescription,
 )
 from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
+    SensorDeviceClass,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.components.switch import SwitchEntityDescription
 from homeassistant.const import (
     DATA_MEGABYTES,
     DATA_RATE_KILOBYTES_PER_SECOND,
     DATA_TERABYTES,
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_TIMESTAMP,
     PERCENTAGE,
     TEMP_CELSIUS,
+    Platform,
 )
-from homeassistant.helpers.entity import EntityDescription
+from homeassistant.helpers.entity import EntityCategory, EntityDescription
 
 DOMAIN = "synology_dsm"
-PLATFORMS = ["binary_sensor", "camera", "sensor", "switch"]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.CAMERA,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.UPDATE,
+]
 COORDINATOR_CAMERAS = "coordinator_cameras"
 COORDINATOR_CENTRAL = "coordinator_central"
 COORDINATOR_SWITCHES = "coordinator_switches"
@@ -48,6 +55,7 @@ UNDO_UPDATE_LISTENER = "undo_update_listener"
 CONF_SERIAL = "serial"
 CONF_VOLUMES = "volumes"
 CONF_DEVICE_TOKEN = "device_token"
+CONF_SNAPSHOT_QUALITY = "snap_profile_type"
 
 DEFAULT_USE_SSL = True
 DEFAULT_VERIFY_SSL = False
@@ -56,6 +64,7 @@ DEFAULT_PORT_SSL = 5001
 # Options
 DEFAULT_SCAN_INTERVAL = 15  # min
 DEFAULT_TIMEOUT = 10  # sec
+DEFAULT_SNAPSHOT_QUALITY = SNAPSHOT_PROFILE_BALANCED
 
 ENTITY_UNIT_LOAD = "load"
 
@@ -104,10 +113,13 @@ class SynologyDSMSwitchEntityDescription(
 # Binary sensors
 UPGRADE_BINARY_SENSORS: tuple[SynologyDSMBinarySensorEntityDescription, ...] = (
     SynologyDSMBinarySensorEntityDescription(
+        # Deprecated, scheduled to be removed in 2022.6 (#68664)
         api_key=SynoCoreUpgrade.API_KEY,
         key="update_available",
-        name="Update available",
-        device_class=DEVICE_CLASS_UPDATE,
+        name="Update Available",
+        entity_registry_enabled_default=False,
+        device_class=BinarySensorDeviceClass.UPDATE,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
 
@@ -115,8 +127,8 @@ SECURITY_BINARY_SENSORS: tuple[SynologyDSMBinarySensorEntityDescription, ...] = 
     SynologyDSMBinarySensorEntityDescription(
         api_key=SynoCoreSecurity.API_KEY,
         key="status",
-        name="Security status",
-        device_class=DEVICE_CLASS_SAFETY,
+        name="Security Status",
+        device_class=BinarySensorDeviceClass.SAFETY,
     ),
 )
 
@@ -125,13 +137,15 @@ STORAGE_DISK_BINARY_SENSORS: tuple[SynologyDSMBinarySensorEntityDescription, ...
         api_key=SynoStorage.API_KEY,
         key="disk_exceed_bad_sector_thr",
         name="Exceeded Max Bad Sectors",
-        device_class=DEVICE_CLASS_SAFETY,
+        device_class=BinarySensorDeviceClass.SAFETY,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SynologyDSMBinarySensorEntityDescription(
         api_key=SynoStorage.API_KEY,
         key="disk_below_remain_life_thr",
         name="Below Min Remaining Life",
-        device_class=DEVICE_CLASS_SAFETY,
+        device_class=BinarySensorDeviceClass.SAFETY,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
 
@@ -144,7 +158,7 @@ UTILISATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:chip",
         entity_registry_enabled_default=False,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SynologyDSMSensorEntityDescription(
         api_key=SynoCoreUtilization.API_KEY,
@@ -152,7 +166,7 @@ UTILISATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         name="CPU Utilization (User)",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:chip",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SynologyDSMSensorEntityDescription(
         api_key=SynoCoreUtilization.API_KEY,
@@ -161,7 +175,7 @@ UTILISATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:chip",
         entity_registry_enabled_default=False,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SynologyDSMSensorEntityDescription(
         api_key=SynoCoreUtilization.API_KEY,
@@ -169,7 +183,7 @@ UTILISATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         name="CPU Utilization (Total)",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:chip",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SynologyDSMSensorEntityDescription(
         api_key=SynoCoreUtilization.API_KEY,
@@ -199,7 +213,7 @@ UTILISATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         name="Memory Usage (Real)",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:memory",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SynologyDSMSensorEntityDescription(
         api_key=SynoCoreUtilization.API_KEY,
@@ -208,7 +222,7 @@ UTILISATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         native_unit_of_measurement=DATA_MEGABYTES,
         icon="mdi:memory",
         entity_registry_enabled_default=False,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SynologyDSMSensorEntityDescription(
         api_key=SynoCoreUtilization.API_KEY,
@@ -217,7 +231,7 @@ UTILISATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         native_unit_of_measurement=DATA_MEGABYTES,
         icon="mdi:memory",
         entity_registry_enabled_default=False,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SynologyDSMSensorEntityDescription(
         api_key=SynoCoreUtilization.API_KEY,
@@ -225,7 +239,7 @@ UTILISATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         name="Memory Available (Swap)",
         native_unit_of_measurement=DATA_MEGABYTES,
         icon="mdi:memory",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SynologyDSMSensorEntityDescription(
         api_key=SynoCoreUtilization.API_KEY,
@@ -233,7 +247,7 @@ UTILISATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         name="Memory Available (Real)",
         native_unit_of_measurement=DATA_MEGABYTES,
         icon="mdi:memory",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SynologyDSMSensorEntityDescription(
         api_key=SynoCoreUtilization.API_KEY,
@@ -241,7 +255,7 @@ UTILISATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         name="Memory Total (Swap)",
         native_unit_of_measurement=DATA_MEGABYTES,
         icon="mdi:memory",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SynologyDSMSensorEntityDescription(
         api_key=SynoCoreUtilization.API_KEY,
@@ -249,7 +263,7 @@ UTILISATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         name="Memory Total (Real)",
         native_unit_of_measurement=DATA_MEGABYTES,
         icon="mdi:memory",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SynologyDSMSensorEntityDescription(
         api_key=SynoCoreUtilization.API_KEY,
@@ -257,7 +271,7 @@ UTILISATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         name="Upload Throughput",
         native_unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
         icon="mdi:upload",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SynologyDSMSensorEntityDescription(
         api_key=SynoCoreUtilization.API_KEY,
@@ -265,7 +279,7 @@ UTILISATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         name="Download Throughput",
         native_unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
         icon="mdi:download",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 STORAGE_VOL_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
@@ -282,7 +296,7 @@ STORAGE_VOL_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         native_unit_of_measurement=DATA_TERABYTES,
         icon="mdi:chart-pie",
         entity_registry_enabled_default=False,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SynologyDSMSensorEntityDescription(
         api_key=SynoStorage.API_KEY,
@@ -290,7 +304,7 @@ STORAGE_VOL_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         name="Used Space",
         native_unit_of_measurement=DATA_TERABYTES,
         icon="mdi:chart-pie",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SynologyDSMSensorEntityDescription(
         api_key=SynoStorage.API_KEY,
@@ -304,15 +318,17 @@ STORAGE_VOL_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         key="volume_disk_temp_avg",
         name="Average Disk Temp",
         native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SynologyDSMSensorEntityDescription(
         api_key=SynoStorage.API_KEY,
         key="volume_disk_temp_max",
         name="Maximum Disk Temp",
         native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
 STORAGE_DISK_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
@@ -322,20 +338,23 @@ STORAGE_DISK_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         name="Status (Smart)",
         icon="mdi:checkbox-marked-circle-outline",
         entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SynologyDSMSensorEntityDescription(
         api_key=SynoStorage.API_KEY,
         key="disk_status",
         name="Status",
         icon="mdi:checkbox-marked-circle-outline",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SynologyDSMSensorEntityDescription(
         api_key=SynoStorage.API_KEY,
         key="disk_temp",
         name="Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
 
@@ -343,17 +362,19 @@ INFORMATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
     SynologyDSMSensorEntityDescription(
         api_key=SynoDSMInformation.API_KEY,
         key="temperature",
-        name="temperature",
+        name="Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SynologyDSMSensorEntityDescription(
         api_key=SynoDSMInformation.API_KEY,
         key="uptime",
-        name="last boot",
-        device_class=DEVICE_CLASS_TIMESTAMP,
+        name="Last Boot",
+        device_class=SensorDeviceClass.TIMESTAMP,
         entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
 
@@ -362,7 +383,7 @@ SURVEILLANCE_SWITCH: tuple[SynologyDSMSwitchEntityDescription, ...] = (
     SynologyDSMSwitchEntityDescription(
         api_key=SynoSurveillanceStation.HOME_MODE_API_KEY,
         key="home_mode",
-        name="home mode",
+        name="Home Mode",
         icon="mdi:home-account",
     ),
 )

@@ -7,11 +7,25 @@
             "cannot_connect": "Ha fallat la connexi\u00f3"
         },
         "step": {
-            "user": {
+            "cloud": {
                 "data": {
                     "password": "Contrasenya",
                     "username": "Nom d'usuari"
                 }
+            },
+            "local": {
+                "data": {
+                    "ip_address": "Adre\u00e7a IP"
+                },
+                "description": "Adre\u00e7a IP local del dispositiu."
+            },
+            "user": {
+                "data": {
+                    "connection_type": "Selecciona el tipus de connexi\u00f3",
+                    "password": "Contrasenya",
+                    "username": "Nom d'usuari"
+                },
+                "description": "Selecciona el tipus de connexi\u00f3. La local necessita escalfadors de generaci\u00f3 3"
             }
         }
     }

@@ -1,14 +1,14 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Device is already configured",
+            "already_configured": "Device is already configured, connection settings are updated",
             "already_in_progress": "Configuration flow is already in progress",
             "connection_error": "Failed to connect"
         },
         "error": {
             "discovery_error": "Failed to discover a Motion Gateway"
         },
-        "flow_title": "Motion Blinds",
+        "flow_title": "{short_mac} ({ip_address})",
         "step": {
             "connect": {
                 "data": {
@@ -30,6 +30,17 @@
                     "host": "IP Address"
                 },
                 "description": "Connect to your Motion Gateway, if the IP address is not set, auto-discovery is used",
+                "title": "Motion Blinds"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "wait_for_push": "Wait for multicast push on update"
+                },
+                "description": "Specify optional settings",
                 "title": "Motion Blinds"
             }
         }

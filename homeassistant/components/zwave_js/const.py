@@ -1,10 +1,6 @@
 """Constants for the Z-Wave JS integration."""
 import logging
 
-import voluptuous as vol
-
-import homeassistant.helpers.config_validation as cv
-
 CONF_ADDON_DEVICE = "device"
 CONF_ADDON_EMULATE_HARDWARE = "emulate_hardware"
 CONF_ADDON_LOG_LEVEL = "log_level"
@@ -56,6 +52,9 @@ ATTR_EVENT_DATA = "event_data"
 ATTR_DATA_TYPE = "data_type"
 ATTR_WAIT_FOR_RESULT = "wait_for_result"
 ATTR_OPTIONS = "options"
+ATTR_TEST_NODE_ID = "test_node_id"
+ATTR_STATUS = "status"
+ATTR_ACKNOWLEDGED_FRAMES = "acknowledged_frames"
 
 ATTR_NODE = "node"
 ATTR_ZWAVE_VALUE = "zwave_value"
@@ -66,6 +65,9 @@ ATTR_PREVIOUS_VALUE_RAW = "previous_value_raw"
 ATTR_CURRENT_VALUE = "current_value"
 ATTR_CURRENT_VALUE_RAW = "current_value_raw"
 ATTR_DESCRIPTION = "description"
+ATTR_EVENT_SOURCE = "event_source"
+ATTR_CONFIG_ENTRY_ID = "config_entry_id"
+ATTR_PARTIAL_DICT_MATCH = "partial_dict_match"
 
 # service constants
 SERVICE_SET_LOCK_USERCODE = "set_lock_usercode"
@@ -109,28 +111,5 @@ ENTITY_DESC_KEY_PRESSURE = "pressure"
 ENTITY_DESC_KEY_SIGNAL_STRENGTH = "signal_strength"
 ENTITY_DESC_KEY_TEMPERATURE = "temperature"
 ENTITY_DESC_KEY_TARGET_TEMPERATURE = "target_temperature"
-ENTITY_DESC_KEY_TIMESTAMP = "timestamp"
 ENTITY_DESC_KEY_MEASUREMENT = "measurement"
 ENTITY_DESC_KEY_TOTAL_INCREASING = "total_increasing"
-
-# Schema Constants
-
-# Validates that a bitmask is provided in hex form and converts it to decimal
-# int equivalent since that's what the library uses
-BITMASK_SCHEMA = vol.All(
-    cv.string,
-    vol.Lower,
-    vol.Match(
-        r"^(0x)?[0-9a-f]+$",
-        msg="Must provide an integer (e.g. 255) or a bitmask in hex form (e.g. 0xff)",
-    ),
-    lambda value: int(value, 16),
-)
-
-VALUE_SCHEMA = vol.Any(
-    bool,
-    vol.Coerce(int),
-    vol.Coerce(float),
-    BITMASK_SCHEMA,
-    cv.string,
-)

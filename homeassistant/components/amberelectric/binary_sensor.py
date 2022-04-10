@@ -10,7 +10,6 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -25,8 +24,12 @@ PRICE_SPIKE_ICONS = {
 }
 
 
-class AmberPriceGridSensor(CoordinatorEntity, BinarySensorEntity):
+class AmberPriceGridSensor(
+    CoordinatorEntity[AmberUpdateCoordinator], BinarySensorEntity
+):
     """Sensor to show single grid binary values."""
+
+    _attr_attribution = ATTRIBUTION
 
     def __init__(
         self,
@@ -38,7 +41,6 @@ class AmberPriceGridSensor(CoordinatorEntity, BinarySensorEntity):
         self.site_id = coordinator.site_id
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.site_id}-{description.key}"
-        self._attr_device_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     @property
     def is_on(self) -> bool | None:
@@ -61,13 +63,12 @@ class AmberPriceSpikeBinarySensor(AmberPriceGridSensor):
         return self.coordinator.data["grid"]["price_spike"] == "spike"
 
     @property
-    def device_state_attributes(self) -> Mapping[str, Any] | None:
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return additional pieces of information about the price spike."""
 
         spike_status = self.coordinator.data["grid"]["price_spike"]
         return {
             "spike_status": spike_status,
-            ATTR_ATTRIBUTION: ATTRIBUTION,
         }
 
 

@@ -1,0 +1,161 @@
+{
+  "mow.DE-BW-S-SE018-20211102-18-001": {
+    "identifier": "mow.DE-BW-S-SE018-20211102-18-001",
+    "sender": "DE-NW-BN-SE030",
+    "sent": "2021-11-02T20:07:16+01:00",
+    "status": "Actual",
+    "msgType": "Update",
+    "scope": "Public",
+    "code": [
+      "DVN:1",
+      "medien_ueberregional",
+      "nina",
+      "Materna:noPush",
+      "Materna:noMirror"
+    ],
+    "references": "DE-NW-BN-SE030-20200506-30-001 DE-NW-BN-SE030-20200422-30-000 DE-NW-BN-SE030-20200420-30-001 DE-NW-BN-SE030-20200416-30-001 DE-NW-BN-SE030-20200403-30-000 DE-NW-BN-W003,mow.DE-NW-BN-SE030-20200506-30-001 mow.DE-NW-BN-SE030-20200422-30-000 mow.DE-NW-BN-SE030-20200420-30-001 mow.DE-NW-BN-SE030-20200416-30-001 mow.DE-NW-BN-SE030-20200403-30-000 mow.DE-NW-BN-W003-20200403-000,2020-04-03T00:00:00+00:00",
+    "info": [
+      {
+        "language": "DE",
+        "category": ["Health"],
+        "event": "Gefahreninformation",
+        "urgency": "Immediate",
+        "severity": "Minor",
+        "certainty": "Observed",
+        "eventCode": [
+          {
+            "valueName": "profile:DE-BBK-EVENTCODE",
+            "value": "BBK-EVC-040"
+          }
+        ],
+        "headline": "Corona-Verordnung des Landes: Warnstufe durch Landesgesundheitsamt ausgerufen",
+        "description": "Die Zahl der mit dem Corona-Virus infizierten Menschen steigt gegenwärtig stark an. Es wächst daher die Gefahr einer weiteren Verbreitung der Infektion und - je nach Einzelfall - auch von schweren Erkrankungen.",
+        "instruction": "Waschen Sie sich regelmäßig und gründlich die Hände.<br/>- Beachten Sie die AHA + A + L - Regeln:<br/>Abstand halten - 1,5 m Mindestabstand beachten, Körperkontakt vermeiden!<br/>Hygiene - regelmäßiges Händewaschen, Husten- und Nieshygiene beachten!<br/>Alltagsmaske (Mund-Nase-Bedeckung) tragen!<br/>App - installieren und nutzen Sie die Corona-Warn-App!<br/>Lüften: Sorgen Sie für eine regelmäßige und gründliche Lüftung von Räumen - auch und gerade in der kommenden kalten Jahreszeit!<br/>- Bitte folgen Sie den behördlichen Anordnungen.<br/>- Husten und niesen Sie in ein Taschentuch oder in die Armbeuge.<br/>- Bleiben Sie bei Erkältungssymptomen nach Möglichkeit zu Hause. Kontaktieren Sie Ihre Hausarztpraxis per Telefon oder wenden sich an die Telefonnummer 116117 des Ärztlichen Bereitschaftsdienstes und besprechen Sie das weitere Vorgehen. Gehen Sie nicht unaufgefordert in eine Arztpraxis oder ins Krankenhaus.<br/>- Seien Sie kritisch: Informieren Sie sich nur aus gesicherten Quellen.",
+        "contact": "Weitere Informationen und Empfehlungen finden Sie im Corona-Informations-Bereich der Warn-App NINA. Beachten Sie auch die Internetseiten der örtlichen Gesundheitsbehörde (Stadt- bzw. Kreisverwaltung) Ihres Aufenthaltsortes",
+        "parameter": [
+          {
+            "valueName": "instructionText",
+            "value": "- Beachten Sie die AHA + A + L - Regeln:\nAbstand halten - 1,5 m Mindestabstand beachten, Körperkontakt vermeiden!  \nHygiene - regelmäßiges Händewaschen, Husten- und Nieshygiene beachten!  \nAlltagsmaske (Mund-Nase-Bedeckung) tragen!  \nApp - installieren und nutzen Sie die Corona-Warn-App!  \nLüften: Sorgen Sie für eine regelmäßige und gründliche Lüftung von Räumen - auch und gerade in der kommenden kalten Jahreszeit!  \n- Bitte folgen Sie den behördlichen Anordnungen. \n- Husten und niesen Sie in ein Taschentuch oder in die Armbeuge. \n- Bleiben Sie bei Erkältungssymptomen nach Möglichkeit zu Hause. Kontaktieren Sie Ihre Hausarztpraxis per Telefon oder wenden sich an die Telefonnummer 116117 des Ärztlichen Bereitschaftsdienstes und besprechen Sie das weitere Vorgehen. Gehen Sie nicht unaufgefordert in eine Arztpraxis oder ins Krankenhaus. \n- Seien Sie kritisch: Informieren Sie sich nur aus gesicherten Quellen."
+          },
+          {
+            "valueName": "warnVerwaltungsbereiche",
+            "value": "130000000000,140000000000,160000000000,110000000000,020000000000,070000000000,030000000000,050000000000,080000000000,120000000000,010000000000,150000000000,040000000000,060000000000,090000000000,100000000000"
+          },
+          {
+            "valueName": "instructionCode",
+            "value": "BBK-ISC-132"
+          },
+          {
+            "valueName": "sender_langname",
+            "value": "BBK, Nationale Warnzentrale Bonn"
+          },
+          {
+            "valueName": "sender_signature",
+            "value": "Bundesamt für Bevölkerungsschutz und Katastrophenhilfe\nNationale Warnzentrale Bonn\nhttps://warnung.bund.de"
+          },
+          {
+            "valueName": "PHGEM",
+            "value": "1+11057,100001"
+          },
+          {
+            "valueName": "ZGEM",
+            "value": "1+11057,100001"
+          }
+        ],
+        "area": [
+          {
+            "areaDesc": "Bundesland: Freie Hansestadt Bremen, Land Berlin, Land Hessen, Land Nordrhein-Westfalen, Land Brandenburg, Freistaat Bayern, Land Mecklenburg-Vorpommern, Land Rheinland-Pfalz, Freistaat Sachsen, Land Schleswig-Holstein, Freie und Hansestadt Hamburg, Freistaat Thüringen, Land Niedersachsen, Land Saarland, Land Sachsen-Anhalt, Land Baden-Württemberg",
+            "geocode": [
+              {
+                "valueName": "AreaId",
+                "value": "0"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "mow.DE-NW-BN-SE030-20201014-30-000": {
+    "identifier": "mow.DE-NW-BN-SE030-20201014-30-000",
+    "sender": "opendata@dwd.de",
+    "sent": "2021-10-11T05:20:00+01:00",
+    "status": "Actual",
+    "msgType": "Alert",
+    "source": "PVW",
+    "scope": "Public",
+    "code": [
+      "DVN:2",
+      "id:2.49.0.0.276.0.DWD.PVW.1645004040000.5a168da8-ac20-4b6d-86be-d616526a7914"
+    ],
+    "info": [
+      {
+        "language": "de-DE",
+        "category": ["Met"],
+        "event": "STURMBÖEN",
+        "responseType": ["Prepare"],
+        "urgency": "Immediate",
+        "severity": "Moderate",
+        "certainty": "Likely",
+        "eventCode": [
+          {
+            "valueName": "PROFILE_VERSION",
+            "value": "2.1.11"
+          },
+          {
+            "valueName": "LICENSE",
+            "value": "© GeoBasis-DE / BKG 2019  (Daten modifiziert)"
+          },
+          {
+            "valueName": "II",
+            "value": "52"
+          },
+          {
+            "valueName": "GROUP",
+            "value": "WIND"
+          },
+          {
+            "valueName": "AREA_COLOR",
+            "value": "251 140 0"
+          }
+        ],
+        "effective": "2021-11-01T03:20:00+01:00",
+        "onset": "2021-11-01T05:20:00+01:00",
+        "expires": "3021-11-22T05:19:00+01:00",
+        "senderName": "Deutscher Wetterdienst",
+        "headline": "Ausfall Notruf 112",
+        "description": "Es treten Sturmböen mit Geschwindigkeiten zwischen 70 km/h (20m/s, 38kn, Bft 8) und 85 km/h (24m/s, 47kn, Bft 9) aus westlicher Richtung auf. In Schauernähe sowie in exponierten Lagen muss mit schweren Sturmböen bis 90 km/h (25m/s, 48kn, Bft 10) gerechnet werden.",
+        "instruction": "ACHTUNG! Hinweis auf mögliche Gefahren: Es können zum Beispiel einzelne Äste herabstürzen. Achten Sie besonders auf herabfallende Gegenstände.",
+        "web": "https://www.wettergefahren.de",
+        "contact": "Deutscher Wetterdienst",
+        "parameter": [
+          {
+            "valueName": "gusts",
+            "value": "70-85 [km/h]"
+          },
+          {
+            "valueName": "exposed gusts",
+            "value": "<90 [km/h]"
+          },
+          {
+            "valueName": "wind direction",
+            "value": "west"
+          },
+          {
+            "valueName": "PHGEM",
+            "value": "3243+168,3413+1,3424+52,3478+1,3495+2,3499,3639+2527,6168+1,6175+22,6199+36,6238,6241+7,6256,9956+184,10142,10154,10164+7,10173,10176+6,10186+1,10195+2,10199,10201+6,10214+4,10220,10249+117,10368,10373+2,10425+9,10436+1,10440+8,10450+1,10453+7,10462+1,10467+5,10474+2,10484+5,10773+68,10843+2,10847+9,10858,10867+8,10878+1,10882+68,10952+7,10961+2,11046,11056+1"
+          },
+          {
+            "valueName": "ZGEM",
+            "value": "3243+168,3413+1,3424+52,3478+1,3495+2,3499,3639+2527,6168+1,6175+22,6199+36,6238,6241+7,6256,9956+184,10142,10154,10164+7,10173,10176+6,10186+1,10195+2,10199,10201+6,10214+4,10220,10249+117,10368,10373+2,10425+9,10436+1,10440+8,10450+1,10453+7,10462+1,10467+5,10474+2,10484+5,10773+68,10843+2,10847+9,10858,10867+8,10878+1,10882+68,10952+7,10961+2,11046,11056+1"
+          }
+        ],
+        "area": [
+          {
+            "areaDesc": "Gemeinde Oberreichenbach, Gemeinde Neuweiler, Stadt Nagold, Stadt Neubulach, Gemeinde Schömberg, Gemeinde Simmersfeld, Gemeinde Simmozheim, Gemeinde Rohrdorf, Gemeinde Ostelsheim, Gemeinde Ebhausen, Gemeinde Egenhausen, Gemeinde Dobel, Stadt Bad Liebenzell, Stadt Solingen, Stadt Haiterbach, Stadt Bad Herrenalb, Gemeinde Höfen an der Enz, Gemeinde Gechingen, Gemeinde Enzklösterle, Gemeinde Gutach (Schwarzwaldbahn) und 3392 weitere."
+          }
+        ]
+      }
+    ]
+  }
+}

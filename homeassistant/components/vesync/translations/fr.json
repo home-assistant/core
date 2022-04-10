@@ -4,13 +4,13 @@
             "single_instance_allowed": "D\u00e9j\u00e0 configur\u00e9. Une seule configuration possible."
         },
         "error": {
-            "invalid_auth": "Authentification invalide"
+            "invalid_auth": "Authentification non valide"
         },
         "step": {
             "user": {
                 "data": {
                     "password": "Mot de passe",
-                    "username": "Email"
+                    "username": "Courriel"
                 },
                 "title": "Entrez vos identifiants"
             }

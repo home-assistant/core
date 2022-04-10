@@ -1,0 +1,47 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado",
+            "already_in_progress": "O fluxo de configura\u00e7\u00e3o j\u00e1 est\u00e1 em andamento",
+            "cannot_connect": "Falha ao conectar",
+            "invalid_host": "Nome de host ou endere\u00e7o IP inv\u00e1lido",
+            "not_supported": "Dispositivo n\u00e3o suportado",
+            "unknown": "Erro inesperado"
+        },
+        "error": {
+            "cannot_connect": "Falha ao conectar",
+            "invalid_host": "Nome de host ou endere\u00e7o IP inv\u00e1lido",
+            "unknown": "Erro inesperado"
+        },
+        "flow_title": "{name} ({model} em {host})",
+        "step": {
+            "auth": {
+                "title": "Autenticar no dispositivo"
+            },
+            "finish": {
+                "data": {
+                    "name": "Nome"
+                },
+                "title": "Escolha um nome para o dispositivo"
+            },
+            "reset": {
+                "description": "{name} ({model} em {host}) est\u00e1 bloqueado. Voc\u00ea precisa desbloquear o dispositivo para autenticar e completar a configura\u00e7\u00e3o. Instru\u00e7\u00f5es:\n1. Abra o aplicativo Broadlink.\n2. Clique no dispositivo.\n3. Clique em '...' no canto superior direito.\n4. Role at\u00e9 a parte inferior da p\u00e1gina.\n5. Desabilite o bloqueio.",
+                "title": "Desbloqueie o dispositivo"
+            },
+            "unlock": {
+                "data": {
+                    "unlock": "Sim, fa\u00e7a isso."
+                },
+                "description": "{name} ({model} em {host}) est\u00e1 bloqueado. Isso pode levar a problemas de autentica\u00e7\u00e3o no Home Assistant. Gostaria de desbloque\u00e1-lo?",
+                "title": "Desbloquear o dispositivo (opcional)"
+            },
+            "user": {
+                "data": {
+                    "host": "Nome do host",
+                    "timeout": "Tempo esgotado"
+                },
+                "title": "Conectar-se ao dispositivo"
+            }
+        }
+    }
+}

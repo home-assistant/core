@@ -1,27 +1,28 @@
 """Platform for beewi_smartclim integration."""
+from __future__ import annotations
+
 from beewi_smartclim import BeewiSmartClimPoller  # pylint: disable=import-error
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import (
-    CONF_MAC,
-    CONF_NAME,
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_TEMPERATURE,
-    PERCENTAGE,
-    TEMP_CELSIUS,
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorDeviceClass,
+    SensorEntity,
 )
+from homeassistant.const import CONF_MAC, CONF_NAME, PERCENTAGE, TEMP_CELSIUS
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 # Default values
 DEFAULT_NAME = "BeeWi SmartClim"
 
 # Sensor config
 SENSOR_TYPES = [
-    [DEVICE_CLASS_TEMPERATURE, "Temperature", TEMP_CELSIUS],
-    [DEVICE_CLASS_HUMIDITY, "Humidity", PERCENTAGE],
-    [DEVICE_CLASS_BATTERY, "Battery", PERCENTAGE],
+    [SensorDeviceClass.TEMPERATURE, "Temperature", TEMP_CELSIUS],
+    [SensorDeviceClass.HUMIDITY, "Humidity", PERCENTAGE],
+    [SensorDeviceClass.BATTERY, "Battery", PERCENTAGE],
 ]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -32,7 +33,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the beewi_smartclim platform."""
 
     mac = config[CONF_MAC]
@@ -71,9 +77,9 @@ class BeewiSmartclimSensor(SensorEntity):
         """Fetch new state data from the poller."""
         self._poller.update_sensor()
         self._attr_native_value = None
-        if self._device == DEVICE_CLASS_TEMPERATURE:
+        if self._device == SensorDeviceClass.TEMPERATURE:
             self._attr_native_value = self._poller.get_temperature()
-        if self._device == DEVICE_CLASS_HUMIDITY:
+        if self._device == SensorDeviceClass.HUMIDITY:
             self._attr_native_value = self._poller.get_humidity()
-        if self._device == DEVICE_CLASS_BATTERY:
+        if self._device == SensorDeviceClass.BATTERY:
             self._attr_native_value = self._poller.get_battery()

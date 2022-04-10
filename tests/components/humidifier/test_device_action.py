@@ -3,6 +3,7 @@ import pytest
 import voluptuous_serialize
 
 import homeassistant.components.automation as automation
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.humidifier import DOMAIN, const, device_action
 from homeassistant.const import STATE_ON
 from homeassistant.helpers import config_validation as cv, device_registry
@@ -35,9 +36,9 @@ def entity_reg(hass):
     "set_state,features_reg,features_state,expected_action_types",
     [
         (False, 0, 0, []),
-        (False, const.SUPPORT_MODES, 0, ["set_mode"]),
+        (False, const.HumidifierEntityFeature.MODES, 0, ["set_mode"]),
         (True, 0, 0, []),
-        (True, 0, const.SUPPORT_MODES, ["set_mode"]),
+        (True, 0, const.HumidifierEntityFeature.MODES, ["set_mode"]),
     ],
 )
 async def test_get_actions(
@@ -87,7 +88,9 @@ async def test_get_actions(
         }
         for action in expected_action_types
     ]
-    actions = await async_get_device_automations(hass, "action", device_entry.id)
+    actions = await async_get_device_automations(
+        hass, DeviceAutomationType.ACTION, device_entry.id
+    )
     assert_lists_same(actions, expected_actions)
 
 

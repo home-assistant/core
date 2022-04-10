@@ -1,6 +1,7 @@
 """The tests for the KMtronic switch platform."""
 import asyncio
 from datetime import timedelta
+from http import HTTPStatus
 
 from homeassistant.components.kmtronic.const import DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE
@@ -128,7 +129,7 @@ async def test_failed_update(hass, aioclient_mock):
     aioclient_mock.get(
         "http://1.1.1.1/status.xml",
         text="401 Unauthorized: Password required",
-        status=401,
+        status=HTTPStatus.UNAUTHORIZED,
     )
     async_fire_time_changed(hass, future)
 

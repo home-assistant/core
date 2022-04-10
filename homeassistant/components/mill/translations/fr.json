@@ -7,11 +7,25 @@
             "cannot_connect": "\u00c9chec de connexion"
         },
         "step": {
-            "user": {
+            "cloud": {
                 "data": {
                     "password": "Mot de passe",
                     "username": "Nom d'utilisateur"
                 }
+            },
+            "local": {
+                "data": {
+                    "ip_address": "Adresse IP"
+                },
+                "description": "Adresse IP locale de l'appareil."
+            },
+            "user": {
+                "data": {
+                    "connection_type": "S\u00e9lectionner le type de connexion",
+                    "password": "Mot de passe",
+                    "username": "Nom d'utilisateur"
+                },
+                "description": "S\u00e9lectionnez le type de connexion. Local n\u00e9cessite des radiateurs de g\u00e9n\u00e9ration 3"
             }
         }
     }

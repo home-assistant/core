@@ -6,6 +6,8 @@
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
             "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "invalid_auth_key": "API-Anmeldeinformationen von Coinbase aufgrund eines ung\u00fcltigen API-Schl\u00fcssels abgelehnt.",
+            "invalid_auth_secret": "API-Anmeldeinformationen von Coinbase aufgrund eines ung\u00fcltigen API-Geheimnisses abgelehnt.",
             "unknown": "Unerwarteter Fehler"
         },
         "step": {
@@ -23,7 +25,9 @@
     },
     "options": {
         "error": {
+            "currency_unavailable": "Eine oder mehrere der angeforderten W\u00e4hrungssalden werden von deiner Coinbase-API nicht bereitgestellt.",
             "currency_unavaliable": "Eine oder mehrere der angeforderten W\u00e4hrungssalden werden von deiner Coinbase-API nicht bereitgestellt.",
+            "exchange_rate_unavailable": "Einer oder mehrere der angeforderten Wechselkurse werden nicht von Coinbase bereitgestellt.",
             "exchange_rate_unavaliable": "Einer oder mehrere der angeforderten Wechselkurse werden nicht von Coinbase bereitgestellt.",
             "unknown": "Unerwarteter Fehler"
         },

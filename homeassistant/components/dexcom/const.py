@@ -1,8 +1,8 @@
 """Constants for the Dexcom integration."""
+from homeassistant.const import Platform
 
 DOMAIN = "dexcom"
-PLATFORMS = ["sensor"]
-
+PLATFORMS = [Platform.SENSOR]
 GLUCOSE_VALUE_ICON = "mdi:diabetes"
 
 GLUCOSE_TREND_ICON = [

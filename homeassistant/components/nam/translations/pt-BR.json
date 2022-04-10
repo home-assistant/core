@@ -1,0 +1,41 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado",
+            "device_unsupported": "O dispositivo n\u00e3o \u00e9 compat\u00edvel.",
+            "reauth_successful": "A reautentica\u00e7\u00e3o foi bem-sucedida",
+            "reauth_unsuccessful": "A reautentica\u00e7\u00e3o falhou. Remova a integra\u00e7\u00e3o e configure-a novamente."
+        },
+        "error": {
+            "cannot_connect": "Falha ao conectar",
+            "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida",
+            "unknown": "Erro inesperado"
+        },
+        "flow_title": "{host}",
+        "step": {
+            "confirm_discovery": {
+                "description": "Deseja configurar o Nettigo Air Monitor em {host} ?"
+            },
+            "credentials": {
+                "data": {
+                    "password": "Senha",
+                    "username": "Usu\u00e1rio"
+                },
+                "description": "Por favor, digite o nome de usu\u00e1rio e senha."
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Senha",
+                    "username": "Usu\u00e1rio"
+                },
+                "description": "Insira o nome de usu\u00e1rio e a senha corretos para o host: {host}"
+            },
+            "user": {
+                "data": {
+                    "host": "Nome do host"
+                },
+                "description": "Configure a integra\u00e7\u00e3o do Nettigo Air Monitor."
+            }
+        }
+    }
+}

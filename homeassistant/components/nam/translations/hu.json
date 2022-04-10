@@ -2,16 +2,33 @@
     "config": {
         "abort": {
             "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
-            "device_unsupported": "Az eszk\u00f6z nem t\u00e1mogatott."
+            "device_unsupported": "Az eszk\u00f6z nem t\u00e1mogatott.",
+            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt.",
+            "reauth_unsuccessful": "Az \u00fajrahiteles\u00edt\u00e9s sikertelen volt, k\u00e9rem, t\u00e1vol\u00edtsa el az integr\u00e1ci\u00f3t, \u00e9s \u00e1ll\u00edtsa be \u00fajra."
         },
         "error": {
             "cannot_connect": "Nem siker\u00fclt csatlakozni",
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
             "unknown": "V\u00e1ratlan hiba"
         },
         "flow_title": "{name}",
         "step": {
             "confirm_discovery": {
                 "description": "Szeretn\u00e9 be\u00e1ll\u00edtani Nettigo Air Monitor-ot a {host} c\u00edmen?"
+            },
+            "credentials": {
+                "data": {
+                    "password": "Jelsz\u00f3",
+                    "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
+                },
+                "description": "K\u00e9rem, adja meg a felhaszn\u00e1l\u00f3nevet \u00e9s a jelsz\u00f3t."
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Jelsz\u00f3",
+                    "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
+                },
+                "description": "K\u00e9rem, adja meg a helyes felhaszn\u00e1l\u00f3nevet \u00e9s jelsz\u00f3t ide: {host}"
             },
             "user": {
                 "data": {

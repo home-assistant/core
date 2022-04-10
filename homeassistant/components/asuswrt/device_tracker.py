@@ -5,8 +5,8 @@ from homeassistant.components.device_tracker import SOURCE_TYPE_ROUTER
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DATA_ASUSWRT, DOMAIN
 from .router import AsusWrtRouter
@@ -15,7 +15,7 @@ DEFAULT_DEVICE_NAME = "Unknown device"
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up device tracker for AsusWrt component."""
     router = hass.data[DOMAIN][entry.entry_id][DATA_ASUSWRT]
@@ -60,12 +60,6 @@ class AsusWrtDevice(ScannerEntity):
         self._device = device
         self._attr_unique_id = device.mac
         self._attr_name = device.name or DEFAULT_DEVICE_NAME
-        self._attr_device_info = {
-            "connections": {(CONNECTION_NETWORK_MAC, device.mac)},
-            "default_model": "ASUSWRT Tracked device",
-        }
-        if device.name:
-            self._attr_device_info["default_name"] = device.name
 
     @property
     def is_connected(self):
@@ -81,6 +75,11 @@ class AsusWrtDevice(ScannerEntity):
     def hostname(self) -> str:
         """Return the hostname of device."""
         return self._device.name
+
+    @property
+    def icon(self) -> str:
+        """Return device icon."""
+        return "mdi:lan-connect" if self._device.is_connected else "mdi:lan-disconnect"
 
     @property
     def ip_address(self) -> str:

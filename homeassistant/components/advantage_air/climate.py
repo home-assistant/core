@@ -1,5 +1,9 @@
 """Climate platform for Advantage Air integration."""
-from homeassistant.components.climate import ClimateEntity
+from __future__ import annotations
+
+import logging
+
+from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
 from homeassistant.components.climate.const import (
     FAN_AUTO,
     FAN_HIGH,
@@ -10,12 +14,14 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_DRY,
     HVAC_MODE_FAN_ONLY,
     HVAC_MODE_HEAT,
+    HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
-    SUPPORT_FAN_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, TEMP_CELSIUS
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     ADVANTAGE_AIR_STATE_CLOSE,
@@ -53,17 +59,23 @@ HASS_FAN_MODES = {v: k for k, v in ADVANTAGE_AIR_FAN_MODES.items()}
 FAN_SPEEDS = {FAN_LOW: 30, FAN_MEDIUM: 60, FAN_HIGH: 100}
 
 ADVANTAGE_AIR_SERVICE_SET_MYZONE = "set_myzone"
-ZONE_HVAC_MODES = [HVAC_MODE_OFF, HVAC_MODE_FAN_ONLY]
+ZONE_HVAC_MODES = [HVAC_MODE_OFF, HVAC_MODE_HEAT_COOL]
 
 PARALLEL_UPDATES = 0
 
+_LOGGER = logging.getLogger(__name__)
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up AdvantageAir climate platform."""
 
     instance = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
 
-    entities = []
+    entities: list[ClimateEntity] = []
     for ac_key, ac_device in instance["coordinator"].data["aircons"].items():
         entities.append(AdvantageAirAC(instance, ac_key))
         for zone_key, zone in ac_device["zones"].items():
@@ -94,7 +106,9 @@ class AdvantageAirAC(AdvantageAirClimateEntity):
 
     _attr_fan_modes = [FAN_AUTO, FAN_LOW, FAN_MEDIUM, FAN_HIGH]
     _attr_hvac_modes = AC_HVAC_MODES
-    _attr_supported_features = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
+    )
 
     def __init__(self, instance, ac_key):
         """Initialize an AdvantageAir AC unit."""
@@ -155,7 +169,7 @@ class AdvantageAirZone(AdvantageAirClimateEntity):
     """AdvantageAir Zone control."""
 
     _attr_hvac_modes = ZONE_HVAC_MODES
-    _attr_supported_features = SUPPORT_TARGET_TEMPERATURE
+    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
 
     def __init__(self, instance, ac_key, zone_key):
         """Initialize an AdvantageAir Zone control."""
@@ -169,7 +183,7 @@ class AdvantageAirZone(AdvantageAirClimateEntity):
     def hvac_mode(self):
         """Return the current state as HVAC mode."""
         if self._zone["state"] == ADVANTAGE_AIR_STATE_OPEN:
-            return HVAC_MODE_FAN_ONLY
+            return HVAC_MODE_HEAT_COOL
         return HVAC_MODE_OFF
 
     @property
@@ -210,6 +224,9 @@ class AdvantageAirZone(AdvantageAirClimateEntity):
 
     async def set_myzone(self, **kwargs):
         """Set this zone as the 'MyZone'."""
+        _LOGGER.warning(
+            "The advantage_air.set_myzone service has been deprecated and will be removed in a future version, please use the select.select_option service on the MyZone entity"
+        )
         await self.async_change(
             {self.ac_key: {"info": {"myZone": self._zone["number"]}}}
         )

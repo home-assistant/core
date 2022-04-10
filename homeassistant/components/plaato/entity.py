@@ -2,6 +2,7 @@
 from pyplaato.models.device import PlaatoDevice
 
 from homeassistant.helpers import entity
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (
     DEVICE,
@@ -53,19 +54,16 @@ class PlaatoEntity(entity.Entity):
         return f"{self._device_id}_{self._sensor_type}"
 
     @property
-    def device_info(self):
+    def device_info(self) -> entity.DeviceInfo:
         """Get device info."""
-        device_info = {
-            "identifiers": {(DOMAIN, self._device_id)},
-            "name": self._device_name,
-            "manufacturer": "Plaato",
-            "model": self._device_type,
-        }
-
-        if self._sensor_data.firmware_version != "":
-            device_info["sw_version"] = self._sensor_data.firmware_version
-
-        return device_info
+        sw_version = self._sensor_data.firmware_version
+        return entity.DeviceInfo(
+            identifiers={(DOMAIN, self._device_id)},
+            manufacturer="Plaato",
+            model=self._device_type,
+            name=self._device_name,
+            sw_version=sw_version if sw_version != "" else None,
+        )
 
     @property
     def extra_state_attributes(self):
@@ -98,7 +96,8 @@ class PlaatoEntity(entity.Entity):
             )
         else:
             self.async_on_remove(
-                self.hass.helpers.dispatcher.async_dispatcher_connect(
+                async_dispatcher_connect(
+                    self.hass,
                     SENSOR_SIGNAL % (self._device_id, self._sensor_type),
                     self.async_write_ha_state,
                 )

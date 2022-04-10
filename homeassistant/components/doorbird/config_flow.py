@@ -1,4 +1,5 @@
 """Config flow for DoorBird integration."""
+from http import HTTPStatus
 from ipaddress import ip_address
 import logging
 
@@ -7,15 +8,11 @@ import requests
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    HTTP_UNAUTHORIZED,
-)
+from homeassistant.components import zeroconf
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
-from homeassistant.util.network import is_link_local
+from homeassistant.data_entry_flow import FlowResult
+from homeassistant.util.network import is_ipv4_address, is_link_local
 
 from .const import CONF_EVENTS, DOMAIN, DOORBIRD_OUI
 from .util import get_mac_address_from_doorstation_info
@@ -45,7 +42,7 @@ async def validate_input(hass: core.HomeAssistant, data):
     try:
         status, info = await hass.async_add_executor_job(_check_device, device)
     except requests.exceptions.HTTPError as err:
-        if err.response.status_code == HTTP_UNAUTHORIZED:
+        if err.response.status_code == HTTPStatus.UNAUTHORIZED:
             raise InvalidAuth from err
         raise CannotConnect from err
     except OSError as err:
@@ -66,7 +63,7 @@ async def async_verify_supported_device(hass, host):
     try:
         await hass.async_add_executor_job(device.doorbell_state)
     except requests.exceptions.HTTPError as err:
-        if err.response.status_code == HTTP_UNAUTHORIZED:
+        if err.response.status_code == HTTPStatus.UNAUTHORIZED:
             return True
     except OSError:
         return False
@@ -95,24 +92,30 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         data = self.discovery_schema or _schema_with_defaults()
         return self.async_show_form(step_id="user", data_schema=data, errors=errors)
 
-    async def async_step_zeroconf(self, discovery_info):
+    async def async_step_zeroconf(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> FlowResult:
         """Prepare configuration for a discovered doorbird device."""
-        macaddress = discovery_info["properties"]["macaddress"]
-        host = discovery_info[CONF_HOST]
+        macaddress = discovery_info.properties["macaddress"]
+        host = discovery_info.host
 
         if macaddress[:6] != DOORBIRD_OUI:
             return self.async_abort(reason="not_doorbird_device")
         if is_link_local(ip_address(host)):
             return self.async_abort(reason="link_local_address")
+        if not is_ipv4_address(host):
+            return self.async_abort(reason="not_ipv4_address")
+
+        await self.async_set_unique_id(macaddress)
+        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
+
+        self._async_abort_entries_match({CONF_HOST: host})
+
         if not await async_verify_supported_device(self.hass, host):
             return self.async_abort(reason="not_doorbird_device")
 
-        await self.async_set_unique_id(macaddress)
-
-        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
-
         chop_ending = "._axis-video._tcp.local."
-        friendly_hostname = discovery_info["name"]
+        friendly_hostname = discovery_info.name
         if friendly_hostname.endswith(chop_ending):
             friendly_hostname = friendly_hostname[: -len(chop_ending)]
 

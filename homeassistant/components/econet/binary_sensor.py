@@ -4,13 +4,13 @@ from __future__ import annotations
 from pyeconet.equipment import EquipmentType
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_LOCK,
-    DEVICE_CLASS_OPENING,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_SOUND,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import EcoNetEntity
 from .const import DOMAIN, EQUIPMENT
@@ -19,27 +19,29 @@ BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(
         key="shutoff_valve_open",
         name="shutoff_valve",
-        device_class=DEVICE_CLASS_OPENING,
+        device_class=BinarySensorDeviceClass.OPENING,
     ),
     BinarySensorEntityDescription(
         key="running",
         name="running",
-        device_class=DEVICE_CLASS_POWER,
+        device_class=BinarySensorDeviceClass.POWER,
     ),
     BinarySensorEntityDescription(
         key="screen_locked",
         name="screen_locked",
-        device_class=DEVICE_CLASS_LOCK,
+        device_class=BinarySensorDeviceClass.LOCK,
     ),
     BinarySensorEntityDescription(
         key="beep_enabled",
         name="beep_enabled",
-        device_class=DEVICE_CLASS_SOUND,
+        device_class=BinarySensorDeviceClass.SOUND,
     ),
 )
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up EcoNet binary sensor based on a config entry."""
     equipment = hass.data[DOMAIN][EQUIPMENT][entry.entry_id]
     all_equipment = equipment[EquipmentType.WATER_HEATER].copy()

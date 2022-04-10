@@ -1,4 +1,6 @@
 """Support for Songpal-enabled (Sony) media devices."""
+from __future__ import annotations
+
 import asyncio
 from collections import OrderedDict
 import logging
@@ -14,14 +16,9 @@ from songpal import (
 )
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
+from homeassistant.components.media_player import (
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, EVENT_HOMEASSISTANT_STOP, STATE_OFF, STATE_ON
@@ -32,6 +29,9 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_platform,
 )
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_ENDPOINT, DOMAIN, SET_SOUND_SETTING
 
@@ -40,20 +40,14 @@ _LOGGER = logging.getLogger(__name__)
 PARAM_NAME = "name"
 PARAM_VALUE = "value"
 
-SUPPORT_SONGPAL = (
-    SUPPORT_VOLUME_SET
-    | SUPPORT_VOLUME_STEP
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_SELECT_SOURCE
-    | SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-)
-
 INITIAL_RETRY_DELAY = 10
 
 
 async def async_setup_platform(
-    hass: HomeAssistant, config: dict, async_add_entities, discovery_info=None
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up from legacy configuration file. Obsolete."""
     _LOGGER.error(
@@ -62,7 +56,9 @@ async def async_setup_platform(
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up songpal media player."""
     name = config_entry.data[CONF_NAME]
@@ -92,6 +88,15 @@ async def async_setup_entry(
 
 class SongpalEntity(MediaPlayerEntity):
     """Class representing a Songpal device."""
+
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.VOLUME_STEP
+        | MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.SELECT_SOURCE
+        | MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.TURN_OFF
+    )
 
     def __init__(self, name, device):
         """Init."""
@@ -202,19 +207,24 @@ class SongpalEntity(MediaPlayerEntity):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return self._sysinfo.macAddr
+        return self._sysinfo.macAddr or self._sysinfo.wirelessMacAddr
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        return {
-            "connections": {(dr.CONNECTION_NETWORK_MAC, self._sysinfo.macAddr)},
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "manufacturer": "Sony Corporation",
-            "name": self.name,
-            "sw_version": self._sysinfo.version,
-            "model": self._model,
-        }
+        connections = set()
+        if self._sysinfo.macAddr:
+            connections.add((dr.CONNECTION_NETWORK_MAC, self._sysinfo.macAddr))
+        if self._sysinfo.wirelessMacAddr:
+            connections.add((dr.CONNECTION_NETWORK_MAC, self._sysinfo.wirelessMacAddr))
+        return DeviceInfo(
+            connections=connections,
+            identifiers={(DOMAIN, self.unique_id)},
+            manufacturer="Sony Corporation",
+            model=self._model,
+            name=self.name,
+            sw_version=self._sysinfo.version,
+        )
 
     @property
     def available(self):
@@ -339,8 +349,3 @@ class SongpalEntity(MediaPlayerEntity):
     def is_volume_muted(self):
         """Return whether the device is muted."""
         return self._is_muted
-
-    @property
-    def supported_features(self):
-        """Return supported features."""
-        return SUPPORT_SONGPAL

@@ -214,7 +214,7 @@ async def test_templates_with_entities(hass, calls):
         blocking=True,
     )
     await hass.async_block_till_done()
-    _verify(hass, "a", ["a", "b", "c"])
+    _verify(hass, "b", ["a", "b", "c"])
 
     await hass.services.async_call(
         SELECT_DOMAIN,

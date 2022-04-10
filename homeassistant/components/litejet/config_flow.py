@@ -1,7 +1,6 @@
 """Config flow for the LiteJet lighting system."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 import pylitejet
@@ -16,8 +15,6 @@ import homeassistant.helpers.config_validation as cv
 
 from .const import CONF_DEFAULT_TRANSITION, DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
-
 
 class LiteJetOptionsFlow(config_entries.OptionsFlow):
     """Handle LiteJet options."""
@@ -28,7 +25,7 @@ class LiteJetOptionsFlow(config_entries.OptionsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> dict[str, Any]:
+    ) -> FlowResult:
         """Manage LiteJet options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)

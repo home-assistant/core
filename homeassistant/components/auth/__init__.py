@@ -113,6 +113,12 @@ Result will be a long-lived access token:
     "result": "ABCDEFGH"
 }
 
+
+# POST /auth/external/callback
+
+This is an endpoint for OAuth2 Authorization callbacks used by integrations
+that link accounts with other cloud providers using LocalOAuth2Implementation
+as part of a config flow.
 """
 from __future__ import annotations
 
@@ -124,17 +130,18 @@ from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.auth import InvalidAuthError
-from homeassistant.auth.models import (
-    TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN,
-    Credentials,
-    User,
-)
+from homeassistant.auth.models import TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN, Credentials
 from homeassistant.components import websocket_api
-from homeassistant.components.http.auth import async_sign_path
+from homeassistant.components.http.auth import (
+    async_sign_path,
+    async_user_not_allowed_do_auth,
+)
 from homeassistant.components.http.ban import log_invalid_auth
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.config_entry_oauth2_flow import OAuth2AuthorizeCallbackView
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
 
@@ -179,18 +186,15 @@ SCHEMA_WS_SIGN_PATH = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
 )
 
 RESULT_TYPE_CREDENTIALS = "credentials"
-RESULT_TYPE_USER = "user"
 
 
 @bind_hass
-def create_auth_code(
-    hass, client_id: str, credential_or_user: Credentials | User
-) -> str:
+def create_auth_code(hass, client_id: str, credential: Credentials) -> str:
     """Create an authorization code to fetch tokens."""
-    return hass.data[DOMAIN](client_id, credential_or_user)
+    return hass.data[DOMAIN](client_id, credential)
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Component to allow users to login."""
     store_result, retrieve_result = _create_auth_code_store()
 
@@ -198,25 +202,28 @@ async def async_setup(hass, config):
 
     hass.http.register_view(TokenView(retrieve_result))
     hass.http.register_view(LinkUserView(retrieve_result))
+    hass.http.register_view(OAuth2AuthorizeCallbackView())
 
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_CURRENT_USER, websocket_current_user, SCHEMA_WS_CURRENT_USER
+    websocket_api.async_register_command(
+        hass, WS_TYPE_CURRENT_USER, websocket_current_user, SCHEMA_WS_CURRENT_USER
     )
-    hass.components.websocket_api.async_register_command(
+    websocket_api.async_register_command(
+        hass,
         WS_TYPE_LONG_LIVED_ACCESS_TOKEN,
         websocket_create_long_lived_access_token,
         SCHEMA_WS_LONG_LIVED_ACCESS_TOKEN,
     )
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_REFRESH_TOKENS, websocket_refresh_tokens, SCHEMA_WS_REFRESH_TOKENS
+    websocket_api.async_register_command(
+        hass, WS_TYPE_REFRESH_TOKENS, websocket_refresh_tokens, SCHEMA_WS_REFRESH_TOKENS
     )
-    hass.components.websocket_api.async_register_command(
+    websocket_api.async_register_command(
+        hass,
         WS_TYPE_DELETE_REFRESH_TOKEN,
         websocket_delete_refresh_token,
         SCHEMA_WS_DELETE_REFRESH_TOKEN,
     )
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_SIGN_PATH, websocket_sign_path, SCHEMA_WS_SIGN_PATH
+    websocket_api.async_register_command(
+        hass, WS_TYPE_SIGN_PATH, websocket_sign_path, SCHEMA_WS_SIGN_PATH
     )
 
     await login_flow.async_setup(hass, store_result)
@@ -270,9 +277,7 @@ class TokenView(HomeAssistantView):
         # 2.2 The authorization server responds with HTTP status code 200
         # if the token has been revoked successfully or if the client
         # submitted an invalid token.
-        token = data.get("token")
-
-        if token is None:
+        if (token := data.get("token")) is None:
             return web.Response(status=HTTPStatus.OK)
 
         refresh_token = await hass.auth.async_get_refresh_token_by_token(token)
@@ -292,15 +297,13 @@ class TokenView(HomeAssistantView):
                 status_code=HTTPStatus.BAD_REQUEST,
             )
 
-        code = data.get("code")
-
-        if code is None:
+        if (code := data.get("code")) is None:
             return self.json(
                 {"error": "invalid_request", "error_description": "Invalid code"},
                 status_code=HTTPStatus.BAD_REQUEST,
             )
 
-        credential = self._retrieve_auth(client_id, RESULT_TYPE_CREDENTIALS, code)
+        credential = self._retrieve_auth(client_id, code)
 
         if credential is None or not isinstance(credential, Credentials):
             return self.json(
@@ -310,9 +313,12 @@ class TokenView(HomeAssistantView):
 
         user = await hass.auth.async_get_or_create_user(credential)
 
-        if not user.is_active:
+        if user_access_error := async_user_not_allowed_do_auth(hass, user):
             return self.json(
-                {"error": "access_denied", "error_description": "User is not active"},
+                {
+                    "error": "access_denied",
+                    "error_description": user_access_error,
+                },
                 status_code=HTTPStatus.FORBIDDEN,
             )
 
@@ -349,9 +355,7 @@ class TokenView(HomeAssistantView):
                 status_code=HTTPStatus.BAD_REQUEST,
             )
 
-        token = data.get("refresh_token")
-
-        if token is None:
+        if (token := data.get("refresh_token")) is None:
             return self.json(
                 {"error": "invalid_request"}, status_code=HTTPStatus.BAD_REQUEST
             )
@@ -366,6 +370,17 @@ class TokenView(HomeAssistantView):
         if refresh_token.client_id != client_id:
             return self.json(
                 {"error": "invalid_request"}, status_code=HTTPStatus.BAD_REQUEST
+            )
+
+        if user_access_error := async_user_not_allowed_do_auth(
+            hass, refresh_token.user
+        ):
+            return self.json(
+                {
+                    "error": "access_denied",
+                    "error_description": user_access_error,
+                },
+                status_code=HTTPStatus.FORBIDDEN,
             )
 
         try:
@@ -405,14 +420,20 @@ class LinkUserView(HomeAssistantView):
         hass = request.app["hass"]
         user = request["hass_user"]
 
-        credentials = self._retrieve_credentials(
-            data["client_id"], RESULT_TYPE_CREDENTIALS, data["code"]
-        )
+        credentials = self._retrieve_credentials(data["client_id"], data["code"])
 
         if credentials is None:
             return self.json_message("Invalid code", status_code=HTTPStatus.BAD_REQUEST)
 
-        await hass.auth.async_link_user(user, credentials)
+        linked_user = await hass.auth.async_get_user_by_credentials(credentials)
+        if linked_user != user and linked_user is not None:
+            return self.json_message(
+                "Credential already linked", status_code=HTTPStatus.BAD_REQUEST
+            )
+
+        # No-op if credential is already linked to the user it will be linked to
+        if linked_user != user:
+            await hass.auth.async_link_user(user, credentials)
         return self.json_message("User linked")
 
 
@@ -424,30 +445,25 @@ def _create_auth_code_store():
     @callback
     def store_result(client_id, result):
         """Store flow result and return a code to retrieve it."""
-        if isinstance(result, User):
-            result_type = RESULT_TYPE_USER
-        elif isinstance(result, Credentials):
-            result_type = RESULT_TYPE_CREDENTIALS
-        else:
-            raise ValueError("result has to be either User or Credentials")
+        if not isinstance(result, Credentials):
+            raise ValueError("result has to be a Credentials instance")
 
         code = uuid.uuid4().hex
-        temp_results[(client_id, result_type, code)] = (
+        temp_results[(client_id, code)] = (
             dt_util.utcnow(),
-            result_type,
             result,
         )
         return code
 
     @callback
-    def retrieve_result(client_id, result_type, code):
+    def retrieve_result(client_id, code):
         """Retrieve flow result."""
-        key = (client_id, result_type, code)
+        key = (client_id, code)
 
         if key not in temp_results:
             return None
 
-        created, _, result = temp_results.pop(key)
+        created, result = temp_results.pop(key)
 
         # OAuth 4.2.1
         # The authorization code MUST expire shortly after it is issued to
@@ -580,7 +596,6 @@ def websocket_sign_path(
             {
                 "path": async_sign_path(
                     hass,
-                    connection.refresh_token_id,
                     msg["path"],
                     timedelta(seconds=msg["expires"]),
                 )

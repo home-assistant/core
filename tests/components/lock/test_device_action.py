@@ -2,7 +2,8 @@
 import pytest
 
 import homeassistant.components.automation as automation
-from homeassistant.components.lock import DOMAIN, SUPPORT_OPEN
+from homeassistant.components.device_automation import DeviceAutomationType
+from homeassistant.components.lock import DOMAIN, LockEntityFeature
 from homeassistant.helpers import device_registry
 from homeassistant.setup import async_setup_component
 
@@ -33,9 +34,9 @@ def entity_reg(hass):
     "set_state,features_reg,features_state,expected_action_types",
     [
         (False, 0, 0, []),
-        (False, SUPPORT_OPEN, 0, ["open"]),
+        (False, LockEntityFeature.OPEN, 0, ["open"]),
         (True, 0, 0, []),
-        (True, 0, SUPPORT_OPEN, ["open"]),
+        (True, 0, LockEntityFeature.OPEN, ["open"]),
     ],
 )
 async def test_get_actions(
@@ -85,7 +86,9 @@ async def test_get_actions(
         }
         for action in expected_action_types
     ]
-    actions = await async_get_device_automations(hass, "action", device_entry.id)
+    actions = await async_get_device_automations(
+        hass, DeviceAutomationType.ACTION, device_entry.id
+    )
     assert_lists_same(actions, expected_actions)
 
 

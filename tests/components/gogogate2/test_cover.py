@@ -16,11 +16,10 @@ from ismartgate.common import (
 )
 
 from homeassistant.components.cover import (
-    DEVICE_CLASS_GARAGE,
-    DEVICE_CLASS_GATE,
     DOMAIN as COVER_DOMAIN,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
+    CoverDeviceClass,
 )
 from homeassistant.components.gogogate2.const import (
     DEVICE_TYPE_GOGOGATE2,
@@ -282,11 +281,11 @@ async def test_availability(ismartgateapi_mock, hass: HomeAssistant) -> None:
     assert hass.states.get("cover.door1")
     assert (
         hass.states.get("cover.door1").attributes[ATTR_DEVICE_CLASS]
-        == DEVICE_CLASS_GARAGE
+        == CoverDeviceClass.GARAGE
     )
     assert (
         hass.states.get("cover.door2").attributes[ATTR_DEVICE_CLASS]
-        == DEVICE_CLASS_GATE
+        == CoverDeviceClass.GATE
     )
 
     api.async_info.side_effect = Exception("Error")

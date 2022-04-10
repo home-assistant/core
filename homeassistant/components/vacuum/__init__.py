@@ -1,6 +1,7 @@
 """Support for vacuum cleaner robots (botvacs)."""
 from dataclasses import dataclass
 from datetime import timedelta
+from enum import IntEnum
 from functools import partial
 import logging
 from typing import final
@@ -33,6 +34,7 @@ from homeassistant.helpers.entity import (
 )
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.icon import icon_for_battery_level
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
@@ -40,6 +42,7 @@ from homeassistant.loader import bind_hass
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "vacuum"
+ENTITY_ID_FORMAT = DOMAIN + ".{}"
 SCAN_INTERVAL = timedelta(seconds=20)
 
 ATTR_BATTERY_ICON = "battery_icon"
@@ -69,6 +72,28 @@ STATES = [STATE_CLEANING, STATE_DOCKED, STATE_RETURNING, STATE_ERROR]
 
 DEFAULT_NAME = "Vacuum cleaner robot"
 
+
+class VacuumEntityFeature(IntEnum):
+    """Supported features of the vacuum entity."""
+
+    TURN_ON = 1
+    TURN_OFF = 2
+    PAUSE = 4
+    STOP = 8
+    RETURN_HOME = 16
+    FAN_SPEED = 32
+    BATTERY = 64
+    STATUS = 128
+    SEND_COMMAND = 256
+    LOCATE = 512
+    CLEAN_SPOT = 1024
+    MAP = 2048
+    STATE = 4096
+    START = 8192
+
+
+# These SUPPORT_* constants are deprecated as of Home Assistant 2022.5.
+# Please use the VacuumEntityFeature enum instead.
 SUPPORT_TURN_ON = 1
 SUPPORT_TURN_OFF = 2
 SUPPORT_PAUSE = 4
@@ -91,7 +116,7 @@ def is_on(hass, entity_id):
     return hass.states.is_state(entity_id, STATE_ON)
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the vacuum component."""
     component = hass.data[DOMAIN] = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
@@ -176,7 +201,7 @@ class _BaseVacuum(Entity):
     @property
     def capability_attributes(self):
         """Return capability attributes."""
-        if self.supported_features & SUPPORT_FAN_SPEED:
+        if self.supported_features & VacuumEntityFeature.FAN_SPEED:
             return {ATTR_FAN_SPEED_LIST: self.fan_speed_list}
 
     @property
@@ -184,11 +209,11 @@ class _BaseVacuum(Entity):
         """Return the state attributes of the vacuum cleaner."""
         data = {}
 
-        if self.supported_features & SUPPORT_BATTERY:
+        if self.supported_features & VacuumEntityFeature.BATTERY:
             data[ATTR_BATTERY_LEVEL] = self.battery_level
             data[ATTR_BATTERY_ICON] = self.battery_icon
 
-        if self.supported_features & SUPPORT_FAN_SPEED:
+        if self.supported_features & VacuumEntityFeature.FAN_SPEED:
             data[ATTR_FAN_SPEED] = self.fan_speed
 
         return data
@@ -295,7 +320,7 @@ class VacuumEntity(_BaseVacuum, ToggleEntity):
         """Return the state attributes of the vacuum cleaner."""
         data = super().state_attributes
 
-        if self.supported_features & SUPPORT_STATUS:
+        if self.supported_features & VacuumEntityFeature.STATUS:
             data[ATTR_STATUS] = self.status
 
         return data
@@ -338,17 +363,6 @@ class VacuumEntity(_BaseVacuum, ToggleEntity):
 
     async def async_start(self):
         """Not supported."""
-
-
-class VacuumDevice(VacuumEntity):
-    """Representation of a vacuum (for backwards compatibility)."""
-
-    def __init_subclass__(cls, **kwargs):
-        """Print deprecation warning."""
-        super().__init_subclass__(**kwargs)
-        _LOGGER.warning(
-            "VacuumDevice is deprecated, modify %s to extend VacuumEntity", cls.__name__
-        )
 
 
 @dataclass
@@ -405,15 +419,3 @@ class StateVacuumEntity(_BaseVacuum):
 
     async def async_toggle(self, **kwargs):
         """Not supported."""
-
-
-class StateVacuumDevice(StateVacuumEntity):
-    """Representation of a vacuum (for backwards compatibility)."""
-
-    def __init_subclass__(cls, **kwargs):
-        """Print deprecation warning."""
-        super().__init_subclass__(**kwargs)
-        _LOGGER.warning(
-            "StateVacuumDevice is deprecated, modify %s to extend StateVacuumEntity",
-            cls.__name__,
-        )

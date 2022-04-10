@@ -31,6 +31,7 @@ from .const import (
     ATTR_AUTOMATION_COUNT,
     ATTR_BASE,
     ATTR_BOARD,
+    ATTR_CERTIFICATE,
     ATTR_CONFIGURED,
     ATTR_CUSTOM_INTEGRATIONS,
     ATTR_DIAGNOSTICS,
@@ -228,6 +229,7 @@ class Analytics:
                     )
 
         if self.preferences.get(ATTR_USAGE, False):
+            payload[ATTR_CERTIFICATE] = self.hass.http.ssl_certificate is not None
             payload[ATTR_INTEGRATIONS] = integrations
             payload[ATTR_CUSTOM_INTEGRATIONS] = custom_integrations
             if supervisor_info is not None:
@@ -255,7 +257,7 @@ class Analytics:
             )
 
         try:
-            with async_timeout.timeout(30):
+            async with async_timeout.timeout(30):
                 response = await self.session.post(self.endpoint, json=payload)
                 if response.status == 200:
                     LOGGER.info(

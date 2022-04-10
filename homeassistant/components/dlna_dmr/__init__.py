@@ -2,12 +2,12 @@
 from __future__ import annotations
 
 from homeassistant import config_entries
-from homeassistant.components.media_player.const import DOMAIN as MEDIA_PLAYER_DOMAIN
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .const import LOGGER
 
-PLATFORMS = [MEDIA_PLAYER_DOMAIN]
+PLATFORMS = [Platform.MEDIA_PLAYER]
 
 
 async def async_setup_entry(

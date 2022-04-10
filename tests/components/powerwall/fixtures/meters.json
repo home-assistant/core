@@ -1,0 +1,62 @@
+{
+  "battery": {
+    "instant_power": -8550,
+    "i_b_current": 0,
+    "instant_average_voltage": 240.56,
+    "i_a_current": 0,
+    "frequency": 60.014,
+    "instant_reactive_power": 50,
+    "energy_imported": 4216170,
+    "instant_total_current": 185.5,
+    "timeout": 1500000000,
+    "energy_exported": 3620010,
+    "instant_apparent_power": 8550.14619758048,
+    "last_communication_time": "2020-03-15T15:58:53.855997624-05:00",
+    "i_c_current": 0
+  },
+  "load": {
+    "i_b_current": 0,
+    "instant_average_voltage": 120.650001525879,
+    "instant_power": 1971.46005249023,
+    "instant_reactive_power": -2119.58996582031,
+    "i_a_current": 0,
+    "frequency": 60,
+    "last_communication_time": "2020-03-15T15:58:53.853784964-05:00",
+    "instant_apparent_power": 2894.70488336392,
+    "i_c_current": 0,
+    "instant_total_current": 0,
+    "energy_imported": 4692987.91889705,
+    "timeout": 1500000000,
+    "energy_exported": 1056797.48917483
+  },
+  "solar": {
+    "i_a_current": 0,
+    "frequency": 60,
+    "instant_reactive_power": -15.2600002288818,
+    "instant_power": 10489.6596679688,
+    "i_b_current": 0,
+    "instant_average_voltage": 120.685001373291,
+    "timeout": 1500000000,
+    "energy_exported": 9864205.82222448,
+    "energy_imported": 28177.5358355867,
+    "instant_total_current": 0,
+    "i_c_current": 0,
+    "instant_apparent_power": 10489.6707678276,
+    "last_communication_time": "2020-03-15T15:58:53.853898963-05:00"
+  },
+  "site": {
+    "instant_total_current": 0.263575500367178,
+    "energy_imported": 4824191.60668611,
+    "energy_exported": 10429451.9916853,
+    "timeout": 1500000000,
+    "last_communication_time": "2020-03-15T15:58:53.853784964-05:00",
+    "instant_apparent_power": 2154.56465790676,
+    "i_c_current": 0,
+    "instant_average_voltage": 120.650001525879,
+    "i_b_current": 0,
+    "instant_power": 31.8003845214844,
+    "instant_reactive_power": -2154.32996559143,
+    "i_a_current": 0,
+    "frequency": 60
+  }
+}

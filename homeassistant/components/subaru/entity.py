@@ -1,4 +1,5 @@
 """Base class for all Subaru Entities."""
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER, VEHICLE_NAME, VEHICLE_VIN
@@ -25,10 +26,10 @@ class SubaruEntity(CoordinatorEntity):
         return f"{self.vin}_{self.entity_type}"
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device_info of the device."""
-        return {
-            "identifiers": {(DOMAIN, self.vin)},
-            "name": self.car_name,
-            "manufacturer": MANUFACTURER,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.vin)},
+            manufacturer=MANUFACTURER,
+            name=self.car_name,
+        )

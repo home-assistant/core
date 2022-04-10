@@ -112,14 +112,14 @@ alarm_display_message:
       name: Line 1
       description: Up to 16 characters of text (truncated if too long).
       example: The answer to life.
-      default: ''
+      default: ""
       selector:
         text:
     line2:
       name: Line 2
       description: Up to 16 characters of text (truncated if too long).
       example: the universe, and everything.
-      default: ''
+      default: ""
       selector:
         text:
 

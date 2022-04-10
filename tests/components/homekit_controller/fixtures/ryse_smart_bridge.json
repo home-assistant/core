@@ -1,0 +1,484 @@
+[
+  {
+    "aid": 1,
+    "services": [
+      {
+        "iid": 1,
+        "type": "0000003E-0000-1000-8000-0026BB765291",
+        "primary": false,
+        "hidden": false,
+        "linked": [],
+        "characteristics": [
+          {
+            "iid": 2,
+            "type": "00000014-0000-1000-8000-0026BB765291",
+            "format": "bool",
+            "perms": ["pw"]
+          },
+          {
+            "iid": 3,
+            "type": "00000020-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "RYSE Inc.",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 4,
+            "type": "00000021-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "RYSE SmartBridge",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 5,
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "RYSE SmartBridge",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 6,
+            "type": "00000030-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "0101.3521.0436",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 7,
+            "type": "00000052-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "1.3.0",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 8,
+            "type": "00000053-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "0101.3521.0436",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 9,
+            "type": "34AB8811-AC7F-4340-BAC3-FD6A85F9943B",
+            "format": "string",
+            "value": "4.1;3fac0fb4",
+            "perms": ["pr", "hd"],
+            "ev": false
+          },
+          {
+            "iid": 10,
+            "type": "220",
+            "format": "data",
+            "value": "Yhl9CmseEb8=",
+            "perms": ["pr", "hd"],
+            "ev": false,
+            "maxDataLen": 8
+          }
+        ]
+      },
+      {
+        "iid": 16,
+        "type": "000000A2-0000-1000-8000-0026BB765291",
+        "primary": false,
+        "hidden": false,
+        "linked": [],
+        "characteristics": [
+          {
+            "iid": 18,
+            "type": "00000037-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "1.1.0",
+            "perms": ["pr"],
+            "ev": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "aid": 2,
+    "services": [
+      {
+        "iid": 1,
+        "type": "0000003E-0000-1000-8000-0026BB765291",
+        "primary": false,
+        "hidden": false,
+        "linked": [],
+        "characteristics": [
+          {
+            "iid": 2,
+            "type": "00000014-0000-1000-8000-0026BB765291",
+            "format": "bool",
+            "perms": ["pw"]
+          },
+          {
+            "iid": 3,
+            "type": "00000020-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "RYSE Inc.",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 4,
+            "type": "00000021-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "RYSE Shade",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 5,
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "Master Bath South",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 6,
+            "type": "00000030-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "1.0.0",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 7,
+            "type": "00000052-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "3.0.8",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 8,
+            "type": "00000053-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "1.0.0",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 11,
+            "type": "000000A6-0000-1000-8000-0026BB765291",
+            "format": "uint32",
+            "value": 0,
+            "perms": ["pr", "ev"],
+            "ev": false,
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          }
+        ]
+      },
+      {
+        "iid": 48,
+        "type": "0000008C-0000-1000-8000-0026BB765291",
+        "primary": true,
+        "hidden": false,
+        "linked": [64],
+        "characteristics": [
+          {
+            "iid": 52,
+            "type": "0000007C-0000-1000-8000-0026BB765291",
+            "format": "uint8",
+            "value": 0,
+            "perms": ["pr", "pw", "ev"],
+            "ev": true,
+            "unit": "percentage",
+            "minValue": 0,
+            "maxValue": 100,
+            "minStep": 1
+          },
+          {
+            "iid": 53,
+            "type": "0000006D-0000-1000-8000-0026BB765291",
+            "format": "uint8",
+            "value": 0,
+            "perms": ["pr", "ev"],
+            "ev": true,
+            "unit": "percentage",
+            "minValue": 0,
+            "maxValue": 100,
+            "minStep": 1
+          },
+          {
+            "iid": 54,
+            "type": "00000072-0000-1000-8000-0026BB765291",
+            "format": "uint8",
+            "value": 2,
+            "perms": ["pr", "ev"],
+            "ev": true,
+            "minValue": 0,
+            "maxValue": 2,
+            "minStep": 1
+          },
+          {
+            "iid": 50,
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "RYSE Shade",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 55,
+            "type": "00000024-0000-1000-8000-0026BB765291",
+            "format": "bool",
+            "value": 0,
+            "perms": ["pr", "ev"],
+            "ev": true
+          }
+        ]
+      },
+      {
+        "iid": 64,
+        "type": "00000096-0000-1000-8000-0026BB765291",
+        "primary": false,
+        "hidden": false,
+        "linked": [],
+        "characteristics": [
+          {
+            "iid": 67,
+            "type": "00000068-0000-1000-8000-0026BB765291",
+            "format": "uint8",
+            "value": 100,
+            "perms": ["pr", "ev"],
+            "ev": true,
+            "unit": "percentage",
+            "minValue": 0,
+            "maxValue": 100,
+            "minStep": 1
+          },
+          {
+            "iid": 68,
+            "type": "0000008F-0000-1000-8000-0026BB765291",
+            "format": "uint8",
+            "value": 2,
+            "perms": ["pr", "ev"],
+            "ev": true,
+            "minValue": 0,
+            "maxValue": 2,
+            "minStep": 1
+          },
+          {
+            "iid": 70,
+            "type": "00000079-0000-1000-8000-0026BB765291",
+            "format": "uint8",
+            "value": 0,
+            "perms": ["pr", "ev"],
+            "ev": true,
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "iid": 66,
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "RYSE Shade",
+            "perms": ["pr"],
+            "ev": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "aid": 3,
+    "services": [
+      {
+        "iid": 1,
+        "type": "0000003E-0000-1000-8000-0026BB765291",
+        "primary": false,
+        "hidden": false,
+        "linked": [],
+        "characteristics": [
+          {
+            "iid": 2,
+            "type": "00000014-0000-1000-8000-0026BB765291",
+            "format": "bool",
+            "perms": ["pw"]
+          },
+          {
+            "iid": 3,
+            "type": "00000020-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "RYSE Inc.",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 4,
+            "type": "00000021-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "RYSE Shade",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 5,
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "RYSE SmartShade",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 6,
+            "type": "00000030-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 7,
+            "type": "00000052-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 8,
+            "type": "00000053-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 11,
+            "type": "000000A6-0000-1000-8000-0026BB765291",
+            "format": "uint32",
+            "value": 1,
+            "perms": ["pr", "ev"],
+            "ev": false,
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          }
+        ]
+      },
+      {
+        "iid": 48,
+        "type": "0000008C-0000-1000-8000-0026BB765291",
+        "primary": true,
+        "hidden": false,
+        "linked": [64],
+        "characteristics": [
+          {
+            "iid": 52,
+            "type": "0000007C-0000-1000-8000-0026BB765291",
+            "format": "uint8",
+            "value": 100,
+            "perms": ["pr", "pw", "ev"],
+            "ev": false,
+            "unit": "percentage",
+            "minValue": 0,
+            "maxValue": 100,
+            "minStep": 1
+          },
+          {
+            "iid": 53,
+            "type": "0000006D-0000-1000-8000-0026BB765291",
+            "format": "uint8",
+            "value": 100,
+            "perms": ["pr", "ev"],
+            "ev": false,
+            "unit": "percentage",
+            "minValue": 0,
+            "maxValue": 100,
+            "minStep": 1
+          },
+          {
+            "iid": 54,
+            "type": "00000072-0000-1000-8000-0026BB765291",
+            "format": "uint8",
+            "value": 2,
+            "perms": ["pr", "ev"],
+            "ev": false,
+            "minValue": 0,
+            "maxValue": 2,
+            "minStep": 1
+          },
+          {
+            "iid": 50,
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "RYSE Shade",
+            "perms": ["pr"],
+            "ev": false
+          },
+          {
+            "iid": 55,
+            "type": "00000024-0000-1000-8000-0026BB765291",
+            "format": "bool",
+            "value": 0,
+            "perms": ["pr", "ev"],
+            "ev": false
+          }
+        ]
+      },
+      {
+        "iid": 64,
+        "type": "00000096-0000-1000-8000-0026BB765291",
+        "primary": false,
+        "hidden": false,
+        "linked": [],
+        "characteristics": [
+          {
+            "iid": 67,
+            "type": "00000068-0000-1000-8000-0026BB765291",
+            "format": "uint8",
+            "value": 100,
+            "perms": ["pr", "ev"],
+            "ev": false,
+            "unit": "percentage",
+            "minValue": 0,
+            "maxValue": 100,
+            "minStep": 1
+          },
+          {
+            "iid": 68,
+            "type": "0000008F-0000-1000-8000-0026BB765291",
+            "format": "uint8",
+            "value": 2,
+            "perms": ["pr", "ev"],
+            "ev": false,
+            "minValue": 0,
+            "maxValue": 2,
+            "minStep": 1
+          },
+          {
+            "iid": 70,
+            "type": "00000079-0000-1000-8000-0026BB765291",
+            "format": "uint8",
+            "value": 0,
+            "perms": ["pr", "ev"],
+            "ev": false,
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "iid": 66,
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "RYSE Shade",
+            "perms": ["pr"],
+            "ev": false
+          }
+        ]
+      }
+    ]
+  }
+]

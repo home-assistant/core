@@ -33,6 +33,7 @@
                     "s2_unauthenticated_key": "S2 Nicht authentifizierter Schl\u00fcssel",
                     "usb_path": "USB-Ger\u00e4te-Pfad"
                 },
+                "description": "Das Add-on generiert Sicherheitsschl\u00fcssel, wenn diese Felder leer gelassen werden.",
                 "title": "Gib die Konfiguration des Z-Wave JS Add-ons ein"
             },
             "hassio_confirm": {
@@ -119,6 +120,7 @@
                     "s2_unauthenticated_key": "S2 Nicht authentifizierter Schl\u00fcssel",
                     "usb_path": "USB-Ger\u00e4te-Pfad"
                 },
+                "description": "Das Add-on generiert Sicherheitsschl\u00fcssel, wenn diese Felder leer gelassen werden.",
                 "title": "Gib die Konfiguration des Z-Wave JS-Add-ons ein"
             },
             "install_addon": {

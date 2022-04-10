@@ -19,7 +19,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     DEFAULT_NAME,
@@ -65,7 +64,7 @@ class NZBGetConfigFlow(ConfigFlow, domain=DOMAIN):
         return NZBGetOptionsFlowHandler(config_entry)
 
     async def async_step_import(
-        self, user_input: ConfigType | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a flow initiated by configuration file."""
         if CONF_SCAN_INTERVAL in user_input:

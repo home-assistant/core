@@ -1,10 +1,13 @@
 """ONVIF event parsers."""
+from collections.abc import Callable, Coroutine
+from typing import Any
+
 from homeassistant.util import dt as dt_util
 from homeassistant.util.decorator import Registry
 
 from .models import Event
 
-PARSERS = Registry()
+PARSERS: Registry[str, Callable[[str, Any], Coroutine[Any, Any, Event]]] = Registry()
 
 
 @PARSERS.register("tns1:VideoSource/MotionAlarm")

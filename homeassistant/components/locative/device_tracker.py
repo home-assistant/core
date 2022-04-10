@@ -1,13 +1,17 @@
 """Support for the Locative platform."""
 from homeassistant.components.device_tracker import SOURCE_TYPE_GPS
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN as LT_DOMAIN, TRACKER_UPDATE
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Configure a dispatcher connection based on a config entry."""
 
     @callback
@@ -23,8 +27,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
     hass.data[LT_DOMAIN]["unsub_device_tracker"][
         entry.entry_id
     ] = async_dispatcher_connect(hass, TRACKER_UPDATE, _receive_data)
-
-    return True
 
 
 class LocativeEntity(TrackerEntity):

@@ -17,11 +17,11 @@
                     "host": "Host",
                     "port": "Porta"
                 },
-                "title": "Selezionare l'indirizzo di connessione"
+                "title": "Seleziona l'indirizzo di connessione"
             },
             "setup_serial": {
                 "data": {
-                    "device": "Selezionare il dispositivo"
+                    "device": "Seleziona il dispositivo"
                 },
                 "title": "Dispositivo"
             },
@@ -35,7 +35,7 @@
                 "data": {
                     "type": "Tipo di connessione"
                 },
-                "title": "Selezionare il tipo di connessione"
+                "title": "Seleziona il tipo di connessione"
             }
         }
     },
@@ -63,10 +63,11 @@
             "prompt_options": {
                 "data": {
                     "automatic_add": "Attivare l'aggiunta automatica",
-                    "debug": "Attivare il debug",
-                    "device": "Selezionare il dispositivo da configurare",
+                    "debug": "Attiva il debug",
+                    "device": "Seleziona il dispositivo da configurare",
                     "event_code": "Inserire il codice dell'evento da aggiungere",
-                    "remove_device": "Selezionare il dispositivo da cancellare"
+                    "protocols": "Protocolli",
+                    "remove_device": "Seleziona il dispositivo da eliminare"
                 },
                 "title": "Opzioni Rfxtrx"
             },
@@ -77,12 +78,12 @@
                     "data_bit": "Numero di bit di dati",
                     "fire_event": "Abilita evento dispositivo",
                     "off_delay": "Ritardo di spegnimento",
-                    "off_delay_enabled": "Attivare il ritardo di spegnimento",
-                    "replace_device": "Selezionare il dispositivo da sostituire",
+                    "off_delay_enabled": "Attiva il ritardo di spegnimento",
+                    "replace_device": "Seleziona il dispositivo da sostituire",
                     "signal_repetitions": "Numero di ripetizioni del segnale",
                     "venetian_blind_mode": "Modalit\u00e0 veneziana"
                 },
-                "title": "Configurare le opzioni del dispositivo"
+                "title": "Configura le opzioni del dispositivo"
             }
         }
     },

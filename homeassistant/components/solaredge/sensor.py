@@ -5,9 +5,8 @@ from typing import Any
 
 from solaredge import Solaredge
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DEVICE_CLASS_BATTERY, DEVICE_CLASS_POWER
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -92,11 +91,11 @@ class SolarEdgeSensorFactory:
             self.services[key] = (SolarEdgeStorageLevelSensor, flow)
 
         for key in (
-            "purchased_power",
-            "production_power",
-            "feedin_power",
-            "consumption_power",
-            "selfconsumption_power",
+            "purchased_energy",
+            "production_energy",
+            "feedin_energy",
+            "consumption_energy",
+            "selfconsumption_energy",
         ):
             self.services[key] = (SolarEdgeEnergyDetailsSensor, energy)
 
@@ -128,6 +127,13 @@ class SolarEdgeSensorEntity(CoordinatorEntity, SensorEntity):
 
         self._attr_name = f"{platform_name} ({description.name})"
 
+    @property
+    def unique_id(self) -> str | None:
+        """Return a unique ID."""
+        if not self.data_service.site_id:
+            return None
+        return f"{self.data_service.site_id}_{self.entity_description.key}"
+
 
 class SolarEdgeOverviewSensor(SolarEdgeSensorEntity):
     """Representation of an SolarEdge Monitoring API overview sensor."""
@@ -150,6 +156,13 @@ class SolarEdgeDetailsSensor(SolarEdgeSensorEntity):
     def native_value(self) -> str | None:
         """Return the state of the sensor."""
         return self.data_service.data
+
+    @property
+    def unique_id(self) -> str | None:
+        """Return a unique ID."""
+        if not self.data_service.site_id:
+            return None
+        return f"{self.data_service.site_id}"
 
 
 class SolarEdgeInventorySensor(SolarEdgeSensorEntity):
@@ -189,7 +202,7 @@ class SolarEdgeEnergyDetailsSensor(SolarEdgeSensorEntity):
 class SolarEdgePowerFlowSensor(SolarEdgeSensorEntity):
     """Representation of an SolarEdge Monitoring API power flow sensor."""
 
-    _attr_device_class = DEVICE_CLASS_POWER
+    _attr_device_class = SensorDeviceClass.POWER
 
     def __init__(
         self,
@@ -216,7 +229,7 @@ class SolarEdgePowerFlowSensor(SolarEdgeSensorEntity):
 class SolarEdgeStorageLevelSensor(SolarEdgeSensorEntity):
     """Representation of an SolarEdge Monitoring API storage level sensor."""
 
-    _attr_device_class = DEVICE_CLASS_BATTERY
+    _attr_device_class = SensorDeviceClass.BATTERY
 
     @property
     def native_value(self) -> str | None:

@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/free_mobile",
   "requirements": ["freesms==0.2.0"],
   "codeowners": [],
-  "iot_class": "cloud_push"
+  "iot_class": "cloud_push",
+  "loggers": ["freesms"]
 }

@@ -8,7 +8,6 @@ import binascii
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 import functools
-import logging
 from typing import Any
 
 from aiohttp import web
@@ -49,8 +48,6 @@ from .const import (
     SIGNAL_ENTITY_REMOVE,
     TYPE_HYPERION_CAMERA,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 IMAGE_STREAM_JPG_SENTINEL = "data:image/jpg;base64,"
 
@@ -189,7 +186,7 @@ class HyperionCamera(Camera):
             return False
 
         self._image_stream_clients += 1
-        self.is_streaming = True
+        self._attr_is_streaming = True
         self.async_write_ha_state()
         return True
 
@@ -199,7 +196,7 @@ class HyperionCamera(Camera):
 
         if not self._image_stream_clients:
             await self._client.async_send_image_stream_stop()
-            self.is_streaming = False
+            self._attr_is_streaming = False
             self.async_write_ha_state()
 
     @asynccontextmanager
@@ -252,12 +249,13 @@ class HyperionCamera(Camera):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information."""
-        return {
-            "identifiers": {(DOMAIN, self._device_id)},
-            "name": self._instance_name,
-            "manufacturer": HYPERION_MANUFACTURER_NAME,
-            "model": HYPERION_MODEL_NAME,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._device_id)},
+            manufacturer=HYPERION_MANUFACTURER_NAME,
+            model=HYPERION_MODEL_NAME,
+            name=self._instance_name,
+            configuration_url=self._client.remote_url,
+        )
 
 
 CAMERA_TYPES = {

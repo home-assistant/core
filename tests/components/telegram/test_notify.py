@@ -1,5 +1,4 @@
 """The tests for the telegram.notify platform."""
-from os import path
 from unittest.mock import patch
 
 from homeassistant import config as hass_config
@@ -7,6 +6,8 @@ import homeassistant.components.notify as notify
 from homeassistant.components.telegram import DOMAIN
 from homeassistant.const import SERVICE_RELOAD
 from homeassistant.setup import async_setup_component
+
+from tests.common import get_fixture_path
 
 
 async def test_reload_notify(hass):
@@ -30,11 +31,7 @@ async def test_reload_notify(hass):
 
     assert hass.services.has_service(notify.DOMAIN, DOMAIN)
 
-    yaml_path = path.join(
-        _get_fixtures_base_path(),
-        "fixtures",
-        "telegram/configuration.yaml",
-    )
+    yaml_path = get_fixture_path("configuration.yaml", "telegram")
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             DOMAIN,
@@ -46,7 +43,3 @@ async def test_reload_notify(hass):
 
     assert not hass.services.has_service(notify.DOMAIN, DOMAIN)
     assert hass.services.has_service(notify.DOMAIN, "telegram_reloaded")
-
-
-def _get_fixtures_base_path():
-    return path.dirname(path.dirname(path.dirname(__file__)))

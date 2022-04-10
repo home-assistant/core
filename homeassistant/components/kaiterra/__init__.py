@@ -9,10 +9,12 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_TYPE,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.typing import ConfigType
 
 from .api_data import KaiterraApiData
 from .const import (
@@ -53,7 +55,7 @@ KAITERRA_SCHEMA = vol.Schema(
 CONFIG_SCHEMA = vol.Schema({DOMAIN: KAITERRA_SCHEMA}, extra=vol.ALLOW_EXTRA)
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Kaiterra integration."""
 
     conf = config[DOMAIN]

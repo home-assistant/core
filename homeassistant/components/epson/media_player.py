@@ -1,4 +1,6 @@
 """Support for Epson projector."""
+from __future__ import annotations
+
 import logging
 
 from epson_projector.const import (
@@ -26,37 +28,29 @@ from epson_projector.const import (
 )
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_STEP,
+from homeassistant.components.media_player import (
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import async_get as async_get_entity_registry
 
 from .const import ATTR_CMODE, DOMAIN, SERVICE_SELECT_CMODE
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_EPSON = (
-    SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-    | SUPPORT_SELECT_SOURCE
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_VOLUME_STEP
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_PREVIOUS_TRACK
-)
 
-
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Epson projector from a config entry."""
     entry_id = config_entry.entry_id
     unique_id = config_entry.unique_id
@@ -79,6 +73,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class EpsonProjectorMediaPlayer(MediaPlayerEntity):
     """Representation of Epson Projector Device."""
 
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.SELECT_SOURCE
+        | MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.VOLUME_STEP
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.PREVIOUS_TRACK
+    )
+
     def __init__(self, projector, name, unique_id, entry):
         """Initialize entity to control Epson projector."""
         self._projector = projector
@@ -97,8 +101,7 @@ class EpsonProjectorMediaPlayer(MediaPlayerEntity):
         _LOGGER.debug("Setting unique_id for projector")
         if self._unique_id:
             return False
-        uid = await self._projector.get_serial_number()
-        if uid:
+        if uid := await self._projector.get_serial_number():
             self.hass.config_entries.async_update_entry(self._entry, unique_id=uid)
             registry = async_get_entity_registry(self.hass)
             old_entity_id = registry.async_get_entity_id(
@@ -137,17 +140,17 @@ class EpsonProjectorMediaPlayer(MediaPlayerEntity):
             self._state = STATE_OFF
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo | None:
         """Get attributes about the device."""
         if not self._unique_id:
             return None
-        return {
-            "identifiers": {(DOMAIN, self._unique_id)},
-            "manufacturer": "Epson",
-            "name": "Epson projector",
-            "model": "Epson",
-            "via_hub": (DOMAIN, self._unique_id),
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._unique_id)},
+            manufacturer="Epson",
+            model="Epson",
+            name="Epson projector",
+            via_device=(DOMAIN, self._unique_id),
+        )
 
     @property
     def name(self):
@@ -168,11 +171,6 @@ class EpsonProjectorMediaPlayer(MediaPlayerEntity):
     def available(self):
         """Return if projector is available."""
         return self._available
-
-    @property
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        return SUPPORT_EPSON
 
     async def async_turn_on(self):
         """Turn on epson."""

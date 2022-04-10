@@ -1,16 +1,19 @@
 """Support for stiebel_eltron climate platform."""
+from __future__ import annotations
+
 import logging
 
-from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
 from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
     PRESET_ECO,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN as STE_DOMAIN
 
@@ -22,7 +25,6 @@ PRESET_DAY = "day"
 PRESET_SETBACK = "setback"
 PRESET_EMERGENCY = "emergency"
 
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 SUPPORT_HVAC = [HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_OFF]
 SUPPORT_PRESET = [PRESET_ECO, PRESET_DAY, PRESET_EMERGENCY, PRESET_SETBACK]
 
@@ -53,7 +55,12 @@ HA_TO_STE_HVAC = {
 HA_TO_STE_PRESET = {k: i for i, k in STE_TO_HA_PRESET.items()}
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the StiebelEltron platform."""
     name = hass.data[STE_DOMAIN]["name"]
     ste_data = hass.data[STE_DOMAIN]["ste_data"]
@@ -63,6 +70,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 class StiebelEltron(ClimateEntity):
     """Representation of a STIEBEL ELTRON heat pump."""
+
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+    )
 
     def __init__(self, name, ste_data):
         """Initialize the unit."""
@@ -74,11 +85,6 @@ class StiebelEltron(ClimateEntity):
         self._filter_alarm = None
         self._force_update = False
         self._ste_data = ste_data
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_FLAGS
 
     def update(self):
         """Update unit attributes."""
@@ -105,7 +111,7 @@ class StiebelEltron(ClimateEntity):
         """Return the name of the climate device."""
         return self._name
 
-    # Handle SUPPORT_TARGET_TEMPERATURE
+    # Handle ClimateEntityFeature.TARGET_TEMPERATURE
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""

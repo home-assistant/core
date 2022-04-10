@@ -1,16 +1,17 @@
 """Platform for light integration."""
-import logging
-
 from smarttub import SpaLight
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_EFFECT,
+    COLOR_MODE_BRIGHTNESS,
     EFFECT_COLORLOOP,
-    SUPPORT_BRIGHTNESS,
     SUPPORT_EFFECT,
     LightEntity,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     ATTR_LIGHTS,
@@ -22,10 +23,10 @@ from .const import (
 from .entity import SmartTubEntity
 from .helpers import get_spa_name
 
-_LOGGER = logging.getLogger(__name__)
 
-
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up entities for any lights in the tub."""
 
     controller = hass.data[DOMAIN][entry.entry_id][SMARTTUB_CONTROLLER]
@@ -41,6 +42,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
 class SmartTubLight(SmartTubEntity, LightEntity):
     """A light on a spa."""
+
+    _attr_color_mode = COLOR_MODE_BRIGHTNESS
+    _attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
 
     def __init__(self, coordinator, light):
         """Initialize the entity."""
@@ -88,7 +92,7 @@ class SmartTubLight(SmartTubEntity, LightEntity):
     @property
     def supported_features(self):
         """Flag supported features."""
-        return SUPPORT_BRIGHTNESS | SUPPORT_EFFECT
+        return SUPPORT_EFFECT
 
     @property
     def effect(self):

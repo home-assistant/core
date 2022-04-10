@@ -103,3 +103,10 @@ class DiscoveryService(Listener):
         await coordo.async_refresh()
 
         async_dispatcher_send(self.hass, DISPATCH_DEVICE_DISCOVERED, coordo)
+
+    async def device_update(self, device_info: DeviceInfo) -> None:
+        """Handle updates in device information, update if ip has changed."""
+        for coordinator in self.hass.data[DOMAIN][COORDINATORS]:
+            if coordinator.device.device_info.mac == device_info.mac:
+                coordinator.device.device_info.ip = device_info.ip
+                await coordinator.async_refresh()

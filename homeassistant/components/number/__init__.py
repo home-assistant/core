@@ -8,7 +8,9 @@ from typing import Any, final
 
 import voluptuous as vol
 
+from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_MODE
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
@@ -37,6 +39,14 @@ ENTITY_ID_FORMAT = DOMAIN + ".{}"
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class NumberMode(StrEnum):
+    """Modes for number entities."""
+
+    AUTO = "auto"
+    BOX = "box"
+    SLIDER = "slider"
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -81,15 +91,20 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class NumberEntityDescription(EntityDescription):
     """A class that describes number entities."""
 
+    max_value: float | None = None
+    min_value: float | None = None
+    step: float | None = None
+
 
 class NumberEntity(Entity):
     """Representation of a Number entity."""
 
     entity_description: NumberEntityDescription
-    _attr_max_value: float = DEFAULT_MAX_VALUE
-    _attr_min_value: float = DEFAULT_MIN_VALUE
+    _attr_max_value: float
+    _attr_min_value: float
     _attr_state: None = None
     _attr_step: float
+    _attr_mode: NumberMode = NumberMode.AUTO
     _attr_value: float
 
     @property
@@ -99,29 +114,54 @@ class NumberEntity(Entity):
             ATTR_MIN: self.min_value,
             ATTR_MAX: self.max_value,
             ATTR_STEP: self.step,
+            ATTR_MODE: self.mode,
         }
 
     @property
     def min_value(self) -> float:
         """Return the minimum value."""
-        return self._attr_min_value
+        if hasattr(self, "_attr_min_value"):
+            return self._attr_min_value
+        if (
+            hasattr(self, "entity_description")
+            and self.entity_description.min_value is not None
+        ):
+            return self.entity_description.min_value
+        return DEFAULT_MIN_VALUE
 
     @property
     def max_value(self) -> float:
         """Return the maximum value."""
-        return self._attr_max_value
+        if hasattr(self, "_attr_max_value"):
+            return self._attr_max_value
+        if (
+            hasattr(self, "entity_description")
+            and self.entity_description.max_value is not None
+        ):
+            return self.entity_description.max_value
+        return DEFAULT_MAX_VALUE
 
     @property
     def step(self) -> float:
         """Return the increment/decrement step."""
         if hasattr(self, "_attr_step"):
             return self._attr_step
+        if (
+            hasattr(self, "entity_description")
+            and self.entity_description.step is not None
+        ):
+            return self.entity_description.step
         step = DEFAULT_STEP
         value_range = abs(self.max_value - self.min_value)
         if value_range != 0:
             while value_range <= step:
                 step /= 10.0
         return step
+
+    @property
+    def mode(self) -> NumberMode:
+        """Return the mode of the entity."""
+        return self._attr_mode
 
     @property
     @final

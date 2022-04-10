@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u30b5\u30fc\u30d3\u30b9\u306f\u3059\u3067\u306b\u8a2d\u5b9a\u3055\u308c\u3066\u3044\u307e\u3059",
+            "unknown": "\u4e88\u671f\u3057\u306a\u3044\u30a8\u30e9\u30fc"
+        },
+        "error": {
+            "invalid_2fa": "2\u8981\u7d20\u8a8d\u8a3c\u304c\u7121\u52b9\u3067\u3059\u3002\u3082\u3046\u4e00\u5ea6\u304a\u8a66\u3057\u304f\u3060\u3055\u3044\u3002",
+            "invalid_2fa_method": "2\u8981\u7d20\u8a8d\u8a3c\u304c\u7121\u52b9(\u96fb\u8a71\u3067\u78ba\u8a8d)",
+            "invalid_login": "\u30ed\u30b0\u30a4\u30f3\u3067\u304d\u307e\u305b\u3093\u3001\u3082\u3046\u4e00\u5ea6\u304a\u8a66\u3057\u304f\u3060\u3055\u3044\u3002"
+        },
+        "step": {
+            "2fa": {
+                "data": {
+                    "2fa": "2\u8981\u7d20 PIN"
+                },
+                "description": "\u7a7a",
+                "title": "2\u8981\u7d20\u8a8d\u8a3c"
+            },
+            "user": {
+                "data": {
+                    "authorization_code": "\u8a8d\u8a3c\u30b3\u30fc\u30c9(\u624b\u52d5\u8a8d\u8a3c\u6642\u306b\u5fc5\u8981)",
+                    "email": "E\u30e1\u30fc\u30eb",
+                    "password": "\u30d1\u30b9\u30ef\u30fc\u30c9"
+                },
+                "description": "\u7a7a",
+                "title": "Google \u30cf\u30f3\u30b0\u30a2\u30a6\u30c8 \u30ed\u30b0\u30a4\u30f3"
+            }
+        }
+    }
+}

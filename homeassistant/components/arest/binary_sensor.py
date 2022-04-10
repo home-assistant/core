@@ -1,5 +1,8 @@
 """Support for an exposed aREST RESTful API of a device."""
+from __future__ import annotations
+
 from datetime import timedelta
+from http import HTTPStatus
 import logging
 
 import requests
@@ -10,14 +13,11 @@ from homeassistant.components.binary_sensor import (
     PLATFORM_SCHEMA,
     BinarySensorEntity,
 )
-from homeassistant.const import (
-    CONF_DEVICE_CLASS,
-    CONF_NAME,
-    CONF_PIN,
-    CONF_RESOURCE,
-    HTTP_OK,
-)
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, CONF_PIN, CONF_RESOURCE
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,7 +34,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the aREST binary sensor."""
     resource = config[CONF_RESOURCE]
     pin = config[CONF_PIN]
@@ -46,10 +51,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.error(
             "Missing resource or schema in configuration. Add http:// to your URL"
         )
-        return False
+        return
     except requests.exceptions.ConnectionError:
         _LOGGER.error("No route to device at %s", resource)
-        return False
+        return
 
     arest = ArestData(resource, pin)
 
@@ -78,7 +83,7 @@ class ArestBinarySensor(BinarySensorEntity):
 
         if pin is not None:
             request = requests.get(f"{resource}/mode/{pin}/i", timeout=10)
-            if request.status_code != HTTP_OK:
+            if request.status_code != HTTPStatus.OK:
                 _LOGGER.error("Can't set mode of %s", resource)
 
     def update(self):

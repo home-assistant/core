@@ -1,14 +1,24 @@
 """Support for Lutron lights."""
+from __future__ import annotations
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    SUPPORT_BRIGHTNESS,
+    COLOR_MODE_BRIGHTNESS,
     LightEntity,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import LUTRON_CONTROLLER, LUTRON_DEVICES, LutronDevice
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Lutron lights."""
     devs = []
     for (area_name, device) in hass.data[LUTRON_DEVICES]["light"]:
@@ -31,15 +41,13 @@ def to_hass_level(level):
 class LutronLight(LutronDevice, LightEntity):
     """Representation of a Lutron Light, including dimmable."""
 
+    _attr_color_mode = COLOR_MODE_BRIGHTNESS
+    _attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
+
     def __init__(self, area_name, lutron_device, controller):
         """Initialize the light."""
         self._prev_brightness = None
         super().__init__(area_name, lutron_device, controller)
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_BRIGHTNESS
 
     @property
     def brightness(self):

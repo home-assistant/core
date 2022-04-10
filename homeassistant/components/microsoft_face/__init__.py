@@ -1,4 +1,6 @@
 """Support for Microsoft face recognition."""
+from __future__ import annotations
+
 import asyncio
 import json
 import logging
@@ -8,11 +10,14 @@ from aiohttp.hdrs import CONTENT_TYPE
 import async_timeout
 import voluptuous as vol
 
+from homeassistant.components import camera
 from homeassistant.const import ATTR_NAME, CONF_API_KEY, CONF_TIMEOUT, CONTENT_TYPE_JSON
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
 
 _LOGGER = logging.getLogger(__name__)
@@ -66,9 +71,9 @@ SCHEMA_FACE_SERVICE = vol.Schema(
 SCHEMA_TRAIN_SERVICE = vol.Schema({vol.Required(ATTR_GROUP): cv.slugify})
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Microsoft Face."""
-    entities = {}
+    entities: dict[str, MicrosoftFaceGroupEntity] = {}
     face = MicrosoftFace(
         hass,
         config[DOMAIN].get(CONF_AZURE_REGION),
@@ -86,7 +91,7 @@ async def async_setup(hass, config):
 
     hass.data[DATA_MICROSOFT_FACE] = face
 
-    async def async_create_group(service):
+    async def async_create_group(service: ServiceCall) -> None:
         """Create a new person group."""
         name = service.data[ATTR_NAME]
         g_id = slugify(name)
@@ -104,7 +109,7 @@ async def async_setup(hass, config):
         DOMAIN, SERVICE_CREATE_GROUP, async_create_group, schema=SCHEMA_GROUP_SERVICE
     )
 
-    async def async_delete_group(service):
+    async def async_delete_group(service: ServiceCall) -> None:
         """Delete a person group."""
         g_id = slugify(service.data[ATTR_NAME])
 
@@ -121,7 +126,7 @@ async def async_setup(hass, config):
         DOMAIN, SERVICE_DELETE_GROUP, async_delete_group, schema=SCHEMA_GROUP_SERVICE
     )
 
-    async def async_train_group(service):
+    async def async_train_group(service: ServiceCall) -> None:
         """Train a person group."""
         g_id = service.data[ATTR_GROUP]
 
@@ -134,7 +139,7 @@ async def async_setup(hass, config):
         DOMAIN, SERVICE_TRAIN_GROUP, async_train_group, schema=SCHEMA_TRAIN_SERVICE
     )
 
-    async def async_create_person(service):
+    async def async_create_person(service: ServiceCall) -> None:
         """Create a person in a group."""
         name = service.data[ATTR_NAME]
         g_id = service.data[ATTR_GROUP]
@@ -153,7 +158,7 @@ async def async_setup(hass, config):
         DOMAIN, SERVICE_CREATE_PERSON, async_create_person, schema=SCHEMA_PERSON_SERVICE
     )
 
-    async def async_delete_person(service):
+    async def async_delete_person(service: ServiceCall) -> None:
         """Delete a person in a group."""
         name = service.data[ATTR_NAME]
         g_id = service.data[ATTR_GROUP]
@@ -171,13 +176,12 @@ async def async_setup(hass, config):
         DOMAIN, SERVICE_DELETE_PERSON, async_delete_person, schema=SCHEMA_PERSON_SERVICE
     )
 
-    async def async_face_person(service):
+    async def async_face_person(service: ServiceCall) -> None:
         """Add a new face picture to a person."""
         g_id = service.data[ATTR_GROUP]
         p_id = face.store[g_id].get(service.data[ATTR_PERSON])
 
         camera_entity = service.data[ATTR_CAMERA_ENTITY]
-        camera = hass.components.camera
 
         try:
             image = await camera.async_get_image(hass, camera_entity)
@@ -299,7 +303,7 @@ class MicrosoftFace:
                 payload = None
 
         try:
-            with async_timeout.timeout(self.timeout):
+            async with async_timeout.timeout(self.timeout):
                 response = await getattr(self.websession, method)(
                     url, data=payload, headers=headers, params=params
                 )

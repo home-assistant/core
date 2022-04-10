@@ -4,13 +4,17 @@ from __future__ import annotations
 import logging
 from typing import Optional
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from . import KrakenData
 from .const import (
@@ -32,8 +36,26 @@ async def async_setup_entry(
 ) -> None:
     """Add kraken entities from a config_entry."""
 
+    def _async_add_kraken_sensors(tracked_asset_pairs: list[str]) -> None:
+        entities = []
+        for tracked_asset_pair in tracked_asset_pairs:
+            entities.extend(
+                [
+                    KrakenSensor(
+                        hass.data[DOMAIN],
+                        tracked_asset_pair,
+                        description,
+                    )
+                    for description in SENSOR_TYPES
+                ]
+            )
+        async_add_entities(entities, True)
+
+    _async_add_kraken_sensors(config_entry.options[CONF_TRACKED_ASSET_PAIRS])
+
     @callback
     def async_update_sensors(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+        """Add or remove sensors for configured tracked asset pairs."""
         dev_reg = device_registry.async_get(hass)
 
         existing_devices = {
@@ -43,7 +65,7 @@ async def async_setup_entry(
             )
         }
 
-        entities = []
+        asset_pairs_to_add = []
         for tracked_asset_pair in config_entry.options[CONF_TRACKED_ASSET_PAIRS]:
             # Only create new devices
             if (
@@ -51,23 +73,12 @@ async def async_setup_entry(
             ) in existing_devices:
                 existing_devices.pop(device_name)
             else:
-                entities.extend(
-                    [
-                        KrakenSensor(
-                            hass.data[DOMAIN],
-                            tracked_asset_pair,
-                            description,
-                        )
-                        for description in SENSOR_TYPES
-                    ]
-                )
-        async_add_entities(entities, True)
+                asset_pairs_to_add.append(tracked_asset_pair)
+        _async_add_kraken_sensors(asset_pairs_to_add)
 
         # Remove devices for asset pairs which are no longer tracked
         for device_id in existing_devices.values():
             dev_reg.async_remove_device(device_id)
-
-    async_update_sensors(hass, config_entry)
 
     config_entry.async_on_unload(
         async_dispatcher_connect(
@@ -78,7 +89,9 @@ async def async_setup_entry(
     )
 
 
-class KrakenSensor(CoordinatorEntity[Optional[KrakenResponse]], SensorEntity):
+class KrakenSensor(
+    CoordinatorEntity[DataUpdateCoordinator[Optional[KrakenResponse]]], SensorEntity
+):
     """Define a Kraken sensor."""
 
     entity_description: KrakenSensorEntityDescription
@@ -111,13 +124,15 @@ class KrakenSensor(CoordinatorEntity[Optional[KrakenResponse]], SensorEntity):
         self._attr_unique_id = self._attr_name.lower()
         self._received_data_at_least_once = False
         self._available = True
+        self._attr_state_class = SensorStateClass.MEASUREMENT
 
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, f"{source_asset}_{self._target_asset}")},
-            "name": self._device_name,
-            "manufacturer": "Kraken.com",
-            "entry_type": "service",
-        }
+        self._attr_device_info = DeviceInfo(
+            configuration_url="https://www.kraken.com/",
+            entry_type=device_registry.DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, f"{source_asset}_{self._target_asset}")},
+            manufacturer="Kraken.com",
+            name=self._device_name,
+        )
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""

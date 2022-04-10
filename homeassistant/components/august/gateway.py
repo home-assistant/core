@@ -1,6 +1,7 @@
 """Handle August connection setup and authentication."""
 
 import asyncio
+from http import HTTPStatus
 import logging
 import os
 
@@ -8,12 +9,7 @@ from aiohttp import ClientError, ClientResponseError
 from yalexs.api_async import ApiAsync
 from yalexs.authenticator_async import AuthenticationState, AuthenticatorAsync
 
-from homeassistant.const import (
-    CONF_PASSWORD,
-    CONF_TIMEOUT,
-    CONF_USERNAME,
-    HTTP_UNAUTHORIZED,
-)
+from homeassistant.const import CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
 from homeassistant.helpers import aiohttp_client
 
 from .const import (
@@ -97,7 +93,7 @@ class AugustGateway:
                 # by have no access
                 await self.api.async_get_operable_locks(self.access_token)
         except ClientResponseError as ex:
-            if ex.status == HTTP_UNAUTHORIZED:
+            if ex.status == HTTPStatus.UNAUTHORIZED:
                 raise InvalidAuth from ex
 
             raise CannotConnect from ex

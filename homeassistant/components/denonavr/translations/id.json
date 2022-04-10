@@ -37,6 +37,7 @@
             "init": {
                 "data": {
                     "show_all_sources": "Tampilkan semua sumber",
+                    "update_audyssey": "Perbarui pengaturan Audyssey",
                     "zone2": "Siapkan Zona 2",
                     "zone3": "Siapkan Zona 3"
                 },

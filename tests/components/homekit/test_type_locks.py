@@ -76,7 +76,7 @@ async def test_lock_unlock(hass, hk_driver, events):
     call_lock = async_mock_service(hass, DOMAIN, "lock")
     call_unlock = async_mock_service(hass, DOMAIN, "unlock")
 
-    await hass.async_add_executor_job(acc.char_target_state.client_update_value, 1)
+    acc.char_target_state.client_update_value(1)
     await hass.async_block_till_done()
     assert call_lock
     assert call_lock[0].data[ATTR_ENTITY_ID] == entity_id
@@ -85,7 +85,7 @@ async def test_lock_unlock(hass, hk_driver, events):
     assert len(events) == 1
     assert events[-1].data[ATTR_VALUE] is None
 
-    await hass.async_add_executor_job(acc.char_target_state.client_update_value, 0)
+    acc.char_target_state.client_update_value(0)
     await hass.async_block_till_done()
     assert call_unlock
     assert call_unlock[0].data[ATTR_ENTITY_ID] == entity_id
@@ -107,7 +107,7 @@ async def test_no_code(hass, hk_driver, config, events):
     # Set from HomeKit
     call_lock = async_mock_service(hass, DOMAIN, "lock")
 
-    await hass.async_add_executor_job(acc.char_target_state.client_update_value, 1)
+    acc.char_target_state.client_update_value(1)
     await hass.async_block_till_done()
     assert call_lock
     assert call_lock[0].data[ATTR_ENTITY_ID] == entity_id

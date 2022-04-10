@@ -7,8 +7,8 @@ from homeassistant.components.homeassistant import (
     DOMAIN as HA_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
+from homeassistant.components.light import ATTR_BRIGHTNESS, DOMAIN as LIGHT_DOMAIN
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON, STATE_OFF, STATE_ON
 from homeassistant.setup import async_setup_component
 
 from . import entity_test_helpers
@@ -43,6 +43,38 @@ async def test_available_after_update(
     await entity_test_helpers.test_avaliable_after_update(
         hass, pywemo_registry, pywemo_device, wemo_entity, LIGHT_DOMAIN
     )
+
+
+async def test_turn_off_state(hass, wemo_entity):
+    """Test that the device state is updated after turning off."""
+    await entity_test_helpers.test_turn_off_state(hass, wemo_entity, LIGHT_DOMAIN)
+
+
+async def test_turn_on_brightness(hass, pywemo_device, wemo_entity):
+    """Test setting the brightness value of the light."""
+    brightness = 0
+    state = 0
+
+    def set_brightness(b):
+        nonlocal brightness
+        nonlocal state
+        brightness, state = (b, int(bool(b)))
+
+    pywemo_device.get_state.side_effect = lambda: state
+    pywemo_device.get_brightness.side_effect = lambda: brightness
+    pywemo_device.set_brightness.side_effect = set_brightness
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: [wemo_entity.entity_id], ATTR_BRIGHTNESS: 204},
+        blocking=True,
+    )
+
+    pywemo_device.set_brightness.assert_called_once_with(80)
+    states = hass.states.get(wemo_entity.entity_id)
+    assert states.state == STATE_ON
+    assert states.attributes[ATTR_BRIGHTNESS] == 204
 
 
 async def test_light_registry_state_callback(

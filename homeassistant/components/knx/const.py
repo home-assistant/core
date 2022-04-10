@@ -1,6 +1,6 @@
 """Constants for the KNX integration."""
 from enum import Enum
-from typing import Final
+from typing import Final, TypedDict
 
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_COOL,
@@ -20,6 +20,7 @@ from homeassistant.components.climate.const import (
     PRESET_NONE,
     PRESET_SLEEP,
 )
+from homeassistant.const import Platform
 
 DOMAIN: Final = "knx"
 
@@ -29,16 +30,74 @@ KNX_ADDRESS: Final = "address"
 CONF_INVERT: Final = "invert"
 CONF_KNX_EXPOSE: Final = "expose"
 CONF_KNX_INDIVIDUAL_ADDRESS: Final = "individual_address"
+
+##
+# Connection constants
+##
+CONF_KNX_CONNECTION_TYPE: Final = "connection_type"
+CONF_KNX_AUTOMATIC: Final = "automatic"
 CONF_KNX_ROUTING: Final = "routing"
 CONF_KNX_TUNNELING: Final = "tunneling"
+CONF_KNX_TUNNELING_TCP: Final = "tunneling_tcp"
+CONF_KNX_TUNNELING_TCP_SECURE: Final = "tunneling_tcp_secure"
+CONF_KNX_LOCAL_IP: Final = "local_ip"
+CONF_KNX_MCAST_GRP: Final = "multicast_group"
+CONF_KNX_MCAST_PORT: Final = "multicast_port"
+
+CONF_KNX_RATE_LIMIT: Final = "rate_limit"
+CONF_KNX_ROUTE_BACK: Final = "route_back"
+CONF_KNX_STATE_UPDATER: Final = "state_updater"
+CONF_KNX_DEFAULT_STATE_UPDATER: Final = True
+CONF_KNX_DEFAULT_RATE_LIMIT: Final = 20
+
+##
+# Secure constants
+##
+CONST_KNX_STORAGE_KEY: Final = "knx/"
+CONF_KNX_KNXKEY_FILENAME: Final = "knxkeys_filename"
+CONF_KNX_KNXKEY_PASSWORD: Final = "knxkeys_password"
+
+CONF_KNX_SECURE_USER_ID: Final = "user_id"
+CONF_KNX_SECURE_USER_PASSWORD: Final = "user_password"
+CONF_KNX_SECURE_DEVICE_AUTHENTICATION: Final = "device_authentication"
+
+
+CONF_PAYLOAD: Final = "payload"
+CONF_PAYLOAD_LENGTH: Final = "payload_length"
 CONF_RESET_AFTER: Final = "reset_after"
 CONF_RESPOND_TO_READ: Final = "respond_to_read"
 CONF_STATE_ADDRESS: Final = "state_address"
 CONF_SYNC_STATE: Final = "sync_state"
+CONF_KNX_INITIAL_CONNECTION_TYPES: Final = [CONF_KNX_TUNNELING, CONF_KNX_ROUTING]
+
+# yaml config merged with config entry data
+DATA_KNX_CONFIG: Final = "knx_config"
+# original hass yaml config
+DATA_HASS_CONFIG: Final = "knx_hass_config"
 
 ATTR_COUNTER: Final = "counter"
-ATTR_LAST_KNX_UPDATE: Final = "last_knx_update"
 ATTR_SOURCE: Final = "source"
+
+
+class KNXConfigEntryData(TypedDict, total=False):
+    """Config entry for the KNX integration."""
+
+    connection_type: str
+    individual_address: str
+    local_ip: str
+    multicast_group: str
+    multicast_port: int
+    route_back: bool
+    state_updater: bool
+    rate_limit: int
+    host: str
+    port: int
+
+    user_id: int
+    user_password: str
+    device_authentication: str
+    knxkeys_filename: str
+    knxkeys_password: str
 
 
 class ColorTempModes(Enum):
@@ -48,22 +107,21 @@ class ColorTempModes(Enum):
     RELATIVE = "DPT-5.001"
 
 
-class SupportedPlatforms(Enum):
-    """Supported platforms."""
-
-    BINARY_SENSOR = "binary_sensor"
-    CLIMATE = "climate"
-    COVER = "cover"
-    FAN = "fan"
-    LIGHT = "light"
-    NOTIFY = "notify"
-    NUMBER = "number"
-    SCENE = "scene"
-    SELECT = "select"
-    SENSOR = "sensor"
-    SWITCH = "switch"
-    WEATHER = "weather"
-
+SUPPORTED_PLATFORMS: Final = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.CLIMATE,
+    Platform.COVER,
+    Platform.FAN,
+    Platform.LIGHT,
+    Platform.NOTIFY,
+    Platform.NUMBER,
+    Platform.SCENE,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.WEATHER,
+]
 
 # Map KNX controller modes to HA modes. This list might not be complete.
 CONTROLLER_MODES: Final = {
@@ -77,11 +135,11 @@ CONTROLLER_MODES: Final = {
 }
 
 CURRENT_HVAC_ACTIONS: Final = {
-    "Heat": CURRENT_HVAC_HEAT,
-    "Cool": CURRENT_HVAC_COOL,
-    "Off": CURRENT_HVAC_OFF,
-    "Fan only": CURRENT_HVAC_FAN,
-    "Dry": CURRENT_HVAC_DRY,
+    HVAC_MODE_HEAT: CURRENT_HVAC_HEAT,
+    HVAC_MODE_COOL: CURRENT_HVAC_COOL,
+    HVAC_MODE_OFF: CURRENT_HVAC_OFF,
+    HVAC_MODE_FAN_ONLY: CURRENT_HVAC_FAN,
+    HVAC_MODE_DRY: CURRENT_HVAC_DRY,
 }
 
 PRESET_MODES: Final = {

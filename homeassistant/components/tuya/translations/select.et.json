@@ -1,0 +1,133 @@
+{
+    "state": {
+        "tuya__basic_anti_flickr": {
+            "0": "Keelatud",
+            "1": "50 Hz",
+            "2": "60 Hz"
+        },
+        "tuya__basic_nightvision": {
+            "0": "Automaatne",
+            "1": "V\u00e4ljas",
+            "2": "Sees"
+        },
+        "tuya__countdown": {
+            "1h": "1 tund",
+            "2h": "2 tundi",
+            "3h": "3 tundi",
+            "4h": "4 tundi",
+            "5h": "5 tundi",
+            "6h": "6 tundi",
+            "cancel": "Loobu"
+        },
+        "tuya__curtain_mode": {
+            "morning": "Hommik",
+            "night": "\u00d6\u00f6"
+        },
+        "tuya__curtain_motor_mode": {
+            "back": "Tagasi",
+            "forward": "Edasi"
+        },
+        "tuya__decibel_sensitivity": {
+            "0": "Madal tundlikkus",
+            "1": "K\u00f5rge tundlikkus"
+        },
+        "tuya__fan_angle": {
+            "30": "30\u00b0",
+            "60": "60\u00b0",
+            "90": "90\u00b0"
+        },
+        "tuya__fingerbot_mode": {
+            "click": "Vajutus",
+            "switch": "L\u00fcliti"
+        },
+        "tuya__humidifier_level": {
+            "level_1": "Tase 1",
+            "level_10": "Tase 10",
+            "level_2": "Tase 2",
+            "level_3": "Tase 3",
+            "level_4": "Tase 4",
+            "level_5": "Tase 5",
+            "level_6": "Tase 6",
+            "level_7": "Tase 7",
+            "level_8": "Tase 8",
+            "level_9": "Tase 9"
+        },
+        "tuya__humidifier_moodlighting": {
+            "1": "Meeleolu 1",
+            "2": "Meeleolu 2",
+            "3": "Meeleolu 3",
+            "4": "Meeleolu 4",
+            "5": "Meeleolu 5"
+        },
+        "tuya__humidifier_spray_mode": {
+            "auto": "Automaatne",
+            "health": "Tervis",
+            "humidity": "Niiskus",
+            "sleep": "Uneaeg",
+            "work": "T\u00f6\u00f6aeg"
+        },
+        "tuya__ipc_work_mode": {
+            "0": "Madala energiatarbega re\u017eiim",
+            "1": "Pidev t\u00f6\u00f6re\u017eiim"
+        },
+        "tuya__led_type": {
+            "halogen": "Halogeenlamp",
+            "incandescent": "H\u00f5\u00f5glamp",
+            "led": "LED"
+        },
+        "tuya__light_mode": {
+            "none": "V\u00e4ljas",
+            "pos": "Kuva l\u00fcliti olekut",
+            "relay": "Kuva l\u00fcliti sees/v\u00e4ljas olekut"
+        },
+        "tuya__motion_sensitivity": {
+            "0": "Madal tundlikkus",
+            "1": "Keskmine tundlikkus",
+            "2": "K\u00f5rge tundlikkus"
+        },
+        "tuya__record_mode": {
+            "1": "Salvesta ainult s\u00fcndmused",
+            "2": "Pidev salvestamine"
+        },
+        "tuya__relay_status": {
+            "last": "J\u00e4ta viimane olek meelde",
+            "memory": "J\u00e4ta viimane olek meelde",
+            "off": "V\u00e4ljas",
+            "on": "Sees",
+            "power_off": "V\u00e4ljas",
+            "power_on": "Sees"
+        },
+        "tuya__vacuum_cistern": {
+            "closed": "Suletud",
+            "high": "K\u00f5rge",
+            "low": "Madal",
+            "middle": "Keskmine"
+        },
+        "tuya__vacuum_collection": {
+            "large": "Suur",
+            "middle": "Keskmine",
+            "small": "V\u00e4ike"
+        },
+        "tuya__vacuum_mode": {
+            "bow": "Kaar",
+            "chargego": "Tagasi kaadimisjaama",
+            "left_bow": "Keera vasakule",
+            "left_spiral": "Spiraal vasakule",
+            "mop": "Mopp",
+            "part": "Osaline",
+            "partial_bow": "Osaline kaar",
+            "pick_zone": "Vali ala",
+            "point": "Punkt",
+            "pose": "Avalda",
+            "random": "Juhuslik",
+            "right_bow": "Kaar paremale",
+            "right_spiral": "Spiraal paremale",
+            "single": "\u00dchekordne",
+            "smart": "Nutikas",
+            "spiral": "Spiraalne",
+            "standby": "Ootel",
+            "wall_follow": "J\u00e4rgi seina",
+            "zone": "Ala"
+        }
+    }
+}

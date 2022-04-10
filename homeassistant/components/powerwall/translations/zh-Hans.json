@@ -1,0 +1,9 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "description": "\u5bc6\u7801\u901a\u5e38\u662f Backup Gateway \u5e8f\u5217\u53f7\u6700\u540e\u4e94\u4f4d\u5b57\u7b26\uff0c\u60a8\u53ef\u4ee5\u5728 Tesla App \u4e2d\u627e\u5230\u76f8\u5173\u5b57\u7b26\u3002\nBackup Gateway 2 \u7684\u540e\u4e94\u4f4d\u5b57\u7b26\u5bc6\u7801\u53ef\u4ee5\u5728\u95e8\u5185\u4fa7\u627e\u5230"
+            }
+        }
+    }
+}

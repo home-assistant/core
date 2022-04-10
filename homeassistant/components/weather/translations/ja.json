@@ -3,6 +3,7 @@
         "_": {
             "clear-night": "\u6674\u308c\u305f\u591c",
             "cloudy": "\u66c7\u308a",
+            "exceptional": "\u534a\u7aef\u3058\u3083\u306a\u3044",
             "fog": "\u9727",
             "hail": "\u96f9",
             "lightning": "\u96f7",
@@ -13,7 +14,8 @@
             "snowy": "\u96ea",
             "snowy-rainy": "\u307f\u305e\u308c",
             "sunny": "\u6674\u308c",
-            "windy": "\u5f37\u98a8"
+            "windy": "\u5f37\u98a8",
+            "windy-variant": "\u5f37\u98a8"
         }
     }
 }

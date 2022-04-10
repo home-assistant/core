@@ -6,8 +6,8 @@
         },
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
-            "invalid_auth": "Authentification invalide",
-            "invalid_url": "URL invalide",
+            "invalid_auth": "Authentification non valide",
+            "invalid_url": "URL non valide",
             "unknown": "Erreur inattendue"
         },
         "step": {
@@ -17,10 +17,10 @@
             },
             "user": {
                 "data": {
-                    "admin_password": "Admin Mot de passe",
-                    "admin_username": "Admin Nom d'utilisateur",
-                    "surveillance_password": "Surveillance Mot de passe",
-                    "surveillance_username": "Surveillance Nom d'utilisateur",
+                    "admin_password": "Mot de passe Admin",
+                    "admin_username": "Nom d'utilisateur Admin",
+                    "surveillance_password": "Mot de passe Surveillance",
+                    "surveillance_username": "Nom d'utilisateur Surveillance",
                     "url": "URL"
                 }
             }
@@ -30,6 +30,7 @@
         "step": {
             "init": {
                 "data": {
+                    "stream_url_template": "Mod\u00e8le d'URL de flux",
                     "webhook_set": "Configurer les webhooks motionEye pour signaler les \u00e9v\u00e9nements \u00e0 Home Assistant",
                     "webhook_set_overwrite": "\u00c9craser les webhooks non reconnus"
                 }

@@ -1,0 +1,15 @@
+{
+  "clientId": "MF_000000000000",
+  "mac": "AA:BB:CC:DD:EE:FF",
+  "lightType": "F6IN-120V-R1-30",
+  "fanType": "1818-56",
+  "fanMotorType": "DC125X25",
+  "productionLotNumber": "",
+  "productSku": "",
+  "owner": "someone@somewhere.com",
+  "federatedIdentity": "us-east-1:f3da237b-c19c-4f61-b387-0e6dde2e470b",
+  "deviceName": "ModernFormsFan",
+  "firmwareVersion": "01.03.0025",
+  "mainMcuFirmwareVersion": "01.03.3008",
+  "firmwareUrl": ""
+}

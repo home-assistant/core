@@ -1,6 +1,7 @@
 {
     "config": {
         "error": {
+            "internal_error": "Sis\u00e4inen virhe koodin vahvistamisessa",
             "unknown": "Odottamaton virhe"
         },
         "step": {

@@ -6,7 +6,7 @@ from requests.exceptions import ConnectTimeout, HTTPError
 
 from homeassistant import data_entry_flow
 from homeassistant.components.solaredge.const import CONF_SITE_ID, DEFAULT_NAME, DOMAIN
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_IGNORE, SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_NAME
 from homeassistant.core import HomeAssistant
 
@@ -64,6 +64,31 @@ async def test_abort_if_already_setup(hass: HomeAssistant, test_api: str) -> Non
     )
     assert result.get("type") == data_entry_flow.RESULT_TYPE_FORM
     assert result.get("errors") == {CONF_SITE_ID: "already_configured"}
+
+
+async def test_ignored_entry_does_not_cause_error(
+    hass: HomeAssistant, test_api: str
+) -> None:
+    """Test an ignored entry does not cause and error and we can still create an new entry."""
+    MockConfigEntry(
+        domain="solaredge",
+        data={CONF_NAME: DEFAULT_NAME, CONF_API_KEY: API_KEY},
+        source=SOURCE_IGNORE,
+    ).add_to_hass(hass)
+
+    # user: Should fail, same SITE_ID
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={CONF_NAME: "test", CONF_SITE_ID: SITE_ID, CONF_API_KEY: "test"},
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == "test"
+
+    data = result["data"]
+    assert data
+    assert data[CONF_SITE_ID] == SITE_ID
+    assert data[CONF_API_KEY] == "test"
 
 
 async def test_asserts(hass: HomeAssistant, test_api: Mock) -> None:

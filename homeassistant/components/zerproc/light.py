@@ -16,6 +16,7 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 import homeassistant.util.color as color_util
@@ -117,13 +118,13 @@ class ZerprocLight(LightEntity):
         return self._light.address
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Device info for this light."""
-        return {
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "name": self.name,
-            "manufacturer": "Zerproc",
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.unique_id)},
+            manufacturer="Zerproc",
+            name=self.name,
+        )
 
     @property
     def icon(self) -> str | None:

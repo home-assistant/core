@@ -1,10 +1,15 @@
 """Support for monitoring a Sense energy sensor device."""
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.const import ATTR_ATTRIBUTION, DEVICE_CLASS_POWER
-from homeassistant.core import callback
+from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
+)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_ATTRIBUTION
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import async_get_registry
 
 from .const import (
@@ -20,7 +25,11 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Sense binary sensor."""
     data = hass.data[DOMAIN][config_entry.entry_id][SENSE_DATA]
     sense_devices_data = hass.data[DOMAIN][config_entry.entry_id][SENSE_DEVICES_DATA]
@@ -113,7 +122,7 @@ class SenseDevice(BinarySensorEntity):
     @property
     def device_class(self):
         """Return the device class of the binary sensor."""
-        return DEVICE_CLASS_POWER
+        return BinarySensorDeviceClass.POWER
 
     @property
     def should_poll(self):

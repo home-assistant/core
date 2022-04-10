@@ -15,7 +15,7 @@
                     "ssl": "Utilizza un certificato SSL",
                     "username": "Nome utente (Facoltativo)"
                 },
-                "description": "Host predefinito: {host}\nPorta predefinita: {port}\nNome utente predefinito: {username}",
+                "description": "Host predefinito: {host}\nNome utente predefinito: {username}",
                 "title": "Netgear"
             }
         }
@@ -26,7 +26,7 @@
                 "data": {
                     "consider_home": "Considera il tempo in casa (secondi)"
                 },
-                "description": "Specificare le impostazioni opzionali",
+                "description": "Specifica le impostazioni opzionali",
                 "title": "Netgear"
             }
         }

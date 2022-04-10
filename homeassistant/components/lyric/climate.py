@@ -1,6 +1,7 @@
 """Support for Honeywell Lyric climate platform."""
 from __future__ import annotations
 
+import asyncio
 import logging
 from time import localtime, strftime, time
 
@@ -8,7 +9,11 @@ from aiolyric.objects.device import LyricDevice
 from aiolyric.objects.location import LyricLocation
 import voluptuous as vol
 
-from homeassistant.components.climate import ClimateEntity, ClimateEntityDescription
+from homeassistant.components.climate import (
+    ClimateEntity,
+    ClimateEntityDescription,
+    ClimateEntityFeature,
+)
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
@@ -20,8 +25,6 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE
@@ -29,6 +32,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import LyricDeviceEntity
@@ -44,7 +48,16 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
+# Only LCC models support presets
+SUPPORT_FLAGS_LCC = (
+    ClimateEntityFeature.TARGET_TEMPERATURE
+    | ClimateEntityFeature.PRESET_MODE
+    | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+)
+SUPPORT_FLAGS_TCC = (
+    ClimateEntityFeature.TARGET_TEMPERATURE
+    | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+)
 
 LYRIC_HVAC_ACTION_OFF = "EquipmentOff"
 LYRIC_HVAC_ACTION_HEAT = "Heat"
@@ -88,7 +101,7 @@ SCHEMA_HOLD_TIME = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Honeywell Lyric climate platform based on a config entry."""
     coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
@@ -165,7 +178,11 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
     @property
     def supported_features(self) -> int:
         """Return the list of supported features."""
-        return SUPPORT_FLAGS
+        if self.device.changeableValues.thermostatSetpointStatus:
+            support_flags = SUPPORT_FLAGS_LCC
+        else:
+            support_flags = SUPPORT_FLAGS_TCC
+        return support_flags
 
     @property
     def temperature_unit(self) -> str:
@@ -199,27 +216,36 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         device = self.device
-        if not device.hasDualSetpointStatus:
-            if self.hvac_mode == HVAC_MODE_COOL:
-                return device.changeableValues.coolSetpoint
-            return device.changeableValues.heatSetpoint
-        return None
-
-    @property
-    def target_temperature_low(self) -> float | None:
-        """Return the upper bound temperature we try to reach."""
-        device = self.device
-        if device.hasDualSetpointStatus:
+        if (
+            device.changeableValues.autoChangeoverActive
+            or HVAC_MODES[device.changeableValues.mode] == HVAC_MODE_OFF
+        ):
+            return None
+        if self.hvac_mode == HVAC_MODE_COOL:
             return device.changeableValues.coolSetpoint
-        return None
+        return device.changeableValues.heatSetpoint
 
     @property
     def target_temperature_high(self) -> float | None:
-        """Return the upper bound temperature we try to reach."""
+        """Return the highbound target temperature we try to reach."""
         device = self.device
-        if device.hasDualSetpointStatus:
-            return device.changeableValues.heatSetpoint
-        return None
+        if (
+            not device.changeableValues.autoChangeoverActive
+            or HVAC_MODES[device.changeableValues.mode] == HVAC_MODE_OFF
+        ):
+            return None
+        return device.changeableValues.coolSetpoint
+
+    @property
+    def target_temperature_low(self) -> float | None:
+        """Return the lowbound target temperature we try to reach."""
+        device = self.device
+        if (
+            not device.changeableValues.autoChangeoverActive
+            or HVAC_MODES[device.changeableValues.mode] == HVAC_MODE_OFF
+        ):
+            return None
+        return device.changeableValues.heatSetpoint
 
     @property
     def preset_mode(self) -> str | None:
@@ -255,11 +281,14 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""
+        if self.hvac_mode == HVAC_MODE_OFF:
+            return
+
+        device = self.device
         target_temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
         target_temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
 
-        device = self.device
-        if device.hasDualSetpointStatus:
+        if device.changeableValues.autoChangeoverActive:
             if target_temp_low is None or target_temp_high is None:
                 raise HomeAssistantError(
                     "Could not find target_temp_low and/or target_temp_high in arguments"
@@ -269,11 +298,13 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
                 await self._update_thermostat(
                     self.location,
                     device,
-                    coolSetpoint=target_temp_low,
-                    heatSetpoint=target_temp_high,
+                    coolSetpoint=target_temp_high,
+                    heatSetpoint=target_temp_low,
+                    mode=HVAC_MODES[device.changeableValues.heatCoolMode],
                 )
             except LYRIC_EXCEPTIONS as exception:
                 _LOGGER.error(exception)
+            await self.coordinator.async_refresh()
         else:
             temp = kwargs.get(ATTR_TEMPERATURE)
             _LOGGER.debug("Set temperature: %s", temp)
@@ -288,15 +319,58 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
                     )
             except LYRIC_EXCEPTIONS as exception:
                 _LOGGER.error(exception)
-        await self.coordinator.async_refresh()
+            await self.coordinator.async_refresh()
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set hvac mode."""
-        _LOGGER.debug("Set hvac mode: %s", hvac_mode)
+        _LOGGER.debug("HVAC mode: %s", hvac_mode)
         try:
-            await self._update_thermostat(
-                self.location, self.device, mode=LYRIC_HVAC_MODES[hvac_mode]
-            )
+            if LYRIC_HVAC_MODES[hvac_mode] == LYRIC_HVAC_MODE_HEAT_COOL:
+                # If the system is off, turn it to Heat first then to Auto, otherwise it turns to
+                # Auto briefly and then reverts to Off (perhaps related to heatCoolMode). This is the
+                # behavior that happens with the native app as well, so likely a bug in the api itself
+
+                if HVAC_MODES[self.device.changeableValues.mode] == HVAC_MODE_OFF:
+                    _LOGGER.debug(
+                        "HVAC mode passed to lyric: %s",
+                        HVAC_MODES[LYRIC_HVAC_MODE_COOL],
+                    )
+                    await self._update_thermostat(
+                        self.location,
+                        self.device,
+                        mode=HVAC_MODES[LYRIC_HVAC_MODE_HEAT],
+                        autoChangeoverActive=False,
+                    )
+                    # Sleep 3 seconds before proceeding
+                    await asyncio.sleep(3)
+                    _LOGGER.debug(
+                        "HVAC mode passed to lyric: %s",
+                        HVAC_MODES[LYRIC_HVAC_MODE_HEAT],
+                    )
+                    await self._update_thermostat(
+                        self.location,
+                        self.device,
+                        mode=HVAC_MODES[LYRIC_HVAC_MODE_HEAT],
+                        autoChangeoverActive=True,
+                    )
+                else:
+                    _LOGGER.debug(
+                        "HVAC mode passed to lyric: %s",
+                        HVAC_MODES[self.device.changeableValues.mode],
+                    )
+                    await self._update_thermostat(
+                        self.location, self.device, autoChangeoverActive=True
+                    )
+            else:
+                _LOGGER.debug(
+                    "HVAC mode passed to lyric: %s", LYRIC_HVAC_MODES[hvac_mode]
+                )
+                await self._update_thermostat(
+                    self.location,
+                    self.device,
+                    mode=LYRIC_HVAC_MODES[hvac_mode],
+                    autoChangeoverActive=False,
+                )
         except LYRIC_EXCEPTIONS as exception:
             _LOGGER.error(exception)
         await self.coordinator.async_refresh()

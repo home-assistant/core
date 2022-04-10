@@ -7,26 +7,23 @@ from zwave_js_server.model.node import Node
 
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
+    SensorDeviceClass,
+    SensorStateClass,
 )
 from homeassistant.components.zwave_js.const import (
     ATTR_METER_TYPE,
     ATTR_METER_TYPE_NAME,
     ATTR_VALUE,
     DOMAIN,
+    SERVICE_REFRESH_VALUE,
     SERVICE_RESET_METER,
 )
+from homeassistant.components.zwave_js.helpers import get_valueless_base_unique_id
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_ICON,
-    DEVICE_CLASS_CURRENT,
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_VOLTAGE,
+    ATTR_UNIT_OF_MEASUREMENT,
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
@@ -35,9 +32,11 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity import EntityCategory
 
 from .common import (
     AIR_TEMPERATURE_SENSOR,
+    BATTERY_SENSOR,
     CURRENT_SENSOR,
     ENERGY_SENSOR,
     HUMIDITY_SENSOR,
@@ -56,15 +55,27 @@ async def test_numeric_sensor(hass, multisensor_6, integration):
 
     assert state
     assert state.state == "9.0"
-    assert state.attributes["unit_of_measurement"] == TEMP_CELSIUS
-    assert state.attributes["device_class"] == DEVICE_CLASS_TEMPERATURE
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TEMPERATURE
+
+    state = hass.states.get(BATTERY_SENSOR)
+
+    assert state
+    assert state.state == "100.0"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "%"
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.BATTERY
+
+    ent_reg = er.async_get(hass)
+    entity_entry = ent_reg.async_get(BATTERY_SENSOR)
+    assert entity_entry
+    assert entity_entry.entity_category is EntityCategory.DIAGNOSTIC
 
     state = hass.states.get(HUMIDITY_SENSOR)
 
     assert state
     assert state.state == "65.0"
-    assert state.attributes["unit_of_measurement"] == "%"
-    assert state.attributes["device_class"] == DEVICE_CLASS_HUMIDITY
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "%"
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.HUMIDITY
 
 
 async def test_energy_sensors(hass, hank_binary_switch, integration):
@@ -73,31 +84,31 @@ async def test_energy_sensors(hass, hank_binary_switch, integration):
 
     assert state
     assert state.state == "0.0"
-    assert state.attributes["unit_of_measurement"] == POWER_WATT
-    assert state.attributes["device_class"] == DEVICE_CLASS_POWER
-    assert state.attributes["state_class"] == STATE_CLASS_MEASUREMENT
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == POWER_WATT
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.POWER
+    assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.MEASUREMENT
 
     state = hass.states.get(ENERGY_SENSOR)
 
     assert state
     assert state.state == "0.16"
-    assert state.attributes["unit_of_measurement"] == ENERGY_KILO_WATT_HOUR
-    assert state.attributes["device_class"] == DEVICE_CLASS_ENERGY
-    assert state.attributes["state_class"] == STATE_CLASS_TOTAL_INCREASING
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == ENERGY_KILO_WATT_HOUR
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.ENERGY
+    assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.TOTAL_INCREASING
 
     state = hass.states.get(VOLTAGE_SENSOR)
 
     assert state
     assert state.state == "122.96"
-    assert state.attributes["unit_of_measurement"] == ELECTRIC_POTENTIAL_VOLT
-    assert state.attributes["device_class"] == DEVICE_CLASS_VOLTAGE
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == ELECTRIC_POTENTIAL_VOLT
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.VOLTAGE
 
     state = hass.states.get(CURRENT_SENSOR)
 
     assert state
     assert state.state == "0.0"
-    assert state.attributes["unit_of_measurement"] == ELECTRIC_CURRENT_AMPERE
-    assert state.attributes["device_class"] == DEVICE_CLASS_CURRENT
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == ELECTRIC_CURRENT_AMPERE
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.CURRENT
 
 
 async def test_disabled_notification_sensor(hass, multisensor_6, integration):
@@ -107,7 +118,7 @@ async def test_disabled_notification_sensor(hass, multisensor_6, integration):
 
     assert entity_entry
     assert entity_entry.disabled
-    assert entity_entry.disabled_by == er.DISABLED_INTEGRATION
+    assert entity_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
     # Test enabling entity
     updated_entry = ent_reg.async_update_entity(
@@ -134,7 +145,7 @@ async def test_disabled_indcator_sensor(
 
     assert entity_entry
     assert entity_entry.disabled
-    assert entity_entry.disabled_by == er.DISABLED_INTEGRATION
+    assert entity_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
 
 async def test_config_parameter_sensor(hass, lock_id_lock_as_id150, integration):
@@ -145,22 +156,17 @@ async def test_config_parameter_sensor(hass, lock_id_lock_as_id150, integration)
     assert entity_entry.disabled
 
 
-async def test_node_status_sensor(hass, client, lock_id_lock_as_id150, integration):
+async def test_node_status_sensor(
+    hass, client, controller_node, lock_id_lock_as_id150, integration
+):
     """Test node status sensor is created and gets updated on node state changes."""
     NODE_STATUS_ENTITY = "sensor.z_wave_module_for_id_lock_150_and_101_node_status"
     node = lock_id_lock_as_id150
     ent_reg = er.async_get(hass)
     entity_entry = ent_reg.async_get(NODE_STATUS_ENTITY)
-    assert entity_entry.disabled
-    assert entity_entry.disabled_by == er.DISABLED_INTEGRATION
-    updated_entry = ent_reg.async_update_entity(
-        entity_entry.entity_id, **{"disabled_by": None}
-    )
 
-    await hass.config_entries.async_reload(integration.entry_id)
-    await hass.async_block_till_done()
-
-    assert not updated_entry.disabled
+    assert not entity_entry.disabled
+    assert entity_entry.entity_category is EntityCategory.DIAGNOSTIC
     assert hass.states.get(NODE_STATUS_ENTITY).state == "alive"
 
     # Test transitions work
@@ -198,6 +204,18 @@ async def test_node_status_sensor(hass, client, lock_id_lock_as_id150, integrati
     await client.disconnect()
     assert hass.states.get(NODE_STATUS_ENTITY).state != STATE_UNAVAILABLE
 
+    # Assert a node status sensor entity is not created for the controller
+    node = client.driver.controller.nodes[1]
+    assert node.is_controller_node
+    assert (
+        ent_reg.async_get_entity_id(
+            DOMAIN,
+            "sensor",
+            f"{get_valueless_base_unique_id(client, node)}.node_status",
+        )
+        is None
+    )
+
 
 async def test_node_status_sensor_not_ready(
     hass,
@@ -205,6 +223,7 @@ async def test_node_status_sensor_not_ready(
     lock_id_lock_as_id150_not_ready,
     lock_id_lock_as_id150_state,
     integration,
+    caplog,
 ):
     """Test node status sensor is created and available if node is not ready."""
     NODE_STATUS_ENTITY = "sensor.z_wave_module_for_id_lock_150_and_101_node_status"
@@ -212,25 +231,36 @@ async def test_node_status_sensor_not_ready(
     assert not node.ready
     ent_reg = er.async_get(hass)
     entity_entry = ent_reg.async_get(NODE_STATUS_ENTITY)
-    assert entity_entry.disabled
-    assert entity_entry.disabled_by == er.DISABLED_INTEGRATION
-    updated_entry = ent_reg.async_update_entity(
-        entity_entry.entity_id, **{"disabled_by": None}
-    )
 
-    await hass.config_entries.async_reload(integration.entry_id)
-    await hass.async_block_till_done()
-
-    assert not updated_entry.disabled
+    assert not entity_entry.disabled
     assert hass.states.get(NODE_STATUS_ENTITY)
     assert hass.states.get(NODE_STATUS_ENTITY).state == "alive"
 
     # Mark node as ready
-    event = Event("ready", {"nodeState": lock_id_lock_as_id150_state})
+    event = Event(
+        "ready",
+        {
+            "source": "node",
+            "event": "ready",
+            "nodeId": node.node_id,
+            "nodeState": lock_id_lock_as_id150_state,
+        },
+    )
     node.receive_event(event)
     assert node.ready
     assert hass.states.get(NODE_STATUS_ENTITY)
     assert hass.states.get(NODE_STATUS_ENTITY).state == "alive"
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_REFRESH_VALUE,
+        {
+            ATTR_ENTITY_ID: NODE_STATUS_ENTITY,
+        },
+        blocking=True,
+    )
+
+    assert "There is no value to refresh for this entity" in caplog.text
 
 
 async def test_reset_meter(
@@ -295,8 +325,8 @@ async def test_meter_attributes(
     assert state
     assert state.attributes[ATTR_METER_TYPE] == MeterType.ELECTRIC.value
     assert state.attributes[ATTR_METER_TYPE_NAME] == MeterType.ELECTRIC.name
-    assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_ENERGY
-    assert state.attributes[ATTR_STATE_CLASS] == STATE_CLASS_TOTAL_INCREASING
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.ENERGY
+    assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.TOTAL_INCREASING
 
 
 async def test_special_meters(hass, aeon_smart_switch_6_state, client, integration):
@@ -358,9 +388,71 @@ async def test_special_meters(hass, aeon_smart_switch_6_state, client, integrati
     state = hass.states.get("sensor.smart_switch_6_electric_consumed_kvah_10")
     assert state
     assert ATTR_DEVICE_CLASS not in state.attributes
-    assert state.attributes[ATTR_STATE_CLASS] == STATE_CLASS_TOTAL_INCREASING
+    assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.TOTAL_INCREASING
 
     state = hass.states.get("sensor.smart_switch_6_electric_consumed_kva_reactive_11")
     assert state
     assert ATTR_DEVICE_CLASS not in state.attributes
-    assert state.attributes[ATTR_STATE_CLASS] == STATE_CLASS_MEASUREMENT
+    assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.MEASUREMENT
+
+
+async def test_unit_change(hass, zp3111, client, integration):
+    """Test unit change via metadata updated event is handled by numeric sensors."""
+    entity_id = "sensor.4_in_1_sensor_air_temperature"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "21.98"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
+    event = Event(
+        "metadata updated",
+        {
+            "source": "node",
+            "event": "metadata updated",
+            "nodeId": zp3111.node_id,
+            "args": {
+                "commandClassName": "Multilevel Sensor",
+                "commandClass": 49,
+                "endpoint": 0,
+                "property": "Air temperature",
+                "metadata": {
+                    "type": "number",
+                    "readable": True,
+                    "writeable": False,
+                    "label": "Air temperature",
+                    "ccSpecific": {"sensorType": 1, "scale": 1},
+                    "unit": "°F",
+                },
+                "propertyName": "Air temperature",
+                "nodeId": zp3111.node_id,
+            },
+        },
+    )
+    zp3111.receive_event(event)
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "21.98"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
+    event = Event(
+        "value updated",
+        {
+            "source": "node",
+            "event": "value updated",
+            "nodeId": zp3111.node_id,
+            "args": {
+                "commandClassName": "Multilevel Sensor",
+                "commandClass": 49,
+                "endpoint": 0,
+                "property": "Air temperature",
+                "newValue": 212,
+                "prevValue": 21.98,
+                "propertyName": "Air temperature",
+            },
+        },
+    )
+    zp3111.receive_event(event)
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "100.0"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS

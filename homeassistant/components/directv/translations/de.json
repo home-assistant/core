@@ -10,10 +10,6 @@
         "flow_title": "{name}",
         "step": {
             "ssdp_confirm": {
-                "data": {
-                    "one": "eins",
-                    "other": "andere"
-                },
                 "description": "M\u00f6chtest du {name} einrichten?"
             },
             "user": {

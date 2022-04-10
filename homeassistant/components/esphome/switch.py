@@ -5,7 +5,7 @@ from typing import Any
 
 from aioesphomeapi import SwitchInfo, SwitchState
 
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.switch import DEVICE_CLASSES, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -36,19 +36,21 @@ class EsphomeSwitch(EsphomeEntity[SwitchInfo, SwitchState], SwitchEntity):
     """A switch implementation for ESPHome."""
 
     @property
-    def icon(self) -> str:
-        """Return the icon."""
-        return self._static_info.icon
-
-    @property
     def assumed_state(self) -> bool:
         """Return true if we do optimistic updates."""
         return self._static_info.assumed_state
 
     @esphome_state_property
-    def is_on(self) -> bool | None:  # type: ignore[override]
+    def is_on(self) -> bool | None:
         """Return true if the switch is on."""
         return self._state.state
+
+    @property
+    def device_class(self) -> str | None:
+        """Return the class of this device."""
+        if self._static_info.device_class not in DEVICE_CLASSES:
+            return None
+        return self._static_info.device_class
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""

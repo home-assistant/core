@@ -4,13 +4,10 @@ import functools
 import voluptuous as vol
 from zigpy.zcl.foundation import Status
 
-from homeassistant.components.lock import (
-    DOMAIN,
-    STATE_LOCKED,
-    STATE_UNLOCKED,
-    LockEntity,
-)
-from homeassistant.core import callback
+from homeassistant.components.lock import STATE_LOCKED, STATE_UNLOCKED, LockEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -18,7 +15,6 @@ from .core import discovery
 from .core.const import (
     CHANNEL_DOORLOCK,
     DATA_ZHA,
-    DATA_ZHA_DISPATCHERS,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
 )
@@ -27,7 +23,7 @@ from .entity import ZhaEntity
 
 # The first state is Zigbee 'Not fully locked'
 STATE_LIST = [STATE_UNLOCKED, STATE_LOCKED, STATE_UNLOCKED]
-STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
+MULTI_MATCH = functools.partial(ZHA_ENTITIES.multipass_match, Platform.LOCK)
 
 VALUE_TO_STATE = dict(enumerate(STATE_LIST))
 
@@ -37,9 +33,13 @@ SERVICE_DISABLE_LOCK_USER_CODE = "disable_lock_user_code"
 SERVICE_CLEAR_LOCK_USER_CODE = "clear_lock_user_code"
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: entity_platform.AddEntitiesCallback,
+) -> None:
     """Set up the Zigbee Home Automation Door Lock from config entry."""
-    entities_to_create = hass.data[DATA_ZHA][DOMAIN]
+    entities_to_create = hass.data[DATA_ZHA][Platform.LOCK]
 
     unsub = async_dispatcher_connect(
         hass,
@@ -48,7 +48,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             discovery.async_add_entities, async_add_entities, entities_to_create
         ),
     )
-    hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
+    config_entry.async_on_unload(unsub)
 
     platform = entity_platform.async_get_current_platform()
 
@@ -86,7 +86,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-@STRICT_MATCH(channel_names=CHANNEL_DOORLOCK)
+@MULTI_MATCH(channel_names=CHANNEL_DOORLOCK)
 class ZhaDoorLock(ZhaEntity, LockEntity):
     """Representation of a ZHA lock."""
 
@@ -122,7 +122,7 @@ class ZhaDoorLock(ZhaEntity, LockEntity):
     async def async_lock(self, **kwargs):
         """Lock the lock."""
         result = await self._doorlock_channel.lock_door()
-        if not isinstance(result, list) or result[0] is not Status.SUCCESS:
+        if isinstance(result, Exception) or result[0] is not Status.SUCCESS:
             self.error("Error with lock_door: %s", result)
             return
         self.async_write_ha_state()
@@ -130,7 +130,7 @@ class ZhaDoorLock(ZhaEntity, LockEntity):
     async def async_unlock(self, **kwargs):
         """Unlock the lock."""
         result = await self._doorlock_channel.unlock_door()
-        if not isinstance(result, list) or result[0] is not Status.SUCCESS:
+        if isinstance(result, Exception) or result[0] is not Status.SUCCESS:
             self.error("Error with unlock_door: %s", result)
             return
         self.async_write_ha_state()

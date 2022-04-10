@@ -1,4 +1,6 @@
 """Support for compensation sensor."""
+from __future__ import annotations
+
 import logging
 
 from homeassistant.components.sensor import SensorEntity
@@ -10,8 +12,10 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     STATE_UNKNOWN,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     CONF_COMPENSATION,
@@ -28,7 +32,12 @@ ATTR_SOURCE = "source"
 ATTR_SOURCE_ATTRIBUTE = "source_attribute"
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Compensation sensor."""
     if discovery_info is None:
         return
@@ -130,8 +139,7 @@ class CompensationSensor(SensorEntity):
     @callback
     def _async_compensation_sensor_state_listener(self, event):
         """Handle sensor state changes."""
-        new_state = event.data.get("new_state")
-        if new_state is None:
+        if (new_state := event.data.get("new_state")) is None:
             return
 
         if self._unit_of_measurement is None and self._source_attribute is None:

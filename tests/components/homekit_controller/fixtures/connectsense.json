@@ -1,0 +1,378 @@
+[
+  {
+    "aid": 1,
+    "services": [
+      {
+        "iid": 1,
+        "type": "0000003E-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "iid": 2,
+            "type": "00000014-0000-1000-8000-0026BB765291",
+            "perms": ["pw"],
+            "ev": false,
+            "format": "bool"
+          },
+          {
+            "iid": 3,
+            "value": "ConnectSense",
+            "type": "00000020-0000-1000-8000-0026BB765291",
+            "perms": ["pr"],
+            "ev": false,
+            "format": "string"
+          },
+          {
+            "iid": 4,
+            "value": "CS-IWO",
+            "type": "00000021-0000-1000-8000-0026BB765291",
+            "perms": ["pr"],
+            "ev": false,
+            "format": "string"
+          },
+          {
+            "iid": 5,
+            "value": "InWall Outlet-0394DE",
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "perms": ["pr"],
+            "ev": false,
+            "format": "string"
+          },
+          {
+            "iid": 6,
+            "value": "1020301376",
+            "type": "00000030-0000-1000-8000-0026BB765291",
+            "perms": ["pr"],
+            "ev": false,
+            "format": "string"
+          },
+          {
+            "iid": 7,
+            "value": "1.0.0",
+            "type": "00000052-0000-1000-8000-0026BB765291",
+            "perms": ["pr"],
+            "ev": false,
+            "format": "string"
+          }
+        ]
+      },
+      {
+        "iid": 8,
+        "type": "000000A2-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "iid": 9,
+            "value": "1.1.0",
+            "type": "00000037-0000-1000-8000-0026BB765291",
+            "perms": ["pr"],
+            "ev": false,
+            "format": "string"
+          }
+        ]
+      },
+      {
+        "iid": 10,
+        "type": "B3BD50B1-B30B-4974-A71F-5C68AA126698",
+        "hidden": true,
+        "characteristics": [
+          {
+            "iid": 11,
+            "value": 100,
+            "type": "00000008-0000-1000-8000-0026BB765291",
+            "perms": ["pr", "pw", "ev"],
+            "ev": false,
+            "format": "int",
+            "minValue": 0,
+            "maxValue": 100,
+            "minStep": 1,
+            "unit": "percentage"
+          },
+          {
+            "iid": 12,
+            "value": 7250712,
+            "type": "00000005-0000-1000-8000-001D4B474349",
+            "perms": ["pr", "ev"],
+            "ev": false,
+            "format": "uint32",
+            "description": "Epoch",
+            "unit": "seconds"
+          }
+        ]
+      },
+      {
+        "iid": 13,
+        "type": "00000047-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "iid": 14,
+            "value": true,
+            "type": "00000025-0000-1000-8000-0026BB765291",
+            "perms": ["pr", "pw", "ev"],
+            "ev": true,
+            "format": "bool"
+          },
+          {
+            "iid": 15,
+            "value": true,
+            "type": "00000026-0000-1000-8000-0026BB765291",
+            "perms": ["pr", "ev"],
+            "ev": true,
+            "format": "bool"
+          },
+          {
+            "iid": 16,
+            "value": "Outlet A",
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "perms": ["pr"],
+            "ev": false,
+            "format": "string"
+          },
+          {
+            "iid": 17,
+            "value": 126.3,
+            "type": "00000008-0000-1000-8000-001D4B474349",
+            "perms": ["pr", "ev"],
+            "ev": false,
+            "format": "float",
+            "minValue": 0.0,
+            "maxValue": 130.0,
+            "minStep": 0.1,
+            "description": "Volts"
+          },
+          {
+            "iid": 18,
+            "value": 0.03,
+            "type": "00000009-0000-1000-8000-001D4B474349",
+            "perms": ["pr", "ev"],
+            "ev": false,
+            "format": "float",
+            "minValue": 0.0,
+            "maxValue": 20.0,
+            "minStep": 0.1,
+            "description": "Amps"
+          },
+          {
+            "iid": 19,
+            "value": 0.8,
+            "type": "0000000A-0000-1000-8000-001D4B474349",
+            "perms": ["pr", "ev"],
+            "ev": false,
+            "format": "float",
+            "description": "Watts"
+          },
+          {
+            "iid": 20,
+            "value": 379.69299,
+            "type": "0000000C-0000-1000-8000-001D4B474349",
+            "perms": ["pr", "ev"],
+            "ev": false,
+            "format": "float",
+            "minValue": 0.0,
+            "maxValue": 34028234663852885981170418348,
+            "minStep": 0.1,
+            "description": "Kilowatt-hours"
+          },
+          {
+            "iid": 21,
+            "value": 22,
+            "type": "0000000B-0000-1000-8000-001D4B474349",
+            "perms": ["pr", "ev"],
+            "ev": false,
+            "format": "int",
+            "minValue": 0,
+            "maxValue": 100,
+            "minStep": 1,
+            "description": "Power factor"
+          },
+          {
+            "iid": 22,
+            "value": 390,
+            "type": "00000005-0000-1000-8000-001D4B474349",
+            "perms": ["pr", "ev"],
+            "ev": false,
+            "format": "uint32",
+            "description": "State timer",
+            "unit": "seconds"
+          },
+          {
+            "iid": 23,
+            "value": "Outlet A",
+            "type": "0000000E-0000-1000-8000-001D4B474349",
+            "perms": ["pr", "ev"],
+            "ev": false,
+            "format": "string",
+            "description": "Assigned name"
+          },
+          {
+            "iid": 24,
+            "value": 0,
+            "type": "0000000F-0000-1000-8000-001D4B474349",
+            "perms": ["pr", "ev"],
+            "ev": false,
+            "format": "uint32",
+            "description": "Device type"
+          }
+        ]
+      },
+      {
+        "iid": 25,
+        "type": "00000047-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "iid": 26,
+            "value": true,
+            "type": "00000025-0000-1000-8000-0026BB765291",
+            "perms": ["pr", "pw", "ev"],
+            "ev": true,
+            "format": "bool"
+          },
+          {
+            "iid": 27,
+            "value": true,
+            "type": "00000026-0000-1000-8000-0026BB765291",
+            "perms": ["pr", "ev"],
+            "ev": true,
+            "format": "bool"
+          },
+          {
+            "iid": 28,
+            "value": "Outlet B",
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "perms": ["pr"],
+            "ev": false,
+            "format": "string"
+          },
+          {
+            "iid": 29,
+            "value": 126.3,
+            "type": "00000008-0000-1000-8000-001D4B474349",
+            "perms": ["pr", "ev"],
+            "ev": false,
+            "format": "float",
+            "minValue": 0.0,
+            "maxValue": 130.0,
+            "minStep": 0.1,
+            "description": "Volts"
+          },
+          {
+            "iid": 30,
+            "value": 0.05,
+            "type": "00000009-0000-1000-8000-001D4B474349",
+            "perms": ["pr", "ev"],
+            "ev": false,
+            "format": "float",
+            "minValue": 0.0,
+            "maxValue": 20.0,
+            "minStep": 0.1,
+            "description": "Amps"
+          },
+          {
+            "iid": 31,
+            "value": 0.8,
+            "type": "0000000A-0000-1000-8000-001D4B474349",
+            "perms": ["pr", "ev"],
+            "ev": false,
+            "format": "float",
+            "description": "Watts"
+          },
+          {
+            "iid": 32,
+            "value": 175.85001,
+            "type": "0000000C-0000-1000-8000-001D4B474349",
+            "perms": ["pr", "ev"],
+            "ev": false,
+            "format": "float",
+            "minValue": 0.0,
+            "maxValue": 34028234663852885981170418348,
+            "minStep": 0.1,
+            "description": "Kilowatt-hours"
+          },
+          {
+            "iid": 33,
+            "value": 13,
+            "type": "0000000B-0000-1000-8000-001D4B474349",
+            "perms": ["pr", "ev"],
+            "ev": false,
+            "format": "int",
+            "minValue": 0,
+            "maxValue": 100,
+            "minStep": 1,
+            "description": "Power factor"
+          },
+          {
+            "iid": 34,
+            "value": 390,
+            "type": "00000005-0000-1000-8000-001D4B474349",
+            "perms": ["pr", "ev"],
+            "ev": false,
+            "format": "uint32",
+            "description": "State timer",
+            "unit": "seconds"
+          },
+          {
+            "iid": 35,
+            "value": "Outlet B",
+            "type": "0000000E-0000-1000-8000-001D4B474349",
+            "perms": ["pr", "ev"],
+            "ev": false,
+            "format": "string",
+            "description": "Assigned name"
+          },
+          {
+            "iid": 36,
+            "value": 0,
+            "type": "0000000F-0000-1000-8000-001D4B474349",
+            "perms": ["pr", "ev"],
+            "ev": false,
+            "format": "uint32",
+            "description": "Device type"
+          }
+        ]
+      },
+      {
+        "iid": 37,
+        "type": "00000020-0000-1000-8000-001D4B474349",
+        "hidden": true,
+        "characteristics": [
+          {
+            "iid": 38,
+            "value": 0,
+            "type": "00000021-0000-1000-8000-001D4B474349",
+            "perms": ["pr", "ev"],
+            "ev": false,
+            "format": "uint8"
+          },
+          {
+            "iid": 39,
+            "type": "00000022-0000-1000-8000-001D4B474349",
+            "perms": ["pw"],
+            "ev": false,
+            "format": "uint8"
+          },
+          {
+            "iid": 40,
+            "type": "00000023-0000-1000-8000-001D4B474349",
+            "perms": ["pw"],
+            "ev": false,
+            "format": "string",
+            "maxLen": 256
+          },
+          {
+            "iid": 41,
+            "type": "00000024-0000-1000-8000-001D4B474349",
+            "perms": ["pw"],
+            "ev": false,
+            "format": "bool"
+          },
+          {
+            "iid": 42,
+            "type": "00000300-0000-1000-8000-001D4B474349",
+            "perms": ["pw"],
+            "ev": false,
+            "format": "string",
+            "maxLen": 65
+          }
+        ]
+      }
+    ]
+  }
+]

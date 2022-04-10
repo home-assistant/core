@@ -19,7 +19,7 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform, config_validation as cv, script
-from homeassistant.helpers.condition import async_validate_condition_config
+from homeassistant.helpers.condition import async_validate_conditions_config
 from homeassistant.helpers.trigger import async_validate_trigger_config
 from homeassistant.loader import IntegrationNotFound
 
@@ -76,11 +76,8 @@ async def async_validate_config_item(hass, config, full_config=None):
     )
 
     if CONF_CONDITION in config:
-        config[CONF_CONDITION] = await asyncio.gather(
-            *(
-                async_validate_condition_config(hass, cond)
-                for cond in config[CONF_CONDITION]
-            )
+        config[CONF_CONDITION] = await async_validate_conditions_config(
+            hass, config[CONF_CONDITION]
         )
 
     config[CONF_ACTION] = await script.async_validate_actions_config(

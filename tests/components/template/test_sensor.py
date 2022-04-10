@@ -19,6 +19,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, CoreState, callback
 from homeassistant.helpers import entity_registry
+from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.helpers.template import Template
 from homeassistant.setup import ATTR_COMPONENT, async_setup_component
 import homeassistant.util.dt as dt_util
@@ -115,7 +116,7 @@ async def test_entity_picture_template(hass, start_ha):
 
 @pytest.mark.parametrize("count,domain", [(1, sensor.DOMAIN)])
 @pytest.mark.parametrize(
-    "attribute,config",
+    "attribute,config,expected",
     [
         (
             "friendly_name",
@@ -130,6 +131,22 @@ async def test_entity_picture_template(hass, start_ha):
                     },
                 },
             },
+            ("It .", "It Works."),
+        ),
+        (
+            "friendly_name",
+            {
+                "sensor": {
+                    "platform": "template",
+                    "sensors": {
+                        "test_template_sensor": {
+                            "value_template": "{{ states.sensor.test_state.state }}",
+                            "friendly_name_template": "{{ 'It ' + states.sensor.test_state.state + '.'}}",
+                        }
+                    },
+                },
+            },
+            (None, "It Works."),
         ),
         (
             "friendly_name",
@@ -144,6 +161,7 @@ async def test_entity_picture_template(hass, start_ha):
                     },
                 },
             },
+            ("It .", "It Works."),
         ),
         (
             "test_attribute",
@@ -160,16 +178,17 @@ async def test_entity_picture_template(hass, start_ha):
                     },
                 },
             },
+            ("It .", "It Works."),
         ),
     ],
 )
-async def test_friendly_name_template(hass, attribute, start_ha):
+async def test_friendly_name_template(hass, attribute, expected, start_ha):
     """Test friendly_name template with an unknown value_template."""
-    assert hass.states.get(TEST_NAME).attributes.get(attribute) == "It ."
+    assert hass.states.get(TEST_NAME).attributes.get(attribute) == expected[0]
 
     hass.states.async_set("sensor.test_state", "Works")
     await hass.async_block_till_done()
-    assert hass.states.get(TEST_NAME).attributes[attribute] == "It Works."
+    assert hass.states.get(TEST_NAME).attributes[attribute] == expected[1]
 
 
 @pytest.mark.parametrize("count,domain", [(0, sensor.DOMAIN)])
@@ -389,7 +408,7 @@ async def test_invalid_attribute_template(hass, caplog, start_ha, caplog_setup_t
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
-    await hass.helpers.entity_component.async_update_entity("sensor.invalid_template")
+    await async_update_entity(hass, "sensor.invalid_template")
     assert "TemplateError" in caplog_setup_text
     assert "test_attribute" in caplog.text
 
@@ -488,15 +507,11 @@ async def test_no_template_match_all(hass, caplog):
     assert hass.states.get("sensor.invalid_friendly_name").state == "hello"
     assert hass.states.get("sensor.invalid_attribute").state == "hello"
 
-    await hass.helpers.entity_component.async_update_entity("sensor.invalid_state")
-    await hass.helpers.entity_component.async_update_entity("sensor.invalid_icon")
-    await hass.helpers.entity_component.async_update_entity(
-        "sensor.invalid_entity_picture"
-    )
-    await hass.helpers.entity_component.async_update_entity(
-        "sensor.invalid_friendly_name"
-    )
-    await hass.helpers.entity_component.async_update_entity("sensor.invalid_attribute")
+    await async_update_entity(hass, "sensor.invalid_state")
+    await async_update_entity(hass, "sensor.invalid_icon")
+    await async_update_entity(hass, "sensor.invalid_entity_picture")
+    await async_update_entity(hass, "sensor.invalid_friendly_name")
+    await async_update_entity(hass, "sensor.invalid_attribute")
 
     assert hass.states.get("sensor.invalid_state").state == "2"
     assert hass.states.get("sensor.invalid_icon").state == "hello"
@@ -1076,3 +1091,171 @@ async def test_trigger_entity_available(hass):
 
     state = hass.states.get("sensor.maybe_available")
     assert state.state == "unavailable"
+
+
+async def test_trigger_entity_device_class_parsing_works(hass):
+    """Test trigger entity device class parsing works."""
+    assert await async_setup_component(
+        hass,
+        "template",
+        {
+            "template": [
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "sensor": [
+                        {
+                            "name": "Date entity",
+                            "state": "{{ now().date() }}",
+                            "device_class": "date",
+                        },
+                        {
+                            "name": "Timestamp entity",
+                            "state": "{{ now() }}",
+                            "device_class": "timestamp",
+                        },
+                    ],
+                },
+            ],
+        },
+    )
+
+    await hass.async_block_till_done()
+
+    # State of timestamp sensors are always in UTC
+    now = dt_util.utcnow()
+
+    with patch("homeassistant.util.dt.now", return_value=now):
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+
+    date_state = hass.states.get("sensor.date_entity")
+    assert date_state is not None
+    assert date_state.state == now.date().isoformat()
+
+    ts_state = hass.states.get("sensor.timestamp_entity")
+    assert ts_state is not None
+    assert ts_state.state == now.isoformat(timespec="seconds")
+
+
+async def test_trigger_entity_device_class_errors_works(hass):
+    """Test trigger entity device class errors works."""
+    assert await async_setup_component(
+        hass,
+        "template",
+        {
+            "template": [
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "sensor": [
+                        {
+                            "name": "Date entity",
+                            "state": "invalid",
+                            "device_class": "date",
+                        },
+                        {
+                            "name": "Timestamp entity",
+                            "state": "invalid",
+                            "device_class": "timestamp",
+                        },
+                    ],
+                },
+            ],
+        },
+    )
+
+    await hass.async_block_till_done()
+
+    now = dt_util.now()
+
+    with patch("homeassistant.util.dt.now", return_value=now):
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+
+    date_state = hass.states.get("sensor.date_entity")
+    assert date_state is not None
+    assert date_state.state == STATE_UNKNOWN
+
+    ts_state = hass.states.get("sensor.timestamp_entity")
+    assert ts_state is not None
+    assert ts_state.state == STATE_UNKNOWN
+
+
+async def test_entity_device_class_parsing_works(hass):
+    """Test entity device class parsing works."""
+    # State of timestamp sensors are always in UTC
+    now = dt_util.utcnow()
+
+    with patch("homeassistant.util.dt.now", return_value=now):
+        assert await async_setup_component(
+            hass,
+            "template",
+            {
+                "template": [
+                    {
+                        "sensor": [
+                            {
+                                "name": "Date entity",
+                                "state": "{{ now().date() }}",
+                                "device_class": "date",
+                            },
+                            {
+                                "name": "Timestamp entity",
+                                "state": "{{ now() }}",
+                                "device_class": "timestamp",
+                            },
+                        ],
+                    },
+                ],
+            },
+        )
+        await hass.async_block_till_done()
+
+    date_state = hass.states.get("sensor.date_entity")
+    assert date_state is not None
+    assert date_state.state == now.date().isoformat()
+
+    ts_state = hass.states.get("sensor.timestamp_entity")
+    assert ts_state is not None
+    assert ts_state.state == now.isoformat(timespec="seconds")
+
+
+async def test_entity_device_class_errors_works(hass):
+    """Test entity device class errors works."""
+    assert await async_setup_component(
+        hass,
+        "template",
+        {
+            "template": [
+                {
+                    "sensor": [
+                        {
+                            "name": "Date entity",
+                            "state": "invalid",
+                            "device_class": "date",
+                        },
+                        {
+                            "name": "Timestamp entity",
+                            "state": "invalid",
+                            "device_class": "timestamp",
+                        },
+                    ],
+                },
+            ],
+        },
+    )
+
+    await hass.async_block_till_done()
+
+    now = dt_util.now()
+
+    with patch("homeassistant.util.dt.now", return_value=now):
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+
+    date_state = hass.states.get("sensor.date_entity")
+    assert date_state is not None
+    assert date_state.state == STATE_UNKNOWN
+
+    ts_state = hass.states.get("sensor.timestamp_entity")
+    assert ts_state is not None
+    assert ts_state.state == STATE_UNKNOWN

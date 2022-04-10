@@ -10,12 +10,7 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN,
     SERVICE_SELECT_SOURCE,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
+    MediaPlayerEntityFeature,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -55,12 +50,11 @@ from .const import (
     FEATURE_PLAY_STOP,
     FEATURE_TOGGLE_MUTE,
     KEY_PLAY_PAUSE,
-    MAX_NAME_LENGTH,
     SERV_SWITCH,
     SERV_TELEVISION_SPEAKER,
 )
 from .type_remotes import REMOTE_KEYS, RemoteInputSelectAccessory
-from .util import get_media_player_features
+from .util import cleanup_name_for_homekit, get_media_player_features
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -135,7 +129,9 @@ class MediaPlayer(HomeAccessory):
 
     def generate_service_name(self, mode):
         """Generate name for individual service."""
-        return f"{self.display_name} {MODE_FRIENDLY_NAME[mode]}"[:MAX_NAME_LENGTH]
+        return cleanup_name_for_homekit(
+            f"{self.display_name} {MODE_FRIENDLY_NAME[mode]}"
+        )
 
     def set_on_off(self, value):
         """Move switch state to value if call came from HomeKit."""
@@ -217,7 +213,7 @@ class TelevisionMediaPlayer(RemoteInputSelectAccessory):
     def __init__(self, *args):
         """Initialize a Television Media Player accessory object."""
         super().__init__(
-            SUPPORT_SELECT_SOURCE,
+            MediaPlayerEntityFeature.SELECT_SOURCE,
             ATTR_INPUT_SOURCE,
             ATTR_INPUT_SOURCE_LIST,
             *args,
@@ -227,12 +223,17 @@ class TelevisionMediaPlayer(RemoteInputSelectAccessory):
 
         self.chars_speaker = []
 
-        self._supports_play_pause = features & (SUPPORT_PLAY | SUPPORT_PAUSE)
-        if features & SUPPORT_VOLUME_MUTE or features & SUPPORT_VOLUME_STEP:
+        self._supports_play_pause = features & (
+            MediaPlayerEntityFeature.PLAY | MediaPlayerEntityFeature.PAUSE
+        )
+        if (
+            features & MediaPlayerEntityFeature.VOLUME_MUTE
+            or features & MediaPlayerEntityFeature.VOLUME_STEP
+        ):
             self.chars_speaker.extend(
                 (CHAR_NAME, CHAR_ACTIVE, CHAR_VOLUME_CONTROL_TYPE, CHAR_VOLUME_SELECTOR)
             )
-            if features & SUPPORT_VOLUME_SET:
+            if features & MediaPlayerEntityFeature.VOLUME_SET:
                 self.chars_speaker.append(CHAR_VOLUME)
 
         if CHAR_VOLUME_SELECTOR in self.chars_speaker:
@@ -303,8 +304,7 @@ class TelevisionMediaPlayer(RemoteInputSelectAccessory):
     def set_remote_key(self, value):
         """Send remote key value if call came from HomeKit."""
         _LOGGER.debug("%s: Set remote key to %s", self.entity_id, value)
-        key_name = REMOTE_KEYS.get(value)
-        if key_name is None:
+        if (key_name := REMOTE_KEYS.get(value)) is None:
             _LOGGER.warning("%s: Unhandled key press for %s", self.entity_id, value)
             return
 

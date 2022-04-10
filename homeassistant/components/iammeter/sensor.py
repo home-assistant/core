@@ -1,4 +1,6 @@
 """Support for iammeter via local API."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 import logging
@@ -10,9 +12,12 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import debounce
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -36,13 +41,18 @@ SCAN_INTERVAL = timedelta(seconds=30)
 PLATFORM_TIMEOUT = 8
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Platform setup."""
     config_host = config[CONF_HOST]
     config_port = config[CONF_PORT]
     config_name = config[CONF_NAME]
     try:
-        with async_timeout.timeout(PLATFORM_TIMEOUT):
+        async with async_timeout.timeout(PLATFORM_TIMEOUT):
             api = await real_time_api(config_host, config_port)
     except (IamMeterError, asyncio.TimeoutError) as err:
         _LOGGER.error("Device is not ready")
@@ -50,7 +60,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     async def async_update_data():
         try:
-            with async_timeout.timeout(PLATFORM_TIMEOUT):
+            async with async_timeout.timeout(PLATFORM_TIMEOUT):
                 return await api.get_data()
         except (IamMeterError, asyncio.TimeoutError) as err:
             raise UpdateFailed from err

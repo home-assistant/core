@@ -1,5 +1,6 @@
 {
     "config": {
+        "flow_title": "{ip}",
         "step": {
             "user": {
                 "data": {

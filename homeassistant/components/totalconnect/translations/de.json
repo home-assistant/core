@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Konto wurde bereits konfiguriert",
+            "no_locations": "F\u00fcr diesen Benutzer sind keine Standorte verf\u00fcgbar, \u00fcberpr\u00fcfe die TotalConnect-Einstellungen",
             "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
         },
         "error": {

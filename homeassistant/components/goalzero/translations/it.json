@@ -12,7 +12,7 @@
         },
         "step": {
             "confirm_discovery": {
-                "description": "Si consiglia la prenotazione DHCP sul router. Se non configurato, il dispositivo potrebbe non essere disponibile fino a quando Home Assistant non rileva il nuovo indirizzo IP. Fare riferimento al manuale utente del router.",
+                "description": "Si consiglia la prenotazione DHCP sul router. Se non configurato, il dispositivo potrebbe non essere disponibile fino a quando Home Assistant non rileva il nuovo indirizzo IP. Fai riferimento al manuale utente del router.",
                 "title": "Goal Zero Yeti"
             },
             "user": {

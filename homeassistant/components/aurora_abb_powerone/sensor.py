@@ -1,63 +1,86 @@
-"""Support for Aurora ABB PowerOne Solar Photvoltaic (PV) inverter."""
+"""Support for Aurora ABB PowerOne Solar Photovoltaic (PV) inverter."""
+from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
+from typing import Any
 
 from aurorapy.client import AuroraError, AuroraSerialClient
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
-    STATE_CLASS_MEASUREMENT,
+    SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
 )
-from homeassistant.const import (
-    CONF_ADDRESS,
-    CONF_DEVICE,
-    CONF_NAME,
-    DEVICE_CLASS_POWER,
-    POWER_WATT,
-)
-import homeassistant.helpers.config_validation as cv
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ENERGY_KILO_WATT_HOUR, POWER_WATT, TEMP_CELSIUS
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from .aurora_device import AuroraEntity
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_ADDRESS = 2
-DEFAULT_NAME = "Solar PV"
+SENSOR_TYPES = [
+    SensorEntityDescription(
+        key="instantaneouspower",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=POWER_WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        name="Power Output",
+    ),
+    SensorEntityDescription(
+        key="temp",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=TEMP_CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+        name="Temperature",
+    ),
+    SensorEntityDescription(
+        key="totalenergy",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        name="Total Energy",
+    ),
+]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_DEVICE): cv.string,
-        vol.Optional(CONF_ADDRESS, default=DEFAULT_ADDRESS): cv.positive_int,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
-)
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up aurora_abb_powerone sensor based on a config entry."""
+    entities = []
+
+    client = hass.data[DOMAIN][config_entry.entry_id]
+    data = config_entry.data
+
+    for sens in SENSOR_TYPES:
+        entities.append(AuroraSensor(client, data, sens))
+
+    _LOGGER.debug("async_setup_entry adding %d entities", len(entities))
+    async_add_entities(entities, True)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Aurora ABB PowerOne device."""
-    devices = []
-    comport = config[CONF_DEVICE]
-    address = config[CONF_ADDRESS]
-    name = config[CONF_NAME]
+class AuroraSensor(AuroraEntity, SensorEntity):
+    """Representation of a Sensor on a Aurora ABB PowerOne Solar inverter."""
 
-    _LOGGER.debug("Intitialising com port=%s address=%s", comport, address)
-    client = AuroraSerialClient(address, comport, parity="N", timeout=1)
-
-    devices.append(AuroraABBSolarPVMonitorSensor(client, name, "Power"))
-    add_entities(devices, True)
-
-
-class AuroraABBSolarPVMonitorSensor(SensorEntity):
-    """Representation of a Sensor."""
-
-    _attr_state_class = STATE_CLASS_MEASUREMENT
-    _attr_native_unit_of_measurement = POWER_WATT
-    _attr_device_class = DEVICE_CLASS_POWER
-
-    def __init__(self, client, name, typename):
+    def __init__(
+        self,
+        client: AuroraSerialClient,
+        data: Mapping[str, Any],
+        entity_description: SensorEntityDescription,
+    ) -> None:
         """Initialize the sensor."""
-        self._attr_name = f"{name} {typename}"
-        self.client = client
+        super().__init__(client, data)
+        self.entity_description = entity_description
+        self.available_prev = True
 
     def update(self):
         """Fetch new state data for the sensor.
@@ -65,11 +88,24 @@ class AuroraABBSolarPVMonitorSensor(SensorEntity):
         This is the only method that should fetch new data for Home Assistant.
         """
         try:
+            self.available_prev = self._attr_available
             self.client.connect()
-            # read ADC channel 3 (grid power output)
-            power_watts = self.client.measure(3, True)
-            self._attr_native_value = round(power_watts, 1)
+            if self.entity_description.key == "instantaneouspower":
+                # read ADC channel 3 (grid power output)
+                power_watts = self.client.measure(3, True)
+                self._attr_native_value = round(power_watts, 1)
+            elif self.entity_description.key == "temp":
+                temperature_c = self.client.measure(21)
+                self._attr_native_value = round(temperature_c, 1)
+            elif self.entity_description.key == "totalenergy":
+                energy_wh = self.client.cumulated_energy(5)
+                self._attr_native_value = round(energy_wh / 1000, 2)
+            self._attr_available = True
+
         except AuroraError as error:
+            self._attr_state = None
+            self._attr_native_value = None
+            self._attr_available = False
             # aurorapy does not have different exceptions (yet) for dealing
             # with timeout vs other comms errors.
             # This means the (normal) situation of no response during darkness
@@ -82,7 +118,14 @@ class AuroraABBSolarPVMonitorSensor(SensorEntity):
                 _LOGGER.debug("No response from inverter (could be dark)")
             else:
                 raise error
-            self._attr_native_value = None
         finally:
+            if self._attr_available != self.available_prev:
+                if self._attr_available:
+                    _LOGGER.info("Communication with %s back online", self.name)
+                else:
+                    _LOGGER.warning(
+                        "Communication with %s lost",
+                        self.name,
+                    )
             if self.client.serline.isOpen():
                 self.client.close()

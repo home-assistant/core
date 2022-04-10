@@ -1,136 +1,190 @@
 """Tests for 1-Wire integration."""
 from __future__ import annotations
 
+from types import MappingProxyType
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import MagicMock
 
 from pyownet.protocol import ProtocolError
 
-from homeassistant.components.onewire.const import (
-    CONF_MOUNT_DIR,
-    CONF_NAMES,
-    CONF_TYPE_OWSERVER,
-    CONF_TYPE_SYSBUS,
-    DEFAULT_SYSBUS_MOUNT_DIR,
-    DOMAIN,
+from homeassistant.components.onewire.const import DEFAULT_SYSBUS_MOUNT_DIR
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_NAME,
+    ATTR_STATE,
+    ATTR_VIA_DEVICE,
 )
-from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceRegistry
+from homeassistant.helpers.entity_registry import EntityRegistry, RegistryEntryDisabler
 
-from .const import MOCK_OWPROXY_DEVICES, MOCK_SYSBUS_DEVICES
-
-from tests.common import MockConfigEntry
-
-
-async def setup_onewire_sysbus_integration(hass):
-    """Create the 1-Wire integration."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        source=SOURCE_USER,
-        data={
-            CONF_TYPE: CONF_TYPE_SYSBUS,
-            CONF_MOUNT_DIR: DEFAULT_SYSBUS_MOUNT_DIR,
-            "names": {
-                "10-111111111111": "My DS18B20",
-            },
-        },
-        unique_id=f"{CONF_TYPE_SYSBUS}:{DEFAULT_SYSBUS_MOUNT_DIR}",
-        options={},
-        entry_id="1",
-    )
-    config_entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.onewire.onewirehub.os.path.isdir", return_value=True
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    return config_entry
+from .const import (
+    ATTR_DEFAULT_DISABLED,
+    ATTR_DEVICE_FILE,
+    ATTR_ENTITY_CATEGORY,
+    ATTR_INJECT_READS,
+    ATTR_UNIQUE_ID,
+    FIXED_ATTRIBUTES,
+    MOCK_OWPROXY_DEVICES,
+    MOCK_SYSBUS_DEVICES,
+)
 
 
-async def setup_onewire_owserver_integration(hass):
-    """Create the 1-Wire integration."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        source=SOURCE_USER,
-        data={
-            CONF_TYPE: CONF_TYPE_OWSERVER,
-            CONF_HOST: "1.2.3.4",
-            CONF_PORT: 1234,
-        },
-        options={},
-        entry_id="2",
-    )
-    config_entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.onewire.onewirehub.protocol.proxy",
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-        return config_entry
+def check_and_enable_disabled_entities(
+    entity_registry: EntityRegistry, expected_entities: MappingProxyType
+) -> None:
+    """Ensure that the expected_entities are correctly disabled."""
+    for expected_entity in expected_entities:
+        if expected_entity.get(ATTR_DEFAULT_DISABLED):
+            entity_id = expected_entity[ATTR_ENTITY_ID]
+            registry_entry = entity_registry.entities.get(entity_id)
+            assert registry_entry.disabled
+            assert registry_entry.disabled_by is RegistryEntryDisabler.INTEGRATION
+            entity_registry.async_update_entity(entity_id, **{"disabled_by": None})
 
 
-async def setup_onewire_patched_owserver_integration(hass):
-    """Create the 1-Wire integration."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        source=SOURCE_USER,
-        data={
-            CONF_TYPE: CONF_TYPE_OWSERVER,
-            CONF_HOST: "1.2.3.4",
-            CONF_PORT: 1234,
-            CONF_NAMES: {
-                "10.111111111111": "My DS18B20",
-            },
-        },
-        options={},
-        entry_id="2",
-    )
-    config_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    return config_entry
+def check_device_registry(
+    device_registry: DeviceRegistry, expected_devices: list[MappingProxyType]
+) -> None:
+    """Ensure that the expected_devices are correctly registered."""
+    for expected_device in expected_devices:
+        registry_entry = device_registry.async_get_device(
+            expected_device[ATTR_IDENTIFIERS]
+        )
+        assert registry_entry is not None
+        assert registry_entry.identifiers == expected_device[ATTR_IDENTIFIERS]
+        assert registry_entry.manufacturer == expected_device[ATTR_MANUFACTURER]
+        assert registry_entry.name == expected_device[ATTR_NAME]
+        assert registry_entry.model == expected_device[ATTR_MODEL]
+        if expected_via_device := expected_device.get(ATTR_VIA_DEVICE):
+            assert registry_entry.via_device_id is not None
+            parent_entry = device_registry.async_get_device({expected_via_device})
+            assert parent_entry is not None
+            assert registry_entry.via_device_id == parent_entry.id
+        else:
+            assert registry_entry.via_device_id is None
 
 
-def setup_owproxy_mock_devices(owproxy, domain, device_ids) -> None:
+def check_entities(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    expected_entities: MappingProxyType,
+) -> None:
+    """Ensure that the expected_entities are correct."""
+    for expected_entity in expected_entities:
+        entity_id = expected_entity[ATTR_ENTITY_ID]
+        registry_entry = entity_registry.entities.get(entity_id)
+        assert registry_entry is not None
+        assert registry_entry.entity_category == expected_entity.get(
+            ATTR_ENTITY_CATEGORY
+        )
+        assert registry_entry.unique_id == expected_entity[ATTR_UNIQUE_ID]
+        state = hass.states.get(entity_id)
+        assert state.state == expected_entity[ATTR_STATE]
+        assert state.attributes[ATTR_DEVICE_FILE] == expected_entity.get(
+            ATTR_DEVICE_FILE, registry_entry.unique_id
+        )
+        for attr in FIXED_ATTRIBUTES:
+            assert state.attributes.get(attr) == expected_entity.get(attr)
+
+
+def setup_owproxy_mock_devices(
+    owproxy: MagicMock, platform: str, device_ids: list[str]
+) -> None:
     """Set up mock for owproxy."""
-    dir_return_value = []
+    main_dir_return_value = []
+    sub_dir_side_effect = []
     main_read_side_effect = []
     sub_read_side_effect = []
 
     for device_id in device_ids:
-        mock_device = MOCK_OWPROXY_DEVICES[device_id]
-
-        # Setup directory listing
-        dir_return_value += [f"/{device_id}/"]
-
-        # Setup device reads
-        main_read_side_effect += [device_id[0:2].encode()]
-        if "inject_reads" in mock_device:
-            main_read_side_effect += mock_device["inject_reads"]
-
-        # Setup sub-device reads
-        device_sensors = mock_device.get(domain, [])
-        for expected_sensor in device_sensors:
-            sub_read_side_effect.append(expected_sensor["injected_value"])
+        _setup_owproxy_mock_device(
+            main_dir_return_value,
+            sub_dir_side_effect,
+            main_read_side_effect,
+            sub_read_side_effect,
+            device_id,
+            platform,
+        )
 
     # Ensure enough read side effect
+    dir_side_effect = [main_dir_return_value] + sub_dir_side_effect
     read_side_effect = (
         main_read_side_effect
         + sub_read_side_effect
         + [ProtocolError("Missing injected value")] * 20
     )
-    owproxy.return_value.dir.return_value = dir_return_value
+    owproxy.return_value.dir.side_effect = dir_side_effect
     owproxy.return_value.read.side_effect = read_side_effect
 
 
+def _setup_owproxy_mock_device(
+    main_dir_return_value: list,
+    sub_dir_side_effect: list,
+    main_read_side_effect: list,
+    sub_read_side_effect: list,
+    device_id: str,
+    platform: str,
+) -> None:
+    """Set up mock for owproxy."""
+    mock_device = MOCK_OWPROXY_DEVICES[device_id]
+
+    # Setup directory listing
+    main_dir_return_value += [f"/{device_id}/"]
+    if "branches" in mock_device:
+        # Setup branch directory listing
+        for branch, branch_details in mock_device["branches"].items():
+            sub_dir_side_effect.append(
+                [  # dir on branch
+                    f"/{device_id}/{branch}/{sub_device_id}/"
+                    for sub_device_id in branch_details
+                ]
+            )
+
+    _setup_owproxy_mock_device_reads(
+        main_read_side_effect,
+        sub_read_side_effect,
+        mock_device,
+        device_id,
+        platform,
+    )
+
+    if "branches" in mock_device:
+        for branch_details in mock_device["branches"].values():
+            for sub_device_id, sub_device in branch_details.items():
+                _setup_owproxy_mock_device_reads(
+                    main_read_side_effect,
+                    sub_read_side_effect,
+                    sub_device,
+                    sub_device_id,
+                    platform,
+                )
+
+
+def _setup_owproxy_mock_device_reads(
+    main_read_side_effect: list,
+    sub_read_side_effect: list,
+    mock_device: Any,
+    device_id: str,
+    platform: str,
+) -> None:
+    """Set up mock for owproxy."""
+    # Setup device reads
+    main_read_side_effect += [device_id[0:2].encode()]
+    if ATTR_INJECT_READS in mock_device:
+        main_read_side_effect += mock_device[ATTR_INJECT_READS]
+
+    # Setup sub-device reads
+    device_sensors = mock_device.get(platform, [])
+    for expected_sensor in device_sensors:
+        sub_read_side_effect.append(expected_sensor[ATTR_INJECT_READS])
+
+
 def setup_sysbus_mock_devices(
-    domain: str, device_ids: list[str]
+    platform: str, device_ids: list[str]
 ) -> tuple[list[str], list[Any]]:
     """Set up mock for sysbus."""
     glob_result = []
@@ -143,12 +197,12 @@ def setup_sysbus_mock_devices(
         glob_result += [f"/{DEFAULT_SYSBUS_MOUNT_DIR}/{device_id}"]
 
         # Setup sub-device reads
-        device_sensors = mock_device.get(domain, [])
+        device_sensors = mock_device.get(platform, [])
         for expected_sensor in device_sensors:
-            if isinstance(expected_sensor["injected_value"], list):
-                read_side_effect += expected_sensor["injected_value"]
+            if isinstance(expected_sensor[ATTR_INJECT_READS], list):
+                read_side_effect += expected_sensor[ATTR_INJECT_READS]
             else:
-                read_side_effect.append(expected_sensor["injected_value"])
+                read_side_effect.append(expected_sensor[ATTR_INJECT_READS])
 
     # Ensure enough read side effect
     read_side_effect.extend([FileNotFoundError("Missing injected value")] * 20)

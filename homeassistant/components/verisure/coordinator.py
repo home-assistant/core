@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from http import HTTPStatus
 
 from verisure import (
     Error as VerisureError,
@@ -10,7 +11,7 @@ from verisure import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, HTTP_SERVICE_UNAVAILABLE
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -24,7 +25,7 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the Verisure hub."""
-        self.imageseries = {}
+        self.imageseries: dict[str, list] = {}
         self.entry = entry
 
         self.verisure = Verisure(
@@ -51,14 +52,12 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
 
         return True
 
-    async def async_logout(self, _event: Event) -> bool:
+    async def async_logout(self, _event: Event) -> None:
         """Logout from Verisure."""
         try:
             await self.hass.async_add_executor_job(self.verisure.logout)
         except VerisureError as ex:
             LOGGER.error("Could not log out from verisure, %s", ex)
-            return False
-        return True
 
     async def _async_update_data(self) -> dict:
         """Fetch data from Verisure."""
@@ -68,7 +67,7 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
             )
         except VerisureResponseError as ex:
             LOGGER.error("Could not read overview, %s", ex)
-            if ex.status_code == HTTP_SERVICE_UNAVAILABLE:  # Service unavailable
+            if ex.status_code == HTTPStatus.SERVICE_UNAVAILABLE:
                 LOGGER.info("Trying to log in again")
                 await self.async_login()
                 return {}

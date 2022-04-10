@@ -8,13 +8,17 @@ import gzip
 import json
 import logging
 import os
-from typing import Type, Union
+from typing import Union
 
 from aiohttp.hdrs import USER_AGENT
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.const import (
     AREA_SQUARE_METERS,
     ATTR_ATTRIBUTION,
@@ -23,7 +27,6 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
     DEGREE,
-    DEVICE_CLASS_TEMPERATURE,
     LENGTH_METERS,
     PERCENTAGE,
     PRESSURE_HPA,
@@ -31,7 +34,10 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     __version__,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle, dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -47,7 +53,7 @@ DEFAULT_NAME = "zamg"
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
 VIENNA_TIME_ZONE = dt_util.get_time_zone("Europe/Vienna")
 
-DTypeT = Union[Type[int], Type[float], Type[str]]
+DTypeT = Union[type[int], type[float], type[str]]
 
 
 @dataclass
@@ -124,7 +130,7 @@ SENSOR_TYPES: tuple[ZamgSensorEntityDescription, ...] = (
         key="temperature",
         name="Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         col_heading=f"T {TEMP_CELSIUS}",
         dtype=float,
     ),
@@ -139,7 +145,7 @@ SENSOR_TYPES: tuple[ZamgSensorEntityDescription, ...] = (
         key="dewpoint",
         name="Dew Point",
         native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         col_heading=f"TP {TEMP_CELSIUS}",
         dtype=float,
     ),
@@ -195,7 +201,12 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the ZAMG sensor platform."""
     name = config[CONF_NAME]
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
@@ -210,14 +221,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             CONF_STATION_ID,
             station_id,
         )
-        return False
+        return
 
     probe = ZamgData(station_id=station_id)
     try:
         probe.update()
     except (ValueError, TypeError) as err:
         _LOGGER.error("Received error from ZAMG: %s", err)
-        return False
+        return
 
     monitored_conditions = config[CONF_MONITORED_CONDITIONS]
     add_entities(

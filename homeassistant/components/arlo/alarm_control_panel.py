@@ -1,4 +1,6 @@
 """Support for Arlo Alarm Control Panels."""
+from __future__ import annotations
+
 import logging
 
 import voluptuous as vol
@@ -6,11 +8,7 @@ import voluptuous as vol
 from homeassistant.components.alarm_control_panel import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     AlarmControlPanelEntity,
-)
-from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_HOME,
-    SUPPORT_ALARM_ARM_NIGHT,
+    AlarmControlPanelEntityFeature,
 )
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -20,9 +18,11 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_NIGHT,
     STATE_ALARM_DISARMED,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import ATTRIBUTION, DATA_ARLO, SIGNAL_UPDATE_ARLO
 
@@ -45,7 +45,12 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Arlo Alarm Control Panels."""
     arlo = hass.data[DATA_ARLO]
 
@@ -69,7 +74,9 @@ class ArloBaseStation(AlarmControlPanelEntity):
     """Representation of an Arlo Alarm Control Panel."""
 
     _attr_supported_features = (
-        SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_NIGHT
+        AlarmControlPanelEntityFeature.ARM_HOME
+        | AlarmControlPanelEntityFeature.ARM_AWAY
+        | AlarmControlPanelEntityFeature.ARM_NIGHT
     )
     _attr_icon = ICON
 

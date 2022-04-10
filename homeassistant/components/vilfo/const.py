@@ -3,8 +3,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from homeassistant.components.sensor import SensorEntityDescription
-from homeassistant.const import DEVICE_CLASS_TIMESTAMP, PERCENTAGE
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescription
+from homeassistant.const import PERCENTAGE
 
 DOMAIN = "vilfo"
 
@@ -44,6 +44,6 @@ SENSOR_TYPES: tuple[VilfoSensorEntityDescription, ...] = (
         name="Boot time",
         icon="mdi:timer-outline",
         api_key=ATTR_API_DATA_FIELD_BOOT_TIME,
-        device_class=DEVICE_CLASS_TIMESTAMP,
+        device_class=SensorDeviceClass.TIMESTAMP,
     ),
 )

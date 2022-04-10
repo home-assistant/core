@@ -7,5 +7,3 @@ LOGGER = logging.getLogger(__package__)
 
 CONF_PLACE_ID = "place_id"
 CONF_SERVICE_ID = "service_id"
-
-DATA_COORDINATOR = "coordinator"

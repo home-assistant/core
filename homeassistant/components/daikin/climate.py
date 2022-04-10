@@ -1,9 +1,15 @@
 """Support for the Daikin HVAC."""
+from __future__ import annotations
+
 import logging
 
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
+from homeassistant.components.climate import (
+    PLATFORM_SCHEMA,
+    ClimateEntity,
+    ClimateEntityFeature,
+)
 from homeassistant.components.climate.const import (
     ATTR_FAN_MODE,
     ATTR_HVAC_MODE,
@@ -23,13 +29,13 @@ from homeassistant.components.climate.const import (
     PRESET_BOOST,
     PRESET_ECO,
     PRESET_NONE,
-    SUPPORT_FAN_MODE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_SWING_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, CONF_HOST, CONF_NAME, TEMP_CELSIUS
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN as DAIKIN_DOMAIN
 from .const import (
@@ -90,7 +96,12 @@ HA_ATTR_TO_DAIKIN = {
 DAIKIN_ATTR_ADVANCED = "adv"
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Old way of setting up the Daikin HVAC platform.
 
     Can only be called when a user accidentally mentions the platform in their
@@ -98,7 +109,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up Daikin climate based on config_entry."""
     daikin_api = hass.data[DAIKIN_DOMAIN].get(entry.entry_id)
     async_add_entities([DaikinClimate(daikin_api)], update_before_add=True)
@@ -117,31 +130,29 @@ class DaikinClimate(ClimateEntity):
             ATTR_SWING_MODE: self._api.device.swing_modes,
         }
 
-        self._supported_features = SUPPORT_TARGET_TEMPERATURE
+        self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
 
         if (
             self._api.device.support_away_mode
             or self._api.device.support_advanced_modes
         ):
-            self._supported_features |= SUPPORT_PRESET_MODE
+            self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
 
         if self._api.device.support_fan_rate:
-            self._supported_features |= SUPPORT_FAN_MODE
+            self._attr_supported_features |= ClimateEntityFeature.FAN_MODE
 
         if self._api.device.support_swing_mode:
-            self._supported_features |= SUPPORT_SWING_MODE
+            self._attr_supported_features |= ClimateEntityFeature.SWING_MODE
 
     async def _set(self, settings):
         """Set device settings using API."""
         values = {}
 
         for attr in (ATTR_TEMPERATURE, ATTR_FAN_MODE, ATTR_SWING_MODE, ATTR_HVAC_MODE):
-            value = settings.get(attr)
-            if value is None:
+            if (value := settings.get(attr)) is None:
                 continue
 
-            daikin_attr = HA_ATTR_TO_DAIKIN.get(attr)
-            if daikin_attr is not None:
+            if (daikin_attr := HA_ATTR_TO_DAIKIN.get(attr)) is not None:
                 if attr == ATTR_HVAC_MODE:
                     values[daikin_attr] = HA_STATE_TO_DAIKIN[value]
                 elif value in self._list[attr]:
@@ -152,17 +163,14 @@ class DaikinClimate(ClimateEntity):
             # temperature
             elif attr == ATTR_TEMPERATURE:
                 try:
-                    values[HA_ATTR_TO_DAIKIN[ATTR_TARGET_TEMPERATURE]] = str(int(value))
+                    values[HA_ATTR_TO_DAIKIN[ATTR_TARGET_TEMPERATURE]] = str(
+                        round(float(value), 1)
+                    )
                 except ValueError:
                     _LOGGER.error("Invalid temperature %s", value)
 
         if values:
             await self._api.device.set(values)
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return self._supported_features
 
     @property
     def name(self):

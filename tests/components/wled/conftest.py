@@ -1,13 +1,13 @@
 """Fixtures for WLED integration tests."""
+from collections.abc import Generator
 import json
-from typing import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
 from wled import Device as WLEDDevice
 
 from homeassistant.components.wled.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_MAC
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
@@ -19,7 +19,8 @@ def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_HOST: "192.168.1.123", CONF_MAC: "aabbccddeeff"},
+        data={CONF_HOST: "192.168.1.123"},
+        unique_id="aabbccddeeff",
     )
 
 
@@ -57,6 +58,7 @@ def mock_wled(request: pytest.FixtureRequest) -> Generator[None, MagicMock, None
         wled = wled_mock.return_value
         wled.update.return_value = device
         wled.connected = False
+        wled.host = "127.0.0.1"
         yield wled
 
 

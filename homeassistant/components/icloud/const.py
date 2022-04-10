@@ -1,4 +1,5 @@
 """iCloud component constants."""
+from homeassistant.const import Platform
 
 DOMAIN = "icloud"
 
@@ -14,7 +15,7 @@ DEFAULT_GPS_ACCURACY_THRESHOLD = 500  # meters
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 2
 
-PLATFORMS = ["device_tracker", "sensor"]
+PLATFORMS = [Platform.DEVICE_TRACKER, Platform.SENSOR]
 
 # pyicloud.AppleDevice status
 DEVICE_BATTERY_LEVEL = "batteryLevel"

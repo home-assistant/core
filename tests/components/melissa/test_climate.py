@@ -3,6 +3,9 @@ import json
 from unittest.mock import AsyncMock, Mock, patch
 
 from homeassistant.components.climate.const import (
+    FAN_HIGH,
+    FAN_LOW,
+    FAN_MEDIUM,
     HVAC_MODE_COOL,
     HVAC_MODE_DRY,
     HVAC_MODE_FAN_ONLY,
@@ -11,7 +14,6 @@ from homeassistant.components.climate.const import (
     SUPPORT_FAN_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
-from homeassistant.components.fan import SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM
 from homeassistant.components.melissa import DATA_MELISSA, climate as melissa
 from homeassistant.components.melissa.climate import MelissaClimate
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
@@ -25,13 +27,13 @@ def melissa_mock():
     """Use this to mock the melissa api."""
     api = Mock()
     api.async_fetch_devices = AsyncMock(
-        return_value=json.loads(load_fixture("melissa_fetch_devices.json"))
+        return_value=json.loads(load_fixture("fetch_devices.json", "melissa"))
     )
     api.async_status = AsyncMock(
-        return_value=json.loads(load_fixture("melissa_status.json"))
+        return_value=json.loads(load_fixture("status.json", "melissa"))
     )
     api.async_cur_settings = AsyncMock(
-        return_value=json.loads(load_fixture("melissa_cur_settings.json"))
+        return_value=json.loads(load_fixture("cur_settings.json", "melissa"))
     )
 
     api.async_send = AsyncMock(return_value=True)
@@ -94,7 +96,7 @@ async def test_current_fan_mode(hass):
         device = (await api.async_fetch_devices())[_SERIAL]
         thermostat = MelissaClimate(api, _SERIAL, device)
         await thermostat.async_update()
-        assert thermostat.fan_mode == SPEED_LOW
+        assert thermostat.fan_mode == FAN_LOW
 
         thermostat._cur_settings = None
         assert thermostat.fan_mode is None
@@ -162,7 +164,7 @@ async def test_fan_modes(hass):
         api = melissa_mock()
         device = (await api.async_fetch_devices())[_SERIAL]
         thermostat = MelissaClimate(api, _SERIAL, device)
-        assert ["auto", SPEED_HIGH, SPEED_MEDIUM, SPEED_LOW] == thermostat.fan_modes
+        assert ["auto", FAN_HIGH, FAN_MEDIUM, FAN_LOW] == thermostat.fan_modes
 
 
 async def test_target_temperature(hass):
@@ -247,9 +249,9 @@ async def test_fan_mode(hass):
         thermostat = MelissaClimate(api, _SERIAL, device)
         await thermostat.async_update()
         await hass.async_block_till_done()
-        await thermostat.async_set_fan_mode(SPEED_HIGH)
+        await thermostat.async_set_fan_mode(FAN_HIGH)
         await hass.async_block_till_done()
-        assert thermostat.fan_mode == SPEED_HIGH
+        assert thermostat.fan_mode == FAN_HIGH
 
 
 async def test_set_operation_mode(hass):
@@ -275,12 +277,12 @@ async def test_send(hass):
         await hass.async_block_till_done()
         await thermostat.async_send({"fan": api.FAN_MEDIUM})
         await hass.async_block_till_done()
-        assert thermostat.fan_mode == SPEED_MEDIUM
+        assert thermostat.fan_mode == FAN_MEDIUM
         api.async_send.return_value = AsyncMock(return_value=False)
         thermostat._cur_settings = None
         await thermostat.async_send({"fan": api.FAN_LOW})
         await hass.async_block_till_done()
-        assert SPEED_LOW != thermostat.fan_mode
+        assert FAN_LOW != thermostat.fan_mode
         assert thermostat._cur_settings is None
 
 
@@ -293,7 +295,7 @@ async def test_update(hass):
         device = (await api.async_fetch_devices())[_SERIAL]
         thermostat = MelissaClimate(api, _SERIAL, device)
         await thermostat.async_update()
-        assert thermostat.fan_mode == SPEED_LOW
+        assert thermostat.fan_mode == FAN_LOW
         assert thermostat.state == HVAC_MODE_HEAT
         api.async_status = AsyncMock(side_effect=KeyError("boom"))
         await thermostat.async_update()
@@ -322,9 +324,9 @@ async def test_melissa_fan_to_hass(hass):
         device = (await api.async_fetch_devices())[_SERIAL]
         thermostat = MelissaClimate(api, _SERIAL, device)
         assert thermostat.melissa_fan_to_hass(0) == "auto"
-        assert thermostat.melissa_fan_to_hass(1) == SPEED_LOW
-        assert thermostat.melissa_fan_to_hass(2) == SPEED_MEDIUM
-        assert thermostat.melissa_fan_to_hass(3) == SPEED_HIGH
+        assert thermostat.melissa_fan_to_hass(1) == FAN_LOW
+        assert thermostat.melissa_fan_to_hass(2) == FAN_MEDIUM
+        assert thermostat.melissa_fan_to_hass(3) == FAN_HIGH
         assert thermostat.melissa_fan_to_hass(4) is None
 
 
@@ -355,9 +357,9 @@ async def test_hass_fan_to_melissa(hass):
         device = (await api.async_fetch_devices())[_SERIAL]
         thermostat = MelissaClimate(api, _SERIAL, device)
         assert thermostat.hass_fan_to_melissa("auto") == 0
-        assert thermostat.hass_fan_to_melissa(SPEED_LOW) == 1
-        assert thermostat.hass_fan_to_melissa(SPEED_MEDIUM) == 2
-        assert thermostat.hass_fan_to_melissa(SPEED_HIGH) == 3
+        assert thermostat.hass_fan_to_melissa(FAN_LOW) == 1
+        assert thermostat.hass_fan_to_melissa(FAN_MEDIUM) == 2
+        assert thermostat.hass_fan_to_melissa(FAN_HIGH) == 3
         thermostat.hass_fan_to_melissa("test")
         mocked_warning.assert_called_once_with(
             "Melissa have no setting for %s fan mode", "test"

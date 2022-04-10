@@ -1,11 +1,17 @@
 """Support for ZhongHong HVAC Controller."""
+from __future__ import annotations
+
 import logging
 
 import voluptuous as vol
 from zhong_hong_hvac.hub import ZhongHongGateway
 from zhong_hong_hvac.hvac import HVAC as ZhongHongHVAC
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
+from homeassistant.components.climate import (
+    PLATFORM_SCHEMA,
+    ClimateEntity,
+    ClimateEntityFeature,
+)
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
     HVAC_MODE_COOL,
@@ -13,8 +19,6 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_FAN_ONLY,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
-    SUPPORT_FAN_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
@@ -23,11 +27,14 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     TEMP_CELSIUS,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -71,7 +78,12 @@ MODE_TO_STATE = {
 }
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the ZhongHong HVAC platform."""
 
     host = config.get(CONF_HOST)
@@ -120,6 +132,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class ZhongHongClimate(ClimateEntity):
     """Representation of a ZhongHong controller support HVAC."""
 
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
+    )
+
     def __init__(self, hub, addr_out, addr_in):
         """Set up the ZhongHong climate devices."""
 
@@ -166,11 +182,6 @@ class ZhongHongClimate(ClimateEntity):
     def unique_id(self):
         """Return the unique ID of the HVAC."""
         return f"zhong_hong_hvac_{self._device.addr_out}_{self._device.addr_in}"
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
 
     @property
     def temperature_unit(self):
@@ -239,12 +250,10 @@ class ZhongHongClimate(ClimateEntity):
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
-        if temperature is not None:
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is not None:
             self._device.set_temperature(temperature)
 
-        operation_mode = kwargs.get(ATTR_HVAC_MODE)
-        if operation_mode is not None:
+        if (operation_mode := kwargs.get(ATTR_HVAC_MODE)) is not None:
             self.set_hvac_mode(operation_mode)
 
     def set_hvac_mode(self, hvac_mode):

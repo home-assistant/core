@@ -7,11 +7,25 @@
             "cannot_connect": "\u00dchendus nurjus"
         },
         "step": {
-            "user": {
+            "cloud": {
                 "data": {
                     "password": "Salas\u00f5na",
                     "username": "Kasutajanimi"
                 }
+            },
+            "local": {
+                "data": {
+                    "ip_address": "IP aadress"
+                },
+                "description": "Seadme kohalik IP-aadress."
+            },
+            "user": {
+                "data": {
+                    "connection_type": "Vali \u00fchenduse t\u00fc\u00fcp",
+                    "password": "Salas\u00f5na",
+                    "username": "Kasutajanimi"
+                },
+                "description": "Vali \u00fchenduse t\u00fc\u00fcp. Kohalik vajab 3. p\u00f5lvkonna k\u00fctteseadmeid"
             }
         }
     }

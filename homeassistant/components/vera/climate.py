@@ -6,9 +6,9 @@ from typing import Any
 import pyvera as veraApi
 
 from homeassistant.components.climate import (
-    DOMAIN as PLATFORM_DOMAIN,
     ENTITY_ID_FORMAT,
     ClimateEntity,
+    ClimateEntityFeature,
 )
 from homeassistant.components.climate.const import (
     FAN_AUTO,
@@ -17,21 +17,22 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
-    SUPPORT_FAN_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import convert
 
 from . import VeraDevice
 from .common import ControllerData, get_controller_data
 
 FAN_OPERATION_LIST = [FAN_ON, FAN_AUTO]
 
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
 SUPPORT_HVAC = [HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_HEAT_COOL, HVAC_MODE_OFF]
 
 
@@ -45,7 +46,7 @@ async def async_setup_entry(
     async_add_entities(
         [
             VeraThermostat(device, controller_data)
-            for device in controller_data.devices.get(PLATFORM_DOMAIN)
+            for device in controller_data.devices[Platform.CLIMATE]
         ],
         True,
     )
@@ -54,17 +55,16 @@ async def async_setup_entry(
 class VeraThermostat(VeraDevice[veraApi.VeraThermostat], ClimateEntity):
     """Representation of a Vera Thermostat."""
 
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
+    )
+
     def __init__(
         self, vera_device: veraApi.VeraThermostat, controller_data: ControllerData
     ) -> None:
         """Initialize the Vera device."""
         VeraDevice.__init__(self, vera_device, controller_data)
         self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
-
-    @property
-    def supported_features(self) -> int | None:
-        """Return the list of supported features."""
-        return SUPPORT_FLAGS
 
     @property
     def hvac_mode(self) -> str:
@@ -92,8 +92,7 @@ class VeraThermostat(VeraDevice[veraApi.VeraThermostat], ClimateEntity):
     @property
     def fan_mode(self) -> str | None:
         """Return the fan setting."""
-        mode = self.vera_device.get_fan_mode()
-        if mode == "ContinuousOn":
+        if self.vera_device.get_fan_mode() == "ContinuousOn":
             return FAN_ON
         return FAN_AUTO
 
@@ -110,13 +109,6 @@ class VeraThermostat(VeraDevice[veraApi.VeraThermostat], ClimateEntity):
             self.vera_device.fan_auto()
 
         self.schedule_update_ha_state()
-
-    @property
-    def current_power_w(self) -> float | None:
-        """Return the current power usage in W."""
-        power = self.vera_device.power
-        if power:
-            return convert(power, float, 0.0)
 
     @property
     def temperature_unit(self) -> str:

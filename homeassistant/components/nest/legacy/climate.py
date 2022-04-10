@@ -1,10 +1,16 @@
 """Legacy Works with Nest climate implementation."""
+# mypy: ignore-errors
+
 import logging
 
 from nest.nest import APIError
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
+from homeassistant.components.climate import (
+    PLATFORM_SCHEMA,
+    ClimateEntity,
+    ClimateEntityFeature,
+)
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
@@ -20,10 +26,6 @@ from homeassistant.components.climate.const import (
     PRESET_AWAY,
     PRESET_ECO,
     PRESET_NONE,
-    SUPPORT_FAN_MODE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
@@ -32,6 +34,7 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
 
 from .const import DATA_NEST, DOMAIN, SIGNAL_NEST_UPDATE
 
@@ -99,14 +102,16 @@ class NestThermostat(ClimateEntity):
         self._fan_modes = [FAN_ON, FAN_AUTO]
 
         # Set the default supported features
-        self._support_flags = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
+        self._support_flags = (
+            ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+        )
 
         # Not all nest devices support cooling and heating remove unused
         self._operation_list = []
 
         if self.device.can_heat and self.device.can_cool:
             self._operation_list.append(HVAC_MODE_AUTO)
-            self._support_flags |= SUPPORT_TARGET_TEMPERATURE_RANGE
+            self._support_flags |= ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
 
         # Add supported nest thermostat features
         if self.device.can_heat:
@@ -120,7 +125,7 @@ class NestThermostat(ClimateEntity):
         # feature of device
         self._has_fan = self.device.has_fan
         if self._has_fan:
-            self._support_flags |= SUPPORT_FAN_MODE
+            self._support_flags |= ClimateEntityFeature.FAN_MODE
 
         # data attributes
         self._away = None
@@ -166,15 +171,15 @@ class NestThermostat(ClimateEntity):
         return self.device.serial
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return information about the device."""
-        return {
-            "identifiers": {(DOMAIN, self.device.device_id)},
-            "name": self.device.name_long,
-            "manufacturer": "Nest Labs",
-            "model": "Thermostat",
-            "sw_version": self.device.software_version,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.device.device_id)},
+            manufacturer="Nest Labs",
+            model="Thermostat",
+            name=self.device.name_long,
+            sw_version=self.device.software_version,
+        )
 
     @property
     def name(self):

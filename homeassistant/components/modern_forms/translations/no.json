@@ -19,7 +19,7 @@
                 "description": "Sett opp Modern Forms-fanen din for \u00e5 integrere med Home Assistant."
             },
             "zeroconf_confirm": {
-                "description": "Vil du legge til Modern Forms-viften med navnet {name} i Hjemmeassistent?",
+                "description": "Vil du legge til Modern Forms-viften med navnet {name} i Home Assistant?",
                 "title": "Oppdaget Modern Forms-vifteenhet"
             }
         }

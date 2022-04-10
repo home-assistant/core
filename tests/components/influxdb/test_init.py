@@ -1,6 +1,7 @@
 """The tests for the InfluxDB component."""
 from dataclasses import dataclass
 import datetime
+from http import HTTPStatus
 from unittest.mock import MagicMock, Mock, call, patch
 
 import pytest
@@ -1607,7 +1608,7 @@ async def test_event_listener_attribute_name_conflict(
             BASE_V2_CONFIG,
             _get_write_api_mock_v2,
             influxdb.API_VERSION_2,
-            influxdb.ApiException(),
+            influxdb.ApiException(http_resp=MagicMock()),
         ),
     ],
     indirect=["mock_client", "get_mock_call"],
@@ -1640,14 +1641,16 @@ async def test_connection_failure_on_startup(
             BASE_V1_CONFIG,
             _get_write_api_mock_v1,
             influxdb.DEFAULT_API_VERSION,
-            influxdb.exceptions.InfluxDBClientError("fail", code=400),
+            influxdb.exceptions.InfluxDBClientError(
+                "fail", code=HTTPStatus.BAD_REQUEST
+            ),
         ),
         (
             influxdb.API_VERSION_2,
             BASE_V2_CONFIG,
             _get_write_api_mock_v2,
             influxdb.API_VERSION_2,
-            influxdb.ApiException(status=400),
+            influxdb.ApiException(status=HTTPStatus.BAD_REQUEST, http_resp=MagicMock()),
         ),
     ],
     indirect=["mock_client", "get_mock_call"],

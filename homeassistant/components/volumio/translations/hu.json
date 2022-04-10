@@ -11,7 +11,7 @@
         "step": {
             "discovery_confirm": {
                 "description": "Szeretn\u00e9 hozz\u00e1adni a Volumio (`{name}`)-t a Home Assistanthoz?",
-                "title": "Felfedezett Volumio"
+                "title": "Volumio felfedezve"
             },
             "user": {
                 "data": {

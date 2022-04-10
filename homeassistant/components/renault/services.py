@@ -1,9 +1,9 @@
 """Support for Renault services."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import datetime
 import logging
-from types import MappingProxyType
 from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
@@ -112,13 +112,21 @@ def setup_services(hass: HomeAssistant) -> None:
 
     async def charge_start(service_call: ServiceCall) -> None:
         """Start charge."""
+        # The Renault start charge service has been replaced by a
+        # dedicated button entity and marked as deprecated
+        LOGGER.warning(
+            "The 'renault.charge_start' service is deprecated and "
+            "replaced by a dedicated start charge button entity; please "
+            "use that entity to start the charge instead"
+        )
+
         proxy = get_vehicle_proxy(service_call.data)
 
         LOGGER.debug("Charge start attempt")
         result = await proxy.vehicle.set_charge_start()
         LOGGER.debug("Charge start result: %s", result)
 
-    def get_vehicle_proxy(service_call_data: MappingProxyType) -> RenaultVehicleProxy:
+    def get_vehicle_proxy(service_call_data: Mapping) -> RenaultVehicleProxy:
         """Get vehicle from service_call data."""
         device_registry = dr.async_get(hass)
         device_id = service_call_data[ATTR_VEHICLE]

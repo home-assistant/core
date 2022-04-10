@@ -11,9 +11,11 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
+    CONF_LOCATION,
     CONF_NAME,
     CONF_SSL,
     CONF_VERIFY_SSL,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -28,7 +30,6 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import (
-    CONF_LOCATION,
     CONF_STATISTICS_ONLY,
     DATA_KEY_API,
     DATA_KEY_COORDINATOR,
@@ -102,13 +103,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         session = async_get_clientsession(hass, verify_tls)
         api = Hole(
             host,
-            hass.loop,
             session,
             location=location,
             tls=use_tls,
             api_token=api_key,
         )
         await api.get_data()
+        await api.get_versions()
+
     except HoleError as ex:
         _LOGGER.warning("Failed to connect: %s", ex)
         raise ConfigEntryNotReady from ex
@@ -117,6 +119,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Fetch data from API endpoint."""
         try:
             await api.get_data()
+            await api.get_versions()
         except HoleError as err:
             raise UpdateFailed(f"Failed to communicate with API: {err}") from err
 
@@ -148,13 +151,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 @callback
-def _async_platforms(entry: ConfigEntry) -> list[str]:
+def _async_platforms(entry: ConfigEntry) -> list[Platform]:
     """Return platforms to be loaded / unloaded."""
-    platforms = ["sensor"]
+    platforms = [Platform.BINARY_SENSOR, Platform.UPDATE, Platform.SENSOR]
     if not entry.data[CONF_STATISTICS_ONLY]:
-        platforms.append("switch")
-    else:
-        platforms.append("binary_sensor")
+        platforms.append(Platform.SWITCH)
     return platforms
 
 
@@ -177,8 +178,14 @@ class PiHoleEntity(CoordinatorEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device information of the entity."""
-        return {
-            "identifiers": {(DOMAIN, self._server_unique_id)},
-            "name": self._name,
-            "manufacturer": "Pi-hole",
-        }
+        if self.api.tls:
+            config_url = f"https://{self.api.host}/{self.api.location}"
+        else:
+            config_url = f"http://{self.api.host}/{self.api.location}"
+
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._server_unique_id)},
+            name=self._name,
+            manufacturer="Pi-hole",
+            configuration_url=config_url,
+        )

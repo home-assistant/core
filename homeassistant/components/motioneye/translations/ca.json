@@ -30,6 +30,7 @@
         "step": {
             "init": {
                 "data": {
+                    "stream_url_template": "Plantilla URL de flux de reproducci\u00f3",
                     "webhook_set": "Configura els webhooks de motionEye per enviar esdeveniments a Home Assistant",
                     "webhook_set_overwrite": "Sobreescriu els webhooks no reconeguts"
                 }

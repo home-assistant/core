@@ -42,7 +42,7 @@
             "double": "{subtype} dubbel geklikt",
             "double_push": "{subtype} dubbele druk",
             "long": "{subtype} lang geklikt",
-            "long_push": " {subtype} lange druk",
+            "long_push": "{subtype} lange druk",
             "long_single": "{subtype} lang geklikt en daarna \u00e9\u00e9n keer geklikt",
             "single": "{subtype} enkel geklikt",
             "single_long": "{subtype} een keer geklikt en daarna lang geklikt",

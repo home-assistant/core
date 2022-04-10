@@ -36,6 +36,12 @@
                 },
                 "title": "Synology DSM Znovu ov\u011b\u0159it integraci"
             },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Heslo",
+                    "username": "U\u017eivatelsk\u00e9 jm\u00e9no"
+                }
+            },
             "user": {
                 "data": {
                     "host": "Hostitel",

@@ -6,6 +6,9 @@
             "cannot_connect": "Gagal terhubung"
         },
         "step": {
+            "discovery_confirm": {
+                "description": "Ingin menyiapkan perangkat Guardian ini?"
+            },
             "user": {
                 "data": {
                     "ip_address": "Alamat IP",

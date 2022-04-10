@@ -1,24 +1,25 @@
 """Media player support for Panasonic Viera TV."""
+from __future__ import annotations
+
 import logging
 
 from panasonic_viera import Keys
 
-from homeassistant.components.media_player import DEVICE_CLASS_TV, MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_URL,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_STOP,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
+from homeassistant.components import media_source
+from homeassistant.components.media_player import (
+    MediaPlayerDeviceClass,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
 )
+from homeassistant.components.media_player.browse_media import (
+    async_process_play_media_url,
+)
+from homeassistant.components.media_player.const import MEDIA_TYPE_URL
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     ATTR_DEVICE_INFO,
@@ -31,24 +32,14 @@ from .const import (
     DOMAIN,
 )
 
-SUPPORT_VIERATV = (
-    SUPPORT_PAUSE
-    | SUPPORT_VOLUME_STEP
-    | SUPPORT_VOLUME_SET
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_TURN_OFF
-    | SUPPORT_TURN_ON
-    | SUPPORT_PLAY
-    | SUPPORT_PLAY_MEDIA
-    | SUPPORT_STOP
-)
-
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up Panasonic Viera TV from a config entry."""
 
     config = config_entry.data
@@ -64,6 +55,21 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class PanasonicVieraTVEntity(MediaPlayerEntity):
     """Representation of a Panasonic Viera TV."""
 
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.VOLUME_STEP
+        | MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.PREVIOUS_TRACK
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.PLAY
+        | MediaPlayerEntityFeature.PLAY_MEDIA
+        | MediaPlayerEntityFeature.STOP
+        | MediaPlayerEntityFeature.BROWSE_MEDIA
+    )
+
     def __init__(self, remote, name, device_info):
         """Initialize the entity."""
         self._remote = remote
@@ -78,23 +84,21 @@ class PanasonicVieraTVEntity(MediaPlayerEntity):
         return self._device_info[ATTR_UDN]
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo | None:
         """Return device specific attributes."""
         if self._device_info is None:
             return None
-        return {
-            "name": self._name,
-            "identifiers": {(DOMAIN, self._device_info[ATTR_UDN])},
-            "manufacturer": self._device_info.get(
-                ATTR_MANUFACTURER, DEFAULT_MANUFACTURER
-            ),
-            "model": self._device_info.get(ATTR_MODEL_NUMBER, DEFAULT_MODEL_NUMBER),
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._device_info[ATTR_UDN])},
+            manufacturer=self._device_info.get(ATTR_MANUFACTURER, DEFAULT_MANUFACTURER),
+            model=self._device_info.get(ATTR_MODEL_NUMBER, DEFAULT_MODEL_NUMBER),
+            name=self._name,
+        )
 
     @property
     def device_class(self):
         """Return the device class of the device."""
-        return DEVICE_CLASS_TV
+        return MediaPlayerDeviceClass.TV
 
     @property
     def name(self):
@@ -120,11 +124,6 @@ class PanasonicVieraTVEntity(MediaPlayerEntity):
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
         return self._remote.muted
-
-    @property
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        return SUPPORT_VIERATV
 
     async def async_update(self):
         """Retrieve the latest data."""
@@ -187,8 +186,18 @@ class PanasonicVieraTVEntity(MediaPlayerEntity):
 
     async def async_play_media(self, media_type, media_id, **kwargs):
         """Play media."""
+        if media_source.is_media_source_id(media_id):
+            media_type = MEDIA_TYPE_URL
+            play_item = await media_source.async_resolve_media(self.hass, media_id)
+            media_id = play_item.url
+
         if media_type != MEDIA_TYPE_URL:
             _LOGGER.warning("Unsupported media_type: %s", media_type)
             return
 
+        media_id = async_process_play_media_url(self.hass, media_id)
         await self._remote.async_play_media(media_type, media_id)
+
+    async def async_browse_media(self, media_content_type=None, media_content_id=None):
+        """Implement the websocket media browsing helper."""
+        return await media_source.async_browse_media(self.hass, media_content_id)

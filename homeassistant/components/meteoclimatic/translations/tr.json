@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "unknown": "Beklenmeyen hata"
+        },
+        "error": {
+            "not_found": "A\u011fda cihaz bulunamad\u0131"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "code": "\u0130stasyon kodu"
+                },
+                "description": "Meteoclimatic istasyon kodunu girin (\u00f6rne\u011fin, ESCAT4300000043206B)",
+                "title": "Meteoclimatic"
+            }
+        }
+    }
+}

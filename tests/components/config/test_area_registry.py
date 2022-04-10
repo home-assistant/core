@@ -22,13 +22,17 @@ def registry(hass):
 async def test_list_areas(hass, client, registry):
     """Test list entries."""
     registry.async_create("mock 1")
-    registry.async_create("mock 2")
+    registry.async_create("mock 2", "/image/example.png")
 
     await client.send_json({"id": 1, "type": "config/area_registry/list"})
 
     msg = await client.receive_json()
 
     assert len(msg["result"]) == len(registry.areas)
+    assert msg["result"][0]["name"] == "mock 1"
+    assert msg["result"][0]["picture"] is None
+    assert msg["result"][1]["name"] == "mock 2"
+    assert msg["result"][1]["picture"] == "/image/example.png"
 
 
 async def test_create_area(hass, client, registry):
@@ -98,6 +102,7 @@ async def test_update_area(hass, client, registry):
             "id": 1,
             "area_id": area.id,
             "name": "mock 2",
+            "picture": "/image/example.png",
             "type": "config/area_registry/update",
         }
     )
@@ -106,6 +111,23 @@ async def test_update_area(hass, client, registry):
 
     assert msg["result"]["area_id"] == area.id
     assert msg["result"]["name"] == "mock 2"
+    assert msg["result"]["picture"] == "/image/example.png"
+    assert len(registry.areas) == 1
+
+    await client.send_json(
+        {
+            "id": 2,
+            "area_id": area.id,
+            "picture": None,
+            "type": "config/area_registry/update",
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert msg["result"]["area_id"] == area.id
+    assert msg["result"]["name"] == "mock 2"
+    assert msg["result"]["picture"] is None
     assert len(registry.areas) == 1
 
 

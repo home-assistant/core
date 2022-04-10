@@ -10,7 +10,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
 from . import commands, connection, const, decorators, http, messages  # noqa: F401
-from .connection import ActiveConnection  # noqa: F401
+from .connection import ActiveConnection, current_connection  # noqa: F401
 from .const import (  # noqa: F401
     ERR_HOME_ASSISTANT_ERROR,
     ERR_INVALID_FORMAT,
@@ -58,8 +58,7 @@ def async_register_command(
         schema = handler._ws_schema  # type: ignore[attr-defined]
     else:
         command = command_or_handler
-    handlers = hass.data.get(DOMAIN)
-    if handlers is None:
+    if (handlers := hass.data.get(DOMAIN)) is None:
         handlers = hass.data[DOMAIN] = {}
     handlers[command] = (handler, schema)
 

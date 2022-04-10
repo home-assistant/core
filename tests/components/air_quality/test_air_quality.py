@@ -1,11 +1,7 @@
 """The tests for the Air Quality component."""
-from homeassistant.components.air_quality import (
-    ATTR_ATTRIBUTION,
-    ATTR_N2O,
-    ATTR_OZONE,
-    ATTR_PM_10,
-)
+from homeassistant.components.air_quality import ATTR_N2O, ATTR_OZONE, ATTR_PM_10
 from homeassistant.const import (
+    ATTR_ATTRIBUTION,
     ATTR_UNIT_OF_MEASUREMENT,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
 )

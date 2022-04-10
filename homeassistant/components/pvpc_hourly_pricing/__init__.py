@@ -1,12 +1,15 @@
 """The pvpc_hourly_pricing integration to collect Spain official electric prices."""
+from collections.abc import Mapping
+from datetime import datetime, timedelta
 import logging
 
-from aiopvpc import DEFAULT_POWER_KW, TARIFFS
+from aiopvpc import DEFAULT_POWER_KW, TARIFFS, PVPCData
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_registry import (
     EntityRegistry,
@@ -14,6 +17,8 @@ from homeassistant.helpers.entity_registry import (
     async_migrate_entries,
 )
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .const import (
     ATTR_POWER,
@@ -99,6 +104,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             await hass.config_entries.async_remove(entry.entry_id)
             return False
 
+    coordinator = ElecPricesDataUpdateCoordinator(hass, entry)
+    await coordinator.async_config_entry_first_refresh()
+
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(async_update_options))
     return True
@@ -119,4 +128,39 @@ async def async_update_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        hass.data[DOMAIN].pop(entry.entry_id)
+    return unload_ok
+
+
+class ElecPricesDataUpdateCoordinator(DataUpdateCoordinator[Mapping[datetime, float]]):
+    """Class to manage fetching Electricity prices data from API."""
+
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+        """Initialize."""
+        self.api = PVPCData(
+            session=async_get_clientsession(hass),
+            tariff=entry.data[ATTR_TARIFF],
+            local_timezone=hass.config.time_zone,
+            power=entry.data[ATTR_POWER],
+            power_valley=entry.data[ATTR_POWER_P3],
+        )
+        super().__init__(
+            hass, _LOGGER, name=DOMAIN, update_interval=timedelta(minutes=30)
+        )
+        self._entry = entry
+
+    @property
+    def entry_id(self) -> str:
+        """Return entry ID."""
+        return self._entry.entry_id
+
+    async def _async_update_data(self) -> Mapping[datetime, float]:
+        """Update electricity prices from the ESIOS API."""
+        prices = await self.api.async_update_prices(dt_util.utcnow())
+        self.api.process_state_and_attributes(dt_util.utcnow())
+        if not prices:
+            raise UpdateFailed
+
+        return prices

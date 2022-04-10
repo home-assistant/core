@@ -8,14 +8,17 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
-from homeassistant.const import CONF_IP_ADDRESS
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_IP_ADDRESS, Platform
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [CLIMATE_DOMAIN]
+PLATFORMS = [Platform.CLIMATE]
 
 
 def coerce_ip(value):
@@ -45,7 +48,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Hisense AEH-W4A1 integration."""
     conf = config.get(DOMAIN)
     hass.data[DOMAIN] = {}
@@ -70,12 +73,12 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry for Hisense AEH-W4A1."""
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

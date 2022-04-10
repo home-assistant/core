@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from notifications_android_tv.notifications import ConnectError, Notifications
 import voluptuous as vol
@@ -18,7 +19,9 @@ _LOGGER = logging.getLogger(__name__)
 class NFAndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for NFAndroidTV."""
 
-    async def async_step_user(self, user_input=None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
 
@@ -50,7 +53,7 @@ class NFAndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, import_config):
+    async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
         """Import a config entry from configuration.yaml."""
         for entry in self._async_current_entries():
             if entry.data[CONF_HOST] == import_config[CONF_HOST]:
@@ -63,7 +66,7 @@ class NFAndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user(import_config)
 
-    async def _async_try_connect(self, host):
+    async def _async_try_connect(self, host: str) -> str | None:
         """Try connecting to Android TV / Fire TV."""
         try:
             await self.hass.async_add_executor_job(Notifications, host)
@@ -73,4 +76,4 @@ class NFAndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             return "unknown"
-        return
+        return None

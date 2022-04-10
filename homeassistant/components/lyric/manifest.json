@@ -3,8 +3,8 @@
   "name": "Honeywell Lyric",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/lyric",
-  "dependencies": ["http"],
-  "requirements": ["aiolyric==1.0.7"],
+  "dependencies": ["auth"],
+  "requirements": ["aiolyric==1.0.8"],
   "codeowners": ["@timmo001"],
   "quality_scale": "silver",
   "dhcp": [
@@ -21,5 +21,6 @@
       "macaddress": "00D02D*"
     }
   ],
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "loggers": ["aiolyric"]
 }

@@ -12,9 +12,13 @@ from aiohttp import web
 from sqlalchemy import not_, or_
 import voluptuous as vol
 
-from homeassistant.components import websocket_api
+from homeassistant.components import frontend, websocket_api
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.recorder import history, models as history_models
+from homeassistant.components.recorder import (
+    get_instance,
+    history,
+    models as history_models,
+)
 from homeassistant.components.recorder.statistics import (
     list_statistic_ids,
     statistics_during_period,
@@ -28,6 +32,7 @@ from homeassistant.helpers.entityfilter import (
     CONF_ENTITY_GLOBS,
     INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
 )
+from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
@@ -88,7 +93,7 @@ def get_state(hass, utc_point_in_time, entity_id, run=None):
     return history.get_state(hass, utc_point_in_time, entity_id, run=None)
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the history hooks."""
     conf = config.get(DOMAIN, {})
 
@@ -97,13 +102,9 @@ async def async_setup(hass, config):
     use_include_order = conf.get(CONF_ORDER)
 
     hass.http.register_view(HistoryPeriodView(filters, use_include_order))
-    hass.components.frontend.async_register_built_in_panel(
-        "history", "history", "hass:chart-box"
-    )
-    hass.components.websocket_api.async_register_command(
-        ws_get_statistics_during_period
-    )
-    hass.components.websocket_api.async_register_command(ws_get_list_statistic_ids)
+    frontend.async_register_built_in_panel(hass, "history", "history", "hass:chart-box")
+    websocket_api.async_register_command(hass, ws_get_statistics_during_period)
+    websocket_api.async_register_command(hass, ws_get_list_statistic_ids)
 
     return True
 
@@ -119,7 +120,7 @@ class LazyState(history_models.LazyState):
         vol.Required("start_time"): str,
         vol.Optional("end_time"): str,
         vol.Optional("statistic_ids"): [str],
-        vol.Required("period"): vol.Any("hour", "5minute"),
+        vol.Required("period"): vol.Any("5minute", "hour", "day", "month"),
     }
 )
 @websocket_api.async_response
@@ -130,16 +131,14 @@ async def ws_get_statistics_during_period(
     start_time_str = msg["start_time"]
     end_time_str = msg.get("end_time")
 
-    start_time = dt_util.parse_datetime(start_time_str)
-    if start_time:
+    if start_time := dt_util.parse_datetime(start_time_str):
         start_time = dt_util.as_utc(start_time)
     else:
         connection.send_error(msg["id"], "invalid_start_time", "Invalid start_time")
         return
 
     if end_time_str:
-        end_time = dt_util.parse_datetime(end_time_str)
-        if end_time:
+        if end_time := dt_util.parse_datetime(end_time_str):
             end_time = dt_util.as_utc(end_time)
         else:
             connection.send_error(msg["id"], "invalid_end_time", "Invalid end_time")
@@ -147,7 +146,7 @@ async def ws_get_statistics_during_period(
     else:
         end_time = None
 
-    statistics = await hass.async_add_executor_job(
+    statistics = await get_instance(hass).async_add_executor_job(
         statistics_during_period,
         hass,
         start_time,
@@ -169,9 +168,10 @@ async def ws_get_list_statistic_ids(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """Fetch a list of available statistic_id."""
-    statistic_ids = await hass.async_add_executor_job(
+    statistic_ids = await get_instance(hass).async_add_executor_job(
         list_statistic_ids,
         hass,
+        None,
         msg.get("statistic_type"),
     )
     connection.send_result(msg["id"], statistic_ids)
@@ -184,7 +184,7 @@ class HistoryPeriodView(HomeAssistantView):
     name = "api:history:view-period"
     extra_urls = ["/api/history/period/{datetime}"]
 
-    def __init__(self, filters, use_include_order):
+    def __init__(self, filters: Filters | None, use_include_order: bool) -> None:
         """Initialize the history period view."""
         self.filters = filters
         self.use_include_order = use_include_order
@@ -194,11 +194,8 @@ class HistoryPeriodView(HomeAssistantView):
     ) -> web.Response:
         """Return history over a period of time."""
         datetime_ = None
-        if datetime:
-            datetime_ = dt_util.parse_datetime(datetime)
-
-            if datetime_ is None:
-                return self.json_message("Invalid datetime", HTTPStatus.BAD_REQUEST)
+        if datetime and (datetime_ := dt_util.parse_datetime(datetime)) is None:
+            return self.json_message("Invalid datetime", HTTPStatus.BAD_REQUEST)
 
         now = dt_util.utcnow()
 
@@ -211,10 +208,8 @@ class HistoryPeriodView(HomeAssistantView):
         if start_time > now:
             return self.json([])
 
-        end_time_str = request.query.get("end_time")
-        if end_time_str:
-            end_time = dt_util.parse_datetime(end_time_str)
-            if end_time:
+        if end_time_str := request.query.get("end_time"):
+            if end_time := dt_util.parse_datetime(end_time_str):
                 end_time = dt_util.as_utc(end_time)
             else:
                 return self.json_message("Invalid end_time", HTTPStatus.BAD_REQUEST)
@@ -230,6 +225,7 @@ class HistoryPeriodView(HomeAssistantView):
         )
 
         minimal_response = "minimal_response" in request.query
+        no_attributes = "no_attributes" in request.query
 
         hass = request.app["hass"]
 
@@ -242,7 +238,7 @@ class HistoryPeriodView(HomeAssistantView):
 
         return cast(
             web.Response,
-            await hass.async_add_executor_job(
+            await get_instance(hass).async_add_executor_job(
                 self._sorted_significant_states_json,
                 hass,
                 start_time,
@@ -251,6 +247,7 @@ class HistoryPeriodView(HomeAssistantView):
                 include_start_time_state,
                 significant_changes_only,
                 minimal_response,
+                no_attributes,
             ),
         )
 
@@ -263,6 +260,7 @@ class HistoryPeriodView(HomeAssistantView):
         include_start_time_state,
         significant_changes_only,
         minimal_response,
+        no_attributes,
     ):
         """Fetch significant stats from the database as json."""
         timer_start = time.perf_counter()
@@ -278,6 +276,7 @@ class HistoryPeriodView(HomeAssistantView):
                 include_start_time_state,
                 significant_changes_only,
                 minimal_response,
+                no_attributes,
             )
 
         result = list(result.values())
@@ -301,16 +300,14 @@ class HistoryPeriodView(HomeAssistantView):
         return self.json(result)
 
 
-def sqlalchemy_filter_from_include_exclude_conf(conf):
+def sqlalchemy_filter_from_include_exclude_conf(conf: ConfigType) -> Filters | None:
     """Build a sql filter from config."""
     filters = Filters()
-    exclude = conf.get(CONF_EXCLUDE)
-    if exclude:
+    if exclude := conf.get(CONF_EXCLUDE):
         filters.excluded_entities = exclude.get(CONF_ENTITIES, [])
         filters.excluded_domains = exclude.get(CONF_DOMAINS, [])
         filters.excluded_entity_globs = exclude.get(CONF_ENTITY_GLOBS, [])
-    include = conf.get(CONF_INCLUDE)
-    if include:
+    if include := conf.get(CONF_INCLUDE):
         filters.included_entities = include.get(CONF_ENTITIES, [])
         filters.included_domains = include.get(CONF_DOMAINS, [])
         filters.included_entity_globs = include.get(CONF_ENTITY_GLOBS, [])
@@ -321,15 +318,15 @@ def sqlalchemy_filter_from_include_exclude_conf(conf):
 class Filters:
     """Container for the configured include and exclude filters."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialise the include and exclude filters."""
-        self.excluded_entities = []
-        self.excluded_domains = []
-        self.excluded_entity_globs = []
+        self.excluded_entities: list[str] = []
+        self.excluded_domains: list[str] = []
+        self.excluded_entity_globs: list[str] = []
 
-        self.included_entities = []
-        self.included_domains = []
-        self.included_entity_globs = []
+        self.included_entities: list[str] = []
+        self.included_domains: list[str] = []
+        self.included_entity_globs: list[str] = []
 
     def apply(self, query):
         """Apply the entity filter."""
@@ -367,7 +364,14 @@ class Filters:
         """Generate the entity filter query."""
         includes = []
         if self.included_domains:
-            includes.append(history_models.States.domain.in_(self.included_domains))
+            includes.append(
+                or_(
+                    *[
+                        history_models.States.entity_id.like(f"{domain}.%")
+                        for domain in self.included_domains
+                    ]
+                ).self_group()
+            )
         if self.included_entities:
             includes.append(history_models.States.entity_id.in_(self.included_entities))
         for glob in self.included_entity_globs:
@@ -375,7 +379,14 @@ class Filters:
 
         excludes = []
         if self.excluded_domains:
-            excludes.append(history_models.States.domain.in_(self.excluded_domains))
+            excludes.append(
+                or_(
+                    *[
+                        history_models.States.entity_id.like(f"{domain}.%")
+                        for domain in self.excluded_domains
+                    ]
+                ).self_group()
+            )
         if self.excluded_entities:
             excludes.append(history_models.States.entity_id.in_(self.excluded_entities))
         for glob in self.excluded_entity_globs:

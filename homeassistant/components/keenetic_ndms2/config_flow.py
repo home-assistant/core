@@ -20,7 +20,6 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     CONF_CONSIDER_HOME,
@@ -98,26 +97,21 @@ class KeeneticFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(
-        self, user_input: ConfigType | None = None
-    ) -> FlowResult:
-        """Import a config entry."""
-        return await self.async_step_user(user_input)
-
-    async def async_step_ssdp(self, discovery_info: DiscoveryInfoType) -> FlowResult:
+    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
         """Handle a discovered device."""
-        friendly_name = discovery_info.get(ssdp.ATTR_UPNP_FRIENDLY_NAME, "")
+        friendly_name = discovery_info.upnp.get(ssdp.ATTR_UPNP_FRIENDLY_NAME, "")
 
         # Filter out items not having "keenetic" in their name
         if "keenetic" not in friendly_name.lower():
             return self.async_abort(reason="not_keenetic_ndms2")
 
         # Filters out items having no/empty UDN
-        if not discovery_info.get(ssdp.ATTR_UPNP_UDN):
+        if not discovery_info.upnp.get(ssdp.ATTR_UPNP_UDN):
             return self.async_abort(reason="no_udn")
 
-        host = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION]).hostname
-        await self.async_set_unique_id(discovery_info[ssdp.ATTR_UPNP_UDN])
+        host = urlparse(discovery_info.ssdp_location).hostname
+        await self.async_set_unique_id(discovery_info.upnp[ssdp.ATTR_UPNP_UDN])
+        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 
         self._async_abort_entries_match({CONF_HOST: host})
 
@@ -136,7 +130,7 @@ class KeeneticOptionsFlowHandler(config_entries.OptionsFlow):
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
-        self._interface_options = {}
+        self._interface_options: dict[str, str] = {}
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None

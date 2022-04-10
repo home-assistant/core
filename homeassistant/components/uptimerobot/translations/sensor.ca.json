@@ -1,0 +1,11 @@
+{
+    "state": {
+        "uptimerobot__monitor_status": {
+            "down": "Caigut",
+            "not_checked_yet": "No comprovat",
+            "pause": "En pausa",
+            "seems_down": "Sembla caigut",
+            "up": "Funcionant"
+        }
+    }
+}

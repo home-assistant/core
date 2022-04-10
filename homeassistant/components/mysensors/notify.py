@@ -4,7 +4,8 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components import mysensors
-from homeassistant.components.notify import ATTR_TARGET, DOMAIN, BaseNotificationService
+from homeassistant.components.notify import ATTR_TARGET, BaseNotificationService
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .const import DevId, DiscoveryInfo
@@ -20,7 +21,7 @@ async def async_get_service(
         return None
 
     new_devices = mysensors.setup_mysensors_platform(
-        hass, DOMAIN, discovery_info, MySensorsNotificationDevice
+        hass, Platform.NOTIFY, discovery_info, MySensorsNotificationDevice
     )
     if not new_devices:
         return None
@@ -51,7 +52,7 @@ class MySensorsNotificationService(BaseNotificationService):
         self.devices: dict[
             DevId, MySensorsNotificationDevice
         ] = mysensors.get_mysensors_devices(
-            hass, DOMAIN
+            hass, Platform.NOTIFY
         )  # type: ignore[assignment]
 
     async def async_send_message(self, message: str = "", **kwargs: Any) -> None:

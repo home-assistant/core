@@ -7,8 +7,9 @@ import async_timeout
 from bleak import BleakScanner
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
-from fjaraskupan import device_filter
+from fjaraskupan import UUID_SERVICE, device_filter
 
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_entry_flow import register_discovery_flow
 
 from .const import DOMAIN
@@ -16,7 +17,7 @@ from .const import DOMAIN
 CONST_WAIT_TIME = 5.0
 
 
-async def _async_has_devices(hass) -> bool:
+async def _async_has_devices(hass: HomeAssistant) -> bool:
     """Return if there are devices that can be discovered."""
 
     event = asyncio.Event()
@@ -25,7 +26,9 @@ async def _async_has_devices(hass) -> bool:
         if device_filter(device, advertisement_data):
             event.set()
 
-    async with BleakScanner(detection_callback=detection):
+    async with BleakScanner(
+        detection_callback=detection, filters={"UUIDs": [str(UUID_SERVICE)]}
+    ):
         try:
             async with async_timeout.timeout(CONST_WAIT_TIME):
                 await event.wait()

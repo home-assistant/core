@@ -1,22 +1,22 @@
 """Support for Sure PetCare Flaps/Pets sensors."""
 from __future__ import annotations
 
-import logging
+from typing import cast
 
 from surepy.entities import SurepyEntity
+from surepy.entities.devices import Felaqua as SurepyFelaqua
 from surepy.enums import EntityType
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_VOLTAGE, DEVICE_CLASS_BATTERY, PERCENTAGE
+from homeassistant.const import ATTR_VOLTAGE, PERCENTAGE, VOLUME_MILLILITERS
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import SurePetcareDataCoordinator
 from .const import DOMAIN, SURE_BATT_VOLTAGE_DIFF, SURE_BATT_VOLTAGE_LOW
 from .entity import SurePetcareEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -24,7 +24,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Sure PetCare Flaps sensors."""
 
-    entities: list[SureBattery] = []
+    entities: list[SurePetcareEntity] = []
 
     coordinator: SurePetcareDataCoordinator = hass.data[DOMAIN][entry.entry_id]
 
@@ -38,13 +38,17 @@ async def async_setup_entry(
         ]:
             entities.append(SureBattery(surepy_entity.id, coordinator))
 
+        if surepy_entity.type == EntityType.FELAQUA:
+            entities.append(Felaqua(surepy_entity.id, coordinator))
+
     async_add_entities(entities)
 
 
 class SureBattery(SurePetcareEntity, SensorEntity):
-    """A sensor implementation for Sure Petcare Entities."""
+    """A sensor implementation for Sure Petcare batteries."""
 
-    _attr_device_class = DEVICE_CLASS_BATTERY
+    _attr_device_class = SensorDeviceClass.BATTERY
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_native_unit_of_measurement = PERCENTAGE
 
     def __init__(
@@ -78,3 +82,27 @@ class SureBattery(SurePetcareEntity, SensorEntity):
             }
         else:
             self._attr_extra_state_attributes = {}
+
+
+class Felaqua(SurePetcareEntity, SensorEntity):
+    """Sure Petcare Felaqua."""
+
+    _attr_native_unit_of_measurement = VOLUME_MILLILITERS
+
+    def __init__(
+        self, surepetcare_id: int, coordinator: SurePetcareDataCoordinator
+    ) -> None:
+        """Initialize a Sure Petcare Felaqua sensor."""
+        super().__init__(surepetcare_id, coordinator)
+
+        surepy_entity: SurepyFelaqua = coordinator.data[surepetcare_id]
+
+        self._attr_name = self._device_name
+        self._attr_unique_id = self._device_id
+        self._attr_entity_picture = surepy_entity.icon
+
+    @callback
+    def _update_attr(self, surepy_entity: SurepyEntity) -> None:
+        """Update the state."""
+        surepy_entity = cast(SurepyFelaqua, surepy_entity)
+        self._attr_native_value = surepy_entity.water_remaining

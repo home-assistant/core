@@ -1,0 +1,20 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "domain": "Domain name"
+        }
+      }
+    },
+    "error": {
+      "unexpected_response": "Unexpected response from whois server",
+      "unknown_date_format": "Unknown date format in whois server response",
+      "unknown_tld": "The given TLD is unknown or not available to this integration",
+      "whois_command_failed": "Whois command failed: could not retrieve whois information"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    }
+  }
+}

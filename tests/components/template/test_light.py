@@ -685,6 +685,7 @@ async def test_level_action_no_template(hass, start_ha, calls):
         (None, {"replace4": '"{{x - 12}}"'}),
         (None, {"replace4": '"{{ none }}"'}),
         (None, {"replace4": '""'}),
+        (None, {"replace4": "\"{{ state_attr('light.nolight', 'brightness') }}\""}),
     ],
 )
 @pytest.mark.parametrize(

@@ -1,12 +1,15 @@
 """Definition of Picnic sensors."""
 from __future__ import annotations
 
-from typing import Any
+from datetime import datetime
+from typing import Any, cast
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -24,8 +27,10 @@ from .const import (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
-):
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up Picnic sensor entries."""
     picnic_coordinator = hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
 
@@ -35,14 +40,12 @@ async def async_setup_entry(
         for description in SENSOR_TYPES
     )
 
-    return True
-
 
 class PicnicSensor(SensorEntity, CoordinatorEntity):
     """The CoordinatorEntity subclass representing Picnic sensors."""
 
+    _attr_attribution = ATTRIBUTION
     entity_description: PicnicSensorEntityDescription
-    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     def __init__(
         self,
@@ -61,8 +64,8 @@ class PicnicSensor(SensorEntity, CoordinatorEntity):
         self._attr_unique_id = f"{config_entry.unique_id}.{description.key}"
 
     @property
-    def native_value(self) -> StateType:
-        """Return the state of the entity."""
+    def native_value(self) -> StateType | datetime:
+        """Return the value reported by the sensor."""
         data_set = (
             self.coordinator.data.get(self.entity_description.data_type, {})
             if self.coordinator.data is not None
@@ -72,19 +75,19 @@ class PicnicSensor(SensorEntity, CoordinatorEntity):
 
     @property
     def available(self) -> bool:
-        """Return True if entity is available."""
-        return self.coordinator.last_update_success and self.state is not None
+        """Return True if last update was successful."""
+        return self.coordinator.last_update_success
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device info."""
-        return {
-            "identifiers": {(DOMAIN, self._service_unique_id)},
-            "manufacturer": "Picnic",
-            "model": self._service_unique_id,
-            "name": f"Picnic: {self.coordinator.data[ADDRESS]}",
-            "entry_type": "service",
-        }
+        return DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, cast(str, self._service_unique_id))},
+            manufacturer="Picnic",
+            model=self._service_unique_id,
+            name=f"Picnic: {self.coordinator.data[ADDRESS]}",
+        )
 
     @staticmethod
     def _to_capitalized_name(name: str) -> str:

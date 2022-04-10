@@ -1,9 +1,11 @@
 """The tests for the Mikrotik device tracker platform."""
 from datetime import timedelta
 
+import pytest
+
 from homeassistant.components import mikrotik
 import homeassistant.components.device_tracker as device_tracker
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -13,6 +15,25 @@ from .test_hub import setup_mikrotik_entry
 from tests.common import MockConfigEntry, patch
 
 DEFAULT_DETECTION_TIME = timedelta(seconds=300)
+
+
+@pytest.fixture
+def mock_device_registry_devices(hass):
+    """Create device registry devices so the device tracker entities are enabled."""
+    dev_reg = dr.async_get(hass)
+    config_entry = MockConfigEntry(domain="something_else")
+
+    for idx, device in enumerate(
+        (
+            "00:00:00:00:00:01",
+            "00:00:00:00:00:02",
+        )
+    ):
+        dev_reg.async_get_or_create(
+            name=f"Device {idx}",
+            config_entry_id=config_entry.entry_id,
+            connections={(dr.CONNECTION_NETWORK_MAC, device)},
+        )
 
 
 def mock_command(self, cmd, params=None):
@@ -39,7 +60,7 @@ async def test_platform_manually_configured(hass):
     assert mikrotik.DOMAIN not in hass.data
 
 
-async def test_device_trackers(hass, legacy_patchable_time):
+async def test_device_trackers(hass, mock_device_registry_devices):
     """Test device_trackers created by mikrotik."""
 
     # test devices are added from wireless list only

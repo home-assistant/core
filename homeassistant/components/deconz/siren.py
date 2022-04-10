@@ -1,31 +1,41 @@
 """Support for deCONZ siren."""
+from __future__ import annotations
+
+from typing import Any
 
 from pydeconz.light import Siren
 
 from homeassistant.components.siren import (
     ATTR_DURATION,
     DOMAIN,
-    SUPPORT_DURATION,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
     SirenEntity,
+    SirenEntityFeature,
 )
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .deconz_device import DeconzDevice
 from .gateway import get_gateway_from_config_entry
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up sirens for deCONZ component."""
     gateway = get_gateway_from_config_entry(hass, config_entry)
     gateway.entities[DOMAIN] = set()
 
     @callback
-    def async_add_siren(lights=gateway.api.lights.values()):
+    def async_add_siren(lights: list[Siren] | None = None) -> None:
         """Add siren from deCONZ."""
         entities = []
+
+        if lights is None:
+            lights = list(gateway.api.lights.sirens.values())
 
         for light in lights:
 
@@ -53,27 +63,25 @@ class DeconzSiren(DeconzDevice, SirenEntity):
     """Representation of a deCONZ siren."""
 
     TYPE = DOMAIN
-
-    def __init__(self, device, gateway) -> None:
-        """Set up siren."""
-        super().__init__(device, gateway)
-
-        self._attr_supported_features = (
-            SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_DURATION
-        )
+    _attr_supported_features = (
+        SirenEntityFeature.TURN_ON
+        | SirenEntityFeature.TURN_OFF
+        | SirenEntityFeature.DURATION
+    )
+    _device: Siren
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if siren is on."""
-        return self._device.is_on
+        return self._device.is_on  # type: ignore[no-any-return]
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on siren."""
         data = {}
         if (duration := kwargs.get(ATTR_DURATION)) is not None:
             data["duration"] = duration * 10
         await self._device.turn_on(**data)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off siren."""
         await self._device.turn_off()

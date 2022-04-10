@@ -140,7 +140,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self):
         data = {}
-        with async_timeout.timeout(120):
+        async with async_timeout.timeout(120):
             weather_response = await self._get_aemet_weather()
         data = self._convert_weather_response(weather_response)
         return data
@@ -286,7 +286,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         temperature_feeling = None
         town_id = None
         town_name = None
-        town_timestamp = dt_util.as_utc(elaborated).isoformat()
+        town_timestamp = dt_util.as_utc(elaborated)
         wind_bearing = None
         wind_max_speed = None
         wind_speed = None
@@ -312,7 +312,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
 
         # Overwrite weather values with closest station data (if present)
         if station_data:
-            station_timestamp = dt_util.as_utc(station_dt).isoformat()
+            station_timestamp = dt_util.as_utc(station_dt)
             if (now_utc - station_dt) <= STATION_MAX_DELTA:
                 if AEMET_ATTR_STATION_HUMIDITY in station_data:
                     humidity = format_float(station_data[AEMET_ATTR_STATION_HUMIDITY])
@@ -398,8 +398,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         return None
 
     def _convert_forecast_day(self, date, day):
-        condition = self._get_condition_day(day)
-        if not condition:
+        if not (condition := self._get_condition_day(day)):
             return None
 
         return {
@@ -415,8 +414,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         }
 
     def _convert_forecast_hour(self, date, day, hour):
-        condition = self._get_condition(day, hour)
-        if not condition:
+        if not (condition := self._get_condition(day, hour)):
             return None
 
         forecast_dt = date.replace(hour=hour, minute=0, second=0)
@@ -435,13 +433,8 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
 
     def _calc_precipitation(self, day, hour):
         """Calculate the precipitation."""
-        rain_value = self._get_rain(day, hour)
-        if not rain_value:
-            rain_value = 0
-
-        snow_value = self._get_snow(day, hour)
-        if not snow_value:
-            snow_value = 0
+        rain_value = self._get_rain(day, hour) or 0
+        snow_value = self._get_snow(day, hour) or 0
 
         if round(rain_value + snow_value, 1) == 0:
             return None
@@ -449,13 +442,8 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
 
     def _calc_precipitation_prob(self, day, hour):
         """Calculate the precipitation probability (hour)."""
-        rain_value = self._get_rain_prob(day, hour)
-        if not rain_value:
-            rain_value = 0
-
-        snow_value = self._get_snow_prob(day, hour)
-        if not snow_value:
-            snow_value = 0
+        rain_value = self._get_rain_prob(day, hour) or 0
+        snow_value = self._get_snow_prob(day, hour) or 0
 
         if rain_value == 0 and snow_value == 0:
             return None

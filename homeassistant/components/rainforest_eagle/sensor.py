@@ -1,39 +1,22 @@
 """Support for the Rainforest Eagle energy monitor."""
 from __future__ import annotations
 
-import logging
-from typing import Any
-
-import voluptuous as vol
-
 from homeassistant.components.sensor import (
-    DEVICE_CLASS_ENERGY,
-    PLATFORM_SCHEMA,
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
-    StateType,
+    SensorStateClass,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_IP_ADDRESS,
-    DEVICE_CLASS_POWER,
-    ENERGY_KILO_WATT_HOUR,
-    POWER_KILO_WATT,
-)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ENERGY_KILO_WATT_HOUR, POWER_KILO_WATT
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_CLOUD_ID, CONF_INSTALL_CODE, DOMAIN
+from .const import DOMAIN
 from .data import EagleDataCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 SENSORS = (
     SensorEntityDescription(
@@ -41,58 +24,24 @@ SENSORS = (
         # We can drop the "Eagle-200" part of the name in HA 2021.12
         name="Eagle-200 Meter Power Demand",
         native_unit_of_measurement=POWER_KILO_WATT,
-        device_class=DEVICE_CLASS_POWER,
-        state_class=STATE_CLASS_MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="zigbee:CurrentSummationDelivered",
         name="Eagle-200 Total Meter Energy Delivered",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key="zigbee:CurrentSummationReceived",
         name="Eagle-200 Total Meter Energy Received",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
 )
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_IP_ADDRESS): cv.string,
-        vol.Required(CONF_CLOUD_ID): cv.string,
-        vol.Required(CONF_INSTALL_CODE): cv.string,
-    }
-)
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: dict[str, Any] | None = None,
-):
-    """Import config as config entry."""
-    _LOGGER.warning(
-        "Configuration of the rainforest_eagle platform in YAML is deprecated "
-        "and will be removed in Home Assistant 2021.11; Your existing configuration "
-        "has been imported into the UI automatically and can be safely removed "
-        "from your configuration.yaml file"
-    )
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={
-                CONF_HOST: config[CONF_IP_ADDRESS],
-                CONF_CLOUD_ID: config[CONF_CLOUD_ID],
-                CONF_INSTALL_CODE: config[CONF_INSTALL_CODE],
-            },
-        )
-    )
 
 
 async def async_setup_entry(
@@ -110,7 +59,7 @@ async def async_setup_entry(
                     key="zigbee:Price",
                     name="Meter Price",
                     native_unit_of_measurement=f"{coordinator.data['zigbee:PriceCurrency']}/{ENERGY_KILO_WATT_HOUR}",
-                    state_class=STATE_CLASS_MEASUREMENT,
+                    state_class=SensorStateClass.MEASUREMENT,
                 ),
             )
         )
@@ -118,10 +67,8 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class EagleSensor(CoordinatorEntity, SensorEntity):
+class EagleSensor(CoordinatorEntity[EagleDataCoordinator], SensorEntity):
     """Implementation of the Rainforest Eagle sensor."""
-
-    coordinator: EagleDataCoordinator
 
     def __init__(self, coordinator, entity_description):
         """Initialize the sensor."""
@@ -144,11 +91,11 @@ class EagleSensor(CoordinatorEntity, SensorEntity):
         return self.coordinator.data.get(self.entity_description.key)
 
     @property
-    def device_info(self) -> DeviceInfo | None:
+    def device_info(self) -> DeviceInfo:
         """Return device info."""
-        return {
-            "name": self.coordinator.model,
-            "identifiers": {(DOMAIN, self.coordinator.cloud_id)},
-            "manufacturer": "Rainforest Automation",
-            "model": self.coordinator.model,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.coordinator.cloud_id)},
+            manufacturer="Rainforest Automation",
+            model=self.coordinator.model,
+            name=self.coordinator.model,
+        )

@@ -4,7 +4,7 @@
             "already_configured": "Ger\u00e4t ist bereits konfiguriert",
             "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
             "cannot_connect": "Verbindung fehlgeschlagen. Bitte versuche es noch einmal. Trenne ggf. Strom- und Ethernetkabel und verbinde diese erneut.",
-            "not_denonavr_manufacturer": "Kein Denon AVR-Netzwerkempf\u00e4nger, entdeckter Hersteller stimmte nicht \u00fcberein",
+            "not_denonavr_manufacturer": "Kein Denon AVR Network Receiver, festgestellter Hersteller stimmt nicht \u00fcberein",
             "not_denonavr_missing": "Kein Denon AVR-Netzwerk-Receiver, Erkennungsinformationen nicht vollst\u00e4ndig"
         },
         "error": {

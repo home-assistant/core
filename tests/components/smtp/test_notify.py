@@ -1,5 +1,4 @@
 """The tests for the notify smtp platform."""
-from os import path
 import re
 from unittest.mock import patch
 
@@ -11,6 +10,8 @@ from homeassistant.components.smtp import DOMAIN
 from homeassistant.components.smtp.notify import MailNotificationService
 from homeassistant.const import SERVICE_RELOAD
 from homeassistant.setup import async_setup_component
+
+from tests.common import get_fixture_path
 
 
 class MockSMTP(MailNotificationService):
@@ -45,11 +46,7 @@ async def test_reload_notify(hass):
 
     assert hass.services.has_service(notify.DOMAIN, DOMAIN)
 
-    yaml_path = path.join(
-        _get_fixtures_base_path(),
-        "fixtures",
-        "smtp/configuration.yaml",
-    )
+    yaml_path = get_fixture_path("configuration.yaml", "smtp")
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path), patch(
         "homeassistant.components.smtp.notify.MailNotificationService.connection_is_valid"
     ):
@@ -63,10 +60,6 @@ async def test_reload_notify(hass):
 
     assert not hass.services.has_service(notify.DOMAIN, DOMAIN)
     assert hass.services.has_service(notify.DOMAIN, "smtp_reloaded")
-
-
-def _get_fixtures_base_path():
-    return path.dirname(path.dirname(path.dirname(__file__)))
 
 
 @pytest.fixture

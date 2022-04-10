@@ -3,7 +3,7 @@
 import asyncio
 
 from aiohttp.client_exceptions import ServerDisconnectedError
-from aiopvapi.helpers.aiorequest import PvApiConnectionError
+from aiopvapi.helpers.aiorequest import PvApiConnectionError, PvApiResponseStatusError
 
 DOMAIN = "hunterdouglas_powerview"
 
@@ -62,7 +62,12 @@ PV_SHADE_DATA = "pv_shade_data"
 PV_ROOM_DATA = "pv_room_data"
 COORDINATOR = "coordinator"
 
-HUB_EXCEPTIONS = (ServerDisconnectedError, asyncio.TimeoutError, PvApiConnectionError)
+HUB_EXCEPTIONS = (
+    ServerDisconnectedError,
+    asyncio.TimeoutError,
+    PvApiConnectionError,
+    PvApiResponseStatusError,
+)
 
 LEGACY_DEVICE_SUB_REVISION = 1
 LEGACY_DEVICE_REVISION = 0

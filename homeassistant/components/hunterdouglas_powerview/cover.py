@@ -14,14 +14,13 @@ import async_timeout
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    DEVICE_CLASS_SHADE,
-    SUPPORT_CLOSE,
-    SUPPORT_OPEN,
-    SUPPORT_SET_POSITION,
-    SUPPORT_STOP,
+    CoverDeviceClass,
     CoverEntity,
+    CoverEntityFeature,
 )
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
 from .const import (
@@ -49,7 +48,9 @@ TRANSITION_COMPLETE_DURATION = 30
 PARALLEL_UPDATES = 1
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up the hunter douglas shades."""
 
     pv_data = hass.data[DOMAIN][entry.entry_id]
@@ -108,19 +109,18 @@ class PowerViewShade(ShadeEntity, CoverEntity):
         self._last_action_timestamp = 0
         self._scheduled_transition_update = None
         self._current_cover_position = MIN_POSITION
+        self._attr_supported_features = (
+            CoverEntityFeature.OPEN
+            | CoverEntityFeature.CLOSE
+            | CoverEntityFeature.SET_POSITION
+        )
+        if self._device_info[DEVICE_MODEL] != LEGACY_DEVICE_MODEL:
+            self._attr_supported_features |= CoverEntityFeature.STOP
 
     @property
     def extra_state_attributes(self):
         """Return the state attributes."""
         return {STATE_ATTRIBUTE_ROOM_NAME: self._room_name}
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        supported_features = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
-        if self._device_info[DEVICE_MODEL] != LEGACY_DEVICE_MODEL:
-            supported_features |= SUPPORT_STOP
-        return supported_features
 
     @property
     def is_closed(self):
@@ -145,7 +145,7 @@ class PowerViewShade(ShadeEntity, CoverEntity):
     @property
     def device_class(self):
         """Return device class."""
-        return DEVICE_CLASS_SHADE
+        return CoverDeviceClass.SHADE
 
     @property
     def name(self):

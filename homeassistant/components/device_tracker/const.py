@@ -6,6 +6,7 @@ from typing import Final
 LOGGER: Final = logging.getLogger(__package__)
 
 DOMAIN: Final = "device_tracker"
+ENTITY_ID_FORMAT: Final = DOMAIN + ".{}"
 
 PLATFORM_TYPE_LEGACY: Final = "legacy"
 PLATFORM_TYPE_ENTITY: Final = "entity_platform"
@@ -36,3 +37,5 @@ ATTR_MAC: Final = "mac"
 ATTR_SOURCE_TYPE: Final = "source_type"
 ATTR_CONSIDER_HOME: Final = "consider_home"
 ATTR_IP: Final = "ip"
+
+CONNECTED_DEVICE_REGISTERED: Final = "device_tracker_connected_device_registered"

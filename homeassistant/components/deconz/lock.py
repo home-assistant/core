@@ -1,25 +1,38 @@
 """Support for deCONZ locks."""
 
+from __future__ import annotations
+
+from typing import Any
+
 from pydeconz.light import Lock
 from pydeconz.sensor import DoorLock
 
 from homeassistant.components.lock import DOMAIN, LockEntity
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .deconz_device import DeconzDevice
 from .gateway import get_gateway_from_config_entry
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up locks for deCONZ component."""
     gateway = get_gateway_from_config_entry(hass, config_entry)
     gateway.entities[DOMAIN] = set()
 
     @callback
-    def async_add_lock_from_light(lights=gateway.api.lights.values()):
+    def async_add_lock_from_light(lights: list[Lock] | None = None) -> None:
         """Add lock from deCONZ."""
         entities = []
+
+        if lights is None:
+            lights = list(gateway.api.lights.locks.values())
 
         for light in lights:
 
@@ -41,9 +54,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
     @callback
-    def async_add_lock_from_sensor(sensors=gateway.api.sensors.values()):
+    def async_add_lock_from_sensor(sensors: list[DoorLock] | None = None) -> None:
         """Add lock from deCONZ."""
         entities = []
+
+        if sensors is None:
+            sensors = list(gateway.api.sensors.door_lock.values())
 
         for sensor in sensors:
 
@@ -72,16 +88,17 @@ class DeconzLock(DeconzDevice, LockEntity):
     """Representation of a deCONZ lock."""
 
     TYPE = DOMAIN
+    _device: DoorLock | Lock
 
     @property
-    def is_locked(self):
+    def is_locked(self) -> bool:
         """Return true if lock is on."""
-        return self._device.is_locked
+        return self._device.is_locked  # type: ignore[no-any-return]
 
-    async def async_lock(self, **kwargs):
+    async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
         await self._device.lock()
 
-    async def async_unlock(self, **kwargs):
+    async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
         await self._device.unlock()

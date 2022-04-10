@@ -14,7 +14,7 @@ async def test_sensor(hass: HomeAssistant, knx: KNXTestKit):
 
     await knx.setup_integration(
         {
-            SensorSchema.PLATFORM_NAME: {
+            SensorSchema.PLATFORM: {
                 CONF_NAME: "test",
                 CONF_STATE_ADDRESS: "1/1/1",
                 CONF_TYPE: "current",  # 2 byte unsigned int
@@ -47,7 +47,7 @@ async def test_always_callback(hass: HomeAssistant, knx: KNXTestKit):
     events = async_capture_events(hass, "state_changed")
     await knx.setup_integration(
         {
-            SensorSchema.PLATFORM_NAME: [
+            SensorSchema.PLATFORM: [
                 {
                     CONF_NAME: "test_normal",
                     CONF_STATE_ADDRESS: "1/1/1",

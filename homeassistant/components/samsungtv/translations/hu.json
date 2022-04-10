@@ -2,13 +2,13 @@
     "config": {
         "abort": {
             "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
-            "already_in_progress": "A konfigur\u00e1l\u00e1s m\u00e1r folyamatban van.",
+            "already_in_progress": "A konfigur\u00e1l\u00e1s m\u00e1r folyamatban van",
             "auth_missing": "Home Assistant nem jogosult csatlakozni ehhez a Samsung TV-hez. Ellen\u0151rizze a TV be\u00e1ll\u00edt\u00e1sait Home Assistant enged\u00e9lyez\u00e9s\u00e9hez.",
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
             "id_missing": "Ennek a Samsung eszk\u00f6znek nincs sorsz\u00e1ma.",
             "missing_config_entry": "Ez a Samsung eszk\u00f6z nem rendelkezik konfigur\u00e1ci\u00f3s bejegyz\u00e9ssel.",
             "not_supported": "Ez a Samsung k\u00e9sz\u00fcl\u00e9k jelenleg nem t\u00e1mogatott.",
-            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt",
+            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt.",
             "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },
         "error": {
@@ -21,7 +21,7 @@
                 "title": "Samsung TV"
             },
             "reauth_confirm": {
-                "description": "A bek\u00fcld\u00e9s ut\u00e1n fogadja el a(z) {device} felugr\u00f3 ablakot, amely 30 m\u00e1sodpercen bel\u00fcl enged\u00e9lyt k\u00e9r."
+                "description": "A bek\u00fcld\u00e9s ut\u00e1n, fogadja el a {device} felugr\u00f3 ablak\u00e1ban l\u00e1that\u00f3 \u00fczenetet, mely 30 m\u00e1sodpercig \u00e1ll rendelkez\u00e9sre."
             },
             "user": {
                 "data": {

@@ -1,0 +1,10 @@
+{
+    "state": {
+        "tractive__tracker_state": {
+            "not_reporting": "Ei vasta",
+            "operational": "Tegevuses",
+            "system_shutdown_user": "S\u00fcsteemi sulgemise kasutaja",
+            "system_startup": "S\u00fcsteemi k\u00e4ivitamine"
+        }
+    }
+}

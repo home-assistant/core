@@ -1,4 +1,6 @@
 """Test security filter middleware."""
+from http import HTTPStatus
+
 from aiohttp import web
 import pytest
 import urllib3
@@ -31,7 +33,7 @@ async def test_ok_requests(request_path, request_params, aiohttp_client):
     mock_api_client = await aiohttp_client(app)
     resp = await mock_api_client.get(request_path, params=request_params)
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     assert await resp.text() == "OK"
 
 
@@ -80,7 +82,7 @@ async def test_bad_requests(
         request_params,
     )
 
-    assert resp.status == 400
+    assert resp.status == HTTPStatus.BAD_REQUEST
 
     message = "Filtered a potential harmful request to:"
     if fail_on_query_string:

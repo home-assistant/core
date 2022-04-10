@@ -11,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import ssdp
-from homeassistant.const import CONF_HOST, CONF_TYPE
+from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_TYPE
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.httpx_client import get_async_client
@@ -28,7 +28,6 @@ IGNORED_MODELS = ["HEOS 1", "HEOS 3", "HEOS 5", "HEOS 7"]
 CONF_SHOW_ALL_SOURCES = "show_all_sources"
 CONF_ZONE2 = "zone2"
 CONF_ZONE3 = "zone3"
-CONF_MODEL = "model"
 CONF_MANUFACTURER = "manufacturer"
 CONF_SERIAL_NUMBER = "serial_number"
 CONF_UPDATE_AUDYSSEY = "update_audyssey"
@@ -111,8 +110,7 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             # check if IP address is set manually
-            host = user_input.get(CONF_HOST)
-            if host:
+            if host := user_input.get(CONF_HOST):
                 self.host = host
                 return await self.async_step_connect()
 
@@ -212,7 +210,7 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_ssdp(self, discovery_info: dict[str, Any]) -> FlowResult:
+    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
         """Handle a discovered Denon AVR.
 
         This flow is triggered by the SSDP component. It will check if the
@@ -220,21 +218,23 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """
         # Filter out non-Denon AVRs#1
         if (
-            discovery_info.get(ssdp.ATTR_UPNP_MANUFACTURER)
+            discovery_info.upnp.get(ssdp.ATTR_UPNP_MANUFACTURER)
             not in SUPPORTED_MANUFACTURERS
         ):
             return self.async_abort(reason="not_denonavr_manufacturer")
 
         # Check if required information is present to set the unique_id
         if (
-            ssdp.ATTR_UPNP_MODEL_NAME not in discovery_info
-            or ssdp.ATTR_UPNP_SERIAL not in discovery_info
+            ssdp.ATTR_UPNP_MODEL_NAME not in discovery_info.upnp
+            or ssdp.ATTR_UPNP_SERIAL not in discovery_info.upnp
         ):
             return self.async_abort(reason="not_denonavr_missing")
 
-        self.model_name = discovery_info[ssdp.ATTR_UPNP_MODEL_NAME].replace("*", "")
-        self.serial_number = discovery_info[ssdp.ATTR_UPNP_SERIAL]
-        self.host = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION]).hostname
+        self.model_name = discovery_info.upnp[ssdp.ATTR_UPNP_MODEL_NAME].replace(
+            "*", ""
+        )
+        self.serial_number = discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL]
+        self.host = urlparse(discovery_info.ssdp_location).hostname
 
         if self.model_name in IGNORED_MODELS:
             return self.async_abort(reason="not_denonavr_manufacturer")
@@ -246,7 +246,9 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.context.update(
             {
                 "title_placeholders": {
-                    "name": discovery_info.get(ssdp.ATTR_UPNP_FRIENDLY_NAME, self.host)
+                    "name": discovery_info.upnp.get(
+                        ssdp.ATTR_UPNP_FRIENDLY_NAME, self.host
+                    )
                 }
             }
         )

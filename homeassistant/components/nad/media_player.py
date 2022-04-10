@@ -1,15 +1,13 @@
 """Support for interfacing with NAD receivers through RS-232."""
+from __future__ import annotations
+
 from nad_receiver import NADReceiver, NADReceiverTCP, NADReceiverTelnet
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
+from homeassistant.components.media_player import (
+    PLATFORM_SCHEMA,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -19,7 +17,10 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 DEFAULT_TYPE = "RS232"
 DEFAULT_SERIAL_PORT = "/dev/ttyUSB0"
@@ -30,12 +31,12 @@ DEFAULT_MAX_VOLUME = -20
 DEFAULT_VOLUME_STEP = 4
 
 SUPPORT_NAD = (
-    SUPPORT_VOLUME_SET
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-    | SUPPORT_VOLUME_STEP
-    | SUPPORT_SELECT_SOURCE
+    MediaPlayerEntityFeature.VOLUME_SET
+    | MediaPlayerEntityFeature.VOLUME_MUTE
+    | MediaPlayerEntityFeature.TURN_ON
+    | MediaPlayerEntityFeature.TURN_OFF
+    | MediaPlayerEntityFeature.VOLUME_STEP
+    | MediaPlayerEntityFeature.SELECT_SOURCE
 )
 
 CONF_SERIAL_PORT = "serial_port"  # for NADReceiver
@@ -63,7 +64,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the NAD platform."""
     if config.get(CONF_TYPE) in ("RS232", "Telnet"):
         add_entities(
@@ -79,6 +85,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 class NAD(MediaPlayerEntity):
     """Representation of a NAD Receiver."""
+
+    _attr_supported_features = SUPPORT_NAD
 
     def __init__(self, config):
         """Initialize the NAD Receiver device."""
@@ -123,11 +131,6 @@ class NAD(MediaPlayerEntity):
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
         return self._mute
-
-    @property
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        return SUPPORT_NAD
 
     def turn_off(self):
         """Turn the media player off."""
@@ -217,6 +220,8 @@ class NAD(MediaPlayerEntity):
 class NADtcp(MediaPlayerEntity):
     """Representation of a NAD Digital amplifier."""
 
+    _attr_supported_features = SUPPORT_NAD
+
     def __init__(self, config):
         """Initialize the amplifier."""
         self._name = config[CONF_NAME]
@@ -250,11 +255,6 @@ class NADtcp(MediaPlayerEntity):
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
         return self._mute
-
-    @property
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        return SUPPORT_NAD
 
     def turn_off(self):
         """Turn the media player off."""

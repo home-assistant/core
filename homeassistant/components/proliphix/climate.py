@@ -1,8 +1,14 @@
 """Support for Proliphix NT10e Thermostats."""
+from __future__ import annotations
+
 import proliphix
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
+from homeassistant.components.climate import (
+    PLATFORM_SCHEMA,
+    ClimateEntity,
+    ClimateEntityFeature,
+)
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_COOL,
     CURRENT_HVAC_HEAT,
@@ -11,7 +17,6 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
-    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
@@ -21,7 +26,10 @@ from homeassistant.const import (
     PRECISION_TENTHS,
     TEMP_FAHRENHEIT,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 ATTR_FAN = "fan"
 
@@ -34,7 +42,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Proliphix thermostats."""
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
@@ -49,15 +62,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class ProliphixThermostat(ClimateEntity):
     """Representation a Proliphix thermostat."""
 
+    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+
     def __init__(self, pdp):
         """Initialize the thermostat."""
         self._pdp = pdp
         self._name = None
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_TARGET_TEMPERATURE
 
     @property
     def should_poll(self):
@@ -131,7 +141,6 @@ class ProliphixThermostat(ClimateEntity):
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
-        if temperature is None:
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
         self._pdp.setback = temperature

@@ -1,1 +1,1 @@
-"""Tests for the Uptime Robot integration."""
+"""Tests for the UptimeRobot integration."""

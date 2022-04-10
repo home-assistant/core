@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
+from enum import IntEnum
 import functools as ft
 import logging
 from typing import final
@@ -31,6 +32,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.temperature import display_temp as show_temp
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.temperature import convert as convert_temperature
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
@@ -54,6 +56,17 @@ STATE_HIGH_DEMAND = "high_demand"
 STATE_HEAT_PUMP = "heat_pump"
 STATE_GAS = "gas"
 
+
+class WaterHeaterEntityFeature(IntEnum):
+    """Supported features of the fan entity."""
+
+    TARGET_TEMPERATURE = 1
+    OPERATION_MODE = 2
+    AWAY_MODE = 4
+
+
+# These SUPPORT_* constants are deprecated as of Home Assistant 2022.5.
+# Please use the WaterHeaterEntityFeature enum instead.
 SUPPORT_TARGET_TEMPERATURE = 1
 SUPPORT_OPERATION_MODE = 2
 SUPPORT_AWAY_MODE = 4
@@ -96,7 +109,7 @@ SET_OPERATION_MODE_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up water_heater devices."""
     component = hass.data[DOMAIN] = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
@@ -188,7 +201,7 @@ class WaterHeaterEntity(Entity):
             ),
         }
 
-        if supported_features & SUPPORT_OPERATION_MODE:
+        if supported_features & WaterHeaterEntityFeature.OPERATION_MODE:
             data[ATTR_OPERATION_LIST] = self.operation_list
 
         return data
@@ -226,10 +239,10 @@ class WaterHeaterEntity(Entity):
 
         supported_features = self.supported_features
 
-        if supported_features & SUPPORT_OPERATION_MODE:
+        if supported_features & WaterHeaterEntityFeature.OPERATION_MODE:
             data[ATTR_OPERATION_MODE] = self.current_operation
 
-        if supported_features & SUPPORT_AWAY_MODE:
+        if supported_features & WaterHeaterEntityFeature.AWAY_MODE:
             is_away = self.is_away_mode_on
             data[ATTR_AWAY_MODE] = STATE_ON if is_away else STATE_OFF
 
@@ -350,15 +363,3 @@ async def async_service_temperature_set(entity, service):
             kwargs[value] = temp
 
     await entity.async_set_temperature(**kwargs)
-
-
-class WaterHeaterDevice(WaterHeaterEntity):
-    """Representation of a water heater (for backwards compatibility)."""
-
-    def __init_subclass__(cls, **kwargs):
-        """Print deprecation warning."""
-        super().__init_subclass__(**kwargs)
-        _LOGGER.warning(
-            "WaterHeaterDevice is deprecated, modify %s to extend WaterHeaterEntity",
-            cls.__name__,
-        )

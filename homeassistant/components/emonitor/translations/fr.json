@@ -7,7 +7,7 @@
             "cannot_connect": "\u00c9chec de connexion",
             "unknown": "Erreur inattendue"
         },
-        "flow_title": "SiteSage {name}",
+        "flow_title": "{name}",
         "step": {
             "confirm": {
                 "description": "Voulez-vous configurer {name} ( {host} )?",

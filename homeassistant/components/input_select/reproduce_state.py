@@ -2,21 +2,14 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 import logging
-from types import MappingProxyType
 from typing import Any
 
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION
 from homeassistant.core import Context, HomeAssistant, State
 
-from . import (
-    ATTR_OPTION,
-    ATTR_OPTIONS,
-    DOMAIN,
-    SERVICE_SELECT_OPTION,
-    SERVICE_SET_OPTIONS,
-)
+from . import ATTR_OPTIONS, DOMAIN, SERVICE_SELECT_OPTION, SERVICE_SET_OPTIONS
 
 ATTR_GROUP = [ATTR_OPTION, ATTR_OPTIONS]
 
@@ -31,10 +24,8 @@ async def _async_reproduce_state(
     reproduce_options: dict[str, Any] | None = None,
 ) -> None:
     """Reproduce a single state."""
-    cur_state = hass.states.get(state.entity_id)
-
     # Return if we can't find entity
-    if cur_state is None:
+    if (cur_state := hass.states.get(state.entity_id)) is None:
         _LOGGER.warning("Unable to find entity %s", state.entity_id)
         return
 
@@ -88,8 +79,6 @@ async def async_reproduce_states(
     )
 
 
-def check_attr_equal(
-    attr1: MappingProxyType, attr2: MappingProxyType, attr_str: str
-) -> bool:
+def check_attr_equal(attr1: Mapping, attr2: Mapping, attr_str: str) -> bool:
     """Return true if the given attributes are equal."""
     return attr1.get(attr_str) == attr2.get(attr_str)

@@ -1,7 +1,8 @@
 """Tests for the Crownstone integration."""
 from __future__ import annotations
 
-from typing import Generator, Union
+from collections.abc import Generator
+from typing import Union
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from crownstone_cloud.cloud_models.spheres import Spheres

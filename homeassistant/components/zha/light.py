@@ -30,13 +30,20 @@ from homeassistant.components.light import (
     SUPPORT_FLASH,
     SUPPORT_TRANSITION,
 )
-from homeassistant.const import ATTR_SUPPORTED_FEATURES, STATE_ON, STATE_UNAVAILABLE
-from homeassistant.core import State, callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    ATTR_SUPPORTED_FEATURES,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    Platform,
+)
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 import homeassistant.util.color as color_util
 
@@ -47,7 +54,6 @@ from .core.const import (
     CHANNEL_ON_OFF,
     CONF_DEFAULT_LIGHT_TRANSITION,
     DATA_ZHA,
-    DATA_ZHA_DISPATCHERS,
     EFFECT_BLINK,
     EFFECT_BREATHE,
     EFFECT_DEFAULT_VARIANT,
@@ -77,8 +83,8 @@ UPDATE_COLORLOOP_HUE = 0x8
 FLASH_EFFECTS = {light.FLASH_SHORT: EFFECT_BLINK, light.FLASH_LONG: EFFECT_BREATHE}
 
 UNSUPPORTED_ATTRIBUTE = 0x86
-STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, light.DOMAIN)
-GROUP_MATCH = functools.partial(ZHA_ENTITIES.group_match, light.DOMAIN)
+STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, Platform.LIGHT)
+GROUP_MATCH = functools.partial(ZHA_ENTITIES.group_match, Platform.LIGHT)
 PARALLEL_UPDATES = 0
 SIGNAL_LIGHT_GROUP_STATE_CHANGED = "zha_light_group_state_changed"
 
@@ -100,9 +106,13 @@ class LightColorMode(enum.IntEnum):
     COLOR_TEMP = 0x02
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Zigbee Home Automation light from config entry."""
-    entities_to_create = hass.data[DATA_ZHA][light.DOMAIN]
+    entities_to_create = hass.data[DATA_ZHA][Platform.LIGHT]
 
     unsub = async_dispatcher_connect(
         hass,
@@ -111,7 +121,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             discovery.async_add_entities, async_add_entities, entities_to_create
         ),
     )
-    hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
+    config_entry.async_on_unload(unsub)
 
 
 class BaseLight(LogMixin, light.LightEntity):
@@ -233,7 +243,7 @@ class BaseLight(LogMixin, light.LightEntity):
                 level, duration
             )
             t_log["move_to_level_with_on_off"] = result
-            if not isinstance(result, list) or result[1] is not Status.SUCCESS:
+            if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
                 self.debug("turned on: %s", t_log)
                 return
             self._state = bool(level)
@@ -245,7 +255,7 @@ class BaseLight(LogMixin, light.LightEntity):
             # we should call the on command on the on_off cluster if brightness is not 0.
             result = await self._on_off_channel.on()
             t_log["on_off"] = result
-            if not isinstance(result, list) or result[1] is not Status.SUCCESS:
+            if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
                 self.debug("turned on: %s", t_log)
                 return
             self._state = True
@@ -256,7 +266,7 @@ class BaseLight(LogMixin, light.LightEntity):
             temperature = kwargs[light.ATTR_COLOR_TEMP]
             result = await self._color_channel.move_to_color_temp(temperature, duration)
             t_log["move_to_color_temp"] = result
-            if not isinstance(result, list) or result[1] is not Status.SUCCESS:
+            if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
                 self.debug("turned on: %s", t_log)
                 return
             self._color_temp = temperature
@@ -272,7 +282,7 @@ class BaseLight(LogMixin, light.LightEntity):
                 int(xy_color[0] * 65535), int(xy_color[1] * 65535), duration
             )
             t_log["move_to_color"] = result
-            if not isinstance(result, list) or result[1] is not Status.SUCCESS:
+            if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
                 self.debug("turned on: %s", t_log)
                 return
             self._hs_color = hs_color
@@ -330,7 +340,7 @@ class BaseLight(LogMixin, light.LightEntity):
         else:
             result = await self._on_off_channel.off()
         self.debug("turned off: %s", result)
-        if not isinstance(result, list) or result[1] is not Status.SUCCESS:
+        if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
             return
         self._state = False
 
@@ -481,8 +491,7 @@ class Light(BaseLight, ZhaEntity):
                 attributes, from_cache=False
             )
 
-            color_mode = results.get("color_mode")
-            if color_mode is not None:
+            if (color_mode := results.get("color_mode")) is not None:
                 if color_mode == LightColorMode.COLOR_TEMP:
                     color_temp = results.get("color_temperature")
                     if color_temp is not None and color_mode:

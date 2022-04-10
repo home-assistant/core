@@ -1,13 +1,12 @@
 """Config flow for the Total Connect component."""
-from total_connect_client import TotalConnectClient
+from total_connect_client.client import TotalConnectClient
+from total_connect_client.exceptions import AuthenticationError
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_LOCATION, CONF_PASSWORD, CONF_USERNAME
 
 from .const import CONF_USERCODES, DOMAIN
-
-CONF_LOCATION = "location"
 
 PASSWORD_DATA_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
 
@@ -36,18 +35,18 @@ class TotalConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(username)
             self._abort_if_unique_id_configured()
 
-            client = await self.hass.async_add_executor_job(
-                TotalConnectClient.TotalConnectClient, username, password, None
-            )
-
-            if client.is_valid_credentials():
+            try:
+                client = await self.hass.async_add_executor_job(
+                    TotalConnectClient, username, password, None
+                )
+            except AuthenticationError:
+                errors["base"] = "invalid_auth"
+            else:
                 # username/password valid so show user locations
                 self.username = username
                 self.password = password
                 self.client = client
                 return await self.async_step_locations()
-            # authentication failed / invalid
-            errors["base"] = "invalid_auth"
 
         data_schema = vol.Schema(
             {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
@@ -88,6 +87,12 @@ class TotalConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     },
                 )
         else:
+            # Force the loading of locations using I/O
+            number_locations = await self.hass.async_add_executor_job(
+                self.client.get_number_locations,
+            )
+            if number_locations < 1:
+                return self.async_abort(reason="no_locations")
             for location_id in self.client.locations:
                 self.usercodes[location_id] = None
 
@@ -129,14 +134,14 @@ class TotalConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 data_schema=PASSWORD_DATA_SCHEMA,
             )
 
-        client = await self.hass.async_add_executor_job(
-            TotalConnectClient.TotalConnectClient,
-            self.username,
-            user_input[CONF_PASSWORD],
-            self.usercodes,
-        )
-
-        if not client.is_valid_credentials():
+        try:
+            await self.hass.async_add_executor_job(
+                TotalConnectClient,
+                self.username,
+                user_input[CONF_PASSWORD],
+                self.usercodes,
+            )
+        except AuthenticationError:
             errors["base"] = "invalid_auth"
             return self.async_show_form(
                 step_id="reauth_confirm",

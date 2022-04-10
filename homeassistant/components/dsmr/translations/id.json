@@ -2,18 +2,29 @@
     "config": {
         "abort": {
             "already_configured": "Perangkat sudah dikonfigurasi",
+            "cannot_communicate": "Gagal berkomunikasi",
             "cannot_connect": "Gagal terhubung"
         },
         "error": {
             "already_configured": "Perangkat sudah dikonfigurasi",
+            "cannot_communicate": "Gagal berkomunikasi",
             "cannot_connect": "Gagal terhubung"
         },
         "step": {
             "setup_network": {
                 "data": {
+                    "dsmr_version": "Pilih versi DSMR",
                     "host": "Host",
                     "port": "Port"
-                }
+                },
+                "title": "Pilih alamat koneksi"
+            },
+            "setup_serial": {
+                "data": {
+                    "dsmr_version": "Pilih versi DSMR",
+                    "port": "Pilih perangkat"
+                },
+                "title": "Perangkat"
             },
             "setup_serial_manual_path": {
                 "data": {

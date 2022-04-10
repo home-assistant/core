@@ -33,6 +33,7 @@
                     "s2_unauthenticated_key": "S2 niet-geverifieerde sleutel",
                     "usb_path": "USB-apparaatpad"
                 },
+                "description": "De add-on genereert beveiligingssleutels als deze velden leeg worden gelaten.",
                 "title": "Voer de Z-Wave JS add-on configuratie in"
             },
             "hassio_confirm": {
@@ -119,6 +120,7 @@
                     "s2_unauthenticated_key": "S2 niet-geverifieerde sleutel",
                     "usb_path": "USB-apparaatpad"
                 },
+                "description": "De add-on genereert beveiligingssleutels als deze velden leeg worden gelaten.",
                 "title": "Voer de configuratie van de Z-Wave JS-add-on in"
             },
             "install_addon": {

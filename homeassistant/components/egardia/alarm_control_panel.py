@@ -1,13 +1,12 @@
 """Interfaces with Egardia/Woonveilig alarm control panel."""
+from __future__ import annotations
+
 import logging
 
 import requests
 
 import homeassistant.components.alarm_control_panel as alarm
-from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_HOME,
-)
+from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
@@ -15,6 +14,9 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import (
     CONF_REPORT_SERVER_CODES,
@@ -38,7 +40,12 @@ STATES = {
 }
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Egardia Alarm Control Panael platform."""
     if discovery_info is None:
         return
@@ -55,6 +62,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 class EgardiaAlarm(alarm.AlarmControlPanelEntity):
     """Representation of a Egardia alarm."""
+
+    _attr_supported_features = (
+        AlarmControlPanelEntityFeature.ARM_HOME
+        | AlarmControlPanelEntityFeature.ARM_AWAY
+    )
 
     def __init__(
         self, name, egardiasystem, rs_enabled=False, rs_codes=None, rs_port=52010
@@ -84,11 +96,6 @@ class EgardiaAlarm(alarm.AlarmControlPanelEntity):
         return self._status
 
     @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
-
-    @property
     def should_poll(self):
         """Poll if no report server is enabled."""
         if not self._rs_enabled:
@@ -97,8 +104,7 @@ class EgardiaAlarm(alarm.AlarmControlPanelEntity):
 
     def handle_status_event(self, event):
         """Handle the Egardia system status event."""
-        statuscode = event.get("status")
-        if statuscode is not None:
+        if (statuscode := event.get("status")) is not None:
             status = self.lookupstatusfromcode(statuscode)
             self.parsestatus(status)
             self.schedule_update_ha_state()

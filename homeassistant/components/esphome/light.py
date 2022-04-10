@@ -25,10 +25,8 @@ from homeassistant.components.light import (
     COLOR_MODE_WHITE,
     FLASH_LONG,
     FLASH_SHORT,
-    SUPPORT_EFFECT,
-    SUPPORT_FLASH,
-    SUPPORT_TRANSITION,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -144,7 +142,7 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
         return self._api_version >= APIVersion(1, 6)
 
     @esphome_state_property
-    def is_on(self) -> bool | None:  # type: ignore[override]
+    def is_on(self) -> bool | None:
         """Return true if the light is on."""
         return self._state.state
 
@@ -281,8 +279,7 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
     def color_mode(self) -> str | None:
         """Return the color mode of the light."""
         if not self._supports_color_mode:
-            supported = self.supported_color_modes
-            if not supported:
+            if not (supported := self.supported_color_modes):
                 return None
             return next(iter(supported))
 
@@ -355,14 +352,14 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
     @property
     def supported_features(self) -> int:
         """Flag supported features."""
-        flags = SUPPORT_FLASH
+        flags: int = LightEntityFeature.FLASH
 
         # All color modes except UNKNOWN,ON_OFF support transition
         modes = self._native_supported_color_modes
         if any(m not in (0, LightColorCapability.ON_OFF) for m in modes):
-            flags |= SUPPORT_TRANSITION
+            flags |= LightEntityFeature.TRANSITION
         if self._static_info.effects:
-            flags |= SUPPORT_EFFECT
+            flags |= LightEntityFeature.EFFECT
         return flags
 
     @property

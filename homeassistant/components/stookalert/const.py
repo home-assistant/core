@@ -21,6 +21,3 @@ PROVINCES: Final = (
     "Zeeland",
     "Zuid-Holland",
 )
-
-ATTR_ENTRY_TYPE: Final = "entry_type"
-ENTRY_TYPE_SERVICE: Final = "service"

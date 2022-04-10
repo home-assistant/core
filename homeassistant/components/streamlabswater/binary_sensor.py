@@ -1,10 +1,15 @@
 """Support for Streamlabs Water Monitor Away Mode."""
+from __future__ import annotations
 
 from datetime import timedelta
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.components.streamlabswater import DOMAIN as STREAMLABSWATER_DOMAIN
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
+
+from . import DOMAIN as STREAMLABSWATER_DOMAIN
 
 DEPENDS = ["streamlabswater"]
 
@@ -14,7 +19,12 @@ ATTR_LOCATION_ID = "location_id"
 NAME_AWAY_MODE = "Water Away Mode"
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_devices: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the StreamLabsWater mode sensor."""
     client = hass.data[STREAMLABSWATER_DOMAIN]["client"]
     location_id = hass.data[STREAMLABSWATER_DOMAIN]["location_id"]

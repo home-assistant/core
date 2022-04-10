@@ -7,11 +7,10 @@ from typing import Any
 
 from kasa import SmartDevice, SmartDeviceException
 from kasa.discover import Discover
-import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import network
-from homeassistant.config_entries import ConfigEntry, ConfigEntryNotReady
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
@@ -19,55 +18,15 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    CONF_DIMMER,
-    CONF_DISCOVERY,
-    CONF_LIGHT,
-    CONF_STRIP,
-    CONF_SWITCH,
-    DOMAIN,
-    PLATFORMS,
-)
+from .const import DOMAIN, PLATFORMS
 from .coordinator import TPLinkDataUpdateCoordinator
-from .migration import (
-    async_migrate_entities_devices,
-    async_migrate_legacy_entries,
-    async_migrate_yaml_entries,
-)
 
 DISCOVERY_INTERVAL = timedelta(minutes=15)
-
-TPLINK_HOST_SCHEMA = vol.Schema({vol.Required(CONF_HOST): cv.string})
-
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        {
-            DOMAIN: vol.Schema(
-                {
-                    vol.Optional(CONF_LIGHT, default=[]): vol.All(
-                        cv.ensure_list, [TPLINK_HOST_SCHEMA]
-                    ),
-                    vol.Optional(CONF_SWITCH, default=[]): vol.All(
-                        cv.ensure_list, [TPLINK_HOST_SCHEMA]
-                    ),
-                    vol.Optional(CONF_STRIP, default=[]): vol.All(
-                        cv.ensure_list, [TPLINK_HOST_SCHEMA]
-                    ),
-                    vol.Optional(CONF_DIMMER, default=[]): vol.All(
-                        cv.ensure_list, [TPLINK_HOST_SCHEMA]
-                    ),
-                    vol.Optional(CONF_DISCOVERY, default=True): cv.boolean,
-                }
-            )
-        },
-    ),
-    extra=vol.ALLOW_EXTRA,
-)
 
 
 @callback
@@ -80,7 +39,7 @@ def async_trigger_discovery(
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,
-                context={"source": config_entries.SOURCE_DISCOVERY},
+                context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
                 data={
                     CONF_NAME: device.alias,
                     CONF_HOST: device.host,
@@ -103,30 +62,9 @@ async def async_discover_devices(hass: HomeAssistant) -> dict[str, SmartDevice]:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the TP-Link component."""
-    conf = config.get(DOMAIN)
     hass.data[DOMAIN] = {}
-    legacy_entry = None
-    config_entries_by_mac = {}
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        if async_entry_is_legacy(entry):
-            legacy_entry = entry
-        elif entry.unique_id:
-            config_entries_by_mac[entry.unique_id] = entry
 
-    discovered_devices = await async_discover_devices(hass)
-    hosts_by_mac = {mac: device.host for mac, device in discovered_devices.items()}
-
-    if legacy_entry:
-        async_migrate_legacy_entries(
-            hass, hosts_by_mac, config_entries_by_mac, legacy_entry
-        )
-        # Migrate the yaml entry that was previously imported
-        async_migrate_yaml_entries(hass, legacy_entry.data)
-
-    if conf is not None:
-        async_migrate_yaml_entries(hass, conf)
-
-    if discovered_devices:
+    if discovered_devices := await async_discover_devices(hass):
         async_trigger_discovery(hass, discovered_devices)
 
     async def _async_discovery(*_: Any) -> None:
@@ -141,18 +79,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up TPLink from a config entry."""
-    if async_entry_is_legacy(entry):
-        return True
-
-    legacy_entry: ConfigEntry | None = None
-    for config_entry in hass.config_entries.async_entries(DOMAIN):
-        if async_entry_is_legacy(config_entry):
-            legacy_entry = config_entry
-            break
-
-    if legacy_entry is not None:
-        await async_migrate_entities_devices(hass, legacy_entry.entry_id, entry)
-
     try:
         device: SmartDevice = await Discover.discover_single(entry.data[CONF_HOST])
     except SmartDeviceException as ex:
@@ -167,19 +93,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     hass_data: dict[str, Any] = hass.data[DOMAIN]
-    if entry.entry_id not in hass_data:
-        return True
-    device: SmartDevice = hass.data[DOMAIN][entry.entry_id].device
+    device: SmartDevice = hass_data[entry.entry_id].device
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass_data.pop(entry.entry_id)
     await device.protocol.close()
     return unload_ok
-
-
-@callback
-def async_entry_is_legacy(entry: ConfigEntry) -> bool:
-    """Check if a config entry is the legacy shared one."""
-    return entry.unique_id is None or entry.unique_id == DOMAIN
 
 
 def legacy_device_id(device: SmartDevice) -> str:

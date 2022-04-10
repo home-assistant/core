@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
-from collections.abc import Callable, Coroutine
+from collections.abc import Callable
 import logging
 import socket
 import sys
@@ -37,7 +37,6 @@ from .const import (
     CONF_VERSION,
     DOMAIN,
     MYSENSORS_GATEWAY_START_TASK,
-    MYSENSORS_GATEWAYS,
     ConfGatewayType,
     GatewayId,
 )
@@ -107,7 +106,7 @@ async def try_connect(
         connect_task = None
         try:
             connect_task = asyncio.create_task(gateway.start())
-            with async_timeout.timeout(GATEWAY_READY_TIMEOUT):
+            async with async_timeout.timeout(GATEWAY_READY_TIMEOUT):
                 await gateway_ready.wait()
                 return True
         except asyncio.TimeoutError:
@@ -120,16 +119,6 @@ async def try_connect(
     except OSError as err:
         _LOGGER.info("Try gateway connect failed with exception", exc_info=err)
         return False
-
-
-def get_mysensors_gateway(
-    hass: HomeAssistant, gateway_id: GatewayId
-) -> BaseAsyncGateway | None:
-    """Return the Gateway for a given GatewayId."""
-    if MYSENSORS_GATEWAYS not in hass.data[DOMAIN]:
-        hass.data[DOMAIN][MYSENSORS_GATEWAYS] = {}
-    gateways = hass.data[DOMAIN].get(MYSENSORS_GATEWAYS)
-    return gateways.get(gateway_id)
 
 
 async def setup_gateway(
@@ -185,7 +174,9 @@ async def _get_gateway(
 
         def pub_callback(topic: str, payload: str, qos: int, retain: bool) -> None:
             """Call MQTT publish function."""
-            mqtt.async_publish(topic, payload, qos, retain)
+            hass.async_create_task(
+                mqtt.async_publish(hass, topic, payload, qos, retain)
+            )
 
         def sub_callback(
             topic: str, sub_cb: Callable[[str, ReceivePayloadType, int], None], qos: int
@@ -232,6 +223,8 @@ async def _get_gateway(
             protocol_version=version,
         )
     gateway.event_callback = event_callback
+    gateway.metric = hass.config.units.is_metric
+
     if persistence:
         await gateway.start_persistence()
 
@@ -242,15 +235,8 @@ async def finish_setup(
     hass: HomeAssistant, entry: ConfigEntry, gateway: BaseAsyncGateway
 ) -> None:
     """Load any persistent devices and platforms and start gateway."""
-    discover_tasks = []
-    start_tasks = []
-    discover_tasks.append(_discover_persistent_devices(hass, entry, gateway))
-    start_tasks.append(_gw_start(hass, entry, gateway))
-    if discover_tasks:
-        # Make sure all devices and platforms are loaded before gateway start.
-        await asyncio.wait(discover_tasks)
-    if start_tasks:
-        await asyncio.wait(start_tasks)
+    await _discover_persistent_devices(hass, entry, gateway)
+    await _gw_start(hass, entry, gateway)
 
 
 async def _discover_persistent_devices(
@@ -315,7 +301,7 @@ async def _gw_start(
         # Gatways connected via mqtt doesn't send gateway ready message.
         return
     try:
-        with async_timeout.timeout(GATEWAY_READY_TIMEOUT):
+        async with async_timeout.timeout(GATEWAY_READY_TIMEOUT):
             await gateway_ready.wait()
     except asyncio.TimeoutError:
         _LOGGER.warning(
@@ -340,9 +326,7 @@ def _gw_callback_factory(
         _LOGGER.debug("Node update: node %s child %s", msg.node_id, msg.child_id)
 
         msg_type = msg.gateway.const.MessageType(msg.type)
-        msg_handler: Callable[
-            [HomeAssistant, GatewayId, Message], Coroutine[Any, Any, None]
-        ] | None = HANDLERS.get(msg_type.name)
+        msg_handler = HANDLERS.get(msg_type.name)
 
         if msg_handler is None:
             return

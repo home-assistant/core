@@ -1,99 +1,68 @@
 """Support for the Environment Canada radar imagery."""
 from __future__ import annotations
 
-import datetime
-
-from env_canada import ECRadar
 import voluptuous as vol
 
-from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    CONF_NAME,
+from homeassistant.components.camera import Camera
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import (
+    AddEntitiesCallback,
+    async_get_current_platform,
 )
-import homeassistant.helpers.config_validation as cv
-from homeassistant.util import Throttle
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-ATTR_UPDATED = "updated"
+from .const import ATTR_OBSERVATION_TIME, DOMAIN
 
-CONF_ATTRIBUTION = "Data provided by Environment Canada"
-CONF_STATION = "station"
-CONF_LOOP = "loop"
-CONF_PRECIP_TYPE = "precip_type"
-
-MIN_TIME_BETWEEN_UPDATES = datetime.timedelta(minutes=10)
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_LOOP, default=True): cv.boolean,
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_STATION): cv.matches_regex(r"^C[A-Z]{4}$|^[A-Z]{3}$"),
-        vol.Inclusive(CONF_LATITUDE, "latlon"): cv.latitude,
-        vol.Inclusive(CONF_LONGITUDE, "latlon"): cv.longitude,
-        vol.Optional(CONF_PRECIP_TYPE): vol.In(["RAIN", "SNOW"]),
-    }
-)
+SERVICE_SET_RADAR_TYPE = "set_radar_type"
+SET_RADAR_TYPE_SCHEMA = {
+    vol.Required("radar_type"): vol.In(["Auto", "Rain", "Snow"]),
+}
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the Environment Canada camera."""
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Add a weather entity from a config_entry."""
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]["radar_coordinator"]
+    async_add_entities([ECCamera(coordinator)])
 
-    if config.get(CONF_STATION):
-        radar_object = ECRadar(
-            station_id=config[CONF_STATION], precip_type=config.get(CONF_PRECIP_TYPE)
-        )
-    else:
-        lat = config.get(CONF_LATITUDE, hass.config.latitude)
-        lon = config.get(CONF_LONGITUDE, hass.config.longitude)
-        radar_object = ECRadar(
-            coordinates=(lat, lon), precip_type=config.get(CONF_PRECIP_TYPE)
-        )
-
-    add_devices(
-        [ECCamera(radar_object, config.get(CONF_NAME), config[CONF_LOOP])], True
+    platform = async_get_current_platform()
+    platform.async_register_entity_service(
+        SERVICE_SET_RADAR_TYPE,
+        SET_RADAR_TYPE_SCHEMA,
+        "async_set_radar_type",
     )
 
 
-class ECCamera(Camera):
+class ECCamera(CoordinatorEntity, Camera):
     """Implementation of an Environment Canada radar camera."""
 
-    def __init__(self, radar_object, camera_name, is_loop):
+    def __init__(self, coordinator):
         """Initialize the camera."""
-        super().__init__()
+        super().__init__(coordinator)
+        Camera.__init__(self)
 
-        self.radar_object = radar_object
-        self.camera_name = camera_name
-        self.is_loop = is_loop
+        self.radar_object = coordinator.ec_data
+        self._attr_name = f"{coordinator.config_entry.title} Radar"
+        self._attr_unique_id = f"{coordinator.config_entry.unique_id}-radar"
+        self._attr_attribution = self.radar_object.metadata["attribution"]
+        self._attr_entity_registry_enabled_default = False
+
         self.content_type = "image/gif"
-        self.image = None
-        self.timestamp = None
 
     def camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return bytes of camera image."""
-        self.update()
-        return self.image
+        self._attr_extra_state_attributes = {
+            ATTR_OBSERVATION_TIME: self.radar_object.timestamp,
+        }
+        return self.radar_object.image
 
-    @property
-    def name(self):
-        """Return the name of the camera."""
-        if self.camera_name is not None:
-            return self.camera_name
-        return "Environment Canada Radar"
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes of the device."""
-        return {ATTR_ATTRIBUTION: CONF_ATTRIBUTION, ATTR_UPDATED: self.timestamp}
-
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
-        """Update radar image."""
-        if self.is_loop:
-            self.image = self.radar_object.get_loop()
-        else:
-            self.image = self.radar_object.get_latest_frame()
-        self.timestamp = self.radar_object.timestamp
+    async def async_set_radar_type(self, radar_type: str):
+        """Set the type of radar to retrieve."""
+        self.radar_object.precip_type = radar_type.lower()
+        await self.radar_object.update()

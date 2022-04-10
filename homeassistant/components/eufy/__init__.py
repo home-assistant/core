@@ -10,9 +10,12 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_TYPE,
     CONF_USERNAME,
+    Platform,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "eufy"
 
@@ -40,18 +43,18 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-EUFY_DISPATCH = {
-    "T1011": "light",
-    "T1012": "light",
-    "T1013": "light",
-    "T1201": "switch",
-    "T1202": "switch",
-    "T1203": "switch",
-    "T1211": "switch",
+PLATFORMS = {
+    "T1011": Platform.LIGHT,
+    "T1012": Platform.LIGHT,
+    "T1013": Platform.LIGHT,
+    "T1201": Platform.SWITCH,
+    "T1202": Platform.SWITCH,
+    "T1203": Platform.SWITCH,
+    "T1211": Platform.SWITCH,
 }
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Eufy devices."""
 
     if CONF_USERNAME in config[DOMAIN] and CONF_PASSWORD in config[DOMAIN]:
@@ -60,19 +63,19 @@ def setup(hass, config):
         )
         for device in data:
             kind = device["type"]
-            if kind not in EUFY_DISPATCH:
+            if kind not in PLATFORMS:
                 continue
-            discovery.load_platform(hass, EUFY_DISPATCH[kind], DOMAIN, device, config)
+            discovery.load_platform(hass, PLATFORMS[kind], DOMAIN, device, config)
 
     for device_info in config[DOMAIN][CONF_DEVICES]:
         kind = device_info["type"]
-        if kind not in EUFY_DISPATCH:
+        if kind not in PLATFORMS:
             continue
         device = {}
         device["address"] = device_info["address"]
         device["code"] = device_info["access_token"]
         device["type"] = device_info["type"]
         device["name"] = device_info["name"]
-        discovery.load_platform(hass, EUFY_DISPATCH[kind], DOMAIN, device, config)
+        discovery.load_platform(hass, PLATFORMS[kind], DOMAIN, device, config)
 
     return True

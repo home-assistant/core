@@ -14,7 +14,7 @@ from pymelcloud.atw_device import (
 )
 import voluptuous as vol
 
-from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
     DEFAULT_MAX_TEMP,
@@ -25,14 +25,12 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
-    SUPPORT_FAN_MODE,
-    SUPPORT_SWING_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import MelCloudDevice
 from .const import (
@@ -68,8 +66,8 @@ ATW_ZONE_HVAC_MODE_REVERSE_LOOKUP = {v: k for k, v in ATW_ZONE_HVAC_MODE_LOOKUP.
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
-):
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up MelCloud device climate based on config_entry."""
     mel_devices = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
@@ -127,7 +125,9 @@ class AtaDeviceClimate(MelCloudClimate):
     """Air-to-Air climate device."""
 
     _attr_supported_features = (
-        SUPPORT_FAN_MODE | SUPPORT_TARGET_TEMPERATURE | SUPPORT_SWING_MODE
+        ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.SWING_MODE
     )
 
     def __init__(self, device: MelCloudDevice, ata_device: AtaDevice) -> None:
@@ -143,8 +143,7 @@ class AtaDeviceClimate(MelCloudClimate):
         """Return the optional state attributes with device specific additions."""
         attr = {}
 
-        vane_horizontal = self._device.vane_horizontal
-        if vane_horizontal:
+        if vane_horizontal := self._device.vane_horizontal:
             attr.update(
                 {
                     ATTR_VANE_HORIZONTAL: vane_horizontal,
@@ -152,8 +151,7 @@ class AtaDeviceClimate(MelCloudClimate):
                 }
             )
 
-        vane_vertical = self._device.vane_vertical
-        if vane_vertical:
+        if vane_vertical := self._device.vane_vertical:
             attr.update(
                 {
                     ATTR_VANE_VERTICAL: vane_vertical,
@@ -297,7 +295,7 @@ class AtwDeviceZoneClimate(MelCloudClimate):
 
     _attr_max_temp = 30
     _attr_min_temp = 10
-    _attr_supported_features = SUPPORT_TARGET_TEMPERATURE
+    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
 
     def __init__(
         self, device: MelCloudDevice, atw_device: AtwDevice, atw_zone: Zone

@@ -1,22 +1,26 @@
 """Support for WeMo switches."""
+from __future__ import annotations
+
 import asyncio
 from datetime import datetime, timedelta
-import logging
+from typing import Any, cast
 
 from pywemo import CoffeeMaker, Insight, Maker
 
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_STANDBY, STATE_UNKNOWN
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import convert
 
 from .const import DOMAIN as WEMO_DOMAIN
-from .entity import WemoEntity
+from .entity import WemoBinaryStateEntity
+from .wemo_device import DeviceCoordinator
 
 SCAN_INTERVAL = timedelta(seconds=10)
 PARALLEL_UPDATES = 0
-
-_LOGGER = logging.getLogger(__name__)
 
 # The WEMO_ constants below come from pywemo itself
 ATTR_SENSOR_STATE = "sensor_state"
@@ -32,10 +36,14 @@ WEMO_OFF = 0
 WEMO_STANDBY = 8
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up WeMo switches."""
 
-    async def _discovered_wemo(coordinator):
+    async def _discovered_wemo(coordinator: DeviceCoordinator) -> None:
         """Handle a discovered Wemo device."""
         async_add_entities([WemoSwitch(coordinator)])
 
@@ -49,13 +57,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class WemoSwitch(WemoEntity, SwitchEntity):
+class WemoSwitch(WemoBinaryStateEntity, SwitchEntity):
     """Representation of a WeMo switch."""
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the device."""
-        attr = {}
+        attr: dict[str, Any] = {}
         if isinstance(self.wemo, Maker):
             # Is the maker sensor on or off.
             if self.wemo.maker_params["hassensor"]:
@@ -84,10 +92,11 @@ class WemoSwitch(WemoEntity, SwitchEntity):
             attr["on_total_time"] = WemoSwitch.as_uptime(
                 self.wemo.insight_params.get("ontotal", 0)
             )
-            attr["power_threshold_w"] = (
-                convert(self.wemo.insight_params.get("powerthreshold"), float, 0.0)
-                / 1000.0
+            threshold = convert(
+                self.wemo.insight_params.get("powerthreshold"), float, 0.0
             )
+            assert isinstance(threshold, float)
+            attr["power_threshold_w"] = threshold / 1000.0
 
         if isinstance(self.wemo, CoffeeMaker):
             attr[ATTR_COFFEMAKER_MODE] = self.wemo.mode
@@ -95,7 +104,7 @@ class WemoSwitch(WemoEntity, SwitchEntity):
         return attr
 
     @staticmethod
-    def as_uptime(_seconds):
+    def as_uptime(_seconds: int) -> str:
         """Format seconds into uptime string in the format: 00d 00h 00m 00s."""
         uptime = datetime(1, 1, 1) + timedelta(seconds=_seconds)
         return "{:0>2d}d {:0>2d}h {:0>2d}m {:0>2d}s".format(
@@ -103,26 +112,10 @@ class WemoSwitch(WemoEntity, SwitchEntity):
         )
 
     @property
-    def current_power_w(self):
-        """Return the current power usage in W."""
-        if isinstance(self.wemo, Insight):
-            return (
-                convert(self.wemo.insight_params.get("currentpower"), float, 0.0)
-                / 1000.0
-            )
-
-    @property
-    def today_energy_kwh(self):
-        """Return the today total energy usage in kWh."""
-        if isinstance(self.wemo, Insight):
-            miliwatts = convert(self.wemo.insight_params.get("todaymw"), float, 0.0)
-            return round(miliwatts / (1000.0 * 1000.0 * 60), 2)
-
-    @property
-    def detail_state(self):
+    def detail_state(self) -> str:
         """Return the state of the device."""
         if isinstance(self.wemo, CoffeeMaker):
-            return self.wemo.mode_string
+            return cast(str, self.wemo.mode_string)
         if isinstance(self.wemo, Insight):
             standby_state = int(self.wemo.insight_params.get("state", 0))
             if standby_state == WEMO_ON:
@@ -132,29 +125,21 @@ class WemoSwitch(WemoEntity, SwitchEntity):
             if standby_state == WEMO_STANDBY:
                 return STATE_STANDBY
             return STATE_UNKNOWN
+        assert False  # Unreachable code statement.
 
     @property
-    def icon(self):
+    def icon(self) -> str | None:
         """Return the icon of device based on its type."""
         if isinstance(self.wemo, CoffeeMaker):
             return "mdi:coffee"
         return None
 
-    @property
-    def is_on(self) -> bool:
-        """Return true if the state is on. Standby is on."""
-        return self.wemo.get_state()
-
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        with self._wemo_exception_handler("turn on"):
+        with self._wemo_call_wrapper("turn on"):
             self.wemo.on()
 
-        self.schedule_update_ha_state()
-
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        with self._wemo_exception_handler("turn off"):
+        with self._wemo_call_wrapper("turn off"):
             self.wemo.off()
-
-        self.schedule_update_ha_state()

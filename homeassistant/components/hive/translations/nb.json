@@ -1,0 +1,16 @@
+{
+    "config": {
+        "step": {
+            "reauth": {
+                "data": {
+                    "username": "Brukernavn"
+                }
+            },
+            "user": {
+                "data": {
+                    "username": "Brukernavn"
+                }
+            }
+        }
+    }
+}

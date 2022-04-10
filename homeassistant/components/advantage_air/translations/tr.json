@@ -9,9 +9,10 @@
         "step": {
             "user": {
                 "data": {
-                    "ip_address": "\u0130p Adresi",
+                    "ip_address": "IP Adresi",
                     "port": "Port"
                 },
+                "description": "Advantage Air duvara monte tabletinizin API'sine ba\u011flan\u0131n.",
                 "title": "Ba\u011flan"
             }
         }

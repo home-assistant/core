@@ -5,5 +5,6 @@
   "documentation": "https://www.home-assistant.io/integrations/firmata",
   "requirements": ["pymata-express==1.19"],
   "codeowners": ["@DaAwesomeP"],
-  "iot_class": "local_push"
+  "iot_class": "local_push",
+  "loggers": ["pymata_express"]
 }

@@ -7,8 +7,6 @@ DOMAIN = "iqvia"
 
 CONF_ZIP_CODE = "zip_code"
 
-DATA_COORDINATOR = "coordinator"
-
 TYPE_ALLERGY_FORECAST = "allergy_average_forecasted"
 TYPE_ALLERGY_INDEX = "allergy_index"
 TYPE_ALLERGY_OUTLOOK = "allergy_outlook"

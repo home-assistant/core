@@ -1,17 +1,13 @@
 """Support for the Dynalite channels as covers."""
 
-from homeassistant.components.cover import (
-    DEVICE_CLASS_SHUTTER,
-    DEVICE_CLASSES,
-    CoverEntity,
-)
+from homeassistant.components.cover import DEVICE_CLASSES, CoverDeviceClass, CoverEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .dynalitebase import DynaliteBase, async_setup_entry_base
 
-DEFAULT_COVER_CLASS = DEVICE_CLASS_SHUTTER
+DEFAULT_COVER_CLASS = CoverDeviceClass.SHUTTER
 
 
 async def async_setup_entry(

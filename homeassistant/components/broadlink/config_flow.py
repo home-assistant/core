@@ -13,12 +13,11 @@ from broadlink.exceptions import (
 import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.dhcp import IP_ADDRESS, MAC_ADDRESS
-from homeassistant.config_entries import SOURCE_REAUTH
+from homeassistant.components import dhcp
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_TIMEOUT, CONF_TYPE
 from homeassistant.helpers import config_validation as cv
 
-from .const import DEFAULT_PORT, DEFAULT_TIMEOUT, DOMAIN, DOMAINS_AND_TYPES
+from .const import DEFAULT_PORT, DEFAULT_TIMEOUT, DEVICE_TYPES, DOMAIN
 from .helpers import format_mac
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,8 +34,7 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_set_device(self, device, raise_on_progress=True):
         """Define a device for the config flow."""
-        supported_types = set.union(*DOMAINS_AND_TYPES.values())
-        if device.type not in supported_types:
+        if device.type not in DEVICE_TYPES:
             _LOGGER.error(
                 "Unsupported device: %s. If it worked before, please open "
                 "an issue at https://github.com/home-assistant/core/issues",
@@ -55,10 +53,12 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             "host": device.host[0],
         }
 
-    async def async_step_dhcp(self, discovery_info):
+    async def async_step_dhcp(
+        self, discovery_info: dhcp.DhcpServiceInfo
+    ) -> data_entry_flow.FlowResult:
         """Handle dhcp discovery."""
-        host = discovery_info[IP_ADDRESS]
-        unique_id = discovery_info[MAC_ADDRESS].lower().replace(":", "")
+        host = discovery_info.ip
+        unique_id = discovery_info.macaddress.lower().replace(":", "")
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 
@@ -73,8 +73,7 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="cannot_connect")
             return self.async_abort(reason="unknown")
 
-        supported_types = set.union(*DOMAINS_AND_TYPES.values())
-        if device.type not in supported_types:
+        if device.type not in DEVICE_TYPES:
             return self.async_abort(reason="not_supported")
 
         await self.async_set_device(device)
@@ -110,7 +109,7 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 device.timeout = timeout
 
-                if self.source != SOURCE_REAUTH:
+                if self.source != config_entries.SOURCE_REAUTH:
                     await self.async_set_device(device)
                     self._abort_if_unique_id_configured(
                         updates={CONF_HOST: device.host[0], CONF_TIMEOUT: timeout}
@@ -189,7 +188,9 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         await self.async_set_unique_id(device.mac.hex())
         _LOGGER.error(
-            "Failed to authenticate to the device at %s: %s", device.host[0], err_msg
+            "Failed to authenticate to the device at %s: %s",
+            device.host[0],
+            err_msg,  # pylint: disable=used-before-assignment
         )
         return self.async_show_form(step_id="auth", errors=errors)
 
@@ -252,7 +253,9 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return await self.async_step_finish()
 
             _LOGGER.error(
-                "Failed to unlock the device at %s: %s", device.host[0], err_msg
+                "Failed to unlock the device at %s: %s",
+                device.host[0],
+                err_msg,  # pylint: disable=used-before-assignment
             )
 
         else:

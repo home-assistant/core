@@ -5,6 +5,7 @@ from unittest.mock import patch
 import pytest
 
 import homeassistant.components.automation as automation
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.switch import DOMAIN
 from homeassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON
 from homeassistant.helpers import device_registry
@@ -65,7 +66,9 @@ async def test_get_conditions(hass, device_reg, entity_reg):
             "entity_id": f"{DOMAIN}.test_5678",
         },
     ]
-    conditions = await async_get_device_automations(hass, "condition", device_entry.id)
+    conditions = await async_get_device_automations(
+        hass, DeviceAutomationType.CONDITION, device_entry.id
+    )
     assert conditions == expected_conditions
 
 
@@ -83,10 +86,12 @@ async def test_get_condition_capabilities(hass, device_reg, entity_reg):
             {"name": "for", "optional": True, "type": "positive_time_period_dict"}
         ]
     }
-    conditions = await async_get_device_automations(hass, "condition", device_entry.id)
+    conditions = await async_get_device_automations(
+        hass, DeviceAutomationType.CONDITION, device_entry.id
+    )
     for condition in conditions:
         capabilities = await async_get_device_automation_capabilities(
-            hass, "condition", condition
+            hass, DeviceAutomationType.CONDITION, condition
         )
         assert capabilities == expected_capabilities
 

@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "reauth_successful": "Op\u00e4tovn\u00e9 overenie bolo \u00faspe\u0161n\u00e9"
+        },
+        "error": {
+            "invalid_api_key": "Neplatn\u00fd API k\u013e\u00fa\u010d"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API k\u013e\u00fa\u010d"
+                }
+            },
+            "user": {
+                "data": {
+                    "api_key": "API k\u013e\u00fa\u010d",
+                    "latitude": "Zemepisn\u00e1 \u0161\u00edrka",
+                    "longitude": "Zemepisn\u00e1 d\u013a\u017eka",
+                    "name": "N\u00e1zov"
+                }
+            }
+        }
+    }
+}

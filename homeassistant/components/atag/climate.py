@@ -1,7 +1,7 @@
 """Initialization of ATAG One climate platform."""
 from __future__ import annotations
 
-from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
@@ -9,12 +9,13 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT,
     PRESET_AWAY,
     PRESET_BOOST,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
 )
-from homeassistant.const import ATTR_TEMPERATURE
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_TEMPERATURE, Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import CLIMATE, DOMAIN, AtagEntity
+from . import DOMAIN, AtagEntity
 
 PRESET_MAP = {
     "Manual": "manual",
@@ -24,14 +25,15 @@ PRESET_MAP = {
     PRESET_BOOST: "fireplace",
 }
 PRESET_INVERTED = {v: k for k, v in PRESET_MAP.items()}
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 HVAC_MODES = [HVAC_MODE_AUTO, HVAC_MODE_HEAT]
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Load a config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([AtagThermostat(coordinator, CLIMATE)])
+    async_add_entities([AtagThermostat(coordinator, Platform.CLIMATE)])
 
 
 class AtagThermostat(AtagEntity, ClimateEntity):
@@ -39,7 +41,9 @@ class AtagThermostat(AtagEntity, ClimateEntity):
 
     _attr_hvac_modes = HVAC_MODES
     _attr_preset_modes = list(PRESET_MAP.keys())
-    _attr_supported_features = SUPPORT_FLAGS
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+    )
 
     def __init__(self, coordinator, atag_id):
         """Initialize an Atag climate device."""

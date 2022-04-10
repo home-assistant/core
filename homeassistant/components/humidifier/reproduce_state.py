@@ -28,9 +28,7 @@ async def _async_reproduce_states(
     reproduce_options: dict[str, Any] | None = None,
 ) -> None:
     """Reproduce component states."""
-    cur_state = hass.states.get(state.entity_id)
-
-    if cur_state is None:
+    if (cur_state := hass.states.get(state.entity_id)) is None:
         _LOGGER.warning("Unable to find entity %s", state.entity_id)
         return
 
@@ -64,7 +62,9 @@ async def _async_reproduce_states(
     if cur_state.state != STATE_ON:
         await call_service(SERVICE_TURN_ON, [])
         # refetch the state as turning on might allow us to see some more values
-        cur_state = hass.states.get(state.entity_id)
+        if (cur_state := hass.states.get(state.entity_id)) is None:
+            _LOGGER.warning("Unable to find entity %s", state.entity_id)
+            return
 
     # Then set the mode before target humidity, because switching modes
     # may invalidate target humidity

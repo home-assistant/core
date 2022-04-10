@@ -12,9 +12,8 @@ def async_describe_events(hass, async_describe_event):
     def async_describe_logbook_event(event):
         """Describe a logbook event."""
         data = event.data
-        entity_id = data["request"].get("entity_id")
 
-        if entity_id:
+        if entity_id := data["request"].get("entity_id"):
             state = hass.states.get(entity_id)
             name = state.name if state else entity_id
             message = f"sent command {data['request']['namespace']}/{data['request']['name']} for {name}"

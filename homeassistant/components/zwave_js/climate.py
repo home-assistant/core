@@ -23,6 +23,7 @@ from homeassistant.components.climate import (
     DEFAULT_MAX_TEMP,
     DEFAULT_MIN_TEMP,
     ClimateEntity,
+    ClimateEntityFeature,
 )
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
@@ -40,13 +41,6 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
     PRESET_NONE,
-    SUPPORT_FAN_MODE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_RANGE,
-)
-from homeassistant.components.zwave_js.discovery_data_template import (
-    DynamicCurrentTempClimateDataTemplate,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -58,10 +52,11 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.temperature import convert_temperature
+from homeassistant.util.temperature import convert as convert_temperature
 
 from .const import DATA_CLIENT, DOMAIN
 from .discovery import ZwaveDiscoveryInfo
+from .discovery_data_template import DynamicCurrentTempClimateDataTemplate
 from .entity import ZWaveBaseEntity
 from .helpers import get_value_of_zwave_value
 
@@ -195,22 +190,23 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             check_all_endpoints=True,
         )
         self._set_modes_and_presets()
-        self._supported_features = 0
+        self._attr_supported_features = 0
         if len(self._hvac_presets) > 1:
-            self._supported_features |= SUPPORT_PRESET_MODE
+            self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
         # If any setpoint value exists, we can assume temperature
         # can be set
         if any(self._setpoint_values.values()):
-            self._supported_features |= SUPPORT_TARGET_TEMPERATURE
+            self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
         if HVAC_MODE_HEAT_COOL in self.hvac_modes:
-            self._supported_features |= SUPPORT_TARGET_TEMPERATURE_RANGE
+            self._attr_supported_features |= (
+                ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+            )
         if self._fan_mode:
-            self._supported_features |= SUPPORT_FAN_MODE
+            self._attr_supported_features |= ClimateEntityFeature.FAN_MODE
 
     def _setpoint_value(self, setpoint_type: ThermostatSetpointType) -> ZwaveValue:
         """Optionally return a ZwaveValue for a setpoint."""
-        val = self._setpoint_values[setpoint_type]
-        if val is None:
+        if (val := self._setpoint_values[setpoint_type]) is None:
             raise ValueError("Value requested is not available")
 
         return val
@@ -231,8 +227,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             mode_id = int(mode_id)
             if mode_id in THERMOSTAT_MODES:
                 # treat value as hvac mode
-                hass_mode = ZW_HVAC_MODE_MAP.get(mode_id)
-                if hass_mode:
+                if hass_mode := ZW_HVAC_MODE_MAP.get(mode_id):
                     all_modes[hass_mode] = mode_id
             else:
                 # treat value as hvac preset
@@ -246,7 +241,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         if self._current_mode is None:
             # Thermostat(valve) with no support for setting a mode is considered heating-only
             return [ThermostatSetpointType.HEATING]
-        return THERMOSTAT_MODE_SETPOINT_MAP.get(int(self._current_mode.value), [])  # type: ignore
+        return THERMOSTAT_MODE_SETPOINT_MAP.get(int(self._current_mode.value), [])  # type: ignore[no-any-return]
 
     @property
     def temperature_unit(self) -> str:
@@ -387,11 +382,6 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         return None
 
     @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return self._supported_features
-
-    @property
     def min_temp(self) -> float:
         """Return the minimum temperature."""
         min_temp = DEFAULT_MIN_TEMP
@@ -470,8 +460,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""
-        hvac_mode_id = self._hvac_modes.get(hvac_mode)
-        if hvac_mode_id is None:
+        if (hvac_mode_id := self._hvac_modes.get(hvac_mode)) is None:
             raise ValueError(f"Received an invalid hvac mode: {hvac_mode}")
 
         if not self._current_mode:

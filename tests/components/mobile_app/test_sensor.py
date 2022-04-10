@@ -1,6 +1,11 @@
 """Entity tests for mobile_app."""
-from homeassistant.const import PERCENTAGE, STATE_UNKNOWN
-from homeassistant.helpers import device_registry as dr
+from http import HTTPStatus
+
+import pytest
+
+from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.const import PERCENTAGE, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 
 async def test_sensor(hass, create_registrations, webhook_client):
@@ -19,13 +24,15 @@ async def test_sensor(hass, create_registrations, webhook_client):
                 "name": "Battery State",
                 "state": 100,
                 "type": "sensor",
+                "entity_category": "diagnostic",
                 "unique_id": "battery_state",
+                "state_class": "total",
                 "unit_of_measurement": PERCENTAGE,
             },
         },
     )
 
-    assert reg_resp.status == 201
+    assert reg_resp.status == HTTPStatus.CREATED
 
     json = await reg_resp.json()
     assert json == {"success": True}
@@ -38,9 +45,15 @@ async def test_sensor(hass, create_registrations, webhook_client):
     assert entity.attributes["icon"] == "mdi:battery"
     assert entity.attributes["unit_of_measurement"] == PERCENTAGE
     assert entity.attributes["foo"] == "bar"
+    assert entity.attributes["state_class"] == "total"
     assert entity.domain == "sensor"
     assert entity.name == "Test 1 Battery State"
     assert entity.state == "100"
+
+    assert (
+        er.async_get(hass).async_get("sensor.test_1_battery_state").entity_category
+        == "diagnostic"
+    )
 
     update_resp = await webhook_client.post(
         webhook_url,
@@ -59,7 +72,7 @@ async def test_sensor(hass, create_registrations, webhook_client):
         },
     )
 
-    assert update_resp.status == 200
+    assert update_resp.status == HTTPStatus.OK
 
     json = await update_resp.json()
     assert json["invalid_state"]["success"] is False
@@ -76,7 +89,7 @@ async def test_sensor(hass, create_registrations, webhook_client):
     await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
     unloaded_entity = hass.states.get("sensor.test_1_battery_state")
-    assert unloaded_entity.state == "unavailable"
+    assert unloaded_entity.state == STATE_UNAVAILABLE
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -97,7 +110,7 @@ async def test_sensor_must_register(hass, create_registrations, webhook_client):
         },
     )
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
 
     json = await resp.json()
     assert json["battery_state"]["success"] is False
@@ -125,7 +138,7 @@ async def test_sensor_id_no_dupes(hass, create_registrations, webhook_client, ca
 
     reg_resp = await webhook_client.post(webhook_url, json=payload)
 
-    assert reg_resp.status == 201
+    assert reg_resp.status == HTTPStatus.CREATED
 
     reg_json = await reg_resp.json()
     assert reg_json == {"success": True}
@@ -147,7 +160,7 @@ async def test_sensor_id_no_dupes(hass, create_registrations, webhook_client, ca
     payload["data"]["state"] = 99
     dupe_resp = await webhook_client.post(webhook_url, json=payload)
 
-    assert dupe_resp.status == 201
+    assert dupe_resp.status == HTTPStatus.CREATED
     dupe_reg_json = await dupe_resp.json()
     assert dupe_reg_json == {"success": True}
     await hass.async_block_till_done()
@@ -184,7 +197,7 @@ async def test_register_sensor_no_state(hass, create_registrations, webhook_clie
         },
     )
 
-    assert reg_resp.status == 201
+    assert reg_resp.status == HTTPStatus.CREATED
 
     json = await reg_resp.json()
     assert json == {"success": True}
@@ -209,7 +222,7 @@ async def test_register_sensor_no_state(hass, create_registrations, webhook_clie
         },
     )
 
-    assert reg_resp.status == 201
+    assert reg_resp.status == HTTPStatus.CREATED
 
     json = await reg_resp.json()
     assert json == {"success": True}
@@ -241,7 +254,7 @@ async def test_update_sensor_no_state(hass, create_registrations, webhook_client
         },
     )
 
-    assert reg_resp.status == 201
+    assert reg_resp.status == HTTPStatus.CREATED
 
     json = await reg_resp.json()
     assert json == {"success": True}
@@ -259,10 +272,71 @@ async def test_update_sensor_no_state(hass, create_registrations, webhook_client
         },
     )
 
-    assert update_resp.status == 200
+    assert update_resp.status == HTTPStatus.OK
 
     json = await update_resp.json()
     assert json == {"battery_state": {"success": True}}
 
     updated_entity = hass.states.get("sensor.test_1_battery_state")
     assert updated_entity.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    "device_class,native_value,state_value",
+    [
+        (SensorDeviceClass.DATE, "2021-11-18", "2021-11-18"),
+        (
+            SensorDeviceClass.TIMESTAMP,
+            "2021-11-18T20:25:00+00:00",
+            "2021-11-18T20:25:00+00:00",
+        ),
+        (
+            SensorDeviceClass.TIMESTAMP,
+            "2021-11-18 20:25:00+01:00",
+            "2021-11-18T19:25:00+00:00",
+        ),
+        (
+            SensorDeviceClass.TIMESTAMP,
+            "unavailable",
+            STATE_UNAVAILABLE,
+        ),
+        (
+            SensorDeviceClass.TIMESTAMP,
+            "unknown",
+            STATE_UNKNOWN,
+        ),
+    ],
+)
+async def test_sensor_datetime(
+    hass, create_registrations, webhook_client, device_class, native_value, state_value
+):
+    """Test that sensors can be registered and updated."""
+    webhook_id = create_registrations[1]["webhook_id"]
+    webhook_url = f"/api/webhook/{webhook_id}"
+
+    reg_resp = await webhook_client.post(
+        webhook_url,
+        json={
+            "type": "register_sensor",
+            "data": {
+                "device_class": device_class,
+                "name": "Datetime sensor test",
+                "state": native_value,
+                "type": "sensor",
+                "unique_id": "super_unique",
+            },
+        },
+    )
+
+    assert reg_resp.status == HTTPStatus.CREATED
+
+    json = await reg_resp.json()
+    assert json == {"success": True}
+    await hass.async_block_till_done()
+
+    entity = hass.states.get("sensor.test_1_datetime_sensor_test")
+    assert entity is not None
+
+    assert entity.attributes["device_class"] == device_class
+    assert entity.domain == "sensor"
+    assert entity.state == state_value

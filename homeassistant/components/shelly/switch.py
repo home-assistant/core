@@ -74,6 +74,7 @@ async def async_setup_rpc_entry(
 ) -> None:
     """Set up entities for RPC device."""
     wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id][RPC]
+
     switch_key_ids = get_rpc_key_ids(wrapper.device.status, "switch")
 
     switch_ids = []

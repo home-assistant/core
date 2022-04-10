@@ -13,6 +13,7 @@
                 "title": "Pilih Metode Autentikasi"
             },
             "reauth_confirm": {
+                "description": "Integrasi Lyric perlu mengautentikasi ulang akun Anda",
                 "title": "Autentikasi Ulang Integrasi"
             }
         }

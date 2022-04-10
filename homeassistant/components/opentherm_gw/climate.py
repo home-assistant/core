@@ -3,7 +3,11 @@ import logging
 
 from pyotgw import vars as gw_vars
 
-from homeassistant.components.climate import ENTITY_ID_FORMAT, ClimateEntity
+from homeassistant.components.climate import (
+    ENTITY_ID_FORMAT,
+    ClimateEntity,
+    ClimateEntityFeature,
+)
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_COOL,
     CURRENT_HVAC_HEAT,
@@ -12,9 +16,8 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT,
     PRESET_AWAY,
     PRESET_NONE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_ID,
@@ -23,9 +26,10 @@ from homeassistant.const import (
     PRECISION_WHOLE,
     TEMP_CELSIUS,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import async_generate_entity_id
+from homeassistant.helpers.entity import DeviceInfo, async_generate_entity_id
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN
 from .const import (
@@ -41,10 +45,12 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_FLOOR_TEMP = False
 
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
-
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up an OpenTherm Gateway climate entity."""
     ents = []
     ents.append(
@@ -59,6 +65,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 class OpenThermClimate(ClimateEntity):
     """Representation of a climate device."""
+
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+    )
 
     def __init__(self, gw_dev, options):
         """Initialize the device."""
@@ -171,15 +181,15 @@ class OpenThermClimate(ClimateEntity):
         return self.friendly_name
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device info."""
-        return {
-            "identifiers": {(DOMAIN, self._gateway.gw_id)},
-            "name": self._gateway.name,
-            "manufacturer": "Schelte Bron",
-            "model": "OpenTherm Gateway",
-            "sw_version": self._gateway.gw_version,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._gateway.gw_id)},
+            manufacturer="Schelte Bron",
+            model="OpenTherm Gateway",
+            name=self._gateway.name,
+            sw_version=self._gateway.gw_version,
+        )
 
     @property
     def unique_id(self):
@@ -277,11 +287,6 @@ class OpenThermClimate(ClimateEntity):
                 temp, self.temporary_ovrd_mode
             )
             self.async_write_ha_state()
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_FLAGS
 
     @property
     def min_temp(self):

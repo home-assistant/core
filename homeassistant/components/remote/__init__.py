@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import timedelta
+from enum import IntEnum
 import functools as ft
 import logging
 from typing import Any, cast, final
@@ -61,6 +62,17 @@ DEFAULT_NUM_REPEATS = 1
 DEFAULT_DELAY_SECS = 0.4
 DEFAULT_HOLD_SECS = 0
 
+
+class RemoteEntityFeature(IntEnum):
+    """Supported features of the remote entity."""
+
+    LEARN_COMMAND = 1
+    DELETE_COMMAND = 2
+    ACTIVITY = 4
+
+
+# These SUPPORT_* constants are deprecated as of Home Assistant 2022.5.
+# Please use the RemoteEntityFeature enum instead.
 SUPPORT_LEARN_COMMAND = 1
 SUPPORT_DELETE_COMMAND = 2
 SUPPORT_ACTIVITY = 4
@@ -175,7 +187,7 @@ class RemoteEntity(ToggleEntity):
     @property
     def state_attributes(self) -> dict[str, Any] | None:
         """Return optional state attributes."""
-        if not self.supported_features & SUPPORT_ACTIVITY:
+        if not self.supported_features & RemoteEntityFeature.ACTIVITY:
             return None
 
         return {
@@ -209,16 +221,4 @@ class RemoteEntity(ToggleEntity):
         """Delete commands from the database."""
         await self.hass.async_add_executor_job(
             ft.partial(self.delete_command, **kwargs)
-        )
-
-
-class RemoteDevice(RemoteEntity):
-    """Representation of a remote (for backwards compatibility)."""
-
-    def __init_subclass__(cls, **kwargs):
-        """Print deprecation warning."""
-        super().__init_subclass__(**kwargs)
-        _LOGGER.warning(
-            "RemoteDevice is deprecated, modify %s to extend RemoteEntity",
-            cls.__name__,
         )

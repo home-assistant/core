@@ -4,10 +4,12 @@ import math
 
 from homeassistant import core as ha
 from homeassistant.components import (
+    button,
     camera,
     cover,
     fan,
     group,
+    input_button,
     input_number,
     light,
     media_player,
@@ -71,7 +73,7 @@ from .errors import (
 from .state_report import async_enable_proactive_mode
 
 _LOGGER = logging.getLogger(__name__)
-HANDLERS = Registry()
+HANDLERS = Registry()  # type: ignore[var-annotated]
 
 
 @HANDLERS.register(("Alexa.Discovery", "Discover"))
@@ -117,8 +119,7 @@ async def async_api_accept_grant(hass, config, directive, context):
 async def async_api_turn_on(hass, config, directive, context):
     """Process a turn on request."""
     entity = directive.entity
-    domain = entity.domain
-    if domain == group.DOMAIN:
+    if (domain := entity.domain) == group.DOMAIN:
         domain = ha.DOMAIN
 
     service = SERVICE_TURN_ON
@@ -128,13 +129,19 @@ async def async_api_turn_on(hass, config, directive, context):
         service = fan.SERVICE_TURN_ON
     elif domain == vacuum.DOMAIN:
         supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-        if not supported & vacuum.SUPPORT_TURN_ON and supported & vacuum.SUPPORT_START:
+        if (
+            not supported & vacuum.VacuumEntityFeature.TURN_ON
+            and supported & vacuum.VacuumEntityFeature.START
+        ):
             service = vacuum.SERVICE_START
     elif domain == timer.DOMAIN:
         service = timer.SERVICE_START
     elif domain == media_player.DOMAIN:
         supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-        power_features = media_player.SUPPORT_TURN_ON | media_player.SUPPORT_TURN_OFF
+        power_features = (
+            media_player.MediaPlayerEntityFeature.TURN_ON
+            | media_player.MediaPlayerEntityFeature.TURN_OFF
+        )
         if not supported & power_features:
             service = media_player.SERVICE_MEDIA_PLAY
 
@@ -165,15 +172,18 @@ async def async_api_turn_off(hass, config, directive, context):
     elif domain == vacuum.DOMAIN:
         supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if (
-            not supported & vacuum.SUPPORT_TURN_OFF
-            and supported & vacuum.SUPPORT_RETURN_HOME
+            not supported & vacuum.VacuumEntityFeature.TURN_OFF
+            and supported & vacuum.VacuumEntityFeature.RETURN_HOME
         ):
             service = vacuum.SERVICE_RETURN_TO_BASE
     elif domain == timer.DOMAIN:
         service = timer.SERVICE_CANCEL
     elif domain == media_player.DOMAIN:
         supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-        power_features = media_player.SUPPORT_TURN_ON | media_player.SUPPORT_TURN_OFF
+        power_features = (
+            media_player.MediaPlayerEntityFeature.TURN_ON
+            | media_player.MediaPlayerEntityFeature.TURN_OFF
+        )
         if not supported & power_features:
             service = media_player.SERVICE_MEDIA_STOP
 
@@ -211,20 +221,14 @@ async def async_api_adjust_brightness(hass, config, directive, context):
     entity = directive.entity
     brightness_delta = int(directive.payload["brightnessDelta"])
 
-    # read current state
-    try:
-        current = math.floor(
-            int(entity.attributes.get(light.ATTR_BRIGHTNESS)) / 255 * 100
-        )
-    except ZeroDivisionError:
-        current = 0
-
     # set brightness
-    brightness = max(0, brightness_delta + current)
     await hass.services.async_call(
         entity.domain,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity.entity_id, light.ATTR_BRIGHTNESS_PCT: brightness},
+        {
+            ATTR_ENTITY_ID: entity.entity_id,
+            light.ATTR_BRIGHTNESS_STEP_PCT: brightness_delta,
+        },
         blocking=False,
         context=context,
     )
@@ -314,9 +318,15 @@ async def async_api_activate(hass, config, directive, context):
     entity = directive.entity
     domain = entity.domain
 
+    service = SERVICE_TURN_ON
+    if domain == button.DOMAIN:
+        service = button.SERVICE_PRESS
+    elif domain == input_button.DOMAIN:
+        service = input_button.SERVICE_PRESS
+
     await hass.services.async_call(
         domain,
-        SERVICE_TURN_ON,
+        service,
         {ATTR_ENTITY_ID: entity.entity_id},
         blocking=False,
         context=context,
@@ -1086,7 +1096,7 @@ async def async_api_set_range(hass, config, directive, context):
             service = fan.SERVICE_TURN_OFF
         else:
             supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-            if supported and fan.SUPPORT_SET_SPEED:
+            if supported and fan.FanEntityFeature.SET_SPEED:
                 service = fan.SERVICE_SET_PERCENTAGE
                 data[fan.ATTR_PERCENTAGE] = range_value
             else:
@@ -1151,8 +1161,7 @@ async def async_api_adjust_range(hass, config, directive, context):
     if instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
         range_delta = int(range_delta * 20) if range_delta_default else int(range_delta)
         service = SERVICE_SET_COVER_POSITION
-        current = entity.attributes.get(cover.ATTR_POSITION)
-        if not current:
+        if not (current := entity.attributes.get(cover.ATTR_POSITION)):
             msg = f"Unable to determine {entity.entity_id} current position"
             raise AlexaInvalidValueError(msg)
         position = response_value = min(100, max(0, range_delta + current))
@@ -1188,8 +1197,7 @@ async def async_api_adjust_range(hass, config, directive, context):
             else int(range_delta)
         )
         service = fan.SERVICE_SET_PERCENTAGE
-        current = entity.attributes.get(fan.ATTR_PERCENTAGE)
-        if not current:
+        if not (current := entity.attributes.get(fan.ATTR_PERCENTAGE)):
             msg = f"Unable to determine {entity.entity_id} current fan speed"
             raise AlexaInvalidValueError(msg)
         percentage = response_value = min(100, max(0, range_delta + current))

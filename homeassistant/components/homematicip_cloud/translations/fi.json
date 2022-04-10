@@ -7,13 +7,20 @@
         },
         "error": {
             "invalid_sgtin_or_pin": "Virheellinen PIN-koodi, yrit\u00e4 uudelleen.",
-            "press_the_button": "Paina sinist\u00e4 painiketta."
+            "press_the_button": "Paina sinist\u00e4 painiketta.",
+            "register_failed": "Rekister\u00f6inti ep\u00e4onnistui, yrit\u00e4 uudelleen.",
+            "timeout_button": "Sinisen painikkeen painalluksen aikakatkaisu, yrit\u00e4 uudelleen."
         },
         "step": {
             "init": {
                 "data": {
                     "pin": "PIN-koodi"
-                }
+                },
+                "title": "Valitse HomematicIP-tukiasema"
+            },
+            "link": {
+                "description": "Rekister\u00f6i HomematicIP Home Assistantiin painamalla tukiaseman sinist\u00e4 painiketta ja l\u00e4hetyspainiketta. \n\n ![Painikkeen sijainti sillalla](/static/images/config_flows/config_homematicip_cloud.png)",
+                "title": "Linkit\u00e4 tukiasema"
             }
         }
     }

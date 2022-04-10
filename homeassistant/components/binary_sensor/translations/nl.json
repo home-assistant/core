@@ -2,6 +2,7 @@
     "device_automation": {
         "condition_type": {
             "is_bat_low": "{entity_name} batterij is bijna leeg",
+            "is_co": "{entity_name} detecteert koolmonoxide",
             "is_cold": "{entity_name} is koud",
             "is_connected": "{entity_name} is verbonden",
             "is_gas": "{entity_name} detecteert gas",
@@ -11,6 +12,7 @@
             "is_moist": "{entity_name} is vochtig",
             "is_motion": "{entity_name} detecteert beweging",
             "is_moving": "{entity_name} is in beweging",
+            "is_no_co": "{entity_name} detecteert geen koolmonoxide",
             "is_no_gas": "{entity_name} detecteert geen gas",
             "is_no_light": "{entity_name} detecteert geen licht",
             "is_no_motion": "{entity_name} detecteert geen beweging",
@@ -31,6 +33,8 @@
             "is_not_plugged_in": "{entity_name} is niet aangesloten",
             "is_not_powered": "{entity_name} is niet van stroom voorzien...",
             "is_not_present": "{entity_name} is niet aanwezig",
+            "is_not_running": "{entity_name} is niet langer actief",
+            "is_not_tampered": "{entity_name} detecteert geen sabotage",
             "is_not_unsafe": "{entity_name} is veilig",
             "is_occupied": "{entity_name} bezet is",
             "is_off": "{entity_name} is uitgeschakeld",
@@ -40,23 +44,29 @@
             "is_powered": "{entity_name} is van stroom voorzien....",
             "is_present": "{entity_name} is aanwezig",
             "is_problem": "{entity_name} detecteert een probleem",
+            "is_running": "{entity_name} is actief",
             "is_smoke": "{entity_name} detecteert rook",
             "is_sound": "{entity_name} detecteert geluid",
+            "is_tampered": "{entity_name} detecteert sabotage",
             "is_unsafe": "{entity_name} is onveilig",
             "is_update": "{entity_name} heeft een update beschikbaar",
             "is_vibration": "{entity_name} detecteert trillingen"
         },
         "trigger_type": {
             "bat_low": "{entity_name} batterij bijna leeg",
+            "co": "{entity_name} begonnen met het detecteren van koolmonoxide",
             "cold": "{entity_name} werd koud",
             "connected": "{entity_name} verbonden",
             "gas": "{entity_name} begon gas te detecteren",
             "hot": "{entity_name} werd heet",
+            "is_not_tampered": "{entity_name} gestopt met het detecteren van sabotage",
+            "is_tampered": "{entity_name} begonnen met het detecteren van sabotage",
             "light": "{entity_name} begon licht te detecteren",
             "locked": "{entity_name} vergrendeld",
             "moist": "{entity_name} werd vochtig",
             "motion": "{entity_name} begon beweging te detecteren",
             "moving": "{entity_name} begon te bewegen",
+            "no_co": "{entity_name} gestopt met het detecteren van koolmonoxide",
             "no_gas": "{entity_name} is gestopt met het detecteren van gas",
             "no_light": "{entity_name} gestopt met het detecteren van licht",
             "no_motion": "{entity_name} is gestopt met het detecteren van beweging",
@@ -77,6 +87,8 @@
             "not_plugged_in": "{entity_name} niet verbonden",
             "not_powered": "{entity_name} niet ingeschakeld",
             "not_present": "{entity_name} is niet aanwezig",
+            "not_running": "{entity_name} is niet langer actief",
+            "not_tampered": "{entity_name} gestopt met het detecteren van sabotage",
             "not_unsafe": "{entity_name} werd veilig",
             "occupied": "{entity_name} werd bezet",
             "opened": "{entity_name} geopend",
@@ -84,14 +96,30 @@
             "powered": "{entity_name} heeft vermogen",
             "present": "{entity_name} aanwezig",
             "problem": "{entity_name} begonnen met het detecteren van een probleem",
+            "running": "{entity_name} is actief geworden",
             "smoke": "{entity_name} begon rook te detecteren",
             "sound": "{entity_name} begon geluid te detecteren",
+            "tampered": "{entity_name} begonnen met het detecteren van sabotage",
             "turned_off": "{entity_name} uitgeschakeld",
             "turned_on": "{entity_name} ingeschakeld",
             "unsafe": "{entity_name} werd onveilig",
             "update": "{entity_name} kreeg een update beschikbaar",
             "vibration": "{entity_name} begon trillingen te detecteren"
         }
+    },
+    "device_class": {
+        "co": "koolmonoxide",
+        "cold": "koud",
+        "gas": "gas",
+        "heat": "warmte",
+        "moisture": "vochtigheid",
+        "motion": "beweging",
+        "occupancy": "bezetting",
+        "power": "power",
+        "problem": "probleem",
+        "smoke": "rook",
+        "sound": "geluid",
+        "vibration": "trilling"
     },
     "state": {
         "_": {
@@ -105,6 +133,14 @@
         "battery_charging": {
             "off": "Niet aan het opladen",
             "on": "Opladen"
+        },
+        "carbon_monoxide": {
+            "off": "Niet gedetecteerd",
+            "on": "Gedetecteerd"
+        },
+        "co": {
+            "off": "Niet gedetecteerd",
+            "on": "Gedetecteerd"
         },
         "cold": {
             "off": "Normaal",
@@ -169,6 +205,10 @@
         "problem": {
             "off": "OK",
             "on": "Probleem"
+        },
+        "running": {
+            "off": "Niet actief",
+            "on": "Actief"
         },
         "safety": {
             "off": "Veilig",

@@ -1,6 +1,7 @@
 """Tests for Plex setup."""
 import copy
 from datetime import timedelta
+from http import HTTPStatus
 import ssl
 from unittest.mock import patch
 
@@ -212,7 +213,9 @@ async def test_setup_when_certificate_changed(
     requests_mock.get(old_url, exc=WrongCertHostnameException)
 
     # Test with account failure
-    requests_mock.get("https://plex.tv/users/account", status_code=401)
+    requests_mock.get(
+        "https://plex.tv/users/account", status_code=HTTPStatus.UNAUTHORIZED
+    )
     old_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(old_entry.entry_id) is False
     await hass.async_block_till_done()
@@ -262,7 +265,9 @@ async def test_bad_token_with_tokenless_server(
     hass, entry, mock_websocket, setup_plex_server, requests_mock
 ):
     """Test setup with a bad token and a server with token auth disabled."""
-    requests_mock.get("https://plex.tv/users/account", status_code=401)
+    requests_mock.get(
+        "https://plex.tv/users/account", status_code=HTTPStatus.UNAUTHORIZED
+    )
 
     await setup_plex_server()
 
@@ -271,3 +276,20 @@ async def test_bad_token_with_tokenless_server(
     # Ensure updates that rely on account return nothing
     trigger_plex_update(mock_websocket)
     await hass.async_block_till_done()
+
+
+async def test_scan_clients_schedule(hass, setup_plex_server):
+    """Test scan_clients scheduled update."""
+    with patch(
+        "homeassistant.components.plex.server.PlexServer._async_update_platforms"
+    ) as mock_scan_clients:
+        await setup_plex_server()
+        mock_scan_clients.reset_mock()
+
+        async_fire_time_changed(
+            hass,
+            dt_util.utcnow() + const.CLIENT_SCAN_INTERVAL,
+        )
+        await hass.async_block_till_done()
+
+    assert mock_scan_clients.called
