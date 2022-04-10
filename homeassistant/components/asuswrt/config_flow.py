@@ -19,6 +19,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
+from homeassistant.helpers import config_validation as cv
 
 from .const import (
     CONF_DNSMASQ,
@@ -86,9 +87,7 @@ class AsusWrtFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         }
 
         if self.show_advanced_options:
-            schema[vol.Required(CONF_PORT, default=0)] = vol.All(
-                vol.Coerce(int), vol.Range(min=0, max=65535)
-            )
+            schema[vol.Optional(CONF_PORT)] = cv.port
             schema[vol.Optional(CONF_SSH_KEY)] = str
 
         schema[vol.Required(CONF_MODE, default=MODE_ROUTER)] = vol.In(
@@ -137,8 +136,6 @@ class AsusWrtFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         errors = {}
         self._host = user_input[CONF_HOST]
-        if user_input.get(CONF_PORT, -1) == 0:
-            user_input.pop(CONF_PORT)
 
         pwd = user_input.get(CONF_PASSWORD)
         ssh = user_input.get(CONF_SSH_KEY)

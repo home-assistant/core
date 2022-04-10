@@ -43,11 +43,6 @@ CONFIG_DATA = {
     CONF_PORT: 22,
 }
 
-CONFIG_DATA_PORT0 = {
-    **CONFIG_DATA_NO_PORT,
-    CONF_PORT: 0,
-}
-
 
 @pytest.fixture(name="connect")
 def mock_controller_connect():
@@ -60,13 +55,10 @@ def mock_controller_connect():
 
 
 @pytest.mark.parametrize(
-    ["config", "confres"],
-    [
-        (CONFIG_DATA, CONFIG_DATA),
-        (CONFIG_DATA_PORT0, CONFIG_DATA_NO_PORT),
-    ],
+    "config",
+    [CONFIG_DATA, CONFIG_DATA_NO_PORT],
 )
-async def test_user(hass, connect, config, confres):
+async def test_user(hass, connect, config):
     """Test user config."""
     flow_result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER, "show_advanced_options": True}
@@ -89,7 +81,7 @@ async def test_user(hass, connect, config, confres):
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["title"] == HOST
-        assert result["data"] == confres
+        assert result["data"] == config
 
         assert len(mock_setup_entry.mock_calls) == 1
 
