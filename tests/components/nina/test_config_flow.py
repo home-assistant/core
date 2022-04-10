@@ -11,7 +11,8 @@ from homeassistant import data_entry_flow
 from homeassistant.components.nina.const import (
     CONF_FILTER_CORONA,
     CONF_MESSAGE_SLOTS,
-    CONF_REGIONS,
+    CONF_MULTIPLE_SENSOR,
+    CONF_SINGLE_SENSOR,
     CONST_REGION_A_TO_D,
     CONST_REGION_E_TO_H,
     CONST_REGION_I_TO_L,
@@ -37,6 +38,8 @@ DUMMY_DATA: dict[str, Any] = {
     CONST_REGION_R_TO_U: ["072320000000_0", "072320000000_1"],
     CONST_REGION_V_TO_Z: ["081270000000_0", "081270000000_1"],
     CONF_FILTER_CORONA: True,
+    CONF_SINGLE_SENSOR: True,
+    CONF_MULTIPLE_SENSOR: True,
 }
 
 DUMMY_RESPONSE_REGIONS: dict[str, Any] = json.loads(
@@ -109,8 +112,24 @@ async def test_step_user(hass: HomeAssistant) -> None:
         assert result["title"] == "NINA"
 
 
-async def test_step_user_no_selection(hass: HomeAssistant) -> None:
-    """Test starting a flow by user with no selection."""
+async def test_step_user_no_selection_regions(hass: HomeAssistant) -> None:
+    """Test starting a flow by user with no region selected."""
+    with patch(
+        "pynina.baseApi.BaseAPI._makeRequest",
+        return_value=DUMMY_RESPONSE,
+    ):
+
+        result: dict[str, Any] = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data={CONF_SINGLE_SENSOR: True}
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "user"
+        assert result["errors"] == {"base": "no_selection"}
+
+
+async def test_step_user_no_selection_sensors(hass: HomeAssistant) -> None:
+    """Test starting a flow by user with no sensor type selected."""
     with patch(
         "pynina.baseApi.BaseAPI._makeRequest",
         wraps=mocked_request_function,
@@ -122,7 +141,7 @@ async def test_step_user_no_selection(hass: HomeAssistant) -> None:
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "user"
-        assert result["errors"] == {"base": "no_selection"}
+        assert result["errors"] == {"base": "no_type"}
 
 
 async def test_step_user_already_configured(hass: HomeAssistant) -> None:

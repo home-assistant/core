@@ -11,7 +11,9 @@
           "_r_to_u": "City/county (R-U)",
           "_v_to_z": "City/county (V-Z)",
           "slots": "Maximum warnings per city/county",
-          "corona_filter": "Remove Corona Warnings"
+          "corona_filter": "Remove Corona Warnings",
+          "single_sensor": "Single sensor",
+          "multiple_sensor": "Multiple sensors"
         }
       }
     },
@@ -19,6 +21,7 @@
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     },
     "error": {
+      "no_type": "Please select at least one sensor type",
       "no_selection": "Please select at least one city/county",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"

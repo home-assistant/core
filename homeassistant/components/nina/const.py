@@ -14,7 +14,13 @@ DOMAIN: str = "nina"
 CONF_REGIONS: str = "regions"
 CONF_MESSAGE_SLOTS: str = "slots"
 CONF_FILTER_CORONA: str = "corona_filter"
+CONF_MULTIPLE_SENSOR: str = "multiple_sensor"
+CONF_SINGLE_SENSOR: str = "single_sensor"
 
+ATTRIBUTION: str = "Data provided by NINA"
+
+ATTR_WARNING_COUNT = "warning_count"
+ATTR_ATTRIBUTION: str = "attribution"
 ATTR_HEADLINE: str = "headline"
 ATTR_DESCRIPTION: str = "description"
 ATTR_SENDER: str = "sender"

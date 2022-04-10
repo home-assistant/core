@@ -20,7 +20,9 @@ from .const import (
     _LOGGER,
     CONF_FILTER_CORONA,
     CONF_MESSAGE_SLOTS,
+    CONF_MULTIPLE_SENSOR,
     CONF_REGIONS,
+    CONF_SINGLE_SENSOR,
     CONST_REGION_MAPPING,
     CONST_REGIONS,
     DOMAIN,
@@ -121,18 +123,36 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None and not errors:
             user_input[CONF_REGIONS] = []
 
-            for group in CONST_REGIONS:
-                if group_input := user_input.get(group):
-                    user_input[CONF_REGIONS] += group_input
+            if user_input.get(CONF_SINGLE_SENSOR, False) or user_input.get(
+                CONF_MULTIPLE_SENSOR, False
+            ):
 
-            if user_input[CONF_REGIONS]:
+                for group in CONST_REGIONS:
+                    if group_input := user_input.get(group):
+                        user_input[CONF_REGIONS] += group_input
 
-                return self.async_create_entry(
-                    title="NINA",
-                    data=prepare_user_input(user_input, self._all_region_codes_sorted),
-                )
+                if user_input[CONF_REGIONS]:
+                    tmp: dict[str, Any] = {}
 
-            errors["base"] = "no_selection"
+                    for reg in user_input[CONF_REGIONS]:
+                        tmp[self._all_region_codes_sorted[reg]] = reg.split("_", 1)[0]
+
+                    compact: dict[str, Any] = {}
+
+                    for key, val in tmp.items():
+                        if val in compact:
+                            # Abenberg, St + Abenberger Wald
+                            compact[val] = f"{compact[val]} + {key}"
+                            break
+                        compact[val] = key
+
+                    user_input[CONF_REGIONS] = compact
+
+                    return self.async_create_entry(title="NINA", data=user_input)
+
+                errors["base"] = "no_selection"
+            else:
+                errors["base"] = "no_type"
 
         return self.async_show_form(
             step_id="user",
@@ -146,6 +166,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         int, vol.Range(min=1, max=20)
                     ),
                     vol.Required(CONF_FILTER_CORONA, default=True): cv.boolean,
+                    vol.Optional(CONF_SINGLE_SENSOR, default=False): cv.boolean,
+                    vol.Optional(CONF_MULTIPLE_SENSOR, default=True): cv.boolean,
                 }
             ),
             errors=errors,

@@ -6,6 +6,7 @@
         "error": {
             "cannot_connect": "Failed to connect",
             "no_selection": "Please select at least one city/county",
+            "no_type": "Please select at least one sensor type",
             "unknown": "Unexpected error"
         },
         "step": {
@@ -18,6 +19,8 @@
                     "_r_to_u": "City/county (R-U)",
                     "_v_to_z": "City/county (V-Z)",
                     "corona_filter": "Remove Corona Warnings",
+                    "multiple_sensor": "Multiple sensors",
+                    "single_sensor": "Single sensor",
                     "slots": "Maximum warnings per city/county"
                 },
                 "title": "Select city/county"

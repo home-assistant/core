@@ -29,12 +29,16 @@ ENTRY_DATA: dict[str, Any] = {
     "slots": 5,
     "corona_filter": True,
     "regions": {"083350000000": "Aach, Stadt"},
+    "single_sensor": True,
+    "multiple_sensor": True,
 }
 
 ENTRY_DATA_NO_CORONA: dict[str, Any] = {
     "slots": 5,
     "corona_filter": False,
     "regions": {"083350000000": "Aach, Stadt"},
+    "single_sensor": True,
+    "multiple_sensor": True,
 }
 
 
@@ -140,6 +144,50 @@ async def test_sensors(hass: HomeAssistant) -> None:
 
         assert entry_w5.unique_id == "083350000000-5"
         assert state_w5.attributes.get("device_class") == BinarySensorDeviceClass.SAFETY
+
+        state_single_warning = hass.states.get("binary_sensor.all_warnings_aach_stadt")
+        entry_single_warning = entity_registry.async_get(
+            "binary_sensor.all_warnings_aach_stadt"
+        )
+
+        assert state_single_warning.state == STATE_ON
+        assert (
+            state_single_warning.attributes.get(f"warning_1_{ATTR_HEADLINE}")
+            == "Ausfall Notruf 112"
+        )
+        assert (
+            state_single_warning.attributes.get(f"warning_1_{ATTR_DESCRIPTION}")
+            == "Es treten Sturmböen mit Geschwindigkeiten zwischen 70 km/h (20m/s, 38kn, Bft 8) und 85 km/h (24m/s, 47kn, Bft 9) aus westlicher Richtung auf. In Schauernähe sowie in exponierten Lagen muss mit schweren Sturmböen bis 90 km/h (25m/s, 48kn, Bft 10) gerechnet werden."
+        )
+        assert (
+            state_single_warning.attributes.get(f"warning_1_{ATTR_SENDER}")
+            == "Deutscher Wetterdienst"
+        )
+        assert (
+            state_single_warning.attributes.get(f"warning_1_{ATTR_SEVERITY}") == "Minor"
+        )
+        assert (
+            state_single_warning.attributes.get(f"warning_1_{ATTR_ID}")
+            == "mow.DE-NW-BN-SE030-20201014-30-000"
+        )
+        assert (
+            state_single_warning.attributes.get(f"warning_1_{ATTR_SENT}")
+            == "2021-10-11T05:20:00+01:00"
+        )
+        assert (
+            state_single_warning.attributes.get(f"warning_1_{ATTR_START}")
+            == "2021-11-01T05:20:00+01:00"
+        )
+        assert (
+            state_single_warning.attributes.get(f"warning_1_{ATTR_EXPIRES}")
+            == "3021-11-22T05:19:00+01:00"
+        )
+
+        assert entry_single_warning.unique_id == "083350000000-warnings"
+        assert (
+            state_single_warning.attributes.get("device_class")
+            == BinarySensorDeviceClass.SAFETY
+        )
 
 
 async def test_sensors_without_corona_filter(hass: HomeAssistant) -> None:
@@ -250,3 +298,72 @@ async def test_sensors_without_corona_filter(hass: HomeAssistant) -> None:
 
         assert entry_w5.unique_id == "083350000000-5"
         assert state_w5.attributes.get("device_class") == BinarySensorDeviceClass.SAFETY
+
+        state_single_warning = hass.states.get("binary_sensor.all_warnings_aach_stadt")
+        entry_single_warning = entity_registry.async_get(
+            "binary_sensor.all_warnings_aach_stadt"
+        )
+
+        assert state_single_warning.state == STATE_ON
+        assert (
+            state_single_warning.attributes.get(f"warning_1_{ATTR_HEADLINE}")
+            == "Corona-Verordnung des Landes: Warnstufe durch Landesgesundheitsamt ausgerufen"
+        )
+        assert (
+            state_single_warning.attributes.get(f"warning_1_{ATTR_DESCRIPTION}")
+            == "Die Zahl der mit dem Corona-Virus infizierten Menschen steigt gegenwärtig stark an. Es wächst daher die Gefahr einer weiteren Verbreitung der Infektion und - je nach Einzelfall - auch von schweren Erkrankungen."
+        )
+        assert state_single_warning.attributes.get(f"warning_1_{ATTR_SENDER}") == ""
+        assert (
+            state_single_warning.attributes.get(f"warning_1_{ATTR_SEVERITY}") == "Minor"
+        )
+        assert (
+            state_single_warning.attributes.get(f"warning_1_{ATTR_ID}")
+            == "mow.DE-BW-S-SE018-20211102-18-001"
+        )
+        assert (
+            state_single_warning.attributes.get(f"warning_1_{ATTR_SENT}")
+            == "2021-11-02T20:07:16+01:00"
+        )
+
+        assert state_single_warning.attributes.get(f"warning_1_{ATTR_START}") == ""
+
+        assert state_single_warning.attributes.get(f"warning_1_{ATTR_EXPIRES}") == ""
+
+        assert (
+            state_single_warning.attributes.get(f"warning_2_{ATTR_HEADLINE}")
+            == "Ausfall Notruf 112"
+        )
+        assert (
+            state_single_warning.attributes.get(f"warning_2_{ATTR_DESCRIPTION}")
+            == "Es treten Sturmböen mit Geschwindigkeiten zwischen 70 km/h (20m/s, 38kn, Bft 8) und 85 km/h (24m/s, 47kn, Bft 9) aus westlicher Richtung auf. In Schauernähe sowie in exponierten Lagen muss mit schweren Sturmböen bis 90 km/h (25m/s, 48kn, Bft 10) gerechnet werden."
+        )
+        assert (
+            state_single_warning.attributes.get(f"warning_2_{ATTR_SENDER}")
+            == "Deutscher Wetterdienst"
+        )
+        assert (
+            state_single_warning.attributes.get(f"warning_2_{ATTR_SEVERITY}") == "Minor"
+        )
+        assert (
+            state_single_warning.attributes.get(f"warning_2_{ATTR_ID}")
+            == "mow.DE-NW-BN-SE030-20201014-30-000"
+        )
+        assert (
+            state_single_warning.attributes.get(f"warning_2_{ATTR_SENT}")
+            == "2021-10-11T05:20:00+01:00"
+        )
+        assert (
+            state_single_warning.attributes.get(f"warning_2_{ATTR_START}")
+            == "2021-11-01T05:20:00+01:00"
+        )
+        assert (
+            state_single_warning.attributes.get(f"warning_2_{ATTR_EXPIRES}")
+            == "3021-11-22T05:19:00+01:00"
+        )
+
+        assert entry_single_warning.unique_id == "083350000000-warnings"
+        assert (
+            state_single_warning.attributes.get("device_class")
+            == BinarySensorDeviceClass.SAFETY
+        )
