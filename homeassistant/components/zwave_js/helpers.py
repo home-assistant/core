@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import astuple, dataclass
+import logging
 from typing import Any, cast
 
 import voluptuous as vol
@@ -55,6 +56,34 @@ class ZwaveValueID:
         """Post initialization check."""
         if all(val is None for val in astuple(self)):
             raise ValueError("At least one of the fields must be set.")
+
+
+@callback
+def get_value_id_from_unique_id(unique_id: str) -> str | None:
+    """
+    Get the value ID and optional state key from a unique ID.
+
+    Raises ValueError
+    """
+    split_unique_id = unique_id.split(".")
+    # If the unique ID contains a `-` in its second part, the unique ID contains
+    # a value ID and we can return it.
+    if "-" in (value_id := split_unique_id[1]):
+        return value_id
+    return None
+
+
+@callback
+def get_state_key_from_unique_id(unique_id: str) -> int | None:
+    """Get the state key from a unique ID."""
+    # If the unique ID has more than two parts, it's a special unique ID. If the last
+    # part of the unique ID is an int, then it's a state key and we return it.
+    if len(split_unique_id := unique_id.split(".")) > 2:
+        try:
+            return int(split_unique_id[-1])
+        except ValueError:
+            pass
+    return None
 
 
 @callback
@@ -251,6 +280,7 @@ def async_get_nodes_from_targets(
     val: dict[str, Any],
     ent_reg: er.EntityRegistry | None = None,
     dev_reg: dr.DeviceRegistry | None = None,
+    logger: logging.Logger = LOGGER,
 ) -> set[ZwaveNode]:
     """
     Get nodes for all targets.
@@ -263,7 +293,7 @@ def async_get_nodes_from_targets(
         try:
             nodes.add(async_get_node_from_entity_id(hass, entity_id, ent_reg, dev_reg))
         except ValueError as err:
-            LOGGER.warning(err.args[0])
+            logger.warning(err.args[0])
 
     # Convert all area IDs to nodes
     for area_id in val.get(ATTR_AREA_ID, []):
@@ -274,7 +304,7 @@ def async_get_nodes_from_targets(
         try:
             nodes.add(async_get_node_from_device_id(hass, device_id, dev_reg))
         except ValueError as err:
-            LOGGER.warning(err.args[0])
+            logger.warning(err.args[0])
 
     return nodes
 
