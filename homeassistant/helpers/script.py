@@ -302,7 +302,7 @@ async def async_validate_action_config(
 
 
 class _AbortScript(Exception):
-    """Throw if script needs to abort."""
+    """Throw if script needs to abort because of an unexpected error."""
 
 
 class _StopScript(Exception):
