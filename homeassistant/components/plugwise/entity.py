@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.const import ATTR_NAME, ATTR_VIA_DEVICE, CONF_HOST, STATE_ON
+from homeassistant.const import ATTR_NAME, ATTR_VIA_DEVICE, CONF_HOST
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     CONNECTION_ZIGBEE,
@@ -59,20 +59,6 @@ class PlugwiseEntity(CoordinatorEntity[PlugwiseDataUpdateCoordinator]):
                     ),
                 }
             )
-
-    async def async_send_api_call(self, target: str, command: str) -> bool:
-        """Send api call."""
-        result = False
-        if command == "set_regulation_mode":
-            result = await self.coordinator.api.set_regulation_mode(target)
-        if command == "set_schedule_state":
-            result = await self.coordinator.api.set_schedule_state(
-                self.device.get("location"),
-                target,
-                STATE_ON,
-            )
-
-        return result
 
     @property
     def available(self) -> bool:

@@ -1,12 +1,14 @@
 """Plugwise Select component for Home Assistant."""
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from typing import Any
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -19,7 +21,7 @@ from .entity import PlugwiseEntity
 class PlugwiseSelectDescriptionMixin:
     """Mixin values for Plugwise Select entities."""
 
-    command: str
+    command: Callable[..., Awaitable[Any]]
     current_option: str
     options: str
 
@@ -36,7 +38,9 @@ SELECT_TYPES = (
         key="select_schedule",
         name="Thermostat Schedule",
         icon="mdi:calendar-clock",
-        command="set_schedule_state",
+        command=lambda coordinator, location, option: coordinator.api.set_schedule_state(
+            location, option, STATE_ON
+        ),
         current_option="selected_schedule",
         options="available_schedules",
     ),
@@ -45,10 +49,11 @@ SELECT_TYPES = (
         name="Regulation Mode",
         icon="mdi:hvac",
         entity_category=EntityCategory.CONFIG,
-        command="set_regulation_mode",
+        command=lambda coordinator, dummy, option: coordinator.api.set_regulation_mode(
+            option
+        ),
         current_option="regulation_mode",
         options="regulation_modes",
-        entity_registry_enabled_default=False,
     ),
 )
 
@@ -66,10 +71,7 @@ async def async_setup_entry(
     entities: list[PlugwiseSelectEntity] = []
     for device_id, device in coordinator.data.devices.items():
         for description in SELECT_TYPES:
-            if (
-                description.options in device
-                and len(device.get(description.options, [])) > 1
-            ):
+            if description.options in device and len(device[description.options]) > 1:
                 entities.append(
                     PlugwiseSelectEntity(coordinator, device_id, description)
                 )
@@ -92,25 +94,22 @@ class PlugwiseSelectEntity(PlugwiseEntity, SelectEntity):
         super().__init__(coordinator, device_id)
         self.entity_description = entity_description
         self._attr_unique_id = f"{device_id}-{entity_description.key}"
-        self._attr_name = (
-            f"{self.device.get('name', '')} {entity_description.name}"
-        ).lstrip()
+        self._attr_name = (f"{self.device['name']} {entity_description.name}").lstrip()
 
     @property
-    def current_option(self) -> str | None:
+    def current_option(self) -> str:
         """Return the selected entity option to represent the entity state."""
-        return self.device.get(self.entity_description.current_option)
+        return self.device[self.entity_description.current_option]
 
     @property
     def options(self) -> list[str]:
         """Return the selectable entity options."""
-        return self.device.get(self.entity_description.options, [])
+        return self.device[self.entity_description.options]
 
     async def async_select_option(self, option: str) -> None:
         """Change to the selected entity option."""
-        if not (
-            await self.async_send_api_call(option, self.entity_description.command)
-        ):
-            raise HomeAssistantError(f"Failed to set {self.entity_description.name}")
+        await self.entity_description.command(
+            self.coordinator, self.device["location"], option
+        )
 
         await self.coordinator.async_request_refresh()
