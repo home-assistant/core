@@ -23,7 +23,7 @@ from homeassistant.helpers.event import (
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
-from . import DOMAIN, CalendarEventDevice
+from . import DOMAIN, CalendarEntity, CalendarEvent
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,7 +47,7 @@ class CalendarEventListener:
         hass: HomeAssistant,
         job: HassJob,
         trigger_data: dict[str, Any],
-        entity: CalendarEventDevice,
+        entity: CalendarEntity,
     ) -> None:
         """Initialize CalendarEventListener."""
         self._hass = hass
@@ -57,7 +57,7 @@ class CalendarEventListener:
         self._unsub_event: CALLBACK_TYPE | None = None
         self._unsub_refresh: CALLBACK_TYPE | None = None
         # Upcoming set of events with their trigger time
-        self._events: list[tuple[datetime.datetime, dict[str, Any]]] = []
+        self._events: list[tuple[datetime.datetime, CalendarEvent]] = []
 
     async def async_attach(self) -> None:
         """Attach a calendar event listener."""
@@ -86,16 +86,11 @@ class CalendarEventListener:
         _LOGGER.debug("Fetching events between %s, %s", start_date, end_date)
         events = await self._entity.async_get_events(self._hass, start_date, end_date)
 
-        def trigger_time_func(event: dict[str, Any]) -> datetime.datetime:
-            value = dt_util.parse_datetime(event["dt_start"])
-            assert value
-            return value
-
         # Build list of events and the appropriate time to trigger an alarm. The
         # returned events may have already started but matched the start/end time
         # filtering above, so exclude any events that have already passed the
         # trigger time.
-        event_list = [(trigger_time_func(event), event) for event in events]
+        event_list = [(event.start_datetime_local, event) for event in events]
         event_list.sort(key=lambda x: x[0])
 
         self._events = [
@@ -113,7 +108,7 @@ class CalendarEventListener:
         if not self._events:
             return
 
-        (event_datetime, _data) = self._events[0]
+        (event_datetime, _event) = self._events[0]
         _LOGGER.debug("Scheduling next event trigger @ %s", event_datetime)
         self._unsub_event = async_track_point_in_utc_time(
             self._hass,
@@ -131,7 +126,7 @@ class CalendarEventListener:
             _LOGGER.debug("Event: %s", event)
             self._hass.async_run_hass_job(
                 self._job,
-                {"trigger": {**self._trigger_data, "calendar_event": event}},
+                {"trigger": {**self._trigger_data, "calendar_event": event.as_dict()}},
             )
         self._unsub_event = None
         self._listen_next_calendar_event()
@@ -159,7 +154,8 @@ async def async_attach_trigger(
     component: EntityComponent = hass.data[DOMAIN]
     if not (entity := component.get_entity(entity_id)):
         raise HomeAssistantError(f"Entity does not exist {entity_id}")
-    assert isinstance(entity, CalendarEventDevice)
+    if not isinstance(entity, CalendarEntity):
+        raise HomeAssistantError(f"Entity {entity_id} is not a calendar entity")
 
     trigger_data = {
         **automation_info["trigger_data"],

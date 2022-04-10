@@ -60,34 +60,34 @@ class FakeSchedule:
     def __init__(self, now: datetime.datetime) -> None:
         """Initiailize FakeSchedule."""
         # Map of event start time to event
-        self.events: list[dict[str, Any]] = []
+        self.events: list[calendar.CalendarEvent] = []
         self.now = now
 
     def create_event(
         self, start_timedelta: datetime.timedelta, end_timedelta: datetime.timedelta
     ) -> dict[str, Any]:
         """Create a new fake event, used by tests."""
-        event_data = {
-            "title": f"Event {secrets.token_hex(16)}",  # Arbitrary unique data
-            "dt_start": (self.now + start_timedelta).isoformat(),
-            "dt_end": (self.now + end_timedelta).isoformat(),
-        }
-        self.events.append(event_data)
-        return event_data
+        event = calendar.CalendarEvent(
+            start=(self.now + start_timedelta),
+            end=(self.now + end_timedelta),
+            summary=f"Event {secrets.token_hex(16)}",  # Arbitrary unique data
+        )
+        self.events.append(event)
+        return event.as_dict()
 
     async def async_get_events(
         self,
         hass: HomeAssistant,
         start_date: datetime.datetime,
         end_date: datetime.datetime,
-    ) -> list[dict[str, Any]]:
+    ) -> list[calendar.CalendarEvent]:
         """Get all events in a specific time frame, used by the demo calendar."""
         assert start_date < end_date
         values = []
         for event in self.events:
             if (
-                start_date < dt_util.parse_datetime(event["dt_start"]) < end_date
-                or start_date < dt_util.parse_datetime(event["dt_end"]) < end_date
+                start_date < event.start_datetime_local < end_date
+                or start_date < event.end_datetime_local < end_date
             ):
                 values.append(event)
         return values
@@ -98,7 +98,7 @@ def fake_schedule(now: datetime.datetime) -> Generator[FakeSchedule, None, None]
     """Fixture that tests can use to make fake events."""
     schedule = FakeSchedule(now)
     with patch(
-        "homeassistant.components.demo.calendar.DemoGoogleCalendar.async_get_events",
+        "homeassistant.components.demo.calendar.DemoCalendar.async_get_events",
         new=schedule.async_get_events,
     ):
         yield schedule
@@ -159,18 +159,20 @@ def mock_update_interval() -> Generator[None, None, None]:
 
 async def fire_time(hass: HomeAssistant, trigger_time: datetime.datetime) -> None:
     """Fire an alarm and wait."""
-    _LOGGER.debug("Firing alarm @ {trigger_time}")
+    _LOGGER.debug(f"Firing alarm @ {trigger_time}")
     with patch("homeassistant.util.dt.utcnow", return_value=trigger_time):
         async_fire_time_changed(hass, trigger_time)
         await hass.async_block_till_done()
 
 
 async def fire_between(
-    hass: HomeAssistant, now: datetime.datetime, end_time: datetime.datetime
+    hass: HomeAssistant,
+    now: datetime.datetime,
+    end_delta: datetime.timedelta,
 ) -> datetime.datetime:
     """Simulate the passage of time by firing alarms until the time is reached."""
     trigger_time = now
-    while trigger_time < (now + end_time):
+    while trigger_time < (now + end_delta):
         trigger_time = trigger_time + TEST_TIME_ADVANCE_INTERVAL
         await fire_time(hass, trigger_time)
     return trigger_time
