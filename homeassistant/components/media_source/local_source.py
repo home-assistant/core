@@ -181,7 +181,7 @@ class LocalSource(MediaSource):
         media.children = []
         for child_path in path.iterdir():
             child = self._build_item_response(source_dir_id, child_path, True)
-            if child:
+            if child and child_path.name[0] != ".":
                 media.children.append(child)
 
         # Sort children showing directories first, then by name
