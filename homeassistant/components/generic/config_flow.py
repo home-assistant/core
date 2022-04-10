@@ -94,7 +94,7 @@ def build_schema(
         vol.Required(
             CONF_FRAMERATE,
             description={"suggested_value": user_input.get(CONF_FRAMERATE, 2)},
-        ): cv.positive_int,
+        ): vol.All(vol.Range(min=1), cv.positive_int),
         vol.Required(
             CONF_VERIFY_SSL, default=user_input.get(CONF_VERIFY_SSL, True)
         ): bool,
