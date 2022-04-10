@@ -177,7 +177,7 @@ def is_offset_reached(
 class CalendarEventDevice(Entity):
     """Legacy API for calendar event entities."""
 
-    def __init_subclass__(cls, **kwargs):
+    def __init_subclass__(cls, **kwargs: Any) -> None:
         """Print deprecation warning."""
         super().__init_subclass__(**kwargs)
         _LOGGER.warning(
