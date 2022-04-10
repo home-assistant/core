@@ -182,12 +182,11 @@ class GoogleCalendarEntity(CalendarEntity):
 
         # Pick the first visible event and apply offset calculations.
         valid_items = filter(self._event_filter, items)
-        self._event = copy.deepcopy(next(valid_items, None))
-        if self._event:
-            (summary, offset) = extract_offset(
-                self._event.get("summary", ""), self._offset
-            )
-            self._event["summary"] = summary
+        event = copy.deepcopy(next(valid_items, None))
+        if event:
+            (summary, offset) = extract_offset(event.get("summary", ""), self._offset)
+            event["summary"] = summary
+            self._event = _get_calendar_event(event)
             self._offset_reached = is_offset_reached(
                 self._event.start_datetime_local, offset
             )
