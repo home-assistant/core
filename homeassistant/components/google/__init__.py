@@ -198,7 +198,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         session.token["expires_at"] = datetime.now().timestamp()
     try:
         await session.async_ensure_token_valid()
-    except aiohttp.client_exceptions.ClientResponseError as err:
+    except aiohttp.ClientResponseError as err:
         if 400 <= err.status < 500:
             raise ConfigEntryAuthFailed from err
         raise ConfigEntryNotReady from err
