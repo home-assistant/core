@@ -2082,7 +2082,7 @@ rova==0.3.0
 rpi-bad-power==0.1.0
 
 # homeassistant.components.rtsp_to_webrtc
-rtsp-to-webrtc==0.5.0
+rtsp-to-webrtc==0.5.1
 
 # homeassistant.components.russound_rnet
 russound==0.1.9
