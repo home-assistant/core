@@ -35,7 +35,7 @@ async def async_setup_entry(
 
 @callback
 def add_entities(
-    router: AsusWrtRouter, async_add_entities: AddEntitiesCallback, tracked: set
+    router: AsusWrtRouter, async_add_entities: AddEntitiesCallback, tracked: set[str]
 ) -> None:
     """Add new tracker entities from the router."""
     new_tracked = []
