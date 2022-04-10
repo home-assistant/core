@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 import datetime
+import http
 import time
 from typing import Any
 from unittest.mock import Mock, call, patch
@@ -31,6 +32,8 @@ from .conftest import (
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
+
+EXPIRED_TOKEN_TIMESTAMP = datetime.datetime(2022, 4, 8).timestamp()
 
 # Typing helpers
 HassApi = Callable[[], Awaitable[dict[str, Any]]]
@@ -505,3 +508,52 @@ async def test_invalid_token_expiry_in_config_entry(
     assert entries[0].state is ConfigEntryState.LOADED
     assert entries[0].data["token"]["access_token"] == "some-updated-token"
     assert entries[0].data["token"]["expires_in"] == expires_in
+
+
+@pytest.mark.parametrize("config_entry_token_expiry", [EXPIRED_TOKEN_TIMESTAMP])
+async def test_expired_token_refresh_internal_error(
+    hass: HomeAssistant,
+    component_setup: ComponentSetup,
+    setup_config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Generic errors on reauth are treated as a retryable setup error."""
+
+    aioclient_mock.post(
+        "https://oauth2.googleapis.com/token",
+        status=http.HTTPStatus.INTERNAL_SERVER_ERROR,
+    )
+
+    assert await component_setup()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize(
+    "config_entry_token_expiry",
+    [EXPIRED_TOKEN_TIMESTAMP],
+)
+async def test_expired_token_requires_reauth(
+    hass: HomeAssistant,
+    component_setup: ComponentSetup,
+    setup_config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test case where reauth is required for token that cannot be refreshed."""
+
+    aioclient_mock.post(
+        "https://oauth2.googleapis.com/token",
+        status=http.HTTPStatus.BAD_REQUEST,
+    )
+
+    assert await component_setup()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].state is ConfigEntryState.SETUP_ERROR
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"
