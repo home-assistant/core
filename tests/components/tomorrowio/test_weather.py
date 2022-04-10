@@ -23,6 +23,7 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_SUNNY,
     ATTR_FORECAST,
     ATTR_FORECAST_CONDITION,
+    ATTR_FORECAST_HUMIDITY,
     ATTR_FORECAST_PRECIPITATION,
     ATTR_FORECAST_PRECIPITATION_PROBABILITY,
     ATTR_FORECAST_TEMP,
@@ -97,6 +98,7 @@ async def test_v4_weather(hass: HomeAssistant) -> None:
         {
             ATTR_FORECAST_CONDITION: ATTR_CONDITION_SUNNY,
             ATTR_FORECAST_TIME: "2021-03-07T11:00:00+00:00",
+            ATTR_FORECAST_HUMIDITY: 74,
             ATTR_FORECAST_PRECIPITATION: 0,
             ATTR_FORECAST_PRECIPITATION_PROBABILITY: 0,
             ATTR_FORECAST_TEMP: 7.7,
@@ -107,6 +109,7 @@ async def test_v4_weather(hass: HomeAssistant) -> None:
         {
             ATTR_FORECAST_CONDITION: ATTR_CONDITION_CLOUDY,
             ATTR_FORECAST_TIME: "2021-03-08T11:00:00+00:00",
+            ATTR_FORECAST_HUMIDITY: 88.5,
             ATTR_FORECAST_PRECIPITATION: 0,
             ATTR_FORECAST_PRECIPITATION_PROBABILITY: 0,
             ATTR_FORECAST_TEMP: 9.7,
@@ -117,6 +120,7 @@ async def test_v4_weather(hass: HomeAssistant) -> None:
         {
             ATTR_FORECAST_CONDITION: ATTR_CONDITION_CLOUDY,
             ATTR_FORECAST_TIME: "2021-03-09T11:00:00+00:00",
+            ATTR_FORECAST_HUMIDITY: 84.37,
             ATTR_FORECAST_PRECIPITATION: 0,
             ATTR_FORECAST_PRECIPITATION_PROBABILITY: 0,
             ATTR_FORECAST_TEMP: 19.4,
@@ -127,6 +131,7 @@ async def test_v4_weather(hass: HomeAssistant) -> None:
         {
             ATTR_FORECAST_CONDITION: ATTR_CONDITION_CLOUDY,
             ATTR_FORECAST_TIME: "2021-03-10T11:00:00+00:00",
+            ATTR_FORECAST_HUMIDITY: 84.73,
             ATTR_FORECAST_PRECIPITATION: 0,
             ATTR_FORECAST_PRECIPITATION_PROBABILITY: 0,
             ATTR_FORECAST_TEMP: 18.5,
@@ -137,6 +142,7 @@ async def test_v4_weather(hass: HomeAssistant) -> None:
         {
             ATTR_FORECAST_CONDITION: ATTR_CONDITION_CLOUDY,
             ATTR_FORECAST_TIME: "2021-03-11T11:00:00+00:00",
+            ATTR_FORECAST_HUMIDITY: 85.15,
             ATTR_FORECAST_PRECIPITATION: 0,
             ATTR_FORECAST_PRECIPITATION_PROBABILITY: 0,
             ATTR_FORECAST_TEMP: 19.0,
@@ -147,6 +153,7 @@ async def test_v4_weather(hass: HomeAssistant) -> None:
         {
             ATTR_FORECAST_CONDITION: ATTR_CONDITION_RAINY,
             ATTR_FORECAST_TIME: "2021-03-12T11:00:00+00:00",
+            ATTR_FORECAST_HUMIDITY: 80.52,
             ATTR_FORECAST_PRECIPITATION: 0.12,
             ATTR_FORECAST_PRECIPITATION_PROBABILITY: 25,
             ATTR_FORECAST_TEMP: 19.9,
@@ -157,6 +164,7 @@ async def test_v4_weather(hass: HomeAssistant) -> None:
         {
             ATTR_FORECAST_CONDITION: ATTR_CONDITION_CLOUDY,
             ATTR_FORECAST_TIME: "2021-03-13T11:00:00+00:00",
+            ATTR_FORECAST_HUMIDITY: 81.73,
             ATTR_FORECAST_PRECIPITATION: 0,
             ATTR_FORECAST_PRECIPITATION_PROBABILITY: 25,
             ATTR_FORECAST_TEMP: 12.5,
@@ -167,6 +175,7 @@ async def test_v4_weather(hass: HomeAssistant) -> None:
         {
             ATTR_FORECAST_CONDITION: ATTR_CONDITION_SNOWY,
             ATTR_FORECAST_TIME: "2021-03-14T10:00:00+00:00",
+            ATTR_FORECAST_HUMIDITY: 86.48,
             ATTR_FORECAST_PRECIPITATION: 23.96,
             ATTR_FORECAST_PRECIPITATION_PROBABILITY: 95,
             ATTR_FORECAST_TEMP: 6.1,
@@ -177,6 +186,7 @@ async def test_v4_weather(hass: HomeAssistant) -> None:
         {
             ATTR_FORECAST_CONDITION: ATTR_CONDITION_SNOWY,
             ATTR_FORECAST_TIME: "2021-03-15T10:00:00+00:00",
+            ATTR_FORECAST_HUMIDITY: 91.44,
             ATTR_FORECAST_PRECIPITATION: 1.46,
             ATTR_FORECAST_PRECIPITATION_PROBABILITY: 55,
             ATTR_FORECAST_TEMP: 6.5,
@@ -187,6 +197,7 @@ async def test_v4_weather(hass: HomeAssistant) -> None:
         {
             ATTR_FORECAST_CONDITION: ATTR_CONDITION_CLOUDY,
             ATTR_FORECAST_TIME: "2021-03-16T10:00:00+00:00",
+            ATTR_FORECAST_HUMIDITY: 86.84,
             ATTR_FORECAST_PRECIPITATION: 0,
             ATTR_FORECAST_PRECIPITATION_PROBABILITY: 0,
             ATTR_FORECAST_TEMP: 6.1,
@@ -197,6 +208,7 @@ async def test_v4_weather(hass: HomeAssistant) -> None:
         {
             ATTR_FORECAST_CONDITION: ATTR_CONDITION_CLOUDY,
             ATTR_FORECAST_TIME: "2021-03-17T10:00:00+00:00",
+            ATTR_FORECAST_HUMIDITY: 82.38,
             ATTR_FORECAST_PRECIPITATION: 0,
             ATTR_FORECAST_PRECIPITATION_PROBABILITY: 0,
             ATTR_FORECAST_TEMP: 11.3,
@@ -207,6 +219,7 @@ async def test_v4_weather(hass: HomeAssistant) -> None:
         {
             ATTR_FORECAST_CONDITION: ATTR_CONDITION_CLOUDY,
             ATTR_FORECAST_TIME: "2021-03-18T10:00:00+00:00",
+            ATTR_FORECAST_HUMIDITY: 68.98,
             ATTR_FORECAST_PRECIPITATION: 0,
             ATTR_FORECAST_PRECIPITATION_PROBABILITY: 10,
             ATTR_FORECAST_TEMP: 12.3,
@@ -217,6 +230,7 @@ async def test_v4_weather(hass: HomeAssistant) -> None:
         {
             ATTR_FORECAST_CONDITION: ATTR_CONDITION_RAINY,
             ATTR_FORECAST_TIME: "2021-03-19T10:00:00+00:00",
+            ATTR_FORECAST_HUMIDITY: 72.59,
             ATTR_FORECAST_PRECIPITATION: 2.93,
             ATTR_FORECAST_PRECIPITATION_PROBABILITY: 55,
             ATTR_FORECAST_TEMP: 9.4,
@@ -227,6 +241,7 @@ async def test_v4_weather(hass: HomeAssistant) -> None:
         {
             ATTR_FORECAST_CONDITION: ATTR_CONDITION_SNOWY,
             ATTR_FORECAST_TIME: "2021-03-20T10:00:00+00:00",
+            ATTR_FORECAST_HUMIDITY: 81.44,
             ATTR_FORECAST_PRECIPITATION: 1.22,
             ATTR_FORECAST_PRECIPITATION_PROBABILITY: 33.3,
             ATTR_FORECAST_TEMP: 4.5,
