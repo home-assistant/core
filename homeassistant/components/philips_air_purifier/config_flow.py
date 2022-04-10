@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from phipsair.purifier import CannotConnect, PersistentClient
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -11,7 +12,6 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 
-from .client import CannotConnect, ReliableClient
 from .const import COAP_PORT, CONF_MODEL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,7 +28,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    return await ReliableClient.test_connection(data[CONF_HOST], COAP_PORT)
+    return await PersistentClient.test_connection(data[CONF_HOST], COAP_PORT)
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

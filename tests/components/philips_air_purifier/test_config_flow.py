@@ -19,7 +19,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.philips_air_purifier.config_flow.ReliableClient.test_connection",
+        "homeassistant.components.philips_air_purifier.config_flow.PersistentClient.test_connection",
         return_value={
             "name": "Air Purifier",
             "device_id": "fake-device-id",
@@ -59,7 +59,7 @@ async def test_form_test_connection_error(
     )
 
     with patch(
-        "homeassistant.components.philips_air_purifier.config_flow.ReliableClient.test_connection",
+        "homeassistant.components.philips_air_purifier.config_flow.PersistentClient.test_connection",
         side_effect=exception,
     ):
         result2 = await hass.config_entries.flow.async_configure(

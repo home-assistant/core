@@ -1,11 +1,12 @@
 """The Philips Air Purifier integration."""
 from __future__ import annotations
 
+from phipsair.purifier import PersistentClient
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 
-from .client import ReliableClient
 from .const import COAP_PORT, DOMAIN
 
 PLATFORMS: list[str] = [Platform.FAN]
@@ -14,7 +15,7 @@ PLATFORMS: list[str] = [Platform.FAN]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Philips Air Purifier from a config entry."""
 
-    client = ReliableClient(hass.loop, entry.data[CONF_HOST], port=COAP_PORT)
+    client = PersistentClient(hass.loop, entry.data[CONF_HOST], port=COAP_PORT)
     client.start()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = client

@@ -939,7 +939,6 @@ omit =
     homeassistant/components/pandora/media_player.py
     homeassistant/components/pencom/switch.py
     homeassistant/components/philips_air_purifier/__init__.py
-    homeassistant/components/philips_air_purifier/client.py
     homeassistant/components/philips_air_purifier/fan.py
     homeassistant/components/philips_js/__init__.py
     homeassistant/components/philips_js/diagnostics.py

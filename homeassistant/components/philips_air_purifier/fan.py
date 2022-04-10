@@ -4,6 +4,8 @@ from __future__ import annotations
 import logging
 from typing import Any, Final
 
+from phipsair.purifier import FanSpeed, Mode, PersistentClient, Status
+
 from homeassistant.components.fan import (
     SUPPORT_PRESET_MODE,
     SUPPORT_SET_SPEED,
@@ -14,7 +16,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import percentage_to_ordered_list_item
 
-from .client import FanSpeed, Mode, ReliableClient, Status
 from .const import CONF_MODEL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -51,7 +52,7 @@ class PurifierEntity(FanEntity):
     _attr_speed_count: int = len(speeds)
     _attr_icon = "mdi:air-purifier"
 
-    def __init__(self, client: ReliableClient, config_entry: ConfigEntry) -> None:
+    def __init__(self, client: PersistentClient, config_entry: ConfigEntry) -> None:
         """Initialize a PurifierEntity."""
         self._client = client
         self._status: Status | None = None
