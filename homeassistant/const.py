@@ -734,6 +734,7 @@ SPEED: Final = "speed"
 WIND_SPEED: Final = "wind_speed"
 ILLUMINANCE: Final = "illuminance"
 ACCUMULATED_PRECIPITATION: Final = "accumulated_precipitation"
+DATA_SIZE: Final = "data_size"
 
 WEEKDAYS: Final[list[str]] = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
 

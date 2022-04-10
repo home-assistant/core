@@ -16,7 +16,12 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_FILE_PATH, DATA_BYTES, DATA_MEGABYTES
+from homeassistant.const import (
+    CONF_FILE_PATH,
+    CONF_UNIT_OF_MEASUREMENT,
+    DATA_BYTES,
+    DATA_MEGABYTES,
+)
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntryType
@@ -28,6 +33,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
     UpdateFailed,
 )
+import homeassistant.util.data_size as data_size_util
 import homeassistant.util.dt as dt_util
 
 from .const import CONF_FILE_PATHS, DOMAIN
@@ -48,7 +54,7 @@ SENSOR_TYPES = (
         key="bytes",
         entity_registry_enabled_default=False,
         icon=ICON,
-        name="Size bytes",
+        name="Size Bytes",
         native_unit_of_measurement=DATA_BYTES,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -88,7 +94,7 @@ async def async_setup_platform(
             hass.config_entries.flow.async_init(
                 DOMAIN,
                 context={"source": SOURCE_IMPORT},
-                data={CONF_FILE_PATH: path},
+                data={CONF_FILE_PATH: path, CONF_UNIT_OF_MEASUREMENT: DATA_MEGABYTES},
             )
         )
 
@@ -101,16 +107,23 @@ async def async_setup_entry(
     """Set up the platform from config entry."""
 
     path = entry.data[CONF_FILE_PATH]
+    unit_of_measurement = entry.data[CONF_UNIT_OF_MEASUREMENT]
     get_path = await hass.async_add_executor_job(pathlib.Path, path)
     fullpath = str(get_path.absolute())
 
-    coordinator = FileSizeCoordinator(hass, fullpath)
+    coordinator = FileSizeCoordinator(hass, fullpath, unit_of_measurement)
     await coordinator.async_config_entry_first_refresh()
 
     if get_path.exists() and get_path.is_file():
         async_add_entities(
             [
-                FilesizeEntity(description, fullpath, entry.entry_id, coordinator)
+                FilesizeEntity(
+                    description,
+                    fullpath,
+                    unit_of_measurement,
+                    entry.entry_id,
+                    coordinator,
+                )
                 for description in SENSOR_TYPES
             ]
         )
@@ -119,7 +132,9 @@ async def async_setup_entry(
 class FileSizeCoordinator(DataUpdateCoordinator):
     """Filesize coordinator."""
 
-    def __init__(self, hass: HomeAssistant, path: str) -> None:
+    def __init__(
+        self, hass: HomeAssistant, path: str, unit_of_measurement: str
+    ) -> None:
         """Initialize filesize coordinator."""
         super().__init__(
             hass,
@@ -128,21 +143,24 @@ class FileSizeCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(seconds=60),
         )
         self._path = path
+        self._unit_of_measurement = unit_of_measurement
 
     async def _async_update_data(self) -> dict[str, float | int | datetime]:
         """Fetch file information."""
         try:
             statinfo = os.stat(self._path)
         except OSError as error:
-            raise UpdateFailed(f"Can not retrieve file statistics {error}") from error
+            raise UpdateFailed(f"Cannot retrieve file statistics {error}") from error
 
         size = statinfo.st_size
         last_updated = datetime.fromtimestamp(statinfo.st_mtime).replace(
             tzinfo=dt_util.UTC
         )
-        _LOGGER.debug("size %s, last updated %s", size, last_updated)
+        _LOGGER.debug("File size (bytes) %s, last updated %s", size, last_updated)
         data: dict[str, int | float | datetime] = {
-            "file": round(size / 1e6, 2),
+            "file": round(
+                data_size_util.convert(size, DATA_BYTES, self._unit_of_measurement), 2
+            ),
             "bytes": size,
             "last_updated": last_updated,
         }
@@ -159,15 +177,19 @@ class FilesizeEntity(CoordinatorEntity[FileSizeCoordinator], SensorEntity):
         self,
         description: SensorEntityDescription,
         path: str,
+        unit_of_measurement: str,
         entry_id: str,
         coordinator: FileSizeCoordinator,
     ) -> None:
         """Initialize the data object."""
         super().__init__(coordinator)
         base_name = path.split("/")[-1]
+        base_name = f"{base_name} ({unit_of_measurement})"
         self._attr_name = f"{base_name} {description.name}"
         self._attr_unique_id = (
-            entry_id if description.key == "file" else f"{entry_id}-{description.key}"
+            entry_id
+            if description.key == "file"
+            else f"{entry_id}-{unit_of_measurement}-{description.key}"
         )
         self.entity_description = description
         self._attr_device_info = DeviceInfo(
@@ -175,6 +197,7 @@ class FilesizeEntity(CoordinatorEntity[FileSizeCoordinator], SensorEntity):
             identifiers={(DOMAIN, entry_id)},
             name=base_name,
         )
+        self._attr_native_unit_of_measurement = unit_of_measurement
 
     @property
     def native_value(self) -> float | int | datetime:

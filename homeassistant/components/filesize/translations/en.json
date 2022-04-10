@@ -3,7 +3,8 @@
       "step": {
         "user": {
           "data": {
-            "file_path": "Path to file"
+            "file_path": "Path to file",
+            "unit_of_measurement": "Unit"
           }
         }
       },
@@ -12,7 +13,7 @@
         "not_allowed": "Path is not allowed"
       },
       "abort": {
-        "already_configured": "Filepath is already configured"
+        "already_configured": "File path is already configured"
       }
     },
     "title": "Filesize"

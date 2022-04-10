@@ -3,7 +3,8 @@
     "step": {
       "user": {
         "data": {
-          "file_path": "Path to file"
+          "file_path": "Path to file",
+          "unit_of_measurement": "Unit"
         }
       }
     },

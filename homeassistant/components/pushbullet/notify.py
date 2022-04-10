@@ -148,12 +148,12 @@ class PushBulletNotificationService(BaseNotificationService):
                 pusher.push_link(title, url, body=message, **email_kwargs)
             elif filepath:
                 if not self.hass.config.is_allowed_path(filepath):
-                    _LOGGER.error("Filepath is not valid or allowed")
+                    _LOGGER.error("File path is not valid or allowed")
                     return
                 with open(filepath, "rb") as fileh:
                     filedata = self.pushbullet.upload_file(fileh, filepath)
                     if filedata.get("file_type") == "application/x-empty":
-                        _LOGGER.error("Can not send an empty file")
+                        _LOGGER.error("Cannot send an empty file")
                         return
                     filedata.update(email_kwargs)
                     pusher.push_file(title=title, body=message, **filedata)
