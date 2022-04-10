@@ -102,8 +102,6 @@ class AsusWrtDevice(ScannerEntity):
             self._attr_extra_state_attributes[
                 "last_time_reachable"
             ] = self._device.last_activity.isoformat(timespec="seconds")
-        if self._device.is_connected:
-            self._attr_extra_state_attributes["connected_to"] = self._router.host
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
