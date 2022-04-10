@@ -60,12 +60,7 @@ def filter_work_items_by_type(
     work_item_type: str,
 ) -> list[DevOpsWorkItemValue]:
     """Filter work items by type."""
-    return list(
-        filter(
-            lambda item: item.fields.work_item_type == work_item_type,
-            work_items,
-        )
-    )
+    return [item for item in work_items if item.fields.work_item_type == work_item_type]
 
 
 async def async_setup_entry(
