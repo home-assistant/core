@@ -1907,7 +1907,7 @@ python-kasa==0.4.3
 python-miio==0.5.11
 
 # homeassistant.components.mpd
-python-mpd2==3.0.4
+python-mpd2==3.0.5
 
 # homeassistant.components.mystrom
 python-mystrom==1.1.2
