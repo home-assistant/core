@@ -200,7 +200,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     )
 
                 return self.async_create_entry(
-                    title=f"{CONF_KNX_TUNNELING.capitalize()} @ {_host}",
+                    title=f"Tunneling @ {_host}",
                     data=entry_data,
                 )
 
