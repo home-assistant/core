@@ -105,7 +105,7 @@ def fake_schedule(now: datetime.datetime) -> Generator[FakeSchedule, None, None]
 
 
 @pytest.fixture(autouse=True)
-async def setup_calendar(hass: HomeAssistant, fake_schedule: FakeSchedule):
+async def setup_calendar(hass: HomeAssistant, fake_schedule: FakeSchedule) -> None:
     """Initialize the demo calendar."""
     assert await async_setup_component(hass, calendar.DOMAIN, CONFIG)
     await hass.async_block_till_done()
