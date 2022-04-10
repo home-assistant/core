@@ -63,6 +63,9 @@ class BMWDataUpdateCoordinator(DataUpdateCoordinator):
                         self._password,
                         self._region,
                     )
+                    self.account.set_observer_position(
+                        self.hass.config.latitude, self.hass.config.longitude
+                    )
         except OSError as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
 
