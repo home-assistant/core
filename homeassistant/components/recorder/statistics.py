@@ -237,7 +237,7 @@ def _update_or_add_metadata(
     Updating metadata source is not possible.
     """
     statistic_id = new_metadata["statistic_id"]
-    if not old_metadata_dict:
+    if statistic_id not in old_metadata_dict:
         meta = StatisticsMeta.from_meta(new_metadata)
         session.add(meta)
         session.flush()  # Flush to get the metadata id assigned
