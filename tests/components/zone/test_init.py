@@ -8,10 +8,10 @@ from homeassistant.components import zone
 from homeassistant.components.zone import DOMAIN
 from homeassistant.const import (
     ATTR_EDITABLE,
-    ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
     ATTR_NAME,
+    ATTR_PERSONS,
     SERVICE_RELOAD,
 )
 from homeassistant.core import Context
@@ -520,7 +520,7 @@ async def test_state(hass):
     assert len(hass.states.async_entity_ids("zone")) == 2
     state = hass.states.get("zone.test_zone")
     assert state.state == "0"
-    assert state.attributes[ATTR_ENTITY_ID] == []
+    assert state.attributes[ATTR_PERSONS] == []
 
     # Person entity enters zone
     hass.states.async_set(
@@ -532,12 +532,12 @@ async def test_state(hass):
     state = hass.states.get("zone.test_zone")
     assert state
     assert state.state == "1"
-    assert state.attributes[ATTR_ENTITY_ID] == ["person.person1"]
+    assert state.attributes[ATTR_PERSONS] == ["person.person1"]
 
     state = hass.states.get("zone.home")
     assert state
     assert state.state == "0"
-    assert state.attributes[ATTR_ENTITY_ID] == []
+    assert state.attributes[ATTR_PERSONS] == []
 
     # Person entity enters zone (case insensitive)
     hass.states.async_set(
@@ -549,7 +549,7 @@ async def test_state(hass):
     state = hass.states.get("zone.test_zone")
     assert state
     assert state.state == "2"
-    assert sorted(state.attributes[ATTR_ENTITY_ID]) == [
+    assert sorted(state.attributes[ATTR_PERSONS]) == [
         "person.person1",
         "person.person2",
     ]
@@ -557,7 +557,7 @@ async def test_state(hass):
     state = hass.states.get("zone.home")
     assert state
     assert state.state == "0"
-    assert state.attributes[ATTR_ENTITY_ID] == []
+    assert state.attributes[ATTR_PERSONS] == []
 
     # Person entity enters another zone
     hass.states.async_set(
@@ -569,12 +569,12 @@ async def test_state(hass):
     state = hass.states.get("zone.test_zone")
     assert state
     assert state.state == "1"
-    assert state.attributes[ATTR_ENTITY_ID] == ["person.person2"]
+    assert state.attributes[ATTR_PERSONS] == ["person.person2"]
 
     state = hass.states.get("zone.home")
     assert state
     assert state.state == "1"
-    assert state.attributes[ATTR_ENTITY_ID] == ["person.person1"]
+    assert state.attributes[ATTR_PERSONS] == ["person.person1"]
 
     # Person entity enters not_home
     hass.states.async_set(
@@ -586,7 +586,7 @@ async def test_state(hass):
     state = hass.states.get("zone.test_zone")
     assert state
     assert state.state == "1"
-    assert state.attributes[ATTR_ENTITY_ID] == ["person.person2"]
+    assert state.attributes[ATTR_PERSONS] == ["person.person2"]
 
     # Person entity removed
     hass.states.async_remove("person.person2")
@@ -595,9 +595,9 @@ async def test_state(hass):
     state = hass.states.get("zone.test_zone")
     assert state
     assert state.state == "0"
-    assert state.attributes[ATTR_ENTITY_ID] == []
+    assert state.attributes[ATTR_PERSONS] == []
 
     state = hass.states.get("zone.home")
     assert state
     assert state.state == "0"
-    assert state.attributes[ATTR_ENTITY_ID] == []
+    assert state.attributes[ATTR_PERSONS] == []

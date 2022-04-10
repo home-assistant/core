@@ -13,6 +13,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
+    ATTR_PERSONS,
     CONF_ICON,
     CONF_ID,
     CONF_LATITUDE,
@@ -375,7 +376,7 @@ class Zone(entity.Entity):
             ATTR_LONGITUDE: self._config[CONF_LONGITUDE],
             ATTR_RADIUS: self._config[CONF_RADIUS],
             ATTR_PASSIVE: self._config[CONF_PASSIVE],
-            ATTR_ENTITY_ID: list(self._persons_in_zone),
+            ATTR_PERSONS: list(self._persons_in_zone),
             ATTR_EDITABLE: self.editable,
         }
 
