@@ -376,7 +376,7 @@ class Zone(entity.Entity):
             ATTR_LONGITUDE: self._config[CONF_LONGITUDE],
             ATTR_RADIUS: self._config[CONF_RADIUS],
             ATTR_PASSIVE: self._config[CONF_PASSIVE],
-            ATTR_PERSONS: list(self._persons_in_zone),
+            ATTR_PERSONS: sorted(self._persons_in_zone),
             ATTR_EDITABLE: self.editable,
         }
 
