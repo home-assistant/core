@@ -107,7 +107,7 @@ async def async_setup_entry(
     """Set up the platform from config entry."""
 
     path = entry.data[CONF_FILE_PATH]
-    unit_of_measurement = entry.data[CONF_UNIT_OF_MEASUREMENT]
+    unit_of_measurement = entry.data.get(CONF_UNIT_OF_MEASUREMENT, DATA_MEGABYTES)
     get_path = await hass.async_add_executor_job(pathlib.Path, path)
     fullpath = str(get_path.absolute())
 
@@ -187,7 +187,7 @@ class FilesizeEntity(CoordinatorEntity[FileSizeCoordinator], SensorEntity):
         base_name = f"{base_name} ({unit_of_measurement})"
         self._attr_name = f"{base_name} {description.name}"
         self._attr_unique_id = (
-            entry_id
+            f"{entry_id}-{unit_of_measurement}"
             if description.key == "file"
             else f"{entry_id}-{unit_of_measurement}-{description.key}"
         )
