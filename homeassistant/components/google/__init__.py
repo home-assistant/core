@@ -202,7 +202,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if 400 <= err.status < 500:
             raise ConfigEntryAuthFailed from err
         raise ConfigEntryNotReady from err
-    except aiohttp.client_exceptions.ClientError as err:
+    except aiohttp.ClientError as err:
         raise ConfigEntryNotReady from err
 
     required_scope = hass.data[DOMAIN][DATA_CONFIG][CONF_CALENDAR_ACCESS].scope
