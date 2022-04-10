@@ -65,3 +65,8 @@ class BMWDataUpdateCoordinator(DataUpdateCoordinator):
                     )
         except OSError as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
+
+    def notify_listeners(self) -> None:
+        """Notify all listeners to refresh HA state machine."""
+        for update_callback in self._listeners:
+            update_callback()

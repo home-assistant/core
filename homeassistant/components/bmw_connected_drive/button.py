@@ -121,3 +121,8 @@ class BMWButton(BMWConnectedDriveBaseEntity, ButtonEntity):
             )
         elif self.entity_description.account_function:
             await self.entity_description.account_function(self.coordinator)
+
+        # Always update HA states after a button was executed.
+        # BMW remote services that change the vehicle's state update the local object
+        # when executing the service, so only the HA state machine needs further updates.
+        self.coordinator.notify_listeners()
