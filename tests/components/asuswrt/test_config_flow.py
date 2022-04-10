@@ -30,13 +30,22 @@ HOST = "myrouter.asuswrt.com"
 IP_ADDRESS = "192.168.1.1"
 SSH_KEY = "1234"
 
-CONFIG_DATA = {
+CONFIG_DATA_NO_PORT = {
     CONF_HOST: HOST,
-    CONF_PORT: 22,
     CONF_PROTOCOL: "telnet",
     CONF_USERNAME: "user",
     CONF_PASSWORD: "pwd",
     CONF_MODE: "ap",
+}
+
+CONFIG_DATA = {
+    **CONFIG_DATA_NO_PORT,
+    CONF_PORT: 22,
+}
+
+CONFIG_DATA_PORT0 = {
+    **CONFIG_DATA_NO_PORT,
+    CONF_PORT: 0,
 }
 
 
@@ -50,13 +59,20 @@ def mock_controller_connect():
         yield service_mock
 
 
-async def test_user(hass, connect):
+@pytest.mark.parametrize(
+    ["config", "confres"],
+    [
+        (CONFIG_DATA, CONFIG_DATA),
+        (CONFIG_DATA_PORT0, CONFIG_DATA_NO_PORT),
+    ],
+)
+async def test_user(hass, connect, config, confres):
     """Test user config."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
+    flow_result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER, "show_advanced_options": True}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
+    assert flow_result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert flow_result["step_id"] == "user"
 
     # test with all provided
     with patch(
@@ -66,16 +82,14 @@ async def test_user(hass, connect):
         "homeassistant.components.asuswrt.config_flow.socket.gethostbyname",
         return_value=IP_ADDRESS,
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data=CONFIG_DATA,
+        result = await hass.config_entries.flow.async_configure(
+            flow_result["flow_id"], user_input=config
         )
         await hass.async_block_till_done()
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["title"] == HOST
-        assert result["data"] == CONFIG_DATA
+        assert result["data"] == confres
 
         assert len(mock_setup_entry.mock_calls) == 1
 
@@ -86,7 +100,7 @@ async def test_error_no_password_ssh(hass):
     config_data.pop(CONF_PASSWORD)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": SOURCE_USER},
+        context={"source": SOURCE_USER, "show_advanced_options": True},
         data=config_data,
     )
 
@@ -100,7 +114,7 @@ async def test_error_both_password_ssh(hass):
     config_data[CONF_SSH_KEY] = SSH_KEY
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": SOURCE_USER},
+        context={"source": SOURCE_USER, "show_advanced_options": True},
         data=config_data,
     )
 
@@ -115,7 +129,7 @@ async def test_error_invalid_ssh(hass):
     config_data[CONF_SSH_KEY] = SSH_KEY
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": SOURCE_USER},
+        context={"source": SOURCE_USER, "show_advanced_options": True},
         data=config_data,
     )
 
@@ -164,7 +178,7 @@ async def test_on_connect_failed(hass):
     """Test when we have errors connecting the router."""
     flow_result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": SOURCE_USER},
+        context={"source": SOURCE_USER, "show_advanced_options": True},
     )
 
     with patch("homeassistant.components.asuswrt.router.AsusWrt") as asus_wrt:
