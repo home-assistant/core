@@ -2105,6 +2105,58 @@ async def test_expand(hass):
         ["light.grouped", "light.first", "light.second"],
     )
 
+    assert await async_setup_component(
+        hass,
+        "zone",
+        {
+            "zone": {
+                "name": "Test",
+                "latitude": 32.880837,
+                "longitude": -117.237561,
+                "radius": 250,
+                "passive": False,
+            }
+        },
+    )
+    info = render_to_info(
+        hass, "{{ expand('zone.test') | map(attribute='entity_id') | join(', ') }}"
+    )
+    assert_result_info(
+        info,
+        "",
+        ["zone.test"],
+    )
+
+    hass.states.async_set(
+        "person.person1",
+        "test",
+    )
+    await hass.async_block_till_done()
+
+    info = render_to_info(
+        hass, "{{ expand('zone.test') | map(attribute='entity_id') | join(', ') }}"
+    )
+    assert_result_info(
+        info,
+        "person.person1",
+        ["zone.test", "person.person1"],
+    )
+
+    hass.states.async_set(
+        "person.person2",
+        "test",
+    )
+    await hass.async_block_till_done()
+
+    info = render_to_info(
+        hass, "{{ expand('zone.test') | map(attribute='entity_id') | join(', ') }}"
+    )
+    assert_result_info(
+        info,
+        "person.person1, person.person2",
+        ["zone.test", "person.person1", "person.person2"],
+    )
+
 
 async def test_device_entities(hass):
     """Test device_entities function."""
