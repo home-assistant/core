@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 import logging
 from typing import Any
 
+import aiohttp
 from httplib2.error import ServerNotFoundError
 from oauth2client.file import Storage
 import voluptuous as vol
@@ -24,7 +25,11 @@ from homeassistant.const import (
     CONF_OFFSET,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 from homeassistant.helpers import config_entry_oauth2_flow
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -191,7 +196,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if session.token["expires_at"] >= datetime(2070, 1, 1).timestamp():
         session.token["expires_in"] = 0
         session.token["expires_at"] = datetime.now().timestamp()
+    try:
         await session.async_ensure_token_valid()
+    except aiohttp.ClientResponseError as err:
+        if 400 <= err.status < 500:
+            raise ConfigEntryAuthFailed from err
+        raise ConfigEntryNotReady from err
+    except aiohttp.ClientError as err:
+        raise ConfigEntryNotReady from err
 
     required_scope = hass.data[DOMAIN][DATA_CONFIG][CONF_CALENDAR_ACCESS].scope
     if required_scope not in session.token.get("scope", []):
