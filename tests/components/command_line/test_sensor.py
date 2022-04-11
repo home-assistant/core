@@ -10,6 +10,7 @@ from homeassistant import setup
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry
+from homeassistant.helpers.entity_component import async_update_entity
 
 
 async def setup_test_entities(hass: HomeAssistant, config_dict: dict[str, Any]) -> None:
@@ -74,6 +75,10 @@ async def test_template_render(hass: HomeAssistant) -> None:
             "command": "echo {{ states.sensor.template_sensor.state }}",
         },
     )
+
+    # Run update now that template sensor is setup
+    await async_update_entity(hass, "sensor.test")
+
     entity_state = hass.states.get("sensor.test")
     assert entity_state
     assert entity_state.state == "template_value"
@@ -93,7 +98,10 @@ async def test_template_render_with_quote(hass: HomeAssistant) -> None:
             },
         )
 
-        check_output.assert_called_once_with(
+        # Run update now that template sensor is setup
+        await async_update_entity(hass, "sensor.test")
+
+        check_output.assert_called_with(
             'echo "template_value" "3 4"',
             shell=True,  # nosec # shell by design
             timeout=15,
