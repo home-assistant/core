@@ -132,9 +132,16 @@ async def token_scopes() -> list[str]:
 
 
 @pytest.fixture
-async def creds(token_scopes: list[str]) -> OAuth2Credentials:
+def token_expiry() -> datetime.datetime:
+    """Expiration time for credentials used in the test."""
+    return utcnow() + datetime.timedelta(days=7)
+
+
+@pytest.fixture
+def creds(
+    token_scopes: list[str], token_expiry: datetime.datetime
+) -> OAuth2Credentials:
     """Fixture that defines creds used in the test."""
-    token_expiry = utcnow() + datetime.timedelta(days=7)
     return OAuth2Credentials(
         access_token="ACCESS_TOKEN",
         client_id="client-id",
@@ -156,9 +163,16 @@ async def storage() -> YieldFixture[FakeStorage]:
 
 
 @pytest.fixture
-async def config_entry(token_scopes: list[str]) -> MockConfigEntry:
+def config_entry_token_expiry(token_expiry: datetime.datetime) -> float:
+    """Fixture for token expiration value stored in the config entry."""
+    return token_expiry.timestamp()
+
+
+@pytest.fixture
+async def config_entry(
+    token_scopes: list[str], config_entry_token_expiry: float
+) -> MockConfigEntry:
     """Fixture to create a config entry for the integration."""
-    token_expiry = utcnow() + datetime.timedelta(days=7)
     return MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -168,7 +182,7 @@ async def config_entry(token_scopes: list[str]) -> MockConfigEntry:
                 "refresh_token": "REFRESH_TOKEN",
                 "scope": " ".join(token_scopes),
                 "token_type": "Bearer",
-                "expires_at": token_expiry.timestamp(),
+                "expires_at": config_entry_token_expiry,
             },
         },
     )
