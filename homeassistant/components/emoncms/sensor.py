@@ -163,7 +163,7 @@ class EmonCmsSensor(SensorEntity):
         self._sensorid = sensorid
         self._elem = elem
 
-        if unit_of_measurement == "kWh" or unit_of_measurement == "Wh":
+        if unit_of_measurement in ("kWh", "Wh"):
             self._attr_device_class = SensorDeviceClass.ENERGY
             self._attr_state_class = SensorStateClass.TOTAL_INCREASING
         elif unit_of_measurement == "W":
