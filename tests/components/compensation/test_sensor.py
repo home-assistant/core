@@ -27,7 +27,7 @@ async def test_linear_state(hass):
             }
         }
     }
-    expected_entity_id = "sensor.compensation_sensor_uncompensated"
+    expected_entity_id = "sensor.test"
 
     assert await async_setup_component(hass, DOMAIN, config)
     assert await async_setup_component(hass, SENSOR_DOMAIN, config)
@@ -72,7 +72,7 @@ async def test_linear_state_from_attribute(hass):
             }
         }
     }
-    expected_entity_id = "sensor.compensation_sensor_uncompensated_value"
+    expected_entity_id = "sensor.test"
 
     assert await async_setup_component(hass, DOMAIN, config)
     assert await async_setup_component(hass, SENSOR_DOMAIN, config)
@@ -138,32 +138,11 @@ async def test_quadratic_state(hass):
     hass.states.async_set(entity_id, 43.2, {})
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.compensation_sensor_temperature")
+    state = hass.states.get("sensor.test")
 
     assert state is not None
 
     assert round(float(state.state), config[DOMAIN]["test"][CONF_PRECISION]) == 3.327
-
-
-async def test_numpy_errors(hass, caplog):
-    """Tests bad polyfits."""
-    config = {
-        "compensation": {
-            "test": {
-                "source": "sensor.uncompensated",
-                "data_points": [
-                    [0.0, 1.0],
-                    [0.0, 1.0],
-                ],
-            },
-        }
-    }
-    await async_setup_component(hass, DOMAIN, config)
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
-
-    assert "invalid value encountered in true_divide" in caplog.text
 
 
 async def test_datapoints_greater_than_degree(hass, caplog):
@@ -203,7 +182,7 @@ async def test_new_state_is_none(hass):
             }
         }
     }
-    expected_entity_id = "sensor.compensation_sensor_uncompensated"
+    expected_entity_id = "sensor.test"
 
     await async_setup_component(hass, DOMAIN, config)
     await hass.async_block_till_done()
