@@ -25,7 +25,7 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_NAME,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
@@ -37,10 +37,11 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import (
     ATTRIBUTION,
+    CONF_MAX_REQUESTS_PER_DAY,
     CONF_TIMESTEP,
+    DEFAULT_MAX_REQUESTS_PER_DAY,
     DOMAIN,
     INTEGRATION_NAME,
-    MAX_REQUESTS_PER_DAY,
     TMRW_ATTR_CARBON_MONOXIDE,
     TMRW_ATTR_CHINA_AQI,
     TMRW_ATTR_CHINA_HEALTH_CONCERN,
@@ -84,40 +85,71 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [SENSOR_DOMAIN, WEATHER_DOMAIN]
 
 
+def _other_config_entries_same_api_key(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> list[ConfigEntry]:
+    """Return all other config entries that use the same API key."""
+    return [
+        entry
+        for entry in hass.config_entries.async_entries(DOMAIN)
+        if entry.entry_id != config_entry.entry_id
+        and entry.data[CONF_API_KEY] == config_entry.data[CONF_API_KEY]
+    ]
+
+
+@callback
 def _set_update_interval(hass: HomeAssistant, current_entry: ConfigEntry) -> timedelta:
     """Recalculate update_interval based on existing Tomorrow.io instances and update them."""
     api_calls = 2
     # We check how many Tomorrow.io configured instances are using the same API key and
     # calculate interval to not exceed allowed numbers of requests. Divide 90% of
-    # MAX_REQUESTS_PER_DAY by the number of API calls because we want a buffer in the
+    # max requests per day by the number of API calls because we want a buffer in the
     # number of API calls left at the end of the day.
-    other_instance_entry_ids = [
-        entry.entry_id
-        for entry in hass.config_entries.async_entries(DOMAIN)
-        if entry.entry_id != current_entry.entry_id
-        and entry.data[CONF_API_KEY] == current_entry.data[CONF_API_KEY]
-    ]
+    other_instance_entries = _other_config_entries_same_api_key(hass, current_entry)
 
     interval = timedelta(
         minutes=(
             ceil(
-                (24 * 60 * (len(other_instance_entry_ids) + 1) * api_calls)
-                / (MAX_REQUESTS_PER_DAY * 0.9)
+                (24 * 60 * (len(other_instance_entries) + 1) * api_calls)
+                / (current_entry.options[CONF_MAX_REQUESTS_PER_DAY] * 0.9)
             )
         )
     )
 
-    for entry_id in other_instance_entry_ids:
-        if entry_id in hass.data[DOMAIN]:
-            hass.data[DOMAIN][entry_id].update_interval = interval
+    for entry in other_instance_entries:
+        if entry.entry_id in hass.data[DOMAIN]:
+            hass.data[DOMAIN][entry.entry_id].update_interval = interval
 
     return interval
 
 
+async def _update_handler(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    """Handle the update of a config entry."""
+    max_requests = config_entry.options[CONF_MAX_REQUESTS_PER_DAY]
+    api_key = config_entry.data[CONF_API_KEY]
+    # If this is the first config entry to be updated, we need to update all of the
+    # other config entries that use the same API key
+    if max_requests != hass.data[DOMAIN][CONF_MAX_REQUESTS_PER_DAY][api_key]:
+        # Update the master requests value so that updates to other entries don't
+        # trigger an infinite loop
+        hass.data[DOMAIN][CONF_MAX_REQUESTS_PER_DAY][api_key] = max_requests
+
+        # Update all other config entries that use the same API key
+        other_instance_entries = _other_config_entries_same_api_key(hass, config_entry)
+        for entry in other_instance_entries:
+            hass.config_entries.async_update_entry(
+                entry,
+                options={**entry.options, CONF_MAX_REQUESTS_PER_DAY: max_requests},
+            )
+
+        # Update the coordinator's update interval
+        hass.data[DOMAIN][config_entry.entry_id].update_interval = _set_update_interval(
+            hass, config_entry
+        )
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Tomorrow.io API from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
-
     # Let's precreate the device so that if this is a first time setup for a config
     # entry imported from a ClimaCell entry, we can apply customizations from the old
     # device.
@@ -198,8 +230,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # Remove the old config entry and now the entry is fully migrated
         hass.async_create_task(hass.config_entries.async_remove(old_config_entry_id))
 
+    if CONF_MAX_REQUESTS_PER_DAY not in entry.options:
+        hass.config_entries.async_update_entry(
+            entry,
+            options={
+                **entry.options,
+                CONF_MAX_REQUESTS_PER_DAY: DEFAULT_MAX_REQUESTS_PER_DAY,
+            },
+        )
+
+    api_key = entry.data[CONF_API_KEY]
+    hass.data.setdefault(DOMAIN, {}).setdefault(CONF_MAX_REQUESTS_PER_DAY, {})
+    hass.data[DOMAIN][CONF_MAX_REQUESTS_PER_DAY][api_key] = entry.options[
+        CONF_MAX_REQUESTS_PER_DAY
+    ]
+
     api = TomorrowioV4(
-        entry.data[CONF_API_KEY],
+        api_key,
         entry.data[CONF_LOCATION][CONF_LATITUDE],
         entry.data[CONF_LOCATION][CONF_LONGITUDE],
         session=async_get_clientsession(hass),
@@ -216,6 +263,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
+    entry.async_on_unload(entry.add_update_listener(_update_handler))
+
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
@@ -228,6 +277,12 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     )
 
     hass.data[DOMAIN].pop(config_entry.entry_id)
+    if not _other_config_entries_same_api_key(hass, config_entry):
+        hass.data[DOMAIN][CONF_MAX_REQUESTS_PER_DAY].pop(
+            config_entry.data[CONF_API_KEY]
+        )
+    if not hass.data[DOMAIN][CONF_MAX_REQUESTS_PER_DAY]:
+        hass.data[DOMAIN].pop(CONF_MAX_REQUESTS_PER_DAY)
     if not hass.data[DOMAIN]:
         hass.data.pop(DOMAIN)
 

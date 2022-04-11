@@ -21,9 +21,10 @@
     "step": {
       "init": {
         "title": "Update Tomorrow.io Options",
-        "description": "If you choose to enable the `nowcast` forecast entity, you can configure the number of minutes between each forecast. The number of forecasts provided depends on the number of minutes chosen between forecasts.",
+        "description": "If your API key allows for a different number of requests per day from the default, you can set the limit here. Note that all `tomorrowio` config entries using this API key will be updated so that your limit is not exceeded.\n\nIf you choose to enable the `nowcast` forecast entity, you can configure the number of minutes between each forecast. The number of forecasts provided depends on the number of minutes chosen between forecasts.",
         "data": {
-          "timestep": "Min. Between NowCast Forecasts"
+          "max_requests_per_day": "Maximum API Requests per Day",
+          "timestep": "Minutes Between NowCast Forecasts"
         }
       }
     }

@@ -1,10 +1,19 @@
 """Tests for Tomorrow.io init."""
-from homeassistant.components.climacell.const import CONF_TIMESTEP, DOMAIN as CC_DOMAIN
+from homeassistant.components.climacell.const import (
+    CONF_TIMESTEP,
+    DEFAULT_TIMESTEP,
+    DOMAIN as CC_DOMAIN,
+)
 from homeassistant.components.tomorrowio.config_flow import (
     _get_config_schema,
     _get_unique_id,
 )
-from homeassistant.components.tomorrowio.const import DOMAIN
+from homeassistant.components.tomorrowio.const import (
+    CONF_MAX_REQUESTS_PER_DAY,
+    DEFAULT_MAX_REQUESTS_PER_DAY,
+    DEFAULT_NAME,
+    DOMAIN,
+)
 from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import (
@@ -18,7 +27,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .const import MIN_CONFIG
+from .const import API_V4_ENTRY_DATA, MIN_CONFIG
 
 from tests.common import MockConfigEntry
 from tests.components.climacell.const import API_V3_ENTRY_DATA
@@ -160,3 +169,38 @@ async def test_climacell_migration_logic(
     assert new_entity_nowcast.device_id != old_device.id
     assert new_entity_nowcast.unique_id == f"{_get_unique_id(hass, new_data)}_nowcast"
     assert new_entity_nowcast.disabled_by is None
+
+
+async def test_max_requests_update(hass: HomeAssistant):
+    """Test updates to max requests."""
+    entry_1 = MockConfigEntry(
+        domain=DOMAIN,
+        data={**API_V4_ENTRY_DATA, CONF_NAME: DEFAULT_NAME},
+        options={CONF_TIMESTEP: DEFAULT_TIMESTEP},
+        unique_id="1",
+    )
+    entry_1.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry_1.entry_id)
+
+    entry_2 = MockConfigEntry(
+        domain=DOMAIN,
+        data={**API_V4_ENTRY_DATA, CONF_NAME: DEFAULT_NAME},
+        options={CONF_TIMESTEP: DEFAULT_TIMESTEP},
+        unique_id="2",
+    )
+    entry_2.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry_2.entry_id)
+
+    assert CONF_MAX_REQUESTS_PER_DAY in entry_1.options
+    assert entry_1.options[CONF_MAX_REQUESTS_PER_DAY] == DEFAULT_MAX_REQUESTS_PER_DAY
+
+    assert CONF_MAX_REQUESTS_PER_DAY in entry_2.options
+    assert entry_2.options[CONF_MAX_REQUESTS_PER_DAY] == DEFAULT_MAX_REQUESTS_PER_DAY
+
+    # Update entry 1 and check that entry 2 is updated because they share an API key
+    hass.config_entries.async_update_entry(
+        entry_1, options={**entry_1.options, CONF_MAX_REQUESTS_PER_DAY: 1}
+    )
+    await hass.async_block_till_done()
+    assert entry_1.options[CONF_MAX_REQUESTS_PER_DAY] == 1
+    assert entry_2.options[CONF_MAX_REQUESTS_PER_DAY] == 1

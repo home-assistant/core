@@ -32,7 +32,9 @@ from homeassistant.helpers.selector import selector
 from .const import (
     AUTO_MIGRATION_MESSAGE,
     CC_DOMAIN,
+    CONF_MAX_REQUESTS_PER_DAY,
     CONF_TIMESTEP,
+    DEFAULT_MAX_REQUESTS_PER_DAY,
     DEFAULT_NAME,
     DEFAULT_TIMESTEP,
     DOMAIN,
@@ -106,6 +108,10 @@ class TomorrowioOptionsConfigFlow(config_entries.OptionsFlow):
 
         options_schema = {
             vol.Required(
+                CONF_MAX_REQUESTS_PER_DAY,
+                default=self._config_entry.options[CONF_MAX_REQUESTS_PER_DAY],
+            ): selector({"number": {"min": 1, "max": 15000, "mode": "box"}}),
+            vol.Required(
                 CONF_TIMESTEP,
                 default=self._config_entry.options[CONF_TIMESTEP],
             ): vol.In([1, 5, 15, 30]),
@@ -155,6 +161,7 @@ class TomorrowioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
             self._abort_if_unique_id_configured()
 
+            api_key = user_input[CONF_API_KEY]
             location = user_input[CONF_LOCATION]
             latitude = location[CONF_LATITUDE]
             longitude = location[CONF_LONGITUDE]
@@ -166,7 +173,7 @@ class TomorrowioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     user_input[CONF_NAME] += f" - {zone_name}"
             try:
                 await TomorrowioV4(
-                    user_input[CONF_API_KEY],
+                    api_key,
                     str(latitude),
                     str(longitude),
                     session=async_get_clientsession(self.hass),
@@ -182,7 +189,22 @@ class TomorrowioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
 
             if not errors:
-                options: Mapping[str, Any] = {CONF_TIMESTEP: DEFAULT_TIMESTEP}
+                max_requests = DEFAULT_MAX_REQUESTS_PER_DAY
+                # Use existing max requests per day if this API key is already being used
+                if existing_entry := next(
+                    (
+                        entry
+                        for entry in self.hass.config_entries.async_entries(DOMAIN)
+                        if entry.data[CONF_API_KEY] == api_key
+                    ),
+                    None,
+                ):
+                    max_requests = existing_entry.options[CONF_MAX_REQUESTS_PER_DAY]
+
+                options: Mapping[str, Any] = {
+                    CONF_TIMESTEP: DEFAULT_TIMESTEP,
+                    CONF_MAX_REQUESTS_PER_DAY: max_requests,
+                }
                 # Store the old config entry ID and retrieve options to recreate the entry
                 if self.source == config_entries.SOURCE_IMPORT:
                     old_config_entry_id = self.context["old_config_entry_id"]

@@ -15,7 +15,9 @@ from homeassistant.components.tomorrowio.config_flow import (
     _get_unique_id,
 )
 from homeassistant.components.tomorrowio.const import (
+    CONF_MAX_REQUESTS_PER_DAY,
     CONF_TIMESTEP,
+    DEFAULT_MAX_REQUESTS_PER_DAY,
     DEFAULT_NAME,
     DEFAULT_TIMESTEP,
     DOMAIN,
@@ -58,6 +60,8 @@ async def test_user_flow_minimum_fields(hass: HomeAssistant) -> None:
     assert result["data"][CONF_API_KEY] == API_KEY
     assert result["data"][CONF_LOCATION][CONF_LATITUDE] == hass.config.latitude
     assert result["data"][CONF_LOCATION][CONF_LONGITUDE] == hass.config.longitude
+    assert result["options"][CONF_TIMESTEP] == DEFAULT_TIMESTEP
+    assert result["options"][CONF_MAX_REQUESTS_PER_DAY] == DEFAULT_MAX_REQUESTS_PER_DAY
 
 
 async def test_user_flow_minimum_fields_in_zone(hass: HomeAssistant) -> None:
@@ -91,6 +95,8 @@ async def test_user_flow_minimum_fields_in_zone(hass: HomeAssistant) -> None:
     assert result["data"][CONF_API_KEY] == API_KEY
     assert result["data"][CONF_LOCATION][CONF_LATITUDE] == hass.config.latitude
     assert result["data"][CONF_LOCATION][CONF_LONGITUDE] == hass.config.longitude
+    assert result["options"][CONF_TIMESTEP] == DEFAULT_TIMESTEP
+    assert result["options"][CONF_MAX_REQUESTS_PER_DAY] == DEFAULT_MAX_REQUESTS_PER_DAY
 
 
 async def test_user_flow_same_unique_ids(hass: HomeAssistant) -> None:
@@ -182,6 +188,7 @@ async def test_user_flow_unknown_exception(hass: HomeAssistant) -> None:
 async def test_options_flow(hass: HomeAssistant) -> None:
     """Test options config flow for tomorrowio."""
     user_config = _get_config_schema(hass, SOURCE_USER)(MIN_CONFIG)
+    user_config[CONF_NAME] = DEFAULT_NAME
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=user_config,
@@ -195,6 +202,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     await hass.config_entries.async_setup(entry.entry_id)
 
     assert entry.options[CONF_TIMESTEP] == DEFAULT_TIMESTEP
+    assert entry.options[CONF_MAX_REQUESTS_PER_DAY] == DEFAULT_MAX_REQUESTS_PER_DAY
     assert CONF_TIMESTEP not in entry.data
 
     result = await hass.config_entries.options.async_init(entry.entry_id, data=None)
@@ -203,13 +211,15 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_TIMESTEP: 1}
+        result["flow_id"], user_input={CONF_TIMESTEP: 1, CONF_MAX_REQUESTS_PER_DAY: 2}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == ""
     assert result["data"][CONF_TIMESTEP] == 1
+    assert result["data"][CONF_MAX_REQUESTS_PER_DAY] == 2
     assert entry.options[CONF_TIMESTEP] == 1
+    assert entry.options[CONF_MAX_REQUESTS_PER_DAY] == 2
 
 
 async def test_import_flow_v4(hass: HomeAssistant) -> None:
