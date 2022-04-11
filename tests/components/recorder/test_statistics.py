@@ -133,6 +133,11 @@ def test_compile_hourly_statistics(hass_recorder):
     stats = get_last_short_term_statistics(hass, 1, "sensor.test3", True)
     assert stats == {}
 
+    recorder.get_session().query(StatisticsShortTerm).delete()
+    # Should not fail there is nothing in the table
+    stats = get_latest_short_term_statistics(hass, ["sensor.test1"], True)
+    assert stats == {}
+
 
 @pytest.fixture
 def mock_sensor_statistics():
