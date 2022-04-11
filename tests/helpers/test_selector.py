@@ -266,7 +266,13 @@ def test_addon_selector_schema(schema, valid_selections, invalid_selections):
 )
 def test_boolean_selector_schema(schema, valid_selections, invalid_selections):
     """Test boolean selector."""
-    _test_selector("boolean", schema, valid_selections, invalid_selections, bool)
+    _test_selector(
+        "boolean",
+        schema,
+        valid_selections,
+        invalid_selections,
+        bool,
+    )
 
 
 @pytest.mark.parametrize(
@@ -512,7 +518,13 @@ def test_media_selector_schema(schema, valid_selections, invalid_selections):
         data.pop("metadata", None)
         return data
 
-    _test_selector("media", schema, valid_selections, invalid_selections, drop_metadata)
+    _test_selector(
+        "media",
+        schema,
+        valid_selections,
+        invalid_selections,
+        drop_metadata,
+    )
 
 
 @pytest.mark.parametrize(
