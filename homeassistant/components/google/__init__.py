@@ -193,9 +193,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
     # Force a token refresh to fix a bug where tokens were persisted with
     # expires_in (relative time delta) and expires_at (absolute time) swapped.
-    if session.token["expires_at"] >= datetime(2070, 1, 1).timestamp():
+    # A google session token typically only lasts a few days between refresh.
+    now = datetime.now()
+    if session.token["expires_at"] >= (now + timedelta(days=365)).timestamp():
         session.token["expires_in"] = 0
-        session.token["expires_at"] = datetime.now().timestamp()
+        session.token["expires_at"] = now.timestamp()
     try:
         await session.async_ensure_token_valid()
     except aiohttp.ClientResponseError as err:
