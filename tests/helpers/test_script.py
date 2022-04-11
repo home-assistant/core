@@ -2857,6 +2857,21 @@ async def test_referenced_areas(hass):
                 },
                 {"event": "test_event"},
                 {"delay": "{{ delay_period }}"},
+                {
+                    "if": [],
+                    "then": [
+                        {
+                            "service": "test.script",
+                            "data": {"area_id": "area_if_then"},
+                        }
+                    ],
+                    "else": [
+                        {
+                            "service": "test.script",
+                            "data": {"area_id": "area_if_else"},
+                        }
+                    ],
+                },
             ]
         ),
         "Test Name",
@@ -2870,6 +2885,8 @@ async def test_referenced_areas(hass):
         "area_in_target",
         "area_service_list",
         "area_service_not_list",
+        "area_if_then",
+        "area_if_else",
         # 'area_service_template',  # no area extraction from template
     }
     # Test we cache results.
@@ -2947,6 +2964,21 @@ async def test_referenced_entities(hass):
                 },
                 {"event": "test_event"},
                 {"delay": "{{ delay_period }}"},
+                {
+                    "if": [],
+                    "then": [
+                        {
+                            "service": "test.script",
+                            "data": {"entity_id": "light.if_then"},
+                        }
+                    ],
+                    "else": [
+                        {
+                            "service": "test.script",
+                            "data": {"entity_id": "light.if_else"},
+                        }
+                    ],
+                },
             ]
         ),
         "Test Name",
@@ -2963,6 +2995,8 @@ async def test_referenced_entities(hass):
         "light.entity_in_target",
         "light.service_list",
         "light.service_not_list",
+        "light.if_then",
+        "light.if_else",
         # "light.service_template",  # no entity extraction from template
         "scene.hello",
         "sensor.condition",
@@ -3035,6 +3069,21 @@ async def test_referenced_devices(hass):
                         }
                     ],
                 },
+                {
+                    "if": [],
+                    "then": [
+                        {
+                            "service": "test.script",
+                            "data": {"device_id": "if-then"},
+                        }
+                    ],
+                    "else": [
+                        {
+                            "service": "test.script",
+                            "data": {"device_id": "if-else"},
+                        }
+                    ],
+                },
             ]
         ),
         "Test Name",
@@ -3053,6 +3102,8 @@ async def test_referenced_devices(hass):
         "target-list-id-1",
         "target-list-id-2",
         "target-string-id",
+        "if-then",
+        "if-else",
     }
     # Test we cache results.
     assert script_obj.referenced_devices is script_obj.referenced_devices
