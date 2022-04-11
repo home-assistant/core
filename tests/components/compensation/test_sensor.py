@@ -1,6 +1,12 @@
 """The tests for the integration sensor platform."""
 
-from homeassistant.components.compensation.const import CONF_PRECISION, DOMAIN
+from homeassistant.components.compensation.const import (
+    ATTR_SOURCE,
+    ATTR_SOURCE_ATTRIBUTE,
+    ATTR_SOURCE_VALUE,
+    CONF_PRECISION,
+    DOMAIN,
+)
 from homeassistant.components.compensation.sensor import ATTR_COEFFICIENTS
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
@@ -41,8 +47,13 @@ async def test_linear_state(hass):
     state = hass.states.get(expected_entity_id)
     assert state is not None
 
+    assert state.name == "Test"
+
     assert round(float(state.state), config[DOMAIN]["test"][CONF_PRECISION]) == 5.0
 
+    assert state.attributes.get(ATTR_SOURCE) == entity_id
+    assert state.attributes.get(ATTR_SOURCE_ATTRIBUTE) is None
+    assert state.attributes.get(ATTR_SOURCE_VALUE) == 4
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "a"
 
     coefs = [round(v, 1) for v in state.attributes.get(ATTR_COEFFICIENTS)]
