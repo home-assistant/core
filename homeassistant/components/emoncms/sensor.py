@@ -163,10 +163,7 @@ class EmonCmsSensor(SensorEntity):
         self._sensorid = sensorid
         self._elem = elem
 
-        if unit_of_measurement == "kWh":
-            self._attr_device_class = SensorDeviceClass.ENERGY
-            self._attr_state_class = SensorStateClass.TOTAL_INCREASING
-        elif unit_of_measurement == "Wh":
+        if unit_of_measurement == "kWh" or unit_of_measurement == "Wh":
             self._attr_device_class = SensorDeviceClass.ENERGY
             self._attr_state_class = SensorStateClass.TOTAL_INCREASING
         elif unit_of_measurement == "W":
@@ -181,13 +178,7 @@ class EmonCmsSensor(SensorEntity):
         elif unit_of_measurement == "VA":
             self._attr_device_class = SensorDeviceClass.APPARENT_POWER
             self._attr_state_class = SensorStateClass.MEASUREMENT
-        elif unit_of_measurement == "°C":
-            self._attr_device_class = SensorDeviceClass.TEMPERATURE
-            self._attr_state_class = SensorStateClass.MEASUREMENT
-        elif unit_of_measurement == "°F":
-            self._attr_device_class = SensorDeviceClass.TEMPERATURE
-            self._attr_state_class = SensorStateClass.MEASUREMENT
-        elif unit_of_measurement == "K":
+        elif unit_of_measurement == "°C" or unit_of_measurement == "°F" or unit_of_measurement == "K":
             self._attr_device_class = SensorDeviceClass.TEMPERATURE
             self._attr_state_class = SensorStateClass.MEASUREMENT
         elif unit_of_measurement == "Hz":
