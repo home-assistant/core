@@ -1,6 +1,7 @@
 """Support for Honeywell (US) Total Connect Comfort climate systems."""
 import asyncio
 from datetime import timedelta
+from typing import Any
 
 import somecomfort
 
@@ -84,20 +85,22 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     return True
 
 
-async def update_listener(hass: HomeAssistant, config: ConfigEntry) -> None:
+async def update_listener(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Update listener."""
-    await hass.config_entries.async_reload(config.entry_id)
+    await hass.config_entries.async_reload(config_entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload the config config and platforms."""
-    unload_ok = await hass.config_entries.async_unload_platforms(config, PLATFORMS)
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
+    )
     if unload_ok:
         hass.data.pop(DOMAIN)
     return unload_ok
 
 
-def get_somecomfort_client(username, password):
+def get_somecomfort_client(username: Any, password: Any) -> somecomfort.SomeComfort:
     """Initialize the somecomfort client."""
     try:
         return somecomfort.SomeComfort(username, password)
@@ -115,10 +118,18 @@ def get_somecomfort_client(username, password):
 class HoneywellData:
     """Get the latest data and update."""
 
-    def __init__(self, hass, config, client, username, password, devices):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        client: somecomfort.SomeComfort,
+        username: Any,
+        password: Any,
+        devices: dict[Any, somecomfort.Device],
+    ) -> None:
         """Initialize the data object."""
         self._hass = hass
-        self._config = config
+        self._config = config_entry
         self._client = client
         self._username = username
         self._password = password
