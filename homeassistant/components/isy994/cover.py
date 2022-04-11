@@ -8,10 +8,8 @@ from pyisy.constants import ISY_VALUE_UNKNOWN
 from homeassistant.components.cover import (
     ATTR_POSITION,
     DOMAIN as COVER,
-    SUPPORT_CLOSE,
-    SUPPORT_OPEN,
-    SUPPORT_SET_POSITION,
     CoverEntity,
+    CoverEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -48,6 +46,12 @@ async def async_setup_entry(
 class ISYCoverEntity(ISYNodeEntity, CoverEntity):
     """Representation of an ISY994 cover device."""
 
+    _attr_supported_features = (
+        CoverEntityFeature.OPEN
+        | CoverEntityFeature.CLOSE
+        | CoverEntityFeature.SET_POSITION
+    )
+
     @property
     def current_cover_position(self) -> int | None:
         """Return the current cover position."""
@@ -63,11 +67,6 @@ class ISYCoverEntity(ISYNodeEntity, CoverEntity):
         if self._node.status == ISY_VALUE_UNKNOWN:
             return None
         return bool(self._node.status == 0)
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Send the open cover command to the ISY994 cover device."""

@@ -7,10 +7,13 @@ from aiohttp import ClientConnectorError
 from vulcan._utils import VulcanAPIException
 
 from homeassistant.components.calendar import ENTITY_ID_FORMAT, CalendarEventDevice
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import generate_entity_id
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.template import DATE_STR_FORMAT
 from homeassistant.util import Throttle, dt
 
@@ -21,7 +24,11 @@ from .fetch_data import get_lessons, get_student_info
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the calendar platform for event devices."""
     VulcanCalendarData.MIN_TIME_BETWEEN_UPDATES = timedelta(
         minutes=config_entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)

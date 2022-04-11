@@ -176,7 +176,10 @@ async def async_setup_platform(
 ) -> None:
     """Set up the utility meter sensor."""
     if discovery_info is None:
-        _LOGGER.error("This platform is only available through discovery")
+        _LOGGER.error(
+            "This platform is not available to configure "
+            "from 'sensor:' in configuration.yaml"
+        )
         return
 
     meters = []

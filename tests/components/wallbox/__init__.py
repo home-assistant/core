@@ -20,6 +20,7 @@ from homeassistant.components.wallbox.const import (
     CONF_SERIAL_NUMBER_KEY,
     CONF_SOFTWARE_KEY,
     CONF_STATION,
+    CONF_STATUS_ID_KEY,
     DOMAIN,
 )
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -33,6 +34,7 @@ test_response = json.loads(
     json.dumps(
         {
             CONF_CHARGING_POWER_KEY: 0,
+            CONF_STATUS_ID_KEY: 161,
             CONF_MAX_AVAILABLE_POWER_KEY: 25.2,
             CONF_CHARGING_SPEED_KEY: 0,
             CONF_ADDED_RANGE_KEY: 150,

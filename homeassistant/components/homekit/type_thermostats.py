@@ -3,6 +3,7 @@ import logging
 
 from pyhap.const import CATEGORY_THERMOSTAT
 
+from homeassistant.components.climate import ClimateEntityFeature
 from homeassistant.components.climate.const import (
     ATTR_CURRENT_HUMIDITY,
     ATTR_CURRENT_TEMPERATURE,
@@ -48,11 +49,6 @@ from homeassistant.components.climate.const import (
     SERVICE_SET_HVAC_MODE as SERVICE_SET_HVAC_MODE_THERMOSTAT,
     SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE as SERVICE_SET_TEMPERATURE_THERMOSTAT,
-    SUPPORT_FAN_MODE,
-    SUPPORT_SWING_MODE,
-    SUPPORT_TARGET_HUMIDITY,
-    SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_RANGE,
     SWING_BOTH,
     SWING_HORIZONTAL,
     SWING_OFF,
@@ -199,12 +195,12 @@ class Thermostat(HomeAccessory):
         min_humidity = attributes.get(ATTR_MIN_HUMIDITY, DEFAULT_MIN_HUMIDITY)
         features = attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
-        if features & SUPPORT_TARGET_TEMPERATURE_RANGE:
+        if features & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE:
             self.chars.extend(
                 (CHAR_COOLING_THRESHOLD_TEMPERATURE, CHAR_HEATING_THRESHOLD_TEMPERATURE)
             )
 
-        if features & SUPPORT_TARGET_HUMIDITY:
+        if features & ClimateEntityFeature.TARGET_HUMIDITY:
             self.chars.extend((CHAR_TARGET_HUMIDITY, CHAR_CURRENT_HUMIDITY))
 
         serv_thermostat = self.add_preload_service(SERV_THERMOSTAT, self.chars)
@@ -288,7 +284,7 @@ class Thermostat(HomeAccessory):
         fan_modes = {}
         self.ordered_fan_speeds = []
 
-        if features & SUPPORT_FAN_MODE:
+        if features & ClimateEntityFeature.FAN_MODE:
             fan_modes = {
                 fan_mode.lower(): fan_mode
                 for fan_mode in attributes.get(ATTR_FAN_MODES) or []
@@ -304,7 +300,7 @@ class Thermostat(HomeAccessory):
 
         self.fan_modes = fan_modes
         if (
-            features & SUPPORT_SWING_MODE
+            features & ClimateEntityFeature.SWING_MODE
             and (swing_modes := attributes.get(ATTR_SWING_MODES))
             and PRE_DEFINED_SWING_MODES.intersection(swing_modes)
         ):
@@ -459,14 +455,14 @@ class Thermostat(HomeAccessory):
 
         if CHAR_TARGET_TEMPERATURE in char_values:
             hc_target_temp = char_values[CHAR_TARGET_TEMPERATURE]
-            if features & SUPPORT_TARGET_TEMPERATURE:
+            if features & ClimateEntityFeature.TARGET_TEMPERATURE:
                 service = SERVICE_SET_TEMPERATURE_THERMOSTAT
                 temperature = self._temperature_to_states(hc_target_temp)
                 events.append(
                     f"{CHAR_TARGET_TEMPERATURE} to {char_values[CHAR_TARGET_TEMPERATURE]}°C"
                 )
                 params[ATTR_TEMPERATURE] = temperature
-            elif features & SUPPORT_TARGET_TEMPERATURE_RANGE:
+            elif features & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE:
                 # Homekit will send us a target temperature
                 # even if the device does not support it
                 _LOGGER.debug(
@@ -657,7 +653,10 @@ class Thermostat(HomeAccessory):
 
         # Update target temperature
         target_temp = _get_target_temperature(new_state, self._unit)
-        if target_temp is None and features & SUPPORT_TARGET_TEMPERATURE_RANGE:
+        if (
+            target_temp is None
+            and features & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+        ):
             # Homekit expects a target temperature
             # even if the device does not support it
             hc_hvac_mode = self.char_target_heat_cool.value

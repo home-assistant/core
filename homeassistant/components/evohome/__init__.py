@@ -524,7 +524,6 @@ class EvoDevice(Entity):
         self._evo_tcs = evo_broker.tcs
 
         self._unique_id = self._name = self._icon = self._precision = None
-        self._supported_features = None
         self._device_state_attrs = {}
 
     async def async_refresh(self, payload: dict | None = None) -> None:
@@ -579,11 +578,6 @@ class EvoDevice(Entity):
     def icon(self) -> str:
         """Return the icon to use in the frontend UI."""
         return self._icon
-
-    @property
-    def supported_features(self) -> int:
-        """Get the flag of supported features of the device."""
-        return self._supported_features
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""

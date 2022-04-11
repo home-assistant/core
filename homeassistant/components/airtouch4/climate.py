@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
 from homeassistant.components.climate.const import (
     FAN_AUTO,
     FAN_DIFFUSE,
@@ -17,8 +17,6 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_FAN_ONLY,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
-    SUPPORT_FAN_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
@@ -29,7 +27,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
 AT_TO_HA_STATE = {
     "Heat": HVAC_MODE_HEAT,
     "Cool": HVAC_MODE_COOL,
@@ -90,7 +87,9 @@ async def async_setup_entry(
 class AirtouchAC(CoordinatorEntity, ClimateEntity):
     """Representation of an AirTouch 4 ac."""
 
-    _attr_supported_features = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
+    )
     _attr_temperature_unit = TEMP_CELSIUS
 
     def __init__(self, coordinator, ac_number, info):
@@ -204,7 +203,7 @@ class AirtouchAC(CoordinatorEntity, ClimateEntity):
 class AirtouchGroup(CoordinatorEntity, ClimateEntity):
     """Representation of an AirTouch 4 group."""
 
-    _attr_supported_features = SUPPORT_TARGET_TEMPERATURE
+    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
     _attr_temperature_unit = TEMP_CELSIUS
     _attr_hvac_modes = AT_GROUP_MODES
 

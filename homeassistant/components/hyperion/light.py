@@ -14,8 +14,8 @@ from homeassistant.components.light import (
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     COLOR_MODE_HS,
-    SUPPORT_EFFECT,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -126,7 +126,7 @@ class HyperionBaseLight(LightEntity):
 
     _attr_color_mode = COLOR_MODE_HS
     _attr_supported_color_modes = {COLOR_MODE_HS}
-    _attr_supported_features = SUPPORT_EFFECT
+    _attr_supported_features = LightEntityFeature.EFFECT
 
     def __init__(
         self,

@@ -11,9 +11,8 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_EFFECT,
     ATTR_HS_COLOR,
+    COLOR_MODE_HS,
     PLATFORM_SCHEMA,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
     SUPPORT_EFFECT,
     SUPPORT_FLASH,
     LightEntity,
@@ -28,8 +27,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "myStrom bulb"
-
-SUPPORT_MYSTROM = SUPPORT_BRIGHTNESS | SUPPORT_EFFECT | SUPPORT_FLASH | SUPPORT_COLOR
 
 EFFECT_RAINBOW = "rainbow"
 EFFECT_SUNRISE = "sunrise"
@@ -74,6 +71,10 @@ async def async_setup_platform(
 class MyStromLight(LightEntity):
     """Representation of the myStrom WiFi bulb."""
 
+    _attr_color_mode = COLOR_MODE_HS
+    _attr_supported_color_modes = {COLOR_MODE_HS}
+    _attr_supported_features = SUPPORT_EFFECT | SUPPORT_FLASH
+
     def __init__(self, bulb, name, mac):
         """Initialize the light."""
         self._bulb = bulb
@@ -94,11 +95,6 @@ class MyStromLight(LightEntity):
     def unique_id(self):
         """Return a unique ID."""
         return self._mac
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_MYSTROM
 
     @property
     def brightness(self):

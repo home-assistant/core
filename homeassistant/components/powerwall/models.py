@@ -38,7 +38,7 @@ class PowerwallData:
     meters: MetersAggregates
     grid_services_active: bool
     grid_status: GridStatus
-    backup_reserve: float
+    backup_reserve: float | None
 
 
 class PowerwallRuntimeData(TypedDict):
