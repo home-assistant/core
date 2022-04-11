@@ -1,12 +1,13 @@
 """Support for Synology DSM switch."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 import logging
 from typing import Any
 
 from synology_dsm.api.surveillance_station import SynoSurveillanceStation
 
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
@@ -14,15 +15,26 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import SynoApi, SynologyDSMBaseEntity
-from .const import (
-    COORDINATOR_SWITCHES,
-    DOMAIN,
-    SURVEILLANCE_SWITCH,
-    SYNO_API,
-    SynologyDSMSwitchEntityDescription,
-)
+from .const import COORDINATOR_SWITCHES, DOMAIN, SYNO_API, SynologyDSMEntityDescription
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class SynologyDSMSwitchEntityDescription(
+    SwitchEntityDescription, SynologyDSMEntityDescription
+):
+    """Describes Synology DSM switch entity."""
+
+
+SURVEILLANCE_SWITCH: tuple[SynologyDSMSwitchEntityDescription, ...] = (
+    SynologyDSMSwitchEntityDescription(
+        api_key=SynoSurveillanceStation.HOME_MODE_API_KEY,
+        key="home_mode",
+        name="Home Mode",
+        icon="mdi:home-account",
+    ),
+)
 
 
 async def async_setup_entry(
