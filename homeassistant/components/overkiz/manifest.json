@@ -18,6 +18,10 @@
     {
       "type": "_kizbox._tcp.local.",
       "name": "gateway*"
+    },
+    {
+      "type": "_kizboxdev._tcp.local.",
+      "name": "gateway*"
     }
   ]
 }
