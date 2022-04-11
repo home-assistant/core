@@ -44,12 +44,12 @@ def _async_migrate_data_to_options(
     )
 
 
-async def async_setup_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up the Honeywell thermostat."""
-    _async_migrate_data_to_options(hass, config)
+    _async_migrate_data_to_options(hass, config_entry)
 
-    username = config.data[CONF_USERNAME]
-    password = config.data[CONF_PASSWORD]
+    username = config_entry.data[CONF_USERNAME]
+    password = config_entry.data[CONF_PASSWORD]
 
     client = await hass.async_add_executor_job(
         get_somecomfort_client, username, password
@@ -58,8 +58,8 @@ async def async_setup_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
     if client is None:
         return False
 
-    loc_id = config.data.get(CONF_LOC_ID)
-    dev_id = config.data.get(CONF_DEV_ID)
+    loc_id = config_entry.data.get(CONF_LOC_ID)
+    dev_id = config_entry.data.get(CONF_DEV_ID)
 
     devices = {}
 
@@ -73,13 +73,13 @@ async def async_setup_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
         _LOGGER.debug("No devices found")
         return False
 
-    data = HoneywellData(hass, config, client, username, password, devices)
+    data = HoneywellData(hass, config_entry, client, username, password, devices)
     await data.async_update()
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][config.entry_id] = data
-    hass.config_entries.async_setup_platforms(config, PLATFORMS)
+    hass.data[DOMAIN][config_entry.entry_id] = data
+    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
-    config.async_on_unload(config.add_update_listener(update_listener))
+    config_entry.async_on_unload(config_entry.add_update_listener(update_listener))
 
     return True
 

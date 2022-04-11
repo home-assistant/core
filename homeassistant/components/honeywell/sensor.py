@@ -59,9 +59,9 @@ SENSOR_TYPES: tuple[HoneywellSensorEntityDescription, ...] = (
 )
 
 
-async def async_setup_entry(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Honeywell thermostat."""
-    data = hass.data[DOMAIN][config.entry_id]
+    data = hass.data[DOMAIN][config_entry.entry_id]
     sensors = []
 
     for device in data.devices.values():
@@ -81,7 +81,7 @@ class HoneywellSensor(SensorEntity):
         """Initialize the outdoor temperature sensor."""
         self._device = device
         self.entity_description = description
-        self._attr_unique_id = f"{device.deviceid}_outdoor_{description.device_class}"
+        self._attr_unique_id = f"{device.deviceid}_{description.key}"
         self._attr_name = f"{device.name} outdoor {description.device_class}"
         self._attr_native_unit_of_measurement = description.unit_fn(device)
 
