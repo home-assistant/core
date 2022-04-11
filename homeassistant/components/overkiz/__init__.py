@@ -16,10 +16,16 @@ from pyoverkiz.exceptions import (
     NotSuchTokenException,
     TooManyRequestsException,
 )
-from pyoverkiz.models import Device, Scenario, Setup
+from pyoverkiz.models import Device, Scenario, Setup, OverkizServer
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_TOKEN,
+    CONF_USERNAME,
+    Platform,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -48,15 +54,34 @@ class HomeAssistantOverkizData:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Overkiz from a config entry."""
-    username = entry.data[CONF_USERNAME]
-    password = entry.data[CONF_PASSWORD]
-    server = SUPPORTED_SERVERS[entry.data[CONF_HUB]]
+    # Local API vs Cloud API
+    if entry.data.get(CONF_HOST):
+        host = entry.data[CONF_HOST]
+        token = entry.data[CONF_TOKEN]
+        session = async_create_clientsession(hass, verify_ssl=False)
 
-    # To allow users with multiple accounts/hubs, we create a new session so they have separate cookies
-    session = async_create_clientsession(hass)
-    client = OverkizClient(
-        username=username, password=password, session=session, server=server
-    )
+        client = OverkizClient(
+            username="",
+            password="",
+            token=token,
+            session=session,
+            server=OverkizServer(
+                name="Somfy Developer Mode (local API)",
+                endpoint=f"https://{host}:8443/enduser-mobile-web/1/enduserAPI/",
+                manufacturer="Somfy",
+                configuration_url=None,
+            ),
+        )
+    else:
+        username = entry.data[CONF_USERNAME]
+        password = entry.data[CONF_PASSWORD]
+        server = SUPPORTED_SERVERS[entry.data[CONF_HUB]]
+
+        # To allow users with multiple accounts/hubs, we create a new session so they have separate cookies
+        session = async_create_clientsession(hass)
+        client = OverkizClient(
+            username=username, password=password, session=session, server=server
+        )
 
     await _async_migrate_entries(hass, entry)
 
