@@ -16,7 +16,7 @@ from pyoverkiz.exceptions import (
     NotSuchTokenException,
     TooManyRequestsException,
 )
-from pyoverkiz.models import Device, Scenario, Setup, OverkizServer
+from pyoverkiz.models import Device, OverkizServer, Setup, Scenario
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -71,7 +71,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             token=token,
             session=session,
             server=OverkizServer(
-                name="Somfy Developer Mode (local API)",
+                name="Somfy TaHoma Developer Mode (local API)",
                 endpoint=f"https://{host}:8443/enduser-mobile-web/1/enduserAPI/",
                 manufacturer="Somfy",
                 configuration_url=None,

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dis import disco
 from typing import Any, cast
 
 from aiohttp import ClientError
@@ -30,7 +31,7 @@ from .const import CONF_HUB, DEFAULT_HUB, DOMAIN, LOGGER
 LOCAL = "local"
 LOCAL_HUB = {
     LOCAL: OverkizServer(
-        name="Somfy Developer Mode (local API)",
+        name="Somfy TaHoma Developer Mode (local API)",
         endpoint="",
         manufacturer="Somfy",
         configuration_url=None,
@@ -46,6 +47,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     _config_entry: ConfigEntry | None
     _default_user: None | str
     _default_hub: str
+    _default_host: str
 
     def __init__(self) -> None:
         """Initialize Overkiz Config Flow."""
@@ -54,6 +56,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._config_entry = None
         self._default_user = None
         self._default_hub = DEFAULT_HUB
+        self._default_host = "gateway-xxxx-xxxx-xxxx.local:8443"
 
     async def async_validate_input(self, user_input: dict[str, Any]) -> None:
         """Validate user credentials."""
@@ -85,14 +88,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             session = async_create_clientsession(self.hass, verify_ssl=False)
 
+            # TODO try if we can access the .local, otherwise remove the token
             client = OverkizClient(
                 username="",
                 password="",
                 token=token,
                 session=session,
                 server=OverkizServer(
-                    name="Somfy Developer Mode (local API)",
-                    endpoint=f"https://{host}:8443/enduser-mobile-web/1/enduserAPI/",
+                    name="Somfy TaHoma Developer Mode (local API)",
+                    endpoint=f"https://{host}/enduser-mobile-web/1/enduserAPI/",
                     manufacturer="Somfy",
                     configuration_url=None,
                 ),
@@ -281,7 +285,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(
-                        CONF_HOST, default="gateway-xxxx-xxxx-xxxx.local"
+                        CONF_HOST, default="gateway-xxxx-xxxx-xxxx.local:8443"
                     ): str,
                     vol.Required(CONF_USERNAME, default=self._default_user): str,
                     vol.Required(CONF_PASSWORD): str,
@@ -305,9 +309,23 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle ZeroConf discovery."""
         properties = discovery_info.properties
         gateway_id = properties["gateway_pin"]
+        hostname = discovery_info.hostname
+        self._default_host = hostname
 
-        LOGGER.debug("ZeroConf discovery detected gateway %s", obfuscate_id(gateway_id))
-        return await self._process_discovery(gateway_id)
+        LOGGER.debug(
+            "ZeroConf discovery detected gateway %s on %s",
+            obfuscate_id(gateway_id),
+            hostname,
+        )
+
+        # await self.async_set_unique_id(gateway_id)
+        # self._abort_if_unique_id_configured()
+        self.context["title_placeholders"] = {"gateway_id": gateway_id}
+
+        if discovery_info.type == "_kizbox._tcp.local.":
+            return await self.async_step_cloud()
+        elif discovery_info.type == "_kizboxdev._tcp.local.":
+            return await self.async_step_local()
 
     async def _process_discovery(self, gateway_id: str) -> FlowResult:
         """Handle discovery of a gateway."""
