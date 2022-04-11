@@ -349,7 +349,7 @@ aurorapy==0.2.6
 
 # homeassistant.components.generic
 # homeassistant.components.stream
-av==9.0.0
+av==8.1.0
 
 # homeassistant.components.avea
 # avea==1.5.1
