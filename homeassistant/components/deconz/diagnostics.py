@@ -39,8 +39,8 @@ async def async_get_config_entry_diagnostics(
     }
     diag["alarm_systems"] = {k: v.raw for k, v in gateway.api.alarmsystems.items()}
     diag["groups"] = {k: v.raw for k, v in gateway.api.groups.items()}
-    diag["lights"] = {k: v.raw for k, v in gateway.api.lights.items()}  # type: ignore[has-type, misc]
+    diag["lights"] = {k: v.raw for k, v in gateway.api.lights.items()}
     diag["scenes"] = {k: v.raw for k, v in gateway.api.scenes.items()}
-    diag["sensors"] = {k: v.raw for k, v in gateway.api.sensors.items()}  # type: ignore[has-type, misc]
+    diag["sensors"] = {k: v.raw for k, v in gateway.api.sensors.items()}
 
     return diag
