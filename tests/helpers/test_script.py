@@ -3732,7 +3732,8 @@ async def test_validate_action_config(hass):
                     "state": "on",
                 },
             ],
-            "then": [templated_device_action("if_event")],
+            "then": [templated_device_action("if_then_event")],
+            "else": [templated_device_action("if_else_event")],
         },
     }
     expected_templates = {
