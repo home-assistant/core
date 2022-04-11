@@ -456,6 +456,8 @@ ATTR_DEVICE_CLASS: Final = "device_class"
 # Temperature attribute
 ATTR_TEMPERATURE: Final = "temperature"
 
+# Persons attribute
+ATTR_PERSONS: Final = "persons"
 
 # #### UNITS OF MEASUREMENT ####
 # Apparent power units
