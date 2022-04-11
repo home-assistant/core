@@ -1,0 +1,16 @@
+{
+  "PM1": 9.8,
+  "PM25": 14.98,
+  "PM10": 18.47,
+  "PRESSURE": 1018.06,
+  "HUMIDITY": 63.6,
+  "TEMPERATURE": 6.78,
+  "PM25_LIMIT": 25.0,
+  "PM25_PERCENT": 59.94,
+  "PM10_LIMIT": 50.0,
+  "PM10_PERCENT": 36.93,
+  "CAQI": 24.97,
+  "LEVEL": "very low",
+  "DESCRIPTION": "Great air here today!",
+  "ADVICE": "It couldn't be better ;)"
+}
