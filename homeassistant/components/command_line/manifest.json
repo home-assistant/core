@@ -2,7 +2,6 @@
   "domain": "command_line",
   "name": "Command Line",
   "documentation": "https://www.home-assistant.io/integrations/command_line",
-  "dependencies": ["template"],
   "codeowners": [],
   "iot_class": "local_polling"
 }
