@@ -290,3 +290,38 @@ async def test_import_flow_v3(
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert "old_config_entry_id" not in entry.data
     assert CONF_API_VERSION not in entry.data
+
+
+async def test_existing_entry_with_same_api_key(hass: HomeAssistant) -> None:
+    """Test user config flow with an existing entry using the same API key."""
+    new_max_requests = DEFAULT_MAX_REQUESTS_PER_DAY * 2
+    # Add config entry with a custom max_requests_per_day so we can verify that
+    # it gets copied over
+    MockConfigEntry(
+        domain=DOMAIN,
+        data=_get_config_schema(hass, SOURCE_USER, MIN_CONFIG)(MIN_CONFIG),
+        options={
+            CONF_TIMESTEP: DEFAULT_TIMESTEP,
+            CONF_MAX_REQUESTS_PER_DAY: new_max_requests,
+        },
+        unique_id="fake_unique_id_so_config_flow_doesnt_abort",
+    ).add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=_get_config_schema(hass, SOURCE_USER, MIN_CONFIG)(MIN_CONFIG),
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == DEFAULT_NAME
+    assert result["data"][CONF_NAME] == DEFAULT_NAME
+    assert result["data"][CONF_API_KEY] == API_KEY
+    assert result["data"][CONF_LOCATION][CONF_LATITUDE] == hass.config.latitude
+    assert result["data"][CONF_LOCATION][CONF_LONGITUDE] == hass.config.longitude
+    assert result["options"][CONF_TIMESTEP] == DEFAULT_TIMESTEP
+    assert result["options"][CONF_MAX_REQUESTS_PER_DAY] == new_max_requests
