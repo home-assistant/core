@@ -20,6 +20,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up IntelliFire from a config entry."""
     LOGGER.debug("Setting up config entry: %s", entry.unique_id)
 
+    if "username" not in entry.data:
+        LOGGER.debug("Auth Failed: %s", entry.unique_id)
+        raise ConfigEntryAuthFailed
+
     # Define the API Objects
     read_object = IntellifireAsync(entry.data[CONF_HOST])
     ift_control = IntellifireControlAsync(
