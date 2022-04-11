@@ -27,7 +27,6 @@ from .core.helpers import async_get_zha_device
 KEYS_TO_REDACT = {
     ATTR_IEEE,
     CONF_UNIQUE_ID,
-    "device_reg_id",
     "network_key",
     CONF_NWK_EXTENDED_PAN_ID,
 }
