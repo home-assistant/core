@@ -63,10 +63,14 @@ CONF_KNX_LABEL_TUNNELING_TCP_SECURE: Final = "TCP with IP Secure"
 CONF_KNX_LABEL_TUNNELING_UDP: Final = "UDP"
 CONF_KNX_LABEL_TUNNELING_UDP_ROUTE_BACK: Final = "UDP with route back / NAT mode"
 
-_IA_SELECTOR = selector.selector({"text": {}})
-_IP_SELECTOR = selector.selector({"text": {}})
+_IA_SELECTOR = selector.TextSelector()
+_IP_SELECTOR = selector.TextSelector()
 _PORT_SELECTOR = vol.All(
-    selector.selector({"number": {"min": 1, "max": 65535, "mode": "box"}}),
+    selector.NumberSelector(
+        selector.NumberSelectorConfig(
+            min=1, max=65535, mode=selector.NumberSelectorMode.BOX
+        ),
+    ),
     vol.Coerce(int),
 )
 
@@ -254,14 +258,18 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         fields = {
             vol.Required(CONF_KNX_SECURE_USER_ID, default=2): vol.All(
-                selector.selector({"number": {"min": 1, "max": 127, "mode": "box"}}),
+                selector.NumberSelector(
+                    selector.NumberSelectorConfig(
+                        min=1, max=127, mode=selector.NumberSelectorMode.BOX
+                    ),
+                ),
                 vol.Coerce(int),
             ),
-            vol.Required(CONF_KNX_SECURE_USER_PASSWORD): selector.selector(
-                {"text": {"type": "password"}}
+            vol.Required(CONF_KNX_SECURE_USER_PASSWORD): selector.TextSelector(
+                selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD),
             ),
-            vol.Required(CONF_KNX_SECURE_DEVICE_AUTHENTICATION): selector.selector(
-                {"text": {"type": "password"}}
+            vol.Required(CONF_KNX_SECURE_DEVICE_AUTHENTICATION): selector.TextSelector(
+                selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD),
             ),
         }
 
@@ -301,8 +309,8 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 )
 
         fields = {
-            vol.Required(CONF_KNX_KNXKEY_FILENAME): selector.selector({"text": {}}),
-            vol.Required(CONF_KNX_KNXKEY_PASSWORD): selector.selector({"text": {}}),
+            vol.Required(CONF_KNX_KNXKEY_FILENAME): selector.TextSelector(),
+            vol.Required(CONF_KNX_KNXKEY_PASSWORD): selector.TextSelector(),
         }
 
         return self.async_show_form(
@@ -405,7 +413,7 @@ class KNXOptionsFlowHandler(OptionsFlow):
             vol.Required(
                 CONF_KNX_INDIVIDUAL_ADDRESS,
                 default=self.current_config[CONF_KNX_INDIVIDUAL_ADDRESS],
-            ): selector.selector({"text": {}}),
+            ): selector.TextSelector(),
             vol.Required(
                 CONF_KNX_MCAST_GRP,
                 default=self.current_config.get(CONF_KNX_MCAST_GRP, DEFAULT_MCAST_GRP),
@@ -438,7 +446,7 @@ class KNXOptionsFlowHandler(OptionsFlow):
                         CONF_KNX_DEFAULT_STATE_UPDATER,
                     ),
                 )
-            ] = selector.selector({"boolean": {}})
+            ] = selector.BooleanSelector()
             data_schema[
                 vol.Required(
                     CONF_KNX_RATE_LIMIT,
@@ -448,14 +456,12 @@ class KNXOptionsFlowHandler(OptionsFlow):
                     ),
                 )
             ] = vol.All(
-                selector.selector(
-                    {
-                        "number": {
-                            "min": 1,
-                            "max": CONF_MAX_RATE_LIMIT,
-                            "mode": "box",
-                        }
-                    }
+                selector.NumberSelector(
+                    selector.NumberSelectorConfig(
+                        min=0,
+                        max=CONF_MAX_RATE_LIMIT,
+                        mode=selector.NumberSelectorMode.BOX,
+                    ),
                 ),
                 vol.Coerce(int),
             )
