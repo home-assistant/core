@@ -288,9 +288,3 @@ class KNXClimate(KnxEntity, ClimateEntity):
         await super().async_added_to_hass()
         if self._device.mode is not None:
             self._device.mode.register_device_updated_cb(self.after_update_callback)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Disconnect device object when removed."""
-        await super().async_will_remove_from_hass()
-        if self._device.mode is not None:
-            self._device.mode.unregister_device_updated_cb(self.after_update_callback)
