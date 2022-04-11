@@ -69,6 +69,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         """Fetch Overkiz data via event listener."""
         try:
             # events = await self.client.fetch_events()
+            # TODO swap when fixed in firmware
             return self.devices
         except BadCredentialsException as exception:
             raise ConfigEntryAuthFailed("Invalid authentication.") from exception
