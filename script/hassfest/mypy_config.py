@@ -27,7 +27,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.deconz.climate",
     "homeassistant.components.deconz.cover",
     "homeassistant.components.deconz.fan",
-    "homeassistant.components.deconz.light",
     "homeassistant.components.deconz.lock",
     "homeassistant.components.deconz.logbook",
     "homeassistant.components.deconz.number",
