@@ -8,10 +8,11 @@ import async_timeout
 import voluptuous as vol
 from yolink_client.const import OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 from yolink_client.yolink_client import YoLinkClient
+from yolink_client.yolink_exception import YoLinkAPIError
 from yolink_client.yolink_mqtt_client import HomeEventMqttSub, MqttClient
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     aiohttp_client,
@@ -39,7 +40,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.SENSOR]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -80,15 +81,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = {
         "client": yolink_http_client,
         "mqttClient": yolink_mqtt_client,
-        "devices": [
-            {
-                "deviceId": "",
-                "name": "",
-                "type": "",
-                "token": "",
-            }
-        ],
+        "devices": [],
     }
+
     try:
         async with async_timeout.timeout(5):
             home_response = await yolink_http_client.get_general_info()
@@ -107,16 +102,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     "devices"
                 ]
         await yolink_mqtt_client.async_connect()
-    except BaseException as err:
-        _LOGGER.warning("Call yolink api failed: %s", err)
+
+    except YoLinkAPIError as yl_err:
+        _LOGGER.warning("Call yolink api failed: %s", yl_err)
         return False
+
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok

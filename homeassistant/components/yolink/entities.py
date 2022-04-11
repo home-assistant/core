@@ -1,10 +1,12 @@
 """Entity for YoLink devices."""
+from __future__ import annotations
+
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.components.yolink.device import YoLinkDevice, YoLinkDeviceEntity
 from homeassistant.const import TEMP_CELSIUS
 
-"""Sensor Config: Unit : Icon : type"""
+from .device import YoLinkDevice, YoLinkDeviceEntity
+
 SENSOR_TYPES_CONFIG = {
     "DoorSensor": [None, None, "door"],
     "LeakSensor": [None, None, "moisture"],
@@ -71,7 +73,7 @@ class YoLinkBatteryEntity(YoLinkSensorEntity):
         """Initialize the ofYoLink T&H Sensor."""
         super().__init__(device, "battery", config_entry)
 
-    async def udpate_entity_state(self, level: int):
+    async def udpate_entity_state(self, level: int) -> None:
         """Update HA Entity State."""
         if level is None:
             return
@@ -95,7 +97,7 @@ class YoLinkDoorEntity(YoLinkBinarySensorEntity):
         """Initialize the YoLink Door Sensor."""
         super().__init__(device, "DoorSensor", config_entry)
 
-    async def udpate_entity_state(self, concat: bool):
+    async def update_entity_state(self, concat: bool) -> None:
         """Update HA Entity State."""
         if concat is None:
             return
@@ -103,6 +105,6 @@ class YoLinkDoorEntity(YoLinkBinarySensorEntity):
         await self.async_update_ha_state()
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Ueturn Door State."""
         return self._attr_is_on

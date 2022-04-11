@@ -4,6 +4,7 @@ from asyncio import run_coroutine_threadsafe
 from aiohttp import ClientSession
 from yolink_client.yolink_auth_mgr import YoLinkAuthMgr
 
+from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 
@@ -24,7 +25,7 @@ class AuthenticationManager(YoLinkAuthMgr):
         """Return the access token."""
         return self.oauth_session.token["access_token"]
 
-    async def check_and_refresh_token(self):
+    async def check_and_refresh_token(self) -> str:
         """Check the token."""
         if not self.oauth_session.valid_token:
             await self.oauth_session.async_ensure_token_valid()
@@ -49,4 +50,4 @@ class ConfigEntryAuth(AuthenticationManager):
         run_coroutine_threadsafe(
             self.oauth_session.async_ensure_token_valid(), self.hass.loop
         ).result()
-        return self.oauth_session.token["access_token"]
+        return self.oauth_session.token[CONF_ACCESS_TOKEN]

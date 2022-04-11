@@ -1,9 +1,10 @@
 """Support for Yolink Devices."""
 
-from homeassistant.components.yolink.device_impl import YoLinkDoorSensor
+from homeassistant.const import Platform
 
 from .const import DOMAIN, HOME_SUBSCRIPTION
 from .device import YoLinkDevice
+from .device_impl import YoLinkDoorSensor
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -18,6 +19,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         entities.extend(device.entities)
 
     hass.data[DOMAIN][config_entry.entry_id][HOME_SUBSCRIPTION].attachPlatformDevices(
-        "sensor", devices
+        Platform.SENSOR, devices
     )
     async_add_entities(entities)

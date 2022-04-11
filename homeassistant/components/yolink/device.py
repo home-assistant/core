@@ -1,15 +1,28 @@
 """YoLink Device Instance."""
+from __future__ import annotations
 
 import logging
-from typing import List
 
 from yolink_client.yolink_device import YoLinkDeviceEntry
 from yolink_client.yolink_model import BRDP, BSDPHelper
 
+from homeassistant.const import CONF_NAME, CONF_STATE, CONF_TOKEN, CONF_TYPE
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers import entity
 
-from .const import DOMAIN
+from .const import ATTR_DEVICE_ID, DOMAIN, MANUFACTURER
+
+
+def resolve_state_in_event(data: BRDP, event_type: str) -> dict | None:
+    """Get state in BRDP."""
+    if event_type in ("Report", "Alert", "StatusChange", "getState"):
+        return data.data
+    return None
+
+
+async def parse_state(state):
+    """Parse state from data, Should be override."""
+    return
 
 
 class YoLinkDevice(YoLinkDeviceEntry):
@@ -17,40 +30,30 @@ class YoLinkDevice(YoLinkDeviceEntry):
 
     def __init__(self, device: dict, hass, config_entry):
         """Init YoLink Device."""
-        self.device_id = device["deviceId"]
-        self.device_name = device["name"]
-        self.device_net_token = device["token"]
-        self.device_type = device["type"]
+        self.device_id = device[ATTR_DEVICE_ID]
+        self.device_name = device[CONF_NAME]
+        self.device_net_token = device[CONF_TOKEN]
+        self.device_type = device[CONF_TYPE]
         self._config_entry = config_entry
         self.hass: HomeAssistant = hass
         self._is_gateway = False
-        self.entities: List[YoLinkDeviceEntity] = []
+        self.entities: list[YoLinkDeviceEntity] = []
 
     @property
-    def should_poll(self):
+    def should_poll(self) -> bool:
         """Return the polling state. No polling needed."""
         return True
 
     @property
-    def device_info(self):
+    def device_info(self) -> entity.DeviceInfo:
         """Return the device info of the YoLink device."""
-        return {
-            "identifiers": {(DOMAIN, self.device_id)},
-            "manufacturer": "YoLink",
-            "model": self.device_type,
-            "name": self.device_name,
-        }
 
-    def resolve_state_in_event(self, data: BRDP, event_type: str):
-        """Get state in BRDP."""
-        if (
-            event_type == "Report"
-            or event_type == "Alert"
-            or event_type == "StatusChange"
-            or event_type == "getState"
-        ):
-            return data.data
-        return None
+        return entity.DeviceInfo(
+            identifiers={(DOMAIN, self.device_id)},
+            manufacturer=MANUFACTURER,
+            model=self.device_type,
+            name=self.device_name,
+        )
 
     @callback
     def push_data(self, data: BRDP):
@@ -58,15 +61,11 @@ class YoLinkDevice(YoLinkDeviceEntry):
         if data.event is not None:
             event_param = data.event.split(".")
             event_type = event_param[len(event_param) - 1]
-            resovled_state = self.resolve_state_in_event(data, event_type)
+            resovled_state = resolve_state_in_event(data, event_type)
             if resovled_state is not None:
-                self.hass.async_create_task(self.parse_state(resovled_state))
+                self.hass.async_create_task(parse_state(resovled_state))
 
-    async def parse_state(self, state):
-        """Parse state from data, Should be override."""
-        return
-
-    async def call_device_http_api(self, method: str, params: dict) -> BRDP:
+    async def call_device_http_api(self, method: str, params: dict | None) -> BRDP:
         """Call device API."""
         bsdp_helper = BSDPHelper(
             self.device_id,
@@ -79,11 +78,11 @@ class YoLinkDevice(YoLinkDeviceEntry):
             "client"
         ].call_yolink_api(bsdp_helper.build())
 
-    async def get_state_with_api(self):
+    async def get_state_with_api(self) -> BRDP:
         """Call *.getState with device to request realtime state data."""
         return await self.call_device_http_api("getState", None)
 
-    async def fetch_state_with_api(self):
+    async def fetch_state_with_api(self) -> BRDP:
         """Call *.fetchState with device to fetch state data."""
         return await self.call_device_http_api("fetchState", None)
 
@@ -92,21 +91,21 @@ class YoLinkDevice(YoLinkDeviceEntry):
         """Return logger."""
         return logging.getLogger(__name__)
 
-    def async_added_to_hass(self):
+    def async_added_to_hass(self) -> None:
         """Start unavailability tracking."""
-        for entity in self.entities:
-            if entity._registed_ is False:
+        for entity_item in self.entities:
+            if entity_item.is_registed is False:
                 return
 
         async def request_state():
             resp = await self.fetch_state_with_api()
             if "state" in resp.data:
-                await self.parse_state(resp.data["state"])
+                await parse_state(resp.data[CONF_STATE])
 
         self.hass.create_task(request_state())
 
 
-class YoLinkDeviceEntity(Entity):
+class YoLinkDeviceEntity(entity.Entity):
     """Representation a base YoLink device."""
 
     def __init__(self, device: YoLinkDevice, entity_type: str, config_entry):
@@ -130,38 +129,43 @@ class YoLinkDeviceEntity(Entity):
         """Return logger."""
         return logging.getLogger(__name__)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Start unavailability tracking."""
         self._registed_ = True
         self._yl_device.async_added_to_hass()
 
     @property
-    def device_id(self):
+    def device_id(self) -> str:
         """Return the device id of the YoLink device."""
         return self._yl_device.device_id
 
     @property
-    def device_info(self):
+    def device_info(self) -> entity.DeviceInfo:
         """Return the device info for HA."""
         return self._yl_device.device_info
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if entity is available."""
         return self._is_available
 
     @property
-    def should_poll(self):
+    def should_poll(self) -> bool:
         """Return the polling state. No polling needed."""
         return self._yl_device.should_poll
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict:
         """Return the state attributes."""
         return self._extra_state_attributes
 
+    @property
+    def is_registed(self) -> bool:
+        """Return entity register state."""
+        return self._registed_
+
     @callback
-    def _async_set_unavailable(self, now):
+    def _async_set_unavailable(self, now) -> None:
         """Set state to UNAVAILABLE."""
         self._remove_unavailability_tracker = None
         self._is_available = False

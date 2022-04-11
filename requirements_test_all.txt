@@ -962,9 +962,6 @@ pycoolmasternet-async==0.1.2
 # homeassistant.components.daikin
 pydaikin==2.7.0
 
-# homeassistant.components.yolink
-pydantic==1.9.0
-
 # homeassistant.components.deconz
 pydeconz==92
 
@@ -1636,7 +1633,7 @@ yalexs==1.1.25
 yeelight==0.7.10
 
 # homeassistant.components.yolink
-yolink-client==0.0.7
+yolink-client==0.0.8
 
 # homeassistant.components.youless
 youless-api==0.16

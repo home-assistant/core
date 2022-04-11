@@ -1,10 +1,9 @@
 """YoLink Special Device Implement."""
 
-from homeassistant.components.yolink.device import YoLinkDevice
-from homeassistant.components.yolink.entities import (
-    YoLinkBatteryEntity,
-    YoLinkDoorEntity,
-)
+from homeassistant.const import CONF_STATE, STATE_OPEN
+
+from .device import YoLinkDevice
+from .entities import YoLinkBatteryEntity, YoLinkDoorEntity
 
 
 class YoLinkDoorSensor(YoLinkDevice):
@@ -18,7 +17,7 @@ class YoLinkDoorSensor(YoLinkDevice):
         self.entities.append(self.door_entity)
         self.entities.append(self.battery_entity)
 
-    async def parse_state(self, state):
+    async def parse_state(self, state) -> None:
         """Parse Door Sensor state from data."""
-        await self.door_entity.udpate_entity_state(state["state"] == "open")
+        await self.door_entity.update_entity_state(state[CONF_STATE] == STATE_OPEN)
         await self.battery_entity.udpate_entity_state(state["battery"])
