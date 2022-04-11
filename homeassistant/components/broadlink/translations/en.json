@@ -38,6 +38,8 @@
             "user": {
                 "data": {
                     "host": "Host",
+                    "mac": "MAC address",
+                    "type": "Device type",
                     "timeout": "Timeout"
                 },
                 "title": "Connect to the device"
