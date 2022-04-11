@@ -87,6 +87,7 @@ class VerticalCover(OverkizGenericCover):
             OverkizState.CORE_CLOSURE,
             OverkizState.CORE_CLOSURE_OR_ROCKER_POSITION,
             OverkizState.CORE_PEDESTRIAN_POSITION,
+            OverkizState.CORE_DEPLOYMENT,
         )
 
         if position is None:
