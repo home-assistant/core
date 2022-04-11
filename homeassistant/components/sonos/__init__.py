@@ -23,7 +23,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOSTS, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval, call_later
 from homeassistant.helpers.typing import ConfigType
 
@@ -246,6 +246,12 @@ class SonosDiscoveryManager:
             if not known_uid:
                 if soco := self._create_soco(ip_addr, SoCoCreationSource.CONFIGURED):
                     self._discovered_player(soco)
+            else:
+                dispatcher_send(
+                    self.hass,
+                    f"{SONOS_SPEAKER_ACTIVITY}-{known_uid}",
+                    "manual host poll",
+                )
 
         self.data.hosts_heartbeat = call_later(
             self.hass, DISCOVERY_INTERVAL.total_seconds(), self._manual_hosts
