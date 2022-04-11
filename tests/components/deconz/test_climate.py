@@ -204,9 +204,9 @@ async def test_climate_device_without_cooling_support(
     climate_thermostat = hass.states.get("climate.thermostat")
     assert climate_thermostat.state == HVAC_MODE_AUTO
     assert climate_thermostat.attributes["hvac_modes"] == [
-        HVAC_MODE_AUTO,
         HVAC_MODE_HEAT,
         HVAC_MODE_OFF,
+        HVAC_MODE_AUTO,
     ]
     assert climate_thermostat.attributes["current_temperature"] == 22.6
     assert climate_thermostat.attributes["temperature"] == 22.0
@@ -378,10 +378,10 @@ async def test_climate_device_with_cooling_support(
     climate_thermostat = hass.states.get("climate.zen_01")
     assert climate_thermostat.state == HVAC_MODE_HEAT
     assert climate_thermostat.attributes["hvac_modes"] == [
-        HVAC_MODE_AUTO,
-        HVAC_MODE_COOL,
         HVAC_MODE_HEAT,
         HVAC_MODE_OFF,
+        HVAC_MODE_AUTO,
+        HVAC_MODE_COOL,
     ]
     assert climate_thermostat.attributes["current_temperature"] == 23.2
     assert climate_thermostat.attributes["temperature"] == 22.2

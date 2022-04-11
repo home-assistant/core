@@ -147,24 +147,15 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
         """Set up thermostat device."""
         super().__init__(device, gateway)
 
-        if not device.mode:
-            self.supported_hvac_modes = [
-                HVAC_MODE_HEAT,
-                HVAC_MODE_OFF,
-            ]
-        elif "coolsetpoint" not in device.raw["config"]:
-            self.supported_hvac_modes = [
-                HVAC_MODE_AUTO,
-                HVAC_MODE_HEAT,
-                HVAC_MODE_OFF,
-            ]
-        else:
-            self.supported_hvac_modes = [
-                HVAC_MODE_AUTO,
-                HVAC_MODE_COOL,
-                HVAC_MODE_HEAT,
-                HVAC_MODE_OFF,
-            ]
+        self.supported_hvac_modes = [
+            HVAC_MODE_HEAT,
+            HVAC_MODE_OFF,
+        ]
+        if device.mode:
+            self.supported_hvac_modes.append(HVAC_MODE_AUTO)
+
+            if "coolsetpoint" in device.raw["config"]:
+                self.supported_hvac_modes.append(HVAC_MODE_COOL)
 
         self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
 
