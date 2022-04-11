@@ -5,11 +5,11 @@ import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.light import (
     ATTR_SUPPORTED_COLOR_MODES,
-    COLOR_MODE_BRIGHTNESS,
     DOMAIN,
     FLASH_LONG,
     FLASH_SHORT,
-    SUPPORT_FLASH,
+    ColorMode,
+    LightEntityFeature,
 )
 from homeassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON
 from homeassistant.helpers import device_registry
@@ -57,7 +57,7 @@ async def test_get_actions(hass, device_reg, entity_reg):
         "test",
         "5678",
         device_id=device_entry.id,
-        supported_features=SUPPORT_FLASH,
+        supported_features=LightEntityFeature.FLASH,
         capabilities={"supported_color_modes": ["brightness"]},
     )
     expected_actions = [
@@ -154,7 +154,7 @@ async def test_get_action_capabilities(hass, device_reg, entity_reg):
             },
             0,
             0,
-            {ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_BRIGHTNESS]},
+            {ATTR_SUPPORTED_COLOR_MODES: [ColorMode.BRIGHTNESS]},
             {},
             {
                 "turn_on": [
@@ -180,7 +180,7 @@ async def test_get_action_capabilities(hass, device_reg, entity_reg):
             0,
             0,
             None,
-            {ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_BRIGHTNESS]},
+            {ATTR_SUPPORTED_COLOR_MODES: [ColorMode.BRIGHTNESS]},
             {
                 "turn_on": [
                     {
@@ -196,7 +196,7 @@ async def test_get_action_capabilities(hass, device_reg, entity_reg):
         (
             False,
             {"turn_on", "toggle", "turn_off", "flash"},
-            SUPPORT_FLASH,
+            LightEntityFeature.FLASH,
             0,
             None,
             {},
@@ -215,7 +215,7 @@ async def test_get_action_capabilities(hass, device_reg, entity_reg):
             True,
             {"turn_on", "toggle", "turn_off", "flash"},
             0,
-            SUPPORT_FLASH,
+            LightEntityFeature.FLASH,
             None,
             {},
             {

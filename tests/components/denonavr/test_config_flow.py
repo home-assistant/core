@@ -7,7 +7,6 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import ssdp
 from homeassistant.components.denonavr.config_flow import (
     CONF_MANUFACTURER,
-    CONF_MODEL,
     CONF_SERIAL_NUMBER,
     CONF_SHOW_ALL_SOURCES,
     CONF_TYPE,
@@ -17,7 +16,7 @@ from homeassistant.components.denonavr.config_flow import (
     DOMAIN,
     AvrTimoutError,
 )
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_MODEL
 
 from tests.common import MockConfigEntry
 

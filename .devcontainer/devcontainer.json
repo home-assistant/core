@@ -11,7 +11,8 @@
     "ms-python.vscode-pylance",
     "visualstudioexptteam.vscodeintellicode",
     "redhat.vscode-yaml",
-    "esbenp.prettier-vscode"
+    "esbenp.prettier-vscode",
+    "GitHub.vscode-pull-request-github"
   ],
   // Please keep this file in sync with settings in home-assistant/.vscode/settings.default.json
   "settings": {

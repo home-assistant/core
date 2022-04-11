@@ -15,7 +15,7 @@ from .util import CONFIG, HVAC_MOCK
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_coordinator_client_connector_error(hass: HomeAssistant):
+async def test_coordinator_client_connector_error(hass: HomeAssistant) -> None:
     """Test ClientConnectorError on coordinator update."""
 
     entry = MockConfigEntry(domain=DOMAIN, data=CONFIG)

@@ -5,7 +5,6 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import switch
-from homeassistant.components.mqtt.switch import MQTT_SWITCH_ATTRIBUTES_BLOCKED
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_DEVICE_CLASS,
@@ -292,7 +291,7 @@ async def test_setting_attribute_via_mqtt_json_message(hass, mqtt_mock):
 async def test_setting_blocked_attribute_via_mqtt_json_message(hass, mqtt_mock):
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_blocked_attribute_via_mqtt_json_message(
-        hass, mqtt_mock, switch.DOMAIN, DEFAULT_CONFIG, MQTT_SWITCH_ATTRIBUTES_BLOCKED
+        hass, mqtt_mock, switch.DOMAIN, DEFAULT_CONFIG, {}
     )
 
 

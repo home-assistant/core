@@ -215,9 +215,12 @@ repeat_set:
       selector:
         select:
           options:
-            - "off"
-            - "all"
-            - "one"
+            - label: "Off"
+              value: "off"
+            - label: "Repeat all"
+              value: "all"
+            - label: "Repeat one"
+              value: "one"
 
 join:
   name: Join

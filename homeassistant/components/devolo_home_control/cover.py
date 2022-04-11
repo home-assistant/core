@@ -7,11 +7,9 @@ from devolo_home_control_api.devices.zwave import Zwave
 from devolo_home_control_api.homecontrol import HomeControl
 
 from homeassistant.components.cover import (
-    SUPPORT_CLOSE,
-    SUPPORT_OPEN,
-    SUPPORT_SET_POSITION,
     CoverDeviceClass,
     CoverEntity,
+    CoverEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -57,7 +55,9 @@ class DevoloCoverDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, CoverEntity):
 
         self._attr_device_class = CoverDeviceClass.BLIND
         self._attr_supported_features = (
-            SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
+            CoverEntityFeature.OPEN
+            | CoverEntityFeature.CLOSE
+            | CoverEntityFeature.SET_POSITION
         )
 
     @property

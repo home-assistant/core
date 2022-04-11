@@ -6,19 +6,48 @@ import somecomfort
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.util import Throttle
 
-from .const import _LOGGER, CONF_DEV_ID, CONF_LOC_ID, DOMAIN
+from .const import (
+    _LOGGER,
+    CONF_COOL_AWAY_TEMPERATURE,
+    CONF_DEV_ID,
+    CONF_HEAT_AWAY_TEMPERATURE,
+    CONF_LOC_ID,
+    DOMAIN,
+)
 
 UPDATE_LOOP_SLEEP_TIME = 5
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=300)
-PLATFORMS = [Platform.CLIMATE]
+PLATFORMS = [Platform.CLIMATE, Platform.SENSOR]
+
+MIGRATE_OPTIONS_KEYS = {CONF_COOL_AWAY_TEMPERATURE, CONF_HEAT_AWAY_TEMPERATURE}
+
+
+@callback
+def _async_migrate_data_to_options(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> None:
+    if not MIGRATE_OPTIONS_KEYS.intersection(config_entry.data):
+        return
+    hass.config_entries.async_update_entry(
+        config_entry,
+        data={
+            k: v for k, v in config_entry.data.items() if k not in MIGRATE_OPTIONS_KEYS
+        },
+        options={
+            **config_entry.options,
+            **{k: config_entry.data.get(k) for k in MIGRATE_OPTIONS_KEYS},
+        },
+    )
 
 
 async def async_setup_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
     """Set up the Honeywell thermostat."""
+    _async_migrate_data_to_options(hass, config)
+
     username = config.data[CONF_USERNAME]
     password = config.data[CONF_PASSWORD]
 

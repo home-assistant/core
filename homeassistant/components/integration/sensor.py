@@ -62,8 +62,6 @@ UNIT_TIME = {
     TIME_DAYS: 24 * 60 * 60,
 }
 
-ICON = "mdi:chart-histogram"
-
 DEFAULT_ROUND = 3
 
 PLATFORM_SCHEMA = vol.All(
@@ -158,7 +156,7 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
         self._state = None
         self._method = integration_method
 
-        self._name = name if name is not None else f"{source_entity} integral"
+        self._attr_name = name if name is not None else f"{source_entity} integral"
         self._unit_template = (
             f"{'' if unit_prefix is None else unit_prefix}{{}}{unit_time}"
         )
@@ -166,6 +164,9 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
         self._unit_prefix = UNIT_PREFIXES[unit_prefix]
         self._unit_time = UNIT_TIME[unit_time]
         self._attr_state_class = SensorStateClass.TOTAL
+        self._attr_icon = "mdi:chart-histogram"
+        self._attr_should_poll = False
+        self._attr_extra_state_attributes = {ATTR_SOURCE_ID: source_entity}
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
@@ -174,7 +175,12 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
             try:
                 self._state = Decimal(state.state)
             except (DecimalException, ValueError) as err:
-                _LOGGER.warning("Could not restore last state: %s", err)
+                _LOGGER.warning(
+                    "%s could not restore last state %s: %s",
+                    self.entity_id,
+                    state.state,
+                    err,
+                )
             else:
                 self._attr_device_class = state.attributes.get(ATTR_DEVICE_CLASS)
                 if self._unit_of_measurement is None:
@@ -253,14 +259,11 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
                     self._state = integral
                 self.async_write_ha_state()
 
-        async_track_state_change_event(
-            self.hass, [self._sensor_source_id], calc_integration
+        self.async_on_remove(
+            async_track_state_change_event(
+                self.hass, [self._sensor_source_id], calc_integration
+            )
         )
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
 
     @property
     def native_value(self):
@@ -273,18 +276,3 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
     def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._unit_of_measurement
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes of the sensor."""
-        return {ATTR_SOURCE_ID: self._sensor_source_id}
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend."""
-        return ICON

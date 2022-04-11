@@ -110,6 +110,11 @@ def test_device_selector_schema(schema, valid_selections, invalid_selections):
         ({}, ("sensor.abc123", FAKE_UUID), (None, "abc123")),
         ({"integration": "zha"}, ("sensor.abc123", FAKE_UUID), (None, "abc123")),
         ({"domain": "light"}, ("light.abc123", FAKE_UUID), (None, "sensor.abc123")),
+        (
+            {"domain": ["light", "sensor"]},
+            ("light.abc123", "sensor.abc123", FAKE_UUID),
+            (None, "dog.abc123"),
+        ),
         ({"device_class": "motion"}, ("sensor.abc123", FAKE_UUID), (None, "abc123")),
         (
             {"integration": "zha", "domain": "light"},
@@ -130,6 +135,26 @@ def test_device_selector_schema(schema, valid_selections, invalid_selections):
                 None,
                 "abc123",
                 ["sensor.abc123", "light.def456"],
+            ),
+        ),
+        (
+            {
+                "include_entities": ["sensor.abc123", "sensor.def456", "sensor.ghi789"],
+                "exclude_entities": ["sensor.ghi789", "sensor.jkl123"],
+            },
+            ("sensor.abc123", FAKE_UUID),
+            ("sensor.ghi789", "sensor.jkl123"),
+        ),
+        (
+            {
+                "multiple": True,
+                "include_entities": ["sensor.abc123", "sensor.def456", "sensor.ghi789"],
+                "exclude_entities": ["sensor.ghi789", "sensor.jkl123"],
+            },
+            (["sensor.abc123", "sensor.def456"], ["sensor.abc123", FAKE_UUID]),
+            (
+                ["sensor.abc123", "sensor.jkl123"],
+                ["sensor.abc123", "sensor.ghi789"],
             ),
         ),
     ),
@@ -221,7 +246,7 @@ def test_number_selector_schema(schema, valid_selections, invalid_selections):
     ),
 )
 def test_number_selector_schema_error(schema):
-    """Test select selector."""
+    """Test number selector."""
     with pytest.raises(vol.Invalid):
         selector.validate_selector({"number": schema})
 
@@ -241,7 +266,13 @@ def test_addon_selector_schema(schema, valid_selections, invalid_selections):
 )
 def test_boolean_selector_schema(schema, valid_selections, invalid_selections):
     """Test boolean selector."""
-    _test_selector("boolean", schema, valid_selections, invalid_selections, bool)
+    _test_selector(
+        "boolean",
+        schema,
+        valid_selections,
+        invalid_selections,
+        bool,
+    )
 
 
 @pytest.mark.parametrize(
@@ -324,7 +355,7 @@ def test_text_selector_schema(schema, valid_selections, invalid_selections):
         (
             {"options": ["red", "green", "blue"]},
             ("red", "green", "blue"),
-            ("cat", 0, None),
+            ("cat", 0, None, ["red"]),
         ),
         (
             {
@@ -334,7 +365,36 @@ def test_text_selector_schema(schema, valid_selections, invalid_selections):
                 ]
             },
             ("red", "green"),
-            ("cat", 0, None),
+            ("cat", 0, None, ["red"]),
+        ),
+        (
+            {"options": ["red", "green", "blue"], "multiple": True},
+            (["red"], ["green", "blue"], []),
+            ("cat", 0, None, "red"),
+        ),
+        (
+            {
+                "options": ["red", "green", "blue"],
+                "multiple": True,
+                "custom_value": True,
+            },
+            (["red"], ["green", "blue"], ["red", "cat"], []),
+            ("cat", 0, None, "red"),
+        ),
+        (
+            {"options": ["red", "green", "blue"], "custom_value": True},
+            ("red", "green", "blue", "cat"),
+            (0, None, ["red"]),
+        ),
+        (
+            {"options": [], "custom_value": True},
+            ("red", "cat"),
+            (0, None, ["red"]),
+        ),
+        (
+            {"options": [], "custom_value": True, "multiple": True},
+            (["red"], ["green", "blue"], []),
+            (0, None, "red"),
         ),
     ),
 )
@@ -348,7 +408,6 @@ def test_select_selector_schema(schema, valid_selections, invalid_selections):
     (
         {},  # Must have options
         {"options": {"hello": "World"}},  # Options must be a list
-        {"options": []},  # Must have at least option
         # Options must be strings or value / label pairs
         {"options": [{"hello": "World"}]},
         # Options must all be of the same type
@@ -381,7 +440,15 @@ def test_attribute_selector_schema(schema, valid_selections, invalid_selections)
     (
         (
             {},
-            ({"seconds": 10},),
+            (
+                {"seconds": 10},
+                {"days": 10},  # Days is allowed also if `enable_day` is not set
+            ),
+            (None, {}),
+        ),
+        (
+            {"enable_day": True},
+            ({"seconds": 10}, {"days": 10}),
             (None, {}),
         ),
     ),
@@ -451,7 +518,13 @@ def test_media_selector_schema(schema, valid_selections, invalid_selections):
         data.pop("metadata", None)
         return data
 
-    _test_selector("media", schema, valid_selections, invalid_selections, drop_metadata)
+    _test_selector(
+        "media",
+        schema,
+        valid_selections,
+        invalid_selections,
+        drop_metadata,
+    )
 
 
 @pytest.mark.parametrize(
@@ -485,3 +558,72 @@ def test_location_selector_schema(schema, valid_selections, invalid_selections):
     """Test location selector."""
 
     _test_selector("location", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    "schema,valid_selections,invalid_selections",
+    (
+        (
+            {},
+            ([0, 0, 0], [255, 255, 255], [0.0, 0.0, 0.0], [255.0, 255.0, 255.0]),
+            (None, "abc", [0, 0, "nil"], (255, 255, 255)),
+        ),
+    ),
+)
+def test_rgb_color_selector_schema(schema, valid_selections, invalid_selections):
+    """Test color_rgb selector."""
+
+    _test_selector("color_rgb", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    "schema,valid_selections,invalid_selections",
+    (
+        (
+            {},
+            (100, 100.0),
+            (None, "abc", [100]),
+        ),
+        (
+            {"min_mireds": 100, "max_mireds": 200},
+            (100, 200),
+            (99, 201),
+        ),
+    ),
+)
+def test_color_tempselector_schema(schema, valid_selections, invalid_selections):
+    """Test color_temp selector."""
+
+    _test_selector("color_temp", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    "schema,valid_selections,invalid_selections",
+    (
+        (
+            {},
+            ("2022-03-24",),
+            (None, "abc", "00:00", "2022-03-24 00:00", "2022-03-32"),
+        ),
+    ),
+)
+def test_date_selector_schema(schema, valid_selections, invalid_selections):
+    """Test date selector."""
+
+    _test_selector("date", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    "schema,valid_selections,invalid_selections",
+    (
+        (
+            {},
+            ("2022-03-24 00:00", "2022-03-24"),
+            (None, "abc", "00:00", "2022-03-24 24:01"),
+        ),
+    ),
+)
+def test_datetime_selector_schema(schema, valid_selections, invalid_selections):
+    """Test datetime selector."""
+
+    _test_selector("datetime", schema, valid_selections, invalid_selections)

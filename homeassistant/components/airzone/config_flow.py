@@ -5,7 +5,7 @@ from typing import Any
 
 from aioairzone.common import ConnectionOptions
 from aioairzone.exceptions import InvalidHost
-from aioairzone.localapi_device import AirzoneLocalApi
+from aioairzone.localapi import AirzoneLocalApi
 from aiohttp.client_exceptions import ClientConnectorError
 import voluptuous as vol
 

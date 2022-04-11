@@ -54,4 +54,26 @@ async def test_invalid_county(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    # it should have errored, instead of returning an errors dict, since this error should never happen
+    second_result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert second_result["type"] == RESULT_TYPE_FORM
+    assert second_result["errors"] is None
+
+    with patch(
+        "homeassistant.components.peco.async_setup_entry",
+        return_value=True,
+    ):
+        second_result2 = await hass.config_entries.flow.async_configure(
+            second_result["flow_id"],
+            {
+                "county": "PHILADELPHIA",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert second_result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert second_result2["title"] == "Philadelphia Outage Count"
+    assert second_result2["data"] == {
+        "county": "PHILADELPHIA",
+    }

@@ -45,8 +45,6 @@ from .backports.enum import StrEnum
 from .const import (
     ATTR_DOMAIN,
     ATTR_FRIENDLY_NAME,
-    ATTR_NOW,
-    ATTR_SECONDS,
     ATTR_SERVICE,
     ATTR_SERVICE_DATA,
     CONF_UNIT_SYSTEM_IMPERIAL,
@@ -60,8 +58,6 @@ from .const import (
     EVENT_SERVICE_REGISTERED,
     EVENT_SERVICE_REMOVED,
     EVENT_STATE_CHANGED,
-    EVENT_TIME_CHANGED,
-    EVENT_TIMER_OUT_OF_SYNC,
     LENGTH_METERS,
     MATCH_ALL,
     MAX_LENGTH_EVENT_EVENT_TYPE,
@@ -101,7 +97,7 @@ block_async_io.enable()
 
 _T = TypeVar("_T")
 _R = TypeVar("_R")
-_R_co = TypeVar("_R_co", covariant=True)  # pylint: disable=invalid-name
+_R_co = TypeVar("_R_co", covariant=True)
 # Internal; not helpers.typing.UNDEFINED due to circular dependency
 _UNDEF: dict[Any, Any] = {}
 _CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
@@ -348,7 +344,6 @@ class HomeAssistant:
         self.state = CoreState.running
         self.bus.async_fire(EVENT_CORE_CONFIG_UPDATE)
         self.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
-        _async_create_timer(self)
 
     def add_job(
         self, target: Callable[..., Any] | Coroutine[Any, Any, Any], *args: Any
@@ -843,8 +838,7 @@ class EventBus:
 
         event = Event(event_type, event_data, origin, time_fired, context)
 
-        if event_type != EVENT_TIME_CHANGED:
-            _LOGGER.debug("Bus:Handling %s", event)
+        _LOGGER.debug("Bus:Handling %s", event)
 
         if not listeners:
             return
@@ -1911,48 +1905,3 @@ class Config:
             CORE_STORAGE_VERSION, CORE_STORAGE_KEY, private=True, atomic_writes=True
         )
         await store.async_save(data)
-
-
-def _async_create_timer(hass: HomeAssistant) -> None:
-    """Create a timer that will start on HOMEASSISTANT_START."""
-    handle = None
-    timer_context = Context()
-
-    def schedule_tick(now: datetime.datetime) -> None:
-        """Schedule a timer tick when the next second rolls around."""
-        nonlocal handle
-
-        slp_seconds = 1 - (now.microsecond / 10**6)
-        target = monotonic() + slp_seconds
-        handle = hass.loop.call_later(slp_seconds, fire_time_event, target)
-
-    @callback
-    def fire_time_event(target: float) -> None:
-        """Fire next time event."""
-        now = dt_util.utcnow()
-
-        hass.bus.async_fire(
-            EVENT_TIME_CHANGED, {ATTR_NOW: now}, time_fired=now, context=timer_context
-        )
-
-        # If we are more than a second late, a tick was missed
-        if (late := monotonic() - target) > 1:
-            hass.bus.async_fire(
-                EVENT_TIMER_OUT_OF_SYNC,
-                {ATTR_SECONDS: late},
-                time_fired=now,
-                context=timer_context,
-            )
-
-        schedule_tick(now)
-
-    @callback
-    def stop_timer(_: Event) -> None:
-        """Stop the timer."""
-        if handle is not None:
-            handle.cancel()
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_timer)
-
-    _LOGGER.info("Timer:starting")
-    schedule_tick(dt_util.utcnow())

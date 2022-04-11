@@ -44,8 +44,8 @@ class WLEDUpdateEntity(WLEDEntity, UpdateEntity):
         self._attr_unique_id = coordinator.data.info.mac_address
 
     @property
-    def current_version(self) -> str | None:
-        """Version currently in use."""
+    def installed_version(self) -> str | None:
+        """Version currently installed and in use."""
         if (version := self.coordinator.data.info.version) is None:
             return None
         return str(version)
@@ -80,10 +80,7 @@ class WLEDUpdateEntity(WLEDEntity, UpdateEntity):
 
     @wled_exception_handler
     async def async_install(
-        self,
-        version: str | None = None,
-        backup: bool | None = None,
-        **kwargs: Any,
+        self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install an update."""
         if version is None:

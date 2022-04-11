@@ -3,8 +3,8 @@
   "name": "Shark IQ",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/sharkiq",
-  "requirements": ["sharkiqpy==0.1.8"],
-  "codeowners": ["@ajmarks"],
+  "requirements": ["sharkiq==0.0.1"],
+  "codeowners": ["@JeffResc", "@funkybunch", "@AritroSaha10"],
   "iot_class": "cloud_polling",
-  "loggers": ["sharkiqpy"]
+  "loggers": ["sharkiq"]
 }

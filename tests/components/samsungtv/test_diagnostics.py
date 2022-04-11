@@ -19,7 +19,7 @@ from .test_media_player import MOCK_ENTRY_WS_WITH_MAC
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 
 
-@pytest.mark.usefixtures("remotews")
+@pytest.mark.usefixtures("remotews", "rest_api")
 async def test_entry_diagnostics(
     hass: HomeAssistant, hass_client: ClientSession
 ) -> None:

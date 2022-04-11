@@ -7,7 +7,7 @@ from elkm1_lib.const import (
     ZonePhysicalStatus,
     ZoneType,
 )
-from elkm1_lib.util import pretty_const, username
+from elkm1_lib.util import pretty_const
 import voluptuous as vol
 
 from homeassistant.components.sensor import SensorEntity
@@ -155,7 +155,7 @@ class ElkKeypad(ElkSensor):
         attrs["last_user_time"] = self._element.last_user_time.isoformat()
         attrs["last_user"] = self._element.last_user + 1
         attrs["code"] = self._element.code
-        attrs["last_user_name"] = username(self._elk, self._element.last_user)
+        attrs["last_user_name"] = self._elk.users.username(self._element.last_user)
         attrs["last_keypress"] = self._element.last_keypress
         return attrs
 

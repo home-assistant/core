@@ -111,7 +111,7 @@ from .util import _VALID_QOS_SCHEMA, valid_publish_topic, valid_subscribe_topic
 if TYPE_CHECKING:
     # Only import for paho-mqtt type checking here, imports are done locally
     # because integrations should be able to optionally rely on MQTT.
-    import paho.mqtt.client as mqtt  # pylint: disable=import-outside-toplevel
+    import paho.mqtt.client as mqtt
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -131,11 +131,14 @@ DEFAULT_PROTOCOL = PROTOCOL_311
 DEFAULT_TLS_PROTOCOL = "auto"
 
 DEFAULT_VALUES = {
-    CONF_PORT: DEFAULT_PORT,
-    CONF_WILL_MESSAGE: DEFAULT_WILL,
     CONF_BIRTH_MESSAGE: DEFAULT_BIRTH,
     CONF_DISCOVERY: DEFAULT_DISCOVERY,
+    CONF_PORT: DEFAULT_PORT,
+    CONF_TLS_VERSION: DEFAULT_TLS_PROTOCOL,
+    CONF_WILL_MESSAGE: DEFAULT_WILL,
 }
+
+MANDATORY_DEFAULT_VALUES = (CONF_PORT,)
 
 ATTR_TOPIC_TEMPLATE = "topic_template"
 ATTR_PAYLOAD_TEMPLATE = "payload_template"
@@ -203,9 +206,7 @@ CONFIG_SCHEMA_BASE = vol.Schema(
             CONF_CLIENT_CERT, "client_key_auth", msg=CLIENT_KEY_AUTH_MSG
         ): cv.isfile,
         vol.Optional(CONF_TLS_INSECURE): cv.boolean,
-        vol.Optional(CONF_TLS_VERSION, default=DEFAULT_TLS_PROTOCOL): vol.Any(
-            "auto", "1.0", "1.1", "1.2"
-        ),
+        vol.Optional(CONF_TLS_VERSION): vol.Any("auto", "1.0", "1.1", "1.2"),
         vol.Optional(CONF_PROTOCOL, default=DEFAULT_PROTOCOL): vol.All(
             cv.string, vol.In([PROTOCOL_31, PROTOCOL_311])
         ),
@@ -219,6 +220,17 @@ CONFIG_SCHEMA_BASE = vol.Schema(
         ): valid_publish_topic,
     }
 )
+
+DEPRECATED_CONFIG_KEYS = [
+    CONF_BIRTH_MESSAGE,
+    CONF_BROKER,
+    CONF_DISCOVERY,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_TLS_VERSION,
+    CONF_USERNAME,
+    CONF_WILL_MESSAGE,
+]
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -602,6 +614,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass.data[DATA_MQTT_CONFIG] = conf
 
     if not bool(hass.config_entries.async_entries(DOMAIN)):
+        # Create an import flow if the user has yaml configured entities etc.
+        # but no broker configuration. Note: The intention is not for this to
+        # import broker configuration from YAML because that has been deprecated.
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,
@@ -612,18 +627,53 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-def _merge_config(entry, conf):
-    """Merge configuration.yaml config with config entry."""
-    # Base config on default values
+def _merge_basic_config(
+    hass: HomeAssistant, entry: ConfigEntry, yaml_config: dict[str, Any]
+) -> None:
+    """Merge basic options in configuration.yaml config with config entry.
+
+    This mends incomplete migration from old version of HA Core.
+    """
+
+    entry_updated = False
+    entry_config = {**entry.data}
+    for key in DEPRECATED_CONFIG_KEYS:
+        if key in yaml_config and key not in entry_config:
+            entry_config[key] = yaml_config[key]
+            entry_updated = True
+
+    for key in MANDATORY_DEFAULT_VALUES:
+        if key not in entry_config:
+            entry_config[key] = DEFAULT_VALUES[key]
+            entry_updated = True
+
+    if entry_updated:
+        hass.config_entries.async_update_entry(entry, data=entry_config)
+
+
+def _merge_extended_config(entry, conf):
+    """Merge advanced options in configuration.yaml config with config entry."""
+    # Add default values
     conf = {**DEFAULT_VALUES, **conf}
     return {**conf, **entry.data}
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Load a config entry."""
-    # If user didn't have configuration.yaml config, generate defaults
+    # Merge basic configuration, and add missing defaults for basic options
+    _merge_basic_config(hass, entry, hass.data.get(DATA_MQTT_CONFIG, {}))
+
+    # Bail out if broker setting is missing
+    if CONF_BROKER not in entry.data:
+        _LOGGER.error("MQTT broker is not configured, please configure it")
+        return False
+
+    # If user doesn't have configuration.yaml config, generate default values
+    # for options not in config entry data
     if (conf := hass.data.get(DATA_MQTT_CONFIG)) is None:
         conf = CONFIG_SCHEMA_BASE(dict(entry.data))
+
+    # User has configuration.yaml config, warn about config entry overrides
     elif any(key in conf for key in entry.data):
         shared_keys = conf.keys() & entry.data.keys()
         override = {k: entry.data[k] for k in shared_keys}
@@ -635,8 +685,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             override,
         )
 
-    # Merge the configuration values from configuration.yaml
-    conf = _merge_config(entry, conf)
+    # Merge advanced configuration values from configuration.yaml
+    conf = _merge_extended_config(entry, conf)
 
     hass.data[DATA_MQTT] = MQTT(
         hass,
@@ -870,7 +920,7 @@ class MQTT:
         if (conf := hass.data.get(DATA_MQTT_CONFIG)) is None:
             conf = CONFIG_SCHEMA_BASE(dict(entry.data))
 
-        self.conf = _merge_config(entry, conf)
+        self.conf = _merge_extended_config(entry, conf)
         await self.async_disconnect()
         self.init_client()
         await self.async_connect()

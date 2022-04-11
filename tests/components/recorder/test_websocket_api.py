@@ -230,6 +230,8 @@ async def test_update_statistics_metadata(hass, hass_ws_client, new_unit):
     assert response["result"] == [
         {
             "statistic_id": "sensor.test",
+            "has_mean": True,
+            "has_sum": False,
             "name": None,
             "source": "recorder",
             "unit_of_measurement": "W",
@@ -254,6 +256,8 @@ async def test_update_statistics_metadata(hass, hass_ws_client, new_unit):
     assert response["result"] == [
         {
             "statistic_id": "sensor.test",
+            "has_mean": True,
+            "has_sum": False,
             "name": None,
             "source": "recorder",
             "unit_of_measurement": new_unit,
@@ -328,7 +332,7 @@ async def test_recorder_info_migration_queue_exhausted(hass, hass_ws_client):
         migration_done.wait()
         return real_migration(*args)
 
-    with patch(
+    with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True), patch(
         "homeassistant.components.recorder.Recorder.async_periodic_statistics"
     ), patch(
         "homeassistant.components.recorder.create_engine", new=create_engine_test
@@ -525,6 +529,8 @@ async def test_get_statistics_metadata(hass, hass_ws_client, units, attributes, 
     assert response["result"] == [
         {
             "statistic_id": "sensor.test",
+            "has_mean": False,
+            "has_sum": True,
             "name": None,
             "source": "recorder",
             "unit_of_measurement": unit,
@@ -549,6 +555,8 @@ async def test_get_statistics_metadata(hass, hass_ws_client, units, attributes, 
     assert response["result"] == [
         {
             "statistic_id": "sensor.test",
+            "has_mean": False,
+            "has_sum": True,
             "name": None,
             "source": "recorder",
             "unit_of_measurement": unit,

@@ -21,7 +21,7 @@ from homeassistant.components.plex.services import process_plex_payload
 from homeassistant.const import CONF_URL
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import DEFAULT_OPTIONS, SECONDARY_DATA
+from .const import DEFAULT_DATA, DEFAULT_OPTIONS, SECONDARY_DATA
 
 from tests.common import MockConfigEntry
 
@@ -210,3 +210,24 @@ async def test_lookup_media_for_other_integrations(
     requests_mock.post("/playqueues", text=playqueue_created)
     result = process_plex_payload(hass, MEDIA_TYPE_MUSIC, CONTENT_ID_SHUFFLE)
     assert isinstance(result.media, plexapi.playqueue.PlayQueue)
+
+
+async def test_lookup_media_with_urls(hass, mock_plex_server):
+    """Test media lookup for media_player.play_media calls from cast/sonos."""
+    CONTENT_ID_URL = f"{PLEX_URI_SCHEME}{DEFAULT_DATA[CONF_SERVER_IDENTIFIER]}/100"
+
+    # Test URL format
+    result = process_plex_payload(
+        hass, MEDIA_TYPE_MUSIC, CONTENT_ID_URL, supports_playqueues=False
+    )
+    assert isinstance(result.media, plexapi.audio.Track)
+    assert result.shuffle is False
+
+    # Test URL format with shuffle
+    CONTENT_ID_URL_WITH_SHUFFLE = CONTENT_ID_URL + "?shuffle=1"
+    result = process_plex_payload(
+        hass, MEDIA_TYPE_MUSIC, CONTENT_ID_URL_WITH_SHUFFLE, supports_playqueues=False
+    )
+    assert isinstance(result.media, plexapi.audio.Track)
+    assert result.shuffle is True
+    assert result.offset == 0
