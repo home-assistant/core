@@ -278,8 +278,10 @@ auroranoaa==0.0.2
 aurorapy==0.2.6
 
 # homeassistant.components.generic
-# homeassistant.components.stream
 av==9.0.0
+
+# homeassistant.components.stream
+av==9.1.1
 
 # homeassistant.components.axis
 axis==44
