@@ -178,7 +178,7 @@ class EmonCmsSensor(SensorEntity):
         elif unit_of_measurement == "VA":
             self._attr_device_class = SensorDeviceClass.APPARENT_POWER
             self._attr_state_class = SensorStateClass.MEASUREMENT
-        elif unit_of_measurement == "°C" or unit_of_measurement == "°F" or unit_of_measurement == "K":
+        elif unit_of_measurement in ("°C", "°F", "K"):
             self._attr_device_class = SensorDeviceClass.TEMPERATURE
             self._attr_state_class = SensorStateClass.MEASUREMENT
         elif unit_of_measurement == "Hz":
