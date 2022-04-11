@@ -15,6 +15,7 @@ from homeassistant.const import (
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConditionError, HomeAssistantError
 from homeassistant.helpers import (
     condition,
@@ -1016,6 +1017,40 @@ async def test_state_multiple_entities(hass):
     assert not test(hass)
 
     hass.states.async_set("sensor.temperature_1", 100)
+    hass.states.async_set("sensor.temperature_2", 101)
+    assert not test(hass)
+
+
+async def test_state_multiple_entities_match_any(hass: HomeAssistant) -> None:
+    """Test with multiple entities in condition with match any."""
+    config = {
+        "condition": "and",
+        "conditions": [
+            {
+                "condition": "state",
+                "entity_id": ["sensor.temperature_1", "sensor.temperature_2"],
+                "match": "any",
+                "state": "100",
+            },
+        ],
+    }
+    config = cv.CONDITION_SCHEMA(config)
+    config = await condition.async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
+
+    hass.states.async_set("sensor.temperature_1", 100)
+    hass.states.async_set("sensor.temperature_2", 100)
+    assert test(hass)
+
+    hass.states.async_set("sensor.temperature_1", 101)
+    hass.states.async_set("sensor.temperature_2", 100)
+    assert test(hass)
+
+    hass.states.async_set("sensor.temperature_1", 100)
+    hass.states.async_set("sensor.temperature_2", 101)
+    assert test(hass)
+
+    hass.states.async_set("sensor.temperature_1", 101)
     hass.states.async_set("sensor.temperature_2", 101)
     assert not test(hass)
 
