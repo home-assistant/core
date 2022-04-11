@@ -134,9 +134,7 @@ class CompensationSensor(SensorEntity):
                 value = (
                     None if new_state.state == STATE_UNKNOWN else float(new_state.state)
                 )
-            self._attr_native_value = (
-                round(self._poly(value), self._precision) if value else None
-            )
+            self._attr_native_value = round(self._poly(value), self._precision)
             self._attr_extra_state_attributes[ATTR_SOURCE_VALUE] = value
         except (ValueError, TypeError):
             self._attr_native_value = None
