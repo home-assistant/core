@@ -159,7 +159,7 @@ class DeconzGateway:
     async def async_update_device_registry(self) -> None:
         """Update device registry."""
         if self.api.config.mac is None:
-            return None
+            return
 
         device_registry = dr.async_get(self.hass)
 
