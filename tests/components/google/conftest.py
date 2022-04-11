@@ -99,7 +99,7 @@ def calendars_config(calendars_config_entity: dict[str, Any]) -> list[dict[str, 
 
 
 @pytest.fixture(autouse=True)
-async def mock_calendars_yaml(
+def mock_calendars_yaml(
     hass: HomeAssistant,
     calendars_config: list[dict[str, Any]],
 ) -> None:
@@ -126,15 +126,22 @@ class FakeStorage:
 
 
 @pytest.fixture
-async def token_scopes() -> list[str]:
+def token_scopes() -> list[str]:
     """Fixture for scopes used during test."""
     return ["https://www.googleapis.com/auth/calendar"]
 
 
 @pytest.fixture
-async def creds(token_scopes: list[str]) -> OAuth2Credentials:
+def token_expiry() -> datetime.datetime:
+    """Expiration time for credentials used in the test."""
+    return utcnow() + datetime.timedelta(days=7)
+
+
+@pytest.fixture
+def creds(
+    token_scopes: list[str], token_expiry: datetime.datetime
+) -> OAuth2Credentials:
     """Fixture that defines creds used in the test."""
-    token_expiry = utcnow() + datetime.timedelta(days=7)
     return OAuth2Credentials(
         access_token="ACCESS_TOKEN",
         client_id="client-id",
@@ -148,7 +155,7 @@ async def creds(token_scopes: list[str]) -> OAuth2Credentials:
 
 
 @pytest.fixture(autouse=True)
-async def storage() -> YieldFixture[FakeStorage]:
+def storage() -> YieldFixture[FakeStorage]:
     """Fixture to populate an existing token file for read on startup."""
     storage = FakeStorage()
     with patch("homeassistant.components.google.Storage", return_value=storage):
@@ -156,9 +163,16 @@ async def storage() -> YieldFixture[FakeStorage]:
 
 
 @pytest.fixture
-async def config_entry(token_scopes: list[str]) -> MockConfigEntry:
+def config_entry_token_expiry(token_expiry: datetime.datetime) -> float:
+    """Fixture for token expiration value stored in the config entry."""
+    return token_expiry.timestamp()
+
+
+@pytest.fixture
+def config_entry(
+    token_scopes: list[str], config_entry_token_expiry: float
+) -> MockConfigEntry:
     """Fixture to create a config entry for the integration."""
-    token_expiry = utcnow() + datetime.timedelta(days=7)
     return MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -168,14 +182,14 @@ async def config_entry(token_scopes: list[str]) -> MockConfigEntry:
                 "refresh_token": "REFRESH_TOKEN",
                 "scope": " ".join(token_scopes),
                 "token_type": "Bearer",
-                "expires_at": token_expiry.timestamp(),
+                "expires_at": config_entry_token_expiry,
             },
         },
     )
 
 
 @pytest.fixture
-async def mock_token_read(
+def mock_token_read(
     hass: HomeAssistant,
     creds: OAuth2Credentials,
     storage: FakeStorage,
@@ -268,15 +282,13 @@ def google_config(google_config_track_new: bool | None) -> dict[str, Any]:
 
 
 @pytest.fixture
-async def config(google_config: dict[str, Any]) -> dict[str, Any]:
+def config(google_config: dict[str, Any]) -> dict[str, Any]:
     """Fixture for overriding component config."""
     return {DOMAIN: google_config}
 
 
 @pytest.fixture
-async def component_setup(
-    hass: HomeAssistant, config: dict[str, Any]
-) -> ComponentSetup:
+def component_setup(hass: HomeAssistant, config: dict[str, Any]) -> ComponentSetup:
     """Fixture for setting up the integration."""
 
     async def _setup_func() -> bool:

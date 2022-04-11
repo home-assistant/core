@@ -61,6 +61,7 @@ MATCH_ALL: Final = "*"
 # Entity target all constant
 ENTITY_MATCH_NONE: Final = "none"
 ENTITY_MATCH_ALL: Final = "all"
+ENTITY_MATCH_ANY: Final = "any"
 
 # If no name is specified
 DEVICE_DEFAULT_NAME: Final = "Unnamed Device"
@@ -172,6 +173,7 @@ CONF_LIGHTS: Final = "lights"
 CONF_LOCATION: Final = "location"
 CONF_LONGITUDE: Final = "longitude"
 CONF_MAC: Final = "mac"
+CONF_MATCH: Final = "match"
 CONF_MAXIMUM: Final = "maximum"
 CONF_MEDIA_DIRS: Final = "media_dirs"
 CONF_METHOD: Final = "method"
@@ -269,9 +271,6 @@ EVENT_SERVICE_REGISTERED: Final = "service_registered"
 EVENT_SERVICE_REMOVED: Final = "service_removed"
 EVENT_STATE_CHANGED: Final = "state_changed"
 EVENT_THEMES_UPDATED: Final = "themes_updated"
-EVENT_TIMER_OUT_OF_SYNC: Final = "timer_out_of_sync"
-EVENT_TIME_CHANGED: Final = "time_changed"
-
 
 # #### DEVICE CLASSES ####
 # DEVICE_CLASS_* below are deprecated as of 2021.12
@@ -459,6 +458,8 @@ ATTR_DEVICE_CLASS: Final = "device_class"
 # Temperature attribute
 ATTR_TEMPERATURE: Final = "temperature"
 
+# Persons attribute
+ATTR_PERSONS: Final = "persons"
 
 # #### UNITS OF MEASUREMENT ####
 # Apparent power units
