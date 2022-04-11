@@ -68,7 +68,8 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
     async def _async_update_data(self) -> dict[str, Device]:
         """Fetch Overkiz data via event listener."""
         try:
-            events = await self.client.fetch_events()
+            # events = await self.client.fetch_events()
+            return self.devices
         except BadCredentialsException as exception:
             raise ConfigEntryAuthFailed("Invalid authentication.") from exception
         except TooManyConcurrentRequestsException as exception:

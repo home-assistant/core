@@ -23,9 +23,10 @@ async def async_get_config_entry_diagnostics(
     data = {
         "setup": await client.get_diagnostic_data(),
         "server": entry.data[CONF_HUB],
-        "execution_history": [
-            repr(execution) for execution in await client.get_execution_history()
-        ],
+        # "execution_history": [
+        #     repr(execution) for execution in await client.get_execution_history()
+        # ],
+        # TODO fix
     }
 
     return data
@@ -49,11 +50,12 @@ async def async_get_device_diagnostics(
         },
         "setup": await client.get_diagnostic_data(),
         "server": entry.data[CONF_HUB],
-        "execution_history": [
-            repr(execution)
-            for execution in await client.get_execution_history()
-            if any(command.device_url == device_url for command in execution.commands)
-        ],
+        # "execution_history": [
+        #     repr(execution)
+        #     for execution in await client.get_execution_history()
+        #     if any(command.device_url == device_url for command in execution.commands)
+        # ],
+        # TODO FIX
     }
 
     return data

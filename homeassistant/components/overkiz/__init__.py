@@ -54,8 +54,13 @@ class HomeAssistantOverkizData:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Overkiz from a config entry."""
+
+    print(entry.data)
+    client = None
+
     # Local API vs Cloud API
     if entry.data.get(CONF_HOST):
+        LOGGER.debug("CONFIGURING LOCAL INTEGRATION")
         host = entry.data[CONF_HOST]
         token = entry.data[CONF_TOKEN]
         session = async_create_clientsession(hass, verify_ssl=False)
@@ -86,7 +91,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await _async_migrate_entries(hass, entry)
 
     try:
-        await client.login()
+        # await client.login()
+        await client.login(register_event_listener=False) # TODO swap when event listener is fixed
 
         setup, scenarios = await asyncio.gather(
             *[
@@ -174,6 +180,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
 
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        # TODO Delete local auth token if local server
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
