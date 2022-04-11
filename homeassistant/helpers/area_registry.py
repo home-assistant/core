@@ -145,7 +145,7 @@ class AreaRegistry:
 
         normalized_name = None
 
-        if name is not UNDEFINED:
+        if name is not UNDEFINED and name != old.name:
             normalized_name = normalize_area_name(name)
 
             if normalized_name != old.normalized_name and self.async_get_area_by_name(

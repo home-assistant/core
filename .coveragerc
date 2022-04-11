@@ -592,10 +592,6 @@ omit =
     homeassistant/components/keyboard_remote/*
     homeassistant/components/kira/*
     homeassistant/components/kiwi/lock.py
-    homeassistant/components/knx/__init__.py
-    homeassistant/components/knx/climate.py
-    homeassistant/components/knx/cover.py
-    homeassistant/components/knx/notify.py
     homeassistant/components/kodi/__init__.py
     homeassistant/components/kodi/browse_media.py
     homeassistant/components/kodi/const.py
