@@ -130,9 +130,12 @@ class Sun(Entity):
         self._config_listener = self.hass.bus.async_listen(
             EVENT_CORE_CONFIG_UPDATE, self.update_location
         )
-        self._loaded_listener = self.hass.bus.async_listen(
-            EVENT_COMPONENT_LOADED, self.loading_complete
-        )
+        if DOMAIN in hass.config.components:
+            self.update_location()
+        else:
+            self._loaded_listener = self.hass.bus.async_listen(
+                EVENT_COMPONENT_LOADED, self.loading_complete
+            )
 
     @callback
     def loading_complete(self, event_: Event) -> None:
@@ -158,6 +161,7 @@ class Sun(Entity):
         """Remove the loaded listener."""
         if self._loaded_listener:
             self._loaded_listener()
+            self._loaded_listener = None
 
     @callback
     def remove_listeners(self):

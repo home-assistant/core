@@ -7,7 +7,7 @@ from pyezviz.exceptions import HTTPError, InvalidHost, PyEzvizError
 import voluptuous as vol
 
 from homeassistant.components import ffmpeg
-from homeassistant.components.camera import SUPPORT_STREAM, Camera
+from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.components.ffmpeg import get_ffmpeg_manager
 from homeassistant.config_entries import (
     SOURCE_IGNORE,
@@ -194,18 +194,13 @@ class EzvizCamera(EzvizEntity, Camera):
         self._ffmpeg = get_ffmpeg_manager(hass)
         self._attr_unique_id = serial
         self._attr_name = self.data["name"]
+        if camera_password:
+            self._attr_supported_features = CameraEntityFeature.STREAM
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
         return self.data["status"] != 2
-
-    @property
-    def supported_features(self) -> int:
-        """Return supported features."""
-        if self._password:
-            return SUPPORT_STREAM
-        return 0
 
     @property
     def is_on(self) -> bool:

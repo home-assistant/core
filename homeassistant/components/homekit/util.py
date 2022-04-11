@@ -25,8 +25,9 @@ from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.components.media_player import (
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     MediaPlayerDeviceClass,
+    MediaPlayerEntityFeature,
 )
-from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN, SUPPORT_ACTIVITY
+from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN, RemoteEntityFeature
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_DEVICE_CLASS,
@@ -296,14 +297,14 @@ def get_media_player_features(state: State) -> list[str]:
 
     supported_modes = []
     if features & (
-        media_player.const.SUPPORT_TURN_ON | media_player.const.SUPPORT_TURN_OFF
+        MediaPlayerEntityFeature.TURN_ON | MediaPlayerEntityFeature.TURN_OFF
     ):
         supported_modes.append(FEATURE_ON_OFF)
-    if features & (media_player.const.SUPPORT_PLAY | media_player.const.SUPPORT_PAUSE):
+    if features & (MediaPlayerEntityFeature.PLAY | MediaPlayerEntityFeature.PAUSE):
         supported_modes.append(FEATURE_PLAY_PAUSE)
-    if features & (media_player.const.SUPPORT_PLAY | media_player.const.SUPPORT_STOP):
+    if features & (MediaPlayerEntityFeature.PLAY | MediaPlayerEntityFeature.STOP):
         supported_modes.append(FEATURE_PLAY_STOP)
-    if features & media_player.const.SUPPORT_VOLUME_MUTE:
+    if features & MediaPlayerEntityFeature.VOLUME_MUTE:
         supported_modes.append(FEATURE_TOGGLE_MUTE)
     return supported_modes
 
@@ -568,5 +569,6 @@ def state_needs_accessory_mode(state: State) -> bool:
         state.domain == MEDIA_PLAYER_DOMAIN
         and state.attributes.get(ATTR_DEVICE_CLASS) == MediaPlayerDeviceClass.TV
         or state.domain == REMOTE_DOMAIN
-        and state.attributes.get(ATTR_SUPPORTED_FEATURES, 0) & SUPPORT_ACTIVITY
+        and state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        & RemoteEntityFeature.ACTIVITY
     )

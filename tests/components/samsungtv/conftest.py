@@ -101,12 +101,27 @@ async def dmr_device_fixture(upnp_device: Mock) -> Mock:
         dmr_device.volume_level = 0.44
         dmr_device.is_volume_muted = False
         dmr_device.on_event = None
+        dmr_device.is_subscribed = False
 
         def _raise_event(service, state_variables):
             if dmr_device.on_event:
                 dmr_device.on_event(service, state_variables)
 
         dmr_device.raise_event = _raise_event
+
+        def _async_subscribe_services(auto_resubscribe: bool = False):
+            dmr_device.is_subscribed = True
+
+        dmr_device.async_subscribe_services = AsyncMock(
+            side_effect=_async_subscribe_services
+        )
+
+        def _async_unsubscribe_services():
+            dmr_device.is_subscribed = False
+
+        dmr_device.async_unsubscribe_services = AsyncMock(
+            side_effect=_async_unsubscribe_services
+        )
         yield dmr_device
 
 

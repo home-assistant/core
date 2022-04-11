@@ -3,7 +3,11 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.components.climate import ENTITY_ID_FORMAT, ClimateEntity
+from homeassistant.components.climate import (
+    ENTITY_ID_FORMAT,
+    ClimateEntity,
+    ClimateEntityFeature,
+)
 from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
@@ -13,9 +17,6 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_OFF,
     PRESET_AWAY,
     PRESET_BOOST,
-    SUPPORT_FAN_MODE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
@@ -157,16 +158,16 @@ class FibaroThermostat(FibaroDevice, ClimateEntity):
                 or "setHeatingThermostatSetpoint" in device.actions
             ):
                 self._target_temp_device = FibaroDevice(device)
-                self._support_flags |= SUPPORT_TARGET_TEMPERATURE
+                self._support_flags |= ClimateEntityFeature.TARGET_TEMPERATURE
                 tempunit = device.properties.unit
 
             if "setMode" in device.actions or "setOperatingMode" in device.actions:
                 self._op_mode_device = FibaroDevice(device)
-                self._support_flags |= SUPPORT_PRESET_MODE
+                self._support_flags |= ClimateEntityFeature.PRESET_MODE
 
             if "setFanMode" in device.actions:
                 self._fan_mode_device = FibaroDevice(device)
-                self._support_flags |= SUPPORT_FAN_MODE
+                self._support_flags |= ClimateEntityFeature.FAN_MODE
 
         if tempunit == "F":
             self._unit_of_temp = TEMP_FAHRENHEIT
@@ -286,7 +287,7 @@ class FibaroThermostat(FibaroDevice, ClimateEntity):
     def preset_mode(self):
         """Return the current preset mode, e.g., home, away, temp.
 
-        Requires SUPPORT_PRESET_MODE.
+        Requires ClimateEntityFeature.PRESET_MODE.
         """
         if not self._op_mode_device:
             return None
@@ -304,7 +305,7 @@ class FibaroThermostat(FibaroDevice, ClimateEntity):
     def preset_modes(self):
         """Return a list of available preset modes.
 
-        Requires SUPPORT_PRESET_MODE.
+        Requires ClimateEntityFeature.PRESET_MODE.
         """
         if not self._op_mode_device:
             return None

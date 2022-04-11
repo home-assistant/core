@@ -1,7 +1,7 @@
 """Initialization of ATAG One climate platform."""
 from __future__ import annotations
 
-from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
@@ -9,8 +9,6 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT,
     PRESET_AWAY,
     PRESET_BOOST,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, Platform
@@ -27,7 +25,6 @@ PRESET_MAP = {
     PRESET_BOOST: "fireplace",
 }
 PRESET_INVERTED = {v: k for k, v in PRESET_MAP.items()}
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 HVAC_MODES = [HVAC_MODE_AUTO, HVAC_MODE_HEAT]
 
 
@@ -44,7 +41,9 @@ class AtagThermostat(AtagEntity, ClimateEntity):
 
     _attr_hvac_modes = HVAC_MODES
     _attr_preset_modes = list(PRESET_MAP.keys())
-    _attr_supported_features = SUPPORT_FLAGS
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+    )
 
     def __init__(self, coordinator, atag_id):
         """Initialize an Atag climate device."""

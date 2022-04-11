@@ -146,7 +146,7 @@ async def async_load_platform(
     Warning: Do not await this inside a setup method to avoid a dead lock.
     Use `hass.async_create_task(async_load_platform(..))` instead.
     """
-    assert hass_config, "You need to pass in the real hass config"
+    assert hass_config is not None, "You need to pass in the real hass config"
 
     setup_success = True
 

@@ -12,11 +12,7 @@ from homeassistant.components.alarm_control_panel import (
     FORMAT_TEXT,
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     AlarmControlPanelEntity,
-)
-from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_HOME,
-    SUPPORT_ALARM_ARM_NIGHT,
+    AlarmControlPanelEntityFeature,
 )
 from homeassistant.const import (
     ATTR_CODE,
@@ -173,13 +169,19 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity):
         """Return the list of supported features."""
         supported_features = 0
         if self._arm_night_script is not None:
-            supported_features = supported_features | SUPPORT_ALARM_ARM_NIGHT
+            supported_features = (
+                supported_features | AlarmControlPanelEntityFeature.ARM_NIGHT
+            )
 
         if self._arm_home_script is not None:
-            supported_features = supported_features | SUPPORT_ALARM_ARM_HOME
+            supported_features = (
+                supported_features | AlarmControlPanelEntityFeature.ARM_HOME
+            )
 
         if self._arm_away_script is not None:
-            supported_features = supported_features | SUPPORT_ALARM_ARM_AWAY
+            supported_features = (
+                supported_features | AlarmControlPanelEntityFeature.ARM_AWAY
+            )
 
         return supported_features
 

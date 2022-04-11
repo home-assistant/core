@@ -17,8 +17,8 @@ from homeassistant.components.light import (
     COLOR_MODE_BRIGHTNESS,
     COLOR_MODE_ONOFF,
     PLATFORM_SCHEMA,
-    SUPPORT_TRANSITION,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
@@ -115,7 +115,7 @@ class DecoraWifiLight(LightEntity):
     def supported_features(self):
         """Return supported features."""
         if self._switch.canSetLevel:
-            return SUPPORT_TRANSITION
+            return LightEntityFeature.TRANSITION
         return 0
 
     @property
