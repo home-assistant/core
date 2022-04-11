@@ -6,9 +6,9 @@ from tests.components.airly import init_integration
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 
 
-async def test_entry_diagnostics(hass, hass_client):
+async def test_entry_diagnostics(hass, aioclient_mock, hass_client):
     """Test config entry diagnostics."""
-    entry = await init_integration(hass)
+    entry = await init_integration(hass, aioclient_mock)
 
     coordinator_data = json.loads(load_fixture("diagnostics_data.json", "airly"))
 
