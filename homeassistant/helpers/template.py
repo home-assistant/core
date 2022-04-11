@@ -33,6 +33,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
+    ATTR_PERSONS,
     ATTR_UNIT_OF_MEASUREMENT,
     LENGTH_METERS,
     STATE_UNKNOWN,
@@ -76,6 +77,7 @@ _IS_NUMERIC = re.compile(r"^[+-]?(?!0\d)\d*(?:\.\d*)?$")
 _RESERVED_NAMES = {"contextfunction", "evalcontextfunction", "environmentfunction"}
 
 _GROUP_DOMAIN_PREFIX = "group."
+_ZONE_DOMAIN_PREFIX = "zone."
 
 _COLLECTABLE_STATE_ATTRIBUTES = {
     "state",
@@ -886,7 +888,7 @@ def result_as_boolean(template_result: Any | None) -> bool:
 
 
 def expand(hass: HomeAssistant, *args: Any) -> Iterable[State]:
-    """Expand out any groups into entity states."""
+    """Expand out any groups and zones into entity states."""
     # circular import.
     from . import entity as entity_helper  # pylint: disable=import-outside-toplevel
 
@@ -912,9 +914,11 @@ def expand(hass: HomeAssistant, *args: Any) -> Iterable[State]:
             and source["domain"] == "group"
         ):
             # Collect state will be called in here since it's wrapped
-            group_entities = entity.attributes.get(ATTR_ENTITY_ID)
-            if group_entities:
+            if group_entities := entity.attributes.get(ATTR_ENTITY_ID):
                 search += group_entities
+        elif entity_id.startswith(_ZONE_DOMAIN_PREFIX):
+            if zone_entities := entity.attributes.get(ATTR_PERSONS):
+                search += zone_entities
         else:
             _collect_state(hass, entity_id)
             found[entity_id] = entity
