@@ -62,8 +62,8 @@ class ZWaveMeFan(ZWaveMeEntity, FanEntity):
 
     def turn_on(
         self,
-        percentage: Union[int, None] = None,
-        preset_mode: Union[str, None] = None,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
         **kwargs,
     ) -> None:
         """Turn on the fan."""
