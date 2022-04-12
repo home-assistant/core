@@ -146,12 +146,12 @@ STATISTIC_UNIT_TO_DISPLAY_UNIT_CONVERSIONS = {
 # Convert volume statistics from the display unit configured by the user
 # to the normalized unit used for statistics
 # This is used to support adjusting statistics in the display unit
-DISPLAY_UNIT_TO_STATISTIC_UNIT_CONVERSIONS = {
+DISPLAY_UNIT_TO_STATISTIC_UNIT_CONVERSIONS: dict[
+    str, Callable[[float, UnitSystem], float]
+] = {
     VOLUME_CUBIC_FEET: lambda x, units: volume_util.convert(
         x, _configured_unit(VOLUME_CUBIC_METERS, units), VOLUME_CUBIC_METERS
-    )
-    if x is not None
-    else None,
+    ),
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -1340,7 +1340,7 @@ def adjust_statistics(
         units = instance.hass.config.units
         statistic_unit = metadata[statistic_id][1]["unit_of_measurement"]
         display_unit = _configured_unit(statistic_unit, units)
-        convert: Callable[[Any, Any], float | None] = DISPLAY_UNIT_TO_STATISTIC_UNIT_CONVERSIONS.get(display_unit, lambda x, units: x)  # type: ignore[arg-type,no-any-return]
+        convert = DISPLAY_UNIT_TO_STATISTIC_UNIT_CONVERSIONS.get(display_unit, lambda x, units: x)  # type: ignore[arg-type]
         sum_adjustment = convert(sum_adjustment, units)
 
         _adjust_sum_statistics(
