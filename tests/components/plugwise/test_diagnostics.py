@@ -148,6 +148,8 @@ async def test_diagnostics(
                 "name": "Adam",
                 "vendor": "Plugwise B.V.",
                 "zigbee_mac_address": "ABCD012345670101",
+                "regulation_mode": "heating",
+                "regulation_modes": [],
                 "binary_sensors": {"plugwise_notification": True},
                 "sensors": {"outdoor_temperature": 7.81},
             },

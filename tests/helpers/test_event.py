@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from astral import LocationInfo
 import astral.sun
+from freezegun import freeze_time
 import jinja2
 import pytest
 
@@ -44,14 +45,6 @@ import homeassistant.util.dt as dt_util
 from tests.common import async_fire_time_changed
 
 DEFAULT_TIME_ZONE = dt_util.DEFAULT_TIME_ZONE
-
-
-@pytest.fixture(autouse=True)
-def teardown():
-    """Stop everything that was started."""
-    yield
-
-    dt_util.set_default_time_zone(DEFAULT_TIME_ZONE)
 
 
 async def test_track_point_in_time(hass):
@@ -3268,7 +3261,7 @@ async def test_track_time_interval(hass):
     assert len(specific_runs) == 2
 
 
-async def test_track_sunrise(hass, legacy_patchable_time):
+async def test_track_sunrise(hass):
     """Test track the sunrise."""
     latitude = 32.87336
     longitude = 117.22743
@@ -3299,42 +3292,46 @@ async def test_track_sunrise(hass, legacy_patchable_time):
 
     # Track sunrise
     runs = []
-    with patch("homeassistant.util.dt.utcnow", return_value=utc_now):
+    with freeze_time(utc_now):
         unsub = async_track_sunrise(hass, callback(lambda: runs.append(1)))
 
     offset_runs = []
     offset = timedelta(minutes=30)
-    with patch("homeassistant.util.dt.utcnow", return_value=utc_now):
+    with freeze_time(utc_now):
         unsub2 = async_track_sunrise(
             hass, callback(lambda: offset_runs.append(1)), offset
         )
 
     # run tests
-    async_fire_time_changed(hass, next_rising - offset)
-    await hass.async_block_till_done()
-    assert len(runs) == 0
-    assert len(offset_runs) == 0
+    with freeze_time(next_rising - offset):
+        async_fire_time_changed(hass, next_rising - offset)
+        await hass.async_block_till_done()
+        assert len(runs) == 0
+        assert len(offset_runs) == 0
 
-    async_fire_time_changed(hass, next_rising)
-    await hass.async_block_till_done()
-    assert len(runs) == 1
-    assert len(offset_runs) == 0
+    with freeze_time(next_rising):
+        async_fire_time_changed(hass, next_rising)
+        await hass.async_block_till_done()
+        assert len(runs) == 1
+        assert len(offset_runs) == 0
 
-    async_fire_time_changed(hass, next_rising + offset)
-    await hass.async_block_till_done()
-    assert len(runs) == 1
-    assert len(offset_runs) == 1
+    with freeze_time(next_rising + offset):
+        async_fire_time_changed(hass, next_rising + offset)
+        await hass.async_block_till_done()
+        assert len(runs) == 1
+        assert len(offset_runs) == 1
 
     unsub()
     unsub2()
 
-    async_fire_time_changed(hass, next_rising + offset)
-    await hass.async_block_till_done()
-    assert len(runs) == 1
-    assert len(offset_runs) == 1
+    with freeze_time(next_rising + offset):
+        async_fire_time_changed(hass, next_rising + offset)
+        await hass.async_block_till_done()
+        assert len(runs) == 1
+        assert len(offset_runs) == 1
 
 
-async def test_track_sunrise_update_location(hass, legacy_patchable_time):
+async def test_track_sunrise_update_location(hass):
     """Test track the sunrise."""
     # Setup sun component
     hass.config.latitude = 32.87336
@@ -3362,16 +3359,17 @@ async def test_track_sunrise_update_location(hass, legacy_patchable_time):
 
     # Track sunrise
     runs = []
-    with patch("homeassistant.util.dt.utcnow", return_value=utc_now):
+    with freeze_time(utc_now):
         async_track_sunrise(hass, callback(lambda: runs.append(1)))
 
     # Mimic sunrise
-    async_fire_time_changed(hass, next_rising)
-    await hass.async_block_till_done()
-    assert len(runs) == 1
+    with freeze_time(next_rising):
+        async_fire_time_changed(hass, next_rising)
+        await hass.async_block_till_done()
+        assert len(runs) == 1
 
     # Move!
-    with patch("homeassistant.util.dt.utcnow", return_value=utc_now):
+    with freeze_time(utc_now):
         await hass.config.async_update(latitude=40.755931, longitude=-73.984606)
         await hass.async_block_till_done()
 
@@ -3381,10 +3379,11 @@ async def test_track_sunrise_update_location(hass, legacy_patchable_time):
     )
 
     # Mimic sunrise
-    async_fire_time_changed(hass, next_rising)
-    await hass.async_block_till_done()
-    # Did not increase
-    assert len(runs) == 1
+    with freeze_time(next_rising):
+        async_fire_time_changed(hass, next_rising)
+        await hass.async_block_till_done()
+        # Did not increase
+        assert len(runs) == 1
 
     # Get next sunrise
     mod = -1
@@ -3396,13 +3395,14 @@ async def test_track_sunrise_update_location(hass, legacy_patchable_time):
             break
         mod += 1
 
-    # Mimic sunrise at new location
-    async_fire_time_changed(hass, next_rising)
-    await hass.async_block_till_done()
-    assert len(runs) == 2
+    with freeze_time(next_rising):
+        # Mimic sunrise at new location
+        async_fire_time_changed(hass, next_rising)
+        await hass.async_block_till_done()
+        assert len(runs) == 2
 
 
-async def test_track_sunset(hass, legacy_patchable_time):
+async def test_track_sunset(hass):
     """Test track the sunset."""
     latitude = 32.87336
     longitude = 117.22743
@@ -3431,39 +3431,43 @@ async def test_track_sunset(hass, legacy_patchable_time):
 
     # Track sunset
     runs = []
-    with patch("homeassistant.util.dt.utcnow", return_value=utc_now):
+    with freeze_time(utc_now):
         unsub = async_track_sunset(hass, callback(lambda: runs.append(1)))
 
     offset_runs = []
     offset = timedelta(minutes=30)
-    with patch("homeassistant.util.dt.utcnow", return_value=utc_now):
+    with freeze_time(utc_now):
         unsub2 = async_track_sunset(
             hass, callback(lambda: offset_runs.append(1)), offset
         )
 
     # Run tests
-    async_fire_time_changed(hass, next_setting - offset)
-    await hass.async_block_till_done()
-    assert len(runs) == 0
-    assert len(offset_runs) == 0
+    with freeze_time(next_setting - offset):
+        async_fire_time_changed(hass, next_setting - offset)
+        await hass.async_block_till_done()
+        assert len(runs) == 0
+        assert len(offset_runs) == 0
 
-    async_fire_time_changed(hass, next_setting)
-    await hass.async_block_till_done()
-    assert len(runs) == 1
-    assert len(offset_runs) == 0
+    with freeze_time(next_setting):
+        async_fire_time_changed(hass, next_setting)
+        await hass.async_block_till_done()
+        assert len(runs) == 1
+        assert len(offset_runs) == 0
 
-    async_fire_time_changed(hass, next_setting + offset)
-    await hass.async_block_till_done()
-    assert len(runs) == 1
-    assert len(offset_runs) == 1
+    with freeze_time(next_setting + offset):
+        async_fire_time_changed(hass, next_setting + offset)
+        await hass.async_block_till_done()
+        assert len(runs) == 1
+        assert len(offset_runs) == 1
 
     unsub()
     unsub2()
 
-    async_fire_time_changed(hass, next_setting + offset)
-    await hass.async_block_till_done()
-    assert len(runs) == 1
-    assert len(offset_runs) == 1
+    with freeze_time(next_setting + offset):
+        async_fire_time_changed(hass, next_setting + offset)
+        await hass.async_block_till_done()
+        assert len(runs) == 1
+        assert len(offset_runs) == 1
 
 
 async def test_async_track_time_change(hass):
@@ -3751,8 +3755,7 @@ async def test_periodic_task_duplicate_time(hass):
 @pytest.mark.freeze_time("2021-03-28 01:28:00+01:00")
 async def test_periodic_task_entering_dst(hass, freezer):
     """Test periodic task behavior when entering dst."""
-    timezone = dt_util.get_time_zone("Europe/Vienna")
-    dt_util.set_default_time_zone(timezone)
+    hass.config.set_time_zone("Europe/Vienna")
     specific_runs = []
 
     today = date.today().isoformat()
@@ -3801,8 +3804,7 @@ async def test_periodic_task_entering_dst_2(hass, freezer):
 
     This tests a task firing every second in the range 0..58 (not *:*:59)
     """
-    timezone = dt_util.get_time_zone("Europe/Vienna")
-    dt_util.set_default_time_zone(timezone)
+    hass.config.set_time_zone("Europe/Vienna")
     specific_runs = []
 
     today = date.today().isoformat()
@@ -3850,8 +3852,7 @@ async def test_periodic_task_entering_dst_2(hass, freezer):
 @pytest.mark.freeze_time("2021-10-31 02:28:00+02:00")
 async def test_periodic_task_leaving_dst(hass, freezer):
     """Test periodic task behavior when leaving dst."""
-    timezone = dt_util.get_time_zone("Europe/Vienna")
-    dt_util.set_default_time_zone(timezone)
+    hass.config.set_time_zone("Europe/Vienna")
     specific_runs = []
 
     today = date.today().isoformat()
@@ -3925,8 +3926,7 @@ async def test_periodic_task_leaving_dst(hass, freezer):
 @pytest.mark.freeze_time("2021-10-31 02:28:00+02:00")
 async def test_periodic_task_leaving_dst_2(hass, freezer):
     """Test periodic task behavior when leaving dst."""
-    timezone = dt_util.get_time_zone("Europe/Vienna")
-    dt_util.set_default_time_zone(timezone)
+    hass.config.set_time_zone("Europe/Vienna")
     specific_runs = []
 
     today = date.today().isoformat()
@@ -4188,8 +4188,8 @@ async def test_async_track_point_in_time_cancel(hass):
     """Test cancel of async track point in time."""
 
     times = []
+    hass.config.set_time_zone("US/Hawaii")
     hst_tz = dt_util.get_time_zone("US/Hawaii")
-    dt_util.set_default_time_zone(hst_tz)
 
     @ha.callback
     def run_callback(local_time):

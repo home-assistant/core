@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import logging
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar, overload
 
 from soco import SoCo
 from soco.exceptions import SoCoException, SoCoUPnPException
@@ -17,6 +17,7 @@ from .exception import SonosUpdateError
 if TYPE_CHECKING:
     from .entity import SonosEntity
     from .household_coordinator import SonosHouseholdCoordinator
+    from .media import SonosMedia
     from .speaker import SonosSpeaker
 
 UID_PREFIX = "RINCON_"
@@ -24,9 +25,29 @@ UID_POSTFIX = "01400"
 
 _LOGGER = logging.getLogger(__name__)
 
-_T = TypeVar("_T", bound="SonosSpeaker | SonosEntity | SonosHouseholdCoordinator")
+_T = TypeVar(
+    "_T", bound="SonosSpeaker | SonosMedia | SonosEntity | SonosHouseholdCoordinator"
+)
 _R = TypeVar("_R")
 _P = ParamSpec("_P")
+
+
+@overload
+def soco_error(
+    errorcodes: None = ...,
+) -> Callable[  # type: ignore[misc]
+    [Callable[Concatenate[_T, _P], _R]], Callable[Concatenate[_T, _P], _R]
+]:
+    ...
+
+
+@overload
+def soco_error(
+    errorcodes: list[str],
+) -> Callable[  # type: ignore[misc]
+    [Callable[Concatenate[_T, _P], _R]], Callable[Concatenate[_T, _P], _R | None]
+]:
+    ...
 
 
 def soco_error(
@@ -43,7 +64,7 @@ def soco_error(
 
         def wrapper(self: _T, *args: _P.args, **kwargs: _P.kwargs) -> _R | None:
             """Wrap for all soco UPnP exception."""
-            args_soco = next((arg for arg in args if isinstance(arg, SoCo)), None)
+            args_soco = next((arg for arg in args if isinstance(arg, SoCo)), None)  # type: ignore[attr-defined]
             try:
                 result = funct(self, *args, **kwargs)
             except (OSError, SoCoException, SoCoUPnPException) as err:
@@ -61,7 +82,7 @@ def soco_error(
                 message = f"Error calling {function} on {target}: {err}"
                 raise SonosUpdateError(message) from err
 
-            dispatch_soco = args_soco or self.soco
+            dispatch_soco = args_soco or self.soco  # type: ignore[union-attr]
             dispatcher_send(
                 self.hass,
                 f"{SONOS_SPEAKER_ACTIVITY}-{dispatch_soco.uid}",

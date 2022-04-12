@@ -4,7 +4,6 @@ from __future__ import annotations
 from abc import abstractmethod
 from collections.abc import Callable
 from functools import wraps
-import logging
 from typing import Any, cast
 
 from pytradfri.command import Command
@@ -15,10 +14,8 @@ from homeassistant.core import callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import DOMAIN, LOGGER
 from .coordinator import TradfriDeviceDataUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def handle_error(
@@ -32,15 +29,13 @@ def handle_error(
         try:
             await func(command)
         except RequestError as err:
-            _LOGGER.error("Unable to execute command %s: %s", command, err)
+            LOGGER.error("Unable to execute command %s: %s", command, err)
 
     return wrapper
 
 
-class TradfriBaseEntity(CoordinatorEntity):
+class TradfriBaseEntity(CoordinatorEntity[TradfriDeviceDataUpdateCoordinator]):
     """Base Tradfri device."""
-
-    coordinator: TradfriDeviceDataUpdateCoordinator
 
     def __init__(
         self,

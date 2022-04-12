@@ -5,6 +5,7 @@ import pytest
 
 from homeassistant.components.rfxtrx import DOMAIN
 from homeassistant.core import State
+from homeassistant.exceptions import HomeAssistantError
 
 from tests.common import MockConfigEntry, mock_restore_cache
 from tests.components.rfxtrx.conftest import create_rfx_test_cfg
@@ -181,19 +182,21 @@ async def test_rfy_cover(hass, rfxtrx):
         blocking=True,
     )
 
-    await hass.services.async_call(
-        "cover",
-        "open_cover_tilt",
-        {"entity_id": "cover.rfy_010203_1"},
-        blocking=True,
-    )
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "cover",
+            "open_cover_tilt",
+            {"entity_id": "cover.rfy_010203_1"},
+            blocking=True,
+        )
 
-    await hass.services.async_call(
-        "cover",
-        "close_cover_tilt",
-        {"entity_id": "cover.rfy_010203_1"},
-        blocking=True,
-    )
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "cover",
+            "close_cover_tilt",
+            {"entity_id": "cover.rfy_010203_1"},
+            blocking=True,
+        )
 
     assert rfxtrx.transport.send.mock_calls == [
         call(bytearray(b"\x08\x1a\x00\x00\x01\x02\x03\x01\x00")),

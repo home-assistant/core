@@ -217,6 +217,7 @@ def zwave_integration_fixture(hass, zwave_migration_data):
         yield zwave_config_entry
 
 
+@pytest.mark.skip(reason="The old zwave integration has been removed.")
 async def test_migrate_zwave(
     hass,
     zwave_integration,
@@ -353,7 +354,7 @@ async def test_migrate_zwave(
     assert not await hass.config_entries.async_setup(zwave_config_entry.entry_id)
 
 
-@pytest.mark.skip(reason="The old zwave integration has been disabled.")
+@pytest.mark.skip(reason="The old zwave integration has been removed.")
 async def test_migrate_zwave_dry_run(
     hass,
     zwave_integration,

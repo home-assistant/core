@@ -1,7 +1,6 @@
 """Config flow for 1-Wire component."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 import voluptuous as vol
@@ -45,9 +44,6 @@ DATA_SCHEMA_MOUNTDIR = vol.Schema(
         vol.Required(CONF_MOUNT_DIR, default=DEFAULT_SYSBUS_MOUNT_DIR): str,
     }
 )
-
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def validate_input_owserver(
@@ -255,7 +251,7 @@ class OnewireOptionsFlowHandler(OptionsFlow):
                         default=self._get_current_configured_sensors(),
                         description="Multiselect with list of devices to choose from",
                     ): cv.multi_select(
-                        {device: False for device in self.configurable_devices.keys()}
+                        {device: False for device in self.configurable_devices}
                     ),
                 }
             ),
@@ -273,18 +269,16 @@ class OnewireOptionsFlowHandler(OptionsFlow):
             return await self._update_options()
 
         self.current_device, description = self.devices_to_configure.popitem()
-        data_schema: vol.Schema
-        if description.family == "28":
-            data_schema = vol.Schema(
-                {
-                    vol.Required(
-                        OPTION_ENTRY_SENSOR_PRECISION,
-                        default=self._get_current_setting(
-                            description.id, OPTION_ENTRY_SENSOR_PRECISION, "temperature"
-                        ),
-                    ): vol.In(PRECISION_MAPPING_FAMILY_28),
-                }
-            )
+        data_schema = vol.Schema(
+            {
+                vol.Required(
+                    OPTION_ENTRY_SENSOR_PRECISION,
+                    default=self._get_current_setting(
+                        description.id, OPTION_ENTRY_SENSOR_PRECISION, "temperature"
+                    ),
+                ): vol.In(PRECISION_MAPPING_FAMILY_28),
+            }
+        )
 
         return self.async_show_form(
             step_id="configure_device",

@@ -16,10 +16,8 @@ from .wemo_device import DeviceCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-class WemoEntity(CoordinatorEntity):
+class WemoEntity(CoordinatorEntity[DeviceCoordinator]):
     """Common methods for Wemo entities."""
-
-    coordinator: DeviceCoordinator  # Override CoordinatorEntity.coordinator type.
 
     # Most pyWeMo devices are associated with a single Home Assistant entity. When
     # that is not the case, name_suffix & unique_id_suffix can be used to provide

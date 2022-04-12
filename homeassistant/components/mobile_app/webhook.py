@@ -15,7 +15,7 @@ from homeassistant.components import camera, cloud, notify as hass_notify, tag
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES as BINARY_SENSOR_CLASSES,
 )
-from homeassistant.components.camera import SUPPORT_STREAM as CAMERA_SUPPORT_STREAM
+from homeassistant.components.camera import CameraEntityFeature
 from homeassistant.components.device_tracker import (
     ATTR_BATTERY,
     ATTR_GPS,
@@ -45,7 +45,7 @@ from homeassistant.helpers import (
     template,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity import validate_entity_category
+from homeassistant.helpers.entity import ENTITY_CATEGORIES_SCHEMA
 from homeassistant.util.decorator import Registry
 
 from .const import (
@@ -297,7 +297,7 @@ async def webhook_stream_camera(hass, config_entry, data):
 
     resp = {"mjpeg_path": f"/api/camera_proxy_stream/{camera_state.entity_id}"}
 
-    if camera_state.attributes[ATTR_SUPPORTED_FEATURES] & CAMERA_SUPPORT_STREAM:
+    if camera_state.attributes[ATTR_SUPPORTED_FEATURES] & CameraEntityFeature.STREAM:
         try:
             resp["hls_path"] = await camera.async_request_stream(
                 hass, camera_state.entity_id, "hls"
@@ -446,7 +446,7 @@ def _validate_state_class_sensor(value: dict):
             vol.Optional(ATTR_SENSOR_STATE, default=None): vol.Any(
                 None, bool, str, int, float
             ),
-            vol.Optional(ATTR_SENSOR_ENTITY_CATEGORY): validate_entity_category,
+            vol.Optional(ATTR_SENSOR_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
             vol.Optional(ATTR_SENSOR_ICON, default="mdi:cellphone"): cv.icon,
             vol.Optional(ATTR_SENSOR_STATE_CLASS): vol.In(SENSOSR_STATE_CLASSES),
         },

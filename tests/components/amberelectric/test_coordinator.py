@@ -12,7 +12,10 @@ from amberelectric.model.site import Site
 from dateutil import parser
 import pytest
 
-from homeassistant.components.amberelectric.coordinator import AmberUpdateCoordinator
+from homeassistant.components.amberelectric.coordinator import (
+    AmberUpdateCoordinator,
+    normalize_descriptor,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed, normalize_descriptor
 

@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 import functools
 from typing import Any, TypeVar
 
-from async_upnp_client import UpnpService, UpnpStateVariable
+from async_upnp_client.client import UpnpService, UpnpStateVariable
 from async_upnp_client.const import NotificationSubType
 from async_upnp_client.exceptions import UpnpError, UpnpResponseError
 from async_upnp_client.profiles.dlna import DmrDevice, PlayMode, TransportState
@@ -21,6 +21,7 @@ from homeassistant.components import media_source, ssdp
 from homeassistant.components.media_player import (
     BrowseMedia,
     MediaPlayerEntity,
+    MediaPlayerEntityFeature,
     async_process_play_media_url,
 )
 from homeassistant.components.media_player.const import (
@@ -28,19 +29,6 @@ from homeassistant.components.media_player.const import (
     REPEAT_MODE_ALL,
     REPEAT_MODE_OFF,
     REPEAT_MODE_ONE,
-    SUPPORT_BROWSE_MEDIA,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_REPEAT_SET,
-    SUPPORT_SEEK,
-    SUPPORT_SELECT_SOUND_MODE,
-    SUPPORT_SHUFFLE_SET,
-    SUPPORT_STOP,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
 )
 from homeassistant.const import (
     CONF_DEVICE_ID,
@@ -76,8 +64,6 @@ PARALLEL_UPDATES = 0
 _T = TypeVar("_T", bound="DlnaDmrEntity")
 _R = TypeVar("_R")
 _P = ParamSpec("_P")
-
-Func = TypeVar("Func", bound=Callable[..., Any])
 
 
 def catch_request_errors(
@@ -505,32 +491,35 @@ class DlnaDmrEntity(MediaPlayerEntity):
         supported_features = 0
 
         if self._device.has_volume_level:
-            supported_features |= SUPPORT_VOLUME_SET
+            supported_features |= MediaPlayerEntityFeature.VOLUME_SET
         if self._device.has_volume_mute:
-            supported_features |= SUPPORT_VOLUME_MUTE
+            supported_features |= MediaPlayerEntityFeature.VOLUME_MUTE
         if self._device.can_play:
-            supported_features |= SUPPORT_PLAY
+            supported_features |= MediaPlayerEntityFeature.PLAY
         if self._device.can_pause:
-            supported_features |= SUPPORT_PAUSE
+            supported_features |= MediaPlayerEntityFeature.PAUSE
         if self._device.can_stop:
-            supported_features |= SUPPORT_STOP
+            supported_features |= MediaPlayerEntityFeature.STOP
         if self._device.can_previous:
-            supported_features |= SUPPORT_PREVIOUS_TRACK
+            supported_features |= MediaPlayerEntityFeature.PREVIOUS_TRACK
         if self._device.can_next:
-            supported_features |= SUPPORT_NEXT_TRACK
+            supported_features |= MediaPlayerEntityFeature.NEXT_TRACK
         if self._device.has_play_media:
-            supported_features |= SUPPORT_PLAY_MEDIA | SUPPORT_BROWSE_MEDIA
+            supported_features |= (
+                MediaPlayerEntityFeature.PLAY_MEDIA
+                | MediaPlayerEntityFeature.BROWSE_MEDIA
+            )
         if self._device.can_seek_rel_time:
-            supported_features |= SUPPORT_SEEK
+            supported_features |= MediaPlayerEntityFeature.SEEK
 
         play_modes = self._device.valid_play_modes
         if play_modes & {PlayMode.RANDOM, PlayMode.SHUFFLE}:
-            supported_features |= SUPPORT_SHUFFLE_SET
+            supported_features |= MediaPlayerEntityFeature.SHUFFLE_SET
         if play_modes & {PlayMode.REPEAT_ONE, PlayMode.REPEAT_ALL}:
-            supported_features |= SUPPORT_REPEAT_SET
+            supported_features |= MediaPlayerEntityFeature.REPEAT_SET
 
         if self._device.has_presets:
-            supported_features |= SUPPORT_SELECT_SOUND_MODE
+            supported_features |= MediaPlayerEntityFeature.SELECT_SOUND_MODE
 
         return supported_features
 
