@@ -2553,9 +2553,15 @@ async def test_if_warning(
     assert events[0].data["if"] == "else"
 
 
-@pytest.mark.parametrize("var,result", [(1, "then"), (2, "else")])
+@pytest.mark.parametrize(
+    "var,if_result,choice", [(1, True, "then"), (2, False, "else")]
+)
 async def test_if(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, var: int, result: str
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    var: int,
+    if_result: bool,
+    choice: str,
 ) -> None:
     """Test if action."""
     events = async_capture_events(hass, "test_event")
@@ -2585,14 +2591,15 @@ async def test_if(
     await hass.async_block_till_done()
 
     assert len(events) == 1
-    assert events[0].data["if"] == result
-    assert f"Test Name: If at step 1: Executing step if {result}" in caplog.text
+    assert events[0].data["if"] == choice
+    assert f"Test Name: If at step 1: Executing step if {choice}" in caplog.text
 
     expected_trace = {
-        "0": [{"result": {"choice": result}}, {"result": {"result": var == 1}}],
-        "0/if/0": [{"result": {"result": var == 1, "entities": []}}],
-        f"0/{result}/0": [
-            {"result": {"event": "test_event", "event_data": {"if": result}}}
+        "0": [{"result": {"choice": choice}}],  # , {"result": {"result": var == 1}}],
+        "0/if": [{"result": {"result": if_result}}],
+        "0/if/condition/0": [{"result": {"result": var == 1, "entities": []}}],
+        f"0/{choice}/0": [
+            {"result": {"event": "test_event", "event_data": {"if": choice}}}
         ],
     }
     assert_action_trace(expected_trace)

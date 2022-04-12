@@ -33,8 +33,8 @@ from homeassistant.const import (
     CONF_DELAY,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
-    CONF_ERROR,
     CONF_ELSE,
+    CONF_ERROR,
     CONF_EVENT,
     CONF_EVENT_DATA,
     CONF_EVENT_DATA_TEMPLATE,
@@ -799,7 +799,10 @@ class _ScriptRun:
 
         test_conditions = False
         try:
-            test_conditions = self._test_conditions(if_data["if_conditions"], "if")
+            with trace_path("if"):
+                test_conditions = self._test_conditions(
+                    if_data["if_conditions"], "if", "condition"
+                )
         except exceptions.ConditionError as ex:
             _LOGGER.warning("Error in 'if' evaluation:\n%s", ex)
 
