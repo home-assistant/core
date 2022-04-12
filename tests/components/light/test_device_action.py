@@ -5,10 +5,10 @@ import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.light import (
     ATTR_SUPPORTED_COLOR_MODES,
-    COLOR_MODE_BRIGHTNESS,
     DOMAIN,
     FLASH_LONG,
     FLASH_SHORT,
+    ColorMode,
     LightEntityFeature,
 )
 from homeassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON
@@ -154,7 +154,7 @@ async def test_get_action_capabilities(hass, device_reg, entity_reg):
             },
             0,
             0,
-            {ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_BRIGHTNESS]},
+            {ATTR_SUPPORTED_COLOR_MODES: [ColorMode.BRIGHTNESS]},
             {},
             {
                 "turn_on": [
@@ -180,7 +180,7 @@ async def test_get_action_capabilities(hass, device_reg, entity_reg):
             0,
             0,
             None,
-            {ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_BRIGHTNESS]},
+            {ATTR_SUPPORTED_COLOR_MODES: [ColorMode.BRIGHTNESS]},
             {
                 "turn_on": [
                     {
