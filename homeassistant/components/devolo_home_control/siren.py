@@ -54,8 +54,8 @@ class DevoloSirenDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, SirenEntity):
         )
         self._attr_available_tones = [
             *range(
-                self._multi_level_switch_property.min,
-                self._multi_level_switch_property.max + 1,
+                int(self._multi_level_switch_property.min),
+                int(self._multi_level_switch_property.max) + 1,
             )
         ]
         self._attr_supported_features = (
