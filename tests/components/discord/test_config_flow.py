@@ -3,8 +3,8 @@ import nextcord
 from pytest import LogCaptureFixture
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.discord.const import DOMAIN
-from homeassistant.const import CONF_API_TOKEN, CONF_SOURCE
+from homeassistant.components.discord.const import DEFAULT_NAME, DOMAIN
+from homeassistant.const import CONF_API_TOKEN, CONF_NAME, CONF_SOURCE
 from homeassistant.core import HomeAssistant
 
 from . import (
@@ -147,7 +147,7 @@ async def test_flow_import_no_name(hass: HomeAssistant) -> None:
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == NAME
-    assert result["data"] == CONF_DATA
+    assert result["data"] == CONF_DATA | {CONF_NAME: DEFAULT_NAME}
 
 
 async def test_flow_import_already_configured(hass: HomeAssistant) -> None:

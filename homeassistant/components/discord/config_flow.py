@@ -11,7 +11,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_API_TOKEN, CONF_NAME, CONF_TOKEN
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import DOMAIN, URL_PLACEHOLDER
+from .const import DEFAULT_NAME, DOMAIN, URL_PLACEHOLDER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -92,6 +92,7 @@ class DiscordFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if entry.data[CONF_API_TOKEN] == import_config[CONF_TOKEN]:
                 return self.async_abort(reason="already_configured")
         import_config[CONF_API_TOKEN] = import_config.pop(CONF_TOKEN)
+        import_config[CONF_NAME] = import_config.get(CONF_NAME, DEFAULT_NAME)
         return await self.async_step_user(import_config)
 
 
