@@ -73,10 +73,6 @@ class Awning(OverkizGenericCover):
     @property
     def is_opening(self) -> bool | None:
         """Return if the cover is opening or not."""
-
-        if self.assumed_state:
-            return None
-
         if self.is_running(COMMANDS_OPEN):
             return True
 
@@ -93,10 +89,6 @@ class Awning(OverkizGenericCover):
     @property
     def is_closing(self) -> bool | None:
         """Return if the cover is closing or not."""
-
-        if self.assumed_state:
-            return None
-
         if self.is_running(COMMANDS_CLOSE):
             return True
 

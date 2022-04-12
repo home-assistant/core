@@ -112,10 +112,6 @@ class VerticalCover(OverkizGenericCover):
     @property
     def is_opening(self) -> bool | None:
         """Return if the cover is opening or not."""
-
-        if self.assumed_state:
-            return None
-
         if self.is_running(COMMANDS_OPEN + COMMANDS_OPEN_TILT):
             return True
 
@@ -132,10 +128,6 @@ class VerticalCover(OverkizGenericCover):
     @property
     def is_closing(self) -> bool | None:
         """Return if the cover is closing or not."""
-
-        if self.assumed_state:
-            return None
-
         if self.is_running(COMMANDS_CLOSE + COMMANDS_CLOSE_TILT):
             return True
 
