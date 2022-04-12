@@ -88,7 +88,7 @@ async def async_setup_entry(
     """Set up a Geocaching sensor entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        [GeocachingSensor(coordinator, entity_description=item) for item in SENSORS]
+        GeocachingSensor(coordinator, description) for description in SENSORS
     )
 
 
@@ -102,17 +102,16 @@ class GeocachingSensor(
     def __init__(
         self,
         coordinator: GeocachingDataUpdateCoordinator,
-        *,
-        entity_description: GeocachingSensorEntityDescription,
+        description: GeocachingSensorEntityDescription,
     ) -> None:
         """Initialize the Geocaching sensor."""
         super().__init__(coordinator)
-        self.entity_description = entity_description
+        self.entity_description = description
         self._attr_name = (
-            f"Geocaching {coordinator.data.user.username} {entity_description.name}"
+            f"Geocaching {coordinator.data.user.username} {description.name}"
         )
         self._attr_unique_id = (
-            f"{coordinator.data.user.reference_code}_{entity_description.key}"
+            f"{coordinator.data.user.reference_code}_{description.key}"
         )
 
     @property
