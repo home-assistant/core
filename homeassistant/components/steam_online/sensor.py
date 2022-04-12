@@ -63,16 +63,14 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Steam platform."""
     async_add_entities(
-        SteamSensor(hass.data[DOMAIN][entry.entry_id], str(account))
-        for account in entry.options[CONF_ACCOUNTS].keys()
+        SteamSensor(hass.data[DOMAIN][entry.entry_id], account)
+        for account in entry.options[CONF_ACCOUNTS]
         if entry.options[CONF_ACCOUNTS][account]["enabled"]
     )
 
 
 class SteamSensor(SteamEntity, SensorEntity):
     """A class for the Steam account."""
-
-    coordinator: SteamDataUpdateCoordinator
 
     def __init__(self, coordinator: SteamDataUpdateCoordinator, account: str) -> None:
         """Initialize the sensor."""
@@ -89,7 +87,7 @@ class SteamSensor(SteamEntity, SensorEntity):
         """Return the state of the sensor."""
         if self.entity_description.key in self.coordinator.data:
             player = self.coordinator.data[self.entity_description.key]
-            return STEAM_STATUSES[int(player["personastate"])]
+            return STEAM_STATUSES[player["personastate"]]
         return None
 
     @property
@@ -109,7 +107,7 @@ class SteamSensor(SteamEntity, SensorEntity):
             attrs["game_image_main"] = f"{game_url}{STEAM_MAIN_IMAGE_FILE}"
             if info := self._get_game_icon(player):
                 attrs["game_icon"] = STEAM_ICON_URL % (
-                    int(game_id),
+                    game_id,
                     info,
                 )
         self._attr_name = player["personaname"]
@@ -122,8 +120,8 @@ class SteamSensor(SteamEntity, SensorEntity):
 
     def _get_game_icon(self, player: dict) -> str | None:
         """Get game icon identifier."""
-        if player.get("gameid") in self.coordinator.game_icons.keys():
-            return self.coordinator.game_icons[player.get("gameid")]
+        if player.get("gameid") in self.coordinator.game_icons:
+            return self.coordinator.game_icons[player["gameid"]]
         # Reset game icons to have coordinator get id for new game
         self.coordinator.game_icons = {}
         return None

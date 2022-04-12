@@ -15,7 +15,7 @@ PLATFORMS = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Twitch from a config entry."""
+    """Set up Steam from a config entry."""
     coordinator = SteamDataUpdateCoordinator(hass)
     await coordinator.async_config_entry_first_refresh()
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator

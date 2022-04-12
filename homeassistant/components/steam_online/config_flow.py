@@ -1,7 +1,6 @@
 """Config flow for Steam integration."""
 from __future__ import annotations
 
-import functools as ft
 from typing import Any
 
 import steam
@@ -9,7 +8,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY, Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.typing import ConfigType
@@ -17,20 +16,16 @@ from homeassistant.helpers.typing import ConfigType
 from .const import CONF_ACCOUNT, CONF_ACCOUNTS, DEFAULT_NAME, DOMAIN, LOGGER
 
 
-async def validate_input(user_input: dict, hass: HomeAssistant) -> list[dict[str, str]]:
+def validate_input(user_input: dict[str, str | int]) -> list[dict[str, str | int]]:
     """Handle common flow input validation."""
     steam.api.key.set(user_input[CONF_API_KEY])
-    interface = await hass.async_add_executor_job(steam.api.interface, "ISteamUser")
-    names = await hass.async_add_executor_job(
-        ft.partial(interface.GetPlayerSummaries, steamids=user_input[CONF_ACCOUNT])
-    )
-    return (await hass.async_add_executor_job(names.get, "response"))["players"][
-        "player"
-    ]
+    interface = steam.api.interface("ISteamUser")
+    names = interface.GetPlayerSummaries(steamids=user_input[CONF_ACCOUNT])
+    return names["response"]["players"]["player"]
 
 
 class SteamFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for team."""
+    """Handle a config flow for Steam."""
 
     def __init__(self) -> None:
         """Initialize the flow."""
@@ -53,16 +48,17 @@ class SteamFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             user_input = {CONF_ACCOUNT: self.entry.data[CONF_ACCOUNT]}
         elif user_input is not None:
             try:
-                res = await validate_input(user_input, self.hass)
+                res = await self.hass.async_add_executor_job(validate_input, user_input)
                 if res[0] is not None:
-                    name = res[0]["personaname"]
+                    name = str(res[0]["personaname"])
                 else:
                     errors = {"base": "invalid_account"}
             except (steam.api.HTTPError, steam.api.HTTPTimeoutError) as ex:
                 errors = {"base": "cannot_connect"}
                 if "403" in str(ex):
                     errors = {"base": "invalid_auth"}
-            except Exception:  # pylint:disable=broad-except
+            except Exception as ex:  # pylint:disable=broad-except
+                LOGGER.exception("Unknown exception: %s", ex)
                 errors = {"base": "unknown"}
             if not errors:
                 entry = await self.async_set_unique_id(user_input[CONF_ACCOUNT])
@@ -114,8 +110,10 @@ class SteamFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         for entry in self._async_current_entries():
             if entry.data[CONF_API_KEY] == import_config[CONF_API_KEY]:
                 return self.async_abort(reason="already_configured")
-        _msg = "Steam yaml config in now deprecated and has been imported. Please remove it from your config"
-        LOGGER.warning(_msg)
+        LOGGER.warning(
+            "Steam yaml config in now deprecated and has been imported. "
+            "Please remove it from your config"
+        )
         import_config[CONF_ACCOUNT] = import_config[CONF_ACCOUNTS][0]
         return await self.async_step_user(import_config)
 
@@ -148,42 +146,9 @@ class SteamOptionsFlowHandler(config_entries.OptionsFlow):
         self, user_input: dict[str, dict[str, str]] | None = None
     ) -> FlowResult:
         """Manage Steam options."""
-        if user_input is None:
-            try:
-                interface = await self.hass.async_add_executor_job(
-                    steam.api.interface, "ISteamUser"
-                )
-                friends = await self.hass.async_add_executor_job(
-                    ft.partial(
-                        interface.GetFriendList, steamid=self.entry.data[CONF_ACCOUNT]
-                    )
-                )
-                friends = (
-                    await self.hass.async_add_executor_job(friends.get, "friendslist")
-                )["friends"]
-                _users_str = str([user["steamid"] for user in friends])
-                names = await self.hass.async_add_executor_job(
-                    ft.partial(interface.GetPlayerSummaries, steamids=_users_str)
-                )
-                names = (await self.hass.async_add_executor_job(names.get, "response"))[
-                    "players"
-                ]["player"]
-                users = {
-                    name["steamid"]: {"name": name["personaname"], "enabled": False}
-                    for name in names
-                }
-            except steam.api.HTTPTimeoutError:
-                users = self.options[CONF_ACCOUNTS]
-            _users = users | self.options[CONF_ACCOUNTS]
-            self.options[CONF_ACCOUNTS] = {
-                k: v
-                for k, v in _users.items()
-                if k in users.keys() or self.options[CONF_ACCOUNTS][k]["enabled"]
-            }
-
-        else:
+        if user_input is not None:
             await self.hass.config_entries.async_unload(self.entry.entry_id)
-            for k in self.options[CONF_ACCOUNTS].keys():
+            for k in self.options[CONF_ACCOUNTS]:
                 if (
                     self.options[CONF_ACCOUNTS][k]["enabled"]
                     and k not in user_input[CONF_ACCOUNTS]
@@ -198,7 +163,7 @@ class SteamOptionsFlowHandler(config_entries.OptionsFlow):
                 CONF_ACCOUNTS: {
                     k: {
                         "name": v["name"],
-                        "enabled": bool(k in user_input[CONF_ACCOUNTS]),
+                        "enabled": k in user_input[CONF_ACCOUNTS],
                     }
                     for k, v in self.options[CONF_ACCOUNTS].items()
                     if k in user_input[CONF_ACCOUNTS]
@@ -206,12 +171,27 @@ class SteamOptionsFlowHandler(config_entries.OptionsFlow):
             }
             await self.hass.config_entries.async_reload(self.entry.entry_id)
             return self.async_create_entry(title="", data=channel_data)
+        try:
+            users = {
+                name["steamid"]: {"name": name["personaname"], "enabled": False}
+                for name in await self.hass.async_add_executor_job(self.get_accounts)
+            }
+
+        except steam.api.HTTPTimeoutError:
+            users = self.options[CONF_ACCOUNTS]
+        _users = users | self.options[CONF_ACCOUNTS]
+        self.options[CONF_ACCOUNTS] = {
+            k: v
+            for k, v in _users.items()
+            if k in users or self.options[CONF_ACCOUNTS][k]["enabled"]
+        }
+
         options = {
             vol.Required(
                 CONF_ACCOUNTS,
                 default={
                     k
-                    for k in self.options[CONF_ACCOUNTS].keys()
+                    for k in self.options[CONF_ACCOUNTS]
                     if self.options[CONF_ACCOUNTS][k]["enabled"]
                 },
             ): cv.multi_select(
@@ -220,3 +200,12 @@ class SteamOptionsFlowHandler(config_entries.OptionsFlow):
         }
 
         return self.async_show_form(step_id="init", data_schema=vol.Schema(options))
+
+    def get_accounts(self) -> list[dict[str, str | int]]:
+        """Get accounts."""
+        interface = steam.api.interface("ISteamUser")
+        friends = interface.GetFriendList(steamid=self.entry.data[CONF_ACCOUNT])
+        friends = friends["friendslist"]["friends"]
+        _users_str = [user["steamid"] for user in friends]
+        names = interface.GetPlayerSummaries(steamids=_users_str)
+        return names["response"]["players"]["player"]

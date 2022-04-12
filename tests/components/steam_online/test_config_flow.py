@@ -165,6 +165,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     with patch_interface():
         await hass.config_entries.async_setup(entry.entry_id)
         result = await hass.config_entries.options.async_init(entry.entry_id)
+        await hass.async_block_till_done()
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "init"
@@ -186,6 +187,7 @@ async def test_options_flow_deselect(hass: HomeAssistant) -> None:
     with patch_interface():
         await hass.config_entries.async_setup(entry.entry_id)
         result = await hass.config_entries.options.async_init(entry.entry_id)
+        await hass.async_block_till_done()
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "init"
@@ -194,7 +196,6 @@ async def test_options_flow_deselect(hass: HomeAssistant) -> None:
             result["flow_id"],
             user_input={CONF_ACCOUNTS: []},
         )
-    await hass.async_block_till_done()
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"] == {CONF_ACCOUNTS: {}}
