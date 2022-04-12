@@ -6,12 +6,10 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_TOKEN, CONF_URL
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
-
-API_URL = "https://ttsapi.knovvu.com/v1/speech/synthesis/tts"
 
 SUPPORT_CODECS = ["mp3", "wav", "opus"]
 
@@ -55,6 +53,7 @@ CONF_VOLUME = "volume"
 CONF_RATE = "rate"
 CONF_SAMPLE_RATE = "sample_rate"
 
+DEFAULT_URL = "https://ttsapi.knovvu.com/v1/speech/synthesis/tts"
 DEFAULT_CODEC = "wav"
 DEFAULT_LANG = "Sestek Gul 24k_HV_Premium"
 DEFAULT_VOICE = "Sestek Gul 24k_HV_Premium"
@@ -64,7 +63,8 @@ DEFAULT_SAMPLE_RATE = 24000
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_API_KEY): cv.string,
+        vol.Required(CONF_API_TOKEN): cv.string,
+        vol.Optional(CONF_URL, default=DEFAULT_URL): cv.string,
         vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES),
         vol.Optional(CONF_CODEC, default=DEFAULT_CODEC): vol.In(SUPPORT_CODECS),
         vol.Optional(CONF_VOICE, default=DEFAULT_VOICE): vol.In(SUPPORT_VOICES),
@@ -94,7 +94,8 @@ class KnovvuProvider(Provider):
     def __init__(self, hass, conf):
         """Init knovvu TTS service."""
         self.hass = hass
-        self._key = conf.get(CONF_API_KEY)
+        self._key = conf.get(CONF_URL)
+        self._token = conf.get(CONF_API_TOKEN)
         self._codec = conf.get(CONF_CODEC)
         self._language = conf.get(CONF_LANG)
         self._voice = conf.get(CONF_VOICE)
@@ -123,8 +124,8 @@ class KnovvuProvider(Provider):
         options = options or {}
         output_format = options.get(CONF_CODEC, self._codec)
 
-        url = API_URL
-        header = {"Authorization": self._key, "Content-Type": "application/json"}
+        url = self._key
+        header = {"Authorization": self._token, "Content-Type": "application/json"}
         data_dict = {
             "Text": message,
             "Voice": {
