@@ -20,7 +20,7 @@ async def test_entry_diagnostics(hass, aioclient_mock, hass_client):
         "entry_id": entry.entry_id,
         "version": 1,
         "domain": "airly",
-        "title": "Dom",
+        "title": "Home",
         "data": {
             "latitude": REDACTED,
             "longitude": REDACTED,
