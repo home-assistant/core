@@ -10,8 +10,6 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_ATTRIBUTE,
     CONF_DEVICE_CLASS,
-    CONF_ICON,
-    CONF_NAME,
     CONF_SOURCE,
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
@@ -55,7 +53,6 @@ async def async_setup_platform(
     name = f"{DEFAULT_NAME} {source}"
     if attribute:
         name = f"{name} {attribute}"
-    name = conf.get(CONF_NAME) or name
 
     async_add_entities(
         [
@@ -68,7 +65,6 @@ async def async_setup_platform(
                 conf[CONF_POLYNOMIAL],
                 conf.get(CONF_UNIT_OF_MEASUREMENT),
                 conf.get(CONF_DEVICE_CLASS),
-                conf.get(CONF_ICON),
             )
         ]
     )
@@ -87,7 +83,6 @@ class CompensationSensor(SensorEntity):
         polynomial,
         unit_of_measurement: str,
         device_class: str,
-        icon: str,
     ) -> None:
         """Initialize the Compensation sensor."""
         self._source_entity_id = source
@@ -99,7 +94,7 @@ class CompensationSensor(SensorEntity):
         self._attr_name = name
         self._attr_should_poll = False
         self._attr_device_class = device_class
-        self._attr_icon = icon
+        self._attr_icon = None
 
         attrs = {
             ATTR_SOURCE_VALUE: None,

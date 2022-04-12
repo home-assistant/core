@@ -12,8 +12,6 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     CONF_ATTRIBUTE,
     CONF_DEVICE_CLASS,
-    CONF_ICON,
-    CONF_NAME,
     CONF_SOURCE,
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
@@ -61,9 +59,7 @@ COMPENSATION_SCHEMA = vol.Schema(
             vol.Coerce(int),
             vol.Range(min=1, max=7),
         ),
-        vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_ICON): cv.icon,
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     }
 )
