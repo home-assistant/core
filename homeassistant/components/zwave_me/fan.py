@@ -1,7 +1,7 @@
 """Representation of a fan."""
 from __future__ import annotations
 
-from typing import Any, Union
+from typing import Any
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
@@ -62,8 +62,8 @@ class ZWaveMeFan(ZWaveMeEntity, FanEntity):
 
     def turn_on(
         self,
-        percentage: Union[int, None] = None,
-        preset_mode: Union[str, None] = None,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
         **kwargs,
     ) -> None:
         """Turn on the fan."""
