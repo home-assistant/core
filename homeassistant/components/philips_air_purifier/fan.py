@@ -82,12 +82,18 @@ class PurifierEntity(FanEntity):
         self._client.stop_observing_status(id(self))
 
     def _set_status(self, status: Status | None) -> None:
+        """_set_status is a callback passed to PersistentClient to receive push updates."""
         self._status = status
         self.schedule_update_ha_state()
 
     @property
     def name(self):
-        """Return the purifier's name."""
+        """
+        Return the purifier's name.
+
+        Return the config entry title as fallback if it's unavailable, otherwise
+        return the name received from the device - it might change over time.
+        """
         if self._status is None:
             return self._config_entry.title
         return self._status.name
