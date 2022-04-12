@@ -2046,7 +2046,7 @@ raspyrfm-client==1.2.8
 regenmaschine==2022.01.0
 
 # homeassistant.components.renault
-renault-api==0.1.10
+renault-api==0.1.11
 
 # homeassistant.components.python_script
 restrictedpython==5.2
