@@ -1,7 +1,8 @@
 {
   "domain": "knovvu",
-  "name": "Text-to-Speech (TTS)",
+  "name": "Knovvu TTS",
   "documentation": "https://www.knovvu.com/",
   "codeowners": ["@mrterdll"],
-  "iot_class": "local_push"
+  "requirements": [],
+  "iot_class": "cloud_push"
 }
