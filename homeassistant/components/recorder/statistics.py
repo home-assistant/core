@@ -66,6 +66,7 @@ QUERY_STATISTICS = [
     Statistics.sum,
 ]
 
+
 QUERY_STATISTICS_SHORT_TERM = [
     StatisticsShortTerm.metadata_id,
     StatisticsShortTerm.start,
@@ -1084,27 +1085,32 @@ def get_latest_short_term_statistics(
     hass: HomeAssistant, statistic_ids: list[str], convert_units: bool
 ) -> dict[str, list[dict]]:
     """Return the latest short term statistics for statistic_ids."""
+    # This function doesn't use a baked query since its
+    # deprecated since version 1.4
     with session_scope(hass=hass) as session:
         # Fetch metadata for the given statistic_id
         metadata = get_metadata_with_session(hass, session, statistic_ids=statistic_ids)
         if not metadata:
             return {}
-        baked_query = hass.data[STATISTICS_BAKERY](
-            lambda session: session.query(
-                *QUERY_STATISTICS_SHORT_TERM,
-                func.max(StatisticsShortTerm.start),
-            )
-        )
-        baked_query += lambda q: q.filter(
-            StatisticsShortTerm.metadata_id.in_(bindparam("metadata_ids"))
-        )
-        baked_query += lambda q: q.group_by(StatisticsShortTerm.metadata_id)
         metadata_ids = [
             metadata[statistic_id][0]
             for statistic_id in statistic_ids
             if statistic_id in metadata
         ]
-        stats = execute(baked_query(session).params(metadata_ids=metadata_ids))
+        most_recent_metadata_ids = (
+            session.query(
+                StatisticsShortTerm.id,
+                func.max(StatisticsShortTerm.start),
+            )
+            .group_by(StatisticsShortTerm.metadata_id)
+            .having(StatisticsShortTerm.metadata_id.in_(metadata_ids))
+        ).subquery()
+        stats = execute(
+            session.query(*QUERY_STATISTICS_SHORT_TERM).join(
+                most_recent_metadata_ids,
+                StatisticsShortTerm.id == most_recent_metadata_ids.c.id,
+            )
+        )
         if not stats:
             return {}
 
