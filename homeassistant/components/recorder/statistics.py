@@ -1323,17 +1323,20 @@ def adjust_statistics(
         if statistic_id not in metadata:
             return True
 
-        tables: tuple[type[Statistics | StatisticsShortTerm], ...] = (
-            Statistics,
+        _adjust_sum_statistics(
+            session,
             StatisticsShortTerm,
+            metadata[statistic_id][0],
+            start_time,
+            sum_adjustment,
         )
-        for table in tables:
-            _adjust_sum_statistics(
-                session,
-                table,
-                metadata[statistic_id][0],
-                start_time,
-                sum_adjustment,
-            )
+
+        _adjust_sum_statistics(
+            session,
+            Statistics,
+            metadata[statistic_id][0],
+            start_time.replace(minute=0),
+            sum_adjustment,
+        )
 
     return True
