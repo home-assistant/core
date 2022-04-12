@@ -204,13 +204,19 @@ class SamsungTVDevice(MediaPlayerEntity):
             )
 
         if self._attr_state != STATE_ON:
+            if self._dmr_device and self._dmr_device.is_subscribed:
+                await self._dmr_device.async_unsubscribe_services()
             return
 
-        startup_tasks: list[Coroutine[Any, Any, None]] = []
+        startup_tasks: list[Coroutine[Any, Any, Any]] = []
 
         if not self._app_list_event.is_set():
             startup_tasks.append(self._async_startup_app_list())
 
+        if self._dmr_device and not self._dmr_device.is_subscribed:
+            startup_tasks.append(
+                self._dmr_device.async_subscribe_services(auto_resubscribe=True)
+            )
         if not self._dmr_device and self._ssdp_rendering_control_location:
             startup_tasks.append(self._async_startup_dmr())
 
@@ -263,7 +269,10 @@ class SamsungTVDevice(MediaPlayerEntity):
         if self._dmr_device is None:
             session = async_get_clientsession(self.hass)
             upnp_requester = AiohttpSessionRequester(session)
-            upnp_factory = UpnpFactory(upnp_requester)
+            # Set non_strict to avoid invalid data sent by Samsung TV:
+            # Got invalid value for <UpnpStateVariable(PlaybackStorageMedium, string)>:
+            # NETWORK,NONE
+            upnp_factory = UpnpFactory(upnp_requester, non_strict=True)
             upnp_device: UpnpDevice | None = None
             with contextlib.suppress(UpnpConnectionError):
                 upnp_device = await upnp_factory.async_create_device(

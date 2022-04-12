@@ -30,7 +30,6 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
     EVENT_STATE_CHANGED,
-    EVENT_TIME_CHANGED,
     MATCH_ALL,
 )
 from homeassistant.core import (
@@ -86,7 +85,7 @@ from .util import (
     end_incomplete_runs,
     is_second_sunday,
     move_away_broken_database,
-    perodic_db_cleanups,
+    periodic_db_cleanups,
     session_scope,
     setup_connection_for_dialect,
     validate_or_move_away_sqlite_database,
@@ -448,7 +447,7 @@ class PurgeTask(RecorderTask):
             # We always need to do the db cleanups after a purge
             # is finished to ensure the WAL checkpoint and other
             # tasks happen after a vacuum.
-            perodic_db_cleanups(instance)
+            periodic_db_cleanups(instance)
             return
         # Schedule a new purge task if this one didn't finish
         instance.queue.put(PurgeTask(self.purge_before, self.repack, self.apply_filter))
@@ -474,7 +473,7 @@ class PerodicCleanupTask(RecorderTask):
 
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
-        perodic_db_cleanups(instance)
+        periodic_db_cleanups(instance)
 
 
 @dataclass
@@ -579,6 +578,34 @@ class EventTask(RecorderTask):
         instance._process_one_event(self.event)
 
 
+@dataclass
+class KeepAliveTask(RecorderTask):
+    """A keep alive to be sent."""
+
+    commit_before = False
+
+    def run(self, instance: Recorder) -> None:
+        """Handle the task."""
+        # pylint: disable-next=[protected-access]
+        instance._send_keep_alive()
+
+
+@dataclass
+class CommitTask(RecorderTask):
+    """Commit the event session."""
+
+    commit_before = False
+
+    def run(self, instance: Recorder) -> None:
+        """Handle the task."""
+        # pylint: disable-next=[protected-access]
+        instance._commit_event_session_or_retry()
+
+
+COMMIT_TASK = CommitTask()
+KEEP_ALIVE_TASK = KeepAliveTask()
+
+
 class Recorder(threading.Thread):
     """A threaded recorder class."""
 
@@ -621,9 +648,7 @@ class Recorder(threading.Thread):
         self.entity_filter = entity_filter
         self.exclude_t = exclude_t
 
-        self._timechanges_seen = 0
         self._commits_without_expire = 0
-        self._keepalive_count = 0
         self._old_states: dict[str, States] = {}
         self._state_attributes_ids: LRU = LRU(STATE_ATTRIBUTES_ID_CACHE_SIZE)
         self._pending_state_attributes: dict[str, StateAttributes] = {}
@@ -640,6 +665,10 @@ class Recorder(threading.Thread):
         self._db_executor: DBInterruptibleThreadPoolExecutor | None = None
         self._exclude_attributes_by_domain = exclude_attributes_by_domain
 
+        self._keep_alive_listener: CALLBACK_TYPE | None = None
+        self._commit_listener: CALLBACK_TYPE | None = None
+        self._periodic_listener: CALLBACK_TYPE | None = None
+        self._nightly_listener: CALLBACK_TYPE | None = None
         self.enabled = True
 
     def set_enable(self, enable: bool) -> None:
@@ -669,6 +698,22 @@ class Recorder(threading.Thread):
         self._queue_watcher = async_track_time_interval(
             self.hass, self._async_check_queue, timedelta(minutes=10)
         )
+
+    @callback
+    def _async_keep_alive(self, now: datetime) -> None:
+        """Queue a keep alive."""
+        if self._event_listener:
+            self.queue.put(KEEP_ALIVE_TASK)
+
+    @callback
+    def _async_commit(self, now: datetime) -> None:
+        """Queue a commit."""
+        if (
+            self._event_listener
+            and not self._database_lock_task
+            and self._event_session_has_pending_writes()
+        ):
+            self.queue.put(COMMIT_TASK)
 
     @callback
     def async_add_executor_job(
@@ -708,6 +753,23 @@ class Recorder(threading.Thread):
         if self._event_listener:
             self._event_listener()
             self._event_listener = None
+
+    @callback
+    def _async_stop_listeners(self) -> None:
+        """Stop listeners."""
+        self._async_stop_queue_watcher_and_event_listener()
+        if self._keep_alive_listener:
+            self._keep_alive_listener()
+            self._keep_alive_listener = None
+        if self._commit_listener:
+            self._commit_listener()
+            self._commit_listener = None
+        if self._nightly_listener:
+            self._nightly_listener()
+            self._nightly_listener = None
+        if self._periodic_listener:
+            self._periodic_listener()
+            self._periodic_listener = None
 
     @callback
     def _async_event_filter(self, event: Event) -> bool:
@@ -780,7 +842,7 @@ class Recorder(threading.Thread):
             if not self._hass_started.done():
                 self._hass_started.set_result(SHUTDOWN_TASK)
             self.queue.put(StopTask())
-            self._async_stop_queue_watcher_and_event_listener()
+            self._async_stop_listeners()
             await self.hass.async_add_executor_job(self.join)
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_shutdown)
@@ -807,7 +869,7 @@ class Recorder(threading.Thread):
             "The recorder could not start, check [the logs](/config/logs)",
             "Recorder",
         )
-        self._async_stop_queue_watcher_and_event_listener()
+        self._async_stop_listeners()
 
     @callback
     def async_connection_success(self) -> None:
@@ -825,7 +887,7 @@ class Recorder(threading.Thread):
     def async_nightly_tasks(self, now: datetime) -> None:
         """Trigger the purge."""
         if self.auto_purge:
-            # Purge will schedule the perodic cleanups
+            # Purge will schedule the periodic cleanups
             # after it completes to ensure it does not happen
             # until after the database is vacuumed
             repack = self.auto_repack and is_second_sunday(now)
@@ -865,19 +927,36 @@ class Recorder(threading.Thread):
         self.queue.put(ExternalStatisticsTask(metadata, stats))
 
     @callback
+    def _using_sqlite(self) -> bool:
+        return bool(self.engine and self.engine.dialect.name == "sqlite")
+
+    @callback
     def _async_setup_periodic_tasks(self) -> None:
         """Prepare periodic tasks."""
         if self.hass.is_stopping or not self.get_session:
             # Home Assistant is shutting down
             return
 
+        # If the db is using a socket connection, we need to keep alive
+        # to prevent errors from unexpected disconnects
+        if not self._using_sqlite():
+            self._keep_alive_listener = async_track_time_interval(
+                self.hass, self._async_keep_alive, timedelta(seconds=KEEPALIVE_TIME)
+            )
+
+        # If the commit interval is not 0, we need to commit periodically
+        if self.commit_interval:
+            self._commit_listener = async_track_time_interval(
+                self.hass, self._async_commit, timedelta(seconds=self.commit_interval)
+            )
+
         # Run nightly tasks at 4:12am
-        async_track_time_change(
+        self._nightly_listener = async_track_time_change(
             self.hass, self.async_nightly_tasks, hour=4, minute=12, second=0
         )
 
         # Compile short term statistics every 5 minutes
-        async_track_utc_time_change(
+        self._periodic_listener = async_track_utc_time_change(
             self.hass, self.async_periodic_statistics, minute=range(0, 60, 5), second=10
         )
 
@@ -947,6 +1026,7 @@ class Recorder(threading.Thread):
         self.stop_requested = False
         while not self.stop_requested:
             task = self.queue.get()
+            _LOGGER.debug("Processing task: %s", task)
             try:
                 self._process_one_task_or_recover(task)
             except Exception as err:  # pylint: disable=broad-except
@@ -1050,20 +1130,14 @@ class Recorder(threading.Thread):
         )
 
     def _process_one_event(self, event: Event) -> None:
-        if event.event_type == EVENT_TIME_CHANGED:
-            self._keepalive_count += 1
-            if self._keepalive_count >= KEEPALIVE_TIME:
-                self._keepalive_count = 0
-                self._send_keep_alive()
-            if self.commit_interval:
-                self._timechanges_seen += 1
-                if self._timechanges_seen >= self.commit_interval:
-                    self._timechanges_seen = 0
-                    self._commit_event_session_or_retry()
-            return
-
         if not self.enabled:
             return
+        self._process_event_into_session(event)
+        # Commit if the commit interval is zero
+        if not self.commit_interval:
+            self._commit_event_session_or_retry()
+
+    def _process_event_into_session(self, event: Event) -> None:
         assert self.event_session is not None
 
         try:
@@ -1076,65 +1150,61 @@ class Recorder(threading.Thread):
             return
 
         self.event_session.add(dbevent)
-        if event.event_type == EVENT_STATE_CHANGED:
-            try:
-                dbstate = States.from_event(event)
-                shared_attrs = StateAttributes.shared_attrs_from_event(
-                    event, self._exclude_attributes_by_domain
-                )
-            except (TypeError, ValueError) as ex:
-                _LOGGER.warning(
-                    "State is not JSON serializable: %s: %s",
-                    event.data.get("new_state"),
-                    ex,
-                )
-                return
+        if event.event_type != EVENT_STATE_CHANGED:
+            return
 
-            dbstate.attributes = None
-            # Matching attributes found in the pending commit
-            if pending_attributes := self._pending_state_attributes.get(shared_attrs):
-                dbstate.state_attributes = pending_attributes
-            # Matching attributes id found in the cache
-            elif attributes_id := self._state_attributes_ids.get(shared_attrs):
-                dbstate.attributes_id = attributes_id
+        try:
+            dbstate = States.from_event(event)
+            shared_attrs = StateAttributes.shared_attrs_from_event(
+                event, self._exclude_attributes_by_domain
+            )
+        except (TypeError, ValueError) as ex:
+            _LOGGER.warning(
+                "State is not JSON serializable: %s: %s",
+                event.data.get("new_state"),
+                ex,
+            )
+            return
+
+        dbstate.attributes = None
+        # Matching attributes found in the pending commit
+        if pending_attributes := self._pending_state_attributes.get(shared_attrs):
+            dbstate.state_attributes = pending_attributes
+        # Matching attributes id found in the cache
+        elif attributes_id := self._state_attributes_ids.get(shared_attrs):
+            dbstate.attributes_id = attributes_id
+        else:
+            attr_hash = StateAttributes.hash_shared_attrs(shared_attrs)
+            # Matching attributes found in the database
+            if (
+                attributes := self.event_session.query(StateAttributes.attributes_id)
+                .filter(StateAttributes.hash == attr_hash)
+                .filter(StateAttributes.shared_attrs == shared_attrs)
+                .first()
+            ):
+                dbstate.attributes_id = attributes[0]
+                self._state_attributes_ids[shared_attrs] = attributes[0]
+            # No matching attributes found, save them in the DB
             else:
-                attr_hash = StateAttributes.hash_shared_attrs(shared_attrs)
-                # Matching attributes found in the database
-                if (
-                    attributes := self.event_session.query(
-                        StateAttributes.attributes_id
-                    )
-                    .filter(StateAttributes.hash == attr_hash)
-                    .filter(StateAttributes.shared_attrs == shared_attrs)
-                    .first()
-                ):
-                    dbstate.attributes_id = attributes[0]
-                    self._state_attributes_ids[shared_attrs] = attributes[0]
-                # No matching attributes found, save them in the DB
-                else:
-                    dbstate_attributes = StateAttributes(
-                        shared_attrs=shared_attrs, hash=attr_hash
-                    )
-                    dbstate.state_attributes = dbstate_attributes
-                    self._pending_state_attributes[shared_attrs] = dbstate_attributes
-                    self.event_session.add(dbstate_attributes)
+                dbstate_attributes = StateAttributes(
+                    shared_attrs=shared_attrs, hash=attr_hash
+                )
+                dbstate.state_attributes = dbstate_attributes
+                self._pending_state_attributes[shared_attrs] = dbstate_attributes
+                self.event_session.add(dbstate_attributes)
 
-            if old_state := self._old_states.pop(dbstate.entity_id, None):
-                if old_state.state_id:
-                    dbstate.old_state_id = old_state.state_id
-                else:
-                    dbstate.old_state = old_state
-            if event.data.get("new_state"):
-                self._old_states[dbstate.entity_id] = dbstate
-                self._pending_expunge.append(dbstate)
+        if old_state := self._old_states.pop(dbstate.entity_id, None):
+            if old_state.state_id:
+                dbstate.old_state_id = old_state.state_id
             else:
-                dbstate.state = None
-            self.event_session.add(dbstate)
-            dbstate.event = dbevent
-
-        # Commit right away if the commit interval is zero
-        if not self.commit_interval:
-            self._commit_event_session_or_retry()
+                dbstate.old_state = old_state
+        if event.data.get("new_state"):
+            self._old_states[dbstate.entity_id] = dbstate
+            self._pending_expunge.append(dbstate)
+        else:
+            dbstate.state = None
+        dbstate.event = dbevent
+        self.event_session.add(dbstate)
 
     def _handle_database_error(self, err: Exception) -> bool:
         """Handle a database error that may result in moving away the corrupt db."""
@@ -1146,11 +1216,14 @@ class Recorder(threading.Thread):
             return True
         return False
 
+    def _event_session_has_pending_writes(self) -> bool:
+        return bool(
+            self.event_session and (self.event_session.new or self.event_session.dirty)
+        )
+
     def _commit_event_session_or_retry(self) -> None:
         """Commit the event session if there is work to do."""
-        if not self.event_session or (
-            not self.event_session.new and not self.event_session.dirty
-        ):
+        if not self._event_session_has_pending_writes():
             return
         tries = 1
         while tries <= self.db_max_retries:
@@ -1197,7 +1270,7 @@ class Recorder(threading.Thread):
         # Expire is an expensive operation (frequently more expensive
         # than the flush and commit itself) so we only
         # do it after EXPIRE_AFTER_COMMITS commits
-        if self._commits_without_expire == EXPIRE_AFTER_COMMITS:
+        if self._commits_without_expire >= EXPIRE_AFTER_COMMITS:
             self._commits_without_expire = 0
             self.event_session.expire_all()
 
@@ -1266,7 +1339,7 @@ class Recorder(threading.Thread):
 
     async def lock_database(self) -> bool:
         """Lock database so it can be backed up safely."""
-        if not self.engine or self.engine.dialect.name != "sqlite":
+        if not self._using_sqlite():
             _LOGGER.debug(
                 "Not a SQLite database or not connected, locking not necessary"
             )
@@ -1295,7 +1368,7 @@ class Recorder(threading.Thread):
 
         Returns true if database lock has been held throughout the process.
         """
-        if not self.engine or self.engine.dialect.name != "sqlite":
+        if not self._using_sqlite():
             _LOGGER.debug(
                 "Not a SQLite database or not connected, unlocking not necessary"
             )
@@ -1414,7 +1487,7 @@ class Recorder(threading.Thread):
 
     def _shutdown(self) -> None:
         """Save end time for current run."""
-        self.hass.add_job(self._async_stop_queue_watcher_and_event_listener)
+        self.hass.add_job(self._async_stop_listeners)
         self._stop_executor()
         self._end_session()
         self._close_connection()

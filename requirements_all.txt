@@ -107,7 +107,7 @@ aio_geojson_geonetnz_volcano==0.6
 aio_geojson_nsw_rfs_incidents==0.4
 
 # homeassistant.components.gdacs
-aio_georss_gdacs==0.5
+aio_georss_gdacs==0.7
 
 # homeassistant.components.airzone
 aioairzone==0.3.3
@@ -349,7 +349,7 @@ aurorapy==0.2.6
 
 # homeassistant.components.generic
 # homeassistant.components.stream
-av==9.0.0
+av==8.1.0
 
 # homeassistant.components.avea
 # avea==1.5.1
@@ -1321,7 +1321,7 @@ pyRFXtrx==0.28.0
 # pySwitchmate==0.4.6
 
 # homeassistant.components.tibber
-pyTibber==0.22.2
+pyTibber==0.22.3
 
 # homeassistant.components.dlink
 pyW215==0.7.0
@@ -1664,7 +1664,7 @@ pynetgear==0.9.4
 pynetio==0.1.9.1
 
 # homeassistant.components.nina
-pynina==0.1.7
+pynina==0.1.8
 
 # homeassistant.components.nuki
 pynuki==1.5.2
@@ -1673,7 +1673,7 @@ pynuki==1.5.2
 pynut2==2.1.2
 
 # homeassistant.components.nws
-pynws==1.3.2
+pynws==1.4.1
 
 # homeassistant.components.nx584
 pynx584==0.5
@@ -1910,7 +1910,7 @@ python-kasa==0.4.3
 python-miio==0.5.11
 
 # homeassistant.components.mpd
-python-mpd2==3.0.4
+python-mpd2==3.0.5
 
 # homeassistant.components.mystrom
 python-mystrom==1.1.2
@@ -1974,7 +1974,7 @@ pytrafikverket==0.1.6.2
 pyudev==0.22.0
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==3.2.0
+pyunifiprotect==3.3.0
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
@@ -2085,7 +2085,7 @@ rova==0.3.0
 rpi-bad-power==0.1.0
 
 # homeassistant.components.rtsp_to_webrtc
-rtsp-to-webrtc==0.5.0
+rtsp-to-webrtc==0.5.1
 
 # homeassistant.components.russound_rnet
 russound==0.1.9
@@ -2158,7 +2158,7 @@ skybellpy==0.6.3
 slackclient==2.5.0
 
 # homeassistant.components.xmpp
-slixmpp==1.8.0.1
+slixmpp==1.8.2
 
 # homeassistant.components.smart_meter_texas
 smart-meter-texas==0.4.7
@@ -2476,7 +2476,7 @@ zengge==0.2
 zeroconf==0.38.4
 
 # homeassistant.components.zha
-zha-quirks==0.0.69
+zha-quirks==0.0.71
 
 # homeassistant.components.zhong_hong
 zhong_hong_hvac==1.0.9

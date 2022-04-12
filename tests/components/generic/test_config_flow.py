@@ -147,6 +147,7 @@ async def test_form_only_svg_whitespace(hass, fakeimgbytes_svg, user_flow):
         ("sample2_jpeg_odd_header.jpg"),
         ("sample3_jpeg_odd_header.jpg"),
         ("sample4_K5-60mileAnim-320x240.gif"),
+        ("sample5_webp.webp"),
     ],
 )
 async def test_form_only_still_sample(hass, user_flow, image_file):
@@ -167,8 +168,9 @@ async def test_form_only_still_sample(hass, user_flow, image_file):
 async def test_form_rtsp_mode(hass, fakeimg_png, mock_av_open, user_flow):
     """Test we complete ok if the user enters a stream url."""
     with mock_av_open as mock_setup:
-        data = TESTDATA
+        data = TESTDATA.copy()
         data[CONF_RTSP_TRANSPORT] = "tcp"
+        data[CONF_STREAM_SOURCE] = "rtsp://127.0.0.1/testurl/2"
         result2 = await hass.config_entries.flow.async_configure(
             user_flow["flow_id"], data
         )
@@ -178,7 +180,7 @@ async def test_form_rtsp_mode(hass, fakeimg_png, mock_av_open, user_flow):
     assert result2["options"] == {
         CONF_STILL_IMAGE_URL: "http://127.0.0.1/testurl/1",
         CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
-        CONF_STREAM_SOURCE: "http://127.0.0.1/testurl/2",
+        CONF_STREAM_SOURCE: "rtsp://127.0.0.1/testurl/2",
         CONF_RTSP_TRANSPORT: "tcp",
         CONF_USERNAME: "fred_flintstone",
         CONF_PASSWORD: "bambam",
@@ -216,7 +218,6 @@ async def test_form_only_stream(hass, mock_av_open, fakeimgbytes_jpg):
     assert result3["options"] == {
         CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
         CONF_STREAM_SOURCE: "http://127.0.0.1/testurl/2",
-        CONF_RTSP_TRANSPORT: "tcp",
         CONF_USERNAME: "fred_flintstone",
         CONF_PASSWORD: "bambam",
         CONF_LIMIT_REFETCH_TO_URL_CHANGE: False,
@@ -549,31 +550,6 @@ async def test_import(hass, fakeimg_png, mock_av_open):
     # Any name defined in yaml should end up as the entity id.
     assert hass.states.get("camera.yaml_defined_name")
     assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
-
-
-@respx.mock
-async def test_import_invalid_still_image(hass, mock_av_open):
-    """Test configuration.yaml import used during migration."""
-    respx.get("http://127.0.0.1/testurl/1").respond(stream=b"invalid")
-    with mock_av_open:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=TESTDATA_YAML
-        )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "unknown"
-
-
-@respx.mock
-async def test_import_other_error(hass, fakeimgbytes_png):
-    """Test that non-specific import errors are raised."""
-    respx.get("http://127.0.0.1/testurl/1").respond(stream=fakeimgbytes_png)
-    with patch(
-        "homeassistant.components.generic.config_flow.av.open",
-        side_effect=OSError("other error"),
-    ), pytest.raises(OSError):
-        await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=TESTDATA_YAML
-        )
 
 
 # These above can be deleted after deprecation period is finished.
