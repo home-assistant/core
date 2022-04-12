@@ -115,7 +115,9 @@ class GeocachingSensor(CoordinatorEntity, SensorEntity):
         self._attr_name = (
             f"Geocaching {coordinator.data.user.username} {entity_description.name}"
         )
-        self._attr_unique_id = f"geocaching_{coordinator.data.user.reference_code}_{entity_description.key}"
+        self._attr_unique_id = (
+            f"{coordinator.data.user.reference_code}_{entity_description.key}"
+        )
 
     @property
     def native_value(self) -> Any | None:
