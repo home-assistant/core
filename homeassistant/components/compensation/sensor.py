@@ -103,7 +103,7 @@ class CompensationSensor(SensorEntity):
             ATTR_COEFFICIENTS: polynomial.coef.tolist(),
         }
         self._attr_extra_state_attributes = {
-            k: v for k, v in attrs.items() if v or k != ATTR_SOURCE_ATTRIBUTE
+            k: v for k, v in attrs.items() if v or k == ATTR_SOURCE_VALUE
         }
 
     async def async_added_to_hass(self) -> None:
@@ -122,7 +122,7 @@ class CompensationSensor(SensorEntity):
         if (new_state := event.data.get("new_state")) is None:
             return
 
-        if self._source_attribute is None:
+        if not self._source_attribute:
             if self._attr_native_unit_of_measurement is None:
                 self._attr_native_unit_of_measurement = new_state.attributes.get(
                     ATTR_UNIT_OF_MEASUREMENT
