@@ -50,7 +50,7 @@ async def test_config_overrides(hass: HomeAssistant):
 
     assert state.name == "Some Sensor"
 
-    ent_reg = await entity_registry.async_get(hass)
+    ent_reg = entity_registry.async_get(hass)
     registry_entry = ent_reg.async_get(expected_entity_id)
 
     assert registry_entry is not None
@@ -85,6 +85,12 @@ async def test_linear_state(hass):
 
     state = hass.states.get(expected_entity_id)
     assert state is not None
+
+    ent_reg = entity_registry.async_get(hass)
+    registry_entry = ent_reg.async_get(expected_entity_id)
+
+    # Entity is not registered when unique_id is not configured
+    assert registry_entry is None
 
     assert round(float(state.state), config[DOMAIN]["test"][CONF_PRECISION]) == 5.0
 
