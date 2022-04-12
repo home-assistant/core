@@ -1014,6 +1014,8 @@ def make_entity_service_schema(
         vol.All(
             vol.Schema(
                 {
+                    # The frontend stores data here. Don't use in core.
+                    vol.Remove("metadata"): dict,
                     **schema,
                     **ENTITY_SERVICE_FIELDS,
                 },

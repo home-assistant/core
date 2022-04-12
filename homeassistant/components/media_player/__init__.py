@@ -171,8 +171,6 @@ MEDIA_PLAYER_PLAY_MEDIA_SCHEMA = {
     vol.Required(ATTR_MEDIA_CONTENT_ID): cv.string,
     vol.Optional(ATTR_MEDIA_ENQUEUE): cv.boolean,
     vol.Optional(ATTR_MEDIA_EXTRA, default={}): dict,
-    # The frontend stores selector data here. We don't use it in core.
-    vol.Remove("metadata"): dict,
 }
 
 ATTR_TO_PROPERTY = [
