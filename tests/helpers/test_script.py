@@ -23,7 +23,13 @@ from homeassistant.const import (
     CONF_DOMAIN,
     SERVICE_TURN_ON,
 )
-from homeassistant.core import SERVICE_CALL_LIMIT, Context, CoreState, callback
+from homeassistant.core import (
+    SERVICE_CALL_LIMIT,
+    Context,
+    CoreState,
+    HomeAssistant,
+    callback,
+)
 from homeassistant.exceptions import ConditionError, ServiceNotFound
 from homeassistant.helpers import (
     config_validation as cv,
@@ -2510,6 +2516,172 @@ async def test_multiple_runs_repeat_choose(hass, caplog, action):
     assert len(events) == max_runs
 
 
+async def test_if_warning(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test warning on if."""
+    event = "test_event"
+    events = async_capture_events(hass, event)
+
+    sequence = cv.SCRIPT_SCHEMA(
+        {
+            "if": {
+                "condition": "numeric_state",
+                "entity_id": "test.entity",
+                "value_template": "{{ undefined_a + undefined_b }}",
+                "above": 1,
+            },
+            "then": {"event": event, "event_data": {"if": "then"}},
+            "else": {"event": event, "event_data": {"if": "else"}},
+        }
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    hass.states.async_set("test.entity", "9")
+    await hass.async_block_till_done()
+
+    caplog.clear()
+    caplog.set_level(logging.WARNING)
+
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert len(caplog.record_tuples) == 1
+    assert caplog.record_tuples[0][1] == logging.WARNING
+
+    assert len(events) == 1
+    assert events[0].data["if"] == "else"
+
+
+@pytest.mark.parametrize(
+    "var,if_result,choice", [(1, True, "then"), (2, False, "else")]
+)
+async def test_if(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    var: int,
+    if_result: bool,
+    choice: str,
+) -> None:
+    """Test if action."""
+    events = async_capture_events(hass, "test_event")
+    sequence = cv.SCRIPT_SCHEMA(
+        {
+            "if": {
+                "alias": "if condition",
+                "condition": "template",
+                "value_template": "{{ var == 1 }}",
+            },
+            "then": {
+                "alias": "if then",
+                "event": "test_event",
+                "event_data": {"if": "then"},
+            },
+            "else": {
+                "alias": "if else",
+                "event": "test_event",
+                "event_data": {"if": "else"},
+            },
+        }
+    )
+
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    await script_obj.async_run(MappingProxyType({"var": var}), Context())
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+    assert events[0].data["if"] == choice
+    assert f"Test Name: If at step 1: Executing step if {choice}" in caplog.text
+
+    expected_trace = {
+        "0": [{"result": {"choice": choice}}],
+        "0/if": [{"result": {"result": if_result}}],
+        "0/if/condition/0": [{"result": {"result": var == 1, "entities": []}}],
+        f"0/{choice}/0": [
+            {"result": {"event": "test_event", "event_data": {"if": choice}}}
+        ],
+    }
+    assert_action_trace(expected_trace)
+
+
+async def test_if_condition_validation(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test if we can use conditions in if actions which validate late."""
+    registry = er.async_get(hass)
+    entry = registry.async_get_or_create(
+        "test", "hue", "1234", suggested_object_id="entity"
+    )
+    assert entry.entity_id == "test.entity"
+    events = async_capture_events(hass, "test_event")
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {"event": "test_event"},
+            {
+                "if": {
+                    "condition": "state",
+                    "entity_id": entry.id,
+                    "state": "hello",
+                },
+                "then": {
+                    "event": "test_event",
+                    "event_data": {"if": "then"},
+                },
+            },
+        ]
+    )
+    sequence = await script.async_validate_actions_config(hass, sequence)
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    hass.states.async_set("test.entity", "hello")
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    caplog.clear()
+    assert len(events) == 2
+
+    assert_action_trace(
+        {
+            "0": [{"result": {"event": "test_event", "event_data": {}}}],
+            "1": [{"result": {"choice": "then"}}],
+            "1/if": [{"result": {"result": True}}],
+            "1/if/condition/0": [{"result": {"result": True}}],
+            "1/if/condition/0/entity_id/0": [
+                {"result": {"result": True, "state": "hello", "wanted_state": "hello"}}
+            ],
+            "1/then/0": [
+                {"result": {"event": "test_event", "event_data": {"if": "then"}}}
+            ],
+        }
+    )
+
+    hass.states.async_set("test.entity", "goodbye")
+
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert len(events) == 3
+
+    assert_action_trace(
+        {
+            "0": [{"result": {"event": "test_event", "event_data": {}}}],
+            "1": [{}],
+            "1/if": [{"result": {"result": False}}],
+            "1/if/condition/0": [{"result": {"result": False}}],
+            "1/if/condition/0/entity_id/0": [
+                {
+                    "result": {
+                        "result": False,
+                        "state": "goodbye",
+                        "wanted_state": "hello",
+                    }
+                }
+            ],
+        },
+    )
+
+
 async def test_last_triggered(hass):
     """Test the last_triggered."""
     event = "test_event"
@@ -2694,6 +2866,21 @@ async def test_referenced_areas(hass):
                 },
                 {"event": "test_event"},
                 {"delay": "{{ delay_period }}"},
+                {
+                    "if": [],
+                    "then": [
+                        {
+                            "service": "test.script",
+                            "data": {"area_id": "area_if_then"},
+                        }
+                    ],
+                    "else": [
+                        {
+                            "service": "test.script",
+                            "data": {"area_id": "area_if_else"},
+                        }
+                    ],
+                },
             ]
         ),
         "Test Name",
@@ -2707,6 +2894,8 @@ async def test_referenced_areas(hass):
         "area_in_target",
         "area_service_list",
         "area_service_not_list",
+        "area_if_then",
+        "area_if_else",
         # 'area_service_template',  # no area extraction from template
     }
     # Test we cache results.
@@ -2784,6 +2973,21 @@ async def test_referenced_entities(hass):
                 },
                 {"event": "test_event"},
                 {"delay": "{{ delay_period }}"},
+                {
+                    "if": [],
+                    "then": [
+                        {
+                            "service": "test.script",
+                            "data": {"entity_id": "light.if_then"},
+                        }
+                    ],
+                    "else": [
+                        {
+                            "service": "test.script",
+                            "data": {"entity_id": "light.if_else"},
+                        }
+                    ],
+                },
             ]
         ),
         "Test Name",
@@ -2800,6 +3004,8 @@ async def test_referenced_entities(hass):
         "light.entity_in_target",
         "light.service_list",
         "light.service_not_list",
+        "light.if_then",
+        "light.if_else",
         # "light.service_template",  # no entity extraction from template
         "scene.hello",
         "sensor.condition",
@@ -2872,6 +3078,21 @@ async def test_referenced_devices(hass):
                         }
                     ],
                 },
+                {
+                    "if": [],
+                    "then": [
+                        {
+                            "service": "test.script",
+                            "data": {"device_id": "if-then"},
+                        }
+                    ],
+                    "else": [
+                        {
+                            "service": "test.script",
+                            "data": {"device_id": "if-else"},
+                        }
+                    ],
+                },
             ]
         ),
         "Test Name",
@@ -2890,6 +3111,8 @@ async def test_referenced_devices(hass):
         "target-list-id-1",
         "target-list-id-2",
         "target-string-id",
+        "if-then",
+        "if-else",
     }
     # Test we cache results.
     assert script_obj.referenced_devices is script_obj.referenced_devices
@@ -3510,6 +3733,17 @@ async def test_validate_action_config(hass):
         cv.SCRIPT_ACTION_VARIABLES: {"variables": {"hello": "world"}},
         cv.SCRIPT_ACTION_STOP: {"stop": "Stop it right there buddy..."},
         cv.SCRIPT_ACTION_ERROR: {"error": "Stand up, and try again!"},
+        cv.SCRIPT_ACTION_IF: {
+            "if": [
+                {
+                    "condition": "state",
+                    "entity_id": "light.kitchen",
+                    "state": "on",
+                },
+            ],
+            "then": [templated_device_action("if_then_event")],
+            "else": [templated_device_action("if_else_event")],
+        },
     }
     expected_templates = {
         cv.SCRIPT_ACTION_CHECK_CONDITION: None,
@@ -3517,6 +3751,7 @@ async def test_validate_action_config(hass):
         cv.SCRIPT_ACTION_REPEAT: [["repeat", "sequence", 0]],
         cv.SCRIPT_ACTION_CHOOSE: [["choose", 0, "sequence", 0], ["default", 0]],
         cv.SCRIPT_ACTION_WAIT_FOR_TRIGGER: None,
+        cv.SCRIPT_ACTION_IF: None,
     }
 
     for key in cv.ACTION_TYPE_SCHEMAS:
