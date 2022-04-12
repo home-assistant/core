@@ -10,7 +10,6 @@ from homeassistant.components.compensation.const import (
 from homeassistant.components.compensation.sensor import ATTR_COEFFICIENTS
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
-    ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
     EVENT_HOMEASSISTANT_START,
     EVENT_STATE_CHANGED,
@@ -21,14 +20,12 @@ from homeassistant.helpers import entity_registry
 from homeassistant.setup import async_setup_component
 
 
-async def test_config_overrides(hass: HomeAssistant):
+async def test_unique_id(hass: HomeAssistant):
     """Test configuration overrides."""
     config = {
         "compensation": {
             "test": {
-                "name": "Some Sensor",
                 "unique_id": "my_unique_id",
-                "icon": "mdi:gauge",
                 "source": "sensor.uncompensated",
                 "data_points": [
                     [1.0, 2.0],
@@ -38,7 +35,7 @@ async def test_config_overrides(hass: HomeAssistant):
             }
         }
     }
-    expected_entity_id = "sensor.some_sensor"
+    expected_entity_id = "sensor.compensation_sensor_uncompensated"
 
     assert await async_setup_component(hass, DOMAIN, config)
     assert await async_setup_component(hass, SENSOR_DOMAIN, config)
@@ -46,12 +43,6 @@ async def test_config_overrides(hass: HomeAssistant):
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
-
-    state = hass.states.get(expected_entity_id)
-    assert state is not None
-
-    assert state.name == "Some Sensor"
-    assert state.attributes.get(ATTR_ICON) == "mdi:gauge"
 
     ent_reg = entity_registry.async_get(hass)
     registry_entry = ent_reg.async_get(expected_entity_id)
