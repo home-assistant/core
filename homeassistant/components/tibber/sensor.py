@@ -397,8 +397,8 @@ class TibberSensorElPrice(TibberSensor):
                 self._attr_extra_state_attributes["today"] = local_today
                 _LOGGER.debug("Today priceInfo array set")
             else:
-                self._attr_extra_state_attributes["raw_today"] = None
-                self._attr_extra_state_attributes["today"] = None
+                self._attr_extra_state_attributes["raw_today"] = []
+                self._attr_extra_state_attributes["today"] = []
                 _LOGGER.debug("Today priceInfo missing")
 
             # iterate through tomorrows prices and add list with only prices
@@ -419,8 +419,8 @@ class TibberSensorElPrice(TibberSensor):
                 if len(local_tomorrow) == 24 and local_tomorrow_valid:
                     self._attr_extra_state_attributes["tomorrow_valid"] = True
             else:
-                self._attr_extra_state_attributes["raw_tomorrow"] = None
-                self._attr_extra_state_attributes["tomorrow"] = None
+                self._attr_extra_state_attributes["raw_tomorrow"] = []
+                self._attr_extra_state_attributes["tomorrow"] = []
                 _LOGGER.debug("Tomorrow priceInfo missing")
 
         # tomorrows priceInfo is for today. Add tomorrows priceInfo as today
@@ -430,8 +430,8 @@ class TibberSensorElPrice(TibberSensor):
             == dt_util.now().date()
         ):
             _LOGGER.debug("Cached tomorrow priceInfo from yesterday is now today")
-            self._attr_extra_state_attributes["raw_tomorrow"] = None
-            self._attr_extra_state_attributes["tomorrow"] = None
+            self._attr_extra_state_attributes["raw_tomorrow"] = []
+            self._attr_extra_state_attributes["tomorrow"] = []
             self._attr_extra_state_attributes["tomorrow_valid"] = False
 
             # iterate through todays prices and add list with only prices
@@ -443,16 +443,16 @@ class TibberSensorElPrice(TibberSensor):
                 self._attr_extra_state_attributes["today"] = local_today
                 _LOGGER.debug("Today priceInfo array set")
             else:
-                self._attr_extra_state_attributes["raw_today"] = None
-                self._attr_extra_state_attributes["today"] = None
+                self._attr_extra_state_attributes["raw_today"] = []
+                self._attr_extra_state_attributes["today"] = []
                 _LOGGER.debug("Today (tomorrow) priceInfo missing")
 
         # no cached priceInfo valid for today
         else:
-            self._attr_extra_state_attributes["today"] = None
-            self._attr_extra_state_attributes["tomorrow"] = None
-            self._attr_extra_state_attributes["raw_today"] = None
-            self._attr_extra_state_attributes["raw_tomorrow"] = None
+            self._attr_extra_state_attributes["today"] = []
+            self._attr_extra_state_attributes["tomorrow"] = []
+            self._attr_extra_state_attributes["raw_today"] = []
+            self._attr_extra_state_attributes["raw_tomorrow"] = []
             _LOGGER.debug("priceInfo missing")
 
         attrs = self._tibber_home.current_attributes()
