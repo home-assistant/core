@@ -29,10 +29,11 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import GeoJsonEventsFeedEntityCoordinator
+from ...helpers.entity_registry import async_get_registry
 from .const import (
     ATTR_EXTERNAL_ID,
     DEFAULT_FORCE_UPDATE,
@@ -77,6 +78,7 @@ async def async_setup_entry(
     )
     # Initial generation of entries.
     if coordinator.data:
+        _LOGGER.debug("Creating geolocation entities during setup")
         async_add_entities(
             GeoJsonLocationEventNew(coordinator, entry.unique_id, external_id)
             for external_id in coordinator.data.keys()
@@ -88,7 +90,6 @@ class GeoJsonLocationEventNew(CoordinatorEntity, GeolocationEvent):
     """This represents an external event with GeoJSON data."""
 
     coordinator: GeoJsonEventsFeedEntityCoordinator
-    # _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_force_update = DEFAULT_FORCE_UPDATE
     _attr_unit_of_measurement = LENGTH_KILOMETERS
     _attr_icon = "mdi:pin"
@@ -103,7 +104,7 @@ class GeoJsonLocationEventNew(CoordinatorEntity, GeolocationEvent):
         super().__init__(coordinator)
         self._external_id = external_id
         self._attr_unique_id = f"{config_entry_unique_id}_{external_id}"
-        self._state: StateType = None
+        self._distance = None
         self._latitude = None
         self._longitude = None
         self._attr_device_info = DeviceInfo(
@@ -122,20 +123,46 @@ class GeoJsonLocationEventNew(CoordinatorEntity, GeolocationEvent):
                 functools.partial(self.async_remove, force_remove=True),
             )
         )
+        self._update_internal_state()
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Call when entity will be removed from hass."""
+        entity_registry = await async_get_registry(self.hass)
+        # Remove from entity registry.
+        if self.entity_id in entity_registry.entities:
+            entity_registry.async_remove(self.entity_id)
+            _LOGGER.debug("Removed geolocation %s from entity registry", self.entity_id)
 
     @property
-    def state(self):
-        """Return the state of the sensor."""
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and self.coordinator.entry_available(self._external_id)
+
+    @property
+    def distance(self) -> float | None:
+        """Return distance value of this external event."""
+        return self._distance
+
+    def _update_internal_state(self):
+        """Update state and attributes from coordinator data."""
+        _LOGGER.debug("Updating %s from coordinator data", self._external_id)
         entry = self.coordinator.get_entry(self._external_id)
         if entry:
-            _LOGGER.debug("Updating state from %s", entry)
             self._attr_name = entry.title
+            self._distance = entry.distance_to_home
             self._latitude = entry.coordinates[0]
             self._longitude = entry.coordinates[1]
-            distance = entry.distance_to_home
-            if distance is not None:
-                return round(distance, 1)
-        return None
+            self._attr_extra_state_attributes = {ATTR_EXTERNAL_ID: self._external_id}
+            # Add all properties from the feed entry.
+            if entry.properties:
+                for key, value in entry.properties.items():
+                    self._attr_extra_state_attributes[f"Feature {key}"] = value
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._update_internal_state()
+        super()._handle_coordinator_update()
 
     @property
     def latitude(self) -> float | None:
@@ -151,19 +178,6 @@ class GeoJsonLocationEventNew(CoordinatorEntity, GeolocationEvent):
     def source(self) -> str:
         """Return source value of this external event."""
         return SOURCE
-
-    @property
-    def extra_state_attributes(self):
-        """Return the device state attributes."""
-        attributes = {}
-        entry = self.coordinator.get_entry(self._external_id)
-        if entry:
-            attributes[ATTR_EXTERNAL_ID] = self._external_id
-            # Add all properties from the feed entry.
-            if entry.properties:
-                for key, value in entry.properties.items():
-                    attributes[f"Feature {key}"] = value
-        return attributes
 
 
 async def async_setup_platform(
@@ -200,7 +214,6 @@ class GeoJsonFeedEntityManager:
         self, hass, async_add_entities, scan_interval, coordinates, url, radius_in_km
     ):
         """Initialize the GeoJSON Feed Manager."""
-
         self._hass = hass
         websession = aiohttp_client.async_get_clientsession(hass)
         self._feed_manager = GenericFeedManager(
@@ -263,6 +276,11 @@ class GeoJsonLocationEvent(GeolocationEvent):
         self._longitude = None
         self._remove_signal_delete = None
         self._remove_signal_update = None
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, feed_manager.config_entry.entry_id)},
+            entry_type=DeviceEntryType.SERVICE,
+            configuration_url=feed_manager.url,
+        )
 
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""

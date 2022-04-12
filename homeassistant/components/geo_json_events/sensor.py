@@ -1,20 +1,17 @@
 """GeoJSON events status sensor."""
 from __future__ import annotations
 
-from collections.abc import Mapping
 import logging
-from typing import Any
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt
 
 from . import GeoJsonEventsFeedEntityCoordinator
 from ...helpers.device_registry import DeviceEntryType
 from ...helpers.entity import DeviceInfo, EntityCategory
-from ...helpers.typing import StateType
 from ...helpers.update_coordinator import CoordinatorEntity
 from .const import (
     ATTR_CREATED,
@@ -44,7 +41,7 @@ async def async_setup_entry(
 
     async_add_entities(
         [GeoJsonEventsSensor(coordinator, config_entry_unique_id)],
-        False,
+        True,
     )
     _LOGGER.debug("Sensor setup done")
 
@@ -66,30 +63,25 @@ class GeoJsonEventsSensor(CoordinatorEntity, SensorEntity):
         """Initialize the entity."""
         super().__init__(coordinator)
         self._attr_unique_id = f"{config_entry_unique_id}_status"
-        self._state: StateType = None
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.coordinator.config_entry.entry_id)},
+            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
             name="GeoJSON Events",
             entry_type=DeviceEntryType.SERVICE,
             configuration_url=coordinator.url,
         )
 
-    @property
-    def native_value(self) -> StateType:
-        """Return native value for entity."""
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        self._update_internal_state()
+
+    def _update_internal_state(self):
+        """Update state and attributes from coordinator data."""
         status_info = self.coordinator.status_info()
         if status_info:
             _LOGGER.debug("Updating state from %s", status_info)
-            self._state = status_info.total
-        return self._state
-
-    @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
-        """Return the device state attributes."""
-        attributes = {}
-        status_info = self.coordinator.status_info()
-        if status_info:
-            _LOGGER.debug("Updating attributes from %s", status_info)
+            self._attr_native_value = status_info.total
+            self._attr_extra_state_attributes = {}
             for key, value in (
                 (ATTR_STATUS, status_info.status),
                 (
@@ -114,5 +106,10 @@ class GeoJsonEventsSensor(CoordinatorEntity, SensorEntity):
                 (ATTR_REMOVED, status_info.removed),
             ):
                 if value or isinstance(value, bool):
-                    attributes[key] = value
-        return attributes
+                    self._attr_extra_state_attributes[key] = value
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._update_internal_state()
+        super()._handle_coordinator_update()

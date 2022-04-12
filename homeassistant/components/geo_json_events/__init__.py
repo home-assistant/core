@@ -65,8 +65,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     coordinator = GeoJsonEventsFeedEntityCoordinator(hass, config_entry, radius)
     feeds[config_entry.entry_id] = coordinator
     _LOGGER.debug("Feed entity coordinator added for %s", config_entry.entry_id)
-    await coordinator.async_init()
     await coordinator.async_config_entry_first_refresh()
+    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
     return True
 
 
@@ -116,12 +116,6 @@ class GeoJsonEventsFeedEntityCoordinator(DataUpdateCoordinator):
         """Return this instance's url."""
         return self._url
 
-    async def async_init(self):
-        """Schedule initial and regular updates based on configured time interval."""
-        self.hass.config_entries.async_setup_platforms(self.config_entry, PLATFORMS)
-        # await self.async_update()
-        _LOGGER.debug("Feed entity coordinator initialized")
-
     async def async_update(self):
         """Refresh data."""
         await self._feed_manager.update()
@@ -145,14 +139,18 @@ class GeoJsonEventsFeedEntityCoordinator(DataUpdateCoordinator):
         """Get feed entry by external id."""
         return self._feed_manager.feed_entries.get(external_id)
 
+    def entry_available(self, external_id):
+        """Get feed entry by external id."""
+        return self._feed_manager.feed_entries.get(external_id) is not None
+
     def status_info(self):
         """Return latest status update info received."""
         return self._status_info
 
     async def _generate_entity(self, external_id: str):
         """Generate new entity."""
-        _LOGGER.debug("New entry received for: %s", external_id)
         if not self._first_update:
+            _LOGGER.debug("New entry received for: %s", external_id)
             async_dispatcher_send(
                 self.hass,
                 self.async_event_new_entity(),
@@ -166,8 +164,8 @@ class GeoJsonEventsFeedEntityCoordinator(DataUpdateCoordinator):
 
     async def _remove_entity(self, external_id: str):
         """Remove entity."""
-        _LOGGER.debug("Remove received for: %s", external_id)
         if not self._first_update:
+            _LOGGER.debug("Remove received for: %s", external_id)
             async_dispatcher_send(self.hass, f"{DOMAIN}_delete_{external_id}")
 
     async def _status_update(self, status_info):
