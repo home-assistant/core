@@ -106,7 +106,6 @@ async def test_if_state(hass, calls):
         "climate.entity",
         const.HVAC_MODE_COOL,
         {
-            const.ATTR_HVAC_MODE: const.HVAC_MODE_COOL,
             const.ATTR_PRESET_MODE: const.PRESET_AWAY,
         },
     )
