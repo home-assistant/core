@@ -2,6 +2,7 @@
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
+from freezegun import freeze_time
 import pytest
 
 from homeassistant.components import alarm_control_panel
@@ -1099,7 +1100,7 @@ async def test_disarm_with_template_code(hass):
     assert state.state == STATE_ALARM_DISARMED
 
 
-async def test_arm_away_after_disabled_disarmed(hass, legacy_patchable_time):
+async def test_arm_away_after_disabled_disarmed(hass):
     """Test pending state with and without zero trigger time."""
     assert await async_setup_component(
         hass,
@@ -1138,10 +1139,7 @@ async def test_arm_away_after_disabled_disarmed(hass, legacy_patchable_time):
     assert state.attributes["next_state"] == STATE_ALARM_ARMED_AWAY
 
     future = dt_util.utcnow() + timedelta(seconds=1)
-    with patch(
-        ("homeassistant.components.manual.alarm_control_panel.dt_util.utcnow"),
-        return_value=future,
-    ):
+    with freeze_time(future):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
@@ -1156,10 +1154,7 @@ async def test_arm_away_after_disabled_disarmed(hass, legacy_patchable_time):
         assert state.attributes["next_state"] == STATE_ALARM_TRIGGERED
 
     future += timedelta(seconds=1)
-    with patch(
-        ("homeassistant.components.manual.alarm_control_panel.dt_util.utcnow"),
-        return_value=future,
-    ):
+    with freeze_time(future):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 

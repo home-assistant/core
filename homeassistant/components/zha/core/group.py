@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-import collections
 import logging
 from typing import TYPE_CHECKING, Any, NamedTuple
 
@@ -30,9 +29,12 @@ class GroupMember(NamedTuple):
     endpoint_id: int
 
 
-GroupEntityReference = collections.namedtuple(
-    "GroupEntityReference", "name original_name entity_id"
-)
+class GroupEntityReference(NamedTuple):
+    """Reference to a group entity."""
+
+    name: str
+    original_name: str
+    entity_id: int
 
 
 class ZHAGroupMember(LogMixin):

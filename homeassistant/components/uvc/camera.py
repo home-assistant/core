@@ -9,7 +9,7 @@ import requests
 from uvcclient import camera as uvc_camera, nvr
 import voluptuous as vol
 
-from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_STREAM, Camera
+from homeassistant.components.camera import PLATFORM_SCHEMA, Camera, CameraEntityFeature
 from homeassistant.const import CONF_PASSWORD, CONF_PORT, CONF_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
@@ -115,7 +115,7 @@ class UnifiVideoCamera(Camera):
         channels = self._caminfo["channels"]
         for channel in channels:
             if channel["isRtspEnabled"]:
-                return SUPPORT_STREAM
+                return CameraEntityFeature.STREAM
 
         return 0
 

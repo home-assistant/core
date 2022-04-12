@@ -4,7 +4,7 @@ from __future__ import annotations
 from libpyvivotek import VivotekCamera
 import voluptuous as vol
 
-from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_STREAM, Camera
+from homeassistant.components.camera import PLATFORM_SCHEMA, Camera, CameraEntityFeature
 from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_IP_ADDRESS,
@@ -76,6 +76,8 @@ def setup_platform(
 class VivotekCam(Camera):
     """A Vivotek IP camera."""
 
+    _attr_supported_features = CameraEntityFeature.STREAM
+
     def __init__(self, config, cam, stream_source):
         """Initialize a Vivotek camera."""
         super().__init__()
@@ -86,11 +88,6 @@ class VivotekCam(Camera):
         self._model_name = None
         self._name = config[CONF_NAME]
         self._stream_source = stream_source
-
-    @property
-    def supported_features(self):
-        """Return supported features for this camera."""
-        return SUPPORT_STREAM
 
     @property
     def frame_interval(self):

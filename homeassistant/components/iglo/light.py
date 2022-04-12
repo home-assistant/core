@@ -15,8 +15,8 @@ from homeassistant.components.light import (
     COLOR_MODE_COLOR_TEMP,
     COLOR_MODE_HS,
     PLATFORM_SCHEMA,
-    SUPPORT_EFFECT,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
@@ -54,7 +54,7 @@ class IGloLamp(LightEntity):
     """Representation of an iGlo light."""
 
     _attr_supported_color_modes = {COLOR_MODE_COLOR_TEMP, COLOR_MODE_HS}
-    _attr_supported_features = SUPPORT_EFFECT
+    _attr_supported_features = LightEntityFeature.EFFECT
 
     def __init__(self, name, host, port):
         """Initialize the light."""

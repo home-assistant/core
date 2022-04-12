@@ -61,6 +61,7 @@ MATCH_ALL: Final = "*"
 # Entity target all constant
 ENTITY_MATCH_NONE: Final = "none"
 ENTITY_MATCH_ALL: Final = "all"
+ENTITY_MATCH_ANY: Final = "any"
 
 # If no name is specified
 DEVICE_DEFAULT_NAME: Final = "Unnamed Device"
@@ -145,6 +146,7 @@ CONF_ENTITY_CATEGORY: Final = "entity_category"
 CONF_ENTITY_ID: Final = "entity_id"
 CONF_ENTITY_NAMESPACE: Final = "entity_namespace"
 CONF_ENTITY_PICTURE_TEMPLATE: Final = "entity_picture_template"
+CONF_ERROR: Final = "error"
 CONF_EVENT: Final = "event"
 CONF_EVENT_DATA: Final = "event_data"
 CONF_EVENT_DATA_TEMPLATE: Final = "event_data_template"
@@ -172,6 +174,7 @@ CONF_LIGHTS: Final = "lights"
 CONF_LOCATION: Final = "location"
 CONF_LONGITUDE: Final = "longitude"
 CONF_MAC: Final = "mac"
+CONF_MATCH: Final = "match"
 CONF_MAXIMUM: Final = "maximum"
 CONF_MEDIA_DIRS: Final = "media_dirs"
 CONF_METHOD: Final = "method"
@@ -224,6 +227,7 @@ CONF_SOURCE: Final = "source"
 CONF_SSL: Final = "ssl"
 CONF_STATE: Final = "state"
 CONF_STATE_TEMPLATE: Final = "state_template"
+CONF_STOP: Final = "stop"
 CONF_STRUCTURE: Final = "structure"
 CONF_SWITCHES: Final = "switches"
 CONF_TARGET: Final = "target"
@@ -269,9 +273,6 @@ EVENT_SERVICE_REGISTERED: Final = "service_registered"
 EVENT_SERVICE_REMOVED: Final = "service_removed"
 EVENT_STATE_CHANGED: Final = "state_changed"
 EVENT_THEMES_UPDATED: Final = "themes_updated"
-EVENT_TIMER_OUT_OF_SYNC: Final = "timer_out_of_sync"
-EVENT_TIME_CHANGED: Final = "time_changed"
-
 
 # #### DEVICE CLASSES ####
 # DEVICE_CLASS_* below are deprecated as of 2021.12
@@ -459,6 +460,8 @@ ATTR_DEVICE_CLASS: Final = "device_class"
 # Temperature attribute
 ATTR_TEMPERATURE: Final = "temperature"
 
+# Persons attribute
+ATTR_PERSONS: Final = "persons"
 
 # #### UNITS OF MEASUREMENT ####
 # Apparent power units

@@ -15,7 +15,7 @@ from homeassistant.components import camera, cloud, notify as hass_notify, tag
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES as BINARY_SENSOR_CLASSES,
 )
-from homeassistant.components.camera import SUPPORT_STREAM as CAMERA_SUPPORT_STREAM
+from homeassistant.components.camera import CameraEntityFeature
 from homeassistant.components.device_tracker import (
     ATTR_BATTERY,
     ATTR_GPS,
@@ -297,7 +297,7 @@ async def webhook_stream_camera(hass, config_entry, data):
 
     resp = {"mjpeg_path": f"/api/camera_proxy_stream/{camera_state.entity_id}"}
 
-    if camera_state.attributes[ATTR_SUPPORTED_FEATURES] & CAMERA_SUPPORT_STREAM:
+    if camera_state.attributes[ATTR_SUPPORTED_FEATURES] & CameraEntityFeature.STREAM:
         try:
             resp["hls_path"] = await camera.async_request_stream(
                 hass, camera_state.entity_id, "hls"
