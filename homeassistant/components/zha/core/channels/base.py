@@ -407,7 +407,7 @@ class ZigbeeChannel(LogMixin):
             self._cluster,
             [attribute],
             allow_cache=from_cache,
-            only_cache=from_cache and not self._ch_pool.is_mains_powered,
+            only_cache=from_cache,
             manufacturer=manufacturer,
         )
         return result.get(attribute)
@@ -431,7 +431,7 @@ class ZigbeeChannel(LogMixin):
                 read, _ = await self.cluster.read_attributes(
                     attributes,
                     allow_cache=from_cache,
-                    only_cache=from_cache and not self._ch_pool.is_mains_powered,
+                    only_cache=from_cache,
                     manufacturer=manufacturer,
                 )
                 result.update(read)
