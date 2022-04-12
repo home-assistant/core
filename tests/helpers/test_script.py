@@ -2644,9 +2644,10 @@ async def test_if_condition_validation(
     assert_action_trace(
         {
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
-            "1": [{"result": {"choice": "then"}}, {"result": {"result": True}}],
-            "1/if/0": [{"result": {"result": True}}],
-            "1/if/0/entity_id/0": [
+            "1": [{"result": {"choice": "then"}}],
+            "1/if": [{"result": {"result": True}}],
+            "1/if/condition/0": [{"result": {"result": True}}],
+            "1/if/condition/0/entity_id/0": [
                 {"result": {"result": True, "state": "hello", "wanted_state": "hello"}}
             ],
             "1/then/0": [
@@ -2665,9 +2666,10 @@ async def test_if_condition_validation(
     assert_action_trace(
         {
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
-            "1": [{}, {"result": {"result": False}}],
-            "1/if/0": [{"result": {"result": False}}],
-            "1/if/0/entity_id/0": [
+            "1": [{}],
+            "1/if": [{"result": {"result": False}}],
+            "1/if/condition/0": [{"result": {"result": False}}],
+            "1/if/condition/0/entity_id/0": [
                 {
                     "result": {
                         "result": False,
