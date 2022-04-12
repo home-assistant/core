@@ -39,6 +39,9 @@ async def test_setup(hass: HomeAssistant, fritz: Mock):
     """Test setup of platform."""
     device = FritzDeviceLightMock()
     device.get_color_temps.return_value = [2700, 6500]
+    device.get_colors.return_value = {
+        "Red": [("100", "70", "10"), ("100", "50", "10"), ("100", "30", "10")]
+    }
     device.color_mode = COLOR_TEMP_MODE
     device.color_temp = 2700
 
@@ -59,6 +62,9 @@ async def test_setup_color(hass: HomeAssistant, fritz: Mock):
     """Test setup of platform in color mode."""
     device = FritzDeviceLightMock()
     device.get_color_temps.return_value = [2700, 6500]
+    device.get_colors.return_value = {
+        "Red": [("100", "70", "10"), ("100", "50", "10"), ("100", "30", "10")]
+    }
     device.color_mode = COLOR_MODE
     device.hue = 100
     device.saturation = 70 * 255.0 / 100.0
@@ -79,6 +85,9 @@ async def test_turn_on(hass: HomeAssistant, fritz: Mock):
     """Test turn device on."""
     device = FritzDeviceLightMock()
     device.get_color_temps.return_value = [2700, 6500]
+    device.get_colors.return_value = {
+        "Red": [("100", "70", "10"), ("100", "50", "10"), ("100", "30", "10")]
+    }
     assert await setup_config_entry(
         hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
@@ -98,6 +107,9 @@ async def test_turn_on_color(hass: HomeAssistant, fritz: Mock):
     """Test turn device on in color mode."""
     device = FritzDeviceLightMock()
     device.get_color_temps.return_value = [2700, 6500]
+    device.get_colors.return_value = {
+        "Red": [("100", "70", "10"), ("100", "50", "10"), ("100", "30", "10")]
+    }
     assert await setup_config_entry(
         hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
@@ -112,10 +124,41 @@ async def test_turn_on_color(hass: HomeAssistant, fritz: Mock):
     assert device.set_unmapped_color.call_count == 1
 
 
+async def test_turn_on_color_unsupported_api_method(hass: HomeAssistant, fritz: Mock):
+    """Test turn device on in mapped color mode if unmapped is not supported."""
+    device = FritzDeviceLightMock()
+    device.get_color_temps.return_value = [2700, 6500]
+    device.get_colors.return_value = {
+        "Red": [("100", "70", "10"), ("100", "50", "10"), ("100", "30", "10")]
+    }
+    mockresponse = Mock()
+    mockresponse.status_code = 400
+
+    error = HTTPError("Bad Request")
+    error.response = mockresponse
+    device.set_unmapped_color.side_effect = error
+
+    assert await setup_config_entry(
+        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+    )
+    assert await hass.services.async_call(
+        DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_BRIGHTNESS: 100, ATTR_HS_COLOR: (100, 70)},
+        True,
+    )
+    assert device.set_state_on.call_count == 1
+    assert device.set_level.call_count == 1
+    assert device.set_color.call_count == 1
+
+
 async def test_turn_off(hass: HomeAssistant, fritz: Mock):
     """Test turn device off."""
     device = FritzDeviceLightMock()
     device.get_color_temps.return_value = [2700, 6500]
+    device.get_colors.return_value = {
+        "Red": [("100", "70", "10"), ("100", "50", "10"), ("100", "30", "10")]
+    }
     assert await setup_config_entry(
         hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
@@ -129,6 +172,9 @@ async def test_update(hass: HomeAssistant, fritz: Mock):
     """Test update without error."""
     device = FritzDeviceLightMock()
     device.get_color_temps.return_value = [2700, 6500]
+    device.get_colors.return_value = {
+        "Red": [("100", "70", "10"), ("100", "50", "10"), ("100", "30", "10")]
+    }
     assert await setup_config_entry(
         hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
@@ -147,6 +193,9 @@ async def test_update_error(hass: HomeAssistant, fritz: Mock):
     """Test update with error."""
     device = FritzDeviceLightMock()
     device.get_color_temps.return_value = [2700, 6500]
+    device.get_colors.return_value = {
+        "Red": [("100", "70", "10"), ("100", "50", "10"), ("100", "30", "10")]
+    }
     fritz().update_devices.side_effect = HTTPError("Boom")
     assert not await setup_config_entry(
         hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
