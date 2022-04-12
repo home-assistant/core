@@ -544,9 +544,6 @@ discogs_client==2.3.0
 # homeassistant.components.steamist
 discovery30303==0.2.1
 
-# homeassistant.components.digitalloggers
-dlipower==0.7.165
-
 # homeassistant.components.doorbird
 doorbirdpy==2.1.0
 
