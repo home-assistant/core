@@ -1,45 +1,71 @@
 """Test the Geocaching config flow."""
-from unittest.mock import patch
+from collections.abc import Awaitable, Callable
+from http import HTTPStatus
+from unittest.mock import MagicMock
 
-from geocachingapi import GeocachingStatus
+from aiohttp.test_utils import TestClient
 
-from homeassistant import config_entries, setup
 from homeassistant.components.geocaching.const import (
     DOMAIN,
     OAUTH2_AUTHORIZE_URL,
     OAUTH2_TOKEN_URL,
 )
+from homeassistant.config_entries import (
+    DEFAULT_DISCOVERY_UNIQUE_ID,
+    SOURCE_INTEGRATION_DISCOVERY,
+    SOURCE_REAUTH,
+    SOURCE_USER,
+)
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import RESULT_TYPE_EXTERNAL_STEP
 from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.setup import async_setup_component
+
+from . import CLIENT_ID, CLIENT_SECRET, REDIRECT_URI
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
 
-CLIENT_ID = "1234"
-CLIENT_SECRET = "5678"
-REDIRECT_URI = "https://example.com/auth/external/callback"
+
+async def setup_geocaching_component(hass: HomeAssistant) -> bool:
+    """Set up the Geocaching component."""
+    return await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                CONF_CLIENT_ID: CLIENT_ID,
+                CONF_CLIENT_SECRET: CLIENT_SECRET,
+            },
+        },
+    )
 
 
 async def test_full_flow(
-    hass, aiohttp_client, aioclient_mock, current_request_with_host
-):
+    hass: HomeAssistant,
+    hass_client_no_auth: Callable[[], Awaitable[TestClient]],
+    aioclient_mock: AiohttpClientMocker,
+    current_request_with_host: None,
+    mock_geocaching_config_flow: MagicMock,
+    mock_setup_entry: MagicMock,
+) -> None:
     """Check full flow."""
-    assert await setup.async_setup_component(
-        hass,
-        "geocaching",
-        {
-            "geocaching": {"client_id": CLIENT_ID, "client_secret": CLIENT_SECRET},
-        },
-    )
+    assert await setup_geocaching_component(hass)
 
     # Ensure integration is discovered when manual implementation is configured
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
-    assert (
-        flows[0]["context"]["unique_id"] == config_entries.DEFAULT_DISCOVERY_UNIQUE_ID
-    )
+    assert "context" in flows[0]
+    assert flows[0]["context"]["source"] == SOURCE_INTEGRATION_DISCOVERY
+    assert flows[0]["context"]["unique_id"] == DEFAULT_DISCOVERY_UNIQUE_ID
 
     result = await hass.config_entries.flow.async_init(
-        "geocaching", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
+    assert "flow_id" in result
+
+    # pylint: disable=protected-access
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
@@ -48,15 +74,17 @@ async def test_full_flow(
         },
     )
 
-    assert result["url"] == (
+    assert result.get("type") == RESULT_TYPE_EXTERNAL_STEP
+    assert result.get("step_id") == "auth"
+    assert result.get("url") == (
         f"{OAUTH2_AUTHORIZE_URL}?response_type=code&client_id={CLIENT_ID}"
         f"&redirect_uri={REDIRECT_URI}"
         f"&state={state}&scope=*"
     )
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
     resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
     aioclient_mock.post(
@@ -69,35 +97,32 @@ async def test_full_flow(
         },
     )
 
-    test_status = GeocachingStatus()
-    test_status.user.username = "mock_user"
-
-    with patch(
-        "homeassistant.components.geocaching.async_setup_entry", return_value=True
-    ) as mock_setup:
-        with patch("geocachingapi.GeocachingApi.update", return_value=test_status):
-            await hass.config_entries.flow.async_configure(result["flow_id"])
+    await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_existing_entry(
-    hass, aiohttp_client, aioclient_mock, current_request_with_host
-):
+    hass: HomeAssistant,
+    hass_client_no_auth: Callable[[], Awaitable[TestClient]],
+    aioclient_mock: AiohttpClientMocker,
+    current_request_with_host: None,
+    mock_geocaching_config_flow: MagicMock,
+    mock_setup_entry: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
     """Check existing entry."""
-    MockConfigEntry(domain=DOMAIN, unique_id="mock_user").add_to_hass(hass)
-    await setup.async_setup_component(
-        hass,
-        "geocaching",
-        {
-            "geocaching": {"client_id": CLIENT_ID, "client_secret": CLIENT_SECRET},
-        },
-    )
+    assert await setup_geocaching_component(hass)
+    mock_config_entry.add_to_hass(hass)
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
     result = await hass.config_entries.flow.async_init(
-        "geocaching", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
+    assert "flow_id" in result
+
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
@@ -106,8 +131,10 @@ async def test_existing_entry(
         },
     )
 
-    client = await aiohttp_client(hass.http.app)
-    await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    client = await hass_client_no_auth()
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == HTTPStatus.OK
+    assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
     aioclient_mock.post(
         OAUTH2_TOKEN_URL,
@@ -119,39 +146,33 @@ async def test_existing_entry(
         },
     )
 
-    test_status = GeocachingStatus()
-    test_status.user.username = "mock_user"
-
-    with patch(
-        "homeassistant.components.geocaching.async_setup_entry", return_value=True
-    ):
-        with patch("geocachingapi.GeocachingApi.update", return_value=test_status):
-            await hass.config_entries.flow.async_configure(result["flow_id"])
-
+    await hass.config_entries.flow.async_configure(result["flow_id"])
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
 async def test_reauthentication(
-    hass, aiohttp_client, aioclient_mock, current_request_with_host
-):
+    hass: HomeAssistant,
+    hass_client_no_auth: Callable[[], Awaitable[TestClient]],
+    aioclient_mock: AiohttpClientMocker,
+    current_request_with_host: None,
+    mock_geocaching_config_flow: MagicMock,
+    mock_setup_entry: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
     """Test Geocaching reauthentication."""
-    MockConfigEntry(domain=DOMAIN, unique_id="mock_user").add_to_hass(hass)
-    await setup.async_setup_component(
-        hass,
-        "geocaching",
-        {
-            "geocaching": {"client_id": CLIENT_ID, "client_secret": CLIENT_SECRET},
-        },
-    )
+    mock_config_entry.add_to_hass(hass)
+    assert await setup_geocaching_component(hass)
 
     result = await hass.config_entries.flow.async_init(
-        "geocaching", context={"source": config_entries.SOURCE_REAUTH}
+        DOMAIN, context={"source": SOURCE_REAUTH}
     )
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
+    assert "flow_id" in flows[0]
 
     result = await hass.config_entries.flow.async_configure(flows[0]["flow_id"], {})
+    assert "flow_id" in result
 
     # pylint: disable=protected-access
     state = config_entry_oauth2_flow._encode_jwt(
@@ -161,8 +182,11 @@ async def test_reauthentication(
             "redirect_uri": "https://example.com/auth/external/callback",
         },
     )
-    client = await aiohttp_client(hass.http.app)
-    await client.get(f"/auth/external/callback?code=abcd&state={state}")
+
+    client = await hass_client_no_auth()
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == HTTPStatus.OK
+    assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
     aioclient_mock.post(
         OAUTH2_TOKEN_URL,
@@ -174,14 +198,7 @@ async def test_reauthentication(
         },
     )
 
-    test_status = GeocachingStatus()
-    test_status.user.username = "mock_user"
-
-    with patch(
-        "homeassistant.components.geocaching.async_setup_entry", return_value=True
-    ) as mock_setup:
-        with patch("geocachingapi.GeocachingApi.update", return_value=test_status):
-            await hass.config_entries.flow.async_configure(result["flow_id"])
+    await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
