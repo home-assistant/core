@@ -15,7 +15,6 @@ from . import ECOVACS_DEVICES
 
 _LOGGER = logging.getLogger(__name__)
 
-
 ATTR_ERROR = "error"
 ATTR_COMPONENT_PREFIX = "component_"
 
