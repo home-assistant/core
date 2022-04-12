@@ -33,6 +33,7 @@ from homeassistant.const import (
     CONF_DELAY,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
+    CONF_ERROR,
     CONF_EVENT,
     CONF_EVENT_DATA,
     CONF_EVENT_DATA_TEMPLATE,
@@ -41,6 +42,7 @@ from homeassistant.const import (
     CONF_SCENE,
     CONF_SEQUENCE,
     CONF_SERVICE,
+    CONF_STOP,
     CONF_TARGET,
     CONF_TIMEOUT,
     CONF_UNTIL,
@@ -191,8 +193,10 @@ async def trace_action(hass, script_run, stop, variables):
 
     try:
         yield trace_element
-    except _StopScript as ex:
+    except _AbortScript as ex:
         trace_element.set_error(ex.__cause__ or ex)
+        raise ex
+    except _StopScript as ex:
         raise ex
     except Exception as ex:
         trace_element.set_error(ex)
@@ -227,6 +231,8 @@ STATIC_VALIDATION_ACTION_TYPES = (
     cv.SCRIPT_ACTION_FIRE_EVENT,
     cv.SCRIPT_ACTION_ACTIVATE_SCENE,
     cv.SCRIPT_ACTION_VARIABLES,
+    cv.SCRIPT_ACTION_ERROR,
+    cv.SCRIPT_ACTION_STOP,
 )
 
 
@@ -295,6 +301,10 @@ async def async_validate_action_config(
     return config
 
 
+class _AbortScript(Exception):
+    """Throw if script needs to abort because of an unexpected error."""
+
+
 class _StopScript(Exception):
     """Throw if script needs to stop."""
 
@@ -360,6 +370,8 @@ class _ScriptRun:
             else:
                 script_execution_set("finished")
         except _StopScript:
+            script_execution_set("finished")
+        except _AbortScript:
             script_execution_set("aborted")
         except Exception:
             script_execution_set("error")
@@ -378,7 +390,7 @@ class _ScriptRun:
                     handler = f"_async_{cv.determine_script_action(self._action)}_step"
                     await getattr(self, handler)()
                 except Exception as ex:
-                    if not isinstance(ex, _StopScript) and (
+                    if not isinstance(ex, (_AbortScript, _StopScript)) and (
                         self._log_exceptions or log_exceptions
                     ):
                         self._log_exception(ex)
@@ -443,7 +455,7 @@ class _ScriptRun:
                 ex,
                 level=logging.ERROR,
             )
-            raise _StopScript from ex
+            raise _AbortScript from ex
 
     async def _async_delay_step(self):
         """Handle delay."""
@@ -509,7 +521,7 @@ class _ScriptRun:
             if not self._action.get(CONF_CONTINUE_ON_TIMEOUT, True):
                 self._log(_TIMEOUT_MSG)
                 trace_set_result(wait=self._variables["wait"], timeout=True)
-                raise _StopScript from ex
+                raise _AbortScript from ex
         finally:
             for task in tasks:
                 task.cancel()
@@ -643,7 +655,7 @@ class _ScriptRun:
         self._log("Test condition %s: %s", self._script.last_action, check)
         trace_update_result(result=check)
         if not check:
-            raise _StopScript
+            raise _AbortScript
 
     def _test_conditions(self, conditions, name, condition_path=None):
         if condition_path is None:
@@ -700,7 +712,7 @@ class _ScriptRun:
                         ex,
                         level=logging.ERROR,
                     )
-                    raise _StopScript from ex
+                    raise _AbortScript from ex
             extra_msg = f" of {count}"
             for iteration in range(1, count + 1):
                 set_repeat_var(iteration, count)
@@ -820,7 +832,7 @@ class _ScriptRun:
             if not self._action.get(CONF_CONTINUE_ON_TIMEOUT, True):
                 self._log(_TIMEOUT_MSG)
                 trace_set_result(wait=self._variables["wait"], timeout=True)
-                raise _StopScript from ex
+                raise _AbortScript from ex
         finally:
             for task in tasks:
                 task.cancel()
@@ -832,6 +844,20 @@ class _ScriptRun:
         self._variables = self._action[CONF_VARIABLES].async_render(
             self._hass, self._variables, render_as_defaults=False
         )
+
+    async def _async_stop_step(self):
+        """Stop script execution."""
+        stop = self._action[CONF_STOP]
+        self._log("Stop script sequence: %s", stop)
+        trace_set_result(stop=stop)
+        raise _StopScript(stop)
+
+    async def _async_error_step(self):
+        """Abort and error script execution."""
+        error = self._action[CONF_ERROR]
+        self._log("Error script sequence: %s", error)
+        trace_set_result(error=error)
+        raise _AbortScript(error)
 
     async def _async_run_script(self, script: Script) -> None:
         """Execute a script."""

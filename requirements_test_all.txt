@@ -318,7 +318,7 @@ bravia-tv==1.0.11
 broadlink==0.18.1
 
 # homeassistant.components.brother
-brother==1.1.0
+brother==1.2.0
 
 # homeassistant.components.brunt
 brunt==1.2.0
@@ -409,7 +409,7 @@ dynalite_devices==0.1.46
 elgato==3.0.0
 
 # homeassistant.components.elkm1
-elkm1-lib==1.2.2
+elkm1-lib==1.3.0
 
 # homeassistant.components.elmax
 elmax_api==0.0.2
@@ -1145,7 +1145,7 @@ pyotgw==1.1b1
 pyotp==2.6.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.3.14
+pyoverkiz==1.4.0
 
 # homeassistant.components.openweathermap
 pyowm==3.2.0
@@ -1581,7 +1581,7 @@ wolf_smartset==0.1.11
 xbox-webapi==2.0.11
 
 # homeassistant.components.knx
-xknx==0.20.1
+xknx==0.20.2
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz
@@ -1607,7 +1607,7 @@ youless-api==0.16
 zeroconf==0.38.4
 
 # homeassistant.components.zha
-zha-quirks==0.0.71
+zha-quirks==0.0.72
 
 # homeassistant.components.zha
 zigpy-deconz==0.15.0
@@ -1622,7 +1622,7 @@ zigpy-zigate==0.8.0
 zigpy-znp==0.7.0
 
 # homeassistant.components.zha
-zigpy==0.44.1
+zigpy==0.44.2
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.35.2

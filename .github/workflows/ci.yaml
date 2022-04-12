@@ -845,7 +845,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v3.0.0
       - name: Download all coverage artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
       - name: Upload coverage to Codecov (full coverage)
         if: needs.changes.outputs.test_full_suite == 'true'
         uses: codecov/codecov-action@v3.0.0
