@@ -2682,6 +2682,136 @@ async def test_if_condition_validation(
     )
 
 
+async def test_sequence(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
+    """Test sequence action."""
+    events = async_capture_events(hass, "test_event")
+    sequence = cv.SCRIPT_SCHEMA(
+        {
+            "sequence": [
+                {
+                    "alias": "one",
+                    "event": "test_event",
+                    "event_data": {"{{ what }}": "1"},
+                },
+                {
+                    "alias": "two",
+                    "event": "test_event",
+                    "event_data": {"{{ what }}": "2"},
+                },
+            ],
+        },
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+    await script_obj.async_run(MappingProxyType({"what": "sequence"}), Context())
+    await hass.async_block_till_done()
+
+    assert len(events) == 2
+    assert events[0].data["sequence"] == "1"
+    assert events[1].data["sequence"] == "2"
+
+    assert "Test Name: Sequence at step 1: Executing step one" in caplog.text
+    assert "Test Name: Sequence at step 1: Executing step two" in caplog.text
+
+    expected_trace = {
+        "0": [{"result": {}}],
+        "0/sequence/0": [
+            {"result": {"event": "test_event", "event_data": {"sequence": "1"}}}
+        ],
+        "0/sequence/1": [
+            {"result": {"event": "test_event", "event_data": {"sequence": "2"}}}
+        ],
+    }
+    assert_action_trace(expected_trace)
+
+
+async def test_parallel(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
+    """Test if action."""
+    events = async_capture_events(hass, "test_event")
+    hass.states.async_set("switch.trigger", "off")
+
+    sequence = cv.SCRIPT_SCHEMA(
+        {
+            "parallel": [
+                {
+                    "sequence": [
+                        {
+                            "alias": "Waiting for trigger",
+                            "wait_for_trigger": {
+                                "platform": "state",
+                                "entity_id": "switch.trigger",
+                                "to": "on",
+                            },
+                        },
+                        {
+                            "event": "test_event",
+                            "event_data": {
+                                "hello": "from action 1",
+                                "what": "{{ what }}",
+                            },
+                        },
+                    ],
+                },
+                {
+                    "alias": "Don't wait at all",
+                    "event": "test_event",
+                    "event_data": {"hello": "from action 2", "what": "{{ what }}"},
+                },
+            ]
+        }
+    )
+
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    wait_started_flag = async_watch_for_action(script_obj, "Waiting for")
+    hass.async_create_task(
+        script_obj.async_run(MappingProxyType({"what": "world"}), Context())
+    )
+    await asyncio.wait_for(wait_started_flag.wait(), 1)
+
+    assert script_obj.is_running
+
+    hass.states.async_set("switch.trigger", "on")
+    await hass.async_block_till_done()
+
+    assert len(events) == 2
+    assert events[0].data["hello"] == "from action 2"
+    assert events[0].data["what"] == "world"
+    assert events[1].data["hello"] == "from action 1"
+    assert events[1].data["what"] == "world"
+
+    assert (
+        "Parallel action at step 1: Don't wait at all: Executing step Don't wait at all"
+        in caplog.text
+    )
+    assert (
+        "Parallel action at step 1: action 1: Sequence at step 1: Executing step Waiting for trigger"
+        in caplog.text
+    )
+
+    expected_trace = {
+        "0": [{"result": {}}],
+        "0/parallel/1": [
+            {
+                "result": {
+                    "event": "test_event",
+                    "event_data": {"hello": "from action 2"},
+                }
+            }
+        ],
+        "0/parallel/0": [{"result": {}}],
+        "0/parallel/0/sequence/0": [{"result": {"wait": {"completed": True}}}],
+        "0/parallel/0/sequence/1": [
+            {
+                "result": {
+                    "event": "test_event",
+                    "event_data": {"hello": "from action 1"},
+                }
+            }
+        ],
+    }
+    assert_action_trace(expected_trace)
+
+
 async def test_last_triggered(hass):
     """Test the last_triggered."""
     event = "test_event"
