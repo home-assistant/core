@@ -13,6 +13,7 @@ from homeassistant.components.fan import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import percentage_to_ordered_list_item
 
@@ -60,6 +61,18 @@ class PurifierEntity(FanEntity):
         # integration to be able to start up anyway and just be unavailable.
         self._config_entry = config_entry
 
+        # Make type checker happy below - we always set the unique id
+        # in config entries.
+        assert config_entry.unique_id is not None
+
+        self._attr_unique_id = self._config_entry.unique_id
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, config_entry.unique_id)},
+            name=config_entry.title,
+            manufacturer="Philips",
+            model=config_entry.data[CONF_MODEL],
+        )
+
     async def async_added_to_hass(self) -> None:
         """Subscribe to device status updates."""
         self._client.observe_status(id(self), self._set_status)
@@ -73,13 +86,6 @@ class PurifierEntity(FanEntity):
         self.schedule_update_ha_state()
 
     @property
-    def unique_id(self):
-        """Return the unique ID for this purifier."""
-        if self._status is None:
-            return self._config_entry.unique_id
-        return self._status.device_id
-
-    @property
     def name(self):
         """Return the purifier's name."""
         if self._status is None:
@@ -90,23 +96,6 @@ class PurifierEntity(FanEntity):
     def available(self):
         """Return whether the purifier is available."""
         return self._status is not None
-
-    @property
-    def device_info(self):
-        """
-        Return device information for the purifier.
-
-        Given that the purifier is sometimes not responsive for 30 seconds ore more,
-        we can't query it during startup and can only use data from the config entry.
-        """
-        info = {
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "name": self.name,
-            "manufacturer": "Philips",
-            "model": self._config_entry.data[CONF_MODEL],
-        }
-        _LOGGER.debug("Device info: %s", str(info))
-        return info
 
     @property
     def is_on(self):
