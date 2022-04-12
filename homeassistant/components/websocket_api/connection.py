@@ -121,6 +121,9 @@ class ActiveConnection:
         """Handle an exception while processing a handler."""
         log_handler = self.logger.error
 
+        code = const.ERR_UNKNOWN_ERROR
+        err_message = None
+
         if isinstance(err, Unauthorized):
             code = const.ERR_UNAUTHORIZED
             err_message = "Unauthorized"
@@ -131,13 +134,15 @@ class ActiveConnection:
             code = const.ERR_TIMEOUT
             err_message = "Timeout"
         elif isinstance(err, HomeAssistantError):
-            code = const.ERR_UNKNOWN_ERROR
             err_message = str(err)
-        else:
-            code = const.ERR_UNKNOWN_ERROR
+
+        # This if-check matches all other errors but also matches errors which
+        # result in an empty message. In that case we will also log the stack
+        # trace so it can be fixed.
+        if not err_message:
             err_message = "Unknown error"
             log_handler = self.logger.exception
 
-        log_handler("Error handling message: %s", err_message)
+        log_handler("Error handling message: %s (%s)", err_message, code)
 
         self.send_message(messages.error_message(msg["id"], code, err_message))

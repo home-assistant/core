@@ -51,7 +51,7 @@ async def async_get_conditions(
 
         supported_features = get_supported_features(hass, entry.entity_id)
 
-        if supported_features & const.SUPPORT_MODES:
+        if supported_features & const.HumidifierEntityFeature.MODES:
             conditions.append(
                 {
                     CONF_CONDITION: "device",

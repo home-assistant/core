@@ -1,8 +1,8 @@
 """Tests for the jewish_calendar component."""
 from collections import namedtuple
-from contextlib import contextmanager
 from datetime import datetime
-from unittest.mock import patch
+
+from freezegun import freeze_time as alter_time  # noqa: F401
 
 from homeassistant.components import jewish_calendar
 import homeassistant.util.dt as dt_util
@@ -12,13 +12,6 @@ _LatLng = namedtuple("_LatLng", ["lat", "lng"])
 HDATE_DEFAULT_ALTITUDE = 754
 NYC_LATLNG = _LatLng(40.7128, -74.0060)
 JERUSALEM_LATLNG = _LatLng(31.778, 35.235)
-
-ORIG_TIME_ZONE = dt_util.DEFAULT_TIME_ZONE
-
-
-def teardown_module():
-    """Reset time zone."""
-    dt_util.set_default_time_zone(ORIG_TIME_ZONE)
 
 
 def make_nyc_test_params(dtime, results, havdalah_offset=0):
@@ -63,14 +56,3 @@ def make_jerusalem_test_params(dtime, results, havdalah_offset=0):
         JERUSALEM_LATLNG.lng,
         results,
     )
-
-
-@contextmanager
-def alter_time(local_time):
-    """Manage multiple time mocks."""
-    utc_time = dt_util.as_utc(local_time)
-    patch1 = patch("homeassistant.util.dt.utcnow", return_value=utc_time)
-    patch2 = patch("homeassistant.util.dt.now", return_value=local_time)
-
-    with patch1, patch2:
-        yield

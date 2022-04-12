@@ -54,10 +54,7 @@
           "key": 0,
           "label": "Unused"
         },
-        "mandatorySupportedCCs": [
-          32,
-          38
-        ],
+        "mandatorySupportedCCs": [32, 38],
         "mandatoryControlledCCs": []
       }
     }
@@ -75,9 +72,7 @@
         "readable": true,
         "writeable": true,
         "label": "Target value",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 99
       }
@@ -255,9 +250,7 @@
         "writeable": false,
         "label": "Z-Wave chip firmware versions"
       },
-      "value": [
-        "1.11"
-      ]
+      "value": ["1.11"]
     },
     {
       "endpoint": 0,
@@ -284,9 +277,7 @@
   ],
   "isFrequentListening": false,
   "maxDataRate": 40000,
-  "supportedDataRates": [
-    40000
-  ],
+  "supportedDataRates": [40000],
   "protocolVersion": 3,
   "supportsBeaming": true,
   "supportsSecurity": false,
@@ -304,10 +295,7 @@
       "key": 0,
       "label": "Unused"
     },
-    "mandatorySupportedCCs": [
-      32,
-      38
-    ],
+    "mandatorySupportedCCs": [32, 38],
     "mandatoryControlledCCs": []
   },
   "commandClasses": [
@@ -351,5 +339,6 @@
     "commandsDroppedTX": 0,
     "timeoutResponse": 1
   },
-  "highestSecurityClass": -1
+  "highestSecurityClass": -1,
+  "isControllerNode": false
 }

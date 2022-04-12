@@ -64,7 +64,7 @@ async def async_setup_entry(
                 coordinator, base_unique_id, f"{name} Operating Mode", "operating_mode"
             )
         )
-    if device.wirings:
+    if device.wirings and device.wiring is not None:
         entities.append(
             FluxWiringsSelect(coordinator, base_unique_id, f"{name} Wiring", "wiring")
         )

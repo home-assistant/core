@@ -248,6 +248,7 @@ async def async_devices_disconnect(hass, data: RequestData, payload):
 
     https://developers.google.com/assistant/smarthome/develop/process-intents#DISCONNECT
     """
+    assert data.context.user_id is not None
     await data.config.async_disconnect_agent_user(data.context.user_id)
     return None
 

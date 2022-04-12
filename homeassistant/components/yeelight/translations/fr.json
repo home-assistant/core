@@ -7,7 +7,7 @@
         "error": {
             "cannot_connect": "\u00c9chec de connexion"
         },
-        "flow_title": "{model} {host}",
+        "flow_title": "{model} {id} ({host})",
         "step": {
             "discovery_confirm": {
                 "description": "Voulez-vous configurer {model} ({host})\u00a0?"
@@ -21,7 +21,7 @@
                 "data": {
                     "host": "H\u00f4te"
                 },
-                "description": "Si vous laissez l'adresse IP vide, la d\u00e9couverte sera utilis\u00e9e pour trouver des appareils."
+                "description": "Si vous laissez l'h\u00f4te vide, la d\u00e9couverte sera utilis\u00e9e pour trouver des appareils."
             }
         }
     },
@@ -29,10 +29,10 @@
         "step": {
             "init": {
                 "data": {
-                    "model": "Mod\u00e8le (facultatif)",
-                    "nightlight_switch": "Utiliser l'interrupteur de la veilleuse",
-                    "save_on_change": "Sauvegarder le statut lors d'un changement",
-                    "transition": "Temps de transition (ms)",
+                    "model": "Mod\u00e8le",
+                    "nightlight_switch": "Utiliser le commutateur de veilleuse",
+                    "save_on_change": "Enregistrer l'\u00e9tat lors d'un changement",
+                    "transition": "Dur\u00e9e de transition (en millisecondes)",
                     "use_music_mode": "Activer le mode musique"
                 },
                 "description": "Si vous ne pr\u00e9cisez pas le mod\u00e8le, il sera automatiquement d\u00e9tect\u00e9."

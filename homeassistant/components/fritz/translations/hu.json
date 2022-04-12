@@ -10,7 +10,8 @@
             "already_in_progress": "A konfigur\u00e1ci\u00f3 m\u00e1r folyamatban van",
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
             "connection_error": "Nem siker\u00fclt csatlakozni",
-            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s"
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
+            "upnp_not_configured": "Hi\u00e1nyz\u00f3 UPnP-be\u00e1ll\u00edt\u00e1sok az eszk\u00f6z\u00f6n."
         },
         "flow_title": "{name}",
         "step": {

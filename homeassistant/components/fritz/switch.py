@@ -30,6 +30,7 @@ from .const import (
     DOMAIN,
     SWITCH_TYPE_DEFLECTION,
     SWITCH_TYPE_PORTFORWARD,
+    SWITCH_TYPE_PROFILE,
     SWITCH_TYPE_WIFINETWORK,
     WIFI_STANDARD,
     MeshRoles,
@@ -185,6 +186,7 @@ def profile_entities_list(
     data_fritz: FritzData,
 ) -> list[FritzBoxProfileSwitch]:
     """Add new tracker entities from the AVM device."""
+    _LOGGER.debug("Setting up %s switches", SWITCH_TYPE_PROFILE)
 
     new_profiles: list[FritzBoxProfileSwitch] = []
 
@@ -198,11 +200,15 @@ def profile_entities_list(
         if device_filter_out_from_trackers(
             mac, device, data_fritz.profile_switches.values()
         ):
+            _LOGGER.debug(
+                "Skipping profile switch creation for device %s", device.hostname
+            )
             continue
 
         new_profiles.append(FritzBoxProfileSwitch(avm_wrapper, device))
         data_fritz.profile_switches[avm_wrapper.unique_id].add(mac)
 
+    _LOGGER.debug("Creating %s profile switches", len(new_profiles))
     return new_profiles
 
 

@@ -9,8 +9,7 @@ from homeassistant.components.climate.const import (
     FAN_ON,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
-    SUPPORT_FAN_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
+    ClimateEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -117,10 +116,10 @@ class MillHeater(CoordinatorEntity, ClimateEntity):
 
         if heater.generation < 3:
             self._attr_supported_features = (
-                SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
+                ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
             )
         else:
-            self._attr_supported_features = SUPPORT_TARGET_TEMPERATURE
+            self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
 
         self._update_attr(heater)
 
@@ -201,7 +200,7 @@ class LocalMillHeater(CoordinatorEntity, ClimateEntity):
     _attr_hvac_modes = [HVAC_MODE_HEAT]
     _attr_max_temp = MAX_TEMP
     _attr_min_temp = MIN_TEMP
-    _attr_supported_features = SUPPORT_TARGET_TEMPERATURE
+    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
     _attr_target_temperature_step = PRECISION_WHOLE
     _attr_temperature_unit = TEMP_CELSIUS
 

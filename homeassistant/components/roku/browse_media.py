@@ -135,6 +135,9 @@ async def root_payload(
             )
         )
 
+    for child in children:
+        child.thumbnail = "https://brands.home-assistant.io/_/roku/logo.png"
+
     try:
         browse_item = await media_source.async_browse_media(hass, None)
 

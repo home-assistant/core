@@ -91,6 +91,11 @@ def _cleanup_entity_filter(device: er.RegistryEntry) -> bool:
     )
 
 
+def _ha_is_stopping(activity: str) -> None:
+    """Inform that HA is stopping."""
+    _LOGGER.info("Cannot execute %s: HomeAssistant is shutting down", activity)
+
+
 class ClassSetupMissing(Exception):
     """Raised when a Class func is called before setup."""
 
@@ -351,6 +356,10 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
     def scan_devices(self, now: datetime | None = None) -> None:
         """Scan for new devices and return a list of found device ids."""
 
+        if self.hass.is_stopping:
+            _ha_is_stopping("scan devices")
+            return
+
         _LOGGER.debug("Checking host info for FRITZ!Box device %s", self.host)
         self._update_available, self._latest_firmware = self._update_device_info()
 
@@ -392,6 +401,8 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
             )
             self.mesh_role = MeshRoles.NONE
             for mac, info in hosts.items():
+                if info.ip_address:
+                    info.wan_access = self._get_wan_access(info.ip_address)
                 if self.manage_device_info(info, mac, consider_home):
                     new_device = True
             self.send_signal_device_update(new_device)
@@ -601,6 +612,10 @@ class AvmWrapper(FritzBoxTools):
     ) -> dict:
         """Return service details."""
 
+        if self.hass.is_stopping:
+            _ha_is_stopping(f"{service_name}/{action_name}")
+            return {}
+
         if f"{service_name}{service_suffix}" not in self.connection.services:
             return {}
 
@@ -630,12 +645,33 @@ class AvmWrapper(FritzBoxTools):
             )
         return {}
 
+    async def async_get_upnp_configuration(self) -> dict[str, Any]:
+        """Call X_AVM-DE_UPnP service."""
+
+        return await self.hass.async_add_executor_job(self.get_upnp_configuration)
+
     async def async_get_wan_link_properties(self) -> dict[str, Any]:
         """Call WANCommonInterfaceConfig service."""
 
         return await self.hass.async_add_executor_job(
             partial(self.get_wan_link_properties)
         )
+
+    async def async_get_connection_info(self) -> ConnectionInfo:
+        """Return ConnectionInfo data."""
+
+        link_properties = await self.async_get_wan_link_properties()
+        connection_info = ConnectionInfo(
+            connection=link_properties.get("NewWANAccessType", "").lower(),
+            mesh_role=self.mesh_role,
+            wan_enabled=self.device_is_router,
+        )
+        _LOGGER.debug(
+            "ConnectionInfo for FritzBox %s: %s",
+            self.host,
+            connection_info,
+        )
+        return connection_info
 
     async def async_get_port_mapping(self, con_type: str, index: int) -> dict[str, Any]:
         """Call GetGenericPortMappingEntry action."""
@@ -697,6 +733,11 @@ class AvmWrapper(FritzBoxTools):
         return await self.hass.async_add_executor_job(
             partial(self.set_allow_wan_access, ip_address, turn_on)
         )
+
+    def get_upnp_configuration(self) -> dict[str, Any]:
+        """Call X_AVM-DE_UPnP service."""
+
+        return self._service_call_action("X_AVM-DE_UPnP", "1", "GetInfo")
 
     def get_ontel_num_deflections(self) -> dict[str, Any]:
         """Call GetNumberOfDeflections action from X_AVM-DE_OnTel service."""
@@ -789,7 +830,7 @@ class FritzData:
     profile_switches: dict = field(default_factory=dict)
 
 
-class FritzDeviceBase(update_coordinator.CoordinatorEntity):
+class FritzDeviceBase(update_coordinator.CoordinatorEntity[AvmWrapper]):
     """Entity base class for a device connected to a FRITZ!Box device."""
 
     def __init__(self, avm_wrapper: AvmWrapper, device: FritzDevice) -> None:
@@ -960,3 +1001,12 @@ class FritzBoxBaseEntity:
             name=self._device_name,
             sw_version=self._avm_wrapper.current_firmware,
         )
+
+
+@dataclass
+class ConnectionInfo:
+    """Fritz sensor connection information class."""
+
+    connection: str
+    mesh_role: MeshRoles
+    wan_enabled: bool

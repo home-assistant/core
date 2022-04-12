@@ -112,7 +112,7 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
             next_delivery = (
                 copy.deepcopy(next_deliveries[-1]) if next_deliveries else {}
             )
-            last_order = copy.deepcopy(deliveries[0])
+            last_order = copy.deepcopy(deliveries[0]) if deliveries else {}
         except (KeyError, TypeError):
             # A KeyError or TypeError indicate that the response contains unexpected data
             return {}, {}

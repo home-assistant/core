@@ -150,7 +150,6 @@ async def test_unique_id_migration(hass, mock_gateway, mock_api_factory):
             "host": "mock-host",
             "identity": "mock-identity",
             "key": "mock-key",
-            "import_groups": False,
             "gateway_id": GATEWAY_ID,
         },
     )

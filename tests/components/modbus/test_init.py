@@ -21,12 +21,12 @@ from pymodbus.pdu import ExceptionResponse, IllegalFunctionRequest
 import pytest
 import voluptuous as vol
 
+from homeassistant import config as hass_config
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.modbus.const import (
     ATTR_ADDRESS,
     ATTR_HUB,
     ATTR_SLAVE,
-    ATTR_STATE,
     ATTR_UNIT,
     ATTR_VALUE,
     CALL_TYPE_COIL,
@@ -43,6 +43,7 @@ from homeassistant.components.modbus.const import (
     CONF_INPUT_TYPE,
     CONF_MSG_WAIT,
     CONF_PARITY,
+    CONF_SLAVE_COUNT,
     CONF_STOPBITS,
     CONF_SWAP,
     CONF_SWAP_BYTE,
@@ -67,6 +68,7 @@ from homeassistant.components.modbus.validators import (
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
+    ATTR_STATE,
     CONF_ADDRESS,
     CONF_BINARY_SENSORS,
     CONF_COUNT,
@@ -82,6 +84,7 @@ from homeassistant.const import (
     CONF_TIMEOUT,
     CONF_TYPE,
     EVENT_HOMEASSISTANT_STOP,
+    SERVICE_RELOAD,
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -98,7 +101,7 @@ from .conftest import (
     ReadResult,
 )
 
-from tests.common import async_fire_time_changed
+from tests.common import async_fire_time_changed, get_fixture_path
 
 
 @pytest.fixture(name="mock_modbus_with_pymodbus")
@@ -146,13 +149,11 @@ async def test_number_validator():
         },
         {
             CONF_NAME: TEST_ENTITY_NAME,
-            CONF_COUNT: 2,
-            CONF_DATA_TYPE: DataType.INT,
+            CONF_DATA_TYPE: DataType.INT32,
         },
         {
             CONF_NAME: TEST_ENTITY_NAME,
-            CONF_COUNT: 2,
-            CONF_DATA_TYPE: DataType.INT,
+            CONF_DATA_TYPE: DataType.INT32,
             CONF_SWAP: CONF_SWAP_BYTE,
         },
         {
@@ -178,7 +179,7 @@ async def test_ok_struct_validator(do_config):
         {
             CONF_NAME: TEST_ENTITY_NAME,
             CONF_COUNT: 8,
-            CONF_DATA_TYPE: DataType.INT,
+            CONF_DATA_TYPE: "int",
         },
         {
             CONF_NAME: TEST_ENTITY_NAME,
@@ -210,6 +211,13 @@ async def test_ok_struct_validator(do_config):
             CONF_DATA_TYPE: DataType.STRING,
             CONF_STRUCTURE: ">f",
             CONF_SWAP: CONF_SWAP_WORD,
+        },
+        {
+            CONF_NAME: TEST_ENTITY_NAME,
+            CONF_COUNT: 2,
+            CONF_DATA_TYPE: DataType.CUSTOM,
+            CONF_STRUCTURE: ">f",
+            CONF_SLAVE_COUNT: 5,
         },
     ],
 )
@@ -711,34 +719,33 @@ async def test_delay(hass, mock_pymodbus):
         ]
     }
     mock_pymodbus.read_coils.return_value = ReadResult([0x01])
-    now = dt_util.utcnow()
-    with mock.patch("homeassistant.helpers.event.dt_util.utcnow", return_value=now):
+    start_time = dt_util.utcnow()
+    with mock.patch(
+        "homeassistant.helpers.event.dt_util.utcnow", return_value=start_time
+    ):
         assert await async_setup_component(hass, DOMAIN, config) is True
         await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
-    # pass first scan_interval
-    start_time = now
-    now = now + timedelta(seconds=(set_scan_interval + 1))
-    with mock.patch(
-        "homeassistant.helpers.event.dt_util.utcnow", return_value=now, autospec=True
-    ):
-        async_fire_time_changed(hass, now)
-        await hass.async_block_till_done()
-        assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
-
-    stop_time = start_time + timedelta(seconds=(set_delay + 1))
-    step_timedelta = timedelta(seconds=1)
-    while now < stop_time:
-        now = now + step_timedelta
-        with mock.patch("homeassistant.helpers.event.dt_util.utcnow", return_value=now):
+    time_sensor_active = start_time + timedelta(seconds=2)
+    time_after_delay = start_time + timedelta(seconds=(set_delay))
+    time_after_scan = start_time + timedelta(seconds=(set_delay + set_scan_interval))
+    time_stop = time_after_scan + timedelta(seconds=10)
+    now = start_time
+    while now < time_stop:
+        now += timedelta(seconds=1)
+        with mock.patch(
+            "homeassistant.helpers.event.dt_util.utcnow",
+            return_value=now,
+            autospec=True,
+        ):
             async_fire_time_changed(hass, now)
             await hass.async_block_till_done()
-            assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
-    now = now + step_timedelta + timedelta(seconds=2)
-    with mock.patch("homeassistant.helpers.event.dt_util.utcnow", return_value=now):
-        async_fire_time_changed(hass, now)
-        await hass.async_block_till_done()
-        assert hass.states.get(entity_id).state == STATE_ON
+            if now > time_sensor_active:
+                if now <= time_after_delay:
+                    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+                elif now > time_after_scan:
+                    assert hass.states.get(entity_id).state == STATE_ON
 
 
 @pytest.mark.parametrize(
@@ -819,3 +826,43 @@ async def test_stop_restart(hass, caplog, mock_modbus):
     assert mock_modbus.connect.called
     assert f"modbus {TEST_MODBUS_NAME} communication closed" in caplog.text
     assert f"modbus {TEST_MODBUS_NAME} communication open" in caplog.text
+
+
+@pytest.mark.parametrize("do_config", [{}])
+async def test_write_no_client(hass, mock_modbus):
+    """Run test for service stop and write without client."""
+
+    mock_modbus.reset()
+    data = {
+        ATTR_HUB: TEST_MODBUS_NAME,
+    }
+    await hass.services.async_call(DOMAIN, SERVICE_STOP, data, blocking=True)
+    await hass.async_block_till_done()
+    assert mock_modbus.close.called
+
+    data = {
+        ATTR_HUB: TEST_MODBUS_NAME,
+        ATTR_UNIT: 17,
+        ATTR_ADDRESS: 16,
+        ATTR_STATE: True,
+    }
+    await hass.services.async_call(DOMAIN, SERVICE_WRITE_COIL, data, blocking=True)
+
+
+@pytest.mark.parametrize("do_config", [{}])
+async def test_integration_reload(hass, caplog, mock_modbus):
+    """Run test for integration reload."""
+
+    caplog.set_level(logging.INFO)
+    caplog.clear()
+
+    yaml_path = get_fixture_path("configuration.yaml", "modbus")
+    now = dt_util.utcnow()
+    with mock.patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
+        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
+        await hass.async_block_till_done()
+        for i in range(4):
+            now = now + timedelta(seconds=1)
+            async_fire_time_changed(hass, now)
+            await hass.async_block_till_done()
+    assert "Modbus reloading" in caplog.text

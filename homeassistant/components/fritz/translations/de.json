@@ -10,7 +10,8 @@
             "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
             "cannot_connect": "Verbindung fehlgeschlagen",
             "connection_error": "Verbindung fehlgeschlagen",
-            "invalid_auth": "Ung\u00fcltige Authentifizierung"
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "upnp_not_configured": "Fehlende UPnP-Einstellungen auf dem Ger\u00e4t."
         },
         "flow_title": "FRITZ!Box Tools: {name}",
         "step": {

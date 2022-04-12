@@ -48,42 +48,6 @@ NUMBER_ENTITIES: dict[str, NumberEntityDescription] = {
         icon="mdi:volume-high",
         entity_category=EntityCategory.CONFIG,
     ),
-    CharacteristicsTypes.VENDOR_ECOBEE_HOME_TARGET_COOL: NumberEntityDescription(
-        key=CharacteristicsTypes.VENDOR_ECOBEE_HOME_TARGET_COOL,
-        name="Home Cool Target",
-        icon="mdi:thermometer-minus",
-        entity_category=EntityCategory.CONFIG,
-    ),
-    CharacteristicsTypes.VENDOR_ECOBEE_HOME_TARGET_HEAT: NumberEntityDescription(
-        key=CharacteristicsTypes.VENDOR_ECOBEE_HOME_TARGET_HEAT,
-        name="Home Heat Target",
-        icon="mdi:thermometer-plus",
-        entity_category=EntityCategory.CONFIG,
-    ),
-    CharacteristicsTypes.VENDOR_ECOBEE_SLEEP_TARGET_COOL: NumberEntityDescription(
-        key=CharacteristicsTypes.VENDOR_ECOBEE_SLEEP_TARGET_COOL,
-        name="Sleep Cool Target",
-        icon="mdi:thermometer-minus",
-        entity_category=EntityCategory.CONFIG,
-    ),
-    CharacteristicsTypes.VENDOR_ECOBEE_SLEEP_TARGET_HEAT: NumberEntityDescription(
-        key=CharacteristicsTypes.VENDOR_ECOBEE_SLEEP_TARGET_HEAT,
-        name="Sleep Heat Target",
-        icon="mdi:thermometer-plus",
-        entity_category=EntityCategory.CONFIG,
-    ),
-    CharacteristicsTypes.VENDOR_ECOBEE_AWAY_TARGET_COOL: NumberEntityDescription(
-        key=CharacteristicsTypes.VENDOR_ECOBEE_AWAY_TARGET_COOL,
-        name="Away Cool Target",
-        icon="mdi:thermometer-minus",
-        entity_category=EntityCategory.CONFIG,
-    ),
-    CharacteristicsTypes.VENDOR_ECOBEE_AWAY_TARGET_HEAT: NumberEntityDescription(
-        key=CharacteristicsTypes.VENDOR_ECOBEE_AWAY_TARGET_HEAT,
-        name="Away Heat Target",
-        icon="mdi:thermometer-plus",
-        entity_category=EntityCategory.CONFIG,
-    ),
 }
 
 

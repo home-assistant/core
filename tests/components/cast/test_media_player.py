@@ -39,6 +39,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er, network
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
@@ -633,8 +634,10 @@ async def test_entity_availability(hass: HomeAssistant):
 
 
 @pytest.mark.parametrize("port,entry_type", ((8009, None), (12345, None)))
-async def test_device_registry(hass: HomeAssistant, port, entry_type):
+async def test_device_registry(hass: HomeAssistant, hass_ws_client, port, entry_type):
     """Test device registry integration."""
+    assert await async_setup_component(hass, "config", {})
+
     entity_id = "media_player.speaker"
     reg = er.async_get(hass)
     dev_reg = dr.async_get(hass)
@@ -657,18 +660,31 @@ async def test_device_registry(hass: HomeAssistant, port, entry_type):
     assert state.state == "off"
     assert entity_id == reg.async_get_entity_id("media_player", "cast", str(info.uuid))
     entity_entry = reg.async_get(entity_id)
-    assert entity_entry.device_id is not None
     device_entry = dev_reg.async_get(entity_entry.device_id)
+    assert entity_entry.device_id == device_entry.id
     assert device_entry.entry_type == entry_type
 
     # Check that the chromecast object is torn down when the device is removed
     chromecast.disconnect.assert_not_called()
-    dev_reg.async_update_device(
-        device_entry.id, remove_config_entry_id=cast_entry.entry_id
+
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "config/device_registry/remove_config_entry",
+            "config_entry_id": cast_entry.entry_id,
+            "device_id": device_entry.id,
+        }
     )
+    response = await client.receive_json()
+    assert response["success"]
+
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     chromecast.disconnect.assert_called_once()
+
+    assert reg.async_get(entity_id) is None
+    assert dev_reg.async_get(entity_entry.device_id) is None
 
 
 async def test_entity_cast_status(hass: HomeAssistant):
@@ -857,6 +873,7 @@ async def test_entity_browse_media(hass: HomeAssistant, hass_ws_client):
         "can_play": True,
         "can_expand": False,
         "thumbnail": None,
+        "children_media_class": None,
     }
     assert expected_child_1 in response["result"]["children"]
 
@@ -868,6 +885,7 @@ async def test_entity_browse_media(hass: HomeAssistant, hass_ws_client):
         "can_play": True,
         "can_expand": False,
         "thumbnail": None,
+        "children_media_class": None,
     }
     assert expected_child_2 in response["result"]["children"]
 
@@ -911,6 +929,7 @@ async def test_entity_browse_media_audio_only(
         "can_play": True,
         "can_expand": False,
         "thumbnail": None,
+        "children_media_class": None,
     }
     assert expected_child_1 not in response["result"]["children"]
 
@@ -922,6 +941,7 @@ async def test_entity_browse_media_audio_only(
         "can_play": True,
         "can_expand": False,
         "thumbnail": None,
+        "children_media_class": None,
     }
     assert expected_child_2 in response["result"]["children"]
 
@@ -954,7 +974,7 @@ async def test_entity_play_media(hass: HomeAssistant, quick_play_mock):
         {
             ATTR_ENTITY_ID: entity_id,
             media_player.ATTR_MEDIA_CONTENT_TYPE: "audio",
-            media_player.ATTR_MEDIA_CONTENT_ID: "best.mp3",
+            media_player.ATTR_MEDIA_CONTENT_ID: "http://example.com/best.mp3",
             media_player.ATTR_MEDIA_EXTRA: {"metadata": {"metadatatype": 3}},
         },
         blocking=True,
@@ -965,7 +985,7 @@ async def test_entity_play_media(hass: HomeAssistant, quick_play_mock):
         chromecast,
         "default_media_receiver",
         {
-            "media_id": "best.mp3",
+            "media_id": "http://example.com/best.mp3",
             "media_type": "audio",
             "metadata": {"metadatatype": 3},
         },
@@ -1206,15 +1226,18 @@ async def test_entity_control(hass: HomeAssistant):
     chromecast.media_controller.pause.assert_called_once_with()
 
     # Media previous
-    await common.async_media_previous_track(hass, entity_id)
+    with pytest.raises(HomeAssistantError):
+        await common.async_media_previous_track(hass, entity_id)
     chromecast.media_controller.queue_prev.assert_not_called()
 
     # Media next
-    await common.async_media_next_track(hass, entity_id)
+    with pytest.raises(HomeAssistantError):
+        await common.async_media_next_track(hass, entity_id)
     chromecast.media_controller.queue_next.assert_not_called()
 
     # Media seek
-    await common.async_media_seek(hass, 123, entity_id)
+    with pytest.raises(HomeAssistantError):
+        await common.async_media_seek(hass, 123, entity_id)
     chromecast.media_controller.seek.assert_not_called()
 
     # Enable support for queue and seek
@@ -1500,13 +1523,15 @@ async def test_group_media_control(hass, mz_mock, quick_play_mock):
     assert not chromecast.media_controller.stop.called
 
     # Verify play_media is not forwarded
-    await common.async_play_media(hass, "music", "best.mp3", entity_id)
+    await common.async_play_media(
+        hass, "music", "http://example.com/best.mp3", entity_id
+    )
     assert not grp_media.play_media.called
     assert not chromecast.media_controller.play_media.called
     quick_play_mock.assert_called_once_with(
         chromecast,
         "default_media_receiver",
-        {"media_id": "best.mp3", "media_type": "music"},
+        {"media_id": "http://example.com/best.mp3", "media_type": "music"},
     )
 
 
@@ -1780,7 +1805,7 @@ async def test_cast_platform_play_media(hass: HomeAssistant, quick_play_mock, ca
         {
             ATTR_ENTITY_ID: entity_id,
             media_player.ATTR_MEDIA_CONTENT_TYPE: "audio",
-            media_player.ATTR_MEDIA_CONTENT_ID: "best.mp3",
+            media_player.ATTR_MEDIA_CONTENT_ID: "http://example.com/best.mp3",
             media_player.ATTR_MEDIA_EXTRA: {"metadata": {"metadatatype": 3}},
         },
         blocking=True,
@@ -1788,7 +1813,7 @@ async def test_cast_platform_play_media(hass: HomeAssistant, quick_play_mock, ca
 
     # Assert the media player attempt to play media through the cast platform
     cast_platform_mock.async_play_media.assert_called_once_with(
-        hass, entity_id, chromecast, "audio", "best.mp3"
+        hass, entity_id, chromecast, "audio", "http://example.com/best.mp3"
     )
 
     # Assert pychromecast is used to play media
@@ -1858,6 +1883,7 @@ async def test_cast_platform_browse_media(hass: HomeAssistant, hass_ws_client):
         "can_play": False,
         "can_expand": True,
         "thumbnail": "https://brands.home-assistant.io/_/spotify/logo.png",
+        "children_media_class": None,
     }
     assert expected_child in response["result"]["children"]
 

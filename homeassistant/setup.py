@@ -149,10 +149,17 @@ async def _async_setup_component(
 
     This method is a coroutine.
     """
+    integration: loader.Integration | None = None
 
-    def log_error(msg: str, link: str | None = None) -> None:
+    def log_error(msg: str) -> None:
         """Log helper."""
-        _LOGGER.error("Setup failed for %s: %s", domain, msg)
+        if integration is None:
+            custom = ""
+            link = None
+        else:
+            custom = "" if integration.is_built_in else "custom integration "
+            link = integration.documentation
+        _LOGGER.error("Setup failed for %s%s: %s", custom, domain, msg)
         async_notify_setup_error(hass, domain, link)
 
     try:
@@ -174,7 +181,7 @@ async def _async_setup_component(
     try:
         await async_process_deps_reqs(hass, config, integration)
     except HomeAssistantError as err:
-        log_error(str(err), integration.documentation)
+        log_error(str(err))
         return False
 
     # Some integrations fail on import because they call functions incorrectly.
@@ -182,7 +189,7 @@ async def _async_setup_component(
     try:
         component = integration.get_component()
     except ImportError as err:
-        log_error(f"Unable to import component: {err}", integration.documentation)
+        log_error(f"Unable to import component: {err}")
         return False
 
     processed_config = await conf_util.async_process_component_config(
@@ -190,7 +197,7 @@ async def _async_setup_component(
     )
 
     if processed_config is None:
-        log_error("Invalid config.", integration.documentation)
+        log_error("Invalid config.")
         return False
 
     start = timer()
@@ -287,6 +294,7 @@ async def async_prepare_setup_platform(
 
     def log_error(msg: str) -> None:
         """Log helper."""
+
         _LOGGER.error("Unable to prepare setup for platform %s: %s", platform_path, msg)
         async_notify_setup_error(hass, platform_path)
 

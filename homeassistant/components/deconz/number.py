@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, ValuesView
+from collections.abc import Callable
 from dataclasses import dataclass
 
-from pydeconz.sensor import PRESENCE_DELAY, DeconzSensor as PydeconzSensor, Presence
+from pydeconz.sensor import PRESENCE_DELAY, Presence, SensorBase as PydeconzSensor
 
 from homeassistant.components.number import (
     DOMAIN,
@@ -28,7 +28,7 @@ class DeconzNumberDescriptionMixin:
 
     suffix: str
     update_key: str
-    value_fn: Callable[[PydeconzSensor], bool | None]
+    value_fn: Callable[[PydeconzSensor], float | None]
 
 
 @dataclass
@@ -40,7 +40,7 @@ ENTITY_DESCRIPTIONS = {
     Presence: [
         DeconzNumberDescription(
             key="delay",
-            value_fn=lambda device: device.delay,
+            value_fn=lambda device: device.delay,  # type: ignore[no-any-return]
             suffix="Delay",
             update_key=PRESENCE_DELAY,
             max_value=65535,
@@ -62,11 +62,12 @@ async def async_setup_entry(
     gateway.entities[DOMAIN] = set()
 
     @callback
-    def async_add_sensor(
-        sensors: list[Presence] | ValuesView[Presence] = gateway.api.sensors.values(),
-    ) -> None:
+    def async_add_sensor(sensors: list[Presence] | None = None) -> None:
         """Add number config sensor from deCONZ."""
         entities = []
+
+        if sensors is None:
+            sensors = list(gateway.api.sensors.presence.values())
 
         for sensor in sensors:
 

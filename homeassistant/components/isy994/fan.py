@@ -6,7 +6,7 @@ from typing import Any
 
 from pyisy.constants import ISY_VALUE_UNKNOWN, PROTO_INSTEON
 
-from homeassistant.components.fan import DOMAIN as FAN, SUPPORT_SET_SPEED, FanEntity
+from homeassistant.components.fan import DOMAIN as FAN, FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -43,6 +43,8 @@ async def async_setup_entry(
 class ISYFanEntity(ISYNodeEntity, FanEntity):
     """Representation of an ISY994 fan device."""
 
+    _attr_supported_features = FanEntityFeature.SET_SPEED
+
     @property
     def percentage(self) -> int | None:
         """Return the current speed percentage."""
@@ -76,7 +78,6 @@ class ISYFanEntity(ISYNodeEntity, FanEntity):
 
     async def async_turn_on(
         self,
-        speed: str | None = None,
         percentage: int | None = None,
         preset_mode: str | None = None,
         **kwargs: Any,
@@ -87,11 +88,6 @@ class ISYFanEntity(ISYNodeEntity, FanEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Send the turn off command to the ISY994 fan device."""
         await self._node.turn_off()
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return SUPPORT_SET_SPEED
 
 
 class ISYFanProgramEntity(ISYProgramEntity, FanEntity):
@@ -121,7 +117,6 @@ class ISYFanProgramEntity(ISYProgramEntity, FanEntity):
 
     async def async_turn_on(
         self,
-        speed: str | None = None,
         percentage: int | None = None,
         preset_mode: str | None = None,
         **kwargs: Any,

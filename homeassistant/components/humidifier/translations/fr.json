@@ -22,8 +22,8 @@
     },
     "state": {
         "_": {
-            "off": "Inactif",
-            "on": "Actif"
+            "off": "D\u00e9sactiv\u00e9",
+            "on": "Activ\u00e9"
         }
     },
     "title": "Humidificateur"

@@ -10,7 +10,7 @@ from PyViCare.PyViCareUtils import (
 import requests
 import voluptuous as vol
 
-from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
@@ -20,11 +20,14 @@ from homeassistant.components.climate.const import (
     PRESET_COMFORT,
     PRESET_ECO,
     PRESET_NONE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, TEMP_CELSIUS
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    PRECISION_TENTHS,
+    PRECISION_WHOLE,
+    TEMP_CELSIUS,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
@@ -66,8 +69,6 @@ VICARE_HOLD_MODE_OFF = "off"
 
 VICARE_TEMP_HEATING_MIN = 3
 VICARE_TEMP_HEATING_MAX = 37
-
-SUPPORT_FLAGS_HEATING = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
 VICARE_TO_HA_HVAC_HEATING = {
     VICARE_MODE_DHW: HVAC_MODE_OFF,
@@ -145,6 +146,10 @@ async def async_setup_entry(
 
 class ViCareClimate(ClimateEntity):
     """Representation of the ViCare heating climate device."""
+
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+    )
 
     def __init__(self, name, api, circuit, device_config, heating_type):
         """Initialize the climate device."""
@@ -245,11 +250,6 @@ class ViCareClimate(ClimateEntity):
             _LOGGER.error("Invalid data from Vicare server: %s", invalid_data_exception)
 
     @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_FLAGS_HEATING
-
-    @property
     def name(self):
         """Return the name of the climate device."""
         return self._name
@@ -310,6 +310,11 @@ class ViCareClimate(ClimateEntity):
     @property
     def precision(self):
         """Return the precision of the system."""
+        return PRECISION_TENTHS
+
+    @property
+    def target_temperature_step(self) -> float:
+        """Set target temperature step to wholes."""
         return PRECISION_WHOLE
 
     def set_temperature(self, **kwargs):

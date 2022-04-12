@@ -7,22 +7,27 @@ from typing import Any
 from plugwise.exceptions import InvalidAuthentication, PlugwiseException
 from plugwise.smile import Smile
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
 
-from .const import DEFAULT_PORT, DEFAULT_USERNAME, DOMAIN, LOGGER, PLATFORMS_GATEWAY
+from .const import (
+    DEFAULT_PORT,
+    DEFAULT_USERNAME,
+    DOMAIN,
+    LOGGER,
+    PLATFORMS_GATEWAY,
+    Platform,
+)
 from .coordinator import PlugwiseDataUpdateCoordinator
 
 
 async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Plugwise Smiles from a config entry."""
-    await async_migrate_entries(hass, entry.entry_id, async_migrate_entity_entry)
+    await er.async_migrate_entries(hass, entry.entry_id, async_migrate_entity_entry)
 
     websession = async_get_clientsession(hass, verify_ssl=False)
     api = Smile(
@@ -57,6 +62,7 @@ async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     coordinator = PlugwiseDataUpdateCoordinator(hass, api)
     await coordinator.async_config_entry_first_refresh()
+    migrate_sensor_entities(hass, coordinator)
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
@@ -85,13 +91,39 @@ async def async_unload_entry_gw(hass: HomeAssistant, entry: ConfigEntry):
 
 
 @callback
-def async_migrate_entity_entry(entry: RegistryEntry) -> dict[str, Any] | None:
+def async_migrate_entity_entry(entry: er.RegistryEntry) -> dict[str, Any] | None:
     """Migrate Plugwise entity entries.
 
     - Migrates unique ID from old relay switches to the new unique ID
     """
-    if entry.domain == SWITCH_DOMAIN and entry.unique_id.endswith("-plug"):
+    if entry.domain == Platform.SWITCH and entry.unique_id.endswith("-plug"):
         return {"new_unique_id": entry.unique_id.replace("-plug", "-relay")}
 
     # No migration needed
     return None
+
+
+def migrate_sensor_entities(
+    hass: HomeAssistant,
+    coordinator: PlugwiseDataUpdateCoordinator,
+) -> None:
+    """Migrate Sensors if needed."""
+    ent_reg = er.async_get(hass)
+
+    # Migrating opentherm_outdoor_temperature to opentherm_outdoor_air_temperature sensor
+    for device_id, device in coordinator.data.devices.items():
+        if device["class"] != "heater_central":
+            continue
+
+        old_unique_id = f"{device_id}-outdoor_temperature"
+        if entity_id := ent_reg.async_get_entity_id(
+            Platform.SENSOR, DOMAIN, old_unique_id
+        ):
+            new_unique_id = f"{device_id}-outdoor_air_temperature"
+            LOGGER.debug(
+                "Migrating entity %s from old unique ID '%s' to new unique ID '%s'",
+                entity_id,
+                old_unique_id,
+                new_unique_id,
+            )
+            ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)

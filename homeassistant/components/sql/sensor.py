@@ -172,7 +172,7 @@ class SQLSensor(SensorEntity):
         else:
             self._attr_native_value = data
 
-        if not data:
+        if data is None:
             _LOGGER.warning("%s returned no results", self._query)
 
         sess.close()

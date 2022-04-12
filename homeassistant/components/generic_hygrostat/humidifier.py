@@ -8,12 +8,12 @@ from homeassistant.components.humidifier import (
     PLATFORM_SCHEMA,
     HumidifierDeviceClass,
     HumidifierEntity,
+    HumidifierEntityFeature,
 )
 from homeassistant.components.humidifier.const import (
     ATTR_HUMIDITY,
     MODE_AWAY,
     MODE_NORMAL,
-    SUPPORT_MODES,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -57,7 +57,6 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_SAVED_HUMIDITY = "saved_humidity"
 
-SUPPORT_FLAGS = 0
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(HYGROSTAT_SCHEMA.schema)
 
@@ -148,9 +147,9 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         self._min_humidity = min_humidity
         self._max_humidity = max_humidity
         self._target_humidity = target_humidity
-        self._support_flags = SUPPORT_FLAGS
+        self._attr_supported_features = 0
         if away_humidity:
-            self._support_flags = SUPPORT_FLAGS | SUPPORT_MODES
+            self._attr_supported_features |= HumidifierEntityFeature.MODES
         self._away_humidity = away_humidity
         self._away_fixed = away_fixed
         self._sensor_stale_duration = sensor_stale_duration
@@ -433,11 +432,6 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
     def _is_device_active(self):
         """If the toggleable device is currently active."""
         return self.hass.states.is_state(self._switch_entity_id, STATE_ON)
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return self._support_flags
 
     async def _async_device_turn_on(self):
         """Turn humidifier toggleable device on."""

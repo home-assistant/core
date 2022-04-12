@@ -3,24 +3,41 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import Any
 from urllib.parse import quote
 
 import yarl
 
 from homeassistant.components.http.auth import async_sign_path
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.network import get_url, is_hass_url
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.network import (
+    NoURLAvailableError,
+    get_supervisor_network_url,
+    get_url,
+    is_hass_url,
+)
 
 from .const import CONTENT_AUTH_EXPIRY_TIME, MEDIA_CLASS_DIRECTORY
 
 
 @callback
-def async_process_play_media_url(hass: HomeAssistant, media_content_id: str) -> str:
+def async_process_play_media_url(
+    hass: HomeAssistant,
+    media_content_id: str,
+    *,
+    allow_relative_url: bool = False,
+    for_supervisor_network: bool = False,
+) -> str:
     """Update a media URL with authentication if it points at Home Assistant."""
-    if media_content_id[0] != "/" and not is_hass_url(hass, media_content_id):
-        return media_content_id
-
     parsed = yarl.URL(media_content_id)
+
+    if parsed.is_absolute():
+        if not is_hass_url(hass, media_content_id):
+            return media_content_id
+    else:
+        if media_content_id[0] != "/":
+            raise ValueError("URL is relative, but does not start with a /")
 
     if parsed.query:
         logging.getLogger(__name__).debug(
@@ -34,9 +51,26 @@ def async_process_play_media_url(hass: HomeAssistant, media_content_id: str) -> 
         )
         media_content_id = str(parsed.join(yarl.URL(signed_path)))
 
-    # prepend external URL
-    if media_content_id[0] == "/":
-        media_content_id = f"{get_url(hass)}{media_content_id}"
+    # convert relative URL to absolute URL
+    if not parsed.is_absolute() and not allow_relative_url:
+        base_url = None
+        if for_supervisor_network:
+            base_url = get_supervisor_network_url(hass)
+
+        if not base_url:
+            try:
+                base_url = get_url(hass)
+            except NoURLAvailableError as err:
+                msg = "Unable to determine Home Assistant URL to send to device"
+                if (
+                    hass.config.api
+                    and hass.config.api.use_ssl
+                    and (not hass.config.external_url or not hass.config.internal_url)
+                ):
+                    msg += ". Configure internal and external URL in general settings."
+                raise HomeAssistantError(msg) from err
+
+        media_content_id = f"{base_url}{media_content_id}"
 
     return media_content_id
 
@@ -72,11 +106,15 @@ class BrowseMedia:
 
     def as_dict(self, *, parent: bool = True) -> dict:
         """Convert Media class to browse media dictionary."""
-        response = {
+        if self.children_media_class is None and self.children:
+            self.calculate_children_class()
+
+        response: dict[str, Any] = {
             "title": self.title,
             "media_class": self.media_class,
             "media_content_type": self.media_content_type,
             "media_content_id": self.media_content_id,
+            "children_media_class": self.children_media_class,
             "can_play": self.can_play,
             "can_expand": self.can_expand,
             "thumbnail": self.thumbnail,
@@ -85,11 +123,7 @@ class BrowseMedia:
         if not parent:
             return response
 
-        if self.children_media_class is None:
-            self.calculate_children_class()
-
         response["not_shown"] = self.not_shown
-        response["children_media_class"] = self.children_media_class
 
         if self.children:
             response["children"] = [
@@ -102,11 +136,8 @@ class BrowseMedia:
 
     def calculate_children_class(self) -> None:
         """Count the children media classes and calculate the correct class."""
-        if self.children is None or len(self.children) == 0:
-            return
-
         self.children_media_class = MEDIA_CLASS_DIRECTORY
-
+        assert self.children is not None
         proposed_class = self.children[0].media_class
         if all(child.media_class == proposed_class for child in self.children):
             self.children_media_class = proposed_class

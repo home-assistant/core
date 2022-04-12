@@ -279,9 +279,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         keypad.add_callback(_element_changed)
 
     try:
-        if not await async_wait_for_elk_to_sync(
-            elk, LOGIN_TIMEOUT, SYNC_TIMEOUT, bool(conf[CONF_USERNAME])
-        ):
+        if not await async_wait_for_elk_to_sync(elk, LOGIN_TIMEOUT, SYNC_TIMEOUT):
             return False
     except asyncio.TimeoutError as exc:
         raise ConfigEntryNotReady(f"Timed out connecting to {conf[CONF_HOST]}") from exc
@@ -334,7 +332,6 @@ async def async_wait_for_elk_to_sync(
     elk: elkm1.Elk,
     login_timeout: int,
     sync_timeout: int,
-    password_auth: bool,
 ) -> bool:
     """Wait until the elk has finished sync. Can fail login or timeout."""
 
@@ -360,12 +357,10 @@ async def async_wait_for_elk_to_sync(
     success = True
     elk.add_handler("login", login_status)
     elk.add_handler("sync_complete", sync_complete)
-    events = []
-    if password_auth:
-        events.append(("login", login_event, login_timeout))
-    events.append(("sync_complete", sync_event, sync_timeout))
-
-    for name, event, timeout in events:
+    for name, event, timeout in (
+        ("login", login_event, login_timeout),
+        ("sync_complete", sync_event, sync_timeout),
+    ):
         _LOGGER.debug("Waiting for %s event for %s seconds", name, timeout)
         try:
             async with async_timeout.timeout(timeout):

@@ -17,7 +17,6 @@ from homeassistant.const import PERCENTAGE
 
 DOMAIN = "pi_hole"
 
-CONF_LOCATION = "location"
 CONF_STATISTICS_ONLY = "statistics_only"
 
 DEFAULT_LOCATION = "admin"
@@ -120,8 +119,10 @@ class PiHoleBinarySensorEntityDescription(
 
 BINARY_SENSOR_TYPES: tuple[PiHoleBinarySensorEntityDescription, ...] = (
     PiHoleBinarySensorEntityDescription(
+        # Deprecated, scheduled to be removed in 2022.6
         key="core_update_available",
         name="Core Update Available",
+        entity_registry_enabled_default=False,
         device_class=BinarySensorDeviceClass.UPDATE,
         extra_value=lambda api: {
             "current_version": api.versions["core_current"],
@@ -130,8 +131,10 @@ BINARY_SENSOR_TYPES: tuple[PiHoleBinarySensorEntityDescription, ...] = (
         state_value=lambda api: bool(api.versions["core_update"]),
     ),
     PiHoleBinarySensorEntityDescription(
+        # Deprecated, scheduled to be removed in 2022.6
         key="web_update_available",
         name="Web Update Available",
+        entity_registry_enabled_default=False,
         device_class=BinarySensorDeviceClass.UPDATE,
         extra_value=lambda api: {
             "current_version": api.versions["web_current"],
@@ -140,8 +143,10 @@ BINARY_SENSOR_TYPES: tuple[PiHoleBinarySensorEntityDescription, ...] = (
         state_value=lambda api: bool(api.versions["web_update"]),
     ),
     PiHoleBinarySensorEntityDescription(
+        # Deprecated, scheduled to be removed in 2022.6
         key="ftl_update_available",
         name="FTL Update Available",
+        entity_registry_enabled_default=False,
         device_class=BinarySensorDeviceClass.UPDATE,
         extra_value=lambda api: {
             "current_version": api.versions["FTL_current"],

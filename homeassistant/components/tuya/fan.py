@@ -8,11 +8,8 @@ from tuya_iot import TuyaDevice, TuyaDeviceManager
 from homeassistant.components.fan import (
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
-    SUPPORT_DIRECTION,
-    SUPPORT_OSCILLATE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_SET_SPEED,
     FanEntity,
+    FanEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -85,7 +82,7 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
             (DPCode.FAN_MODE, DPCode.MODE), dptype=DPType.ENUM, prefer_function=True
         ):
             self._presets = enum_type
-            self._attr_supported_features |= SUPPORT_PRESET_MODE
+            self._attr_supported_features |= FanEntityFeature.PRESET_MODE
             self._attr_preset_modes = enum_type.range
 
         # Find speed controls, can be either percentage or a set of speeds
@@ -98,25 +95,25 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
         if int_type := self.find_dpcode(
             dpcodes, dptype=DPType.INTEGER, prefer_function=True
         ):
-            self._attr_supported_features |= SUPPORT_SET_SPEED
+            self._attr_supported_features |= FanEntityFeature.SET_SPEED
             self._speed = int_type
         elif enum_type := self.find_dpcode(
             dpcodes, dptype=DPType.ENUM, prefer_function=True
         ):
-            self._attr_supported_features |= SUPPORT_SET_SPEED
+            self._attr_supported_features |= FanEntityFeature.SET_SPEED
             self._speeds = enum_type
 
         if dpcode := self.find_dpcode(
             (DPCode.SWITCH_HORIZONTAL, DPCode.SWITCH_VERTICAL), prefer_function=True
         ):
             self._oscillate = dpcode
-            self._attr_supported_features |= SUPPORT_OSCILLATE
+            self._attr_supported_features |= FanEntityFeature.OSCILLATE
 
         if enum_type := self.find_dpcode(
             DPCode.FAN_DIRECTION, dptype=DPType.ENUM, prefer_function=True
         ):
             self._direction = enum_type
-            self._attr_supported_features |= SUPPORT_DIRECTION
+            self._attr_supported_features |= FanEntityFeature.DIRECTION
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
@@ -161,7 +158,6 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
 
     def turn_on(
         self,
-        speed: str = None,
         percentage: int = None,
         preset_mode: str = None,
         **kwargs: Any,

@@ -29,10 +29,13 @@ from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_ENTITY_ID,
     CONF_ID,
+    CONF_MATCH,
     CONF_STATE,
     CONF_VALUE_TEMPLATE,
     CONF_WEEKDAY,
     CONF_ZONE,
+    ENTITY_MATCH_ALL,
+    ENTITY_MATCH_ANY,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     SUN_EVENT_SUNRISE,
@@ -524,6 +527,7 @@ def state_from_config(config: ConfigType) -> ConditionCheckerType:
     req_states: str | list[str] = config.get(CONF_STATE, [])
     for_period = config.get("for")
     attribute = config.get(CONF_ATTRIBUTE)
+    match = config.get(CONF_MATCH, ENTITY_MATCH_ALL)
 
     if not isinstance(req_states, list):
         req_states = [req_states]
@@ -532,10 +536,13 @@ def state_from_config(config: ConfigType) -> ConditionCheckerType:
     def if_state(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
         """Test if condition."""
         errors = []
+        result: bool = match != ENTITY_MATCH_ANY
         for index, entity_id in enumerate(entity_ids):
             try:
                 with trace_path(["entity_id", str(index)]), trace_condition(variables):
-                    if not state(hass, entity_id, req_states, for_period, attribute):
+                    if state(hass, entity_id, req_states, for_period, attribute):
+                        result = True
+                    elif match == ENTITY_MATCH_ALL:
                         return False
             except ConditionError as ex:
                 errors.append(
@@ -548,7 +555,7 @@ def state_from_config(config: ConfigType) -> ConditionCheckerType:
         if errors:
             raise ConditionErrorContainer("state", errors=errors)
 
-        return True
+        return result
 
     return if_state
 
@@ -897,7 +904,7 @@ def numeric_state_validate_config(
 
     registry = er.async_get(hass)
     config = dict(config)
-    config[CONF_ENTITY_ID] = er.async_resolve_entity_ids(
+    config[CONF_ENTITY_ID] = er.async_validate_entity_ids(
         registry, cv.entity_ids_or_uuids(config[CONF_ENTITY_ID])
     )
     return config
@@ -908,7 +915,7 @@ def state_validate_config(hass: HomeAssistant, config: ConfigType) -> ConfigType
 
     registry = er.async_get(hass)
     config = dict(config)
-    config[CONF_ENTITY_ID] = er.async_resolve_entity_ids(
+    config[CONF_ENTITY_ID] = er.async_validate_entity_ids(
         registry, cv.entity_ids_or_uuids(config[CONF_ENTITY_ID])
     )
     return config

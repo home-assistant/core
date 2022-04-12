@@ -57,7 +57,7 @@
                     "zone_relayaddr": "\u4e2d\u7e7c\u4f4d\u5740",
                     "zone_relaychan": "\u4e2d\u7e7c\u983b\u9053",
                     "zone_rfid": "RF \u5e8f\u5217",
-                    "zone_type": "\u5340\u57df\u985e\u578b"
+                    "zone_type": "\u5340\u57df\u985e\u5225"
                 },
                 "description": "\u8f38\u5165\u5340\u57df {zone_number} \u8a73\u7d30\u8cc7\u6599\u3002\u6b32\u522a\u9664\u5340\u57df {zone_number}\uff0c\u4fdd\u6301\u5340\u57df\u540d\u7a31\u7a7a\u767d\u3002",
                 "title": "\u8a2d\u5b9a AlarmDecoder"

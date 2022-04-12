@@ -171,6 +171,20 @@ SOURCE_LINEIN = "Line-in"
 SOURCE_SPOTIFY_CONNECT = "Spotify Connect"
 SOURCE_TV = "TV"
 
+MODELS_LINEIN_ONLY = (
+    "CONNECT",
+    "CONNECT:AMP",
+    "PORT",
+    "PLAY:5",
+)
+MODELS_TV_ONLY = (
+    "ARC",
+    "BEAM",
+    "PLAYBAR",
+    "PLAYBASE",
+)
+MODELS_LINEIN_AND_TV = ("AMP",)
+
 AVAILABILITY_CHECK_INTERVAL = datetime.timedelta(minutes=1)
 AVAILABILITY_TIMEOUT = AVAILABILITY_CHECK_INTERVAL.total_seconds() * 4.5
 BATTERY_SCAN_INTERVAL = datetime.timedelta(minutes=15)

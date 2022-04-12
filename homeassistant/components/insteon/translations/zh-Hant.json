@@ -36,9 +36,9 @@
             },
             "user": {
                 "data": {
-                    "modem_type": "\u6578\u64da\u6a5f\u985e\u578b\u3002"
+                    "modem_type": "\u6578\u64da\u6a5f\u985e\u5225\u3002"
                 },
-                "description": "\u9078\u64c7 Insteon \u6578\u64da\u6a5f\u985e\u578b\u3002",
+                "description": "\u9078\u64c7 Insteon \u6578\u64da\u6a5f\u985e\u5225\u3002",
                 "title": "Insteon"
             }
         }
