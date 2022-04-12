@@ -141,6 +141,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "airzone_cloud": {
+      "name": "Airzone Cloud",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "aladdin_connect": {
       "name": "Aladdin Connect",
       "integration_type": "hub",
