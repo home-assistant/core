@@ -15,7 +15,46 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED,
     STATE_UNKNOWN,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry
 from homeassistant.setup import async_setup_component
+
+
+async def test_config_overrides(hass: HomeAssistant):
+    """Test configuration overrides."""
+    config = {
+        "compensation": {
+            "test": {
+                "name": "Some Sensor",
+                "unique_id": "my_unique_id",
+                "source": "sensor.uncompensated",
+                "data_points": [
+                    [1.0, 2.0],
+                    [2.0, 3.0],
+                ],
+                "precision": 2,
+            }
+        }
+    }
+    expected_entity_id = "sensor.some_sensor"
+
+    assert await async_setup_component(hass, DOMAIN, config)
+    assert await async_setup_component(hass, SENSOR_DOMAIN, config)
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(expected_entity_id)
+    assert state is not None
+
+    assert state.name == "Some Sensor"
+
+    ent_reg = await entity_registry.async_get(hass)
+    registry_entry = ent_reg.async_get(expected_entity_id)
+
+    assert registry_entry is not None
+    assert registry_entry.unique_id == "my_unique_id"
 
 
 async def test_linear_state(hass):
@@ -33,7 +72,7 @@ async def test_linear_state(hass):
             }
         }
     }
-    expected_entity_id = "sensor.test"
+    expected_entity_id = "sensor.compensation_sensor_uncompensated"
 
     assert await async_setup_component(hass, DOMAIN, config)
     assert await async_setup_component(hass, SENSOR_DOMAIN, config)
@@ -46,8 +85,6 @@ async def test_linear_state(hass):
 
     state = hass.states.get(expected_entity_id)
     assert state is not None
-
-    assert state.name == "Test"
 
     assert round(float(state.state), config[DOMAIN]["test"][CONF_PRECISION]) == 5.0
 
@@ -83,7 +120,7 @@ async def test_linear_state_from_attribute(hass):
             }
         }
     }
-    expected_entity_id = "sensor.test"
+    expected_entity_id = "sensor.compensation_sensor_uncompensated_value"
 
     assert await async_setup_component(hass, DOMAIN, config)
     assert await async_setup_component(hass, SENSOR_DOMAIN, config)
@@ -97,6 +134,8 @@ async def test_linear_state_from_attribute(hass):
 
     state = hass.states.get(expected_entity_id)
     assert state is not None
+
+    assert state.name == "Compensation sensor.uncompensated value"
 
     assert round(float(state.state), config[DOMAIN]["test"][CONF_PRECISION]) == 5.0
 
@@ -149,7 +188,7 @@ async def test_quadratic_state(hass):
     hass.states.async_set(entity_id, 43.2, {})
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.test")
+    state = hass.states.get("sensor.compensation_sensor_temperature")
 
     assert state is not None
 
@@ -193,7 +232,7 @@ async def test_new_state_is_none(hass):
             }
         }
     }
-    expected_entity_id = "sensor.test"
+    expected_entity_id = "sensor.compensation_sensor_uncompensated"
 
     await async_setup_component(hass, DOMAIN, config)
     await hass.async_block_till_done()

@@ -17,4 +17,5 @@ ATTR_SOURCE_ATTRIBUTE = "source_attribute"
 ATTR_SOURCE_VALUE = "source_value"
 
 DEFAULT_DEGREE = 1
+DEFAULT_NAME = "Compensation"
 DEFAULT_PRECISION = 2
