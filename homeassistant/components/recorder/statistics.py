@@ -66,7 +66,6 @@ QUERY_STATISTICS = [
     Statistics.sum,
 ]
 
-
 QUERY_STATISTICS_SHORT_TERM = [
     StatisticsShortTerm.metadata_id,
     StatisticsShortTerm.start,
