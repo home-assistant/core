@@ -1,8 +1,9 @@
 """Provides the Geocaching DataUpdateCoordinator."""
 from __future__ import annotations
 
-from geocachingapi import GeocachingApi, GeocachingStatus
 from geocachingapi.exceptions import GeocachingApiError
+from geocachingapi.geocachingapi import GeocachingApi
+from geocachingapi.models import GeocachingStatus
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant

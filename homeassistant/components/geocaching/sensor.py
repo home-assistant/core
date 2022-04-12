@@ -3,9 +3,8 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
 
-from geocachingapi import GeocachingStatus
+from geocachingapi.models import GeocachingStatus
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -21,7 +20,7 @@ from .coordinator import GeocachingDataUpdateCoordinator
 class GeocachingRequiredKeysMixin:
     """Mixin for required keys."""
 
-    value_fn: Callable[[GeocachingStatus], Any]
+    value_fn: Callable[[GeocachingStatus], str | int | None]
 
 
 @dataclass
@@ -117,4 +116,4 @@ class GeocachingSensor(
     @property
     def native_value(self) -> str | int | None:
         """Return the state of the sensor."""
-        return self.entity_description.value_fn(self.coordinator.data)  # type: ignore[no-any-return]
+        return self.entity_description.value_fn(self.coordinator.data)
