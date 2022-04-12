@@ -9,7 +9,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_ATTRIBUTE,
     CONF_DEVICE_CLASS,
-    CONF_FRIENDLY_NAME,
+    CONF_NAME,
     CONF_SOURCE,
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
@@ -29,7 +29,7 @@ from .const import (
     CONF_POLYNOMIAL,
     CONF_PRECISION,
     DATA_COMPENSATION,
-    DOMAIN,
+    DEFAULT_NAME,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -48,16 +48,20 @@ async def async_setup_platform(
     compensation = discovery_info[CONF_COMPENSATION]
     conf = hass.data[DATA_COMPENSATION][compensation]
 
-    unique_id = conf.get(CONF_UNIQUE_ID) or f"{DOMAIN}.{compensation}"
-    name = conf.get(CONF_FRIENDLY_NAME) or compensation.replace("_", " ").title()
+    source = conf[CONF_SOURCE]
+    attribute = conf.get(CONF_ATTRIBUTE)
+    name = f"{DEFAULT_NAME} {source}"
+    if attribute:
+        name = f"{name} {attribute}"
+    name = conf.get(CONF_NAME) or name
 
     async_add_entities(
         [
             CompensationSensor(
-                unique_id,
+                conf.get(CONF_UNIQUE_ID),
                 name,
-                conf[CONF_SOURCE],
-                conf.get(CONF_ATTRIBUTE),
+                source,
+                attribute,
                 conf[CONF_PRECISION],
                 conf[CONF_POLYNOMIAL],
                 conf.get(CONF_UNIT_OF_MEASUREMENT),
@@ -126,20 +130,17 @@ class CompensationSensor(SensorEntity):
             if self._attr_device_class is None:
                 self._attr_device_class = new_state.attributes.get(ATTR_DEVICE_CLASS)
 
-        value: float | None
         try:
-            if self._source_attribute:
-                value = float(new_state.attributes.get(self._source_attribute))
-            else:
-                value = (
-                    None if new_state.state == STATE_UNKNOWN else float(new_state.state)
-                )
-            self._attr_native_value = round(self._poly(value), self._precision)
-            self._attr_extra_state_attributes[ATTR_SOURCE_VALUE] = value
+            source_value = (
+                float(new_state.attributes.get(self._source_attribute))
+                if self._source_attribute
+                else float(new_state.state)
+                if new_state.state != STATE_UNKNOWN
+                else None
+            )
+            native_value = round(self._poly(source_value), self._precision)
         except (ValueError, TypeError):
-            self._attr_native_value = None
-            self._attr_extra_state_attributes[ATTR_SOURCE_VALUE] = None
-
+            source_value = native_value = None
             if self._source_attribute:
                 _LOGGER.warning(
                     "%s attribute %s is not numerical",
@@ -148,5 +149,8 @@ class CompensationSensor(SensorEntity):
                 )
             else:
                 _LOGGER.warning("%s state is not numerical", self._source_entity_id)
+
+        self._attr_extra_state_attributes[ATTR_SOURCE_VALUE] = source_value
+        self._attr_native_value = native_value
 
         self.async_write_ha_state()
