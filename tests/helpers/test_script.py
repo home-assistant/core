@@ -2595,7 +2595,7 @@ async def test_if(
     assert f"Test Name: If at step 1: Executing step if {choice}" in caplog.text
 
     expected_trace = {
-        "0": [{"result": {"choice": choice}}],  # , {"result": {"result": var == 1}}],
+        "0": [{"result": {"choice": choice}}],
         "0/if": [{"result": {"result": if_result}}],
         "0/if/condition/0": [{"result": {"result": var == 1, "entities": []}}],
         f"0/{choice}/0": [
