@@ -15,6 +15,19 @@ from . import ECOVACS_DEVICES
 
 _LOGGER = logging.getLogger(__name__)
 
+SUPPORT_ECOVACS = (
+    VacuumEntityFeature.BATTERY
+    | VacuumEntityFeature.RETURN_HOME
+    | VacuumEntityFeature.CLEAN_SPOT
+    | VacuumEntityFeature.STOP
+    | VacuumEntityFeature.TURN_OFF
+    | VacuumEntityFeature.TURN_ON
+    | VacuumEntityFeature.LOCATE
+    | VacuumEntityFeature.STATUS
+    | VacuumEntityFeature.SEND_COMMAND
+    | VacuumEntityFeature.FAN_SPEED
+)
+
 ATTR_ERROR = "error"
 ATTR_COMPONENT_PREFIX = "component_"
 
@@ -35,19 +48,6 @@ def setup_platform(
 
 class EcovacsVacuum(VacuumEntity):
     """Ecovacs Vacuums such as Deebot."""
-
-    _attr_supported_features = (
-        VacuumEntityFeature.BATTERY
-        | VacuumEntityFeature.RETURN_HOME
-        | VacuumEntityFeature.CLEAN_SPOT
-        | VacuumEntityFeature.STOP
-        | VacuumEntityFeature.TURN_OFF
-        | VacuumEntityFeature.TURN_ON
-        | VacuumEntityFeature.LOCATE
-        | VacuumEntityFeature.STATUS
-        | VacuumEntityFeature.SEND_COMMAND
-        | VacuumEntityFeature.FAN_SPEED
-    )
 
     def __init__(self, device):
         """Initialize the Ecovacs Vacuum."""
@@ -110,6 +110,11 @@ class EcovacsVacuum(VacuumEntity):
     def name(self):
         """Return the name of the device."""
         return self._name
+
+    @property
+    def supported_features(self):
+        """Flag vacuum cleaner robot features that are supported."""
+        return SUPPORT_ECOVACS
 
     @property
     def status(self):
