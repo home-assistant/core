@@ -1,8 +1,11 @@
 """Platform for sensor integration."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
+
+from geocachingapi import GeocachingStatus
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -18,8 +21,7 @@ from .coordinator import GeocachingDataUpdateCoordinator
 class GeocachingRequiredKeysMixin:
     """Mixin for required keys."""
 
-    section: str
-    measurement: str
+    value_fn: Callable[[GeocachingStatus], Any]
 
 
 @dataclass
@@ -33,55 +35,49 @@ SENSORS: tuple[GeocachingSensorEntityDescription, ...] = (
     GeocachingSensorEntityDescription(
         key="username",
         name="username",
-        section="user",
-        measurement="username",
         icon="mdi:account",
         entity_registry_enabled_default=False,
+        value_fn=lambda status: status.user.username,
     ),
     GeocachingSensorEntityDescription(
         key="find_count",
         name="Total finds",
-        section="user",
-        measurement="find_count",
         icon="mdi:notebook-edit-outline",
         native_unit_of_measurement="caches",
         entity_registry_enabled_default=False,
+        value_fn=lambda status: status.user.find_count,
     ),
     GeocachingSensorEntityDescription(
         key="hide_count",
         name="Total hides",
-        section="user",
-        measurement="hide_count",
         icon="mdi:eye-off-outline",
         native_unit_of_measurement="caches",
         entity_registry_enabled_default=False,
+        value_fn=lambda status: status.user.hide_count,
     ),
     GeocachingSensorEntityDescription(
         key="favorite_points",
         name="Favorite points",
-        section="user",
-        measurement="favorite_points",
         icon="mdi:heart-outline",
         native_unit_of_measurement="points",
         entity_registry_enabled_default=False,
+        value_fn=lambda status: status.user.favorite_points,
     ),
     GeocachingSensorEntityDescription(
         key="souvenir_count",
         name="Total souvenirs",
-        section="user",
-        measurement="souvenir_count",
         icon="mdi:license",
         native_unit_of_measurement="souvenirs",
         entity_registry_enabled_default=False,
+        value_fn=lambda status: status.user.souvenir_count,
     ),
     GeocachingSensorEntityDescription(
         key="awarded_favorite_points",
         name="Awarded favorite points",
-        section="user",
-        measurement="awarded_favorite_points",
         icon="mdi:heart",
         native_unit_of_measurement="points",
         entity_registry_enabled_default=False,
+        value_fn=lambda status: status.user.awarded_favorite_points,
     ),
 )
 
@@ -96,11 +92,12 @@ async def async_setup_entry(
     )
 
 
-class GeocachingSensor(CoordinatorEntity, SensorEntity):
+class GeocachingSensor(
+    CoordinatorEntity[GeocachingDataUpdateCoordinator], SensorEntity
+):
     """Representation of a Sensor."""
 
     entity_description: GeocachingSensorEntityDescription
-    key: str
 
     def __init__(
         self,
@@ -119,7 +116,6 @@ class GeocachingSensor(CoordinatorEntity, SensorEntity):
         )
 
     @property
-    def native_value(self) -> Any | None:
+    def native_value(self) -> str | int | None:
         """Return the state of the sensor."""
-        section = getattr(self.coordinator.data, self.entity_description.section)
-        return getattr(section, self.entity_description.measurement)
+        return self.entity_description.value_fn(self.coordinator.data)  # type: ignore[no-any-return]
