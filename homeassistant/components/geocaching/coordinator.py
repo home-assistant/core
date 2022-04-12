@@ -1,8 +1,6 @@
 """Provides the Geocaching DataUpdateCoordinator."""
 from __future__ import annotations
 
-import logging
-
 from geocachingapi import GeocachingApi, GeocachingStatus
 from geocachingapi.exceptions import GeocachingApiError
 
@@ -12,9 +10,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, UPDATE_INTERVAL
-
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN, LOGGER, UPDATE_INTERVAL
 
 
 class GeocachingDataUpdateCoordinator(DataUpdateCoordinator[GeocachingStatus]):
@@ -39,7 +35,7 @@ class GeocachingDataUpdateCoordinator(DataUpdateCoordinator[GeocachingStatus]):
             token_refresh_method=async_token_refresh,
         )
 
-        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=UPDATE_INTERVAL)
+        super().__init__(hass, LOGGER, name=DOMAIN, update_interval=UPDATE_INTERVAL)
 
     async def _async_update_data(self) -> GeocachingStatus:
         try:

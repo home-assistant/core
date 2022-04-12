@@ -1,7 +1,6 @@
 """oAuth2 functions and classes for Geocaching API integration."""
 from __future__ import annotations
 
-import logging
 from typing import Any, cast
 
 from homeassistant.core import HomeAssistant
@@ -9,8 +8,6 @@ from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, OAUTH2_AUTHORIZE_URL, OAUTH2_TOKEN_URL
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class GeocachingOAuth2Implementation(

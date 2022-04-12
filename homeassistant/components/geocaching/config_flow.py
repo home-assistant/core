@@ -43,8 +43,12 @@ class GeocachingFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
             session=async_get_clientsession(self.hass),
         )
         status = await api.update()
-        existing_entry = await self.async_set_unique_id(status.user.username.lower())
-        if existing_entry:
+        if not status.user or not status.user.username:
+            return self.async_abort(reason="oauth_error")
+
+        if existing_entry := await self.async_set_unique_id(
+            status.user.username.lower()
+        ):
             self.hass.config_entries.async_update_entry(existing_entry, data=data)
             await self.hass.config_entries.async_reload(existing_entry.entry_id)
             return self.async_abort(reason="reauth_successful")
