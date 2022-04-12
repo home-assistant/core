@@ -2464,6 +2464,16 @@ def test_compile_statistics_hourly_daily_monthly_summary(
         },
     ]
 
+    # Adjust the inserted statistics
+    sum_adjustment = -10
+    sum_adjustement_start = zero + timedelta(minutes=65)
+    for i in range(13, 24):
+        expected_sums["sensor.test4"][i] += sum_adjustment
+    recorder.async_adjust_statistics(
+        "sensor.test4", sum_adjustement_start, sum_adjustment
+    )
+    wait_recording_done(hass)
+
     stats = statistics_during_period(hass, zero, period="5minute")
     expected_stats = {
         "sensor.test1": [],
