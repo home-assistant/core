@@ -111,7 +111,6 @@ class GeocachingSensor(CoordinatorEntity, SensorEntity):
         """Initialize the Geocaching sensor."""
         super().__init__(coordinator)
         self.entity_description = entity_description
-        self.key = entity_description.key
         self._attr_name = (
             f"Geocaching {coordinator.data.user.username} {entity_description.name}"
         )
