@@ -18,7 +18,6 @@ from .coordinator import GeocachingDataUpdateCoordinator
 class GeocachingRequiredKeysMixin:
     """Mixin for required keys."""
 
-    default_enabled: bool
     section: str
     measurement: str
 
@@ -30,14 +29,14 @@ class GeocachingSensorEntityDescription(
     """Define Sensor entity description class."""
 
 
-SENSOR_DATA: tuple[GeocachingSensorEntityDescription, ...] = (
+SENSORS: tuple[GeocachingSensorEntityDescription, ...] = (
     GeocachingSensorEntityDescription(
         key="username",
         name="username",
         section="user",
         measurement="username",
         icon="mdi:account",
-        default_enabled=False,
+        entity_registry_enabled_default=False,
     ),
     GeocachingSensorEntityDescription(
         key="find_count",
@@ -46,7 +45,7 @@ SENSOR_DATA: tuple[GeocachingSensorEntityDescription, ...] = (
         measurement="find_count",
         icon="mdi:notebook-edit-outline",
         native_unit_of_measurement="caches",
-        default_enabled=True,
+        entity_registry_enabled_default=False,
     ),
     GeocachingSensorEntityDescription(
         key="hide_count",
@@ -55,7 +54,7 @@ SENSOR_DATA: tuple[GeocachingSensorEntityDescription, ...] = (
         measurement="hide_count",
         icon="mdi:eye-off-outline",
         native_unit_of_measurement="caches",
-        default_enabled=True,
+        entity_registry_enabled_default=False,
     ),
     GeocachingSensorEntityDescription(
         key="favorite_points",
@@ -64,7 +63,7 @@ SENSOR_DATA: tuple[GeocachingSensorEntityDescription, ...] = (
         measurement="favorite_points",
         icon="mdi:heart-outline",
         native_unit_of_measurement="points",
-        default_enabled=True,
+        entity_registry_enabled_default=False,
     ),
     GeocachingSensorEntityDescription(
         key="souvenir_count",
@@ -73,7 +72,7 @@ SENSOR_DATA: tuple[GeocachingSensorEntityDescription, ...] = (
         measurement="souvenir_count",
         icon="mdi:license",
         native_unit_of_measurement="souvenirs",
-        default_enabled=True,
+        entity_registry_enabled_default=False,
     ),
     GeocachingSensorEntityDescription(
         key="awarded_favorite_points",
@@ -82,7 +81,7 @@ SENSOR_DATA: tuple[GeocachingSensorEntityDescription, ...] = (
         measurement="awarded_favorite_points",
         icon="mdi:heart",
         native_unit_of_measurement="points",
-        default_enabled=True,
+        entity_registry_enabled_default=False,
     ),
 )
 
@@ -93,7 +92,7 @@ async def async_setup_entry(
     """Set up a Geocaching sensor entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        [GeocachingSensor(coordinator, entity_description=item) for item in SENSOR_DATA]
+        [GeocachingSensor(coordinator, entity_description=item) for item in SENSORS]
     )
 
 
@@ -113,10 +112,6 @@ class GeocachingSensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self.entity_description = entity_description
         self.key = entity_description.key
-
-        self._attr_entity_registry_enabled_default = (
-            entity_description.default_enabled or True
-        )
         self._attr_name = (
             f"Geocaching {coordinator.data.user.username} {entity_description.name}"
         )
