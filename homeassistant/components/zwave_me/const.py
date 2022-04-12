@@ -12,10 +12,13 @@ class ZWaveMePlatform(StrEnum):
     BINARY_SENSOR = "sensorBinary"
     BUTTON = "toggleButton"
     CLIMATE = "thermostat"
+    COVER = "motor"
+    FAN = "fan"
     LOCK = "doorlock"
     NUMBER = "switchMultilevel"
     SWITCH = "switchBinary"
     SENSOR = "sensorMultilevel"
+    SIREN = "siren"
     RGBW_LIGHT = "switchRGBW"
     RGB_LIGHT = "switchRGB"
 
@@ -24,9 +27,12 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.CLIMATE,
+    Platform.COVER,
+    Platform.FAN,
     Platform.LIGHT,
     Platform.LOCK,
     Platform.NUMBER,
     Platform.SENSOR,
+    Platform.SIREN,
     Platform.SWITCH,
 ]
