@@ -1604,7 +1604,7 @@ zeroconf==0.38.4
 zha-quirks==0.0.72
 
 # homeassistant.components.zha
-zigpy-deconz==0.15.0
+zigpy-deconz==0.14.0
 
 # homeassistant.components.zha
 zigpy-xbee==0.14.0
