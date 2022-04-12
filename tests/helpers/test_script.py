@@ -3011,6 +3011,22 @@ async def test_referenced_areas(hass):
                         }
                     ],
                 },
+                {
+                    "sequence": [
+                        {
+                            "service": "test.script",
+                            "data": {"area_id": "area_sequence"},
+                        }
+                    ],
+                },
+                {
+                    "parallel": [
+                        {
+                            "service": "test.script",
+                            "data": {"area_id": "area_parallel"},
+                        }
+                    ],
+                },
             ]
         ),
         "Test Name",
@@ -3026,6 +3042,8 @@ async def test_referenced_areas(hass):
         "area_service_not_list",
         "area_if_then",
         "area_if_else",
+        "area_sequence",
+        "area_parallel",
         # 'area_service_template',  # no area extraction from template
     }
     # Test we cache results.
@@ -3118,6 +3136,22 @@ async def test_referenced_entities(hass):
                         }
                     ],
                 },
+                {
+                    "sequence": [
+                        {
+                            "service": "test.script",
+                            "data": {"entity_id": "light.sequence"},
+                        }
+                    ],
+                },
+                {
+                    "parallel": [
+                        {
+                            "service": "test.script",
+                            "data": {"entity_id": "light.parallel"},
+                        }
+                    ],
+                },
             ]
         ),
         "Test Name",
@@ -3136,6 +3170,8 @@ async def test_referenced_entities(hass):
         "light.service_not_list",
         "light.if_then",
         "light.if_else",
+        "light.sequence",
+        "light.parallel",
         # "light.service_template",  # no entity extraction from template
         "scene.hello",
         "sensor.condition",
@@ -3223,6 +3259,22 @@ async def test_referenced_devices(hass):
                         }
                     ],
                 },
+                {
+                    "sequence": [
+                        {
+                            "service": "test.script",
+                            "target": {"device_id": "sequence-device"},
+                        }
+                    ],
+                },
+                {
+                    "parallel": [
+                        {
+                            "service": "test.script",
+                            "target": {"device_id": "parallel-device"},
+                        }
+                    ],
+                },
             ]
         ),
         "Test Name",
@@ -3243,6 +3295,8 @@ async def test_referenced_devices(hass):
         "target-string-id",
         "if-then",
         "if-else",
+        "sequence-device",
+        "parallel-device",
     }
     # Test we cache results.
     assert script_obj.referenced_devices is script_obj.referenced_devices
@@ -3874,6 +3928,12 @@ async def test_validate_action_config(hass):
             "then": [templated_device_action("if_then_event")],
             "else": [templated_device_action("if_else_event")],
         },
+        cv.SCRIPT_ACTION_SEQUENCE: {
+            "sequence": [templated_device_action("sequence_event")],
+        },
+        cv.SCRIPT_ACTION_PARALLEL: {
+            "parallel": [templated_device_action("parallel_event")],
+        },
     }
     expected_templates = {
         cv.SCRIPT_ACTION_CHECK_CONDITION: None,
@@ -3882,6 +3942,8 @@ async def test_validate_action_config(hass):
         cv.SCRIPT_ACTION_CHOOSE: [["choose", 0, "sequence", 0], ["default", 0]],
         cv.SCRIPT_ACTION_WAIT_FOR_TRIGGER: None,
         cv.SCRIPT_ACTION_IF: None,
+        cv.SCRIPT_ACTION_SEQUENCE: None,
+        cv.SCRIPT_ACTION_PARALLEL: None,
     }
 
     for key in cv.ACTION_TYPE_SCHEMAS:
