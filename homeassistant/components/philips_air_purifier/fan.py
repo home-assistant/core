@@ -121,8 +121,11 @@ class PurifierEntity(FanEntity):
     @property
     def preset_mode(self) -> str | None:
         """Return the purifier's preset mode."""
-        if self._status is None:
-            return None
+
+        # Make type checker happy. Home Assistant doesn't call this method
+        # if the device is unavailable.
+        assert self._status is not None
+
         if self._status.mode == Mode.Manual:
             return None
         return self._status.mode.name
@@ -135,8 +138,11 @@ class PurifierEntity(FanEntity):
     @property
     def percentage(self) -> int | None:
         """Return the current fan speed converted to a percentage."""
-        if self._status is None:
-            return None
+
+        # Make type checker happy. Home Assistant doesn't call this method
+        # if the device is unavailable.
+        assert self._status is not None
+
         return DEVICE_TO_SPEED_PERCENTAGE_MAP[self._status.fan_speed]
 
     async def async_set_percentage(self, percentage: int) -> None:
