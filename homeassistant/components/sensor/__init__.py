@@ -186,7 +186,14 @@ class SensorStateClass(StrEnum):
     # The state represents a total amount, e.g. net energy consumption
     TOTAL = "total"
 
-    # The state represents a monotonically increasing total, e.g. an amount of consumed gas
+    # The state represents a total amount which is periodically reset to 0
+    # according to some cycle, e.g. an amount of consumed gas starting from 0
+    # the 1st of every month.
+    # This will be converted to a monotonically increasing total. Use with care,
+    # `TOTAL` should be used if the sensor does not peridocially reset.
+    TOTAL_AUTO_CYCLE = "total_auto_cycle"
+
+    # Deprecated, replaced by TOTAL_AUTO_CYCLE
     TOTAL_INCREASING = "total_increasing"
 
 

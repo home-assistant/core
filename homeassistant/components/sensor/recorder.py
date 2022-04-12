@@ -57,18 +57,18 @@ from . import (
     ATTR_STATE_CLASS,
     DOMAIN,
     STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL,
-    STATE_CLASS_TOTAL_INCREASING,
     STATE_CLASSES,
     SensorDeviceClass,
+    SensorStateClass,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_STATISTICS = {
-    STATE_CLASS_MEASUREMENT: {"mean", "min", "max"},
-    STATE_CLASS_TOTAL: {"sum"},
-    STATE_CLASS_TOTAL_INCREASING: {"sum"},
+    SensorStateClass.MEASUREMENT: {"mean", "min", "max"},
+    SensorStateClass.TOTAL: {"sum"},
+    SensorStateClass.TOTAL_AUTO_CYCLE: {"sum"},
+    SensorStateClass.TOTAL_INCREASING: {"sum"},  # Backwards compatibility
 }
 
 # Normalized units which will be stored in the statistics table
@@ -118,10 +118,10 @@ UNIT_CONVERSIONS: dict[str, dict[str, Callable]] = {
 }
 
 # Keep track of entities for which a warning about decreasing value has been logged
-SEEN_DIP = "sensor_seen_total_increasing_dip"
-WARN_DIP = "sensor_warn_total_increasing_dip"
+SEEN_DIP = "sensor_seen_total_auto_cycle_dip"
+WARN_DIP = "sensor_warn_total_auto_cycle_dip"
 # Keep track of entities for which a warning about negative value has been logged
-WARN_NEGATIVE = "sensor_warn_total_increasing_negative"
+WARN_NEGATIVE = "sensor_warn_total_auto_cycle_negative"
 # Keep track of entities for which a warning about unsupported unit has been logged
 WARN_UNSUPPORTED_UNIT = "sensor_warn_unsupported_unit"
 WARN_UNSTABLE_UNIT = "sensor_warn_unstable_unit"
@@ -309,7 +309,7 @@ def warn_dip(
         if domain in ["energy", "growatt_server", "solaredge"]:
             return
         _LOGGER.warning(
-            "Entity %s %shas state class total_increasing, but its state is "
+            "Entity %s %shas state class total_auto_cycle, but its state is "
             "not strictly increasing. Triggered by state %s (%s) with last_updated set to %s. "
             "Please %s",
             entity_id,
@@ -329,7 +329,7 @@ def warn_negative(hass: HomeAssistant, entity_id: str, state: State) -> None:
         hass.data[WARN_NEGATIVE].add(entity_id)
         domain = entity_sources(hass).get(entity_id, {}).get("domain")
         _LOGGER.warning(
-            "Entity %s %shas state class total_increasing, but its state is "
+            "Entity %s %shas state class total_auto_cycle, but its state is "
             "negative. Triggered by state %s with last_updated set to %s. Please %s",
             entity_id,
             f"from integration {domain} " if domain else "",
@@ -346,7 +346,7 @@ def reset_detected(
     previous_fstate: float | None,
     state: State,
 ) -> bool:
-    """Test if a total_increasing sensor has been reset."""
+    """Test if a total_auto_cycle sensor has been reset."""
     if previous_fstate is None:
         return False
 
@@ -523,7 +523,11 @@ def _compile_statistics(  # noqa: C901
             for fstate, state in fstates:
                 reset = False
                 if (
-                    state_class != STATE_CLASS_TOTAL_INCREASING
+                    state_class
+                    not in (
+                        SensorStateClass.TOTAL_AUTO_CYCLE,
+                        SensorStateClass.TOTAL_INCREASING,
+                    )
                     and (
                         last_reset := _last_reset_as_utc_isoformat(
                             state.attributes.get("last_reset"), entity_id
@@ -553,7 +557,10 @@ def _compile_statistics(  # noqa: C901
                         entity_id,
                         fstate,
                     )
-                elif state_class == STATE_CLASS_TOTAL_INCREASING:
+                elif state_class in (
+                    SensorStateClass.TOTAL_AUTO_CYCLE,
+                    SensorStateClass.TOTAL_INCREASING,
+                ):
                     try:
                         if old_state is None or reset_detected(
                             hass, entity_id, fstate, new_state, state

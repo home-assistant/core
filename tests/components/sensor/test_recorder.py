@@ -789,7 +789,7 @@ def test_compile_hourly_sum_statistics_nan_inf_state(
         ),
     ],
 )
-@pytest.mark.parametrize("state_class", ["total_increasing"])
+@pytest.mark.parametrize("state_class", ["total_auto_cycle", "total_increasing"])
 @pytest.mark.parametrize(
     "device_class,unit,native_unit,factor",
     [
@@ -879,7 +879,7 @@ def test_compile_hourly_sum_statistics_negative_state(
     state = states[entity_id][offending_state].state
     last_updated = states[entity_id][offending_state].last_updated.isoformat()
     assert (
-        f"Entity {entity_id} {warning_1}has state class total_increasing, but its state "
+        f"Entity {entity_id} {warning_1}has state class total_auto_cycle, but its state "
         f"is negative. Triggered by state {state} with last_updated set to {last_updated}."
         in caplog.text
     )
@@ -991,8 +991,9 @@ def test_compile_hourly_sum_statistics_total_no_reset(
         ("gas", "ft³", "m³", 0.0283168466),
     ],
 )
-def test_compile_hourly_sum_statistics_total_increasing(
-    hass_recorder, caplog, device_class, unit, native_unit, factor
+@pytest.mark.parametrize("state_class", ["total_auto_cycle", "total_increasing"])
+def test_compile_hourly_sum_statistics_total_auto_cycle(
+    hass_recorder, caplog, device_class, unit, native_unit, factor, state_class
 ):
     """Test compiling hourly statistics."""
     period0 = dt_util.utcnow()
@@ -1004,7 +1005,7 @@ def test_compile_hourly_sum_statistics_total_increasing(
     setup_component(hass, "sensor", {})
     attributes = {
         "device_class": device_class,
-        "state_class": "total_increasing",
+        "state_class": state_class,
         "unit_of_measurement": unit,
     }
     seq = [10, 15, 20, 10, 30, 40, 50, 60, 70]
@@ -1083,8 +1084,9 @@ def test_compile_hourly_sum_statistics_total_increasing(
     "device_class,unit,native_unit,factor",
     [("energy", "kWh", "kWh", 1)],
 )
-def test_compile_hourly_sum_statistics_total_increasing_small_dip(
-    hass_recorder, caplog, device_class, unit, native_unit, factor
+@pytest.mark.parametrize("state_class", ["total_auto_cycle", "total_increasing"])
+def test_compile_hourly_sum_statistics_total_auto_cycle_small_dip(
+    hass_recorder, caplog, device_class, unit, native_unit, factor, state_class
 ):
     """Test small dips in sensor readings do not trigger a reset."""
     period0 = dt_util.utcnow()
@@ -1096,7 +1098,7 @@ def test_compile_hourly_sum_statistics_total_increasing_small_dip(
     setup_component(hass, "sensor", {})
     attributes = {
         "device_class": device_class,
-        "state_class": "total_increasing",
+        "state_class": state_class,
         "unit_of_measurement": unit,
     }
     seq = [10, 15, 20, 19, 30, 40, 39, 60, 70]
@@ -1115,7 +1117,7 @@ def test_compile_hourly_sum_statistics_total_increasing_small_dip(
     recorder.do_adhoc_statistics(start=period1)
     wait_recording_done(hass)
     assert (
-        "Entity sensor.test1 has state class total_increasing, but its state is not "
+        "Entity sensor.test1 has state class total_auto_cycle, but its state is not "
         "strictly increasing."
     ) not in caplog.text
     recorder.do_adhoc_statistics(start=period2)
@@ -1124,7 +1126,7 @@ def test_compile_hourly_sum_statistics_total_increasing_small_dip(
     previous_state = float(states["sensor.test1"][5].state)
     last_updated = states["sensor.test1"][6].last_updated.isoformat()
     assert (
-        "Entity sensor.test1 has state class total_increasing, but its state is not "
+        "Entity sensor.test1 has state class total_auto_cycle, but its state is not "
         f"strictly increasing. Triggered by state {state} ({previous_state}) with "
         f"last_updated set to {last_updated}. Please create a bug report at "
         "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
@@ -2173,8 +2175,9 @@ def test_compile_hourly_statistics_changing_device_class_2(
         (None, None, None, 13.050847, -10, 30),
     ],
 )
+@pytest.mark.parametrize("state_class", ["total_auto_cycle", "total_increasing"])
 def test_compile_hourly_statistics_changing_statistics(
-    hass_recorder, caplog, device_class, unit, native_unit, mean, min, max
+    hass_recorder, caplog, device_class, unit, native_unit, mean, min, max, state_class
 ):
     """Test compiling hourly statistics where units change during an hour."""
     period0 = dt_util.utcnow()
@@ -2190,7 +2193,7 @@ def test_compile_hourly_statistics_changing_statistics(
     }
     attributes_2 = {
         "device_class": device_class,
-        "state_class": "total_increasing",
+        "state_class": state_class,
         "unit_of_measurement": unit,
     }
     four, states = record_states(hass, period0, "sensor.test1", attributes_1)
