@@ -38,6 +38,7 @@ from .const import (
     CONF_SERIAL_NUMBER_KEY,
     CONF_STATE_OF_CHARGE_KEY,
     CONF_STATUS_DESCRIPTION_KEY,
+    CONF_STATUS_ID_KEY,
     DOMAIN,
 )
 
@@ -122,6 +123,11 @@ SENSOR_TYPES: dict[str, WallboxSensorEntityDescription] = {
         key=CONF_STATUS_DESCRIPTION_KEY,
         icon="mdi:ev-station",
         name="Status Description",
+    ),
+    CONF_STATUS_ID_KEY: WallboxSensorEntityDescription(
+        key=CONF_STATUS_ID_KEY,
+        icon="mdi:ev-station",
+        name="Status Id",
     ),
     CONF_MAX_CHARGING_CURRENT_KEY: WallboxSensorEntityDescription(
         key=CONF_MAX_CHARGING_CURRENT_KEY,
