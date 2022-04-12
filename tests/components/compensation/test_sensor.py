@@ -10,6 +10,7 @@ from homeassistant.components.compensation.const import (
 from homeassistant.components.compensation.sensor import ATTR_COEFFICIENTS
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
+    ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
     EVENT_HOMEASSISTANT_START,
     EVENT_STATE_CHANGED,
@@ -27,6 +28,7 @@ async def test_config_overrides(hass: HomeAssistant):
             "test": {
                 "name": "Some Sensor",
                 "unique_id": "my_unique_id",
+                "icon": "mdi:gauge",
                 "source": "sensor.uncompensated",
                 "data_points": [
                     [1.0, 2.0],
@@ -49,6 +51,7 @@ async def test_config_overrides(hass: HomeAssistant):
     assert state is not None
 
     assert state.name == "Some Sensor"
+    assert state.attributes.get(ATTR_ICON) == "mdi:gauge"
 
     ent_reg = entity_registry.async_get(hass)
     registry_entry = ent_reg.async_get(expected_entity_id)
