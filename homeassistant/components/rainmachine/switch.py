@@ -31,6 +31,7 @@ from .const import (
     DEFAULT_ZONE_RUN,
     DOMAIN,
 )
+from .model import RainMachineDescriptionMixinUid
 
 ATTR_AREA = "area"
 ATTR_CS_ON = "cs_on"
@@ -49,7 +50,6 @@ ATTR_SOIL_TYPE = "soil_type"
 ATTR_SPRINKLER_TYPE = "sprinkler_head_type"
 ATTR_STATUS = "status"
 ATTR_SUN_EXPOSURE = "sun_exposure"
-ATTR_TIME_REMAINING = "time_remaining"
 ATTR_VEGETATION_TYPE = "vegetation_type"
 ATTR_ZONES = "zones"
 
@@ -110,15 +110,8 @@ VEGETATION_MAP = {
 
 
 @dataclass
-class RainMachineSwitchDescriptionMixin:
-    """Define an entity description mixin for switches."""
-
-    uid: int
-
-
-@dataclass
 class RainMachineSwitchDescription(
-    SwitchEntityDescription, RainMachineSwitchDescriptionMixin
+    SwitchEntityDescription, RainMachineDescriptionMixinUid
 ):
     """Describe a RainMachine switch."""
 
@@ -411,7 +404,6 @@ class RainMachineZone(RainMachineActivitySwitch):
                 ATTR_SPRINKLER_TYPE: SPRINKLER_TYPE_MAP.get(data.get("group_id")),
                 ATTR_STATUS: RUN_STATUS_MAP[data["state"]],
                 ATTR_SUN_EXPOSURE: SUN_EXPOSURE_MAP.get(data.get("sun")),
-                ATTR_TIME_REMAINING: data.get("remaining"),
                 ATTR_VEGETATION_TYPE: VEGETATION_MAP.get(data.get("type")),
             }
         )
