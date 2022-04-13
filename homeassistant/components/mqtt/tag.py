@@ -114,6 +114,18 @@ class MQTTTagScanner(MqttDiscoveryDeviceUpdate):
             self, hass, discovery_data, device_id, config_entry, LOG_NAME
         )
 
+    async def async_update(self, discovery_data: dict) -> None:
+        """Handle MQTT tag discovery updates."""
+        # Update tag scanner
+        config = PLATFORM_SCHEMA(discovery_data)
+        self._config = config
+        self._value_template = MqttValueTemplate(
+            config.get(CONF_VALUE_TEMPLATE),
+            hass=self.hass,
+        ).async_render_with_possible_json_value
+        update_device(self.hass, self._config_entry, config)
+        await self.subscribe_topics()
+
     async def subscribe_topics(self) -> None:
         """Subscribe to MQTT topics."""
 

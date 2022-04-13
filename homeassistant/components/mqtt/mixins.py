@@ -560,7 +560,7 @@ class MqttDiscoveryDeviceUpdate:
         device_id: str,
         config_entry: ConfigEntry,
         log_name: str,
-        async_update_callback: Callable | None = None,
+        async_update_callback: bool = False,
     ) -> None:
         """Initialize the update service."""
 
@@ -610,11 +610,12 @@ class MqttDiscoveryDeviceUpdate:
             discovery_payload
             and discovery_payload != self._discovery_data[ATTR_DISCOVERY_PAYLOAD]
         ):
-            # Only rediscover if updates are not supported by the platform
-            if self._async_update_callback is not None:
-                await self._async_update_callback(discovery_payload)
-            else:
-                self._rediscover = True
+            _LOGGER.info(
+                "%s %s update",
+                self.log_name,
+                discovery_hash,
+            )
+            await self.async_update(discovery_payload)
         if not discovery_payload or self._rediscover:
             # Unregister and clean up the current discovery instance
             terminate_discovery(self.hass, self._discovery_data, self._remove_signal)
@@ -681,11 +682,12 @@ class MqttDiscoveryDeviceUpdate:
         # cleanup platform resources
         self.hass.async_create_task(self._async_tear_down())
 
-    async def async_update(self) -> None:
-        """Handle the update of platform specific parts."""
+    async def async_update(self, discovery_data: dict) -> None:
+        """Handle the update of platform specific parts, extend to disable rediscovery."""
+        self._rediscover = True
 
     async def async_tear_down(self) -> None:
-        """Handle the cleanup of platform specific parts."""
+        """Handle the cleanup of platform specific parts, extend to the platform."""
 
 
 class MqttDiscoveryUpdate(Entity):
