@@ -46,7 +46,7 @@ async def async_setup_platform(
     _LOGGER.warning(
         "Loading aladdin_connect via platform setup is deprecated; Please remove it from your configuration"
     )
-    hass.async_create_task(
+    await hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},

@@ -1,5 +1,5 @@
 """Test the Aladdin Connect Cover."""
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 from homeassistant.components.aladdin_connect.const import DOMAIN
 import homeassistant.components.aladdin_connect.cover as cover
@@ -116,36 +116,12 @@ async def test_setup_component_noerror(hass: HomeAssistant) -> None:
         unique_id="test-id",
     )
     config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.aladdin_connect.cover.AladdinConnectClient.login",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.aladdin_connect.cover.AladdinConnectClient.get_doors",
-        return_value=[DEVICE_CONFIG],
-    ):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert config_entry.state == ConfigEntryState.LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-
-
-async def test_import(hass: HomeAssistant) -> None:
-    """Testing the import function of Aladdin Connect entry."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=YAML_CONFIG,
-        unique_id="test-id",
-    )
-    config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.aladdin_connect.cover.AladdinConnectClient.login",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.aladdin_connect.cover.AladdinConnectClient.get_doors",
-        return_value=[DEVICE_CONFIG],
-    ):
-        await async_setup_component(hass, DOMAIN, config_entry)
 
 
 async def test_load_and_unload(hass: HomeAssistant) -> None:
@@ -156,15 +132,9 @@ async def test_load_and_unload(hass: HomeAssistant) -> None:
         unique_id="test-id",
     )
     config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.aladdin_connect.cover.AladdinConnectClient.login",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.aladdin_connect.cover.AladdinConnectClient.get_doors",
-        return_value=[DEVICE_CONFIG],
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert config_entry.state == ConfigEntryState.LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
@@ -263,6 +233,6 @@ async def test_open_cover(hass: HomeAssistant) -> None:
 async def test_yaml_info_cover(hass):
     """Test setup YAML import."""
     assert COVER_DOMAIN not in hass.config.components
-    hass.async_create_task = MagicMock()
+    hass.async_create_task = AsyncMock()
     await cover.async_setup_platform(hass, YAML_CONFIG, None)
     await hass.async_block_till_done()
