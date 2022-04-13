@@ -1,6 +1,7 @@
 """The met component."""
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
 from datetime import timedelta
 import logging
@@ -33,7 +34,8 @@ from .const import (
     DOMAIN,
 )
 
-URL = "https://aa015h6buqvih86i1.api.met.no/weatherapi/locationforecast/2.0/complete"
+# From https://api.met.no/weatherapi/locationforecast/2.0/documentation
+URL = "https://api.met.no/weatherapi/locationforecast/2.0/complete"
 
 PLATFORMS = [Platform.WEATHER]
 
@@ -173,7 +175,9 @@ class MetWeatherData:
 
     async def fetch_data(self) -> MetWeatherData:
         """Fetch data from API - (current weather and forecast)."""
-        await self._weather_data.fetching_data()
+        resp = await self._weather_data.fetching_data()
+        if not resp:
+            raise asyncio.TimeoutError
         self.current_weather_data = self._weather_data.get_current_weather()
         time_zone = dt_util.DEFAULT_TIME_ZONE
         self.daily_forecast = self._weather_data.get_forecast(time_zone, False)
