@@ -33,8 +33,6 @@ SYSTEM_ID_SCHEMA = vol.Schema(
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle config flow for an Airzone device."""
 
-    VERSION = 2
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -43,10 +41,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            if CONF_ID in user_input:
-                system_id = user_input[CONF_ID]
-            else:
-                system_id = DEFAULT_SYSTEM_ID
+            system_id = user_input.get(CONF_ID, DEFAULT_SYSTEM_ID)
 
             self._async_abort_entries_match(
                 {

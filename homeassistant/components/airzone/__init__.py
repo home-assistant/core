@@ -65,28 +65,12 @@ class AirzoneEntity(CoordinatorEntity[AirzoneUpdateCoordinator]):
         return value
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
-    """Migrate old entry."""
-    _LOGGER.debug("Migrating from version %s", config_entry.version)
-
-    if config_entry.version == 1:
-        new = {**config_entry.data}
-        new[CONF_ID] = DEFAULT_SYSTEM_ID
-
-        config_entry.version = 2
-        hass.config_entries.async_update_entry(config_entry, data=new)
-
-    _LOGGER.info("Migration to version %s successful", config_entry.version)
-
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Airzone from a config entry."""
     options = ConnectionOptions(
         entry.data[CONF_HOST],
         entry.data[CONF_PORT],
-        entry.data[CONF_ID],
+        entry.data.get(CONF_ID, DEFAULT_SYSTEM_ID),
     )
 
     airzone = AirzoneLocalApi(aiohttp_client.async_get_clientsession(hass), options)
