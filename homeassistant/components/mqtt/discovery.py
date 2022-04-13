@@ -309,7 +309,7 @@ async def async_process_discovery_payload(
                     from . import device_automation
 
                     await device_automation.async_setup_entry(hass, config_entry)
-                elif component in "tag":
+                elif component == "tag":
                     # Local import to avoid circular dependencies
                     # pylint: disable-next=import-outside-toplevel
                     from . import tag
