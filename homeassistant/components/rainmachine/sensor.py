@@ -219,7 +219,7 @@ class ZoneTimeRemainingSensor(RainMachineEntity, SensorEntity):
         data = self.coordinator.data[self.entity_description.uid]
         now = utcnow()
 
-        if data["state"] != ZONE_STATE_RUNNING:
+        if ZONE_STATE_MAP.get(data["state"]) != ZONE_STATE_RUNNING:
             # If the zone isn't actively running, return immediately:
             return
 
