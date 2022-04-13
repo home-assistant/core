@@ -216,7 +216,7 @@ class _BaseVacuum(Entity):
         return None
 
     @property
-    def state_attributes(self):
+    def state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the vacuum cleaner."""
         data = {}
 
