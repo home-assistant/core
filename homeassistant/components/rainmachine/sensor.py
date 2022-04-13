@@ -146,7 +146,7 @@ async def async_setup_entry(
                 controller,
                 RainMachineSensorDescriptionUid(
                     key=f"{TYPE_ZONE_TIME_REMAINING}_{uid}",
-                    name=f"Zone Run Completion Time: {zone['name']}",
+                    name=f"{zone['name']} Run Completion Time",
                     device_class=SensorDeviceClass.TIMESTAMP,
                     entity_category=EntityCategory.DIAGNOSTIC,
                     uid=uid,
