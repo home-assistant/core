@@ -184,73 +184,6 @@ async def async_start(  # noqa: C901
 
         await async_process_discovery_payload(component, discovery_id, payload)
 
-    hass.data[DATA_CONFIG_ENTRY_LOCK] = asyncio.Lock()
-    hass.data[DATA_CONFIG_FLOW_LOCK] = asyncio.Lock()
-    hass.data[CONFIG_ENTRY_IS_SETUP] = set()
-
-    hass.data[ALREADY_DISCOVERED] = {}
-    hass.data[PENDING_DISCOVERED] = {}
-
-    discovery_topics = [
-        f"{discovery_topic}/+/+/config",
-        f"{discovery_topic}/+/+/+/config",
-    ]
-    hass.data[DISCOVERY_UNSUBSCRIBE] = await asyncio.gather(
-        *(
-            mqtt.async_subscribe(hass, topic, async_discovery_message_received, 0)
-            for topic in discovery_topics
-        )
-    )
-
-    hass.data[LAST_DISCOVERY] = time.time()
-    mqtt_integrations = await async_get_mqtt(hass)
-
-    hass.data[INTEGRATION_UNSUBSCRIBE] = {}
-
-    for (integration, topics) in mqtt_integrations.items():
-
-        async def async_integration_message_received(integration, msg):
-            """Process the received message."""
-            key = f"{integration}_{msg.subscribed_topic}"
-
-            # Lock to prevent initiating many parallel config flows.
-            # Note: The lock is not intended to prevent a race, only for performance
-            async with hass.data[DATA_CONFIG_FLOW_LOCK]:
-                # Already unsubscribed
-                if key not in hass.data[INTEGRATION_UNSUBSCRIBE]:
-                    return
-
-                data = mqtt.MqttServiceInfo(
-                    topic=msg.topic,
-                    payload=msg.payload,
-                    qos=msg.qos,
-                    retain=msg.retain,
-                    subscribed_topic=msg.subscribed_topic,
-                    timestamp=msg.timestamp,
-                )
-                result = await hass.config_entries.flow.async_init(
-                    integration, context={"source": DOMAIN}, data=data
-                )
-                if (
-                    result
-                    and result["type"] == RESULT_TYPE_ABORT
-                    and result["reason"]
-                    in ("already_configured", "single_instance_allowed")
-                ):
-                    unsub = hass.data[INTEGRATION_UNSUBSCRIBE].pop(key, None)
-                    if unsub is None:
-                        return
-                    unsub()
-
-        for topic in topics:
-            key = f"{integration}_{topic}"
-            hass.data[INTEGRATION_UNSUBSCRIBE][key] = await mqtt.async_subscribe(
-                hass,
-                topic,
-                functools.partial(async_integration_message_received, integration),
-                0,
-            )
-
     async def async_process_discovery_payload(component, discovery_id, payload):
         """Process the payload of a new discovery."""
 
@@ -323,6 +256,73 @@ async def async_start(  # noqa: C901
             # Unhandled discovery message
             async_dispatcher_send(
                 hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
+            )
+
+    hass.data[DATA_CONFIG_ENTRY_LOCK] = asyncio.Lock()
+    hass.data[DATA_CONFIG_FLOW_LOCK] = asyncio.Lock()
+    hass.data[CONFIG_ENTRY_IS_SETUP] = set()
+
+    hass.data[ALREADY_DISCOVERED] = {}
+    hass.data[PENDING_DISCOVERED] = {}
+
+    discovery_topics = [
+        f"{discovery_topic}/+/+/config",
+        f"{discovery_topic}/+/+/+/config",
+    ]
+    hass.data[DISCOVERY_UNSUBSCRIBE] = await asyncio.gather(
+        *(
+            mqtt.async_subscribe(hass, topic, async_discovery_message_received, 0)
+            for topic in discovery_topics
+        )
+    )
+
+    hass.data[LAST_DISCOVERY] = time.time()
+    mqtt_integrations = await async_get_mqtt(hass)
+
+    hass.data[INTEGRATION_UNSUBSCRIBE] = {}
+
+    for (integration, topics) in mqtt_integrations.items():
+
+        async def async_integration_message_received(integration, msg):
+            """Process the received message."""
+            key = f"{integration}_{msg.subscribed_topic}"
+
+            # Lock to prevent initiating many parallel config flows.
+            # Note: The lock is not intended to prevent a race, only for performance
+            async with hass.data[DATA_CONFIG_FLOW_LOCK]:
+                # Already unsubscribed
+                if key not in hass.data[INTEGRATION_UNSUBSCRIBE]:
+                    return
+
+                data = mqtt.MqttServiceInfo(
+                    topic=msg.topic,
+                    payload=msg.payload,
+                    qos=msg.qos,
+                    retain=msg.retain,
+                    subscribed_topic=msg.subscribed_topic,
+                    timestamp=msg.timestamp,
+                )
+                result = await hass.config_entries.flow.async_init(
+                    integration, context={"source": DOMAIN}, data=data
+                )
+                if (
+                    result
+                    and result["type"] == RESULT_TYPE_ABORT
+                    and result["reason"]
+                    in ("already_configured", "single_instance_allowed")
+                ):
+                    unsub = hass.data[INTEGRATION_UNSUBSCRIBE].pop(key, None)
+                    if unsub is None:
+                        return
+                    unsub()
+
+        for topic in topics:
+            key = f"{integration}_{topic}"
+            hass.data[INTEGRATION_UNSUBSCRIBE][key] = await mqtt.async_subscribe(
+                hass,
+                topic,
+                functools.partial(async_integration_message_received, integration),
+                0,
             )
 
 
