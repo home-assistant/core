@@ -135,7 +135,7 @@ def test_compile_hourly_statistics(hass_recorder):
 
     recorder.get_session().query(StatisticsShortTerm).delete()
     # Should not fail there is nothing in the table
-    stats = get_latest_short_term_statistics(hass, ["sensor.test1"], True)
+    stats = get_latest_short_term_statistics(hass, ["sensor.test1"])
     assert stats == {}
 
 
