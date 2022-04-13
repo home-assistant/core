@@ -5,6 +5,7 @@ import asyncio
 from collections.abc import Callable, Sequence
 from contextlib import asynccontextmanager, suppress
 from contextvars import ContextVar
+from copy import copy
 from datetime import datetime, timedelta
 from functools import partial
 import itertools
@@ -80,6 +81,7 @@ from .trace import (
     trace_id_get,
     trace_path,
     trace_path_get,
+    trace_path_stack_cv,
     trace_set_result,
     trace_stack_cv,
     trace_stack_pop,
@@ -908,6 +910,7 @@ class _ScriptRun:
         trace_set_result(error=error)
         raise _AbortScript(error)
 
+    @async_trace_path("parallel")
     async def _async_parallel_step(self) -> None:
         """Run a sequence in parallel."""
         # pylint: disable=protected-access
@@ -915,20 +918,18 @@ class _ScriptRun:
 
         async def async_run_with_trace(idx: int, script: Script) -> None:
             """Run a script with a trace path."""
+            reset = trace_path_stack_cv.set(copy(trace_path_stack_cv.get()))
             with trace_path(str(idx)):
                 await self._async_run_script(script)
+            trace_path_stack_cv.reset(reset)
 
-        with trace_path(["parallel"]):
-            results = await asyncio.gather(
-                *(
-                    async_run_with_trace(idx, script)
-                    for idx, script in enumerate(scripts)
-                ),
-                return_exceptions=True,
-            )
-            for result in results:
-                if isinstance(result, Exception):
-                    raise result
+        results = await asyncio.gather(
+            *(async_run_with_trace(idx, script) for idx, script in enumerate(scripts)),
+            return_exceptions=True,
+        )
+        for result in results:
+            if isinstance(result, Exception):
+                raise result
 
     async def _async_sequence_step(self) -> None:
         """Run a sub-sequence."""
