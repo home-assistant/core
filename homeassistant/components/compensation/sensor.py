@@ -6,10 +6,10 @@ import logging
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
-    ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_ATTRIBUTE,
     CONF_DEVICE_CLASS,
+    CONF_NAME,
     CONF_SOURCE,
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
@@ -53,6 +53,7 @@ async def async_setup_platform(
     name = f"{DEFAULT_NAME} {source}"
     if attribute:
         name = f"{name} {attribute}"
+    name = conf.get(CONF_NAME) or name
 
     async_add_entities(
         [
@@ -94,7 +95,6 @@ class CompensationSensor(SensorEntity):
         self._attr_name = name
         self._attr_should_poll = False
         self._attr_device_class = device_class
-        self._attr_icon = None
 
         attrs = {
             ATTR_SOURCE_VALUE: None,
@@ -129,8 +129,6 @@ class CompensationSensor(SensorEntity):
                 )
             if self._attr_device_class is None:
                 self._attr_device_class = new_state.attributes.get(ATTR_DEVICE_CLASS)
-            if self._attr_icon is None:
-                self._attr_icon = new_state.attributes.get(ATTR_ICON)
 
         try:
             source_value = (
