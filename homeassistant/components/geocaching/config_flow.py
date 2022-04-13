@@ -16,7 +16,6 @@ from .const import DOMAIN
 class GeocachingFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
     """Config flow to handle Geocaching OAuth2 authentication."""
 
-    DOMAIN = DOMAIN
     VERSION = 1
 
     @property
