@@ -380,7 +380,6 @@ build.json @home-assistant/supervisor
 /tests/components/gios/ @bieniu
 /homeassistant/components/github/ @timmo001 @ludeeus
 /tests/components/github/ @timmo001 @ludeeus
-/homeassistant/components/gitter/ @fabaff
 /homeassistant/components/glances/ @engrbm87
 /tests/components/glances/ @engrbm87
 /homeassistant/components/goalzero/ @tkdrob
