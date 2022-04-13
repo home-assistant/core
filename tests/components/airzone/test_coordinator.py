@@ -1,8 +1,8 @@
 """Define tests for the Airzone coordinator."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
-from aiohttp import ClientConnectorError
+from aioairzone.exceptions import AirzoneError
 
 from homeassistant.components.airzone.const import DOMAIN
 from homeassistant.components.airzone.coordinator import SCAN_INTERVAL
@@ -30,7 +30,7 @@ async def test_coordinator_client_connector_error(hass: HomeAssistant) -> None:
         mock_hvac.assert_called_once()
         mock_hvac.reset_mock()
 
-        mock_hvac.side_effect = ClientConnectorError(MagicMock(), MagicMock())
+        mock_hvac.side_effect = AirzoneError
         async_fire_time_changed(hass, utcnow() + SCAN_INTERVAL)
         await hass.async_block_till_done()
         mock_hvac.assert_called_once()
