@@ -1,7 +1,6 @@
 """Support for Honeywell (US) Total Connect Comfort climate systems."""
 import asyncio
 from datetime import timedelta
-from typing import Any
 
 import somecomfort
 
@@ -100,7 +99,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     return unload_ok
 
 
-def get_somecomfort_client(username: Any, password: Any) -> somecomfort.SomeComfort:
+def get_somecomfort_client(username: str, password: str) -> somecomfort.SomeComfort:
     """Initialize the somecomfort client."""
     try:
         return somecomfort.SomeComfort(username, password)
@@ -123,9 +122,9 @@ class HoneywellData:
         hass: HomeAssistant,
         config_entry: ConfigEntry,
         client: somecomfort.SomeComfort,
-        username: Any,
-        password: Any,
-        devices: dict[Any, somecomfort.Device],
+        username: str,
+        password: str,
+        devices: dict[str, somecomfort.Device],
     ) -> None:
         """Initialize the data object."""
         self._hass = hass
