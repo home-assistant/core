@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import timedelta
 from functools import partial
 
 from homeassistant.components.sensor import (
@@ -15,6 +16,7 @@ from homeassistant.const import TEMP_CELSIUS, VOLUME_CUBIC_METERS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util.dt import utcnow
 
 from . import RainMachineEntity
 from .const import (
@@ -22,26 +24,38 @@ from .const import (
     DATA_COORDINATOR,
     DATA_PROVISION_SETTINGS,
     DATA_RESTRICTIONS_UNIVERSAL,
+    DATA_ZONES,
     DOMAIN,
 )
-from .model import RainMachineSensorDescriptionMixin
+from .model import (
+    RainMachineDescriptionMixinApiCategory,
+    RainMachineDescriptionMixinUid,
+)
 
 TYPE_FLOW_SENSOR_CLICK_M3 = "flow_sensor_clicks_cubic_meter"
 TYPE_FLOW_SENSOR_CONSUMED_LITERS = "flow_sensor_consumed_liters"
 TYPE_FLOW_SENSOR_START_INDEX = "flow_sensor_start_index"
 TYPE_FLOW_SENSOR_WATERING_CLICKS = "flow_sensor_watering_clicks"
 TYPE_FREEZE_TEMP = "freeze_protect_temp"
+TYPE_ZONE_TIME_REMAINING = "zone_time_remaining"
 
 
 @dataclass
-class RainMachineSensorEntityDescription(
-    SensorEntityDescription, RainMachineSensorDescriptionMixin
+class RainMachineSensorDescriptionApiCategory(
+    SensorEntityDescription, RainMachineDescriptionMixinApiCategory
+):
+    """Describe a RainMachine sensor."""
+
+
+@dataclass
+class RainMachineSensorDescriptionUid(
+    SensorEntityDescription, RainMachineDescriptionMixinUid
 ):
     """Describe a RainMachine sensor."""
 
 
 SENSOR_DESCRIPTIONS = (
-    RainMachineSensorEntityDescription(
+    RainMachineSensorDescriptionApiCategory(
         key=TYPE_FLOW_SENSOR_CLICK_M3,
         name="Flow Sensor Clicks per Cubic Meter",
         icon="mdi:water-pump",
@@ -51,7 +65,7 @@ SENSOR_DESCRIPTIONS = (
         state_class=SensorStateClass.MEASUREMENT,
         api_category=DATA_PROVISION_SETTINGS,
     ),
-    RainMachineSensorEntityDescription(
+    RainMachineSensorDescriptionApiCategory(
         key=TYPE_FLOW_SENSOR_CONSUMED_LITERS,
         name="Flow Sensor Consumed Liters",
         icon="mdi:water-pump",
@@ -61,7 +75,7 @@ SENSOR_DESCRIPTIONS = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         api_category=DATA_PROVISION_SETTINGS,
     ),
-    RainMachineSensorEntityDescription(
+    RainMachineSensorDescriptionApiCategory(
         key=TYPE_FLOW_SENSOR_START_INDEX,
         name="Flow Sensor Start Index",
         icon="mdi:water-pump",
@@ -70,7 +84,7 @@ SENSOR_DESCRIPTIONS = (
         entity_registry_enabled_default=False,
         api_category=DATA_PROVISION_SETTINGS,
     ),
-    RainMachineSensorEntityDescription(
+    RainMachineSensorDescriptionApiCategory(
         key=TYPE_FLOW_SENSOR_WATERING_CLICKS,
         name="Flow Sensor Clicks",
         icon="mdi:water-pump",
@@ -80,7 +94,7 @@ SENSOR_DESCRIPTIONS = (
         state_class=SensorStateClass.MEASUREMENT,
         api_category=DATA_PROVISION_SETTINGS,
     ),
-    RainMachineSensorEntityDescription(
+    RainMachineSensorDescriptionApiCategory(
         key=TYPE_FREEZE_TEMP,
         name="Freeze Protect Temperature",
         icon="mdi:thermometer",
@@ -101,7 +115,7 @@ async def async_setup_entry(
     coordinators = hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR]
 
     @callback
-    def async_get_sensor(api_category: str) -> partial:
+    def async_get_sensor_by_api_category(api_category: str) -> partial:
         """Generate the appropriate sensor object for an API category."""
         if api_category == DATA_PROVISION_SETTINGS:
             return partial(
@@ -116,12 +130,31 @@ async def async_setup_entry(
             coordinators[DATA_RESTRICTIONS_UNIVERSAL],
         )
 
-    async_add_entities(
-        [
-            async_get_sensor(description.api_category)(controller, description)
-            for description in SENSOR_DESCRIPTIONS
-        ]
-    )
+    sensors = [
+        async_get_sensor_by_api_category(description.api_category)(
+            controller, description
+        )
+        for description in SENSOR_DESCRIPTIONS
+    ]
+
+    zone_coordinator = coordinators[DATA_ZONES]
+    for uid, zone in zone_coordinator.data.items():
+        sensors.append(
+            ZoneTimeRemainingSensor(
+                entry,
+                zone_coordinator,
+                controller,
+                RainMachineSensorDescriptionUid(
+                    key=f"{TYPE_ZONE_TIME_REMAINING}_{uid}",
+                    name=f"Zone Run Completion Time: {zone['name']}",
+                    device_class=SensorDeviceClass.TIMESTAMP,
+                    entity_category=EntityCategory.DIAGNOSTIC,
+                    uid=uid,
+                ),
+            )
+        )
+
+    async_add_entities(sensors)
 
 
 class ProvisionSettingsSensor(RainMachineEntity, SensorEntity):
@@ -162,3 +195,24 @@ class UniversalRestrictionsSensor(RainMachineEntity, SensorEntity):
         """Update the state."""
         if self.entity_description.key == TYPE_FREEZE_TEMP:
             self._attr_native_value = self.coordinator.data["freezeProtectTemp"]
+
+
+class ZoneTimeRemainingSensor(RainMachineEntity, SensorEntity):
+    """Define a sensor that shows the amount of time remaining for a zone."""
+
+    entity_description: RainMachineSensorDescriptionUid
+
+    @callback
+    def update_from_latest_data(self) -> None:
+        """Update the state."""
+        now = utcnow()
+        seconds_remaining = self.coordinator.data[self.entity_description.uid][
+            "remaining"
+        ]
+
+        if seconds_remaining == 0:
+            # If 0 seconds remain, the zone is finished/not running, so we leave the
+            # state wherever it was:
+            return
+
+        self._attr_native_value = now + timedelta(seconds=seconds_remaining)
