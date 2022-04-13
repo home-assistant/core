@@ -258,9 +258,7 @@ class SamsungTVDevice(MediaPlayerEntity):
         except asyncio.TimeoutError as err:
             # No need to try again
             self._app_list_event.set()
-            LOGGER.debug(
-                "Failed to load app list from %s: %s", self._host, err.__repr__()
-            )
+            LOGGER.debug("Failed to load app list from %s: %r", self._host, err)
 
     async def _async_startup_dmr(self) -> None:
         assert self._ssdp_rendering_control_location is not None
@@ -378,9 +376,7 @@ class SamsungTVDevice(MediaPlayerEntity):
         try:
             await dmr_device.async_set_volume_level(volume)
         except UpnpActionResponseError as err:
-            LOGGER.warning(
-                "Unable to set volume level on %s: %s", self._host, err.__repr__()
-            )
+            LOGGER.warning("Unable to set volume level on %s: %r", self._host, err)
 
     async def async_volume_up(self) -> None:
         """Volume up the media player."""
