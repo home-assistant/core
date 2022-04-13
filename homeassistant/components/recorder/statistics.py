@@ -1087,7 +1087,7 @@ def get_latest_short_term_statistics(
     # This function doesn't use a baked query, we instead rely on the
     # "Transparent SQL Compilation Caching" feature introduced in SQLAlchemy 1.4
     with session_scope(hass=hass) as session:
-        # Fetch metadata for the given statistic_id
+        # Fetch metadata for the given statistic_ids
         metadata = get_metadata_with_session(hass, session, statistic_ids=statistic_ids)
         if not metadata:
             return {}
