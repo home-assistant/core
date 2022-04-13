@@ -176,6 +176,9 @@ class _BaseVacuum(Entity):
     Contains common properties and functions for all vacuum devices.
     """
 
+    _attr_fan_speed: str | None = None
+    _attr_fan_speed_list: list[str] | None = None
+
     @property
     def supported_features(self) -> int:
         """Flag vacuum cleaner features that are supported."""
@@ -194,14 +197,16 @@ class _BaseVacuum(Entity):
         raise NotImplementedError()
 
     @property
-    def fan_speed(self):
+    def fan_speed(self) -> str | None:
         """Return the fan speed of the vacuum cleaner."""
-        return None
+        return self._attr_fan_speed
 
     @property
-    def fan_speed_list(self):
+    def fan_speed_list(self) -> list[str]:
         """Get the list of available fan speed steps of the vacuum cleaner."""
-        raise NotImplementedError()
+        if self._attr_fan_speed_list is None:
+            raise NotImplementedError()
+        return self._attr_fan_speed_list
 
     @property
     def capability_attributes(self) -> Mapping[str, Any] | None:
