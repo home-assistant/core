@@ -41,6 +41,15 @@ TYPE_FLOW_SENSOR_WATERING_CLICKS = "flow_sensor_watering_clicks"
 TYPE_FREEZE_TEMP = "freeze_protect_temp"
 TYPE_ZONE_RUN_COMPLETION_TIME = "zone_run_completion_time"
 
+ZONE_STATE_NOT_RUNNING = "not_running"
+ZONE_STATE_PENDING = "pending"
+ZONE_STATE_RUNNING = "running"
+ZONE_STATE_MAP = {
+    0: ZONE_STATE_NOT_RUNNING,
+    1: ZONE_STATE_RUNNING,
+    2: ZONE_STATE_PENDING,
+}
+
 
 @dataclass
 class RainMachineSensorDescriptionApiCategory(
@@ -207,17 +216,14 @@ class ZoneTimeRemainingSensor(RainMachineEntity, SensorEntity):
     @callback
     def update_from_latest_data(self) -> None:
         """Update the state."""
+        data = self.coordinator.data[self.entity_description.uid]
         now = utcnow()
-        seconds_remaining = self.coordinator.data[self.entity_description.uid][
-            "remaining"
-        ]
 
-        if seconds_remaining == 0:
-            # If 0 seconds remain, the zone is finished/not running, so we leave the
-            # state wherever it was:
+        if ZONE_STATE_MAP.get(data["state"]) != ZONE_STATE_RUNNING:
+            # If the zone isn't actively running, return immediately:
             return
 
-        new_timestamp = now + timedelta(seconds=seconds_remaining)
+        new_timestamp = now + timedelta(seconds=data["remaining"])
 
         if self._attr_native_value:
             assert isinstance(self._attr_native_value, datetime)
