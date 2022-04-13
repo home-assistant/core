@@ -1084,8 +1084,8 @@ def get_latest_short_term_statistics(
     hass: HomeAssistant, statistic_ids: list[str], convert_units: bool
 ) -> dict[str, list[dict]]:
     """Return the latest short term statistics for statistic_ids."""
-    # This function doesn't use a baked query since its
-    # deprecated since version 1.4
+    # This function doesn't use a baked query, we instead rely on the
+    # "Transparent SQL Compilation Caching" feature introduced in SQLAlchemy 1.4
     with session_scope(hass=hass) as session:
         # Fetch metadata for the given statistic_id
         metadata = get_metadata_with_session(hass, session, statistic_ids=statistic_ids)
