@@ -1096,7 +1096,7 @@ def get_latest_short_term_statistics(
             for statistic_id in statistic_ids
             if statistic_id in metadata
         ]
-        most_recent_metadata_ids = (
+        most_recent_statistic_row = (
             session.query(
                 StatisticsShortTerm.id,
                 func.max(StatisticsShortTerm.start),
@@ -1106,8 +1106,8 @@ def get_latest_short_term_statistics(
         ).subquery()
         stats = execute(
             session.query(*QUERY_STATISTICS_SHORT_TERM).join(
-                most_recent_metadata_ids,
-                StatisticsShortTerm.id == most_recent_metadata_ids.c.id,
+                most_recent_statistic_row,
+                StatisticsShortTerm.id == most_recent_statistic_row.c.id,
             )
         )
         if not stats:
