@@ -215,7 +215,6 @@ omit =
     homeassistant/components/devolo_home_control/subscriber.py
     homeassistant/components/devolo_home_control/switch.py
     homeassistant/components/digital_ocean/*
-    homeassistant/components/digitalloggers/switch.py
     homeassistant/components/discogs/sensor.py
     homeassistant/components/discord/__init__.py
     homeassistant/components/discord/notify.py
