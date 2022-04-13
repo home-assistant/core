@@ -229,44 +229,44 @@ class _BaseVacuum(Entity):
 
         return data
 
-    def stop(self, **kwargs):
+    def stop(self, **kwargs: Any) -> None:
         """Stop the vacuum cleaner."""
         raise NotImplementedError()
 
-    async def async_stop(self, **kwargs):
+    async def async_stop(self, **kwargs: Any) -> None:
         """Stop the vacuum cleaner.
 
         This method must be run in the event loop.
         """
         await self.hass.async_add_executor_job(partial(self.stop, **kwargs))
 
-    def return_to_base(self, **kwargs):
+    def return_to_base(self, **kwargs: Any) -> None:
         """Set the vacuum cleaner to return to the dock."""
         raise NotImplementedError()
 
-    async def async_return_to_base(self, **kwargs):
+    async def async_return_to_base(self, **kwargs: Any) -> None:
         """Set the vacuum cleaner to return to the dock.
 
         This method must be run in the event loop.
         """
         await self.hass.async_add_executor_job(partial(self.return_to_base, **kwargs))
 
-    def clean_spot(self, **kwargs):
+    def clean_spot(self, **kwargs: Any) -> None:
         """Perform a spot clean-up."""
         raise NotImplementedError()
 
-    async def async_clean_spot(self, **kwargs):
+    async def async_clean_spot(self, **kwargs: Any) -> None:
         """Perform a spot clean-up.
 
         This method must be run in the event loop.
         """
         await self.hass.async_add_executor_job(partial(self.clean_spot, **kwargs))
 
-    def locate(self, **kwargs):
+    def locate(self, **kwargs: Any) -> None:
         """Locate the vacuum cleaner."""
         raise NotImplementedError()
 
-    async def async_locate(self, **kwargs):
+    async def async_locate(self, **kwargs: Any) -> None:
         """Locate the vacuum cleaner.
 
         This method must be run in the event loop.
