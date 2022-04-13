@@ -447,7 +447,7 @@ class UtilityMeterSensor(RestoreSensor):
             self._last_period = last_sensor_data.last_period
             self._last_reset = last_sensor_data.last_reset
             if last_sensor_data.status == COLLECTING:
-                # Fake cancellation function to init the meter in similar state
+                # Null lambda to allow cancelling the collection on tariff change
                 self._collecting = lambda: None
 
         elif state := await self.async_get_last_state():
