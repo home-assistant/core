@@ -312,9 +312,10 @@ async def async_validate_action_config(
             )
 
     elif action_type == cv.SCRIPT_ACTION_PARALLEL:
-        config[CONF_PARALLEL] = await async_validate_actions_config(
-            hass, config[CONF_PARALLEL]
-        )
+        for parallel_conf in config[CONF_PARALLEL]:
+            parallel_conf[CONF_SEQUENCE] = await async_validate_actions_config(
+                hass, parallel_conf[CONF_SEQUENCE]
+            )
 
     else:
         raise ValueError(f"No validation for {action_type}")
@@ -1213,7 +1214,8 @@ class Script:
                     Script._find_referenced_areas(referenced, step[CONF_ELSE])
 
             elif action == cv.SCRIPT_ACTION_PARALLEL:
-                Script._find_referenced_areas(referenced, step[CONF_PARALLEL])
+                for script in step[CONF_PARALLEL]:
+                    Script._find_referenced_areas(referenced, script[CONF_SEQUENCE])
 
     @property
     def referenced_devices(self):
@@ -1260,7 +1262,8 @@ class Script:
                     Script._find_referenced_devices(referenced, step[CONF_ELSE])
 
             elif action == cv.SCRIPT_ACTION_PARALLEL:
-                Script._find_referenced_devices(referenced, step[CONF_PARALLEL])
+                for script in step[CONF_PARALLEL]:
+                    Script._find_referenced_devices(referenced, script[CONF_SEQUENCE])
 
     @property
     def referenced_entities(self):
@@ -1308,7 +1311,8 @@ class Script:
                     Script._find_referenced_entities(referenced, step[CONF_ELSE])
 
             elif action == cv.SCRIPT_ACTION_PARALLEL:
-                Script._find_referenced_entities(referenced, step[CONF_PARALLEL])
+                for script in step[CONF_PARALLEL]:
+                    Script._find_referenced_entities(referenced, script[CONF_SEQUENCE])
 
     def run(
         self, variables: _VarsType | None = None, context: Context | None = None
