@@ -121,7 +121,7 @@ def test_compile_hourly_statistics(hass_recorder):
     stats = get_last_short_term_statistics(hass, 1, "sensor.test1", True)
     assert stats == {"sensor.test1": [{**expected_2, "statistic_id": "sensor.test1"}]}
 
-    stats = get_latest_short_term_statistics(hass, ["sensor.test1"], True)
+    stats = get_latest_short_term_statistics(hass, ["sensor.test1"])
     assert stats == {"sensor.test1": [{**expected_2, "statistic_id": "sensor.test1"}]}
 
     stats = get_last_short_term_statistics(hass, 2, "sensor.test1", True)
