@@ -233,6 +233,18 @@ class MqttDeviceTrigger(MqttDiscoveryDeviceUpdate):
             self.hass, discovery_hash, self.discovery_data, self.device_id
         )
 
+    async def async_update(self, discovery_data: dict) -> None:
+        """Handle MQTT tag discovery updates."""
+        discovery_hash = self.discovery_data[ATTR_DISCOVERY_HASH]
+        discovery_id = discovery_hash[1]
+        debug_info.update_trigger_discovery_data(
+            self.hass, discovery_hash, discovery_data
+        )
+        config = TRIGGER_DISCOVERY_SCHEMA(discovery_data)
+        update_device(self.hass, self._config_entry, config)
+        device_trigger: Trigger = self.hass.data[DEVICE_TRIGGERS][discovery_id]
+        await device_trigger.update_trigger(config)
+
     async def async_tear_down(self) -> None:
         """Cleanup device trigger."""
         discovery_hash = self.discovery_data[ATTR_DISCOVERY_HASH]
