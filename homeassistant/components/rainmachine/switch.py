@@ -30,6 +30,7 @@ from .const import (
     DATA_ZONES,
     DEFAULT_ZONE_RUN,
     DOMAIN,
+    RUN_STATE_MAP,
 )
 from .model import RainMachineDescriptionMixinUid
 
@@ -54,8 +55,6 @@ ATTR_VEGETATION_TYPE = "vegetation_type"
 ATTR_ZONES = "zones"
 
 DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-
-RUN_STATUS_MAP = {0: "Not Running", 1: "Running", 2: "Queued"}
 
 SOIL_TYPE_MAP = {
     0: "Not Set",
@@ -328,7 +327,7 @@ class RainMachineProgram(RainMachineActivitySwitch):
                 ATTR_ID: self.entity_description.uid,
                 ATTR_NEXT_RUN: next_run,
                 ATTR_SOAK: data.get("soak"),
-                ATTR_STATUS: RUN_STATUS_MAP[data["status"]],
+                ATTR_STATUS: RUN_STATE_MAP[data["status"]],
                 ATTR_ZONES: [z for z in data["wateringTimes"] if z["active"]],
             }
         )
@@ -402,7 +401,7 @@ class RainMachineZone(RainMachineActivitySwitch):
                 ATTR_SLOPE: SLOPE_TYPE_MAP.get(data["slope"], 99),
                 ATTR_SOIL_TYPE: SOIL_TYPE_MAP.get(data["soil"], 99),
                 ATTR_SPRINKLER_TYPE: SPRINKLER_TYPE_MAP.get(data["group_id"], 99),
-                ATTR_STATUS: RUN_STATUS_MAP[data["state"]],
+                ATTR_STATUS: RUN_STATE_MAP[data["state"]],
                 ATTR_SUN_EXPOSURE: SUN_EXPOSURE_MAP.get(data.get("sun")),
                 ATTR_VEGETATION_TYPE: VEGETATION_MAP.get(data["type"], 99),
             }
