@@ -5,10 +5,10 @@ import logging
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_TRANSITION,
+    COLOR_MODE_BRIGHTNESS,
     DOMAIN,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_TRANSITION,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -56,10 +56,9 @@ async def async_setup_entry(
 class LutronCasetaLight(LutronCasetaDevice, LightEntity):
     """Representation of a Lutron Light, including dimmable."""
 
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
+    _attr_color_mode = COLOR_MODE_BRIGHTNESS
+    _attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
+    _attr_supported_features = LightEntityFeature.TRANSITION
 
     @property
     def brightness(self):

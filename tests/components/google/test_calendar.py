@@ -272,6 +272,35 @@ async def test_all_day_offset_event(hass, mock_events_list_items, component_setu
     }
 
 
+async def test_missing_summary(hass, mock_events_list_items, component_setup):
+    """Test that we can create an event trigger on device."""
+    start_event = dt_util.now() + datetime.timedelta(minutes=14)
+    end_event = start_event + datetime.timedelta(minutes=60)
+    event = {
+        **TEST_EVENT,
+        "start": {"dateTime": start_event.isoformat()},
+        "end": {"dateTime": end_event.isoformat()},
+    }
+    del event["summary"]
+    mock_events_list_items([event])
+
+    assert await component_setup()
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state.name == TEST_ENTITY_NAME
+    assert state.state == STATE_OFF
+    assert dict(state.attributes) == {
+        "friendly_name": TEST_ENTITY_NAME,
+        "message": "",
+        "all_day": False,
+        "offset_reached": False,
+        "start_time": start_event.strftime(DATE_STR_FORMAT),
+        "end_time": end_event.strftime(DATE_STR_FORMAT),
+        "location": event["location"],
+        "description": event["description"],
+    }
+
+
 async def test_update_error(
     hass, calendar_resource, component_setup, test_api_calendar
 ):
