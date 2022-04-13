@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
 from functools import partial
 
 from homeassistant.components.sensor import (
@@ -32,12 +32,14 @@ from .model import (
     RainMachineDescriptionMixinUid,
 )
 
+DEFAULT_ZONE_COMPLETION_TIME_WOBBLE_TOLERANCE = timedelta(seconds=5)
+
 TYPE_FLOW_SENSOR_CLICK_M3 = "flow_sensor_clicks_cubic_meter"
 TYPE_FLOW_SENSOR_CONSUMED_LITERS = "flow_sensor_consumed_liters"
 TYPE_FLOW_SENSOR_START_INDEX = "flow_sensor_start_index"
 TYPE_FLOW_SENSOR_WATERING_CLICKS = "flow_sensor_watering_clicks"
 TYPE_FREEZE_TEMP = "freeze_protect_temp"
-TYPE_ZONE_TIME_REMAINING = "zone_time_remaining"
+TYPE_ZONE_RUN_COMPLETION_TIME = "zone_run_completion_time"
 
 
 @dataclass
@@ -145,7 +147,7 @@ async def async_setup_entry(
                 zone_coordinator,
                 controller,
                 RainMachineSensorDescriptionUid(
-                    key=f"{TYPE_ZONE_TIME_REMAINING}_{uid}",
+                    key=f"{TYPE_ZONE_RUN_COMPLETION_TIME}_{uid}",
                     name=f"{zone['name']} Run Completion Time",
                     device_class=SensorDeviceClass.TIMESTAMP,
                     entity_category=EntityCategory.DIAGNOSTIC,
@@ -215,4 +217,15 @@ class ZoneTimeRemainingSensor(RainMachineEntity, SensorEntity):
             # state wherever it was:
             return
 
-        self._attr_native_value = now + timedelta(seconds=seconds_remaining)
+        new_timestamp = now + timedelta(seconds=seconds_remaining)
+
+        if self._attr_native_value:
+            assert isinstance(self._attr_native_value, datetime)
+            if (
+                new_timestamp - self._attr_native_value
+            ) < DEFAULT_ZONE_COMPLETION_TIME_WOBBLE_TOLERANCE:
+                # If the deviation between the previous and new timestamps is less than
+                # a "wobble tolerance," don't spam the state machine:
+                return
+
+        self._attr_native_value = new_timestamp
