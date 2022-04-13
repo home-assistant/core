@@ -4,10 +4,10 @@ from unittest.mock import patch
 
 from homeassistant.components.airzone.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST, CONF_ID, CONF_PORT
+from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
 
-from .util import CONFIG, HVAC_MOCK
+from .util import CONFIG, CONFIG_NO_ID, HVAC_MOCK
 
 from tests.common import MockConfigEntry
 
@@ -16,10 +16,7 @@ async def test_migration_system_id(hass: HomeAssistant):
     """Test System ID config migration."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={
-            CONF_HOST: CONFIG[CONF_HOST],
-            CONF_PORT: CONFIG[CONF_PORT],
-        },
+        data=CONFIG_NO_ID,
     )
     config_entry.add_to_hass(hass)
 

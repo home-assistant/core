@@ -4,9 +4,8 @@ from __future__ import annotations
 from typing import Any
 
 from aioairzone.common import ConnectionOptions
-from aioairzone.exceptions import InvalidHost
+from aioairzone.exceptions import AirzoneError, InvalidSystem
 from aioairzone.localapi import AirzoneLocalApi
-from aiohttp.client_exceptions import ClientConnectorError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -15,6 +14,20 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
 
 from .const import DEFAULT_LOCAL_API_PORT, DEFAULT_SYSTEM_ID, DOMAIN
+
+CONFIG_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST): str,
+        vol.Required(CONF_PORT, default=DEFAULT_LOCAL_API_PORT): int,
+    }
+)
+SYSTEM_ID_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST): str,
+        vol.Required(CONF_PORT, default=DEFAULT_LOCAL_API_PORT): int,
+        vol.Required(CONF_ID, default=DEFAULT_SYSTEM_ID): int,
+    }
+)
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -26,14 +39,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
+        data_schema = CONFIG_SCHEMA
         errors = {}
 
         if user_input is not None:
+            if CONF_ID in user_input:
+                system_id = user_input[CONF_ID]
+            else:
+                system_id = DEFAULT_SYSTEM_ID
+
             self._async_abort_entries_match(
                 {
                     CONF_HOST: user_input[CONF_HOST],
                     CONF_PORT: user_input[CONF_PORT],
-                    CONF_ID: user_input[CONF_ID],
+                    CONF_ID: system_id,
                 }
             )
 
@@ -42,13 +61,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 ConnectionOptions(
                     user_input[CONF_HOST],
                     user_input[CONF_PORT],
-                    user_input[CONF_ID],
+                    system_id,
                 ),
             )
 
             try:
                 await airzone.validate_airzone()
-            except (ClientConnectorError, InvalidHost):
+            except InvalidSystem:
+                data_schema = SYSTEM_ID_SCHEMA
+                errors["base"] = "invalid_system_id"
+            except AirzoneError:
                 errors["base"] = "cannot_connect"
             else:
                 title = f"Airzone {user_input[CONF_HOST]}:{user_input[CONF_PORT]}"
@@ -56,12 +78,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_HOST): str,
-                    vol.Required(CONF_PORT, default=DEFAULT_LOCAL_API_PORT): int,
-                    vol.Required(CONF_ID, default=DEFAULT_SYSTEM_ID): int,
-                }
-            ),
+            data_schema=data_schema,
             errors=errors,
         )
