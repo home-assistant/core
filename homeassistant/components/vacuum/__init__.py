@@ -223,7 +223,7 @@ class _BaseVacuum(Entity):
         return None
 
     @property
-    def state_attributes(self) -> dict[str, Any] | None:
+    def state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the vacuum cleaner."""
         data: dict[str, Any] = {}
 
@@ -322,7 +322,7 @@ class VacuumEntity(_BaseVacuum, ToggleEntity):
     entity_description: VacuumEntityDescription
 
     @property
-    def status(self):
+    def status(self) -> str | None:
         """Return the status of the vacuum cleaner."""
         return None
 
@@ -338,7 +338,7 @@ class VacuumEntity(_BaseVacuum, ToggleEntity):
 
     @final
     @property
-    def state_attributes(self):
+    def state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the vacuum cleaner."""
         data = super().state_attributes
 
@@ -347,43 +347,43 @@ class VacuumEntity(_BaseVacuum, ToggleEntity):
 
         return data
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the vacuum on and start cleaning."""
         raise NotImplementedError()
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the vacuum on and start cleaning.
 
         This method must be run in the event loop.
         """
         await self.hass.async_add_executor_job(partial(self.turn_on, **kwargs))
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the vacuum off stopping the cleaning and returning home."""
         raise NotImplementedError()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the vacuum off stopping the cleaning and returning home.
 
         This method must be run in the event loop.
         """
         await self.hass.async_add_executor_job(partial(self.turn_off, **kwargs))
 
-    def start_pause(self, **kwargs):
+    def start_pause(self, **kwargs: Any) -> None:
         """Start, pause or resume the cleaning task."""
         raise NotImplementedError()
 
-    async def async_start_pause(self, **kwargs):
+    async def async_start_pause(self, **kwargs: Any) -> None:
         """Start, pause or resume the cleaning task.
 
         This method must be run in the event loop.
         """
         await self.hass.async_add_executor_job(partial(self.start_pause, **kwargs))
 
-    async def async_pause(self):
+    async def async_pause(self) -> None:
         """Not supported."""
 
-    async def async_start(self):
+    async def async_start(self) -> None:
         """Not supported."""
 
 
@@ -398,7 +398,7 @@ class StateVacuumEntity(_BaseVacuum):
     entity_description: StateVacuumEntityDescription
 
     @property
-    def state(self):
+    def state(self) -> str | None:
         """Return the state of the vacuum cleaner."""
         return None
 
@@ -411,33 +411,33 @@ class StateVacuumEntity(_BaseVacuum):
             battery_level=self.battery_level, charging=charging
         )
 
-    def start(self):
+    def start(self) -> None:
         """Start or resume the cleaning task."""
         raise NotImplementedError()
 
-    async def async_start(self):
+    async def async_start(self) -> None:
         """Start or resume the cleaning task.
 
         This method must be run in the event loop.
         """
         await self.hass.async_add_executor_job(self.start)
 
-    def pause(self):
+    def pause(self) -> None:
         """Pause the cleaning task."""
         raise NotImplementedError()
 
-    async def async_pause(self):
+    async def async_pause(self) -> None:
         """Pause the cleaning task.
 
         This method must be run in the event loop.
         """
         await self.hass.async_add_executor_job(self.pause)
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Not supported."""
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Not supported."""
 
-    async def async_toggle(self, **kwargs):
+    async def async_toggle(self, **kwargs: Any) -> None:
         """Not supported."""
