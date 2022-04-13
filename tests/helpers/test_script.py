@@ -2683,7 +2683,7 @@ async def test_if_condition_validation(
 
 
 async def test_parallel(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
-    """Test if action."""
+    """Test parallel action."""
     events = async_capture_events(hass, "test_event")
     hass.states.async_set("switch.trigger", "off")
 
@@ -2782,6 +2782,46 @@ async def test_parallel(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
         ],
     }
     assert_action_trace(expected_trace)
+
+
+async def test_parallel_error(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test parallel action failure handling."""
+    events = async_capture_events(hass, "test_event")
+    sequence = cv.SCRIPT_SCHEMA(
+        {
+            "parallel": [
+                {"service": "epic.failure"},
+            ]
+        }
+    )
+
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    with pytest.raises(exceptions.ServiceNotFound):
+        await script_obj.async_run(context=Context())
+    assert len(events) == 0
+
+    expected_trace = {
+        "0": [{"error_type": ServiceNotFound, "result": {}}],
+        "0/parallel/0/sequence/0": [
+            {
+                "error_type": ServiceNotFound,
+                "result": {
+                    "limit": 10,
+                    "params": {
+                        "domain": "epic",
+                        "service": "failure",
+                        "service_data": {},
+                        "target": {},
+                    },
+                    "running_script": False,
+                },
+            }
+        ],
+    }
+    assert_action_trace(expected_trace, expected_script_execution="error")
 
 
 async def test_last_triggered(hass):
