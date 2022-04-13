@@ -12,7 +12,7 @@ import logging
 import os
 import re
 from statistics import mean
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, Literal, overload
 
 from sqlalchemy import bindparam, func
 from sqlalchemy.exc import SQLAlchemyError, StatementError
@@ -123,9 +123,9 @@ QUERY_STATISTIC_META_ID = [
 STATISTICS_BAKERY = "recorder_statistics_bakery"
 
 
-# Convert pressure and temperature statistics from the native unit used for statistics
-# to the units configured by the user
-UNIT_CONVERSIONS = {
+# Convert pressure, temperature and volume statistics from the normalized unit used for
+# statistics to the unit configured by the user
+STATISTIC_UNIT_TO_DISPLAY_UNIT_CONVERSIONS = {
     PRESSURE_PA: lambda x, units: pressure_util.convert(
         x, PRESSURE_PA, units.pressure_unit
     )
@@ -141,6 +141,17 @@ UNIT_CONVERSIONS = {
     )
     if x is not None
     else None,
+}
+
+# Convert volume statistics from the display unit configured by the user
+# to the normalized unit used for statistics
+# This is used to support adjusting statistics in the display unit
+DISPLAY_UNIT_TO_STATISTIC_UNIT_CONVERSIONS: dict[
+    str, Callable[[float, UnitSystem], float]
+] = {
+    VOLUME_CUBIC_FEET: lambda x, units: volume_util.convert(
+        x, _configured_unit(VOLUME_CUBIC_METERS, units), VOLUME_CUBIC_METERS
+    ),
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -717,7 +728,17 @@ def get_metadata(
         )
 
 
+@overload
+def _configured_unit(unit: None, units: UnitSystem) -> None:
+    ...
+
+
+@overload
 def _configured_unit(unit: str, units: UnitSystem) -> str:
+    ...
+
+
+def _configured_unit(unit: str | None, units: UnitSystem) -> str | None:
     """Return the pressure and temperature units configured by the user."""
     if unit == PRESSURE_PA:
         return units.pressure_unit
@@ -1156,7 +1177,7 @@ def _sorted_statistics_to_dict(
         statistic_id = metadata[meta_id]["statistic_id"]
         convert: Callable[[Any, Any], float | None]
         if convert_units:
-            convert = UNIT_CONVERSIONS.get(unit, lambda x, units: x)  # type: ignore[arg-type,no-any-return]
+            convert = STATISTIC_UNIT_TO_DISPLAY_UNIT_CONVERSIONS.get(unit, lambda x, units: x)  # type: ignore[arg-type,no-any-return]
         else:
             convert = no_conversion
         ent_results = result[meta_id]
@@ -1316,17 +1337,26 @@ def adjust_statistics(
         if statistic_id not in metadata:
             return True
 
-        tables: tuple[type[Statistics | StatisticsShortTerm], ...] = (
-            Statistics,
+        units = instance.hass.config.units
+        statistic_unit = metadata[statistic_id][1]["unit_of_measurement"]
+        display_unit = _configured_unit(statistic_unit, units)
+        convert = DISPLAY_UNIT_TO_STATISTIC_UNIT_CONVERSIONS.get(display_unit, lambda x, units: x)  # type: ignore[arg-type]
+        sum_adjustment = convert(sum_adjustment, units)
+
+        _adjust_sum_statistics(
+            session,
             StatisticsShortTerm,
+            metadata[statistic_id][0],
+            start_time,
+            sum_adjustment,
         )
-        for table in tables:
-            _adjust_sum_statistics(
-                session,
-                table,
-                metadata[statistic_id][0],
-                start_time,
-                sum_adjustment,
-            )
+
+        _adjust_sum_statistics(
+            session,
+            Statistics,
+            metadata[statistic_id][0],
+            start_time.replace(minute=0),
+            sum_adjustment,
+        )
 
     return True

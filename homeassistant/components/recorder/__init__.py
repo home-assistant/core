@@ -19,7 +19,6 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.orm.session import Session
-from sqlalchemy.pool import StaticPool
 import voluptuous as vol
 
 from homeassistant.components import persistent_notification
@@ -79,7 +78,7 @@ from .models import (
     StatisticsRuns,
     process_timestamp,
 )
-from .pool import POOL_SIZE, RecorderPool
+from .pool import POOL_SIZE, MutexPool, RecorderPool
 from .util import (
     dburl_to_path,
     end_incomplete_runs,
@@ -1405,7 +1404,8 @@ class Recorder(threading.Thread):
 
         if self.db_url == SQLITE_URL_PREFIX or ":memory:" in self.db_url:
             kwargs["connect_args"] = {"check_same_thread": False}
-            kwargs["poolclass"] = StaticPool
+            kwargs["poolclass"] = MutexPool
+            MutexPool.pool_lock = threading.RLock()
             kwargs["pool_reset_on_return"] = None
         elif self.db_url.startswith(SQLITE_URL_PREFIX):
             kwargs["poolclass"] = RecorderPool

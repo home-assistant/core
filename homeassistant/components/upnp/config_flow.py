@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Mapping
-from datetime import timedelta
 from typing import Any, cast
 
 import voluptuous as vol
@@ -11,16 +10,13 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.components.ssdp import SsdpChange, SsdpServiceInfo
-from homeassistant.const import CONF_SCAN_INTERVAL
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
     CONFIG_ENTRY_HOSTNAME,
-    CONFIG_ENTRY_SCAN_INTERVAL,
     CONFIG_ENTRY_ST,
     CONFIG_ENTRY_UDN,
-    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     LOGGER,
     SSDP_SEARCH_TIMEOUT,
@@ -258,14 +254,6 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         discovery = self._discoveries[0]
         return await self._async_create_entry_from_discovery(discovery)
 
-    @staticmethod
-    @callback
-    def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
-    ) -> config_entries.OptionsFlow:
-        """Define the config flow to handle options."""
-        return UpnpOptionsFlowHandler(config_entry)
-
     async def _async_create_entry_from_discovery(
         self,
         discovery: SsdpServiceInfo,
@@ -283,38 +271,3 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             CONFIG_ENTRY_HOSTNAME: discovery.ssdp_headers["_host"],
         }
         return self.async_create_entry(title=title, data=data)
-
-
-class UpnpOptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle a UPnP options flow."""
-
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize."""
-        self.config_entry = config_entry
-
-    async def async_step_init(self, user_input: Mapping = None) -> FlowResult:
-        """Manage the options."""
-        if user_input is not None:
-            coordinator = self.hass.data[DOMAIN][self.config_entry.entry_id]
-            update_interval_sec = user_input.get(
-                CONFIG_ENTRY_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-            )
-            update_interval = timedelta(seconds=update_interval_sec)
-            LOGGER.debug("Updating coordinator, update_interval: %s", update_interval)
-            coordinator.update_interval = update_interval
-            return self.async_create_entry(title="", data=user_input)
-
-        scan_interval = self.config_entry.options.get(
-            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-        )
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(
-                        CONF_SCAN_INTERVAL,
-                        default=scan_interval,
-                    ): vol.All(vol.Coerce(int), vol.Range(min=30)),
-                }
-            ),
-        )
