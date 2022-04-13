@@ -194,7 +194,7 @@ class _BaseVacuum(Entity):
 
         Percentage from 0-100.
         """
-        return self.battery_level
+        return self._attr_battery_level
 
     @property
     def battery_icon(self) -> str:
