@@ -146,7 +146,7 @@ async def async_setup_entry(
                 controller,
                 RainMachineSensorDescriptionUid(
                     key=f"{TYPE_ZONE_TIME_REMAINING}_{uid}",
-                    name=f"Zone Time Remaining: {zone['name']}",
+                    name=f"Zone Run Completion Time: {zone['name']}",
                     device_class=SensorDeviceClass.TIMESTAMP,
                     entity_category=EntityCategory.DIAGNOSTIC,
                     uid=uid,
@@ -211,6 +211,8 @@ class ZoneTimeRemainingSensor(RainMachineEntity, SensorEntity):
         ]
 
         if seconds_remaining == 0:
-            self._attr_native_value = None
-        else:
-            self._attr_native_value = now + timedelta(seconds=seconds_remaining)
+            # If 0 seconds remain, the zone is finished/not running, so we leave the
+            # state wherever it was:
+            return
+
+        self._attr_native_value = now + timedelta(seconds=seconds_remaining)
