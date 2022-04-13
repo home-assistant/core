@@ -686,8 +686,6 @@ build.json @home-assistant/supervisor
 /tests/components/nina/ @DeerMaximum
 /homeassistant/components/nissan_leaf/ @filcole
 /homeassistant/components/nmbs/ @thibmaek
-/homeassistant/components/no_ip/ @fabaff
-/tests/components/no_ip/ @fabaff
 /homeassistant/components/noaa_tides/ @jdelaney72
 /homeassistant/components/notify/ @home-assistant/core
 /tests/components/notify/ @home-assistant/core
