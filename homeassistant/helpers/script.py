@@ -914,10 +914,9 @@ class _ScriptRun:
 
         async def async_run_with_trace(idx: int, script: Script) -> None:
             """Run a script with a trace path."""
-            path_stack_reset = trace_path_stack_cv.set(copy(trace_path_stack_cv.get()))
+            trace_path_stack_cv.set(copy(trace_path_stack_cv.get()))
             with trace_path([str(idx), "sequence"]):
                 await self._async_run_script(script)
-            trace_path_stack_cv.reset(path_stack_reset)
 
         results = await asyncio.gather(
             *(async_run_with_trace(idx, script) for idx, script in enumerate(scripts)),
