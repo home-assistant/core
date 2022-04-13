@@ -1,7 +1,6 @@
 """The Airzone integration."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from aioairzone.common import ConnectionOptions
@@ -26,8 +25,6 @@ from .const import DEFAULT_SYSTEM_ID, DOMAIN, MANUFACTURER
 from .coordinator import AirzoneUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.CLIMATE, Platform.SENSOR]
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class AirzoneEntity(CoordinatorEntity[AirzoneUpdateCoordinator]):
