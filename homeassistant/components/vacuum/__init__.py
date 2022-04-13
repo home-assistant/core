@@ -286,11 +286,15 @@ class _BaseVacuum(Entity):
             partial(self.set_fan_speed, fan_speed, **kwargs)
         )
 
-    def send_command(self, command, params=None, **kwargs):
+    def send_command(
+        self, command: str, params: dict | list | None = None, **kwargs: Any
+    ) -> None:
         """Send a command to a vacuum cleaner."""
         raise NotImplementedError()
 
-    async def async_send_command(self, command, params=None, **kwargs):
+    async def async_send_command(
+        self, command: str, params: dict | list | None = None, **kwargs: Any
+    ) -> None:
         """Send a command to a vacuum cleaner.
 
         This method must be run in the event loop.
