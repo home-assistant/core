@@ -4142,3 +4142,88 @@ async def test_continue_on_error(hass: HomeAssistant) -> None:
         },
         expected_script_execution="finished",
     )
+
+
+async def test_continue_on_error_automation_issue(hass: HomeAssistant) -> None:
+    """Test continue on error doesn't block action automation errors."""
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {
+                "continue_on_error": True,
+                "service": "service.not_found",
+            },
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    with pytest.raises(exceptions.ServiceNotFound):
+        await script_obj.async_run(context=Context())
+
+    assert_action_trace(
+        {
+            "0": [
+                {
+                    "error_type": ServiceNotFound,
+                    "result": {
+                        "limit": 10,
+                        "params": {
+                            "domain": "service",
+                            "service": "not_found",
+                            "service_data": {},
+                            "target": {},
+                        },
+                        "running_script": False,
+                    },
+                }
+            ],
+        },
+        expected_script_execution="error",
+    )
+
+
+async def test_continue_on_error_unknown_error(hass: HomeAssistant) -> None:
+    """Test continue on error doesn't block unknown errors from e.g., libraries."""
+
+    class MyLibraryError(Exception):
+        """My custom library error."""
+
+    @callback
+    def some_service(service: ServiceCall) -> None:
+        """Break this service with an error."""
+        raise MyLibraryError("It is not working!")
+
+    hass.services.async_register("some", "service", some_service)
+
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {
+                "continue_on_error": True,
+                "service": "some.service",
+            },
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    with pytest.raises(MyLibraryError):
+        await script_obj.async_run(context=Context())
+
+    assert_action_trace(
+        {
+            "0": [
+                {
+                    "error_type": MyLibraryError,
+                    "result": {
+                        "limit": 10,
+                        "params": {
+                            "domain": "some",
+                            "service": "service",
+                            "service_data": {},
+                            "target": {},
+                        },
+                        "running_script": False,
+                    },
+                }
+            ],
+        },
+        expected_script_execution="error",
+    )
