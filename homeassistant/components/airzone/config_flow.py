@@ -25,7 +25,7 @@ SYSTEM_ID_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
         vol.Required(CONF_PORT, default=DEFAULT_LOCAL_API_PORT): int,
-        vol.Required(CONF_ID, default=DEFAULT_SYSTEM_ID): int,
+        vol.Required(CONF_ID, default=1): int,
     }
 )
 

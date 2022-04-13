@@ -118,7 +118,7 @@ async def test_form_invalid_system_id(hass: HomeAssistant) -> None:
 async def test_form_duplicated_id(hass: HomeAssistant) -> None:
     """Test setting up duplicated entry."""
 
-    entry = MockConfigEntry(domain=DOMAIN, data=CONFIG, version=2)
+    entry = MockConfigEntry(domain=DOMAIN, data=CONFIG)
     entry.add_to_hass(hass)
 
     with patch(
