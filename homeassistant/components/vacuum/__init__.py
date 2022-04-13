@@ -176,10 +176,10 @@ class _BaseVacuum(Entity):
     Contains common properties and functions for all vacuum devices.
     """
 
-    _attr_battery_icon: str | None = None
+    _attr_battery_icon: str
     _attr_battery_level: int | None = None
     _attr_fan_speed: str | None = None
-    _attr_fan_speed_list: list[str] | None = None
+    _attr_fan_speed_list: list[str]
 
     @property
     def supported_features(self) -> int:
@@ -196,8 +196,6 @@ class _BaseVacuum(Entity):
     @property
     def battery_icon(self) -> str:
         """Return the battery icon for the vacuum cleaner."""
-        if self._attr_battery_icon is None:
-            raise NotImplementedError()
         return self._attr_battery_icon
 
     @property
@@ -208,8 +206,6 @@ class _BaseVacuum(Entity):
     @property
     def fan_speed_list(self) -> list[str]:
         """Get the list of available fan speed steps of the vacuum cleaner."""
-        if self._attr_fan_speed_list is None:
-            raise NotImplementedError()
         return self._attr_fan_speed_list
 
     @property
