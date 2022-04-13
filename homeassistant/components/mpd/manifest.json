@@ -3,7 +3,7 @@
   "name": "Music Player Daemon (MPD)",
   "documentation": "https://www.home-assistant.io/integrations/mpd",
   "requirements": ["python-mpd2==3.0.5"],
-  "codeowners": ["@fabaff"],
+  "codeowners": [],
   "iot_class": "local_polling",
   "loggers": ["mpd"]
 }
