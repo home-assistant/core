@@ -26,8 +26,8 @@ from homeassistant.util.json import load_json, save_json
 from .const import (
     DOMAIN,
     FORMAT_HTML,
-    FORMAT_TEXT,
     FORMAT_MARKDOWN,
+    FORMAT_TEXT,
     SERVICE_SEND_MESSAGE,
 )
 
