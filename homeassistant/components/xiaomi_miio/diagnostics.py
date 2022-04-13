@@ -26,6 +26,9 @@ async def async_get_config_entry_diagnostics(
     }
 
     if coordinator := hass.data[DOMAIN][config_entry.entry_id].get(KEY_COORDINATOR):
-        diagnostics_data["coordinator_data"] = coordinator.data.__repr__()
+        if isinstance(coordinator.data, dict):
+            diagnostics_data["coordinator_data"] = coordinator.data
+        else:
+            diagnostics_data["coordinator_data"] = coordinator.data.__repr__()
 
     return diagnostics_data
