@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from elkm1_lib.const import AlarmState, ArmedStatus, ArmLevel, ArmUpState
-from elkm1_lib.util import username
 import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel import (
@@ -147,7 +146,7 @@ class ElkArea(ElkAttachedEntity, AlarmControlPanelEntity, RestoreEntity):
             self._changed_by_keypad = keypad.name
             self._changed_by_time = keypad.last_user_time.isoformat()
             self._changed_by_id = keypad.last_user + 1
-            self._changed_by = username(self._elk, keypad.last_user)
+            self._changed_by = self._elk.users.username(keypad.last_user)
             self.async_write_ha_state()
 
     def _watch_area(self, area, changeset):
@@ -158,7 +157,7 @@ class ElkArea(ElkAttachedEntity, AlarmControlPanelEntity, RestoreEntity):
             return
         self._changed_by_keypad = None
         self._changed_by_id = last_log["user_number"]
-        self._changed_by = username(self._elk, self._changed_by_id - 1)
+        self._changed_by = self._elk.users.username(self._changed_by_id - 1)
         self._changed_by_time = last_log["timestamp"]
         self.async_write_ha_state()
 

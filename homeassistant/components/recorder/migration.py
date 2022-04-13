@@ -56,7 +56,7 @@ def get_schema_version(instance: Any) -> int:
         current_version = getattr(res, "schema_version", None)
 
         if current_version is None:
-            current_version = _inspect_schema_version(instance.engine, session)
+            current_version = _inspect_schema_version(session)
             _LOGGER.debug(
                 "No schema version found. Inspected version: %s", current_version
             )
@@ -651,7 +651,7 @@ def _apply_update(instance, new_version, old_version):  # noqa: C901
         raise ValueError(f"No schema migration defined for version {new_version}")
 
 
-def _inspect_schema_version(engine, session):
+def _inspect_schema_version(session):
     """Determine the schema version by inspecting the db structure.
 
     When the schema version is not present in the db, either db was just
@@ -660,7 +660,7 @@ def _inspect_schema_version(engine, session):
     version 1 are present to make the determination. Eventually this logic
     can be removed and we can assume a new db is being created.
     """
-    inspector = sqlalchemy.inspect(engine)
+    inspector = sqlalchemy.inspect(session.connection())
     indexes = inspector.get_indexes("events")
 
     for index in indexes:

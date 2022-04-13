@@ -42,6 +42,16 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
             reason="replaced by CameraEntityFeature enum",
             constant=re.compile(r"^SUPPORT_(\w*)$"),
         ),
+        ObsoleteImportMatch(
+            reason="replaced by StreamType enum",
+            constant=re.compile(r"^STREAM_TYPE_(\w*)$"),
+        ),
+    ],
+    "homeassistant.components.camera.const": [
+        ObsoleteImportMatch(
+            reason="replaced by StreamType enum",
+            constant=re.compile(r"^STREAM_TYPE_(\w*)$"),
+        ),
     ],
     "homeassistant.components.climate": [
         ObsoleteImportMatch(
