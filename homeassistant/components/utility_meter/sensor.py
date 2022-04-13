@@ -185,7 +185,7 @@ async def async_setup_platform(
         meter = conf[CONF_METER]
         conf_meter_source = hass.data[DATA_UTILITY][meter][CONF_SOURCE_SENSOR]
         conf_meter_unique_id = hass.data[DATA_UTILITY][meter].get(CONF_UNIQUE_ID)
-        conf_sensor_tariff = conf.get(CONF_TARIFF)
+        conf_sensor_tariff = conf.get(CONF_TARIFF, "single_tariff")
         conf_sensor_unique_id = (
             f"{conf_meter_unique_id}_{conf_sensor_tariff}"
             if conf_meter_unique_id
