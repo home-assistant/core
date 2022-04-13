@@ -473,7 +473,7 @@ def _compile_statistics(  # noqa: C901
         if "sum" in wanted_statistics[entity_id]:
             to_query.append(entity_id)
 
-    last_stats = statistics.get_latest_short_term_statistics(hass, to_query, False)
+    last_stats = statistics.get_latest_short_term_statistics(hass, to_query)
     for (  # pylint: disable=too-many-nested-blocks
         entity_id,
         unit,

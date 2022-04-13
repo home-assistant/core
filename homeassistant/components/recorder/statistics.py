@@ -66,7 +66,6 @@ QUERY_STATISTICS = [
     Statistics.sum,
 ]
 
-
 QUERY_STATISTICS_SHORT_TERM = [
     StatisticsShortTerm.metadata_id,
     StatisticsShortTerm.start,
@@ -1103,13 +1102,13 @@ def get_last_short_term_statistics(
 
 
 def get_latest_short_term_statistics(
-    hass: HomeAssistant, statistic_ids: list[str], convert_units: bool
+    hass: HomeAssistant, statistic_ids: list[str]
 ) -> dict[str, list[dict]]:
-    """Return the latest short term statistics for statistic_ids."""
-    # This function doesn't use a baked query since its
-    # deprecated since version 1.4
+    """Return the latest short term statistics for a list of statistic_ids."""
+    # This function doesn't use a baked query, we instead rely on the
+    # "Transparent SQL Compilation Caching" feature introduced in SQLAlchemy 1.4
     with session_scope(hass=hass) as session:
-        # Fetch metadata for the given statistic_id
+        # Fetch metadata for the given statistic_ids
         metadata = get_metadata_with_session(hass, session, statistic_ids=statistic_ids)
         if not metadata:
             return {}
@@ -1118,7 +1117,7 @@ def get_latest_short_term_statistics(
             for statistic_id in statistic_ids
             if statistic_id in metadata
         ]
-        most_recent_metadata_ids = (
+        most_recent_statistic_row = (
             session.query(
                 StatisticsShortTerm.id,
                 func.max(StatisticsShortTerm.start),
@@ -1128,8 +1127,8 @@ def get_latest_short_term_statistics(
         ).subquery()
         stats = execute(
             session.query(*QUERY_STATISTICS_SHORT_TERM).join(
-                most_recent_metadata_ids,
-                StatisticsShortTerm.id == most_recent_metadata_ids.c.id,
+                most_recent_statistic_row,
+                StatisticsShortTerm.id == most_recent_statistic_row.c.id,
             )
         )
         if not stats:
@@ -1142,7 +1141,7 @@ def get_latest_short_term_statistics(
             stats,
             statistic_ids,
             metadata,
-            convert_units,
+            False,
             StatisticsShortTerm,
             None,
         )
