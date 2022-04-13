@@ -20,11 +20,12 @@ from homeassistant.helpers import entity_registry
 from homeassistant.setup import async_setup_component
 
 
-async def test_unique_id(hass: HomeAssistant):
+async def test_config_overrides(hass: HomeAssistant):
     """Test configuration overrides."""
     config = {
         "compensation": {
             "test": {
+                "name": "Some Sensor",
                 "unique_id": "my_unique_id",
                 "source": "sensor.uncompensated",
                 "data_points": [
@@ -35,7 +36,7 @@ async def test_unique_id(hass: HomeAssistant):
             }
         }
     }
-    expected_entity_id = "sensor.compensation_sensor_uncompensated"
+    expected_entity_id = "sensor.some_sensor"
 
     assert await async_setup_component(hass, DOMAIN, config)
     assert await async_setup_component(hass, SENSOR_DOMAIN, config)
@@ -43,6 +44,11 @@ async def test_unique_id(hass: HomeAssistant):
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
+
+    state = hass.states.get(expected_entity_id)
+    assert state is not None
+
+    assert state.name == "Some Sensor"
 
     ent_reg = entity_registry.async_get(hass)
     registry_entry = ent_reg.async_get(expected_entity_id)
