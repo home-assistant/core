@@ -182,9 +182,7 @@ async def async_start(  # noqa: C901
             )
             return
 
-        await async_process_discovery_payload(
-            hass, config_entry, component, discovery_id, payload
-        )
+        await async_process_discovery_payload(component, discovery_id, payload)
 
     hass.data[DATA_CONFIG_ENTRY_LOCK] = asyncio.Lock()
     hass.data[DATA_CONFIG_FLOW_LOCK] = asyncio.Lock()
@@ -253,80 +251,79 @@ async def async_start(  # noqa: C901
                 0,
             )
 
+    async def async_process_discovery_payload(component, discovery_id, payload):
+        """Process the payload of a new discovery."""
 
-async def async_process_discovery_payload(
-    hass, config_entry, component, discovery_id, payload
-):
-    """Process the payload of a new discovery."""
+        _LOGGER.debug("Process discovery payload %s", payload)
+        discovery_hash = (component, discovery_id)
+        if discovery_hash in hass.data[ALREADY_DISCOVERED] or payload:
 
-    _LOGGER.debug("Process discovery payload %s", payload)
-    discovery_hash = (component, discovery_id)
-    if discovery_hash in hass.data[ALREADY_DISCOVERED] or payload:
-
-        async def discovery_done(_):
-            pending = hass.data[PENDING_DISCOVERED][discovery_hash]["pending"]
-            _LOGGER.debug("Pending discovery for %s: %s", discovery_hash, pending)
-            if not pending:
-                hass.data[PENDING_DISCOVERED][discovery_hash]["unsub"]()
-                hass.data[PENDING_DISCOVERED].pop(discovery_hash)
-            else:
-                payload = pending.pop()
-                await async_process_discovery_payload(
-                    hass, config_entry, component, discovery_id, payload
-                )
-
-        if discovery_hash not in hass.data[PENDING_DISCOVERED]:
-            hass.data[PENDING_DISCOVERED][discovery_hash] = {
-                "unsub": async_dispatcher_connect(
-                    hass,
-                    MQTT_DISCOVERY_DONE.format(discovery_hash),
-                    discovery_done,
-                ),
-                "pending": deque([]),
-            }
-
-    if discovery_hash in hass.data[ALREADY_DISCOVERED]:
-        # Dispatch update
-        _LOGGER.info(
-            "Component has already been discovered: %s %s, sending update",
-            component,
-            discovery_id,
-        )
-        async_dispatcher_send(
-            hass, MQTT_DISCOVERY_UPDATED.format(discovery_hash), payload
-        )
-    elif payload:
-        # Add component
-        _LOGGER.info("Found new component: %s %s", component, discovery_id)
-        hass.data[ALREADY_DISCOVERED][discovery_hash] = None
-
-        config_entries_key = f"{component}.mqtt"
-        async with hass.data[DATA_CONFIG_ENTRY_LOCK]:
-            if config_entries_key not in hass.data[CONFIG_ENTRY_IS_SETUP]:
-                if component == "device_automation":
-                    # Local import to avoid circular dependencies
-                    # pylint: disable-next=import-outside-toplevel
-                    from . import device_automation
-
-                    await device_automation.async_setup_entry(hass, config_entry)
-                elif component == "tag":
-                    # Local import to avoid circular dependencies
-                    # pylint: disable-next=import-outside-toplevel
-                    from . import tag
-
-                    await tag.async_setup_entry(hass, config_entry)
+            async def discovery_done(_):
+                pending = hass.data[PENDING_DISCOVERED][discovery_hash]["pending"]
+                _LOGGER.debug("Pending discovery for %s: %s", discovery_hash, pending)
+                if not pending:
+                    hass.data[PENDING_DISCOVERED][discovery_hash]["unsub"]()
+                    hass.data[PENDING_DISCOVERED].pop(discovery_hash)
                 else:
-                    await hass.config_entries.async_forward_entry_setup(
-                        config_entry, component
+                    payload = pending.pop()
+                    await async_process_discovery_payload(
+                        component, discovery_id, payload
                     )
-                hass.data[CONFIG_ENTRY_IS_SETUP].add(config_entries_key)
 
-        async_dispatcher_send(
-            hass, MQTT_DISCOVERY_NEW.format(component, "mqtt"), payload
-        )
-    else:
-        # Unhandled discovery message
-        async_dispatcher_send(hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None)
+            if discovery_hash not in hass.data[PENDING_DISCOVERED]:
+                hass.data[PENDING_DISCOVERED][discovery_hash] = {
+                    "unsub": async_dispatcher_connect(
+                        hass,
+                        MQTT_DISCOVERY_DONE.format(discovery_hash),
+                        discovery_done,
+                    ),
+                    "pending": deque([]),
+                }
+
+        if discovery_hash in hass.data[ALREADY_DISCOVERED]:
+            # Dispatch update
+            _LOGGER.info(
+                "Component has already been discovered: %s %s, sending update",
+                component,
+                discovery_id,
+            )
+            async_dispatcher_send(
+                hass, MQTT_DISCOVERY_UPDATED.format(discovery_hash), payload
+            )
+        elif payload:
+            # Add component
+            _LOGGER.info("Found new component: %s %s", component, discovery_id)
+            hass.data[ALREADY_DISCOVERED][discovery_hash] = None
+
+            config_entries_key = f"{component}.mqtt"
+            async with hass.data[DATA_CONFIG_ENTRY_LOCK]:
+                if config_entries_key not in hass.data[CONFIG_ENTRY_IS_SETUP]:
+                    if component == "device_automation":
+                        # Local import to avoid circular dependencies
+                        # pylint: disable-next=import-outside-toplevel
+                        from . import device_automation
+
+                        await device_automation.async_setup_entry(hass, config_entry)
+                    elif component == "tag":
+                        # Local import to avoid circular dependencies
+                        # pylint: disable-next=import-outside-toplevel
+                        from . import tag
+
+                        await tag.async_setup_entry(hass, config_entry)
+                    else:
+                        await hass.config_entries.async_forward_entry_setup(
+                            config_entry, component
+                        )
+                    hass.data[CONFIG_ENTRY_IS_SETUP].add(config_entries_key)
+
+            async_dispatcher_send(
+                hass, MQTT_DISCOVERY_NEW.format(component, "mqtt"), payload
+            )
+        else:
+            # Unhandled discovery message
+            async_dispatcher_send(
+                hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
+            )
 
 
 async def async_stop(hass: HomeAssistant) -> None:

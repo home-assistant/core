@@ -77,7 +77,6 @@ from .discovery import (
     MQTT_DISCOVERY_DONE,
     MQTT_DISCOVERY_NEW,
     MQTT_DISCOVERY_UPDATED,
-    async_process_discovery_payload,
     clear_discovery_hash,
     set_discovery_hash,
 )
@@ -573,7 +572,6 @@ class MqttDiscoveryDeviceUpdate:
         self._device_id = device_id
         self._config_entry = config_entry
         self._config_entry_id = config_entry.entry_id
-        self._rediscover: bool = False
         self._skip_device_removal: bool = False
         self._async_update_callback = async_update_callback
 
@@ -611,12 +609,12 @@ class MqttDiscoveryDeviceUpdate:
             and discovery_payload != self._discovery_data[ATTR_DISCOVERY_PAYLOAD]
         ):
             _LOGGER.info(
-                "%s %s update",
+                "%s %s updating",
                 self.log_name,
                 discovery_hash,
             )
             await self.async_update(discovery_payload)
-        if not discovery_payload or self._rediscover:
+        if not discovery_payload:
             # Unregister and clean up the current discovery instance
             terminate_discovery(self.hass, self._discovery_data, self._remove_signal)
             await self._async_tear_down()
@@ -635,20 +633,6 @@ class MqttDiscoveryDeviceUpdate:
                 discovery_hash,
             )
             return
-        if self._rediscover:
-            # start a new discovery service
-            await async_process_discovery_payload(
-                self.hass,
-                self._config_entry,
-                discovery_hash[0],
-                discovery_hash[1],
-                discovery_payload,
-            )
-            _LOGGER.debug(
-                "%s %s rediscovery initiated",
-                self.log_name,
-                discovery_hash,
-            )
 
     async def _async_device_removed(self, event) -> None:
         """Handle the manual removal of a device."""
@@ -683,8 +667,7 @@ class MqttDiscoveryDeviceUpdate:
         self.hass.async_create_task(self._async_tear_down())
 
     async def async_update(self, discovery_data: dict) -> None:
-        """Handle the update of platform specific parts, extend to disable rediscovery."""
-        self._rediscover = True
+        """Handle the update of platform specific parts, extend to the platform."""
 
     async def async_tear_down(self) -> None:
         """Handle the cleanup of platform specific parts, extend to the platform."""
