@@ -435,7 +435,7 @@ class _ScriptRun:
             raise exception
 
         # These are incorrect scripts, and not runtime errors that need to
-        # be handled and thus are not
+        # be handled and thus cannot be stopped by `continue_on_error`.
         if isinstance(
             exception,
             (
