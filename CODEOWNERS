@@ -639,7 +639,6 @@ build.json @home-assistant/supervisor
 /tests/components/motion_blinds/ @starkillerOG
 /homeassistant/components/motioneye/ @dermotduffy
 /tests/components/motioneye/ @dermotduffy
-/homeassistant/components/mpd/ @fabaff
 /homeassistant/components/mqtt/ @emontnemery
 /tests/components/mqtt/ @emontnemery
 /homeassistant/components/msteams/ @peroyvind
