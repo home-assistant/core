@@ -292,7 +292,7 @@ ambiclimate==0.2.1
 amcrest==1.9.7
 
 # homeassistant.components.androidtv
-androidtv[async]==0.0.66
+androidtv[async]==0.0.67
 
 # homeassistant.components.anel_pwrctrl
 anel_pwrctrl-homeassistant==0.0.1.dev2
@@ -2485,7 +2485,7 @@ zhong_hong_hvac==1.0.9
 ziggo-mediabox-xl==1.1.0
 
 # homeassistant.components.zha
-zigpy-deconz==0.15.0
+zigpy-deconz==0.14.0
 
 # homeassistant.components.zha
 zigpy-xbee==0.14.0
