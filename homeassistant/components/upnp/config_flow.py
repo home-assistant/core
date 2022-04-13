@@ -16,7 +16,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
-    CONFIG_ENTRY_HOSTNAME,
+    CONFIG_ENTRY_LOCATION,
+    CONFIG_ENTRY_MAC_ADDRESS,
+    CONFIG_ENTRY_ORIGINAL_UDN,
     CONFIG_ENTRY_SCAN_INTERVAL,
     CONFIG_ENTRY_ST,
     CONFIG_ENTRY_UDN,
@@ -27,6 +29,7 @@ from .const import (
     ST_IGD_V1,
     ST_IGD_V2,
 )
+from .device import get_mac_address_from_host
 
 
 def _friendly_name_from_discovery(discovery_info: ssdp.SsdpServiceInfo) -> str:
@@ -99,6 +102,12 @@ async def _async_discover_igd_devices(
     return await ssdp.async_get_discovery_info_by_st(
         hass, ST_IGD_V1
     ) + await ssdp.async_get_discovery_info_by_st(hass, ST_IGD_V2)
+
+
+def _mac_address_from_discovery(discovery: SsdpServiceInfo) -> str | None:
+    """Get the mac address from a discovery."""
+    host = discovery.ssdp_headers["_host"]
+    return get_mac_address_from_host(host)
 
 
 class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -221,32 +230,41 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # Ensure not already configuring/configured.
         unique_id = discovery_info.ssdp_usn
         await self.async_set_unique_id(unique_id)
-        hostname = discovery_info.ssdp_headers["_host"]
+        mac_address = _mac_address_from_discovery(discovery_info)
         self._abort_if_unique_id_configured(
-            # Do reload on update, SSDP will signal header changes which are probably interesting to us...
-            updates={CONFIG_ENTRY_HOSTNAME: hostname},
-            reload_on_update=False,
+            # The location is stored in the config entry such that when the location changes, the entry is reloaded.
+            # Store mac address for older entries.
+            updates={
+                CONFIG_ENTRY_MAC_ADDRESS: mac_address,
+                CONFIG_ENTRY_LOCATION: discovery_info.ssdp_location,
+            },
         )
 
         # Handle devices changing their UDN, only allow a single host.
-        for config_entry in self._async_current_entries():
-            entry_hostname = config_entry.data.get(CONFIG_ENTRY_HOSTNAME)
-            if entry_hostname == hostname:
-                udn = discovery_info.ssdp_udn
-                LOGGER.debug(
-                    "Found existing config_entry with same hostname, updating config entry, old udn: %s, new udn: %s",
-                    config_entry.data.get(CONFIG_ENTRY_UDN),
-                    udn,
-                )
-                self.hass.config_entries.async_update_entry(
-                    config_entry,
-                    unique_id=unique_id,
-                    data={**config_entry.data, CONFIG_ENTRY_UDN: udn},
-                )
-                self.hass.async_create_task(
-                    self.hass.config_entries.async_reload(config_entry.entry_id)
-                )
-                return self.async_abort(reason="config_entry_updated")
+        for config_entry in self._async_current_entries(include_ignore=True):
+            # entry_host = config_entry.data.get(CONFIG_ENTRY_HOSTNAME)
+            entry_mac_address = config_entry.data.get(CONFIG_ENTRY_MAC_ADDRESS)
+            entry_st = config_entry.data.get(CONFIG_ENTRY_ST)
+            if entry_mac_address != mac_address:
+                continue
+
+            if discovery_info.ssdp_st != entry_st:
+                # Prevent swapping between IGDv1 and IGDv2.
+                continue
+
+            if config_entry.source == config_entries.SOURCE_IGNORE:
+                # Host was already ignored. Don't update ignored entries.
+                return self.async_abort(reason="discovery_ignored")
+
+            self.hass.config_entries.async_update_entry(
+                config_entry,
+                unique_id=unique_id,
+                data={**config_entry.data, CONFIG_ENTRY_UDN: discovery_info.ssdp_udn},
+            )
+            self.hass.async_create_task(
+                self.hass.config_entries.async_reload(config_entry.entry_id)
+            )
+            return self.async_abort(reason="config_entry_updated")
 
         # Store discovery.
         self._discoveries = [discovery_info]
@@ -289,10 +307,13 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         title = _friendly_name_from_discovery(discovery)
+        mac_address = _mac_address_from_discovery(discovery)
         data = {
             CONFIG_ENTRY_UDN: discovery.upnp[ssdp.ATTR_UPNP_UDN],
             CONFIG_ENTRY_ST: discovery.ssdp_st,
-            CONFIG_ENTRY_HOSTNAME: discovery.ssdp_headers["_host"],
+            CONFIG_ENTRY_ORIGINAL_UDN: discovery.upnp[ssdp.ATTR_UPNP_UDN],
+            CONFIG_ENTRY_LOCATION: discovery.ssdp_location,
+            CONFIG_ENTRY_MAC_ADDRESS: mac_address,
         }
         return self.async_create_entry(title=title, data=data)
 

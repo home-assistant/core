@@ -3,17 +3,17 @@ from __future__ import annotations
 
 import pytest
 
-from homeassistant.components import ssdp
-from homeassistant.components.upnp import UpnpDataUpdateCoordinator
 from homeassistant.components.upnp.const import (
+    CONFIG_ENTRY_LOCATION,
+    CONFIG_ENTRY_MAC_ADDRESS,
+    CONFIG_ENTRY_ORIGINAL_UDN,
     CONFIG_ENTRY_ST,
     CONFIG_ENTRY_UDN,
     DOMAIN,
 )
-from homeassistant.components.upnp.device import Device
 from homeassistant.core import HomeAssistant
 
-from .conftest import TEST_DISCOVERY, TEST_ST, TEST_UDN
+from .conftest import TEST_LOCATION, TEST_MAC_ADDRESS, TEST_ST, TEST_UDN, TEST_USN
 
 from tests.common import MockConfigEntry
 
@@ -23,34 +23,16 @@ async def test_async_setup_entry_default(hass: HomeAssistant):
     """Test async_setup_entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
+        unique_id=TEST_USN,
         data={
-            CONFIG_ENTRY_UDN: TEST_UDN,
             CONFIG_ENTRY_ST: TEST_ST,
+            CONFIG_ENTRY_UDN: TEST_UDN,
+            CONFIG_ENTRY_ORIGINAL_UDN: TEST_UDN,
+            CONFIG_ENTRY_LOCATION: TEST_LOCATION,
+            CONFIG_ENTRY_MAC_ADDRESS: TEST_MAC_ADDRESS,
         },
     )
 
     # Load config_entry.
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id) is True
-
-
-async def test_reinitialize_device(
-    hass: HomeAssistant, config_entry: MockConfigEntry
-):
-    """Test device is reinitialized when device changes location."""
-    coordinator: UpnpDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
-    device: Device = coordinator.device
-    assert device._igd_device.device.device_url == TEST_DISCOVERY.ssdp_location
-
-    # Reinit.
-    new_location = "http://192.168.1.1:12345/desc.xml"
-    await device.async_ssdp_callback(
-        ssdp.SsdpServiceInfo(
-            ssdp_usn="mock_usn",
-            ssdp_st="mock_st",
-            ssdp_location="http://192.168.1.1:12345/desc.xml",
-            upnp={},
-        ),
-        ...,
-    )
-    assert device._igd_device.device.device_url == new_location
