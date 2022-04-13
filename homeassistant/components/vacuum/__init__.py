@@ -273,11 +273,11 @@ class _BaseVacuum(Entity):
         """
         await self.hass.async_add_executor_job(partial(self.locate, **kwargs))
 
-    def set_fan_speed(self, fan_speed, **kwargs):
+    def set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
         raise NotImplementedError()
 
-    async def async_set_fan_speed(self, fan_speed, **kwargs):
+    async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed.
 
         This method must be run in the event loop.
