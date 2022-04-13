@@ -57,7 +57,7 @@ def test_compile_hourly_statistics(hass_recorder):
     assert dict(states) == dict(hist)
 
     # Should not fail if there is nothing there yet
-    stats = get_latest_short_term_statistics(hass, ["sensor.test1"], True)
+    stats = get_latest_short_term_statistics(hass, ["sensor.test1"])
     assert stats == {}
 
     for kwargs in ({}, {"statistic_ids": ["sensor.test1"]}):
