@@ -53,6 +53,7 @@ from homeassistant.const import (
     CONF_ID,
     CONF_IF,
     CONF_MATCH,
+    CONF_PARALLEL,
     CONF_PLATFORM,
     CONF_REPEAT,
     CONF_SCAN_INTERVAL,
@@ -1455,6 +1456,32 @@ _SCRIPT_ERROR_SCHEMA = vol.Schema(
     }
 )
 
+
+_SCRIPT_PARALLEL_SEQUENCE = vol.Schema(
+    {
+        **SCRIPT_ACTION_BASE_SCHEMA,
+        vol.Required(CONF_SEQUENCE): SCRIPT_SCHEMA,
+    }
+)
+
+_parallel_sequence_action = vol.All(
+    # Wrap a shorthand sequences in a parallel action
+    SCRIPT_SCHEMA,
+    lambda config: {
+        CONF_SEQUENCE: config,
+    },
+)
+
+_SCRIPT_PARALLEL_SCHEMA = vol.Schema(
+    {
+        **SCRIPT_ACTION_BASE_SCHEMA,
+        vol.Required(CONF_PARALLEL): vol.All(
+            ensure_list, [vol.Any(_SCRIPT_PARALLEL_SEQUENCE, _parallel_sequence_action)]
+        ),
+    }
+)
+
+
 SCRIPT_ACTION_DELAY = "delay"
 SCRIPT_ACTION_WAIT_TEMPLATE = "wait_template"
 SCRIPT_ACTION_CHECK_CONDITION = "condition"
@@ -1469,6 +1496,7 @@ SCRIPT_ACTION_VARIABLES = "variables"
 SCRIPT_ACTION_STOP = "stop"
 SCRIPT_ACTION_ERROR = "error"
 SCRIPT_ACTION_IF = "if"
+SCRIPT_ACTION_PARALLEL = "parallel"
 
 
 def determine_script_action(action: dict[str, Any]) -> str:
@@ -1515,6 +1543,9 @@ def determine_script_action(action: dict[str, Any]) -> str:
     if CONF_ERROR in action:
         return SCRIPT_ACTION_ERROR
 
+    if CONF_PARALLEL in action:
+        return SCRIPT_ACTION_PARALLEL
+
     raise ValueError("Unable to determine action")
 
 
@@ -1533,6 +1564,7 @@ ACTION_TYPE_SCHEMAS: dict[str, Callable[[Any], dict]] = {
     SCRIPT_ACTION_STOP: _SCRIPT_STOP_SCHEMA,
     SCRIPT_ACTION_ERROR: _SCRIPT_ERROR_SCHEMA,
     SCRIPT_ACTION_IF: _SCRIPT_IF_SCHEMA,
+    SCRIPT_ACTION_PARALLEL: _SCRIPT_PARALLEL_SCHEMA,
 }
 
 
