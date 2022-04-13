@@ -972,6 +972,9 @@ mac-vendor-lookup==0.1.11
 magicseaweed==1.0.3
 
 # homeassistant.components.matrix
+markdown==3.3.6
+
+# homeassistant.components.matrix
 matrix-client==0.4.0
 
 # homeassistant.components.maxcube

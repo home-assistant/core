@@ -4,6 +4,7 @@ import logging
 import mimetypes
 import os
 
+import markdown
 from matrix_client.client import MatrixClient, MatrixRequestError
 import voluptuous as vol
 
@@ -38,6 +39,7 @@ DEFAULT_CONTENT_TYPE = "application/octet-stream"
 
 EVENT_MATRIX_COMMAND = "matrix_command"
 
+ATTR_FORMAT = "format"  # optional message format
 ATTR_IMAGES = "images"  # optional images
 
 COMMAND_SCHEMA = vol.All(
@@ -75,6 +77,7 @@ SERVICE_SCHEMA_SEND_MESSAGE = vol.Schema(
     {
         vol.Required(ATTR_MESSAGE): cv.string,
         vol.Optional(ATTR_DATA): {
+            vol.Optional(ATTR_FORMAT, default="text"): vol.In(["html", "markdown", "md", "text"]),
             vol.Optional(ATTR_IMAGES): vol.All(cv.ensure_list, [cv.string]),
         },
         vol.Required(ATTR_TARGET): vol.All(cv.ensure_list, [cv.string]),
@@ -377,7 +380,12 @@ class MatrixBot:
             try:
                 room = self._join_or_get_room(target_room)
                 if message is not None:
-                    _LOGGER.debug(room.send_text(message))
+                    if data.get(ATTR_FORMAT) == "html":
+                        _LOGGER.debug(room.send_html(message))
+                    elif data.get(ATTR_FORMAT) in ["markdown", "md"]:
+                        _LOGGER.debug(room.send_html(markdown.markdown(message)))
+                    else:
+                        _LOGGER.debug(room.send_text(message))
             except MatrixRequestError as ex:
                 _LOGGER.error(
                     "Unable to deliver message to room '%s': %d, %s",
