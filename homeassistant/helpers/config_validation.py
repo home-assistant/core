@@ -1456,17 +1456,28 @@ _SCRIPT_ERROR_SCHEMA = vol.Schema(
     }
 )
 
-_SCRIPT_PARALLEL_SCHEMA = vol.Schema(
-    {
-        **SCRIPT_ACTION_BASE_SCHEMA,
-        vol.Required(CONF_PARALLEL): SCRIPT_SCHEMA,
-    }
-)
 
-_SCRIPT_SEQUENCE_SCHEMA = vol.Schema(
+_SCRIPT_PARALLEL_SEQUENCE = vol.Schema(
     {
         **SCRIPT_ACTION_BASE_SCHEMA,
         vol.Required(CONF_SEQUENCE): SCRIPT_SCHEMA,
+    }
+)
+
+_parallel_sequence_action = vol.All(
+    # Wrap a shorthand sequences in a parallel action
+    SCRIPT_SCHEMA,
+    lambda config: {
+        CONF_SEQUENCE: config,
+    },
+)
+
+_SCRIPT_PARALLEL_SCHEMA = vol.Schema(
+    {
+        **SCRIPT_ACTION_BASE_SCHEMA,
+        vol.Required(CONF_PARALLEL): vol.All(
+            ensure_list, [vol.Any(_SCRIPT_PARALLEL_SEQUENCE, _parallel_sequence_action)]
+        ),
     }
 )
 
@@ -1486,7 +1497,6 @@ SCRIPT_ACTION_STOP = "stop"
 SCRIPT_ACTION_ERROR = "error"
 SCRIPT_ACTION_IF = "if"
 SCRIPT_ACTION_PARALLEL = "parallel"
-SCRIPT_ACTION_SEQUENCE = "sequence"
 
 
 def determine_script_action(action: dict[str, Any]) -> str:
@@ -1536,9 +1546,6 @@ def determine_script_action(action: dict[str, Any]) -> str:
     if CONF_PARALLEL in action:
         return SCRIPT_ACTION_PARALLEL
 
-    if CONF_SEQUENCE in action:
-        return SCRIPT_ACTION_SEQUENCE
-
     raise ValueError("Unable to determine action")
 
 
@@ -1558,7 +1565,6 @@ ACTION_TYPE_SCHEMAS: dict[str, Callable[[Any], dict]] = {
     SCRIPT_ACTION_ERROR: _SCRIPT_ERROR_SCHEMA,
     SCRIPT_ACTION_IF: _SCRIPT_IF_SCHEMA,
     SCRIPT_ACTION_PARALLEL: _SCRIPT_PARALLEL_SCHEMA,
-    SCRIPT_ACTION_SEQUENCE: _SCRIPT_SEQUENCE_SCHEMA,
 }
 
 

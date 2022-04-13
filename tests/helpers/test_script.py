@@ -2682,48 +2682,6 @@ async def test_if_condition_validation(
     )
 
 
-async def test_sequence(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
-    """Test sequence action."""
-    events = async_capture_events(hass, "test_event")
-    sequence = cv.SCRIPT_SCHEMA(
-        {
-            "sequence": [
-                {
-                    "alias": "one",
-                    "event": "test_event",
-                    "event_data": {"{{ what }}": "1"},
-                },
-                {
-                    "alias": "two",
-                    "event": "test_event",
-                    "event_data": {"{{ what }}": "2"},
-                },
-            ],
-        },
-    )
-    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
-    await script_obj.async_run(MappingProxyType({"what": "sequence"}), Context())
-    await hass.async_block_till_done()
-
-    assert len(events) == 2
-    assert events[0].data["sequence"] == "1"
-    assert events[1].data["sequence"] == "2"
-
-    assert "Test Name: Sequence at step 1: Executing step one" in caplog.text
-    assert "Test Name: Sequence at step 1: Executing step two" in caplog.text
-
-    expected_trace = {
-        "0": [{"result": {}}],
-        "0/sequence/0": [
-            {"result": {"event": "test_event", "event_data": {"sequence": "1"}}}
-        ],
-        "0/sequence/1": [
-            {"result": {"event": "test_event", "event_data": {"sequence": "2"}}}
-        ],
-    }
-    assert_action_trace(expected_trace)
-
-
 async def test_parallel(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
     """Test if action."""
     events = async_capture_events(hass, "test_event")
@@ -2733,6 +2691,7 @@ async def test_parallel(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
         {
             "parallel": [
                 {
+                    "alias": "Sequential group",
                     "sequence": [
                         {
                             "alias": "Waiting for trigger",
@@ -2762,7 +2721,7 @@ async def test_parallel(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
 
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
 
-    wait_started_flag = async_watch_for_action(script_obj, "Waiting for")
+    wait_started_flag = async_watch_for_action(script_obj, "Waiting for trigger")
     hass.async_create_task(
         script_obj.async_run(MappingProxyType({"what": "world"}), Context())
     )
@@ -2780,32 +2739,45 @@ async def test_parallel(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
     assert events[1].data["what"] == "world"
 
     assert (
-        "Parallel action at step 1: Don't wait at all: Executing step Don't wait at all"
+        "Test Name: Parallel action at step 1: Sequential group: Executing step Waiting for trigger"
         in caplog.text
     )
     assert (
-        "Parallel action at step 1: action 1: Sequence at step 1: Executing step Waiting for trigger"
+        "Parallel action at step 1: parallel 2: Executing step Don't wait at all"
         in caplog.text
     )
 
     expected_trace = {
         "0": [{"result": {}}],
-        "0/parallel/1": [
+        "0/parallel/0/sequence/0": [
             {
                 "result": {
-                    "event": "test_event",
-                    "event_data": {"hello": "from action 2"},
+                    "wait": {
+                        "remaining": None,
+                        "trigger": {
+                            "entity_id": "switch.trigger",
+                            "description": "state of switch.trigger",
+                        },
+                    }
                 }
             }
         ],
-        "0/parallel/0": [{"result": {}}],
-        "0/parallel/0/sequence/0": [{"result": {"wait": {"completed": True}}}],
-        "0/parallel/0/sequence/1": [
+        "0/parallel/1/sequence/0": [
             {
+                "variables": {"wait": {"remaining": None}},
                 "result": {
                     "event": "test_event",
-                    "event_data": {"hello": "from action 1"},
-                }
+                    "event_data": {"hello": "from action 2", "what": "world"},
+                },
+            }
+        ],
+        "0/parallel/0/sequence/1": [
+            {
+                "variables": {"wait": {"remaining": None}},
+                "result": {
+                    "event": "test_event",
+                    "event_data": {"hello": "from action 1", "what": "world"},
+                },
             }
         ],
     }
@@ -3012,14 +2984,6 @@ async def test_referenced_areas(hass):
                     ],
                 },
                 {
-                    "sequence": [
-                        {
-                            "service": "test.script",
-                            "data": {"area_id": "area_sequence"},
-                        }
-                    ],
-                },
-                {
                     "parallel": [
                         {
                             "service": "test.script",
@@ -3042,7 +3006,6 @@ async def test_referenced_areas(hass):
         "area_service_not_list",
         "area_if_then",
         "area_if_else",
-        "area_sequence",
         "area_parallel",
         # 'area_service_template',  # no area extraction from template
     }
@@ -3137,14 +3100,6 @@ async def test_referenced_entities(hass):
                     ],
                 },
                 {
-                    "sequence": [
-                        {
-                            "service": "test.script",
-                            "data": {"entity_id": "light.sequence"},
-                        }
-                    ],
-                },
-                {
                     "parallel": [
                         {
                             "service": "test.script",
@@ -3170,7 +3125,6 @@ async def test_referenced_entities(hass):
         "light.service_not_list",
         "light.if_then",
         "light.if_else",
-        "light.sequence",
         "light.parallel",
         # "light.service_template",  # no entity extraction from template
         "scene.hello",
@@ -3260,14 +3214,6 @@ async def test_referenced_devices(hass):
                     ],
                 },
                 {
-                    "sequence": [
-                        {
-                            "service": "test.script",
-                            "target": {"device_id": "sequence-device"},
-                        }
-                    ],
-                },
-                {
                     "parallel": [
                         {
                             "service": "test.script",
@@ -3295,7 +3241,6 @@ async def test_referenced_devices(hass):
         "target-string-id",
         "if-then",
         "if-else",
-        "sequence-device",
         "parallel-device",
     }
     # Test we cache results.
@@ -3928,9 +3873,6 @@ async def test_validate_action_config(hass):
             "then": [templated_device_action("if_then_event")],
             "else": [templated_device_action("if_else_event")],
         },
-        cv.SCRIPT_ACTION_SEQUENCE: {
-            "sequence": [templated_device_action("sequence_event")],
-        },
         cv.SCRIPT_ACTION_PARALLEL: {
             "parallel": [templated_device_action("parallel_event")],
         },
@@ -3942,7 +3884,6 @@ async def test_validate_action_config(hass):
         cv.SCRIPT_ACTION_CHOOSE: [["choose", 0, "sequence", 0], ["default", 0]],
         cv.SCRIPT_ACTION_WAIT_FOR_TRIGGER: None,
         cv.SCRIPT_ACTION_IF: None,
-        cv.SCRIPT_ACTION_SEQUENCE: None,
         cv.SCRIPT_ACTION_PARALLEL: None,
     }
 
