@@ -2682,6 +2682,148 @@ async def test_if_condition_validation(
     )
 
 
+async def test_parallel(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
+    """Test parallel action."""
+    events = async_capture_events(hass, "test_event")
+    hass.states.async_set("switch.trigger", "off")
+
+    sequence = cv.SCRIPT_SCHEMA(
+        {
+            "parallel": [
+                {
+                    "alias": "Sequential group",
+                    "sequence": [
+                        {
+                            "alias": "Waiting for trigger",
+                            "wait_for_trigger": {
+                                "platform": "state",
+                                "entity_id": "switch.trigger",
+                                "to": "on",
+                            },
+                        },
+                        {
+                            "event": "test_event",
+                            "event_data": {
+                                "hello": "from action 1",
+                                "what": "{{ what }}",
+                            },
+                        },
+                    ],
+                },
+                {
+                    "alias": "Don't wait at all",
+                    "event": "test_event",
+                    "event_data": {"hello": "from action 2", "what": "{{ what }}"},
+                },
+            ]
+        }
+    )
+
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    wait_started_flag = async_watch_for_action(script_obj, "Waiting for trigger")
+    hass.async_create_task(
+        script_obj.async_run(MappingProxyType({"what": "world"}), Context())
+    )
+    await asyncio.wait_for(wait_started_flag.wait(), 1)
+
+    assert script_obj.is_running
+
+    hass.states.async_set("switch.trigger", "on")
+    await hass.async_block_till_done()
+
+    assert len(events) == 2
+    assert events[0].data["hello"] == "from action 2"
+    assert events[0].data["what"] == "world"
+    assert events[1].data["hello"] == "from action 1"
+    assert events[1].data["what"] == "world"
+
+    assert (
+        "Test Name: Parallel action at step 1: Sequential group: Executing step Waiting for trigger"
+        in caplog.text
+    )
+    assert (
+        "Parallel action at step 1: parallel 2: Executing step Don't wait at all"
+        in caplog.text
+    )
+
+    expected_trace = {
+        "0": [{"result": {}}],
+        "0/parallel/0/sequence/0": [
+            {
+                "result": {
+                    "wait": {
+                        "remaining": None,
+                        "trigger": {
+                            "entity_id": "switch.trigger",
+                            "description": "state of switch.trigger",
+                        },
+                    }
+                }
+            }
+        ],
+        "0/parallel/1/sequence/0": [
+            {
+                "variables": {"wait": {"remaining": None}},
+                "result": {
+                    "event": "test_event",
+                    "event_data": {"hello": "from action 2", "what": "world"},
+                },
+            }
+        ],
+        "0/parallel/0/sequence/1": [
+            {
+                "variables": {"wait": {"remaining": None}},
+                "result": {
+                    "event": "test_event",
+                    "event_data": {"hello": "from action 1", "what": "world"},
+                },
+            }
+        ],
+    }
+    assert_action_trace(expected_trace)
+
+
+async def test_parallel_error(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test parallel action failure handling."""
+    events = async_capture_events(hass, "test_event")
+    sequence = cv.SCRIPT_SCHEMA(
+        {
+            "parallel": [
+                {"service": "epic.failure"},
+            ]
+        }
+    )
+
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    with pytest.raises(exceptions.ServiceNotFound):
+        await script_obj.async_run(context=Context())
+    assert len(events) == 0
+
+    expected_trace = {
+        "0": [{"error_type": ServiceNotFound, "result": {}}],
+        "0/parallel/0/sequence/0": [
+            {
+                "error_type": ServiceNotFound,
+                "result": {
+                    "limit": 10,
+                    "params": {
+                        "domain": "epic",
+                        "service": "failure",
+                        "service_data": {},
+                        "target": {},
+                    },
+                    "running_script": False,
+                },
+            }
+        ],
+    }
+    assert_action_trace(expected_trace, expected_script_execution="error")
+
+
 async def test_last_triggered(hass):
     """Test the last_triggered."""
     event = "test_event"
@@ -2881,6 +3023,14 @@ async def test_referenced_areas(hass):
                         }
                     ],
                 },
+                {
+                    "parallel": [
+                        {
+                            "service": "test.script",
+                            "data": {"area_id": "area_parallel"},
+                        }
+                    ],
+                },
             ]
         ),
         "Test Name",
@@ -2896,6 +3046,7 @@ async def test_referenced_areas(hass):
         "area_service_not_list",
         "area_if_then",
         "area_if_else",
+        "area_parallel",
         # 'area_service_template',  # no area extraction from template
     }
     # Test we cache results.
@@ -2988,6 +3139,14 @@ async def test_referenced_entities(hass):
                         }
                     ],
                 },
+                {
+                    "parallel": [
+                        {
+                            "service": "test.script",
+                            "data": {"entity_id": "light.parallel"},
+                        }
+                    ],
+                },
             ]
         ),
         "Test Name",
@@ -3006,6 +3165,7 @@ async def test_referenced_entities(hass):
         "light.service_not_list",
         "light.if_then",
         "light.if_else",
+        "light.parallel",
         # "light.service_template",  # no entity extraction from template
         "scene.hello",
         "sensor.condition",
@@ -3093,6 +3253,14 @@ async def test_referenced_devices(hass):
                         }
                     ],
                 },
+                {
+                    "parallel": [
+                        {
+                            "service": "test.script",
+                            "target": {"device_id": "parallel-device"},
+                        }
+                    ],
+                },
             ]
         ),
         "Test Name",
@@ -3113,6 +3281,7 @@ async def test_referenced_devices(hass):
         "target-string-id",
         "if-then",
         "if-else",
+        "parallel-device",
     }
     # Test we cache results.
     assert script_obj.referenced_devices is script_obj.referenced_devices
@@ -3744,6 +3913,9 @@ async def test_validate_action_config(hass):
             "then": [templated_device_action("if_then_event")],
             "else": [templated_device_action("if_else_event")],
         },
+        cv.SCRIPT_ACTION_PARALLEL: {
+            "parallel": [templated_device_action("parallel_event")],
+        },
     }
     expected_templates = {
         cv.SCRIPT_ACTION_CHECK_CONDITION: None,
@@ -3752,6 +3924,7 @@ async def test_validate_action_config(hass):
         cv.SCRIPT_ACTION_CHOOSE: [["choose", 0, "sequence", 0], ["default", 0]],
         cv.SCRIPT_ACTION_WAIT_FOR_TRIGGER: None,
         cv.SCRIPT_ACTION_IF: None,
+        cv.SCRIPT_ACTION_PARALLEL: None,
     }
 
     for key in cv.ACTION_TYPE_SCHEMAS:
