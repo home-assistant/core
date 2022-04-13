@@ -31,6 +31,7 @@ from .const import (
     DEFAULT_ZONE_RUN,
     DOMAIN,
 )
+from .model import RainMachineDescriptionMixinUid
 
 ATTR_AREA = "area"
 ATTR_CS_ON = "cs_on"
@@ -110,15 +111,8 @@ VEGETATION_MAP = {
 
 
 @dataclass
-class RainMachineSwitchDescriptionMixin:
-    """Define an entity description mixin for switches."""
-
-    uid: int
-
-
-@dataclass
 class RainMachineSwitchDescription(
-    SwitchEntityDescription, RainMachineSwitchDescriptionMixin
+    SwitchEntityDescription, RainMachineDescriptionMixinUid
 ):
     """Describe a RainMachine switch."""
 
