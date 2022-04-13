@@ -410,7 +410,9 @@ class RainMachineZone(RainMachineActivitySwitch):
                 ),
                 ATTR_ID: data["uid"],
                 ATTR_NO_CYCLES: data.get("noOfCycles"),
-                ATTR_PRECIP_RATE: data.get("waterSense").get("precipitationRate"),
+                ATTR_PRECIP_RATE: async_limit_precision(
+                    data.get("waterSense").get("precipitationRate")
+                ),
                 ATTR_RESTRICTIONS: data.get("restriction"),
                 ATTR_SLOPE: SLOPE_TYPE_MAP.get(data.get("slope")),
                 ATTR_SOIL_TYPE: SOIL_TYPE_MAP.get(data.get("soil")),
