@@ -4107,6 +4107,7 @@ async def test_continue_on_error(hass: HomeAssistant) -> None:
             },
             {"event": "test_event"},
             {
+                "continue_on_error": True,
                 "stop": "Stop!",
             },
             {"event": "test_event"},
