@@ -274,7 +274,7 @@ class SamsungTVDevice(MediaPlayerEntity):
             # NETWORK,NONE
             upnp_factory = UpnpFactory(upnp_requester, non_strict=True)
             upnp_device: UpnpDevice | None = None
-            with contextlib.suppress(UpnpConnectionError):
+            with contextlib.suppress(UpnpConnectionError, UpnpResponseError):
                 upnp_device = await upnp_factory.async_create_device(
                     self._ssdp_rendering_control_location
                 )
