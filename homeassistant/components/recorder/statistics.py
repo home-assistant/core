@@ -1081,7 +1081,7 @@ def get_last_short_term_statistics(
 
 
 def get_latest_short_term_statistics(
-    hass: HomeAssistant, statistic_ids: list[str], convert_units: bool
+    hass: HomeAssistant, statistic_ids: list[str]
 ) -> dict[str, list[dict]]:
     """Return the latest short term statistics for a list of statistic_ids."""
     # This function doesn't use a baked query, we instead rely on the
