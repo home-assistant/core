@@ -1120,7 +1120,7 @@ def get_latest_short_term_statistics(
             stats,
             statistic_ids,
             metadata,
-            convert_units,
+            False,
             StatisticsShortTerm,
             None,
         )
