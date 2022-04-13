@@ -6,8 +6,9 @@ from homeassistant.components.solaredge.const import (
     DEFAULT_NAME,
     DOMAIN,
     OVERVIEW_UPDATE_DELAY,
+    SENSOR_TYPES,
 )
-from homeassistant.const import CONF_API_KEY, CONF_NAME, STATE_UNAVAILABLE
+from homeassistant.const import CONF_API_KEY, CONF_NAME, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
@@ -29,6 +30,9 @@ async def test_solaredgeoverviewdataservice_energy_values_validity(
     )
     mock_solaredge().get_details.return_value = {"details": {"status": "active"}}
     mock_config_entry.add_to_hass(hass)
+    for description in SENSOR_TYPES:
+        description.entity_registry_enabled_default = True
+
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     # Valid energy values update
@@ -56,7 +60,7 @@ async def test_solaredgeoverviewdataservice_energy_values_validity(
 
     state = hass.states.get("sensor.solaredge_lifetime_energy")
     assert state
-    assert state.state == STATE_UNAVAILABLE
+    assert state.state == STATE_UNKNOWN
 
     # New valid energy values update
     mock_overview_data["overview"]["lifeTimeData"]["energy"] = 100001
@@ -68,15 +72,29 @@ async def test_solaredgeoverviewdataservice_energy_values_validity(
     assert state
     assert state.state == str(mock_overview_data["overview"]["lifeTimeData"]["energy"])
 
-    # Invalid energy values, lastYearData energy is lower than last month or day.
-    mock_overview_data["overview"]["lastYearData"]["energy"] = 0
+    # Small variations should not be considered invalid.
+    mock_overview_data["overview"]["lifeTimeData"]["energy"] = 100002
+    mock_overview_data["overview"]["lastYearData"][
+        "energy"
+    ] = 100004  # just slightly larger
     mock_solaredge().get_overview.return_value = mock_overview_data
     async_fire_time_changed(hass, dt_util.utcnow() + OVERVIEW_UPDATE_DELAY)
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.solaredge_lifetime_energy")
     assert state
-    assert state.state == STATE_UNAVAILABLE
+    assert state.state == str(mock_overview_data["overview"]["lifeTimeData"]["energy"])
+    await hass.async_block_till_done()
+
+    # Invalid energy values, lastYearData energy is lower than last month or day.
+    mock_overview_data["overview"]["lastYearData"]["energy"] = 0
+    mock_solaredge().get_overview.return_value = mock_overview_data
+    async_fire_time_changed(hass, dt_util.utcnow() + OVERVIEW_UPDATE_DELAY)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.solaredge_energy_this_year")
+    assert state
+    assert state.state == STATE_UNKNOWN
 
     # All zero energy values should also be valid.
     mock_overview_data["overview"]["lifeTimeData"]["energy"] = 0.0
