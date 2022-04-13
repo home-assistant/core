@@ -201,7 +201,7 @@ aioridwell==2022.03.0
 aiosenseme==0.6.1
 
 # homeassistant.components.shelly
-aioshelly==1.0.11
+aioshelly==2.0.0
 
 # homeassistant.components.steamist
 aiosteamist==0.3.1
