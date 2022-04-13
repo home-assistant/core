@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import timedelta
 from functools import partial
 
 from homeassistant.components.sensor import (
@@ -15,6 +16,7 @@ from homeassistant.const import TEMP_CELSIUS, VOLUME_CUBIC_METERS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util.dt import utcnow
 
 from . import RainMachineEntity
 from .const import (
@@ -143,7 +145,7 @@ async def async_setup_entry(
                 zone_coordinator,
                 controller,
                 RainMachineSensorDescriptionUid(
-                    key=TYPE_ZONE_TIME_REMAINING,
+                    key=f"{TYPE_ZONE_TIME_REMAINING}_{uid}",
                     name=f"Zone Time Remaining: {zone['name']}",
                     device_class=SensorDeviceClass.TIMESTAMP,
                     entity_category=EntityCategory.DIAGNOSTIC,
@@ -197,3 +199,18 @@ class UniversalRestrictionsSensor(RainMachineEntity, SensorEntity):
 
 class ZoneTimeRemainingSensor(RainMachineEntity, SensorEntity):
     """Define a sensor that shows the amount of time remaining for a zone."""
+
+    entity_description: RainMachineSensorDescriptionUid
+
+    @callback
+    def update_from_latest_data(self) -> None:
+        """Update the state."""
+        now = utcnow()
+        seconds_remaining = self.coordinator.data[self.entity_description.uid][
+            "remaining"
+        ]
+
+        if seconds_remaining == 0:
+            self._attr_native_value = None
+        else:
+            self._attr_native_value = now + timedelta(seconds=seconds_remaining)
