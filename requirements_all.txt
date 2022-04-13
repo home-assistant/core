@@ -59,7 +59,7 @@ RtmAPI==0.7.2
 TravisPy==0.3.5
 
 # homeassistant.components.twitter
-TwitterAPI==2.7.5
+TwitterAPI==2.7.12
 
 # homeassistant.components.onvif
 WSDiscovery==2.0.0
@@ -110,7 +110,7 @@ aio_geojson_nsw_rfs_incidents==0.4
 aio_georss_gdacs==0.7
 
 # homeassistant.components.airzone
-aioairzone==0.3.3
+aioairzone==0.3.6
 
 # homeassistant.components.ambient_station
 aioambient==2021.11.0
@@ -543,9 +543,6 @@ discogs_client==2.3.0
 
 # homeassistant.components.steamist
 discovery30303==0.2.1
-
-# homeassistant.components.digitalloggers
-dlipower==0.7.165
 
 # homeassistant.components.doorbird
 doorbirdpy==2.1.0
@@ -2128,7 +2125,7 @@ sendgrid==6.8.2
 sense_energy==0.10.4
 
 # homeassistant.components.sentry
-sentry-sdk==1.5.8
+sentry-sdk==1.5.9
 
 # homeassistant.components.sharkiq
 sharkiq==0.0.1
