@@ -1,12 +1,13 @@
 """Support for vacuum cleaner robots (botvacs)."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import timedelta
 from enum import IntEnum
 from functools import partial
 import logging
-from typing import final
+from typing import Any, final
 
 import voluptuous as vol
 
@@ -203,10 +204,11 @@ class _BaseVacuum(Entity):
         raise NotImplementedError()
 
     @property
-    def capability_attributes(self):
+    def capability_attributes(self) -> Mapping[str, Any] | None:
         """Return capability attributes."""
         if self.supported_features & VacuumEntityFeature.FAN_SPEED:
             return {ATTR_FAN_SPEED_LIST: self.fan_speed_list}
+        return None
 
     @property
     def state_attributes(self):
