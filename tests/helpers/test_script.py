@@ -28,9 +28,10 @@ from homeassistant.core import (
     Context,
     CoreState,
     HomeAssistant,
+    ServiceCall,
     callback,
 )
-from homeassistant.exceptions import ConditionError, ServiceNotFound
+from homeassistant.exceptions import ConditionError, HomeAssistantError, ServiceNotFound
 from homeassistant.helpers import (
     config_validation as cv,
     entity_registry as er,
@@ -4083,4 +4084,60 @@ async def test_error_action(hass, caplog):
             ],
         },
         expected_script_execution="aborted",
+    )
+
+
+async def test_continue_on_error(hass: HomeAssistant) -> None:
+    """Test if automation continue when a step fails."""
+    events = async_capture_events(hass, "test_event")
+
+    @callback
+    def broken_service(service: ServiceCall) -> None:
+        """Break this service with an error."""
+        raise HomeAssistantError("It is not working!")
+
+    hass.services.async_register("broken", "service", broken_service)
+
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {"event": "test_event"},
+            {
+                "continue_on_error": True,
+                "service": "broken.service",
+            },
+            {"event": "test_event"},
+            {
+                "stop": "Stop!",
+            },
+            {"event": "test_event"},
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert len(events) == 2
+
+    assert_action_trace(
+        {
+            "0": [{"result": {"event": "test_event", "event_data": {}}}],
+            "1": [
+                {
+                    "result": {
+                        "limit": 10,
+                        "params": {
+                            "domain": "broken",
+                            "service": "service",
+                            "service_data": {},
+                            "target": {},
+                        },
+                        "running_script": False,
+                    },
+                }
+            ],
+            "2": [{"result": {"event": "test_event", "event_data": {}}}],
+            "3": [{"result": {"stop": "Stop!"}}],
+        },
+        expected_script_execution="finished",
     )

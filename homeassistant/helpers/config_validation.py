@@ -36,6 +36,7 @@ from homeassistant.const import (
     CONF_CHOOSE,
     CONF_CONDITION,
     CONF_CONDITIONS,
+    CONF_CONTINUE_ON_ERROR,
     CONF_CONTINUE_ON_TIMEOUT,
     CONF_COUNT,
     CONF_DEFAULT,
@@ -1055,7 +1056,10 @@ def script_action(value: Any) -> dict:
 
 SCRIPT_SCHEMA = vol.All(ensure_list, [script_action])
 
-SCRIPT_ACTION_BASE_SCHEMA = {vol.Optional(CONF_ALIAS): string}
+SCRIPT_ACTION_BASE_SCHEMA = {
+    vol.Optional(CONF_ALIAS): string,
+    vol.Optional(CONF_CONTINUE_ON_ERROR): boolean,
+}
 
 EVENT_SCHEMA = vol.Schema(
     {
