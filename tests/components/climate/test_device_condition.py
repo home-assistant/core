@@ -92,15 +92,6 @@ async def test_get_conditions(
 
 async def test_if_state(hass, calls):
     """Test for turn_on and turn_off conditions."""
-    hass.states.async_set(
-        "climate.entity",
-        const.HVAC_MODE_COOL,
-        {
-            const.ATTR_HVAC_MODE: const.HVAC_MODE_COOL,
-            const.ATTR_PRESET_MODE: const.PRESET_AWAY,
-        },
-    )
-
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -147,6 +138,20 @@ async def test_if_state(hass, calls):
             ]
         },
     )
+
+    # Should not fire, entity doesn't exist yet
+    hass.bus.async_fire("test_event1")
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    hass.states.async_set(
+        "climate.entity",
+        const.HVAC_MODE_COOL,
+        {
+            const.ATTR_PRESET_MODE: const.PRESET_AWAY,
+        },
+    )
+
     hass.bus.async_fire("test_event1")
     await hass.async_block_till_done()
     assert len(calls) == 1
@@ -156,7 +161,6 @@ async def test_if_state(hass, calls):
         "climate.entity",
         const.HVAC_MODE_AUTO,
         {
-            const.ATTR_HVAC_MODE: const.HVAC_MODE_AUTO,
             const.ATTR_PRESET_MODE: const.PRESET_AWAY,
         },
     )
@@ -176,7 +180,6 @@ async def test_if_state(hass, calls):
         "climate.entity",
         const.HVAC_MODE_AUTO,
         {
-            const.ATTR_HVAC_MODE: const.HVAC_MODE_AUTO,
             const.ATTR_PRESET_MODE: const.PRESET_HOME,
         },
     )
