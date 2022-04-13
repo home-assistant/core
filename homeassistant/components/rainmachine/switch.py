@@ -5,7 +5,7 @@ import asyncio
 from collections.abc import Coroutine
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, TypeVar, cast
+from typing import Any
 
 from regenmaschine.controller import Controller
 from regenmaschine.errors import RequestError
@@ -114,17 +114,6 @@ class RainMachineSwitchDescription(
     SwitchEntityDescription, RainMachineDescriptionMixinUid
 ):
     """Describe a RainMachine switch."""
-
-
-_T = TypeVar("_T")
-
-
-@callback
-def async_limit_precision(value: _T) -> _T:
-    """Reduce a value's decimal precision to 1 place (if appropriate)."""
-    if isinstance(value, float):
-        return cast(_T, round(value, 2))
-    return value
 
 
 async def async_setup_entry(
@@ -403,23 +392,19 @@ class RainMachineZone(RainMachineActivitySwitch):
 
         self._attr_extra_state_attributes.update(
             {
-                ATTR_AREA: async_limit_precision(data.get("waterSense").get("area")),
-                ATTR_CURRENT_CYCLE: data.get("cycle"),
-                ATTR_FIELD_CAPACITY: async_limit_precision(
-                    data.get("waterSense").get("fieldCapacity")
-                ),
+                ATTR_AREA: round(data["waterSense"]["area"], 2),
+                ATTR_CURRENT_CYCLE: data["cycle"],
+                ATTR_FIELD_CAPACITY: round(data["waterSense"]["fieldCapacity"], 2),
                 ATTR_ID: data["uid"],
-                ATTR_NO_CYCLES: data.get("noOfCycles"),
-                ATTR_PRECIP_RATE: async_limit_precision(
-                    data.get("waterSense").get("precipitationRate")
-                ),
-                ATTR_RESTRICTIONS: data.get("restriction"),
-                ATTR_SLOPE: SLOPE_TYPE_MAP.get(data.get("slope")),
-                ATTR_SOIL_TYPE: SOIL_TYPE_MAP.get(data.get("soil")),
-                ATTR_SPRINKLER_TYPE: SPRINKLER_TYPE_MAP.get(data.get("group_id")),
+                ATTR_NO_CYCLES: data["noOfCycles"],
+                ATTR_PRECIP_RATE: round(data["waterSense"]["precipitationRate"], 2),
+                ATTR_RESTRICTIONS: data["restriction"],
+                ATTR_SLOPE: SLOPE_TYPE_MAP.get(data["slope"], 99),
+                ATTR_SOIL_TYPE: SOIL_TYPE_MAP.get(data["soil"], 99),
+                ATTR_SPRINKLER_TYPE: SPRINKLER_TYPE_MAP.get(data["group_id"], 99),
                 ATTR_STATUS: RUN_STATUS_MAP[data["state"]],
                 ATTR_SUN_EXPOSURE: SUN_EXPOSURE_MAP.get(data.get("sun")),
-                ATTR_VEGETATION_TYPE: VEGETATION_MAP.get(data.get("type")),
+                ATTR_VEGETATION_TYPE: VEGETATION_MAP.get(data["type"], 99),
             }
         )
 
