@@ -70,7 +70,7 @@ class SlackFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_try_connect(
         self, token: str
-    ) -> tuple[str | None, dict[str, str] | None]:
+    ) -> tuple[str, None] | tuple[None, dict[str, str]]:
         """Try connecting to Slack."""
         session = aiohttp_client.async_get_clientsession(self.hass)
         client = WebClient(token=token, run_async=True, session=session)
