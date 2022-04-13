@@ -26,6 +26,8 @@ from .const import (
     DATA_RESTRICTIONS_UNIVERSAL,
     DATA_ZONES,
     DOMAIN,
+    RUN_STATE_MAP,
+    RunStates,
 )
 from .model import (
     RainMachineDescriptionMixinApiCategory,
@@ -40,15 +42,6 @@ TYPE_FLOW_SENSOR_START_INDEX = "flow_sensor_start_index"
 TYPE_FLOW_SENSOR_WATERING_CLICKS = "flow_sensor_watering_clicks"
 TYPE_FREEZE_TEMP = "freeze_protect_temp"
 TYPE_ZONE_RUN_COMPLETION_TIME = "zone_run_completion_time"
-
-ZONE_STATE_NOT_RUNNING = "not_running"
-ZONE_STATE_PENDING = "pending"
-ZONE_STATE_RUNNING = "running"
-ZONE_STATE_MAP = {
-    0: ZONE_STATE_NOT_RUNNING,
-    1: ZONE_STATE_RUNNING,
-    2: ZONE_STATE_PENDING,
-}
 
 
 @dataclass
@@ -219,7 +212,7 @@ class ZoneTimeRemainingSensor(RainMachineEntity, SensorEntity):
         data = self.coordinator.data[self.entity_description.uid]
         now = utcnow()
 
-        if ZONE_STATE_MAP.get(data["state"]) != ZONE_STATE_RUNNING:
+        if RUN_STATE_MAP.get(data["state"]) != RunStates.RUNNING:
             # If the zone isn't actively running, return immediately:
             return
 
