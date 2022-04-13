@@ -9,31 +9,31 @@
     "name": "benzen",
     "id": 658,
     "index": "bardzo dobry",
-    "value": 0.2
+    "value": 0.23789
   },
   "co": {
     "name": "tlenek węgla",
     "id": 660,
     "index": "dobry",
-    "value": 251.9
+    "value": 251.874
   },
   "no2": {
     "name": "dwutlenek azotu",
     "id": 665,
     "index": "dobry",
-    "value": 7.1
+    "value": 7.13411
   },
   "o3": {
     "name": "ozon",
     "id": 667,
     "index": "dobry",
-    "value": 95.8
+    "value": 95.7768
   },
   "pm10": {
     "name": "py\u0142 zawieszony PM10",
     "id": 14395,
     "index": "dobry",
-    "value": 16.8
+    "value": 16.8344
   },
   "pm25": {
     "name": "py\u0142 zawieszony PM2.5",
@@ -45,6 +45,6 @@
     "name": "dwutlenek siarki",
     "id": 672,
     "index": "bardzo dobry",
-    "value": 4.4
+    "value": 4.35478
   }
 }
