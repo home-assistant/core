@@ -25,6 +25,7 @@ async def async_get_config_entry_diagnostics(
         "config_entry": async_redact_data(config_entry.as_dict(), TO_REDACT)
     }
 
+    # not every device uses DataUpdateCoordinator
     if coordinator := hass.data[DOMAIN][config_entry.entry_id].get(KEY_COORDINATOR):
         if isinstance(coordinator.data, dict):
             diagnostics_data["coordinator_data"] = coordinator.data
