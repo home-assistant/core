@@ -476,8 +476,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/image_processing/ @home-assistant/core
 /tests/components/image_processing/ @home-assistant/core
 /homeassistant/components/incomfort/ @zxdavb
-/homeassistant/components/influxdb/ @fabaff @mdegat01
-/tests/components/influxdb/ @fabaff @mdegat01
+/homeassistant/components/influxdb/ @mdegat01
+/tests/components/influxdb/ @mdegat01
 /homeassistant/components/input_boolean/ @home-assistant/core
 /tests/components/input_boolean/ @home-assistant/core
 /homeassistant/components/input_button/ @home-assistant/core
