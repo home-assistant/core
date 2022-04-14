@@ -19,7 +19,6 @@ WAN_STATUS = "wan_status"
 ROUTER_IP = "ip"
 ROUTER_UPTIME = "uptime"
 KIBIBYTE = 1024
-CONFIG_ENTRY_SCAN_INTERVAL = "scan_interval"
 CONFIG_ENTRY_ST = "st"
 CONFIG_ENTRY_UDN = "udn"
 # CONFIG_ENTRY_HOSTNAME = "hostname"

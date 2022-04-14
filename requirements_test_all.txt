@@ -94,7 +94,7 @@ aio_geojson_nsw_rfs_incidents==0.4
 aio_georss_gdacs==0.7
 
 # homeassistant.components.airzone
-aioairzone==0.3.3
+aioairzone==0.3.6
 
 # homeassistant.components.ambient_station
 aioambient==2021.11.0
@@ -201,7 +201,7 @@ aioridwell==2022.03.0
 aiosenseme==0.6.1
 
 # homeassistant.components.shelly
-aioshelly==1.0.11
+aioshelly==2.0.0
 
 # homeassistant.components.steamist
 aiosteamist==0.3.1
@@ -249,7 +249,7 @@ amberelectric==1.0.4
 ambiclimate==0.2.1
 
 # homeassistant.components.androidtv
-androidtv[async]==0.0.66
+androidtv[async]==0.0.67
 
 # homeassistant.components.apprise
 apprise==0.9.7
@@ -1380,7 +1380,7 @@ securetar==2022.2.0
 sense_energy==0.10.4
 
 # homeassistant.components.sentry
-sentry-sdk==1.5.8
+sentry-sdk==1.5.9
 
 # homeassistant.components.sharkiq
 sharkiq==0.0.1

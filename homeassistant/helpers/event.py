@@ -1532,17 +1532,17 @@ track_time_change = threaded_listener_factory(async_track_time_change)
 
 
 def process_state_match(
-    parameter: None | str | Iterable[str],
+    parameter: None | str | Iterable[str], invert: bool = False
 ) -> Callable[[str | None], bool]:
     """Convert parameter to function that matches input against parameter."""
     if parameter is None or parameter == MATCH_ALL:
-        return lambda _: True
+        return lambda _: not invert
 
     if isinstance(parameter, str) or not hasattr(parameter, "__iter__"):
-        return lambda state: state == parameter
+        return lambda state: invert is not (state == parameter)
 
     parameter_set = set(parameter)
-    return lambda state: state in parameter_set
+    return lambda state: invert is not (state in parameter_set)
 
 
 @callback

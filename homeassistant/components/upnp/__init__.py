@@ -33,7 +33,6 @@ from .const import (
     CONF_LOCAL_IP,
     CONFIG_ENTRY_MAC_ADDRESS,
     CONFIG_ENTRY_ORIGINAL_UDN,
-    CONFIG_ENTRY_SCAN_INTERVAL,
     CONFIG_ENTRY_ST,
     CONFIG_ENTRY_UDN,
     DEFAULT_SCAN_INTERVAL,
@@ -188,11 +187,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             new_identifiers={(DOMAIN, device.usn)},
         )
 
-    update_interval_sec = entry.options.get(
-        CONFIG_ENTRY_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-    )
-    update_interval = timedelta(seconds=update_interval_sec)
     assert device_entry
+    update_interval = timedelta(seconds=DEFAULT_SCAN_INTERVAL)
     coordinator = UpnpDataUpdateCoordinator(
         hass,
         device=device,
