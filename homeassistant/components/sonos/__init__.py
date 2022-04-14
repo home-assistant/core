@@ -170,7 +170,7 @@ class SonosDiscoveryManager:
         return any(x for x in self._known_invisible if x.ip_address == ip_address)
 
     def _create_visible_speakers(self, ip_address: str) -> None:
-        """Create all new SonosSpeaker instances with the provided seed IP."""
+        """Create all visible SonosSpeaker instances with the provided seed IP."""
         try:
             soco = SoCo(ip_address)
             visible_zones = soco.visible_zones
@@ -183,7 +183,7 @@ class SonosDiscoveryManager:
 
         for zone in visible_zones:
             if zone.uid not in self.data.discovered:
-                self._discovered_player(zone)
+                self._add_speaker(zone)
 
     async def _async_stop_event_listener(self, event: Event | None = None) -> None:
         for speaker in self.data.discovered.values():
@@ -200,8 +200,8 @@ class SonosDiscoveryManager:
             self.data.hosts_heartbeat()
             self.data.hosts_heartbeat = None
 
-    def _discovered_player(self, soco: SoCo) -> None:
-        """Handle a (re)discovered player."""
+    def _add_speaker(self, soco: SoCo) -> None:
+        """Create and set up a new SonosSpeaker instance."""
         try:
             speaker_info = soco.get_speaker_info(True)
             if soco.uid not in self.data.boot_counts:
@@ -221,7 +221,7 @@ class SonosDiscoveryManager:
         except (OSError, SoCoException):
             _LOGGER.warning("Failed to add SonosSpeaker using %s", soco, exc_info=True)
 
-    def _manual_hosts(self, now: datetime.datetime | None = None) -> None:
+    def _poll_manual_hosts(self, now: datetime.datetime | None = None) -> None:
         """Add and maintain Sonos devices from a manual configuration."""
         for host in self.hosts:
             ip_addr = socket.gethostbyname(host)
@@ -279,11 +279,11 @@ class SonosDiscoveryManager:
                     )
 
         self.data.hosts_heartbeat = call_later(
-            self.hass, DISCOVERY_INTERVAL.total_seconds(), self._manual_hosts
+            self.hass, DISCOVERY_INTERVAL.total_seconds(), self._poll_manual_hosts
         )
 
-    async def _async_create_discovered_player(
-        self, uid, discovered_ip, boot_seqnum
+    async def _async_handle_discovery_message(
+        self, uid: str, discovered_ip: str, boot_seqnum: int
     ) -> None:
         """Handle discovered player creation and activity."""
         async with self.discovery_lock:
@@ -297,7 +297,7 @@ class SonosDiscoveryManager:
                 if self.is_device_invisible(discovered_ip):
                     return
                 await self.hass.async_add_executor_job(
-                    self._discovered_player, SoCo(discovered_ip)
+                    self._add_speaker, SoCo(discovered_ip)
                 )
             elif boot_seqnum and boot_seqnum > self.data.boot_counts[uid]:
                 self.data.boot_counts[uid] = boot_seqnum
@@ -361,7 +361,7 @@ class SonosDiscoveryManager:
             _LOGGER.debug("New %s discovery uid=%s: %s", source, uid, info)
             self.data.discovery_known.add(uid)
         asyncio.create_task(
-            self._async_create_discovered_player(uid, discovered_ip, boot_seqnum)
+            self._async_handle_discovery_message(uid, discovered_ip, boot_seqnum)
         )
 
     async def setup_platforms_and_discovery(self):
@@ -384,7 +384,7 @@ class SonosDiscoveryManager:
                     EVENT_HOMEASSISTANT_STOP, self._stop_manual_heartbeat
                 )
             )
-            await self.hass.async_add_executor_job(self._manual_hosts)
+            await self.hass.async_add_executor_job(self._poll_manual_hosts)
 
         self.entry.async_on_unload(
             await ssdp.async_register_callback(
