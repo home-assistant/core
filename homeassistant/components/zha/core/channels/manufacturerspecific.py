@@ -12,7 +12,7 @@ from ..const import (
     SIGNAL_ATTR_UPDATED,
     UNKNOWN,
 )
-from .base import ZigbeeChannel
+from .base import ClientChannel, ZigbeeChannel
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(registries.SMARTTHINGS_HUMIDITY_CLUSTER)
@@ -88,7 +88,7 @@ class SmartThingsAcceleration(ZigbeeChannel):
 
 @registries.CHANNEL_ONLY_CLUSTERS.register(0xFC31)
 @registries.CLIENT_CHANNELS_REGISTRY.register(0xFC31)
-class InovelliCluster(ZigbeeChannel):
+class InovelliCluster(ClientChannel):
     """Inovelli Button Press Event channel."""
 
     REPORT_CONFIG = []

@@ -6,13 +6,10 @@ import logging
 from russound import russound
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
+from homeassistant.components.media_player import (
+    PLATFORM_SCHEMA,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
@@ -25,13 +22,6 @@ _LOGGER = logging.getLogger(__name__)
 CONF_ZONES = "zones"
 CONF_SOURCES = "sources"
 
-SUPPORT_RUSSOUND = (
-    SUPPORT_VOLUME_MUTE
-    | SUPPORT_VOLUME_SET
-    | SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-    | SUPPORT_SELECT_SOURCE
-)
 
 ZONE_SCHEMA = vol.Schema({vol.Required(CONF_NAME): cv.string})
 
@@ -81,6 +71,14 @@ def setup_platform(
 class RussoundRNETDevice(MediaPlayerEntity):
     """Representation of a Russound RNET device."""
 
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.SELECT_SOURCE
+    )
+
     def __init__(self, hass, russ, sources, zone_id, extra):
         """Initialise the Russound RNET device."""
         self._name = extra["name"]
@@ -128,11 +126,6 @@ class RussoundRNETDevice(MediaPlayerEntity):
     def state(self):
         """Return the state of the device."""
         return self._state
-
-    @property
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        return SUPPORT_RUSSOUND
 
     @property
     def source(self):

@@ -351,18 +351,11 @@ async def async_wait_for_elk_to_sync(
             login_event.set()
             sync_event.set()
 
-    def first_response(*args, **kwargs):
-        _LOGGER.debug("ElkM1 received first response (VN)")
-        login_event.set()
-
     def sync_complete():
         sync_event.set()
 
     success = True
     elk.add_handler("login", login_status)
-    # VN is the first command sent for panel, when we get
-    # it back we now we are logged in either with or without a password
-    elk.add_handler("VN", first_response)
     elk.add_handler("sync_complete", sync_complete)
     for name, event, timeout in (
         ("login", login_event, login_timeout),

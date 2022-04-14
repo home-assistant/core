@@ -204,9 +204,6 @@ async def async_setup_entry(
     lifx_manager = LIFXManager(hass, platform, config_entry, async_add_entities)
     hass.data[DATA_LIFX_MANAGER] = lifx_manager
 
-    # This is to clean up old litter. Can be removed in Home Assistant 2022.5.
-    await lifx_manager.remove_empty_devices()
-
     for interface in interfaces:
         lifx_manager.start_discovery(interface)
 
@@ -438,14 +435,15 @@ class LIFXManager:
             entity.registered = False
             entity.async_write_ha_state()
 
-    async def entity_registry_updated(self, event):
+    @callback
+    def entity_registry_updated(self, event):
         """Handle entity registry updated."""
         if event.data["action"] == "remove":
-            await self.remove_empty_devices()
+            self.remove_empty_devices()
 
-    async def remove_empty_devices(self):
+    def remove_empty_devices(self):
         """Remove devices with no entities."""
-        entity_reg = await er.async_get_registry(self.hass)
+        entity_reg = er.async_get(self.hass)
         device_reg = dr.async_get(self.hass)
         device_list = dr.async_entries_for_config_entry(
             device_reg, self.config_entry.entry_id
@@ -456,7 +454,9 @@ class LIFXManager:
                 device_entry.id,
                 include_disabled_entities=True,
             ):
-                device_reg.async_remove_device(device_entry.id)
+                device_reg.async_update_device(
+                    device_entry.id, remove_config_entry_id=self.config_entry.entry_id
+                )
 
 
 class AwaitAioLIFX:

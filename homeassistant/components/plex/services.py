@@ -112,6 +112,7 @@ def process_plex_payload(
 ) -> PlexMediaSearchResult:
     """Look up Plex media using media_player.play_media service payloads."""
     plex_server = default_plex_server
+    extra_params = {}
 
     if content_id.startswith(PLEX_URI_SCHEME + "{"):
         # Handle the special payload of 'plex://{<json>}'
@@ -132,6 +133,7 @@ def process_plex_payload(
         else:
             # Handle legacy payloads without server_id in URL host position
             content = int(plex_url.host)  # type: ignore[arg-type]
+        extra_params = dict(plex_url.query)
     else:
         content = json.loads(content_id)
 
@@ -152,6 +154,8 @@ def process_plex_payload(
         content = {"plex_key": content}
         content_type = DOMAIN
 
+    content.update(extra_params)
+
     if playqueue_id := content.pop("playqueue_id", None):
         if not supports_playqueues:
             raise HomeAssistantError("Plex playqueues are not supported on this device")
@@ -169,7 +173,9 @@ def process_plex_payload(
     media = plex_server.lookup_media(content_type, **search_query)
 
     if supports_playqueues and (isinstance(media, list) or shuffle):
-        playqueue = plex_server.create_playqueue(media, shuffle=shuffle)
+        playqueue = plex_server.create_playqueue(
+            media, includeRelated=0, shuffle=shuffle
+        )
         return PlexMediaSearchResult(playqueue, content)
 
     return PlexMediaSearchResult(media, content)

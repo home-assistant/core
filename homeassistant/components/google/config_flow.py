@@ -34,7 +34,7 @@ class OAuth2FlowHandler(
         return logging.getLogger(__name__)
 
     async def async_step_import(self, info: dict[str, Any]) -> FlowResult:
-        """Import existing auth from Nest."""
+        """Import existing auth into a new config entry."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
         implementations = await config_entry_oauth2_flow.async_get_implementations(

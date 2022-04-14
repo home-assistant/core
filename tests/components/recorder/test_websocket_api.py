@@ -332,7 +332,7 @@ async def test_recorder_info_migration_queue_exhausted(hass, hass_ws_client):
         migration_done.wait()
         return real_migration(*args)
 
-    with patch(
+    with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True), patch(
         "homeassistant.components.recorder.Recorder.async_periodic_statistics"
     ), patch(
         "homeassistant.components.recorder.create_engine", new=create_engine_test

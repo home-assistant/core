@@ -2,18 +2,13 @@
 from __future__ import annotations
 
 from elkm1_lib.const import AlarmState, ArmedStatus, ArmLevel, ArmUpState
-from elkm1_lib.util import username
 import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel import (
     ATTR_CHANGED_BY,
     FORMAT_NUMBER,
     AlarmControlPanelEntity,
-)
-from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_HOME,
-    SUPPORT_ALARM_ARM_NIGHT,
+    AlarmControlPanelEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -107,6 +102,12 @@ async def async_setup_entry(
 class ElkArea(ElkAttachedEntity, AlarmControlPanelEntity, RestoreEntity):
     """Representation of an Area / Partition within the ElkM1 alarm panel."""
 
+    _attr_supported_features = (
+        AlarmControlPanelEntityFeature.ARM_HOME
+        | AlarmControlPanelEntityFeature.ARM_AWAY
+        | AlarmControlPanelEntityFeature.ARM_NIGHT
+    )
+
     def __init__(self, element, elk, elk_data):
         """Initialize Area as Alarm Control Panel."""
         super().__init__(element, elk, elk_data)
@@ -145,7 +146,7 @@ class ElkArea(ElkAttachedEntity, AlarmControlPanelEntity, RestoreEntity):
             self._changed_by_keypad = keypad.name
             self._changed_by_time = keypad.last_user_time.isoformat()
             self._changed_by_id = keypad.last_user + 1
-            self._changed_by = username(self._elk, keypad.last_user)
+            self._changed_by = self._elk.users.username(keypad.last_user)
             self.async_write_ha_state()
 
     def _watch_area(self, area, changeset):
@@ -156,7 +157,7 @@ class ElkArea(ElkAttachedEntity, AlarmControlPanelEntity, RestoreEntity):
             return
         self._changed_by_keypad = None
         self._changed_by_id = last_log["user_number"]
-        self._changed_by = username(self._elk, self._changed_by_id - 1)
+        self._changed_by = self._elk.users.username(self._changed_by_id - 1)
         self._changed_by_time = last_log["timestamp"]
         self.async_write_ha_state()
 
@@ -169,11 +170,6 @@ class ElkArea(ElkAttachedEntity, AlarmControlPanelEntity, RestoreEntity):
     def state(self):
         """Return the state of the element."""
         return self._state
-
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_NIGHT
 
     @property
     def extra_state_attributes(self):

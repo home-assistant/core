@@ -34,11 +34,11 @@ from homeassistant.const import (
     MAX_LENGTH_STATE_ENTITY_ID,
     MAX_LENGTH_STATE_STATE,
 )
-from homeassistant.core import Context, Event, EventOrigin, State
+from homeassistant.core import Context, Event, EventOrigin, State, split_entity_id
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 import homeassistant.util.dt as dt_util
 
-from .const import JSON_DUMP
+from .const import ALL_DOMAIN_EXCLUDE_ATTRS, JSON_DUMP
 
 # SQLAlchemy Schema
 # pylint: disable=invalid-name
@@ -260,11 +260,21 @@ class StateAttributes(Base):  # type: ignore[misc,valid-type]
         return dbstate
 
     @staticmethod
-    def shared_attrs_from_event(event: Event) -> str:
+    def shared_attrs_from_event(
+        event: Event, exclude_attrs_by_domain: dict[str, set[str]]
+    ) -> str:
         """Create shared_attrs from a state_changed event."""
         state: State | None = event.data.get("new_state")
         # None state means the state was removed from the state machine
-        return "{}" if state is None else JSON_DUMP(state.attributes)
+        if state is None:
+            return "{}"
+        domain = split_entity_id(state.entity_id)[0]
+        exclude_attrs = (
+            exclude_attrs_by_domain.get(domain, set()) | ALL_DOMAIN_EXCLUDE_ATTRS
+        )
+        return JSON_DUMP(
+            {k: v for k, v in state.attributes.items() if k not in exclude_attrs}
+        )
 
     @staticmethod
     def hash_shared_attrs(shared_attrs: str) -> int:

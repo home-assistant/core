@@ -20,13 +20,14 @@ from homeassistant.const import (
     CONF_API_VERSION,
     CONF_FRIENDLY_NAME,
     CONF_LATITUDE,
+    CONF_LOCATION,
     CONF_LONGITUDE,
     CONF_NAME,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.selector import LocationSelector, LocationSelectorConfig
 
 from .const import (
     AUTO_MIGRATION_MESSAGE,
@@ -63,19 +64,21 @@ def _get_config_schema(
     if source == config_entries.SOURCE_IMPORT:
         return vol.Schema(api_key_schema, extra=vol.REMOVE_EXTRA)
 
+    default_location = (
+        input_dict[CONF_LOCATION]
+        if CONF_LOCATION in input_dict
+        else {
+            CONF_LATITUDE: hass.config.latitude,
+            CONF_LONGITUDE: hass.config.longitude,
+        }
+    )
     return vol.Schema(
         {
             **api_key_schema,
             vol.Required(
-                CONF_LATITUDE,
-                "location",
-                default=input_dict.get(CONF_LATITUDE, hass.config.latitude),
-            ): cv.latitude,
-            vol.Required(
-                CONF_LONGITUDE,
-                "location",
-                default=input_dict.get(CONF_LONGITUDE, hass.config.longitude),
-            ): cv.longitude,
+                CONF_LOCATION,
+                default=default_location,
+            ): LocationSelector(LocationSelectorConfig(radius=False)),
         },
     )
 
@@ -84,8 +87,8 @@ def _get_unique_id(hass: HomeAssistant, input_dict: dict[str, Any]):
     """Return unique ID from config data."""
     return (
         f"{input_dict[CONF_API_KEY]}"
-        f"_{input_dict.get(CONF_LATITUDE, hass.config.latitude)}"
-        f"_{input_dict.get(CONF_LONGITUDE, hass.config.longitude)}"
+        f"_{input_dict[CONF_LOCATION][CONF_LATITUDE]}"
+        f"_{input_dict[CONF_LOCATION][CONF_LONGITUDE]}"
     )
 
 
@@ -138,14 +141,23 @@ class TomorrowioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # Grab the API key and add it to the rest of the config before continuing
             if self._import_config:
                 self._import_config[CONF_API_KEY] = user_input[CONF_API_KEY]
+                self._import_config[CONF_LOCATION] = {
+                    CONF_LATITUDE: self._import_config.pop(
+                        CONF_LATITUDE, self.hass.config.latitude
+                    ),
+                    CONF_LONGITUDE: self._import_config.pop(
+                        CONF_LONGITUDE, self.hass.config.longitude
+                    ),
+                }
                 user_input = self._import_config.copy()
             await self.async_set_unique_id(
                 unique_id=_get_unique_id(self.hass, user_input)
             )
             self._abort_if_unique_id_configured()
 
-            latitude = user_input.get(CONF_LATITUDE, self.hass.config.latitude)
-            longitude = user_input.get(CONF_LONGITUDE, self.hass.config.longitude)
+            location = user_input[CONF_LOCATION]
+            latitude = location[CONF_LATITUDE]
+            longitude = location[CONF_LONGITUDE]
             if CONF_NAME not in user_input:
                 user_input[CONF_NAME] = DEFAULT_NAME
                 # Append zone name if it exists and we are using the default name

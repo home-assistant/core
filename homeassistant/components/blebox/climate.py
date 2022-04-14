@@ -1,12 +1,11 @@
 """BleBox climate entity."""
-from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
     CURRENT_HVAC_OFF,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
-    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
@@ -31,7 +30,7 @@ async def async_setup_entry(
 class BleBoxClimateEntity(BleBoxEntity, ClimateEntity):
     """Representation of a BleBox climate feature (saunaBox)."""
 
-    _attr_supported_features = SUPPORT_TARGET_TEMPERATURE
+    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
     _attr_hvac_modes = [HVAC_MODE_OFF, HVAC_MODE_HEAT]
     _attr_temperature_unit = TEMP_CELSIUS
 

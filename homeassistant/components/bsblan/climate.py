@@ -7,7 +7,7 @@ from typing import Any
 
 from bsblan import BSBLan, BSBLanError, Info, State
 
-from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
@@ -16,8 +16,6 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_OFF,
     PRESET_ECO,
     PRESET_NONE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
@@ -31,8 +29,6 @@ _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 SCAN_INTERVAL = timedelta(seconds=20)
-
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
 HVAC_MODES = [
     HVAC_MODE_AUTO,
@@ -76,7 +72,9 @@ async def async_setup_entry(
 class BSBLanClimate(ClimateEntity):
     """Defines a BSBLan climate device."""
 
-    _attr_supported_features = SUPPORT_FLAGS
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+    )
     _attr_hvac_modes = HVAC_MODES
     _attr_preset_modes = PRESET_MODES
 

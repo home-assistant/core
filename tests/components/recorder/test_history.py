@@ -124,6 +124,62 @@ def test_get_states(hass_recorder):
     assert history.get_state(hass, time_before_recorder_ran, "demo.id") is None
 
 
+def test_get_full_significant_states_with_session_entity_no_matches(hass_recorder):
+    """Test getting states at a specific point in time for entities that never have been recorded."""
+    hass = hass_recorder()
+    now = dt_util.utcnow()
+    time_before_recorder_ran = now - timedelta(days=1000)
+    with recorder.session_scope(hass=hass) as session:
+        assert (
+            history.get_full_significant_states_with_session(
+                hass, session, time_before_recorder_ran, now, entity_ids=["demo.id"]
+            )
+            == {}
+        )
+        assert (
+            history.get_full_significant_states_with_session(
+                hass,
+                session,
+                time_before_recorder_ran,
+                now,
+                entity_ids=["demo.id", "demo.id2"],
+            )
+            == {}
+        )
+
+
+def test_significant_states_with_session_entity_minimal_response_no_matches(
+    hass_recorder,
+):
+    """Test getting states at a specific point in time for entities that never have been recorded."""
+    hass = hass_recorder()
+    now = dt_util.utcnow()
+    time_before_recorder_ran = now - timedelta(days=1000)
+    with recorder.session_scope(hass=hass) as session:
+        assert (
+            history.get_significant_states_with_session(
+                hass,
+                session,
+                time_before_recorder_ran,
+                now,
+                entity_ids=["demo.id"],
+                minimal_response=True,
+            )
+            == {}
+        )
+        assert (
+            history.get_significant_states_with_session(
+                hass,
+                session,
+                time_before_recorder_ran,
+                now,
+                entity_ids=["demo.id", "demo.id2"],
+                minimal_response=True,
+            )
+            == {}
+        )
+
+
 def test_get_states_no_attributes(hass_recorder):
     """Test getting states without attributes at a specific point in time."""
     hass = hass_recorder()

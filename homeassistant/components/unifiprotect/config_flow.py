@@ -116,9 +116,6 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     self.hass.config_entries.async_update_entry(
                         entry, data={**entry.data, CONF_HOST: new_host}
                     )
-                    self.hass.async_create_task(
-                        self.hass.config_entries.async_reload(entry.entry_id)
-                    )
                 return self.async_abort(reason="already_configured")
             if entry_host in (direct_connect_domain, source_ip) or (
                 entry_has_direct_connect

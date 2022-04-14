@@ -16,6 +16,7 @@
       "model": "Generic heater",
       "name": "OpenTherm",
       "vendor": "Techneco",
+      "maximum_boiler_temperature": 60.0,
       "compressor_state": true,
       "binary_sensors": {
         "dhw_state": false,
@@ -25,12 +26,12 @@
         "flame_state": false
       },
       "sensors": {
-        "outdoor_temperature": 3.0,
         "water_temperature": 29.1,
         "intended_boiler_temperature": 0.0,
         "modulation_level": 52,
         "return_temperature": 25.1,
-        "water_pressure": 1.57
+        "water_pressure": 1.57,
+        "outdoor_air_temperature": 3.0
       },
       "switches": {
         "dhw_cm_switch": false
@@ -64,39 +65,16 @@
       "lower_bound": 4.0,
       "upper_bound": 30.0,
       "resolution": 0.1,
-      "preset_modes": [
-        "no_frost",
-        "home",
-        "away",
-        "asleep",
-        "vacation"
-      ],
+      "preset_modes": ["no_frost", "home", "away", "asleep", "vacation"],
       "active_preset": "home",
       "presets": {
-        "no_frost": [
-          10.0,
-          30.0
-        ],
-        "home": [
-          21.0,
-          22.0
-        ],
-        "away": [
-          20.0,
-          25.0
-        ],
-        "asleep": [
-          20.5,
-          24.0
-        ],
-        "vacation": [
-          17.0,
-          28.0
-        ]
+        "no_frost": [10.0, 30.0],
+        "home": [21.0, 22.0],
+        "away": [20.0, 25.0],
+        "asleep": [20.5, 24.0],
+        "vacation": [17.0, 28.0]
       },
-      "available_schedules": [
-        "None"
-      ],
+      "available_schedules": ["None"],
       "selected_schedule": "None",
       "last_used": null,
       "schedule_temperature": null,

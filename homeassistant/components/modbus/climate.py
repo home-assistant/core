@@ -5,11 +5,8 @@ from datetime import datetime
 import struct
 from typing import Any
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
-    HVAC_MODE_AUTO,
-    SUPPORT_TARGET_TEMPERATURE,
-)
+from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
+from homeassistant.components.climate.const import HVAC_MODE_AUTO
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_NAME,
@@ -28,6 +25,7 @@ from . import get_hub
 from .base_platform import BaseStructPlatform
 from .const import (
     CALL_TYPE_REGISTER_HOLDING,
+    CALL_TYPE_WRITE_REGISTER,
     CALL_TYPE_WRITE_REGISTERS,
     CONF_CLIMATES,
     CONF_MAX_TEMP,
@@ -62,6 +60,8 @@ async def async_setup_platform(
 class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
     """Representation of a Modbus Thermostat."""
 
+    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+
     def __init__(
         self,
         hub: ModbusHub,
@@ -72,7 +72,6 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         self._target_temperature_register = config[CONF_TARGET_TEMP]
         self._unit = config[CONF_TEMPERATURE_UNIT]
 
-        self._attr_supported_features = SUPPORT_TARGET_TEMPERATURE
         self._attr_hvac_mode = HVAC_MODE_AUTO
         self._attr_hvac_modes = [HVAC_MODE_AUTO]
         self._attr_current_temperature = None
@@ -121,12 +120,23 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         ]
         registers = self._swap_registers(raw_regs)
 
-        result = await self._hub.async_pymodbus_call(
-            self._slave,
-            self._target_temperature_register,
-            [int(float(i)) for i in registers],
-            CALL_TYPE_WRITE_REGISTERS,
-        )
+        if self._data_type in (
+            DataType.INT16,
+            DataType.UINT16,
+        ):
+            result = await self._hub.async_pymodbus_call(
+                self._slave,
+                self._target_temperature_register,
+                int(float(registers[0])),
+                CALL_TYPE_WRITE_REGISTER,
+            )
+        else:
+            result = await self._hub.async_pymodbus_call(
+                self._slave,
+                self._target_temperature_register,
+                [int(float(i)) for i in registers],
+                CALL_TYPE_WRITE_REGISTERS,
+            )
         self._attr_available = result is not None
         await self.async_update()
 

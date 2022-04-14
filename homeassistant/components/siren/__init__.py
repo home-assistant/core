@@ -20,7 +20,7 @@ from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
+from .const import (  # noqa: F401
     ATTR_AVAILABLE_TONES,
     ATTR_DURATION,
     ATTR_TONE,
@@ -31,6 +31,7 @@ from .const import (
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
     SUPPORT_VOLUME_SET,
+    SirenEntityFeature,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -62,7 +63,7 @@ def process_turn_on_params(
     """
     supported_features = siren.supported_features or 0
 
-    if not supported_features & SUPPORT_TONES:
+    if not supported_features & SirenEntityFeature.TONES:
         params.pop(ATTR_TONE, None)
     elif (tone := params.get(ATTR_TONE)) is not None:
         # Raise an exception if the specified tone isn't available
@@ -88,9 +89,9 @@ def process_turn_on_params(
                 key for key, value in siren.available_tones.items() if value == tone
             )
 
-    if not supported_features & SUPPORT_DURATION:
+    if not supported_features & SirenEntityFeature.DURATION:
         params.pop(ATTR_DURATION, None)
-    if not supported_features & SUPPORT_VOLUME_SET:
+    if not supported_features & SirenEntityFeature.VOLUME_SET:
         params.pop(ATTR_VOLUME_LEVEL, None)
 
     return params
@@ -117,13 +118,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
 
     component.async_register_entity_service(
-        SERVICE_TURN_ON, TURN_ON_SCHEMA, async_handle_turn_on_service, [SUPPORT_TURN_ON]
+        SERVICE_TURN_ON,
+        TURN_ON_SCHEMA,
+        async_handle_turn_on_service,
+        [SirenEntityFeature.TURN_ON],
     )
     component.async_register_entity_service(
-        SERVICE_TURN_OFF, {}, "async_turn_off", [SUPPORT_TURN_OFF]
+        SERVICE_TURN_OFF, {}, "async_turn_off", [SirenEntityFeature.TURN_OFF]
     )
     component.async_register_entity_service(
-        SERVICE_TOGGLE, {}, "async_toggle", [SUPPORT_TURN_ON & SUPPORT_TURN_OFF]
+        SERVICE_TOGGLE,
+        {},
+        "async_toggle",
+        [SirenEntityFeature.TURN_ON & SirenEntityFeature.TURN_OFF],
     )
 
     return True
@@ -158,7 +165,10 @@ class SirenEntity(ToggleEntity):
         """Return capability attributes."""
         supported_features = self.supported_features or 0
 
-        if supported_features & SUPPORT_TONES and self.available_tones is not None:
+        if (
+            supported_features & SirenEntityFeature.TONES
+            and self.available_tones is not None
+        ):
             return {ATTR_AVAILABLE_TONES: self.available_tones}
 
         return None
@@ -168,6 +178,6 @@ class SirenEntity(ToggleEntity):
         """
         Return a list of available tones.
 
-        Requires SUPPORT_TONES.
+        Requires SirenEntityFeature.TONES.
         """
         return self._attr_available_tones
