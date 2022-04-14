@@ -193,6 +193,11 @@ async def test_form_reauth_auth(hass: HomeAssistant, mock_nvr: NVR) -> None:
     )
     assert result["type"] == RESULT_TYPE_FORM
     assert not result["errors"]
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert flows[0]["context"]["title_placeholders"] == {
+        "ip_address": "1.1.1.1",
+        "name": "Mock Title",
+    }
 
     with patch(
         "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_nvr",
