@@ -735,10 +735,13 @@ class Recorder(threading.Thread):
         """
         size = self.queue.qsize()
         _LOGGER.debug("Recorder queue size is: %s", size)
-        if self.queue.qsize() <= MAX_QUEUE_BACKLOG:
+        if size <= MAX_QUEUE_BACKLOG:
             return
         _LOGGER.error(
-            "The recorder queue reached the maximum size of %s; Events are no longer being recorded",
+            "The recorder backlog queue reached the maximum size of %s events; "
+            "usually, the system is CPU bound, I/O bound, or the database "
+            "is corrupt due to a disk problem; The recorder will stop "
+            "recording events to avoid running out of memory",
             MAX_QUEUE_BACKLOG,
         )
         self._async_stop_queue_watcher_and_event_listener()
