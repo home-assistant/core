@@ -68,6 +68,7 @@ from .helpers import (
     CastStatusListener,
     ChromecastInfo,
     ChromeCastZeroconf,
+    PlaylistError,
     parse_m3u,
     parse_pls,
 )
@@ -645,26 +646,36 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
                         "hlsVideoSegmentFormat": "fmp4",
                     },
                 }
-        elif media_id.endswith(".pls"):
-            if playlist := await parse_pls(self.hass, media_id):
-                _LOGGER.debug(
-                    "[%s %s] Playing item %s from playlist %s",
+        elif media_id.endswith(".m3u") or media_id.endswith(".pls"):
+            try:
+                if media_id.endswith(".m3u"):
+                    playlist = await parse_m3u(self.hass, media_id)
+                else:
+                    playlist = await parse_pls(self.hass, media_id)
+                if playlist:
+                    _LOGGER.debug(
+                        "[%s %s] Playing item %s from playlist %s",
+                        self.entity_id,
+                        self._cast_info.friendly_name,
+                        playlist[0].url,
+                        media_id,
+                    )
+                    media_id = playlist[0].url
+                else:
+                    _LOGGER.warning(
+                        "[%s %s] No items found in playlist %s",
+                        self.entity_id,
+                        self._cast_info.friendly_name,
+                        media_id,
+                    )
+            except PlaylistError as err:
+                _LOGGER.warning(
+                    "[%s %s] Failed to parse playlist %s: %s",
                     self.entity_id,
                     self._cast_info.friendly_name,
-                    playlist[0].url,
                     media_id,
+                    err,
                 )
-                media_id = playlist[0].url
-        elif media_id.endswith(".m3u"):
-            if playlist := await parse_m3u(self.hass, media_id):
-                _LOGGER.debug(
-                    "[%s %s] Playing item %s from playlist %s",
-                    self.entity_id,
-                    self._cast_info.friendly_name,
-                    playlist[0].url,
-                    media_id,
-                )
-            media_id = playlist[0].url
 
         # Default to play with the default media receiver
         app_data = {"media_id": media_id, "media_type": media_type, **extra}
