@@ -8,12 +8,17 @@
     "models": [
       "LIFX A19",
       "LIFX Beam",
-      "LIFX Candle Color",
+      "LIFX BR30",
+      "LIFX Candle",
       "LIFX Clean",
+      "LIFX Color",
       "LIFX Dlight",
+      "LIFX Filament",
       "LIFX GU10",
       "LIFX Mini",
-      "LIFX Nightvision"
+      "LIFX Nightvision",
+      "LIFX White",
+      "LIFX Z"
     ]
   },
   "codeowners": [],
