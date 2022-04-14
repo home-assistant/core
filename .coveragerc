@@ -1028,6 +1028,9 @@ omit =
     homeassistant/components/sensibo/number.py
     homeassistant/components/sensibo/select.py
     homeassistant/components/sensibo/sensor.py
+    homeassistant/components/senz/__init__.py
+    homeassistant/components/senz/api.py
+    homeassistant/components/senz/climate.py
     homeassistant/components/serial/sensor.py
     homeassistant/components/serial_pm/sensor.py
     homeassistant/components/sesame/lock.py
