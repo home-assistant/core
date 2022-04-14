@@ -1358,17 +1358,3 @@ async def async_remove_config_entry_device(
 
     await device_automation.async_removed_from_device(hass, device_entry.id)
     return True
-
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    hass.services.async_remove(
-        DOMAIN,
-        SERVICE_PUBLISH,
-    )
-    hass.services.async_remove(
-        DOMAIN,
-        SERVICE_DUMP,
-    )
-    return unload_ok

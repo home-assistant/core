@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import functools
-from typing import cast
 
 import voluptuous as vol
 
@@ -67,7 +66,7 @@ async def _async_setup_tag(
     tag_scanner = MQTTTagScanner(
         hass,
         config,
-        cast(str, device_id),
+        device_id,
         discovery_data,
         config_entry,
     )
@@ -94,7 +93,7 @@ class MQTTTagScanner(MqttDiscoveryDeviceUpdate):
         self,
         hass: HomeAssistant,
         config: ConfigType,
-        device_id: str,
+        device_id: str | None,
         discovery_data: dict,
         config_entry: ConfigEntry,
     ) -> None:

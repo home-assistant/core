@@ -7,7 +7,6 @@ import pytest
 
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.mqtt.const import DOMAIN as MQTT_DOMAIN
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
@@ -758,31 +757,3 @@ async def test_cleanup_device_with_entity2(hass, device_reg, entity_reg, mqtt_mo
     # Verify device registry entry is cleared
     device_entry = device_reg.async_get_device({("mqtt", "helloworld")})
     assert device_entry is None
-
-
-async def test_unload_entry(hass, device_reg, mqtt_mock, tag_mock) -> None:
-    """Test unloading the MQTT entry."""
-
-    config = copy.deepcopy(DEFAULT_CONFIG_DEVICE)
-
-    async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", json.dumps(config))
-    await hass.async_block_till_done()
-    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
-
-    # Fake tag scan, should be processed
-    async_fire_mqtt_message(hass, "foobar/tag_scanned", DEFAULT_TAG_SCAN)
-    await hass.async_block_till_done()
-    tag_mock.assert_called_once_with(ANY, DEFAULT_TAG_ID, device_entry.id)
-
-    tag_mock.reset_mock()
-
-    mqtt_config_entry = hass.config_entries.async_entries(MQTT_DOMAIN)[0]
-    assert mqtt_config_entry.state is ConfigEntryState.LOADED
-    assert await hass.config_entries.async_unload(mqtt_config_entry.entry_id)
-    assert mqtt_config_entry.state is ConfigEntryState.NOT_LOADED
-    await hass.async_block_till_done()
-
-    # Fake tag scan, should not be processed
-    async_fire_mqtt_message(hass, "foobar/tag_scanned", DEFAULT_TAG_SCAN)
-    await hass.async_block_till_done()
-    tag_mock.assert_not_called()
