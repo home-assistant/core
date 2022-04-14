@@ -228,8 +228,8 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(unique_id)
         mac_address = _mac_address_from_discovery(discovery_info)
         self._abort_if_unique_id_configured(
-            # The location is stored in the config entry such that when the location changes, the entry is reloaded.
             # Store mac address for older entries.
+            # The location is stored in the config entry such that when the location changes, the entry is reloaded.
             updates={
                 CONFIG_ENTRY_MAC_ADDRESS: mac_address,
                 CONFIG_ENTRY_LOCATION: discovery_info.ssdp_location,
@@ -237,10 +237,10 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         # Handle devices changing their UDN, only allow a single host.
-        for config_entry in self._async_current_entries(include_ignore=True):
+        for entry in self._async_current_entries(include_ignore=True):
             # entry_host = config_entry.data.get(CONFIG_ENTRY_HOSTNAME)
-            entry_mac_address = config_entry.data.get(CONFIG_ENTRY_MAC_ADDRESS)
-            entry_st = config_entry.data.get(CONFIG_ENTRY_ST)
+            entry_mac_address = entry.data.get(CONFIG_ENTRY_MAC_ADDRESS)
+            entry_st = entry.data.get(CONFIG_ENTRY_ST)
             if entry_mac_address != mac_address:
                 continue
 
@@ -248,18 +248,23 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 # Prevent swapping between IGDv1 and IGDv2.
                 continue
 
-            if config_entry.source == config_entries.SOURCE_IGNORE:
+            if entry.source == config_entries.SOURCE_IGNORE:
                 # Host was already ignored. Don't update ignored entries.
                 return self.async_abort(reason="discovery_ignored")
 
+            LOGGER.debug("Updating entry: %s", entry.entry_id)
             self.hass.config_entries.async_update_entry(
-                config_entry,
+                entry,
                 unique_id=unique_id,
-                data={**config_entry.data, CONFIG_ENTRY_UDN: discovery_info.ssdp_udn},
+                data={**entry.data, CONFIG_ENTRY_UDN: discovery_info.ssdp_udn},
             )
-            self.hass.async_create_task(
-                self.hass.config_entries.async_reload(config_entry.entry_id)
-            )
+            if entry.state == config_entries.ConfigEntryState.LOADED:
+                # Only reload when entry has state LOADED; when entry has state SETUP_RETRY,
+                # another load is started, causing the entry to be loaded twice.
+                LOGGER.debug("Reloading entry: %s", entry.entry_id)
+                self.hass.async_create_task(
+                    self.hass.config_entries.async_reload(entry.entry_id)
+                )
             return self.async_abort(reason="config_entry_updated")
 
         # Store discovery.
