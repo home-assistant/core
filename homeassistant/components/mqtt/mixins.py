@@ -669,6 +669,7 @@ class MqttDiscoveryDeviceUpdate:
     async def async_update(self, discovery_data: dict) -> None:
         """Handle the update of platform specific parts, extend to the platform."""
 
+    @abstractmethod
     async def async_tear_down(self) -> None:
         """Handle the cleanup of platform specific parts, extend to the platform."""
 
