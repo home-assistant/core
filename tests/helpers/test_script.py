@@ -4107,16 +4107,16 @@ async def test_continue_on_error(hass: HomeAssistant) -> None:
             },
             {"event": "test_event"},
             {
-                "continue_on_error": True,
-                "stop": "Stop!",
+                "continue_on_error": False,
+                "service": "broken.service",
             },
             {"event": "test_event"},
         ]
     )
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
 
-    await script_obj.async_run(context=Context())
-    await hass.async_block_till_done()
+    with pytest.raises(exceptions.HomeAssistantError, match="It is not working!"):
+        await script_obj.async_run(context=Context())
 
     assert len(events) == 2
 
@@ -4138,7 +4138,43 @@ async def test_continue_on_error(hass: HomeAssistant) -> None:
                 }
             ],
             "2": [{"result": {"event": "test_event", "event_data": {}}}],
-            "3": [{"result": {"stop": "Stop!"}}],
+            "3": [
+                {
+                    "error_type": HomeAssistantError,
+                    "result": {
+                        "limit": 10,
+                        "params": {
+                            "domain": "broken",
+                            "service": "service",
+                            "service_data": {},
+                            "target": {},
+                        },
+                        "running_script": False,
+                    },
+                }
+            ],
+        },
+        expected_script_execution="error",
+    )
+
+
+async def test_continue_on_error_with_stop(hass: HomeAssistant) -> None:
+    """Test continue on error doesn't work with explicit an stop."""
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {
+                "continue_on_error": True,
+                "stop": "Stop it!",
+            },
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    await script_obj.async_run(context=Context())
+
+    assert_action_trace(
+        {
+            "0": [{"result": {"stop": "Stop it!"}}],
         },
         expected_script_execution="finished",
     )

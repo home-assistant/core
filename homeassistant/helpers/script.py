@@ -453,9 +453,6 @@ class _ScriptRun:
         if not isinstance(exception, exceptions.HomeAssistantError):
             raise exception
 
-        # Ignore the error
-        script_execution_set("error")
-
     def _log_exception(self, exception):
         action_type = cv.determine_script_action(self._action)
 
