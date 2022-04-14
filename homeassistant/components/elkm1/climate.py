@@ -37,7 +37,7 @@ async def async_setup_entry(
 ) -> None:
     """Create the Elk-M1 thermostat platform."""
     elk_data = hass.data[DOMAIN][config_entry.entry_id]
-    entities: list[ElkEntity] = []
+    entities: list[ElkThermostat] = []
     elk = elk_data["elk"]
     create_elk_entities(
         elk_data, elk.thermostats, "thermostat", ElkThermostat, entities
