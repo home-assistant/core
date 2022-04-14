@@ -547,7 +547,7 @@ def stop_discovery_updates(
 
 
 async def async_remove_discovery_payload(hass: HomeAssistant, discovery_data: dict):
-    """Remove the auto discovery payload to avoid rediscovery after a restart."""
+    """Clear retained discovery topic in broker to avoid rediscovery after a restart of HA."""
     discovery_topic = discovery_data[ATTR_DISCOVERY_TOPIC]
     await async_publish(hass, discovery_topic, "", retain=True)
 
