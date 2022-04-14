@@ -500,7 +500,7 @@ class MqttAvailability(Entity):
 async def cleanup_device_registry(
     hass: HomeAssistant, device_id: str | None, config_entry_id: str | None
 ) -> None:
-    """Remove device registry entry if there are no remaining entities, triggers or notify services."""
+    """Remove MQTT from the device registry entry if there are no remaining entities, triggers or tags."""
     # Local import to avoid circular dependencies
     # pylint: disable-next=import-outside-toplevel
     from . import device_trigger, tag
