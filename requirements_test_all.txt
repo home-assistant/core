@@ -200,6 +200,9 @@ aioridwell==2022.03.0
 # homeassistant.components.senseme
 aiosenseme==0.6.1
 
+# homeassistant.components.senz
+aiosenz==1.0.0
+
 # homeassistant.components.shelly
 aioshelly==2.0.0
 
