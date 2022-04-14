@@ -64,7 +64,13 @@ from .const import (
     SIGNAL_HASS_CAST_SHOW_VIEW,
 )
 from .discovery import setup_internal_discovery
-from .helpers import CastStatusListener, ChromecastInfo, ChromeCastZeroconf
+from .helpers import (
+    CastStatusListener,
+    ChromecastInfo,
+    ChromeCastZeroconf,
+    parse_m3u,
+    parse_pls,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -639,9 +645,35 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
                         "hlsVideoSegmentFormat": "fmp4",
                     },
                 }
+        elif media_id.endswith(".pls"):
+            if playlist := await parse_pls(self.hass, media_id):
+                _LOGGER.debug(
+                    "[%s %s] Playing item %s from playlist %s",
+                    self.entity_id,
+                    self._cast_info.friendly_name,
+                    playlist[0].url,
+                    media_id,
+                )
+                media_id = playlist[0].url
+        elif media_id.endswith(".m3u"):
+            if playlist := await parse_m3u(self.hass, media_id):
+                _LOGGER.debug(
+                    "[%s %s] Playing item %s from playlist %s",
+                    self.entity_id,
+                    self._cast_info.friendly_name,
+                    playlist[0].url,
+                    media_id,
+                )
+            media_id = playlist[0].url
 
         # Default to play with the default media receiver
         app_data = {"media_id": media_id, "media_type": media_type, **extra}
+        _LOGGER.debug(
+            "[%s %s] Playing %s with default_media_receiver",
+            self.entity_id,
+            self._cast_info.friendly_name,
+            app_data,
+        )
         await self.hass.async_add_executor_job(
             quick_play, self._chromecast, "default_media_receiver", app_data
         )
