@@ -500,7 +500,13 @@ async def test_restore_state(hass, yaml_config, config_entry_config):
                         ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
                     },
                 ),
-                {},
+                {
+                    "native_value": {
+                        "__type": "<class 'decimal.Decimal'>",
+                        "decimal_str": "3f",
+                    },
+                    "native_unit_of_measurement": "kWh",
+                },
             ),
             (
                 State(

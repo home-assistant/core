@@ -238,6 +238,13 @@ RESTORE_DATA = {
             "decimal_str": "123.4",
         },
     },
+    "BadDecimal": {
+        "native_unit_of_measurement": "°F",
+        "native_value": {
+            "__type": "<class 'decimal.Decimal'>",
+            "decimal_str": "123f",
+        },
+    },
 }
 
 
@@ -323,6 +330,7 @@ async def test_restore_sensor_save_state(
             None,
             None,
         ),
+        (None, type(None), RESTORE_DATA["BadDecimal"], SensorDeviceClass.ENERGY, None),
     ],
 )
 async def test_restore_sensor_restore_state(

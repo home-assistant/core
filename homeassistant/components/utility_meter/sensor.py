@@ -257,6 +257,9 @@ class UtilitySensorExtraStoredData(SensorExtraStoredData):
         except KeyError:
             # restored is a dict, but does not have all values
             return None
+        except InvalidOperation:
+            # last_period is corrupted
+            return None
 
         return cls(
             extra.native_value,
