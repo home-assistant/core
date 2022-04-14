@@ -509,6 +509,7 @@ async def cleanup_device_registry(
     entity_registry = er.async_get(hass)
     if (
         device_id
+        and config_entry_id
         and not er.async_entries_for_device(
             entity_registry, device_id, include_disabled_entities=False
         )
@@ -516,7 +517,7 @@ async def cleanup_device_registry(
         and not tag.async_has_tags(hass, device_id)
     ):
         device_registry.async_update_device(
-            device_id, remove_config_entry_id=cast(str, config_entry_id)
+            device_id, remove_config_entry_id=config_entry_id
         )
 
 
@@ -565,10 +566,8 @@ class MqttDiscoveryDeviceUpdate:
     ) -> None:
         """Initialize the update service."""
 
-        # Only activate if the parent class has a discovery hash
         self.hass = hass
         self.log_name = log_name
-        self._remove_discovery = None
 
         self._discovery_data = discovery_data
         self._device_id = device_id

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import logging
-from typing import Any
+from typing import Any, cast
 
 import attr
 import voluptuous as vol
@@ -281,9 +281,10 @@ async def async_removed_from_device(hass: HomeAssistant, device_id: str) -> None
         device_trigger: Trigger = hass.data[DEVICE_TRIGGERS].pop(
             trig[CONF_DISCOVERY_ID]
         )
-        if device_trigger and device_trigger.discovery_data:
+        if device_trigger:
             device_trigger.detach_trigger()
-            discovery_hash = device_trigger.discovery_data[ATTR_DISCOVERY_HASH]
+            discovery_data = cast(dict, device_trigger.discovery_data)
+            discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
             debug_info.remove_trigger_discovery_data(hass, discovery_hash)
 
 
