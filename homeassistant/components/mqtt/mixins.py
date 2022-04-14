@@ -520,26 +520,28 @@ async def cleanup_device_registry(
         )
 
 
-def get_discovery_hash(discovery_data: dict | None) -> tuple:
+def get_discovery_hash(discovery_data: dict) -> tuple:
     """Get the discovery hash from the discovery data."""
-    return discovery_data[ATTR_DISCOVERY_HASH] if discovery_data else ()
+    return discovery_data[ATTR_DISCOVERY_HASH]
 
 
-def send_discovery_done(hass: HomeAssistant, discovery_data: dict | None) -> None:
+def send_discovery_done(hass: HomeAssistant, discovery_data: dict) -> None:
     """Acknowledge a discovery message has been handled."""
-    if discovery_hash := get_discovery_hash(discovery_data):
-        async_dispatcher_send(hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None)
+    discovery_hash = get_discovery_hash(discovery_data)
+    async_dispatcher_send(hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None)
 
 
-def terminate_discovery(
-    hass: HomeAssistant, discovery_data: dict | None, dispatcher: Callable | None
+def stop_discovery_updates(
+    hass: HomeAssistant,
+    discovery_data: dict,
+    remove_discovery_updated: Callable[[], None] | None,
 ) -> None:
-    """Terminate the discovery."""
-    if (discovery_hash := get_discovery_hash(discovery_data)) == ():
+    """Stop discovery updates of being sent."""
+    if remove_discovery_updated is None:
         return
-    if dispatcher:
-        dispatcher()
-        dispatcher = None
+    remove_discovery_updated()
+    remove_discovery_updated = None
+    discovery_hash = get_discovery_hash(discovery_data)
     clear_discovery_hash(hass, discovery_hash)
 
 
@@ -616,7 +618,7 @@ class MqttDiscoveryDeviceUpdate:
             await self.async_update(discovery_payload)
         if not discovery_payload:
             # Unregister and clean up the current discovery instance
-            terminate_discovery(self.hass, self._discovery_data, self._remove_signal)
+            stop_discovery_updates(self.hass, self._discovery_data, self._remove_signal)
             await self._async_tear_down()
             send_discovery_done(self.hass, self._discovery_data)
             _LOGGER.info(
@@ -644,7 +646,7 @@ class MqttDiscoveryDeviceUpdate:
         self._skip_device_removal = True
         # Unregister and clean up and publish an empty payload
         # so the service is not rediscovered after a restart
-        terminate_discovery(self.hass, self._discovery_data, self._remove_signal)
+        stop_discovery_updates(self.hass, self._discovery_data, self._remove_signal)
         await self._async_tear_down()
         await async_remove_discovery_payload(self.hass, self._discovery_data)
 
@@ -662,7 +664,7 @@ class MqttDiscoveryDeviceUpdate:
     @callback
     def _entry_unload(self, *_: Any) -> None:
         """Handle the unload of the config entry."""
-        terminate_discovery(self.hass, self._discovery_data, self._remove_signal)
+        stop_discovery_updates(self.hass, self._discovery_data, self._remove_signal)
         # cleanup platform resources
         self.hass.async_create_task(self._async_tear_down())
 
@@ -756,8 +758,9 @@ class MqttDiscoveryUpdate(Entity):
     @callback
     def add_to_platform_abort(self) -> None:
         """Abort adding an entity to a platform."""
-        terminate_discovery(self.hass, self._discovery_data, self._remove_signal)
-        send_discovery_done(self.hass, self._discovery_data)
+        if self._discovery_data:
+            stop_discovery_updates(self.hass, self._discovery_data, self._remove_signal)
+            send_discovery_done(self.hass, self._discovery_data)
         super().add_to_platform_abort()
 
     async def async_will_remove_from_hass(self) -> None:
@@ -767,7 +770,7 @@ class MqttDiscoveryUpdate(Entity):
     def _cleanup_discovery_on_remove(self) -> None:
         """Stop listening to signal and cleanup discovery data."""
         if self._discovery_data and not self._removed_from_hass:
-            terminate_discovery(self.hass, self._discovery_data, self._remove_signal)
+            stop_discovery_updates(self.hass, self._discovery_data, self._remove_signal)
             self._removed_from_hass = True
 
 
@@ -873,7 +876,8 @@ class MqttEntity(
         self._prepare_subscribe_topics()
         await self._subscribe_topics()
         await self.mqtt_async_added_to_hass()
-        send_discovery_done(self.hass, self._discovery_data)
+        if self._discovery_data is not None:
+            send_discovery_done(self.hass, self._discovery_data)
 
     async def mqtt_async_added_to_hass(self):
         """Call before the discovery message is acknowledged.
@@ -977,11 +981,11 @@ class MqttEntity(
 
 def update_device(
     hass: HomeAssistant,
-    config_entry: ConfigEntry | None,
+    config_entry: ConfigEntry,
     config: ConfigType,
 ) -> str | None:
     """Update device registry."""
-    if config_entry is None or CONF_DEVICE not in config:
+    if CONF_DEVICE not in config:
         return None
 
     device = None
