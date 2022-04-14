@@ -202,6 +202,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.data[CONF_API_KEY],
         entry.data[CONF_LOCATION][CONF_LATITUDE],
         entry.data[CONF_LOCATION][CONF_LONGITUDE],
+        unit_system="metric",
         session=async_get_clientsession(hass),
     )
 
