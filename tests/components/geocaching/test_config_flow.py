@@ -7,8 +7,8 @@ from aiohttp.test_utils import TestClient
 
 from homeassistant.components.geocaching.const import (
     DOMAIN,
-    OAUTH2_AUTHORIZE_URL,
-    OAUTH2_TOKEN_URL,
+    ENVIRONMENT_URLS,
+    GeocachingApiEnvironment,
 )
 from homeassistant.config_entries import (
     DEFAULT_DISCOVERY_UNIQUE_ID,
@@ -26,6 +26,8 @@ from . import CLIENT_ID, CLIENT_SECRET, REDIRECT_URI
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
+
+CURRENT_ENVIRONMENT_URLS = ENVIRONMENT_URLS[GeocachingApiEnvironment.Staging]
 
 
 async def setup_geocaching_component(hass: HomeAssistant) -> bool:
@@ -77,7 +79,7 @@ async def test_full_flow(
     assert result.get("type") == RESULT_TYPE_EXTERNAL_STEP
     assert result.get("step_id") == "auth"
     assert result.get("url") == (
-        f"{OAUTH2_AUTHORIZE_URL}?response_type=code&client_id={CLIENT_ID}"
+        f"{CURRENT_ENVIRONMENT_URLS['authorize_url']}?response_type=code&client_id={CLIENT_ID}"
         f"&redirect_uri={REDIRECT_URI}"
         f"&state={state}&scope=*"
     )
@@ -88,7 +90,7 @@ async def test_full_flow(
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
     aioclient_mock.post(
-        OAUTH2_TOKEN_URL,
+        CURRENT_ENVIRONMENT_URLS["token_url"],
         json={
             "access_token": "mock-access-token",
             "token_type": "bearer",
@@ -122,7 +124,7 @@ async def test_existing_entry(
         DOMAIN, context={"source": SOURCE_USER}
     )
     assert "flow_id" in result
-
+    # pylint: disable=protected-access
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
@@ -137,7 +139,7 @@ async def test_existing_entry(
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
     aioclient_mock.post(
-        OAUTH2_TOKEN_URL,
+        CURRENT_ENVIRONMENT_URLS["token_url"],
         json={
             "access_token": "mock-access-token",
             "token_type": "bearer",
@@ -189,7 +191,7 @@ async def test_reauthentication(
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
     aioclient_mock.post(
-        OAUTH2_TOKEN_URL,
+        CURRENT_ENVIRONMENT_URLS["token_url"],
         json={
             "access_token": "mock-access-token",
             "token_type": "bearer",
