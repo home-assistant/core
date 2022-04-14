@@ -43,7 +43,6 @@ SENSORS: tuple[GeocachingSensorEntityDescription, ...] = (
         name="Total finds",
         icon="mdi:notebook-edit-outline",
         native_unit_of_measurement="caches",
-        entity_registry_enabled_default=False,
         value_fn=lambda status: status.user.find_count,
     ),
     GeocachingSensorEntityDescription(
@@ -51,7 +50,6 @@ SENSORS: tuple[GeocachingSensorEntityDescription, ...] = (
         name="Total hides",
         icon="mdi:eye-off-outline",
         native_unit_of_measurement="caches",
-        entity_registry_enabled_default=False,
         value_fn=lambda status: status.user.hide_count,
     ),
     GeocachingSensorEntityDescription(
