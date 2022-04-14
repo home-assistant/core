@@ -13,7 +13,7 @@ DOMAIN = "recorder"
 
 CONF_DB_INTEGRITY_CHECK = "db_integrity_check"
 
-MAX_QUEUE_BACKLOG = 30000
+MAX_QUEUE_BACKLOG = 40000
 
 # The maximum number of rows (events) we purge in one delete statement
 

@@ -278,7 +278,7 @@ async def test_recorder_info(hass, hass_ws_client):
     assert response["success"]
     assert response["result"] == {
         "backlog": 0,
-        "max_backlog": 30000,
+        "max_backlog": 40000,
         "migration_in_progress": False,
         "recording": True,
         "thread_running": True,
