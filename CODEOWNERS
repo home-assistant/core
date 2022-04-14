@@ -56,7 +56,6 @@ build.json @home-assistant/supervisor
 /tests/components/alexa/ @home-assistant/cloud @ochlocracy
 /homeassistant/components/almond/ @gcampax @balloob
 /tests/components/almond/ @gcampax @balloob
-/homeassistant/components/alpha_vantage/ @fabaff
 /homeassistant/components/ambee/ @frenck
 /tests/components/ambee/ @frenck
 /homeassistant/components/amberelectric/ @madpilot
