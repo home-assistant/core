@@ -120,13 +120,22 @@ class GoogleCalendarEntity(CalendarEntity):
         self._event: CalendarEvent | None = None
         self._name: str = data[CONF_NAME]
         self._offset = data.get(CONF_OFFSET, DEFAULT_CONF_OFFSET)
-        self._offset_reached = False
+        self._offset_value: timedelta | None = None
         self.entity_id = entity_id
 
     @property
     def extra_state_attributes(self) -> dict[str, bool]:
         """Return the device state attributes."""
-        return {"offset_reached": self._offset_reached}
+        return {"offset_reached": self.offset_reached}
+
+    @property
+    def offset_reached(self) -> bool:
+        """Return whether or not the event offset was reached."""
+        if self._event and self._offset_value:
+            return is_offset_reached(
+                self._event.start_datetime_local, self._offset_value
+            )
+        return False
 
     @property
     def event(self) -> CalendarEvent | None:
@@ -187,9 +196,7 @@ class GoogleCalendarEntity(CalendarEntity):
             (summary, offset) = extract_offset(event.get("summary", ""), self._offset)
             event["summary"] = summary
             self._event = _get_calendar_event(event)
-            self._offset_reached = is_offset_reached(
-                self._event.start_datetime_local, offset
-            )
+            self._offset_value = offset
         else:
             self._event = None
 
