@@ -6,32 +6,25 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Final
 
-from pyfritzhome.fritzhomedevice import FritzhomeDevice
-
 from homeassistant.components.climate.const import PRESET_COMFORT, PRESET_ECO
-from homeassistant.components.sensor import (
-    SensorDeviceClass,
-    SensorEntity,
-    SensorEntityDescription,
-    SensorStateClass,
-)
+from homeassistant.components.sensor import (SensorDeviceClass, SensorEntity,
+                                             SensorEntityDescription,
+                                             SensorStateClass)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ENERGY_KILO_WATT_HOUR,
-    PERCENTAGE,
-    POWER_WATT,
-	ELECTRIC_POTENTIAL_VOLT,
-	ELECTRIC_CURRENT_AMPERE,
-    TEMP_CELSIUS,
-)
+from homeassistant.const import (ELECTRIC_CURRENT_AMPERE,
+                                 ELECTRIC_POTENTIAL_VOLT,
+                                 ENERGY_KILO_WATT_HOUR, PERCENTAGE, POWER_WATT,
+                                 TEMP_CELSIUS)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utc_from_timestamp
+from pyfritzhome.fritzhomedevice import FritzhomeDevice
 
 from . import FritzBoxEntity
-from .const import CONF_COORDINATOR, DOMAIN as FRITZBOX_DOMAIN
+from .const import CONF_COORDINATOR
+from .const import DOMAIN as FRITZBOX_DOMAIN
 from .model import FritzEntityDescriptionMixinBase
 
 
@@ -90,8 +83,8 @@ SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
         native_value=lambda device: device.power / 1000 if device.power else 0.0,
     ),
     FritzSensorEntityDescription(
-        key="total_voltage",
-        name="Total Voltage",
+        key="electric_potential",
+        name="Electric Potential",
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -99,13 +92,15 @@ SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
         native_value=lambda device: device.voltage if device.voltage else 0.0,
     ),
     FritzSensorEntityDescription(
-        key="total_ampere",
-        name="Total Ampere",
+        key="electric_current",
+        name="Electric Current",
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         suitable=lambda device: device.has_powermeter,  # type: ignore[no-any-return]
-        native_value=lambda device: device.power / 1000 / device.voltage if device.voltage else 0.0,
+        native_value=lambda device: device.power / 1000 / device.voltage
+        if device.voltage
+        else 0.0,
     ),
     FritzSensorEntityDescription(
         key="total_energy",
