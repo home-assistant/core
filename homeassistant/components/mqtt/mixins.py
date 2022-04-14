@@ -238,10 +238,10 @@ class SetupEntity(Protocol):
 
 
 async def async_setup_entry_helper(hass, domain, async_setup, schema):
-    """Set up automation trigger dynamically through MQTT discovery."""
+    """Set up entity, automation or tag creation dynamically through MQTT discovery."""
 
     async def async_discover(discovery_payload):
-        """Discover and add automation trigger."""
+        """Discover and add an MQTT entity, automation or tag."""
         discovery_data = discovery_payload.discovery_data
         try:
             config = schema(discovery_payload)
