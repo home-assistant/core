@@ -28,6 +28,7 @@ from homeassistant.const import (
     CONF_CHOOSE,
     CONF_CONDITION,
     CONF_CONDITIONS,
+    CONF_CONTINUE_ON_ERROR,
     CONF_CONTINUE_ON_TIMEOUT,
     CONF_COUNT,
     CONF_DEFAULT,
@@ -404,6 +405,8 @@ class _ScriptRun:
             self._finish()
 
     async def _async_step(self, log_exceptions):
+        continue_on_error = self._action.get(CONF_CONTINUE_ON_ERROR, False)
+
         with trace_path(str(self._step)):
             async with trace_action(self._hass, self, self._stop, self._variables):
                 if self._stop.is_set():
@@ -411,12 +414,10 @@ class _ScriptRun:
                 try:
                     handler = f"_async_{cv.determine_script_action(self._action)}_step"
                     await getattr(self, handler)()
-                except Exception as ex:
-                    if not isinstance(ex, (_AbortScript, _StopScript)) and (
-                        self._log_exceptions or log_exceptions
-                    ):
-                        self._log_exception(ex)
-                    raise
+                except Exception as ex:  # pylint: disable=broad-except
+                    self._handle_exception(
+                        ex, continue_on_error, self._log_exceptions or log_exceptions
+                    )
 
     def _finish(self) -> None:
         self._script._runs.remove(self)  # pylint: disable=protected-access
@@ -429,6 +430,38 @@ class _ScriptRun:
         """Stop script run."""
         self._stop.set()
         await self._stopped.wait()
+
+    def _handle_exception(
+        self, exception: Exception, continue_on_error: bool, log_exceptions: bool
+    ) -> None:
+        if not isinstance(exception, (_AbortScript, _StopScript)) and log_exceptions:
+            self._log_exception(exception)
+
+        if not continue_on_error:
+            raise exception
+
+        # An explicit request to stop the script has been raised.
+        if isinstance(exception, _StopScript):
+            raise exception
+
+        # These are incorrect scripts, and not runtime errors that need to
+        # be handled and thus cannot be stopped by `continue_on_error`.
+        if isinstance(
+            exception,
+            (
+                vol.Invalid,
+                exceptions.TemplateError,
+                exceptions.ServiceNotFound,
+                exceptions.InvalidEntityFormatError,
+                exceptions.NoEntitySpecifiedError,
+                exceptions.ConditionError,
+            ),
+        ):
+            raise exception
+
+        # Only Home Assistant errors can be ignored.
+        if not isinstance(exception, exceptions.HomeAssistantError):
+            raise exception
 
     def _log_exception(self, exception):
         action_type = cv.determine_script_action(self._action)
