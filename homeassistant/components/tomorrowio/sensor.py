@@ -353,8 +353,8 @@ class BaseTomorrowioSensorEntity(TomorrowioEntity, SensorEntity):
         if desc.multiplication_factor is not None:
             state = handle_conversion(state, desc.multiplication_factor)
 
-        # If an imperial unit isn't provided, we always want to convert to metric since
-        # that is what the UI expects
+        # If there is an imperial conversion needed and the instance is using imperial,
+        # apply the conversion logic.
         if (
             desc.imperial_conversion
             and desc.unit_imperial is not None
