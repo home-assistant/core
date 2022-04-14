@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from elkm1_lib.tasks import Task
+
 from homeassistant.components.scene import Scene
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -27,6 +29,8 @@ async def async_setup_entry(
 
 class ElkTask(ElkAttachedEntity, Scene):
     """Elk-M1 task as scene."""
+
+    _element: Task
 
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate the task."""

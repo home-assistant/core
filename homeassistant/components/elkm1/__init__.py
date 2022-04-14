@@ -5,7 +5,7 @@ import asyncio
 import logging
 import re
 from types import MappingProxyType
-from typing import Any, cast
+from typing import Any, TypeVar, cast
 from urllib.parse import urlparse
 
 import async_timeout
@@ -279,7 +279,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             },
         )
 
-    for keypad in getattr(elk, "keypads"):
+    for keypad in elk.keypads:
         keypad.add_callback(_element_changed)
 
     try:
@@ -288,7 +288,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except asyncio.TimeoutError as exc:
         raise ConfigEntryNotReady(f"Timed out connecting to {conf[CONF_HOST]}") from exc
 
-    elk_temp_unit = getattr(elk, "panel").temperature_units
+    elk_temp_unit = elk.panel.temperature_units
     temperature_unit = TEMP_CELSIUS if elk_temp_unit == "C" else TEMP_FAHRENHEIT
     config["temperature_unit"] = temperature_unit
     hass.data[DOMAIN][entry.entry_id] = {
@@ -389,13 +389,13 @@ def _create_elk_services(hass: HomeAssistant) -> None:
         return elk
 
     def _speak_word_service(service: ServiceCall) -> None:
-        getattr(_getelk(service), "panel").speak_word(service.data["number"])
+        _getelk(service).panel.speak_word(service.data["number"])
 
     def _speak_phrase_service(service: ServiceCall) -> None:
-        getattr(_getelk(service), "panel").speak_phrase(service.data["number"])
+        _getelk(service).panel.speak_phrase(service.data["number"])
 
     def _set_time_service(service: ServiceCall) -> None:
-        getattr(_getelk(service), "panel").set_time(dt_util.now())
+        _getelk(service).panel.set_time(dt_util.now())
 
     hass.services.async_register(
         DOMAIN, "speak_word", _speak_word_service, SPEAK_SERVICE_SCHEMA
@@ -406,34 +406,6 @@ def _create_elk_services(hass: HomeAssistant) -> None:
     hass.services.async_register(
         DOMAIN, "set_time", _set_time_service, SET_TIME_SERVICE_SCHEMA
     )
-
-
-def create_elk_entities(
-    elk_data: dict[str, Any],
-    elk_elements: list[Element],
-    element_type: str,
-    class_: Any,
-    entities: list[ElkEntity],
-) -> list[ElkEntity] | None:
-    """Create the ElkM1 devices of a particular class."""
-    auto_configure = elk_data["auto_configure"]
-
-    if not auto_configure and not elk_data["config"][element_type]["enabled"]:
-        return None
-
-    elk = elk_data["elk"]
-    _LOGGER.debug("Creating elk entities for %s", elk)
-
-    for element in elk_elements:
-        if auto_configure:
-            if not element.configured:
-                continue
-        # Only check the included list if auto configure is not
-        elif not elk_data["config"][element_type]["included"][element.index]:
-            continue
-
-        entities.append(class_(element, elk, elk_data))
-    return entities
 
 
 class ElkEntity(Entity):
@@ -528,8 +500,39 @@ class ElkAttachedEntity(ElkEntity):
             manufacturer="ELK Products, Inc.",
             model="M1",
             name=device_name,
-            sw_version=getattr(self._elk, "panel").elkm1_version,
+            sw_version=self._elk.panel.elkm1_version,
         )
         if self._mac:
             device_info[ATTR_CONNECTIONS] = {(CONNECTION_NETWORK_MAC, self._mac)}
         return device_info
+
+
+_T = TypeVar("_T", bound=ElkEntity)
+
+
+def create_elk_entities(
+    elk_data: dict[str, Any],
+    elk_elements: list[Element],
+    element_type: str,
+    class_: Any,
+    entities: list[_T],
+) -> list[_T] | None:
+    """Create the ElkM1 devices of a particular class."""
+    auto_configure = elk_data["auto_configure"]
+
+    if not auto_configure and not elk_data["config"][element_type]["enabled"]:
+        return None
+
+    elk = elk_data["elk"]
+    _LOGGER.debug("Creating elk entities for %s", elk)
+
+    for element in elk_elements:
+        if auto_configure:
+            if not element.configured:
+                continue
+        # Only check the included list if auto configure is not
+        elif not elk_data["config"][element_type]["included"][element.index]:
+            continue
+
+        entities.append(class_(element, elk, elk_data))
+    return entities

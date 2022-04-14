@@ -1,6 +1,8 @@
 """Support for control of ElkM1 outputs (relays)."""
 from __future__ import annotations
 
+from elkm1_lib.outputs import Output
+
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -25,6 +27,8 @@ async def async_setup_entry(
 
 class ElkOutput(ElkAttachedEntity, SwitchEntity):
     """Elk output as switch."""
+
+    _element: Output
 
     @property
     def is_on(self) -> bool:
