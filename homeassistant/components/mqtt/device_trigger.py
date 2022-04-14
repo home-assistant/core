@@ -234,7 +234,7 @@ class MqttDeviceTrigger(MqttDiscoveryDeviceUpdate):
         )
 
     async def async_update(self, discovery_data: dict) -> None:
-        """Handle MQTT tag discovery updates."""
+        """Handle MQTT device trigger discovery updates."""
         discovery_hash = self.discovery_data[ATTR_DISCOVERY_HASH]
         discovery_id = discovery_hash[1]
         debug_info.update_trigger_discovery_data(
