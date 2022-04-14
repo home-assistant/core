@@ -5,6 +5,7 @@ import logging
 from typing import Any
 
 from geocachingapi.geocachingapi import GeocachingApi
+from geocachingapi.models import GeocachingApiEnvironment
 
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -39,6 +40,7 @@ class GeocachingFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> FlowResult:
         """Create an oauth config entry or update existing entry for reauth."""
         api = GeocachingApi(
+            environment=GeocachingApiEnvironment.Staging,
             token=data["token"]["access_token"],
             session=async_get_clientsession(self.hass),
         )

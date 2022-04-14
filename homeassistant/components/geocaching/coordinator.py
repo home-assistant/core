@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from geocachingapi.exceptions import GeocachingApiError
 from geocachingapi.geocachingapi import GeocachingApi
-from geocachingapi.models import GeocachingStatus
+from geocachingapi.models import GeocachingApiEnvironment, GeocachingStatus
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -27,10 +27,12 @@ class GeocachingDataUpdateCoordinator(DataUpdateCoordinator[GeocachingStatus]):
         async def async_token_refresh() -> str:
             await session.async_ensure_token_valid()
             token = session.token["access_token"]
+            LOGGER.debug(str(token))
             return str(token)
 
         client_session = async_get_clientsession(hass)
         self.geocaching = GeocachingApi(
+            environment=GeocachingApiEnvironment.Staging,
             token=session.token["access_token"],
             session=client_session,
             token_refresh_method=async_token_refresh,

@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN, OAUTH2_AUTHORIZE_URL, OAUTH2_TOKEN_URL
+from .const import DOMAIN, ENVIRONMENT, ENVIRONMENT_URLS
 
 
 class GeocachingOAuth2Implementation(
@@ -25,8 +25,8 @@ class GeocachingOAuth2Implementation(
             client_id=client_id,
             client_secret=client_secret,
             domain=DOMAIN,
-            authorize_url=OAUTH2_AUTHORIZE_URL,
-            token_url=OAUTH2_TOKEN_URL,
+            authorize_url=ENVIRONMENT_URLS[ENVIRONMENT]["authorize_url"],
+            token_url=ENVIRONMENT_URLS[ENVIRONMENT]["token_url"],
         )
 
     @property
@@ -72,6 +72,6 @@ class GeocachingOAuth2Implementation(
         if self.client_secret is not None:
             data["client_secret"] = self.client_secret
         session = async_get_clientsession(self.hass)
-        resp = await session.post(OAUTH2_TOKEN_URL, data=data)
+        resp = await session.post(ENVIRONMENT_URLS[ENVIRONMENT]["token_url"], data=data)
         resp.raise_for_status()
         return cast(dict, await resp.json())

@@ -5,10 +5,23 @@ from datetime import timedelta
 import logging
 from typing import Final
 
+from geocachingapi.models import GeocachingApiEnvironment
+
+from .models import GeocachingOAuthApiUrls
+
 DOMAIN: Final = "geocaching"
 LOGGER = logging.getLogger(__package__)
 UPDATE_INTERVAL = timedelta(hours=1)
 
-OAUTH2_AUTHORIZE_URL = "https://staging.geocaching.com/oauth/authorize.aspx"
-OAUTH2_TOKEN_URL = "https://oauth-staging.geocaching.com/token"
-API_ENDPOINT_URL = "https://staging.api.groundspeak.com"
+ENVIRONMENT_URLS = {
+    GeocachingApiEnvironment.Staging: GeocachingOAuthApiUrls(
+        authorize_url="https://staging.geocaching.com/oauth/authorize.aspx",
+        token_url="https://oauth-staging.geocaching.com/token",
+    ),
+    GeocachingApiEnvironment.Production: GeocachingOAuthApiUrls(
+        authorize_url="https://geocaching.com/oauth/authorize.aspx",
+        token_url="https://staging.geocaching.com/token",
+    ),
+}
+
+ENVIRONMENT = GeocachingApiEnvironment.Staging

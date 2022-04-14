@@ -489,7 +489,7 @@ garages-amsterdam==3.0.0
 gcal-sync==0.7.1
 
 # homeassistant.components.geocaching
-geocachingapi==0.1.1
+geocachingapi==0.2.1
 
 # homeassistant.components.usgs_earthquakes_feed
 geojson_client==0.6
