@@ -80,6 +80,9 @@ async def _async_reproduce_states(
     ):
         await call_service(SERVICE_TURN_ON, [])
 
+    cur_state = hass.states.get(state.entity_id)
+    features = cur_state.attributes[ATTR_SUPPORTED_FEATURES] if cur_state else 0
+
     if (
         ATTR_MEDIA_VOLUME_LEVEL in state.attributes
         and features & MediaPlayerEntityFeature.VOLUME_SET
