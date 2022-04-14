@@ -562,7 +562,6 @@ class MqttDiscoveryDeviceUpdate:
         device_id: str,
         config_entry: ConfigEntry,
         log_name: str,
-        async_update_callback: bool = False,
     ) -> None:
         """Initialize the update service."""
 
@@ -574,7 +573,6 @@ class MqttDiscoveryDeviceUpdate:
         self._config_entry = config_entry
         self._config_entry_id = config_entry.entry_id
         self._skip_device_removal: bool = False
-        self._async_update_callback = async_update_callback
 
         discovery_hash = get_discovery_hash(discovery_data)
         self._remove_signal = async_dispatcher_connect(
