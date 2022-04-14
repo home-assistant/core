@@ -8,7 +8,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ElkAttachedEntity, create_elk_entities
+from . import ElkAttachedEntity, ElkEntity, create_elk_entities
 from .const import DOMAIN
 
 
@@ -19,7 +19,7 @@ async def async_setup_entry(
 ) -> None:
     """Create the Elk-M1 switch platform."""
     elk_data = hass.data[DOMAIN][config_entry.entry_id]
-    entities: list[ElkOutput] = []
+    entities: list[ElkEntity] = []
     elk = elk_data["elk"]
     create_elk_entities(elk_data, elk.outputs, "output", ElkOutput, entities)
     async_add_entities(entities, True)
