@@ -639,7 +639,7 @@ class MqttDiscoveryDeviceUpdate:
             self.hass, event, cast(str, self._device_id), self._config_entry_id
         ):
             return
-        # Avoid loop of device registry updates
+        # Prevent a second cleanup round after the device is removed
         self._remove_device_updated()
         self._skip_device_removal = True
         # Unregister and clean up and publish an empty payload
