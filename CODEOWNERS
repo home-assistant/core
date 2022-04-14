@@ -882,6 +882,8 @@ build.json @home-assistant/supervisor
 /tests/components/sensor/ @home-assistant/core
 /homeassistant/components/sentry/ @dcramer @frenck
 /tests/components/sentry/ @dcramer @frenck
+/homeassistant/components/senz/ @milanmeu
+/tests/components/senz/ @milanmeu
 /homeassistant/components/serial/ @fabaff
 /homeassistant/components/seven_segments/ @fabaff
 /homeassistant/components/sharkiq/ @JeffResc @funkybunch @AritroSaha10
