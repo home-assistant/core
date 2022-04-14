@@ -8,7 +8,7 @@ from aioremootio import (
 )
 
 from homeassistant import config_entries
-from homeassistant.components.cover import DEVICE_CLASS_GARAGE
+from homeassistant.components.cover import CoverDeviceClass
 from homeassistant.components.remootio.const import (
     CONF_API_AUTH_KEY,
     CONF_API_SECRET_KEY,
@@ -56,7 +56,7 @@ async def test_form_unsupported_device(hass: HomeAssistant) -> None:
                 CONF_HOST: TDV_VALID_HOST,
                 CONF_API_AUTH_KEY: TDV_VALID_CREDENTIAL,
                 CONF_API_SECRET_KEY: TDV_VALID_CREDENTIAL,
-                CONF_DEVICE_CLASS: DEVICE_CLASS_GARAGE,
+                CONF_DEVICE_CLASS: CoverDeviceClass.GARAGE,
             },
         )
 
@@ -92,7 +92,7 @@ async def test_form_invalid_user_input(hass: HomeAssistant) -> None:
                 CONF_HOST: TDV_INVALID_HOST,
                 CONF_API_AUTH_KEY: TDV_INVALID_CREDENTIAL,
                 CONF_API_SECRET_KEY: TDV_VALID_CREDENTIAL,
-                CONF_DEVICE_CLASS: DEVICE_CLASS_GARAGE,
+                CONF_DEVICE_CLASS: CoverDeviceClass.GARAGE,
             },
         )
 
@@ -130,7 +130,7 @@ async def test_form_incomplete_user_input(hass: HomeAssistant) -> None:
             {
                 CONF_HOST: TDV_VALID_HOST,
                 CONF_API_SECRET_KEY: TDV_VALID_CREDENTIAL,
-                CONF_DEVICE_CLASS: DEVICE_CLASS_GARAGE,
+                CONF_DEVICE_CLASS: CoverDeviceClass.GARAGE,
             },
         )
 
@@ -168,7 +168,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
                 CONF_HOST: TDV_VALID_HOST,
                 CONF_API_AUTH_KEY: TDV_VALID_CREDENTIAL,
                 CONF_API_SECRET_KEY: TDV_VALID_CREDENTIAL,
-                CONF_DEVICE_CLASS: DEVICE_CLASS_GARAGE,
+                CONF_DEVICE_CLASS: CoverDeviceClass.GARAGE,
             },
         )
 
@@ -204,7 +204,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
                 CONF_HOST: TDV_VALID_HOST,
                 CONF_API_AUTH_KEY: TDV_VALID_CREDENTIAL,
                 CONF_API_SECRET_KEY: TDV_VALID_CREDENTIAL,
-                CONF_DEVICE_CLASS: DEVICE_CLASS_GARAGE,
+                CONF_DEVICE_CLASS: CoverDeviceClass.GARAGE,
             },
         )
 
@@ -230,7 +230,7 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
             CONF_HOST: TDV_VALID_HOST,
             CONF_API_SECRET_KEY: TDV_VALID_CREDENTIAL,
             CONF_API_AUTH_KEY: TDV_VALID_CREDENTIAL,
-            CONF_DEVICE_CLASS: DEVICE_CLASS_GARAGE,
+            CONF_DEVICE_CLASS: CoverDeviceClass.GARAGE,
             CONF_SERIAL_NUMBER: TDV_SERIAL_NUMBER,
         },
         unique_id=TDV_SERIAL_NUMBER,
@@ -253,7 +253,7 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
                 CONF_HOST: TDV_VALID_HOST,
                 CONF_API_AUTH_KEY: TDV_VALID_CREDENTIAL,
                 CONF_API_SECRET_KEY: TDV_VALID_CREDENTIAL,
-                CONF_DEVICE_CLASS: DEVICE_CLASS_GARAGE,
+                CONF_DEVICE_CLASS: CoverDeviceClass.GARAGE,
             },
         )
 
@@ -289,7 +289,7 @@ async def test_form(hass: HomeAssistant) -> None:
                 CONF_HOST: TDV_VALID_HOST,
                 CONF_API_AUTH_KEY: TDV_VALID_CREDENTIAL,
                 CONF_API_SECRET_KEY: TDV_VALID_CREDENTIAL,
-                CONF_DEVICE_CLASS: DEVICE_CLASS_GARAGE,
+                CONF_DEVICE_CLASS: CoverDeviceClass.GARAGE,
             },
         )
 
@@ -305,7 +305,7 @@ async def test_form(hass: HomeAssistant) -> None:
         CONF_HOST: TDV_VALID_HOST,
         CONF_API_AUTH_KEY: TDV_VALID_CREDENTIAL,
         CONF_API_SECRET_KEY: TDV_VALID_CREDENTIAL,
-        CONF_DEVICE_CLASS: DEVICE_CLASS_GARAGE,
+        CONF_DEVICE_CLASS: CoverDeviceClass.GARAGE,
         CONF_SERIAL_NUMBER: TDV_SERIAL_NUMBER,
     }
 
