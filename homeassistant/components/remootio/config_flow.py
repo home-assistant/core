@@ -19,7 +19,7 @@ from voluptuous.error import RequiredFieldInvalid
 from voluptuous.schema_builder import REMOVE_EXTRA
 
 from homeassistant import config_entries
-from homeassistant.components.cover import DEVICE_CLASS_GARAGE, DEVICE_CLASS_GATE
+from homeassistant.components.cover import CoverDeviceClass
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
@@ -58,11 +58,11 @@ INPUT_VALIDATION_SCHEMA = vol.Schema(
         ),
         vol.Required(
             CONF_DEVICE_CLASS,
-            default=DEVICE_CLASS_GARAGE,
+            default=CoverDeviceClass.GARAGE,
             msg="Controlled device's class is required",
         ): vol.All(
             vol.Coerce(str),
-            vol.In([DEVICE_CLASS_GARAGE, DEVICE_CLASS_GATE]),
+            vol.In([CoverDeviceClass.GARAGE, CoverDeviceClass.GATE]),
             msg="Controlled device's class appears to be invalid",
         ),
     },
@@ -168,10 +168,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     ): vol.Coerce(str),
                     vol.Optional(
                         CONF_DEVICE_CLASS,
-                        default=user_input.get(CONF_DEVICE_CLASS, DEVICE_CLASS_GARAGE),
+                        default=user_input.get(
+                            CONF_DEVICE_CLASS, CoverDeviceClass.GARAGE
+                        ),
                     ): vol.All(
                         vol.Coerce(str),
-                        vol.In([DEVICE_CLASS_GARAGE, DEVICE_CLASS_GATE]),
+                        vol.In([CoverDeviceClass.GARAGE, CoverDeviceClass.GATE]),
                     ),
                 },
                 extra=REMOVE_EXTRA,

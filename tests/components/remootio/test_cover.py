@@ -12,7 +12,7 @@ from aioremootio import (
     StateChange,
 )
 
-from homeassistant.components.cover import DEVICE_CLASS_GARAGE, DOMAIN as COVER_DOMAIN
+from homeassistant.components.cover import DOMAIN as COVER_DOMAIN, CoverDeviceClass
 from homeassistant.components.remootio.const import (
     CONF_API_AUTH_KEY,
     CONF_API_SECRET_KEY,
@@ -62,7 +62,7 @@ async def test_open_when_closed(remootio_create_client: Mock, hass: HomeAssistan
             CONF_HOST: TDV_HOST,
             CONF_API_SECRET_KEY: TDV_CREDENTIAL,
             CONF_API_AUTH_KEY: TDV_CREDENTIAL,
-            CONF_DEVICE_CLASS: DEVICE_CLASS_GARAGE,
+            CONF_DEVICE_CLASS: CoverDeviceClass.GARAGE,
             CONF_SERIAL_NUMBER: TDV_SERIAL_NUMBER,
         },
         unique_id=TDV_SERIAL_NUMBER,
@@ -108,7 +108,7 @@ async def test_open_when_open(remootio_create_client: Mock, hass: HomeAssistant)
             CONF_HOST: TDV_HOST,
             CONF_API_SECRET_KEY: TDV_CREDENTIAL,
             CONF_API_AUTH_KEY: TDV_CREDENTIAL,
-            CONF_DEVICE_CLASS: DEVICE_CLASS_GARAGE,
+            CONF_DEVICE_CLASS: CoverDeviceClass.GARAGE,
             CONF_SERIAL_NUMBER: TDV_SERIAL_NUMBER,
         },
         unique_id=TDV_SERIAL_NUMBER,
@@ -152,7 +152,7 @@ async def test_close_when_open(remootio_create_client: Mock, hass: HomeAssistant
             CONF_HOST: TDV_HOST,
             CONF_API_SECRET_KEY: TDV_CREDENTIAL,
             CONF_API_AUTH_KEY: TDV_CREDENTIAL,
-            CONF_DEVICE_CLASS: DEVICE_CLASS_GARAGE,
+            CONF_DEVICE_CLASS: CoverDeviceClass.GARAGE,
             CONF_SERIAL_NUMBER: TDV_SERIAL_NUMBER,
         },
         unique_id=TDV_SERIAL_NUMBER,
@@ -198,7 +198,7 @@ async def test_close_when_closed(remootio_create_client: Mock, hass: HomeAssista
             CONF_HOST: TDV_HOST,
             CONF_API_SECRET_KEY: TDV_CREDENTIAL,
             CONF_API_AUTH_KEY: TDV_CREDENTIAL,
-            CONF_DEVICE_CLASS: DEVICE_CLASS_GARAGE,
+            CONF_DEVICE_CLASS: CoverDeviceClass.GARAGE,
             CONF_SERIAL_NUMBER: TDV_SERIAL_NUMBER,
         },
         unique_id=TDV_SERIAL_NUMBER,
@@ -242,7 +242,7 @@ async def test_event_left_open(remootio_create_client: Mock, hass: HomeAssistant
             CONF_HOST: TDV_HOST,
             CONF_API_SECRET_KEY: TDV_CREDENTIAL,
             CONF_API_AUTH_KEY: TDV_CREDENTIAL,
-            CONF_DEVICE_CLASS: DEVICE_CLASS_GARAGE,
+            CONF_DEVICE_CLASS: CoverDeviceClass.GARAGE,
             CONF_SERIAL_NUMBER: TDV_SERIAL_NUMBER,
         },
         unique_id=TDV_SERIAL_NUMBER,

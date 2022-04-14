@@ -2,11 +2,11 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from aioremootio import Event, EventType, Listener, RemootioClient, State, StateChange
 
 from homeassistant.components import cover
+from homeassistant.components.cover import CoverDeviceClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_NAME, CONF_DEVICE_CLASS
 from homeassistant.core import HomeAssistant
@@ -34,7 +34,7 @@ async def async_setup_entry(
     )
 
     serial_number: str = config_entry.data[CONF_SERIAL_NUMBER]
-    device_class: str = config_entry.data[CONF_DEVICE_CLASS]
+    device_class: CoverDeviceClass = config_entry.data[CONF_DEVICE_CLASS]
     remootio_client: RemootioClient = hass.data[DOMAIN][config_entry.entry_id][
         REMOOTIO_CLIENT
     ]
@@ -57,7 +57,7 @@ class RemootioCover(cover.CoverEntity):
         self,
         unique_id: str,
         name: str,
-        device_class: str,
+        device_class: CoverDeviceClass,
         remootio_client: RemootioClient,
     ) -> None:
         """Initialize this cover entity."""
@@ -108,17 +108,9 @@ class RemootioCover(cover.CoverEntity):
         """Return True when the Remootio controlled garage door or gate is currently closed."""
         return self._remootio_client.state == State.CLOSED
 
-    def open_cover(self, **kwargs: Any) -> None:
-        """Open the Remootio controlled garage door or gate."""
-        self.hass.async_create_task(self.async_open_cover())
-
     async def async_open_cover(self, **kwargs):
         """Open the Remootio controlled garage door or gate."""
         await self._remootio_client.trigger_open()
-
-    def close_cover(self, **kwargs: Any) -> None:
-        """Close the Remootio controlled garage door or gate."""
-        self.hass.async_create_task(self.async_close_cover())
 
     async def async_close_cover(self, **kwargs):
         """Close the Remootio controlled garage door or gate."""
