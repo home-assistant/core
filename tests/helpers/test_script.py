@@ -28,9 +28,10 @@ from homeassistant.core import (
     Context,
     CoreState,
     HomeAssistant,
+    ServiceCall,
     callback,
 )
-from homeassistant.exceptions import ConditionError, ServiceNotFound
+from homeassistant.exceptions import ConditionError, HomeAssistantError, ServiceNotFound
 from homeassistant.helpers import (
     config_validation as cv,
     entity_registry as er,
@@ -4256,4 +4257,182 @@ async def test_error_action(hass, caplog):
             ],
         },
         expected_script_execution="aborted",
+    )
+
+
+async def test_continue_on_error(hass: HomeAssistant) -> None:
+    """Test if automation continue when a step fails."""
+    events = async_capture_events(hass, "test_event")
+
+    @callback
+    def broken_service(service: ServiceCall) -> None:
+        """Break this service with an error."""
+        raise HomeAssistantError("It is not working!")
+
+    hass.services.async_register("broken", "service", broken_service)
+
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {"event": "test_event"},
+            {
+                "continue_on_error": True,
+                "service": "broken.service",
+            },
+            {"event": "test_event"},
+            {
+                "continue_on_error": False,
+                "service": "broken.service",
+            },
+            {"event": "test_event"},
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    with pytest.raises(exceptions.HomeAssistantError, match="It is not working!"):
+        await script_obj.async_run(context=Context())
+
+    assert len(events) == 2
+
+    assert_action_trace(
+        {
+            "0": [{"result": {"event": "test_event", "event_data": {}}}],
+            "1": [
+                {
+                    "result": {
+                        "limit": 10,
+                        "params": {
+                            "domain": "broken",
+                            "service": "service",
+                            "service_data": {},
+                            "target": {},
+                        },
+                        "running_script": False,
+                    },
+                }
+            ],
+            "2": [{"result": {"event": "test_event", "event_data": {}}}],
+            "3": [
+                {
+                    "error_type": HomeAssistantError,
+                    "result": {
+                        "limit": 10,
+                        "params": {
+                            "domain": "broken",
+                            "service": "service",
+                            "service_data": {},
+                            "target": {},
+                        },
+                        "running_script": False,
+                    },
+                }
+            ],
+        },
+        expected_script_execution="error",
+    )
+
+
+async def test_continue_on_error_with_stop(hass: HomeAssistant) -> None:
+    """Test continue on error doesn't work with explicit an stop."""
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {
+                "continue_on_error": True,
+                "stop": "Stop it!",
+            },
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    await script_obj.async_run(context=Context())
+
+    assert_action_trace(
+        {
+            "0": [{"result": {"stop": "Stop it!"}}],
+        },
+        expected_script_execution="finished",
+    )
+
+
+async def test_continue_on_error_automation_issue(hass: HomeAssistant) -> None:
+    """Test continue on error doesn't block action automation errors."""
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {
+                "continue_on_error": True,
+                "service": "service.not_found",
+            },
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    with pytest.raises(exceptions.ServiceNotFound):
+        await script_obj.async_run(context=Context())
+
+    assert_action_trace(
+        {
+            "0": [
+                {
+                    "error_type": ServiceNotFound,
+                    "result": {
+                        "limit": 10,
+                        "params": {
+                            "domain": "service",
+                            "service": "not_found",
+                            "service_data": {},
+                            "target": {},
+                        },
+                        "running_script": False,
+                    },
+                }
+            ],
+        },
+        expected_script_execution="error",
+    )
+
+
+async def test_continue_on_error_unknown_error(hass: HomeAssistant) -> None:
+    """Test continue on error doesn't block unknown errors from e.g., libraries."""
+
+    class MyLibraryError(Exception):
+        """My custom library error."""
+
+    @callback
+    def some_service(service: ServiceCall) -> None:
+        """Break this service with an error."""
+        raise MyLibraryError("It is not working!")
+
+    hass.services.async_register("some", "service", some_service)
+
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {
+                "continue_on_error": True,
+                "service": "some.service",
+            },
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    with pytest.raises(MyLibraryError):
+        await script_obj.async_run(context=Context())
+
+    assert_action_trace(
+        {
+            "0": [
+                {
+                    "error_type": MyLibraryError,
+                    "result": {
+                        "limit": 10,
+                        "params": {
+                            "domain": "some",
+                            "service": "service",
+                            "service_data": {},
+                            "target": {},
+                        },
+                        "running_script": False,
+                    },
+                }
+            ],
+        },
+        expected_script_execution="error",
     )
