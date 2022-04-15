@@ -21,7 +21,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Elk light platform."""
     elk_data = hass.data[DOMAIN][config_entry.entry_id]
-    entities: list[ElkLight] = []
+    entities: list[ElkEntity] = []
     elk = elk_data["elk"]
     create_elk_entities(elk_data, elk.lights, "plc", ElkLight, entities)
     async_add_entities(entities, True)
