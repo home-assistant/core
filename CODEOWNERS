@@ -926,8 +926,6 @@ build.json @home-assistant/supervisor
 /homeassistant/components/smhi/ @gjohansson-ST
 /tests/components/smhi/ @gjohansson-ST
 /homeassistant/components/sms/ @ocalvo
-/homeassistant/components/smtp/ @fabaff
-/tests/components/smtp/ @fabaff
 /homeassistant/components/solaredge/ @frenck
 /tests/components/solaredge/ @frenck
 /homeassistant/components/solaredge_local/ @drobtravels @scheric
