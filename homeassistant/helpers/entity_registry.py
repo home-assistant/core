@@ -485,7 +485,7 @@ class EntityRegistry:
             )
 
     @callback
-    def async_update_entity(
+    def _async_update_entity(
         self,
         entity_id: str,
         *,
@@ -506,6 +506,8 @@ class EntityRegistry:
         original_name: str | None | UndefinedType = UNDEFINED,
         supported_features: int | UndefinedType = UNDEFINED,
         unit_of_measurement: str | None | UndefinedType = UNDEFINED,
+        platform: str | None | UndefinedType = UNDEFINED,
+        options: Mapping[str, Mapping[str, Any]] | UndefinedType = UNDEFINED,
     ) -> RegistryEntry:
         """Private facing update properties method."""
         old = self.entities[entity_id]
@@ -545,6 +547,8 @@ class EntityRegistry:
             ("original_name", original_name),
             ("supported_features", supported_features),
             ("unit_of_measurement", unit_of_measurement),
+            ("platform", platform),
+            ("options", options),
         ):
             if value is not UNDEFINED and value != getattr(old, attr_name):
                 new_values[attr_name] = value
@@ -597,25 +601,49 @@ class EntityRegistry:
         return new
 
     @callback
-    def async_update_entity_options(
-        self, entity_id: str, domain: str, options: dict[str, Any]
+    def async_update_entity(
+        self,
+        entity_id: str,
+        *,
+        area_id: str | None | UndefinedType = UNDEFINED,
+        capabilities: Mapping[str, Any] | None | UndefinedType = UNDEFINED,
+        config_entry_id: str | None | UndefinedType = UNDEFINED,
+        device_class: str | None | UndefinedType = UNDEFINED,
+        device_id: str | None | UndefinedType = UNDEFINED,
+        disabled_by: RegistryEntryDisabler | None | UndefinedType = UNDEFINED,
+        entity_category: EntityCategory | None | UndefinedType = UNDEFINED,
+        hidden_by: RegistryEntryHider | None | UndefinedType = UNDEFINED,
+        icon: str | None | UndefinedType = UNDEFINED,
+        name: str | None | UndefinedType = UNDEFINED,
+        new_entity_id: str | UndefinedType = UNDEFINED,
+        new_unique_id: str | UndefinedType = UNDEFINED,
+        original_device_class: str | None | UndefinedType = UNDEFINED,
+        original_icon: str | None | UndefinedType = UNDEFINED,
+        original_name: str | None | UndefinedType = UNDEFINED,
+        supported_features: int | UndefinedType = UNDEFINED,
+        unit_of_measurement: str | None | UndefinedType = UNDEFINED,
     ) -> RegistryEntry:
-        """Update entity options."""
-        old = self.entities[entity_id]
-        new_options: Mapping[str, Mapping[str, Any]] = {**old.options, domain: options}
-        new = self.entities[entity_id] = attr.evolve(old, options=new_options)
-
-        self.async_schedule_save()
-
-        data: dict[str, str | dict[str, Any]] = {
-            "action": "update",
-            "entity_id": entity_id,
-            "changes": {"options": old.options},
-        }
-
-        self.hass.bus.async_fire(EVENT_ENTITY_REGISTRY_UPDATED, data)
-
-        return new
+        """Update properties of an entity."""
+        return self._async_update_entity(
+            entity_id,
+            area_id=area_id,
+            capabilities=capabilities,
+            config_entry_id=config_entry_id,
+            device_class=device_class,
+            device_id=device_id,
+            disabled_by=disabled_by,
+            entity_category=entity_category,
+            hidden_by=hidden_by,
+            icon=icon,
+            name=name,
+            new_entity_id=new_entity_id,
+            new_unique_id=new_unique_id,
+            original_device_class=original_device_class,
+            original_icon=original_icon,
+            original_name=original_name,
+            supported_features=supported_features,
+            unit_of_measurement=unit_of_measurement,
+        )
 
     @callback
     def async_migrate_entity_to_new_platform(
@@ -647,13 +675,22 @@ class EntityRegistry:
                 "to a config entry"
             )
 
-        new = self.entities[entity_id] = attr.evolve(old, platform=new_platform)
-        return self.async_update_entity(
-            new.entity_id,
+        return self._async_update_entity(
+            entity_id,
             new_unique_id=new_unique_id,
             config_entry_id=new_config_entry_id,
             device_id=new_device_id,
+            platform=new_platform,
         )
+
+    @callback
+    def async_update_entity_options(
+        self, entity_id: str, domain: str, options: dict[str, Any]
+    ) -> RegistryEntry:
+        """Update entity options."""
+        old = self.entities[entity_id]
+        new_options: Mapping[str, Mapping[str, Any]] = {**old.options, domain: options}
+        return self._async_update_entity(entity_id, options=new_options)
 
     async def async_load(self) -> None:
         """Load the entity registry."""
