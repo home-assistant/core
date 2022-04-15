@@ -1,7 +1,6 @@
 """The met component."""
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable
 from datetime import timedelta
 import logging
@@ -22,6 +21,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import Event, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.distance import convert as convert_distance
@@ -82,6 +82,10 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     hass.data[DOMAIN].pop(config_entry.entry_id)
 
     return unload_ok
+
+
+class CannotConnect(HomeAssistantError):
+    """Unable to connect to the web site."""
 
 
 class MetDataUpdateCoordinator(DataUpdateCoordinator["MetWeatherData"]):
@@ -177,7 +181,7 @@ class MetWeatherData:
         """Fetch data from API - (current weather and forecast)."""
         resp = await self._weather_data.fetching_data()
         if not resp:
-            raise asyncio.TimeoutError
+            raise CannotConnect()
         self.current_weather_data = self._weather_data.get_current_weather()
         time_zone = dt_util.DEFAULT_TIME_ZONE
         self.daily_forecast = self._weather_data.get_forecast(time_zone, False)
