@@ -1787,6 +1787,232 @@ async def test_repeat_count_0(hass, caplog):
     )
 
 
+async def test_repeat_for_each(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test repeat action using for each."""
+    events = async_capture_events(hass, "test_event")
+    sequence = cv.SCRIPT_SCHEMA(
+        {
+            "alias": "For each!",
+            "repeat": {
+                "for_each": ["one", "two", "{{ 'thr' + 'ee' }}"],
+                "sequence": {
+                    "event": "test_event",
+                    "event_data": {
+                        "first": "{{ repeat.first }}",
+                        "index": "{{ repeat.index }}",
+                        "last": "{{ repeat.last }}",
+                        "item": "{{ repeat.item }}",
+                    },
+                },
+            },
+        }
+    )
+
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert len(events) == 3
+    assert "Repeating For each!: Iteration 1 of 3 with item: 'one'" in caplog.text
+    assert "Repeating For each!: Iteration 2 of 3 with item: 'two'" in caplog.text
+    assert "Repeating For each!: Iteration 3 of 3 with item: 'three'" in caplog.text
+
+    assert_action_trace(
+        {
+            "0": [{}],
+            "0/repeat/sequence/0": [
+                {
+                    "result": {
+                        "event": "test_event",
+                        "event_data": {
+                            "first": True,
+                            "index": 1,
+                            "last": False,
+                            "item": "one",
+                        },
+                    },
+                    "variables": {
+                        "repeat": {
+                            "first": True,
+                            "index": 1,
+                            "last": False,
+                            "item": "one",
+                        }
+                    },
+                },
+                {
+                    "result": {
+                        "event": "test_event",
+                        "event_data": {
+                            "first": False,
+                            "index": 2,
+                            "last": False,
+                            "item": "two",
+                        },
+                    },
+                    "variables": {
+                        "repeat": {
+                            "first": False,
+                            "index": 2,
+                            "last": False,
+                            "item": "two",
+                        }
+                    },
+                },
+                {
+                    "result": {
+                        "event": "test_event",
+                        "event_data": {
+                            "first": False,
+                            "index": 3,
+                            "last": True,
+                            "item": "three",
+                        },
+                    },
+                    "variables": {
+                        "repeat": {
+                            "first": False,
+                            "index": 3,
+                            "last": True,
+                            "item": "three",
+                        }
+                    },
+                },
+            ],
+        }
+    )
+
+
+async def test_repeat_for_each_template(hass: HomeAssistant) -> None:
+    """Test repeat action using for each template."""
+    events = async_capture_events(hass, "test_event")
+    sequence = cv.SCRIPT_SCHEMA(
+        {
+            "alias": "",
+            "repeat": {
+                "for_each": (
+                    "{% set var = ['light.bulb_one', 'light.bulb_two'] %} {{ var }}"
+                ),
+                "sequence": {
+                    "event": "test_event",
+                },
+            },
+        }
+    )
+
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert len(events) == 2
+
+    assert_action_trace(
+        {
+            "0": [{}],
+            "0/repeat/sequence/0": [
+                {
+                    "result": {
+                        "event": "test_event",
+                        "event_data": {},
+                    },
+                    "variables": {
+                        "repeat": {
+                            "first": True,
+                            "index": 1,
+                            "last": False,
+                            "item": "light.bulb_one",
+                        }
+                    },
+                },
+                {
+                    "result": {
+                        "event": "test_event",
+                        "event_data": {},
+                    },
+                    "variables": {
+                        "repeat": {
+                            "first": False,
+                            "index": 2,
+                            "last": True,
+                            "item": "light.bulb_two",
+                        }
+                    },
+                },
+            ],
+        }
+    )
+
+
+async def test_repeat_for_each_non_list_template(hass: HomeAssistant) -> None:
+    """Test repeat action using for each with a template not resulting in a list."""
+    events = async_capture_events(hass, "test_event")
+    sequence = cv.SCRIPT_SCHEMA(
+        {
+            "repeat": {
+                "for_each": "{{ 'Not a list' }}",
+                "sequence": {
+                    "event": "test_event",
+                },
+            },
+        }
+    )
+
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert len(events) == 0
+
+    assert_action_trace(
+        {
+            "0": [
+                {
+                    "error_type": script._AbortScript,
+                }
+            ],
+        },
+        expected_script_execution="aborted",
+    )
+
+
+async def test_repeat_for_each_invalid_template(hass: HomeAssistant, caplog) -> None:
+    """Test repeat action using for each with an invalid template."""
+    events = async_capture_events(hass, "test_event")
+    sequence = cv.SCRIPT_SCHEMA(
+        {
+            "repeat": {
+                "for_each": "{{ Muhaha }}",
+                "sequence": {
+                    "event": "test_event",
+                },
+            },
+        }
+    )
+
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert (
+        "Test Name: Repeat 'for_each' must be a list of items in Test Name, got"
+        in caplog.text
+    )
+    assert len(events) == 0
+
+    assert_action_trace(
+        {
+            "0": [{"error_type": script._AbortScript}],
+        },
+        expected_script_execution="aborted",
+    )
+
+
 @pytest.mark.parametrize("condition", ["while", "until"])
 async def test_repeat_condition_warning(hass, caplog, condition):
     """Test warning on repeat conditions."""
