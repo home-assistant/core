@@ -514,7 +514,7 @@ async def test_homekit_match_partial_space(hass, mock_async_zeroconf):
         ),
     ) as mock_service_browser, patch(
         "homeassistant.components.zeroconf.AsyncServiceInfo",
-        side_effect=get_homekit_info_mock("LIFX bulb", HOMEKIT_STATUS_UNPAIRED),
+        side_effect=get_homekit_info_mock("LIFX Color Bulb", HOMEKIT_STATUS_UNPAIRED),
     ):
         assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
