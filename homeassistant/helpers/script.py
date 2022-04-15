@@ -794,12 +794,12 @@ class _ScriptRun:
 
             if not isinstance(items, list):
                 self._log(
-                    "For each items in %s repeat must be a list, got: %s",
+                    "Repeat 'for_each' must be a list of items in %s, got: %s",
                     self._script.name,
                     items,
                     level=logging.ERROR,
                 )
-                raise _AbortScript("For each items must be a list")
+                raise _AbortScript("Repeat 'for_each' must be a list of items")
 
             count = len(items)
             for iteration, item in enumerate(items, 1):

@@ -2000,7 +2000,7 @@ async def test_repeat_for_each_invalid_template(hass: HomeAssistant, caplog) -> 
     await hass.async_block_till_done()
 
     assert (
-        "Test Name: For each items in Test Name repeat must be a list, got"
+        "Test Name: Repeat 'for_each' must be a list of items in Test Name, got"
         in caplog.text
     )
     assert len(events) == 0
