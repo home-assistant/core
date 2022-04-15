@@ -183,6 +183,10 @@ ZEROCONF = {
             "name": "bosch shc*"
         },
         {
+            "domain": "loqed",
+            "name": "loqed*"
+        },
+        {
             "domain": "nam",
             "name": "nam-*"
         },

@@ -971,6 +971,9 @@ london-tube-status==0.2
 # homeassistant.components.recorder
 lru-dict==1.1.7
 
+# homeassistant.components.loqed
+loqedAPI==2.1.3
+
 # homeassistant.components.luftdaten
 luftdaten==0.7.2
 

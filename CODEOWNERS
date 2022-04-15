@@ -590,6 +590,8 @@ build.json @home-assistant/supervisor
 /tests/components/logi_circle/ @evanjd
 /homeassistant/components/lookin/ @ANMalko @bdraco
 /tests/components/lookin/ @ANMalko @bdraco
+/homeassistant/components/loqed/ @cpolhout
+/tests/components/loqed/ @cpolhout
 /homeassistant/components/lovelace/ @home-assistant/frontend
 /tests/components/lovelace/ @home-assistant/frontend
 /homeassistant/components/luci/ @mzdrale
