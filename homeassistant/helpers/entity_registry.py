@@ -656,7 +656,7 @@ class EntityRegistry:
         new_device_id: str | None | UndefinedType = UNDEFINED,
     ) -> RegistryEntry:
         """
-        Migrate entity to new platform.
+        Update entity platform.
 
         This should only be used when an entity needs to be migrated between
         integrations.
