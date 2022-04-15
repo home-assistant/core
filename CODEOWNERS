@@ -56,7 +56,6 @@ build.json @home-assistant/supervisor
 /tests/components/alexa/ @home-assistant/cloud @ochlocracy
 /homeassistant/components/almond/ @gcampax @balloob
 /tests/components/almond/ @gcampax @balloob
-/homeassistant/components/alpha_vantage/ @fabaff
 /homeassistant/components/ambee/ @frenck
 /tests/components/ambee/ @frenck
 /homeassistant/components/amberelectric/ @madpilot
@@ -883,6 +882,8 @@ build.json @home-assistant/supervisor
 /tests/components/sensor/ @home-assistant/core
 /homeassistant/components/sentry/ @dcramer @frenck
 /tests/components/sentry/ @dcramer @frenck
+/homeassistant/components/senz/ @milanmeu
+/tests/components/senz/ @milanmeu
 /homeassistant/components/serial/ @fabaff
 /homeassistant/components/seven_segments/ @fabaff
 /homeassistant/components/sharkiq/ @JeffResc @funkybunch @AritroSaha10
@@ -998,7 +999,6 @@ build.json @home-assistant/supervisor
 /homeassistant/components/synology_dsm/ @hacf-fr @Quentame @mib1185
 /tests/components/synology_dsm/ @hacf-fr @Quentame @mib1185
 /homeassistant/components/synology_srm/ @aerialls
-/homeassistant/components/syslog/ @fabaff
 /homeassistant/components/system_bridge/ @timmo001
 /tests/components/system_bridge/ @timmo001
 /homeassistant/components/tado/ @michaelarnauts @north3221

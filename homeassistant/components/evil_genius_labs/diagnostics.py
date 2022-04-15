@@ -19,5 +19,5 @@ async def async_get_config_entry_diagnostics(
 
     return {
         "info": async_redact_data(coordinator.info, TO_REDACT),
-        "data": coordinator.data,
+        "all": coordinator.data,
     }

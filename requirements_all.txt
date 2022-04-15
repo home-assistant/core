@@ -110,7 +110,7 @@ aio_geojson_nsw_rfs_incidents==0.4
 aio_georss_gdacs==0.7
 
 # homeassistant.components.airzone
-aioairzone==0.3.6
+aioairzone==0.3.8
 
 # homeassistant.components.ambient_station
 aioambient==2021.11.0
@@ -233,6 +233,9 @@ aioridwell==2022.03.0
 
 # homeassistant.components.senseme
 aiosenseme==0.6.1
+
+# homeassistant.components.senz
+aiosenz==1.0.0
 
 # homeassistant.components.shelly
 aioshelly==2.0.0
@@ -375,7 +378,7 @@ batinfo==0.4.2
 # beacontools[scan]==1.2.3
 
 # homeassistant.components.scrape
-beautifulsoup4==4.10.0
+beautifulsoup4==4.11.1
 
 # homeassistant.components.beewi_smartclim
 # beewi_smartclim==0.0.10
@@ -1141,7 +1144,7 @@ openerz-api==0.1.0
 openevsewifi==1.1.0
 
 # homeassistant.components.openhome
-openhomedevice==2.0.1
+openhomedevice==2.0.2
 
 # homeassistant.components.opensensemap
 opensensemap-api==0.2.0
@@ -1239,7 +1242,7 @@ pmsensor==0.4
 poolsense==0.0.8
 
 # homeassistant.components.reddit
-praw==7.4.0
+praw==7.5.0
 
 # homeassistant.components.islamic_prayer_times
 prayer_times_calculator==0.0.5
@@ -1465,7 +1468,7 @@ pyephember==0.3.1
 pyeverlights==0.1.0
 
 # homeassistant.components.evil_genius_labs
-pyevilgenius==1.0.0
+pyevilgenius==2.0.0
 
 # homeassistant.components.ezviz
 pyezviz==0.2.0.6
