@@ -1,4 +1,5 @@
 """Platform to retrieve Islamic prayer times information for Home Assistant."""
+from datetime import datetime
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -50,9 +51,8 @@ class IslamicPrayerTimeSensor(SensorEntity):
     @property
     def native_value(self):
         """Return the state of the sensor."""
-        return self.client.prayer_times_info.get(self.sensor_type).astimezone(
-            dt_util.UTC
-        )
+        timezone = datetime.now().tzinfo
+        return self.client.prayer_times_info.get(self.sensor_type).astimezone( timezone )
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
