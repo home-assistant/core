@@ -26,7 +26,6 @@ from aioairzone.const import (
     AZD_ZONES,
 )
 from aioairzone.exceptions import AirzoneError
-from aiohttp.client_exceptions import ClientConnectorError
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
@@ -128,12 +127,32 @@ class AirzoneClimate(AirzoneEntity, ClimateEntity):
         """Send HVAC parameters to API."""
         try:
             await self.coordinator.airzone.put_hvac(params)
-        except (AirzoneError, ClientConnectorError) as error:
+        except AirzoneError as error:
             raise HomeAssistantError(
                 f"Failed to set zone {self.name}: {error}"
             ) from error
         else:
             self.coordinator.async_set_updated_data(self.coordinator.airzone.data())
+
+    async def async_turn_on(self) -> None:
+        """Turn the entity on."""
+        params = {
+            API_SYSTEM_ID: self.system_id,
+            API_ZONE_ID: self.zone_id,
+            API_ON: 1,
+        }
+        _LOGGER.debug("Turn off params=%s", params)
+        await self._async_update_hvac_params(params)
+
+    async def async_turn_off(self) -> None:
+        """Turn the entity off."""
+        params = {
+            API_SYSTEM_ID: self.system_id,
+            API_ZONE_ID: self.zone_id,
+            API_ON: 0,
+        }
+        _LOGGER.debug("Turn off params=%s", params)
+        await self._async_update_hvac_params(params)
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set hvac mode."""
