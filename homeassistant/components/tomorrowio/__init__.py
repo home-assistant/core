@@ -23,9 +23,9 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LOCATION,
     CONF_LONGITUDE,
-    CONF_NAME,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
@@ -40,7 +40,6 @@ from .const import (
     CONF_TIMESTEP,
     DOMAIN,
     INTEGRATION_NAME,
-    MAX_REQUESTS_PER_DAY,
     TMRW_ATTR_CARBON_MONOXIDE,
     TMRW_ATTR_CHINA_AQI,
     TMRW_ATTR_CHINA_HEALTH_CONCERN,
@@ -84,34 +83,28 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [SENSOR_DOMAIN, WEATHER_DOMAIN]
 
 
-def _set_update_interval(hass: HomeAssistant, current_entry: ConfigEntry) -> timedelta:
-    """Recalculate update_interval based on existing Tomorrow.io instances and update them."""
-    api_calls = 2
+@callback
+def _set_update_interval(
+    hass: HomeAssistant, api: TomorrowioV4, current_entry: ConfigEntry | None = None
+) -> timedelta:
+    """Calculate update_interval."""
     # We check how many Tomorrow.io configured instances are using the same API key and
     # calculate interval to not exceed allowed numbers of requests. Divide 90% of
-    # MAX_REQUESTS_PER_DAY by the number of API calls because we want a buffer in the
+    # max_requests by the number of API calls because we want a buffer in the
     # number of API calls left at the end of the day.
-    other_instance_entry_ids = [
-        entry.entry_id
+    config_entries = [
+        entry
         for entry in hass.config_entries.async_entries(DOMAIN)
-        if entry.entry_id != current_entry.entry_id
-        and entry.data[CONF_API_KEY] == current_entry.data[CONF_API_KEY]
+        if entry.data[CONF_API_KEY] == api.api_key
+        and (current_entry is None or current_entry != entry)
     ]
 
-    interval = timedelta(
-        minutes=(
-            ceil(
-                (24 * 60 * (len(other_instance_entry_ids) + 1) * api_calls)
-                / (MAX_REQUESTS_PER_DAY * 0.9)
-            )
+    return timedelta(
+        minutes=ceil(
+            (24 * 60 * len(config_entries) * api.num_api_requests)
+            / (api.max_requests_per_day * 0.9)
         )
     )
-
-    for entry_id in other_instance_entry_ids:
-        if entry_id in hass.data[DOMAIN]:
-            hass.data[DOMAIN][entry_id].update_interval = interval
-
-    return interval
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -189,24 +182,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # Remove the old config entry and now the entry is fully migrated
         hass.async_create_task(hass.config_entries.async_remove(old_config_entry_id))
 
-    api = TomorrowioV4(
-        entry.data[CONF_API_KEY],
-        entry.data[CONF_LOCATION][CONF_LATITUDE],
-        entry.data[CONF_LOCATION][CONF_LONGITUDE],
-        unit_system="metric",
-        session=async_get_clientsession(hass),
-    )
+    api_key = entry.data[CONF_API_KEY]
 
-    coordinator = TomorrowioDataUpdateCoordinator(
-        hass,
-        entry,
-        api,
-        _set_update_interval(hass, entry),
-    )
+    coordinator: TomorrowioDataUpdateCoordinator
+    if api_key not in hass.data[DOMAIN]:
+        api = TomorrowioV4(
+            api_key,
+            361.0,  # we will not use the class's lat and long so we can pass garbage in
+            361.0,
+            unit_system="metric",
+            session=async_get_clientsession(hass),
+        )
 
-    await coordinator.async_config_entry_first_refresh()
+        coordinator = TomorrowioDataUpdateCoordinator(hass, api)
+        hass.data[DOMAIN][entry.entry_id] = coordinator
+        first_refresh = True
 
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    else:
+        coordinator = hass.data[DOMAIN][api_key]
+        first_refresh = False
+
+    await coordinator.async_setup_entry(entry, first_refresh)
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
@@ -219,9 +215,12 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
         config_entry, PLATFORMS
     )
 
-    hass.data[DOMAIN].pop(config_entry.entry_id)
-    if not hass.data[DOMAIN]:
-        hass.data.pop(DOMAIN)
+    api_key = config_entry.data[CONF_API_KEY]
+    coordinator: TomorrowioDataUpdateCoordinator = hass.data[DOMAIN][api_key]
+    if await coordinator.async_unload_entry(config_entry):
+        hass.data[DOMAIN].pop(api_key)
+        if not hass.data[DOMAIN]:
+            hass.data.pop(DOMAIN)
 
     return unload_ok
 
@@ -229,82 +228,100 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator):
     """Define an object to hold Tomorrow.io data."""
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config_entry: ConfigEntry,
-        api: TomorrowioV4,
-        update_interval: timedelta,
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, api: TomorrowioV4) -> None:
         """Initialize."""
-
-        self._config_entry = config_entry
         self._api = api
-        self.name = config_entry.data[CONF_NAME]
         self.data = {CURRENT: {}, FORECASTS: {}}
+        self.entry_id_to_location_dict: dict[str, str] = {}
 
-        super().__init__(
-            hass,
-            _LOGGER,
-            name=config_entry.data[CONF_NAME],
-            update_interval=update_interval,
-        )
+        super().__init__(hass, _LOGGER, name=f"{DOMAIN}_{self._api.api_key}")
+
+    async def async_setup_entry(self, entry: ConfigEntry, first_refresh: bool) -> None:
+        """Load data when config entry is setup."""
+        latitude = entry.data[CONF_LOCATION][CONF_LATITUDE]
+        longitude = entry.data[CONF_LOCATION][CONF_LONGITUDE]
+        self.entry_id_to_location_dict[entry.entry_id] = f"{latitude},{longitude}"
+        if first_refresh:
+            await super().async_config_entry_first_refresh()
+        else:
+            await super().async_refresh()
+        if self._api.max_requests_per_day is None:
+            # We should never get here
+            raise ConfigEntryNotReady("Max requests per day should not be None")
+        self.update_interval = _set_update_interval(self.hass, self._api)
+        self._schedule_refresh()
+
+    async def async_unload_entry(self, entry: ConfigEntry) -> bool | None:
+        """
+        Unload a config entry from coordinator.
+
+        Returns whether coordinator can be removed as well because there are no
+        config entries tied to it anymore.
+        """
+        self.entry_id_to_location_dict.pop(entry.entry_id)
+        self.update_interval = _set_update_interval(self.hass, self._api, entry)
+        return not self.entry_id_to_location_dict
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
+        data = {}
         try:
-            return await self._api.realtime_and_all_forecasts(
-                [
-                    TMRW_ATTR_TEMPERATURE,
-                    TMRW_ATTR_HUMIDITY,
-                    TMRW_ATTR_PRESSURE,
-                    TMRW_ATTR_WIND_SPEED,
-                    TMRW_ATTR_WIND_DIRECTION,
-                    TMRW_ATTR_CONDITION,
-                    TMRW_ATTR_VISIBILITY,
-                    TMRW_ATTR_OZONE,
-                    TMRW_ATTR_WIND_GUST,
-                    TMRW_ATTR_CLOUD_COVER,
-                    TMRW_ATTR_PRECIPITATION_TYPE,
-                    *(
-                        TMRW_ATTR_CARBON_MONOXIDE,
-                        TMRW_ATTR_CHINA_AQI,
-                        TMRW_ATTR_CHINA_HEALTH_CONCERN,
-                        TMRW_ATTR_CHINA_PRIMARY_POLLUTANT,
-                        TMRW_ATTR_CLOUD_BASE,
-                        TMRW_ATTR_CLOUD_CEILING,
-                        TMRW_ATTR_CLOUD_COVER,
-                        TMRW_ATTR_DEW_POINT,
-                        TMRW_ATTR_EPA_AQI,
-                        TMRW_ATTR_EPA_HEALTH_CONCERN,
-                        TMRW_ATTR_EPA_PRIMARY_POLLUTANT,
-                        TMRW_ATTR_FEELS_LIKE,
-                        TMRW_ATTR_FIRE_INDEX,
-                        TMRW_ATTR_NITROGEN_DIOXIDE,
+            for entry_id, location in self.entry_id_to_location_dict.items():
+                entry = self.hass.config_entries.async_get_entry(entry_id)
+                assert entry
+                data[entry_id] = await self._api.realtime_and_all_forecasts(
+                    [
+                        TMRW_ATTR_TEMPERATURE,
+                        TMRW_ATTR_HUMIDITY,
+                        TMRW_ATTR_PRESSURE,
+                        TMRW_ATTR_WIND_SPEED,
+                        TMRW_ATTR_WIND_DIRECTION,
+                        TMRW_ATTR_CONDITION,
+                        TMRW_ATTR_VISIBILITY,
                         TMRW_ATTR_OZONE,
-                        TMRW_ATTR_PARTICULATE_MATTER_10,
-                        TMRW_ATTR_PARTICULATE_MATTER_25,
-                        TMRW_ATTR_POLLEN_GRASS,
-                        TMRW_ATTR_POLLEN_TREE,
-                        TMRW_ATTR_POLLEN_WEED,
-                        TMRW_ATTR_PRECIPITATION_TYPE,
-                        TMRW_ATTR_PRESSURE_SURFACE_LEVEL,
-                        TMRW_ATTR_SOLAR_GHI,
-                        TMRW_ATTR_SULPHUR_DIOXIDE,
                         TMRW_ATTR_WIND_GUST,
-                    ),
-                ],
-                [
-                    TMRW_ATTR_TEMPERATURE_LOW,
-                    TMRW_ATTR_TEMPERATURE_HIGH,
-                    TMRW_ATTR_WIND_SPEED,
-                    TMRW_ATTR_WIND_DIRECTION,
-                    TMRW_ATTR_CONDITION,
-                    TMRW_ATTR_PRECIPITATION,
-                    TMRW_ATTR_PRECIPITATION_PROBABILITY,
-                ],
-                nowcast_timestep=self._config_entry.options[CONF_TIMESTEP],
-            )
+                        TMRW_ATTR_CLOUD_COVER,
+                        TMRW_ATTR_PRECIPITATION_TYPE,
+                        *(
+                            TMRW_ATTR_CARBON_MONOXIDE,
+                            TMRW_ATTR_CHINA_AQI,
+                            TMRW_ATTR_CHINA_HEALTH_CONCERN,
+                            TMRW_ATTR_CHINA_PRIMARY_POLLUTANT,
+                            TMRW_ATTR_CLOUD_BASE,
+                            TMRW_ATTR_CLOUD_CEILING,
+                            TMRW_ATTR_CLOUD_COVER,
+                            TMRW_ATTR_DEW_POINT,
+                            TMRW_ATTR_EPA_AQI,
+                            TMRW_ATTR_EPA_HEALTH_CONCERN,
+                            TMRW_ATTR_EPA_PRIMARY_POLLUTANT,
+                            TMRW_ATTR_FEELS_LIKE,
+                            TMRW_ATTR_FIRE_INDEX,
+                            TMRW_ATTR_NITROGEN_DIOXIDE,
+                            TMRW_ATTR_OZONE,
+                            TMRW_ATTR_PARTICULATE_MATTER_10,
+                            TMRW_ATTR_PARTICULATE_MATTER_25,
+                            TMRW_ATTR_POLLEN_GRASS,
+                            TMRW_ATTR_POLLEN_TREE,
+                            TMRW_ATTR_POLLEN_WEED,
+                            TMRW_ATTR_PRECIPITATION_TYPE,
+                            TMRW_ATTR_PRESSURE_SURFACE_LEVEL,
+                            TMRW_ATTR_SOLAR_GHI,
+                            TMRW_ATTR_SULPHUR_DIOXIDE,
+                            TMRW_ATTR_WIND_GUST,
+                        ),
+                    ],
+                    [
+                        TMRW_ATTR_TEMPERATURE_LOW,
+                        TMRW_ATTR_TEMPERATURE_HIGH,
+                        TMRW_ATTR_WIND_SPEED,
+                        TMRW_ATTR_WIND_DIRECTION,
+                        TMRW_ATTR_CONDITION,
+                        TMRW_ATTR_PRECIPITATION,
+                        TMRW_ATTR_PRECIPITATION_PROBABILITY,
+                    ],
+                    nowcast_timestep=entry.options[CONF_TIMESTEP],
+                    location=location,
+                )
         except (
             CantConnectException,
             InvalidAPIKeyException,
@@ -312,6 +329,8 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator):
             UnknownException,
         ) as error:
             raise UpdateFailed from error
+
+        return data
 
 
 class TomorrowioEntity(CoordinatorEntity[TomorrowioDataUpdateCoordinator]):
@@ -341,7 +360,11 @@ class TomorrowioEntity(CoordinatorEntity[TomorrowioDataUpdateCoordinator]):
 
         Used for V4 API.
         """
-        return self.coordinator.data.get(CURRENT, {}).get(property_name)
+        return (
+            self.coordinator.data[self._config_entry.entry_id]
+            .get(CURRENT, {})
+            .get(property_name)
+        )
 
     @property
     def attribution(self):

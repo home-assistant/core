@@ -19,6 +19,7 @@ from homeassistant.components.weather import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CONF_API_KEY,
     CONF_NAME,
     LENGTH_KILOMETERS,
     LENGTH_MILLIMETERS,
@@ -61,7 +62,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a config entry."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = hass.data[DOMAIN][config_entry.data[CONF_API_KEY]]
 
     entities = [
         TomorrowioWeatherEntity(config_entry, coordinator, 4, forecast_type)

@@ -1,6 +1,6 @@
 """Configure py.test."""
 import json
-from unittest.mock import patch
+from unittest.mock import PropertyMock, patch
 
 import pytest
 
@@ -23,7 +23,11 @@ def tomorrowio_config_entry_update_fixture():
     with patch(
         "homeassistant.components.tomorrowio.TomorrowioV4.realtime_and_all_forecasts",
         return_value=json.loads(load_fixture("v4.json", "tomorrowio")),
-    ):
+    ), patch(
+        "homeassistant.components.tomorrowio.TomorrowioV4.max_requests_per_day",
+        new_callable=PropertyMock,
+    ) as mock_max_requests_per_day:
+        mock_max_requests_per_day.return_value = 100
         yield
 
 

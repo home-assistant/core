@@ -1,4 +1,6 @@
 """Tests for Tomorrow.io init."""
+from datetime import timedelta
+
 from homeassistant.components.climacell.const import CONF_TIMESTEP, DOMAIN as CC_DOMAIN
 from homeassistant.components.tomorrowio.config_flow import (
     _get_config_schema,
@@ -45,6 +47,43 @@ async def test_load_and_unload(hass: HomeAssistant) -> None:
     assert await hass.config_entries.async_remove(config_entry.entry_id)
     await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids(WEATHER_DOMAIN)) == 0
+
+
+async def test_update_intervals(hass: HomeAssistant) -> None:
+    """Test coordinator update intervals."""
+    data = _get_config_schema(hass, SOURCE_USER)(MIN_CONFIG)
+    data[CONF_NAME] = "test"
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=data,
+        options={CONF_TIMESTEP: 1},
+        unique_id=_get_unique_id(hass, data),
+        version=1,
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.data[DOMAIN][config_entry.entry_id].update_interval == timedelta(
+        minutes=32
+    )
+
+    # Adding a second config entry should cause the update interval to double
+    config_entry_2 = MockConfigEntry(
+        domain=DOMAIN,
+        data=data,
+        options={CONF_TIMESTEP: 1},
+        unique_id=f"{_get_unique_id(hass, data)}_1",
+        version=1,
+    )
+    config_entry_2.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry_2.entry_id)
+    await hass.async_block_till_done()
+    assert hass.data[DOMAIN][config_entry.entry_id].update_interval == timedelta(
+        minutes=64
+    )
+    assert hass.data[DOMAIN][config_entry_2.entry_id].update_interval == timedelta(
+        minutes=64
+    )
 
 
 async def test_climacell_migration_logic(
