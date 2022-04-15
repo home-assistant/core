@@ -173,6 +173,10 @@ class PlaylistError(Exception):
     """Exception wrapper for pls and m3u helpers."""
 
 
+class PlaylistSupported(PlaylistError):
+    """The playlist is supported by cast devices and should not be parsed."""
+
+
 @dataclass
 class PlaylistItem:
     """Playlist item."""
@@ -231,6 +235,9 @@ async def parse_m3u(hass, url):
                 continue
             length = info[0].split(" ", 1)
             title = info[1].strip()
+        elif line.startswith("#EXT-X-VERSION:"):
+            # HLS stream, supported by cast devices
+            raise PlaylistSupported("HLS")
         elif line.startswith("#"):
             # Ignore other extensions
             continue

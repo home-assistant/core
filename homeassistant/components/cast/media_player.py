@@ -69,6 +69,7 @@ from .helpers import (
     ChromecastInfo,
     ChromeCastZeroconf,
     PlaylistError,
+    PlaylistSupported,
     parse_playlist,
 )
 
@@ -668,6 +669,14 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
                         self._cast_info.friendly_name,
                         media_id,
                     )
+            except PlaylistSupported as err:
+                _LOGGER.info(
+                    "[%s %s] Playlist %s is supported: %s",
+                    self.entity_id,
+                    self._cast_info.friendly_name,
+                    media_id,
+                    err,
+                )
             except PlaylistError as err:
                 _LOGGER.warning(
                     "[%s %s] Failed to parse playlist %s: %s",
