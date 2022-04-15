@@ -506,7 +506,12 @@ class HueLight(CoordinatorEntity, LightEntity):
         elif flash == FLASH_SHORT:
             command["alert"] = "select"
             del command["on"]
-        elif not self.is_innr and not self.is_ewelink and not self.is_livarno and not self.is_s31litezb:
+        elif (
+            not self.is_innr
+            and not self.is_ewelink
+            and not self.is_livarno
+            and not self.is_s31litezb
+        ):
             command["alert"] = "none"
 
         if ATTR_EFFECT in kwargs:
