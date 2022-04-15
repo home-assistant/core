@@ -69,8 +69,7 @@ from .helpers import (
     ChromecastInfo,
     ChromeCastZeroconf,
     PlaylistError,
-    parse_m3u,
-    parse_pls,
+    parse_playlist,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -646,12 +645,13 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
                         "hlsVideoSegmentFormat": "fmp4",
                     },
                 }
-        elif media_id.endswith(".m3u") or media_id.endswith(".pls"):
+        elif (
+            media_id.endswith(".m3u")
+            or media_id.endswith(".m3u8")
+            or media_id.endswith(".pls")
+        ):
             try:
-                if media_id.endswith(".m3u"):
-                    playlist = await parse_m3u(self.hass, media_id)
-                else:
-                    playlist = await parse_pls(self.hass, media_id)
+                playlist = await parse_playlist(self.hass, media_id)
                 if playlist:
                     _LOGGER.debug(
                         "[%s %s] Playing item %s from playlist %s",

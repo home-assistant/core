@@ -289,3 +289,10 @@ async def parse_pls(hass, url):
             )
         )
     return playlist
+
+
+async def parse_playlist(hass, url):
+    """Parse an m3u or pls playlist."""
+    if url.endswith(".m3u") or url.endswith(".m3u8"):
+        return await parse_m3u(hass, url)
+    return await parse_pls(hass, url)
