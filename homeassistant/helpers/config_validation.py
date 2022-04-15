@@ -973,6 +973,38 @@ def custom_serializer(schema: Any) -> Any:
     return voluptuous_serialize.UNSUPPORTED
 
 
+def boolean_condition_shorthand(condition: str) -> Callable[[Any], dict[Hashable, Any]]:
+    """Create a validator for shorthand format of boolean conditions."""
+    schema = vol.Schema(
+        vol.All(
+            {
+                **CONDITION_BASE_SCHEMA,
+                vol.Required(condition): vol.All(
+                    ensure_list,
+                    # pylint: disable=unnecessary-lambda
+                    [lambda value: CONDITION_SCHEMA(value)],
+                ),
+            },
+            lambda config: {
+                CONF_CONDITION: condition,
+                CONF_CONDITIONS: config.get(condition),
+                **{k: config[k] for k in config if k != condition},
+            },
+        )
+    )
+
+    def validator(value: dict[Hashable, Any]) -> Any:
+        if value is None:
+            raise vol.Invalid("Condition is none")
+        if condition not in value:
+            raise vol.Invalid("Incorrect shorthand condition")
+        if CONF_CONDITION in value or CONF_CONDITIONS in value:
+            raise vol.Invalid("Shorthand and longhand condition found")
+        return schema(value)
+
+    return validator
+
+
 # Schemas
 PLATFORM_SCHEMA = vol.Schema(
     {
@@ -1236,24 +1268,6 @@ AND_CONDITION_SCHEMA = vol.Schema(
     }
 )
 
-and_condition_shorthand_action = vol.All(
-    vol.Schema(
-        {
-            **CONDITION_BASE_SCHEMA,
-            "and": vol.All(
-                ensure_list,
-                # pylint: disable=unnecessary-lambda
-                [lambda value: CONDITION_SCHEMA(value)],
-            ),
-        }
-    ),
-    lambda config: {
-        CONF_CONDITION: "and",
-        CONF_CONDITIONS: config["and"],
-        **{k: config[k] for k in config.keys() if k not in ["and"]},
-    },
-)
-
 OR_CONDITION_SCHEMA = vol.Schema(
     {
         **CONDITION_BASE_SCHEMA,
@@ -1266,24 +1280,6 @@ OR_CONDITION_SCHEMA = vol.Schema(
     }
 )
 
-or_condition_shorthand_action = vol.All(
-    vol.Schema(
-        {
-            **CONDITION_BASE_SCHEMA,
-            "or": vol.All(
-                ensure_list,
-                # pylint: disable=unnecessary-lambda
-                [lambda value: CONDITION_SCHEMA(value)],
-            ),
-        }
-    ),
-    lambda config: {
-        CONF_CONDITION: "or",
-        CONF_CONDITIONS: config["or"],
-        **{k: config[k] for k in config.keys() if k not in ["or"]},
-    },
-)
-
 NOT_CONDITION_SCHEMA = vol.Schema(
     {
         **CONDITION_BASE_SCHEMA,
@@ -1294,24 +1290,6 @@ NOT_CONDITION_SCHEMA = vol.Schema(
             [lambda value: CONDITION_SCHEMA(value)],
         ),
     }
-)
-
-not_condition_shorthand_action = vol.All(
-    vol.Schema(
-        {
-            **CONDITION_BASE_SCHEMA,
-            "not": vol.All(
-                ensure_list,
-                # pylint: disable=unnecessary-lambda
-                [lambda value: CONDITION_SCHEMA(value)],
-            ),
-        }
-    ),
-    lambda config: {
-        CONF_CONDITION: "not",
-        CONF_CONDITIONS: config["not"],
-        **{k: config[k] for k in config.keys() if k not in ["not"]},
-    },
 )
 
 DEVICE_CONDITION_BASE_SCHEMA = vol.Schema(
@@ -1354,9 +1332,9 @@ CONDITION_SCHEMA: vol.Schema = vol.Schema(
             },
         ),
         dynamic_template_condition_action,
-        and_condition_shorthand_action,
-        or_condition_shorthand_action,
-        not_condition_shorthand_action,
+        boolean_condition_shorthand("and"),
+        boolean_condition_shorthand("or"),
+        boolean_condition_shorthand("not"),
     )
 )
 
