@@ -74,13 +74,9 @@ async def test_upnp_sensors(hass: HomeAssistant, config_entry: MockConfigEntry):
     assert wan_status_state.state == "Disconnected"
 
 
-async def test_derived_upnp_sensors(
-    hass: HomeAssistant, config_entry: MockConfigEntry
-):
+async def test_derived_upnp_sensors(hass: HomeAssistant, config_entry: MockConfigEntry):
     """Test derived sensors."""
-    coordinator: UpnpDataUpdateCoordinator = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]
+    coordinator: UpnpDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     # First poll.
     kib_s_received_state = hass.states.get("sensor.mock_name_kib_s_received")

@@ -1,7 +1,6 @@
 """Test UPnP/IGD config flow."""
 
 from copy import deepcopy
-from datetime import timedelta
 
 import pytest
 
