@@ -4436,3 +4436,46 @@ async def test_continue_on_error_unknown_error(hass: HomeAssistant) -> None:
         },
         expected_script_execution="error",
     )
+
+
+async def test_disabled_actions(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test disabled action steps."""
+    events = async_capture_events(hass, "test_event")
+
+    @callback
+    def broken_service(service: ServiceCall) -> None:
+        """Break this service with an error."""
+        raise HomeAssistantError("This service should not be called")
+
+    hass.services.async_register("broken", "service", broken_service)
+
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {"event": "test_event"},
+            {
+                "alias": "Hello",
+                "enabled": False,
+                "service": "broken.service",
+            },
+            {"alias": "World", "enabled": False, "event": "test_event"},
+            {"event": "test_event"},
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    await script_obj.async_run(context=Context())
+
+    assert len(events) == 2
+    assert "Test Name: Skipped disabled step Hello" in caplog.text
+    assert "Test Name: Skipped disabled step World" in caplog.text
+
+    assert_action_trace(
+        {
+            "0": [{"result": {"event": "test_event", "event_data": {}}}],
+            "1": [{}],
+            "2": [{}],
+            "3": [{"result": {"event": "test_event", "event_data": {}}}],
+        },
+    )

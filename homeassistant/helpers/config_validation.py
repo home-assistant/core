@@ -44,6 +44,7 @@ from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_ELSE,
+    CONF_ENABLED,
     CONF_ENTITY_ID,
     CONF_ENTITY_NAMESPACE,
     CONF_ERROR,
@@ -1060,6 +1061,7 @@ SCRIPT_SCHEMA = vol.All(ensure_list, [script_action])
 SCRIPT_ACTION_BASE_SCHEMA = {
     vol.Optional(CONF_ALIAS): string,
     vol.Optional(CONF_CONTINUE_ON_ERROR): boolean,
+    vol.Optional(CONF_ENABLED): boolean,
 }
 
 EVENT_SCHEMA = vol.Schema(
@@ -1098,7 +1100,10 @@ NUMERIC_STATE_THRESHOLD_SCHEMA = vol.Any(
     vol.Coerce(float), vol.All(str, entity_domain(["input_number", "number", "sensor"]))
 )
 
-CONDITION_BASE_SCHEMA = {vol.Optional(CONF_ALIAS): string}
+CONDITION_BASE_SCHEMA = {
+    vol.Optional(CONF_ALIAS): string,
+    vol.Optional(CONF_ENABLED): boolean,
+}
 
 NUMERIC_STATE_CONDITION_SCHEMA = vol.All(
     vol.Schema(
@@ -1337,6 +1342,7 @@ TRIGGER_BASE_SCHEMA = vol.Schema(
         vol.Required(CONF_PLATFORM): str,
         vol.Optional(CONF_ID): str,
         vol.Optional(CONF_VARIABLES): SCRIPT_VARIABLES_SCHEMA,
+        vol.Optional(CONF_ENABLED): boolean,
     }
 )
 

@@ -36,6 +36,7 @@ from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_ELSE,
+    CONF_ENABLED,
     CONF_ERROR,
     CONF_EVENT,
     CONF_EVENT_DATA,
@@ -411,8 +412,17 @@ class _ScriptRun:
             async with trace_action(self._hass, self, self._stop, self._variables):
                 if self._stop.is_set():
                     return
+
+                action = cv.determine_script_action(self._action)
+
+                if not self._action.get(CONF_ENABLED, True):
+                    self._log(
+                        "Skipped disabled step %s", self._action.get(CONF_ALIAS, action)
+                    )
+                    return
+
                 try:
-                    handler = f"_async_{cv.determine_script_action(self._action)}_step"
+                    handler = f"_async_{action}_step"
                     await getattr(self, handler)()
                 except Exception as ex:  # pylint: disable=broad-except
                     self._handle_exception(
