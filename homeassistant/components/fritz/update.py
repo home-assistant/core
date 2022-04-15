@@ -3,9 +3,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
-from typing import Final
+from typing import Any, Final
 
-from homeassistant.components.update import UpdateEntity, UpdateEntityDescription
+from homeassistant.components.update import (
+    UpdateEntity,
+    UpdateEntityDescription,
+    UpdateEntityFeature,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
@@ -59,22 +63,22 @@ class FritzBoxUpdateEntity(FritzBoxBaseEntity, UpdateEntity):
         self._attr_unique_id = f"{avm_wrapper.unique_id}-{description.key}"
         super().__init__(avm_wrapper, device_friendly_name)
 
+    _attr_supported_features = UpdateEntityFeature.INSTALL
+
     @property
     def installed_version(self) -> str | None:
         """Version currently in use."""
-        return self._avm_wrapper.current_firmware.partition(".")[2]
+        return self._avm_wrapper.current_firmware
 
     @property
     def latest_version(self) -> str | None:
         """Latest version available for install."""
         if self._avm_wrapper.update_available:
-            return (
-                self._avm_wrapper.latest_firmware.partition(".")[2]
-                if self._avm_wrapper.latest_firmware
-                else None
-            )
-        return (
-            self._avm_wrapper.current_firmware.partition(".")[2]
-            if self._avm_wrapper.current_firmware
-            else None
-        )
+            return self._avm_wrapper.latest_firmware
+        return self._avm_wrapper.current_firmware
+
+    async def async_install(
+        self, version: str | None, backup: bool, **kwargs: Any
+    ) -> None:
+        """Install an update."""
+        await self._avm_wrapper.async_trigger_firmware_update()
