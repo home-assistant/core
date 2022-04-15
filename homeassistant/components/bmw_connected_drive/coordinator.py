@@ -7,7 +7,6 @@ import logging
 import async_timeout
 from bimmer_connected.account import ConnectedDriveAccount
 from bimmer_connected.country_selector import get_region_from_name
-from bimmer_connected.vehicle import ConnectedDriveVehicle
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed

@@ -23,13 +23,7 @@ from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    ATTR_VIN,
-    ATTRIBUTION,
-    CONF_READ_ONLY,
-    DATA_HASS_CONFIG,
-    DOMAIN,
-)
+from .const import ATTR_VIN, ATTRIBUTION, CONF_READ_ONLY, DATA_HASS_CONFIG, DOMAIN
 from .coordinator import BMWDataUpdateCoordinator
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
