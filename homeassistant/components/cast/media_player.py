@@ -653,22 +653,14 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         ):
             try:
                 playlist = await parse_playlist(self.hass, media_id)
-                if playlist:
-                    _LOGGER.debug(
-                        "[%s %s] Playing item %s from playlist %s",
-                        self.entity_id,
-                        self._cast_info.friendly_name,
-                        playlist[0].url,
-                        media_id,
-                    )
-                    media_id = playlist[0].url
-                else:
-                    _LOGGER.warning(
-                        "[%s %s] No items found in playlist %s",
-                        self.entity_id,
-                        self._cast_info.friendly_name,
-                        media_id,
-                    )
+                _LOGGER.debug(
+                    "[%s %s] Playing item %s from playlist %s",
+                    self.entity_id,
+                    self._cast_info.friendly_name,
+                    playlist[0].url,
+                    media_id,
+                )
+                media_id = playlist[0].url
             except PlaylistSupported as err:
                 _LOGGER.info(
                     "[%s %s] Playlist %s is supported: %s",

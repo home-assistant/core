@@ -187,12 +187,9 @@ class PlaylistItem:
 
 
 def _is_url(url):
-    """Validate URL."""
-    try:
-        result = urlparse(url)
-        return all([result.scheme, result.netloc])
-    except ValueError:
-        return False
+    """Validate the URL can be parsed and at least has scheme + netloc."""
+    result = urlparse(url)
+    return all([result.scheme, result.netloc])
 
 
 async def _fetch_playlist(hass, url):
@@ -215,10 +212,7 @@ async def parse_m3u(hass, url):
     Based on https://github.com/dvndrsn/M3uParser/blob/master/m3uparser.py
     """
     m3u_data = await _fetch_playlist(hass, url)
-
     m3u_lines = m3u_data.splitlines()
-    if not m3u_lines:
-        raise PlaylistError(f"Empty playlist {url}")
 
     playlist = []
 
@@ -231,7 +225,7 @@ async def parse_m3u(hass, url):
             # Get length and title from #EXTINF line
             info = line.split("#EXTINF:")[1].split(",", 1)
             if len(info) != 2:
-                _LOGGER.debug("Ignoring invalid extinf %s in playlist %s", line, url)
+                _LOGGER.warning("Ignoring invalid extinf %s in playlist %s", line, url)
                 continue
             length = info[0].split(" ", 1)
             title = info[1].strip()
@@ -301,5 +295,11 @@ async def parse_pls(hass, url):
 async def parse_playlist(hass, url):
     """Parse an m3u or pls playlist."""
     if url.endswith(".m3u") or url.endswith(".m3u8"):
-        return await parse_m3u(hass, url)
-    return await parse_pls(hass, url)
+        playlist = await parse_m3u(hass, url)
+    else:
+        playlist = await parse_pls(hass, url)
+
+    if not playlist:
+        raise PlaylistError(f"Empty playlist {url}")
+
+    return playlist
