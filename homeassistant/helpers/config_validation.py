@@ -36,12 +36,15 @@ from homeassistant.const import (
     CONF_CHOOSE,
     CONF_CONDITION,
     CONF_CONDITIONS,
+    CONF_CONTINUE_ON_ERROR,
     CONF_CONTINUE_ON_TIMEOUT,
     CONF_COUNT,
     CONF_DEFAULT,
     CONF_DELAY,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
+    CONF_ELSE,
+    CONF_ENABLED,
     CONF_ENTITY_ID,
     CONF_ENTITY_NAMESPACE,
     CONF_ERROR,
@@ -49,8 +52,11 @@ from homeassistant.const import (
     CONF_EVENT_DATA,
     CONF_EVENT_DATA_TEMPLATE,
     CONF_FOR,
+    CONF_FOR_EACH,
     CONF_ID,
+    CONF_IF,
     CONF_MATCH,
+    CONF_PARALLEL,
     CONF_PLATFORM,
     CONF_REPEAT,
     CONF_SCAN_INTERVAL,
@@ -61,6 +67,7 @@ from homeassistant.const import (
     CONF_STATE,
     CONF_STOP,
     CONF_TARGET,
+    CONF_THEN,
     CONF_TIMEOUT,
     CONF_UNIT_SYSTEM_IMPERIAL,
     CONF_UNIT_SYSTEM_METRIC,
@@ -1018,6 +1025,8 @@ def make_entity_service_schema(
         vol.All(
             vol.Schema(
                 {
+                    # The frontend stores data here. Don't use in core.
+                    vol.Remove("metadata"): dict,
                     **schema,
                     **ENTITY_SERVICE_FIELDS,
                 },
@@ -1050,7 +1059,11 @@ def script_action(value: Any) -> dict:
 
 SCRIPT_SCHEMA = vol.All(ensure_list, [script_action])
 
-SCRIPT_ACTION_BASE_SCHEMA = {vol.Optional(CONF_ALIAS): string}
+SCRIPT_ACTION_BASE_SCHEMA = {
+    vol.Optional(CONF_ALIAS): string,
+    vol.Optional(CONF_CONTINUE_ON_ERROR): boolean,
+    vol.Optional(CONF_ENABLED): boolean,
+}
 
 EVENT_SCHEMA = vol.Schema(
     {
@@ -1088,7 +1101,10 @@ NUMERIC_STATE_THRESHOLD_SCHEMA = vol.Any(
     vol.Coerce(float), vol.All(str, entity_domain(["input_number", "number", "sensor"]))
 )
 
-CONDITION_BASE_SCHEMA = {vol.Optional(CONF_ALIAS): string}
+CONDITION_BASE_SCHEMA = {
+    vol.Optional(CONF_ALIAS): string,
+    vol.Optional(CONF_ENABLED): boolean,
+}
 
 NUMERIC_STATE_CONDITION_SCHEMA = vol.All(
     vol.Schema(
@@ -1327,6 +1343,7 @@ TRIGGER_BASE_SCHEMA = vol.Schema(
         vol.Required(CONF_PLATFORM): str,
         vol.Optional(CONF_ID): str,
         vol.Optional(CONF_VARIABLES): SCRIPT_VARIABLES_SCHEMA,
+        vol.Optional(CONF_ENABLED): boolean,
     }
 )
 
@@ -1379,6 +1396,9 @@ _SCRIPT_REPEAT_SCHEMA = vol.Schema(
         vol.Required(CONF_REPEAT): vol.All(
             {
                 vol.Exclusive(CONF_COUNT, "repeat"): vol.Any(vol.Coerce(int), template),
+                vol.Exclusive(CONF_FOR_EACH, "repeat"): vol.Any(
+                    dynamic_template, vol.All(list, template_complex)
+                ),
                 vol.Exclusive(CONF_WHILE, "repeat"): vol.All(
                     ensure_list, [CONDITION_SCHEMA]
                 ),
@@ -1387,7 +1407,7 @@ _SCRIPT_REPEAT_SCHEMA = vol.Schema(
                 ),
                 vol.Required(CONF_SEQUENCE): SCRIPT_SCHEMA,
             },
-            has_at_least_one_key(CONF_COUNT, CONF_WHILE, CONF_UNTIL),
+            has_at_least_one_key(CONF_COUNT, CONF_FOR_EACH, CONF_WHILE, CONF_UNTIL),
         ),
     }
 )
@@ -1420,6 +1440,15 @@ _SCRIPT_WAIT_FOR_TRIGGER_SCHEMA = vol.Schema(
     }
 )
 
+_SCRIPT_IF_SCHEMA = vol.Schema(
+    {
+        **SCRIPT_ACTION_BASE_SCHEMA,
+        vol.Required(CONF_IF): vol.All(ensure_list, [CONDITION_SCHEMA]),
+        vol.Required(CONF_THEN): SCRIPT_SCHEMA,
+        vol.Optional(CONF_ELSE): SCRIPT_SCHEMA,
+    }
+)
+
 _SCRIPT_SET_SCHEMA = vol.Schema(
     {
         **SCRIPT_ACTION_BASE_SCHEMA,
@@ -1441,6 +1470,32 @@ _SCRIPT_ERROR_SCHEMA = vol.Schema(
     }
 )
 
+
+_SCRIPT_PARALLEL_SEQUENCE = vol.Schema(
+    {
+        **SCRIPT_ACTION_BASE_SCHEMA,
+        vol.Required(CONF_SEQUENCE): SCRIPT_SCHEMA,
+    }
+)
+
+_parallel_sequence_action = vol.All(
+    # Wrap a shorthand sequences in a parallel action
+    SCRIPT_SCHEMA,
+    lambda config: {
+        CONF_SEQUENCE: config,
+    },
+)
+
+_SCRIPT_PARALLEL_SCHEMA = vol.Schema(
+    {
+        **SCRIPT_ACTION_BASE_SCHEMA,
+        vol.Required(CONF_PARALLEL): vol.All(
+            ensure_list, [vol.Any(_SCRIPT_PARALLEL_SEQUENCE, _parallel_sequence_action)]
+        ),
+    }
+)
+
+
 SCRIPT_ACTION_DELAY = "delay"
 SCRIPT_ACTION_WAIT_TEMPLATE = "wait_template"
 SCRIPT_ACTION_CHECK_CONDITION = "condition"
@@ -1454,6 +1509,8 @@ SCRIPT_ACTION_WAIT_FOR_TRIGGER = "wait_for_trigger"
 SCRIPT_ACTION_VARIABLES = "variables"
 SCRIPT_ACTION_STOP = "stop"
 SCRIPT_ACTION_ERROR = "error"
+SCRIPT_ACTION_IF = "if"
+SCRIPT_ACTION_PARALLEL = "parallel"
 
 
 def determine_script_action(action: dict[str, Any]) -> str:
@@ -1488,6 +1545,9 @@ def determine_script_action(action: dict[str, Any]) -> str:
     if CONF_VARIABLES in action:
         return SCRIPT_ACTION_VARIABLES
 
+    if CONF_IF in action:
+        return SCRIPT_ACTION_IF
+
     if CONF_SERVICE in action or CONF_SERVICE_TEMPLATE in action:
         return SCRIPT_ACTION_CALL_SERVICE
 
@@ -1496,6 +1556,9 @@ def determine_script_action(action: dict[str, Any]) -> str:
 
     if CONF_ERROR in action:
         return SCRIPT_ACTION_ERROR
+
+    if CONF_PARALLEL in action:
+        return SCRIPT_ACTION_PARALLEL
 
     raise ValueError("Unable to determine action")
 
@@ -1514,6 +1577,8 @@ ACTION_TYPE_SCHEMAS: dict[str, Callable[[Any], dict]] = {
     SCRIPT_ACTION_VARIABLES: _SCRIPT_SET_SCHEMA,
     SCRIPT_ACTION_STOP: _SCRIPT_STOP_SCHEMA,
     SCRIPT_ACTION_ERROR: _SCRIPT_ERROR_SCHEMA,
+    SCRIPT_ACTION_IF: _SCRIPT_IF_SCHEMA,
+    SCRIPT_ACTION_PARALLEL: _SCRIPT_PARALLEL_SCHEMA,
 }
 
 

@@ -215,7 +215,6 @@ omit =
     homeassistant/components/devolo_home_control/subscriber.py
     homeassistant/components/devolo_home_control/switch.py
     homeassistant/components/digital_ocean/*
-    homeassistant/components/digitalloggers/switch.py
     homeassistant/components/discogs/sensor.py
     homeassistant/components/discord/__init__.py
     homeassistant/components/discord/notify.py
@@ -1029,6 +1028,9 @@ omit =
     homeassistant/components/sensibo/number.py
     homeassistant/components/sensibo/select.py
     homeassistant/components/sensibo/sensor.py
+    homeassistant/components/senz/__init__.py
+    homeassistant/components/senz/api.py
+    homeassistant/components/senz/climate.py
     homeassistant/components/serial/sensor.py
     homeassistant/components/serial_pm/sensor.py
     homeassistant/components/sesame/lock.py
@@ -1264,6 +1266,7 @@ omit =
     homeassistant/components/tractive/__init__.py
     homeassistant/components/tractive/binary_sensor.py
     homeassistant/components/tractive/device_tracker.py
+    homeassistant/components/tractive/diagnostics.py
     homeassistant/components/tractive/entity.py
     homeassistant/components/tractive/sensor.py
     homeassistant/components/tractive/switch.py
@@ -1427,6 +1430,7 @@ omit =
     homeassistant/components/xiaomi_miio/button.py
     homeassistant/components/xiaomi_miio/device.py
     homeassistant/components/xiaomi_miio/device_tracker.py
+    homeassistant/components/xiaomi_miio/diagnostics.py
     homeassistant/components/xiaomi_miio/fan.py
     homeassistant/components/xiaomi_miio/gateway.py
     homeassistant/components/xiaomi_miio/humidifier.py
