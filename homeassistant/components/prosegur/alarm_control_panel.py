@@ -51,6 +51,7 @@ class ProsegurAlarm(alarm.AlarmControlPanelEntity):
         self.contract = contract
         self._auth = auth
 
+        self._attr_code_arm_required = False
         self._attr_name = f"contract {self.contract}"
         self._attr_unique_id = self.contract
         self._attr_supported_features = SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_HOME
