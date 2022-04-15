@@ -6,6 +6,7 @@ import configparser
 from dataclasses import dataclass
 import logging
 from typing import Optional
+from urllib.parse import urlparse
 
 import aiohttp
 import attr
@@ -181,6 +182,15 @@ class PlaylistItem:
     url: str
 
 
+def _is_url(url):
+    """Validate URL."""
+    try:
+        result = urlparse(url)
+        return all([result.scheme, result.netloc])
+    except ValueError:
+        return False
+
+
 async def _fetch_playlist(hass, url):
     """Fetch a playlist from the given url."""
     try:
@@ -226,6 +236,8 @@ async def parse_m3u(hass, url):
             continue
         elif len(line) != 0:
             # Get song path from all other, non-blank lines
+            if not _is_url(line):
+                raise PlaylistError(f"Invalid item {line} in playlist {url}")
             playlist.append(PlaylistItem(length=length, title=title, url=line))
             # reset the song variables so it doesn't use the same EXTINF more than once
             length = None
@@ -266,11 +278,14 @@ async def parse_pls(hass, url):
         if file_option not in playlist_section:
             _LOGGER.warning("Missing %s in pls from %s", file_option, url)
             continue
+        item_url = playlist_section[file_option]
+        if not _is_url(item_url):
+            raise PlaylistError(f"Invalid item {item_url} in playlist {url}")
         playlist.append(
             PlaylistItem(
                 length=playlist_section.get(f"Length{entry}"),
                 title=playlist_section.get(f"Title{entry}"),
-                url=playlist_section[file_option],
+                url=item_url,
             )
         )
     return playlist
