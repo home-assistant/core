@@ -3,11 +3,9 @@ from __future__ import annotations
 
 from boschshcpy import SHCIntrusionSystem, SHCSession
 
-from homeassistant.components.alarm_control_panel import AlarmControlPanelEntity
-from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_CUSTOM_BYPASS,
-    SUPPORT_ALARM_ARM_HOME,
+from homeassistant.components.alarm_control_panel import (
+    AlarmControlPanelEntity,
+    AlarmControlPanelEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -48,9 +46,9 @@ class IntrusionSystemAlarmControlPanel(SHCDomainEntity, AlarmControlPanelEntity)
     _attr_code_arm_required: bool = False
     _attr_should_poll: bool = False
     _attr_supported_features: int = (
-        SUPPORT_ALARM_ARM_AWAY
-        | SUPPORT_ALARM_ARM_HOME
-        | SUPPORT_ALARM_ARM_CUSTOM_BYPASS
+        AlarmControlPanelEntityFeature.ARM_AWAY
+        | AlarmControlPanelEntityFeature.ARM_HOME
+        | AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS
     )
 
     @property
