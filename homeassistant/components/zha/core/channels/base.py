@@ -339,14 +339,18 @@ class ZigbeeChannel(LogMixin):
 
         if cached:
             self.debug("initializing cached channel attributes: %s", cached)
-            await self._get_attributes(True, cached, from_cache=True)
+            await self._get_attributes(
+                True, cached, from_cache=True, only_cache=from_cache
+            )
         if uncached:
             self.debug(
                 "initializing uncached channel attributes: %s - from cache[%s]",
                 uncached,
                 from_cache,
             )
-            await self._get_attributes(True, uncached, from_cache=from_cache)
+            await self._get_attributes(
+                True, uncached, from_cache=from_cache, only_cache=from_cache
+            )
 
         ch_specific_init = getattr(self, "async_initialize_channel_specific", None)
         if ch_specific_init:
@@ -428,6 +432,7 @@ class ZigbeeChannel(LogMixin):
         raise_exceptions: bool,
         attributes: list[int | str],
         from_cache: bool = True,
+        only_cache: bool = True,
     ) -> dict[int | str, Any]:
         """Get the values for a list of attributes."""
         manufacturer = None
@@ -443,7 +448,7 @@ class ZigbeeChannel(LogMixin):
                 read, _ = await self.cluster.read_attributes(
                     attributes,
                     allow_cache=from_cache,
-                    only_cache=from_cache,
+                    only_cache=only_cache,
                     manufacturer=manufacturer,
                 )
                 result.update(read)
