@@ -34,8 +34,8 @@ from .const import (
     DOMAIN,
 )
 
-# From https://api.met.no/weatherapi/locationforecast/2.0/documentation
-URL = "https://api.met.no/weatherapi/locationforecast/2.0/complete"
+# Dedicated Home Assistant endpoint - do not change!
+URL = "https://aa015h6buqvih86i1.api.met.no/weatherapi/locationforecast/2.0/complete"
 
 PLATFORMS = [Platform.WEATHER]
 
