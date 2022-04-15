@@ -27,6 +27,7 @@ from homeassistant.const import (
     CONF_BELOW,
     CONF_CONDITION,
     CONF_DEVICE_ID,
+    CONF_ENABLED,
     CONF_ENTITY_ID,
     CONF_ID,
     CONF_MATCH,
@@ -165,6 +166,18 @@ async def async_from_config(
 
     if factory is None:
         raise HomeAssistantError(f'Invalid condition "{condition}" specified {config}')
+
+    # Check if condition is not enabled
+    if not config.get(CONF_ENABLED, True):
+
+        @trace_condition_function
+        def disabled_condition(
+            hass: HomeAssistant, variables: TemplateVarsType = None
+        ) -> bool:
+            """Condition not enabled, will always pass."""
+            return True
+
+        return disabled_condition
 
     # Check for partials to properly determine if coroutine function
     check_factory = factory

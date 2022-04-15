@@ -3004,3 +3004,23 @@ async def test_platform_async_validate_condition_config(hass):
         platform.async_validate_condition_config.return_value = config
         await condition.async_validate_condition_config(hass, config)
         platform.async_validate_condition_config.assert_awaited()
+
+
+async def test_disabled_condition(hass: HomeAssistant) -> None:
+    """Test a disabled condition always passes."""
+    config = {
+        "enabled": False,
+        "condition": "state",
+        "entity_id": "binary_sensor.test",
+        "state": "on",
+    }
+    config = cv.CONDITION_SCHEMA(config)
+    config = await condition.async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
+
+    hass.states.async_set("binary_sensor.test", "on")
+    assert test(hass)
+
+    # Still passses, condition is not enabled
+    hass.states.async_set("binary_sensor.test", "off")
+    assert test(hass)
