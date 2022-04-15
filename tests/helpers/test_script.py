@@ -1787,6 +1787,105 @@ async def test_repeat_count_0(hass, caplog):
     )
 
 
+async def test_repeat_for_each(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test repeat action using for each."""
+    events = async_capture_events(hass, "test_event")
+    sequence = cv.SCRIPT_SCHEMA(
+        {
+            "alias": "For each!",
+            "repeat": {
+                "for_each": ["one", "two", "{{ 'thr' + 'ee' }}"],
+                "sequence": {
+                    "event": "test_event",
+                    "event_data": {
+                        "first": "{{ repeat.first }}",
+                        "index": "{{ repeat.index }}",
+                        "last": "{{ repeat.last }}",
+                        "item": "{{ repeat.item }}",
+                    },
+                },
+            },
+        }
+    )
+
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert len(events) == 3
+    assert "Repeating For each!: Iteration 1 of 3 with item: 'one'" in caplog.text
+    assert "Repeating For each!: Iteration 2 of 3 with item: 'two'" in caplog.text
+    assert "Repeating For each!: Iteration 3 of 3 with item: 'three'" in caplog.text
+
+    assert_action_trace(
+        {
+            "0": [{}],
+            "0/repeat/sequence/0": [
+                {
+                    "result": {
+                        "event": "test_event",
+                        "event_data": {
+                            "first": True,
+                            "index": 1,
+                            "last": False,
+                            "item": "one",
+                        },
+                    },
+                    "variables": {
+                        "repeat": {
+                            "first": True,
+                            "index": 1,
+                            "last": False,
+                            "item": "one",
+                        }
+                    },
+                },
+                {
+                    "result": {
+                        "event": "test_event",
+                        "event_data": {
+                            "first": False,
+                            "index": 2,
+                            "last": False,
+                            "item": "two",
+                        },
+                    },
+                    "variables": {
+                        "repeat": {
+                            "first": False,
+                            "index": 2,
+                            "last": False,
+                            "item": "two",
+                        }
+                    },
+                },
+                {
+                    "result": {
+                        "event": "test_event",
+                        "event_data": {
+                            "first": False,
+                            "index": 3,
+                            "last": True,
+                            "item": "three",
+                        },
+                    },
+                    "variables": {
+                        "repeat": {
+                            "first": False,
+                            "index": 3,
+                            "last": True,
+                            "item": "three",
+                        }
+                    },
+                },
+            ],
+        }
+    )
+
+
 @pytest.mark.parametrize("condition", ["while", "until"])
 async def test_repeat_condition_warning(hass, caplog, condition):
     """Test warning on repeat conditions."""
