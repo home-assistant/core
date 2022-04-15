@@ -1005,6 +1005,18 @@ def boolean_condition_shorthand(condition: str) -> Callable[[Any], dict[Hashable
     return validator
 
 
+def ensure_default_condition(value: dict[Hashable, Any]) -> Any:
+    """Assume AND condition if only a list of conditions is given."""
+    if (
+        isinstance(value, dict)
+        and isinstance(value.get(CONF_CONDITION), list)
+        and CONF_CONDITIONS not in value
+    ):
+        value[CONF_CONDITIONS] = value.get(CONF_CONDITION)
+        value[CONF_CONDITION] = "and"
+    return value
+
+
 # Schemas
 PLATFORM_SCHEMA = vol.Schema(
     {
@@ -1315,21 +1327,24 @@ dynamic_template_condition_action = vol.All(
 
 CONDITION_SCHEMA: vol.Schema = vol.Schema(
     vol.Any(
-        key_value_schemas(
-            CONF_CONDITION,
-            {
-                "and": AND_CONDITION_SCHEMA,
-                "device": DEVICE_CONDITION_SCHEMA,
-                "not": NOT_CONDITION_SCHEMA,
-                "numeric_state": NUMERIC_STATE_CONDITION_SCHEMA,
-                "or": OR_CONDITION_SCHEMA,
-                "state": STATE_CONDITION_SCHEMA,
-                "sun": SUN_CONDITION_SCHEMA,
-                "template": TEMPLATE_CONDITION_SCHEMA,
-                "time": TIME_CONDITION_SCHEMA,
-                "trigger": TRIGGER_CONDITION_SCHEMA,
-                "zone": ZONE_CONDITION_SCHEMA,
-            },
+        vol.All(
+            ensure_default_condition,
+            key_value_schemas(
+                CONF_CONDITION,
+                {
+                    "and": AND_CONDITION_SCHEMA,
+                    "device": DEVICE_CONDITION_SCHEMA,
+                    "not": NOT_CONDITION_SCHEMA,
+                    "numeric_state": NUMERIC_STATE_CONDITION_SCHEMA,
+                    "or": OR_CONDITION_SCHEMA,
+                    "state": STATE_CONDITION_SCHEMA,
+                    "sun": SUN_CONDITION_SCHEMA,
+                    "template": TEMPLATE_CONDITION_SCHEMA,
+                    "time": TIME_CONDITION_SCHEMA,
+                    "trigger": TRIGGER_CONDITION_SCHEMA,
+                    "zone": ZONE_CONDITION_SCHEMA,
+                },
+            ),
         ),
         dynamic_template_condition_action,
         boolean_condition_shorthand("and"),
@@ -1353,23 +1368,26 @@ dynamic_template_condition_action = vol.All(
 
 
 CONDITION_ACTION_SCHEMA: vol.Schema = vol.Schema(
-    key_value_schemas(
-        CONF_CONDITION,
-        {
-            "and": AND_CONDITION_SCHEMA,
-            "device": DEVICE_CONDITION_SCHEMA,
-            "not": NOT_CONDITION_SCHEMA,
-            "numeric_state": NUMERIC_STATE_CONDITION_SCHEMA,
-            "or": OR_CONDITION_SCHEMA,
-            "state": STATE_CONDITION_SCHEMA,
-            "sun": SUN_CONDITION_SCHEMA,
-            "template": TEMPLATE_CONDITION_SCHEMA,
-            "time": TIME_CONDITION_SCHEMA,
-            "trigger": TRIGGER_CONDITION_SCHEMA,
-            "zone": ZONE_CONDITION_SCHEMA,
-        },
-        dynamic_template_condition_action,
-        "a valid template",
+    vol.All(
+        ensure_default_condition,
+        key_value_schemas(
+            CONF_CONDITION,
+            {
+                "and": AND_CONDITION_SCHEMA,
+                "device": DEVICE_CONDITION_SCHEMA,
+                "not": NOT_CONDITION_SCHEMA,
+                "numeric_state": NUMERIC_STATE_CONDITION_SCHEMA,
+                "or": OR_CONDITION_SCHEMA,
+                "state": STATE_CONDITION_SCHEMA,
+                "sun": SUN_CONDITION_SCHEMA,
+                "template": TEMPLATE_CONDITION_SCHEMA,
+                "time": TIME_CONDITION_SCHEMA,
+                "trigger": TRIGGER_CONDITION_SCHEMA,
+                "zone": ZONE_CONDITION_SCHEMA,
+            },
+            dynamic_template_condition_action,
+            "a list of conditions or a valid template",
+        ),
     )
 )
 

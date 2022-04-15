@@ -330,6 +330,48 @@ async def test_and_condition_shorthand(hass):
     assert test(hass)
 
 
+async def test_and_condition_list_shorthand(hass):
+    """Test the 'and' condition list shorthand."""
+    config = {
+        "alias": "And Condition List Shorthand",
+        "condition": [
+            {
+                "alias": "Template Condition",
+                "condition": "template",
+                "value_template": '{{ states.sensor.temperature.state == "100" }}',
+            },
+            {
+                "condition": "numeric_state",
+                "entity_id": "sensor.temperature",
+                "below": 110,
+            },
+        ],
+    }
+    config = cv.CONDITION_SCHEMA(config)
+    config = await condition.async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
+
+    assert config["alias"] == "And Condition List Shorthand"
+    assert "and" not in config.keys()
+
+    hass.states.async_set("sensor.temperature", 120)
+    assert not test(hass)
+    assert_condition_trace(
+        {
+            "": [{"result": {"result": False}}],
+            "conditions/0": [
+                {"result": {"entities": ["sensor.temperature"], "result": False}}
+            ],
+        }
+    )
+
+    hass.states.async_set("sensor.temperature", 105)
+    assert not test(hass)
+
+    hass.states.async_set("sensor.temperature", 100)
+    assert test(hass)
+
+
 async def test_or_condition(hass):
     """Test the 'or' condition."""
     config = {
