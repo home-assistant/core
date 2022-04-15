@@ -1236,6 +1236,24 @@ AND_CONDITION_SCHEMA = vol.Schema(
     }
 )
 
+and_condition_shorthand_action = vol.All(
+    vol.Schema(
+        {
+            **CONDITION_BASE_SCHEMA,
+            "and": vol.All(
+                ensure_list,
+                # pylint: disable=unnecessary-lambda
+                [lambda value: CONDITION_SCHEMA(value)],
+            ),
+        }
+    ),
+    lambda config: {
+        CONF_CONDITION: "and",
+        CONF_CONDITIONS: config["and"],
+        **{k: config[k] for k in config.keys() if k not in ["and"]},
+    },
+)
+
 OR_CONDITION_SCHEMA = vol.Schema(
     {
         **CONDITION_BASE_SCHEMA,
@@ -1248,6 +1266,24 @@ OR_CONDITION_SCHEMA = vol.Schema(
     }
 )
 
+or_condition_shorthand_action = vol.All(
+    vol.Schema(
+        {
+            **CONDITION_BASE_SCHEMA,
+            "or": vol.All(
+                ensure_list,
+                # pylint: disable=unnecessary-lambda
+                [lambda value: CONDITION_SCHEMA(value)],
+            ),
+        }
+    ),
+    lambda config: {
+        CONF_CONDITION: "or",
+        CONF_CONDITIONS: config["or"],
+        **{k: config[k] for k in config.keys() if k not in ["or"]},
+    },
+)
+
 NOT_CONDITION_SCHEMA = vol.Schema(
     {
         **CONDITION_BASE_SCHEMA,
@@ -1258,6 +1294,24 @@ NOT_CONDITION_SCHEMA = vol.Schema(
             [lambda value: CONDITION_SCHEMA(value)],
         ),
     }
+)
+
+not_condition_shorthand_action = vol.All(
+    vol.Schema(
+        {
+            **CONDITION_BASE_SCHEMA,
+            "not": vol.All(
+                ensure_list,
+                # pylint: disable=unnecessary-lambda
+                [lambda value: CONDITION_SCHEMA(value)],
+            ),
+        }
+    ),
+    lambda config: {
+        CONF_CONDITION: "not",
+        CONF_CONDITIONS: config["not"],
+        **{k: config[k] for k in config.keys() if k not in ["not"]},
+    },
 )
 
 DEVICE_CONDITION_BASE_SCHEMA = vol.Schema(
@@ -1300,6 +1354,9 @@ CONDITION_SCHEMA: vol.Schema = vol.Schema(
             },
         ),
         dynamic_template_condition_action,
+        and_condition_shorthand_action,
+        or_condition_shorthand_action,
+        not_condition_shorthand_action,
     )
 )
 
