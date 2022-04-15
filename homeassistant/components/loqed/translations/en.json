@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect, did you copy the complete string with the copy button?",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error",
+            "already_configured": "Device is already configured"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Lock-name in Home Assistant",
+                    "internal_url": "Internal Home Assistant URL. Should be accessible in the local network",
+                    "config": "Lock-details: [Integration information] in the api-key details"
+                },
+                "description": "Please enter a name for the lock and the internal Home Assistant URL.<BR/>Then visit https://app.loqed.com/API-Config and: <BR/>* Create an API-key: [add new api-key] <BR/>* Copy the [Integration information] value by clicking on the copy button in the detail-page of the just created API-key."
+            }
+        }
+    }
+}

@@ -1148,6 +1148,9 @@ logi-circle==0.2.3
 # homeassistant.components.london_underground
 london-tube-status==0.5
 
+# homeassistant.components.loqed
+loqedAPI==2.1.3
+
 # homeassistant.components.luftdaten
 luftdaten==0.7.4
 
