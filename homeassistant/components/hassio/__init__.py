@@ -917,7 +917,6 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def force_data_refresh(self) -> None:
         """Force update of the addon info."""
-        await self.hassio.refresh_updates()
         (
             self.hass.data[DATA_INFO],
             self.hass.data[DATA_CORE_INFO],
@@ -976,3 +975,18 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         except HassioAPIError as err:
             _LOGGER.warning("Could not fetch info for %s: %s", slug, err)
         return (slug, None)
+
+    async def _async_refresh(
+        self,
+        log_failures: bool = True,
+        raise_on_auth_failed: bool = False,
+        scheduled: bool = False,
+    ) -> None:
+        """Refresh data."""
+        if not scheduled:
+            # Force refreshing updates for non-scheduled updates
+            try:
+                await self.hassio.refresh_updates()
+            except HassioAPIError as err:
+                _LOGGER.warning("Error on Supervisor API: %s", err)
+        await super()._async_refresh(log_failures, raise_on_auth_failed, scheduled)
