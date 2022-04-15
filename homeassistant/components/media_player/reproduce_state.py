@@ -83,18 +83,7 @@ async def _async_reproduce_states(
     cur_state = hass.states.get(state.entity_id)
     features = cur_state.attributes[ATTR_SUPPORTED_FEATURES] if cur_state else 0
 
-    if (
-        ATTR_MEDIA_VOLUME_LEVEL in state.attributes
-        and features & MediaPlayerEntityFeature.VOLUME_SET
-    ):
-        await call_service(SERVICE_VOLUME_SET, [ATTR_MEDIA_VOLUME_LEVEL])
-
-    if (
-        ATTR_MEDIA_VOLUME_MUTED in state.attributes
-        and features & MediaPlayerEntityFeature.VOLUME_MUTE
-    ):
-        await call_service(SERVICE_VOLUME_MUTE, [ATTR_MEDIA_VOLUME_MUTED])
-
+    # First set source & sound mode to match the saved supported features
     if (
         ATTR_INPUT_SOURCE in state.attributes
         and features & MediaPlayerEntityFeature.SELECT_SOURCE
@@ -106,6 +95,18 @@ async def _async_reproduce_states(
         and features & MediaPlayerEntityFeature.SELECT_SOUND_MODE
     ):
         await call_service(SERVICE_SELECT_SOUND_MODE, [ATTR_SOUND_MODE])
+
+    if (
+        ATTR_MEDIA_VOLUME_LEVEL in state.attributes
+        and features & MediaPlayerEntityFeature.VOLUME_SET
+    ):
+        await call_service(SERVICE_VOLUME_SET, [ATTR_MEDIA_VOLUME_LEVEL])
+
+    if (
+        ATTR_MEDIA_VOLUME_MUTED in state.attributes
+        and features & MediaPlayerEntityFeature.VOLUME_MUTE
+    ):
+        await call_service(SERVICE_VOLUME_MUTE, [ATTR_MEDIA_VOLUME_MUTED])
 
     already_playing = False
 
