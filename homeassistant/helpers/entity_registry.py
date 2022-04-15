@@ -646,7 +646,7 @@ class EntityRegistry:
         )
 
     @callback
-    def async_migrate_entity_to_new_platform(
+    def async_update_entity_platform(
         self,
         entity_id: str,
         new_platform: str,
@@ -661,8 +661,6 @@ class EntityRegistry:
         This should only be used when an entity needs to be migrated between
         integrations.
         """
-        if not self.async_get(entity_id):
-            raise ValueError(f"Entity {entity_id} is not in the entity registry")
         if (
             state := self.hass.states.get(entity_id)
         ) is not None and state.state != STATE_UNKNOWN:

@@ -162,7 +162,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 f"{entry.data[CONF_API_KEY]}_"
                 f"{'_'.join(entity_entry.unique_id.split('_')[1:])}"
             )
-            ent_reg.async_migrate_entity_to_new_platform(
+            ent_reg.async_update_entity_platform(
                 entity_entry.entity_id,
                 DOMAIN,
                 new_unique_id=new_unique_id,
