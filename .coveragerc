@@ -1367,6 +1367,7 @@ omit =
     homeassistant/components/vicare/button.py
     homeassistant/components/vicare/climate.py
     homeassistant/components/vicare/const.py
+    homeassistant/components/vicare/diagnostics.py
     homeassistant/components/vicare/__init__.py
     homeassistant/components/vicare/sensor.py
     homeassistant/components/vicare/water_heater.py
