@@ -1028,3 +1028,35 @@ async def test_does_not_work_into_the_future(hass):
         await hass.async_block_till_done()
 
     assert hass.states.get("sensor.sensor1").state == STATE_UNKNOWN
+
+    def _fake_off_states(*args, **kwargs):
+        return {
+            "binary_sensor.state": [
+                ha.State(
+                    "binary_sensor.state",
+                    "off",
+                    last_changed=start_time,
+                    last_updated=start_time,
+                ),
+            ]
+        }
+
+    past_the_window_with_data = start_time + timedelta(hours=26)
+    with patch(
+        "homeassistant.components.recorder.history.state_changes_during_period",
+        _fake_off_states,
+    ), freeze_time(past_the_window_with_data):
+        async_fire_time_changed(hass, past_the_window_with_data)
+        await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.sensor1").state == STATE_UNKNOWN
+
+    at_the_next_window_with_data = start_time + timedelta(days=1, hours=23)
+    with patch(
+        "homeassistant.components.recorder.history.state_changes_during_period",
+        _fake_off_states,
+    ), freeze_time(at_the_next_window_with_data):
+        async_fire_time_changed(hass, at_the_next_window_with_data)
+        await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.sensor1").state == "0.0"
