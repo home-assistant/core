@@ -1275,7 +1275,7 @@ python_awair==0.2.3
 pytile==2022.02.0
 
 # homeassistant.components.tomorrowio
-pytomorrowio==0.2.0
+pytomorrowio==0.2.1
 
 # homeassistant.components.traccar
 pytraccar==0.10.0
