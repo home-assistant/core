@@ -574,7 +574,7 @@ elgato==3.0.0
 eliqonline==1.2.2
 
 # homeassistant.components.elkm1
-elkm1-lib==1.3.0
+elkm1-lib==1.3.3
 
 # homeassistant.components.elmax
 elmax_api==0.0.2
@@ -2438,7 +2438,7 @@ xbox-webapi==2.0.11
 xboxapi==2.0.1
 
 # homeassistant.components.knx
-xknx==0.20.2
+xknx==0.20.3
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz
