@@ -62,7 +62,6 @@ FAN_MODE_TO_DECONZ = {
     FAN_ON: THERMOSTAT_FAN_MODE_ON,
     FAN_OFF: THERMOSTAT_FAN_MODE_OFF,
 }
-
 DECONZ_TO_FAN_MODE = {value: key for key, value in FAN_MODE_TO_DECONZ.items()}
 
 HVAC_MODE_TO_DECONZ: dict[str, str] = {
@@ -71,6 +70,7 @@ HVAC_MODE_TO_DECONZ: dict[str, str] = {
     HVAC_MODE_HEAT: THERMOSTAT_MODE_HEAT,
     HVAC_MODE_OFF: THERMOSTAT_MODE_OFF,
 }
+DECONZ_TO_HVAC_MODE = {value: key for key, value in HVAC_MODE_TO_DECONZ.items()}
 
 DECONZ_PRESET_AUTO = "auto"
 DECONZ_PRESET_COMPLEX = "complex"
@@ -86,7 +86,6 @@ PRESET_MODE_TO_DECONZ = {
     DECONZ_PRESET_HOLIDAY: THERMOSTAT_PRESET_HOLIDAY,
     DECONZ_PRESET_MANUAL: THERMOSTAT_PRESET_MANUAL,
 }
-
 DECONZ_TO_PRESET_MODE = {value: key for key, value in PRESET_MODE_TO_DECONZ.items()}
 
 
@@ -195,7 +194,7 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
         Need to be one of HVAC_MODE_*.
         """
         if self._device.mode in self.supported_hvac_modes:
-            return HVAC_MODE_TO_DECONZ[self._device.mode]
+            return DECONZ_TO_HVAC_MODE[self._device.mode]
         return HVAC_MODE_HEAT if self._device.state_on else HVAC_MODE_OFF
 
     @property
