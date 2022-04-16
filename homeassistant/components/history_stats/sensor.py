@@ -133,11 +133,6 @@ def async_calculate_period(
         assert end is not None
         assert duration is not None
         start = end - duration
-
-    if start > dt_util.now():
-        # History hasn't been written yet for this period
-        return None
-
     if end is None:
         assert start is not None
         assert duration is not None
@@ -205,6 +200,7 @@ class HistoryStatsSensor(SensorEntity):
         self._period = (datetime.datetime.min, datetime.datetime.min)
 
         self._history_current_period: list[State] = []
+        self._previous_run_before_start = False
 
     @callback
     def _async_start_refresh(self, *_) -> None:
@@ -256,18 +252,27 @@ class HistoryStatsSensor(SensorEntity):
         previous_period_end_timestamp = _floored_timestamp(previous_period_end)
         now_timestamp = _floored_timestamp(datetime.datetime.now())
 
-        start_is_fixed_and_end_did_not_shrink_or_miss_events = current_period_start_timestamp == previous_period_start_timestamp and (
-            current_period_end_timestamp == previous_period_end_timestamp
-            or
-            # The period can expand as long as the previous period end
-            # was not before now (otherwise it would miss events)
-            (
-                current_period_end_timestamp >= previous_period_end_timestamp
-                and previous_period_end_timestamp <= now_timestamp
+        if now_timestamp < current_period_start_timestamp:
+            # History cannot tell the future
+            self._history_current_period = []
+            self._previous_run_before_start = True
+        # If the period is the same or exapanding and it was already
+        # in the start window we can accept state change events
+        # instead of doing database queries
+        elif (
+            not self._previous_run_before_start
+            and current_period_start_timestamp == previous_period_start_timestamp
+            and (
+                current_period_end_timestamp == previous_period_end_timestamp
+                or
+                # The period can expand as long as the previous period end
+                # was not before now (otherwise it would miss events)
+                (
+                    current_period_end_timestamp >= previous_period_end_timestamp
+                    and previous_period_end_timestamp <= now_timestamp
+                )
             )
-        )
-
-        if start_is_fixed_and_end_did_not_shrink_or_miss_events:
+        ):
             # As long as the period window doesn't shrink
             # there can never be any new states in the database
             # since we would have already run the query
@@ -285,7 +290,6 @@ class HistoryStatsSensor(SensorEntity):
                 return
         else:
             # The period has changed, load from db
-            had_history = bool(self._history_current_period)
             self._history_current_period = await get_instance(
                 self.hass
             ).async_add_executor_job(
@@ -293,9 +297,11 @@ class HistoryStatsSensor(SensorEntity):
                 current_period_start,
                 current_period_end,
             )
-            # If we never had any history, the state is unknown
-            if not had_history and not self._history_current_period:
-                return
+            self._previous_run_before_start = False
+
+        if not self._history_current_period:
+            self._async_set_native_value(None, None)
+            return
 
         hours_matched, changes_to_match_state = self._async_compute_hours_and_changes(
             now_timestamp,
@@ -354,9 +360,14 @@ class HistoryStatsSensor(SensorEntity):
         return hours_matched, changes_to_match_state
 
     def _async_set_native_value(
-        self, hours_matched: float, changes_to_match_state: int
+        self, hours_matched: float | None, changes_to_match_state: int | None
     ) -> None:
         """Set attrs from value and count."""
+        if hours_matched is None:
+            self._attr_native_value = None
+            self._attr_extra_state_attributes = {}
+            return
+
         if self._type == CONF_TYPE_TIME:
             self._attr_native_value = round(hours_matched, 2)
         elif self._type == CONF_TYPE_RATIO:
