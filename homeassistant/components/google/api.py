@@ -156,7 +156,7 @@ class ApiAuthImpl(AbstractAuth):
     def __init__(
         self, hass: HomeAssistant, session: config_entry_oauth2_flow.OAuth2Session
     ) -> None:
-        """Init the Google Calendar service."""
+        """Init the Google Calendar client library auth implementation."""
         self._hass = hass
         self._session = session
 
