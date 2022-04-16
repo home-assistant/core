@@ -69,6 +69,7 @@ homeassistant.components.deconz.config_flow
 homeassistant.components.deconz.diagnostics
 homeassistant.components.deconz.gateway
 homeassistant.components.deconz.light
+homeassistant.components.deconz.number
 homeassistant.components.deconz.services
 homeassistant.components.device_automation.*
 homeassistant.components.device_tracker.*
