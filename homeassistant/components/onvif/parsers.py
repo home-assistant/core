@@ -3,8 +3,6 @@ from collections.abc import Callable, Coroutine
 import datetime
 from typing import Any
 
-import datetime
-
 from homeassistant.util import dt as dt_util
 from homeassistant.util.decorator import Registry
 
@@ -13,13 +11,16 @@ from .models import Event
 PARSERS: Registry[str, Callable[[str, Any], Coroutine[Any, Any, Event]]] = Registry()
 
 
-def datetime_or_zero(value: str):
+def datetime_or_zero(value: str) -> datetime:
     """Convert strings to datetimes, if invalid, return datetime.min."""
     # To handle cameras that return times like '0000-00-00T00:00:00Z' (e.g. hikvision)
     try:
-        return dt_util.parse_datetime(value)
-    except (ValueError):
+        ret = dt_util.parse_datetime(value)
+    except ValueError:
         return datetime.datetime.min
+    if ret is None:
+        return datetime.datetime.min
+    return ret
 
 
 @PARSERS.register("tns1:VideoSource/MotionAlarm")
@@ -364,8 +365,8 @@ async def async_parse_last_reset(uid: str, msg) -> Event:
 
     Topic: tns1:Monitoring/OperatingTime/LastReset
     """
-    date_time = datetime_or_zero(msg.Message._value_1.Data.SimpleItem[0].Value)
     try:
+        date_time = datetime_or_zero(msg.Message._value_1.Data.SimpleItem[0].Value)
         return Event(
             f"{uid}_{msg.Topic._value_1}",
             "Last Reset",
@@ -409,8 +410,8 @@ async def async_parse_last_clock_sync(uid: str, msg) -> Event:
 
     Topic: tns1:Monitoring/OperatingTime/LastClockSynchronization
     """
-    date_time = datetime_or_zero(msg.Message._value_1.Data.SimpleItem[0].Value)
     try:
+        date_time = datetime_or_zero(msg.Message._value_1.Data.SimpleItem[0].Value)
         return Event(
             f"{uid}_{msg.Topic._value_1}",
             "Last Clock Synchronization",
