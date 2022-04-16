@@ -1010,7 +1010,7 @@ def expand_condition_shorthand(value: Any | None) -> Any:
         except vol.MultipleInvalid:
             pass
 
-        if isinstance(value[CONF_CONDITION], list):
+        if isinstance(value.get(CONF_CONDITION), list):
             try:
                 CONDITION_SHORTHAND_SCHEMA(value)
                 return {
