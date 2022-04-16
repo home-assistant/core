@@ -25,7 +25,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.conversation.default_agent",
     "homeassistant.components.deconz.cover",
     "homeassistant.components.deconz.lock",
-    "homeassistant.components.deconz.logbook",
     "homeassistant.components.deconz.sensor",
     "homeassistant.components.deconz.siren",
     "homeassistant.components.deconz.switch",
