@@ -3,6 +3,7 @@ from datetime import datetime
 from unittest.mock import AsyncMock, patch
 
 import pytest
+import voluptuous as vol
 
 from homeassistant.components import sun
 import homeassistant.components.automation as automation
@@ -370,6 +371,17 @@ async def test_and_condition_list_shorthand(hass):
 
     hass.states.async_set("sensor.temperature", 100)
     assert test(hass)
+
+
+async def test_malformed_and_condition_list_shorthand(hass):
+    """Test the 'and' condition list shorthand syntax check."""
+    config = {
+        "alias": "Bad shorthand syntax",
+        "condition": ["bad", "syntax"],
+    }
+
+    with pytest.raises(vol.MultipleInvalid):
+        cv.CONDITION_SCHEMA(config)
 
 
 async def test_or_condition(hass):
