@@ -5,6 +5,7 @@
   "dependencies": ["auth"],
   "documentation": "https://www.home-assistant.io/integrations/calendar.google/",
   "requirements": [
+    "gcal-sync==0.3.1",
     "google-api-python-client==2.38.0",
     "httplib2==0.20.4",
     "oauth2client==4.1.3"

@@ -254,7 +254,7 @@ async def test_calendar_config_track_new(
     assert_state(state, expected_state)
 
 
-async def test_add_event(
+async def test_add_event_missing_required_fields(
     hass: HomeAssistant,
     component_setup: ComponentSetup,
     mock_calendars_list: ApiResult,
@@ -262,30 +262,21 @@ async def test_add_event(
     mock_insert_event: Mock,
     setup_config_entry: MockConfigEntry,
 ) -> None:
-    """Test service call that adds an event."""
+    """Test service call that adds an event missing required fields."""
 
     assert await component_setup()
 
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_ADD_EVENT,
-        {
-            "calendar_id": CALENDAR_ID,
-            "summary": "Summary",
-            "description": "Description",
-        },
-        blocking=True,
-    )
-    mock_insert_event.assert_called()
-    assert mock_insert_event.mock_calls[0] == call(
-        calendarId=CALENDAR_ID,
-        body={
-            "summary": "Summary",
-            "description": "Description",
-            "start": {},
-            "end": {},
-        },
-    )
+    with pytest.raises(ValueError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_ADD_EVENT,
+            {
+                "calendar_id": CALENDAR_ID,
+                "summary": "Summary",
+                "description": "Description",
+            },
+            blocking=True,
+        )
 
 
 @pytest.mark.parametrize(

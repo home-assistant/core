@@ -307,7 +307,7 @@ async def test_update_error(
     """Test that the calendar update handles a server error."""
 
     now = dt_util.now()
-    with patch("homeassistant.components.google.api.google_discovery.build") as mock:
+    with patch("gcal_sync.api.google_discovery.build") as mock:
         mock.return_value.calendarList.return_value.list.return_value.execute.return_value = {
             "items": [test_api_calendar]
         }
@@ -333,7 +333,7 @@ async def test_update_error(
     # Advance time to avoid throttling
     now += datetime.timedelta(minutes=30)
     with patch(
-        "homeassistant.components.google.api.google_discovery.build",
+        "gcal_sync.api.google_discovery.build",
         side_effect=httplib2.ServerNotFoundError("unit test"),
     ), patch("homeassistant.util.utcnow", return_value=now):
         async_fire_time_changed(hass, now)
@@ -346,9 +346,9 @@ async def test_update_error(
 
     # Advance time beyond update/throttle point
     now += datetime.timedelta(minutes=30)
-    with patch(
-        "homeassistant.components.google.api.google_discovery.build"
-    ) as mock, patch("homeassistant.util.utcnow", return_value=now):
+    with patch("gcal_sync.api.google_discovery.build") as mock, patch(
+        "homeassistant.util.utcnow", return_value=now
+    ):
         mock.return_value.events.return_value.list.return_value.execute.return_value = {
             "items": [
                 {
@@ -499,7 +499,7 @@ async def test_scan_calendar_error(
 ):
     """Test that the calendar update handles a server error."""
     with patch(
-        "homeassistant.components.google.api.google_discovery.build",
+        "gcal_sync.api.google_discovery.build",
         side_effect=httplib2.ServerNotFoundError("unit test"),
     ):
         assert await component_setup()

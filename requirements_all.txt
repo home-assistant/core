@@ -675,6 +675,9 @@ gTTS==2.2.4
 # homeassistant.components.garages_amsterdam
 garages-amsterdam==3.0.0
 
+# homeassistant.components.google
+gcal-sync==0.3.1
+
 # homeassistant.components.geniushub
 geniushub-client==0.6.30
 

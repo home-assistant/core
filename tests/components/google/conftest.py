@@ -201,7 +201,7 @@ def mock_token_read(
 @pytest.fixture(autouse=True)
 def calendar_resource() -> YieldFixture[google_discovery.Resource]:
     """Fixture to mock out the Google discovery API."""
-    with patch("homeassistant.components.google.api.google_discovery.build") as mock:
+    with patch("gcal_sync.api.google_discovery.build") as mock:
         yield mock
 
 
