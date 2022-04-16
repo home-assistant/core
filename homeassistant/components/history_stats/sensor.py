@@ -202,7 +202,7 @@ class HistoryStatsSensor(SensorEntity):
         self._start = start
         self._end = end
         self._type = sensor_type
-        self._period = (datetime.datetime.now(), datetime.datetime.now())
+        self._period = (datetime.datetime.min, datetime.datetime.min)
 
         self._history_current_period: list[State] = []
 
@@ -254,15 +254,25 @@ class HistoryStatsSensor(SensorEntity):
         current_period_end_timestamp = _floored_timestamp(current_period_end)
         previous_period_start_timestamp = _floored_timestamp(previous_period_start)
         previous_period_end_timestamp = _floored_timestamp(previous_period_end)
-
-        period_is_the_same = (
-            current_period_start_timestamp == previous_period_start_timestamp
-            and current_period_end_timestamp == previous_period_end_timestamp
-        )
-
         now_timestamp = _floored_timestamp(datetime.datetime.now())
 
-        if period_is_the_same:
+        start_is_fixed_and_end_did_not_shrink_or_miss_events = current_period_start_timestamp == previous_period_start_timestamp and (
+            current_period_end_timestamp == previous_period_end_timestamp
+            or
+            # The period can expand as long as the previous period end
+            # was not before now (otherwise it would miss events)
+            (
+                current_period_end_timestamp >= previous_period_end_timestamp
+                and previous_period_end_timestamp <= now_timestamp
+            )
+        )
+
+        if start_is_fixed_and_end_did_not_shrink_or_miss_events:
+            # As long as the period window doesn't shrink
+            # there can never be any new states in the database
+            # since we would have already run the query
+            # for them when the start time changed and any
+            # state change events would have been appended
             new_data = False
             if event and event.data["new_state"] is not None:
                 new_state: State = event.data["new_state"]
