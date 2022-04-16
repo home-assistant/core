@@ -4,9 +4,15 @@ from __future__ import annotations
 import pytest
 
 from homeassistant.components import script
-from homeassistant.components.automation import ATTR_CUR, ATTR_LAST_TRIGGERED, ATTR_MODE
 from homeassistant.components.recorder.models import StateAttributes, States
 from homeassistant.components.recorder.util import session_scope
+from homeassistant.components.script import (
+    ATTR_CUR,
+    ATTR_LAST_ACTION,
+    ATTR_LAST_TRIGGERED,
+    ATTR_MAX,
+    ATTR_MODE,
+)
 from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.core import Context, State, callback
 from homeassistant.setup import async_setup_component
@@ -72,4 +78,6 @@ async def test_exclude_attributes(hass, calls):
         assert ATTR_LAST_TRIGGERED not in state.attributes
         assert ATTR_MODE not in state.attributes
         assert ATTR_CUR not in state.attributes
+        assert ATTR_LAST_ACTION not in state.attributes
+        assert ATTR_MAX not in state.attributes
         assert ATTR_FRIENDLY_NAME in state.attributes
