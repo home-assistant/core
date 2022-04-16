@@ -263,11 +263,13 @@ class HistoryStatsSensor(SensorEntity):
         now_timestamp = _floored_timestamp(datetime.datetime.now())
 
         if period_is_the_same:
+            new_data = False
             if event and event.data["new_state"] is not None:
                 new_state: State = event.data["new_state"]
                 if current_period_start <= new_state.last_changed <= current_period_end:
                     self._history_current_period.append(new_state)
-            elif current_period_end_timestamp < now_timestamp:
+                    new_data = True
+            if not new_data and current_period_end_timestamp < now_timestamp:
                 # If period has not changed and current time after the period end...
                 # Don't compute anything as the value cannot have changed
                 return
