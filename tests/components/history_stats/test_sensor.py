@@ -358,6 +358,8 @@ async def test_measure_multiple(hass):
 
 async def async_test_measure(hass):
     """Test the history statistics sensor measure."""
+    await async_init_recorder_component(hass)
+
     start_time = dt_util.utcnow() - timedelta(minutes=60)
     t0 = start_time + timedelta(minutes=20)
     t1 = t0 + timedelta(minutes=10)
@@ -437,6 +439,8 @@ async def async_test_measure(hass):
 
 async def test_async_on_entire_period(hass):
     """Test the history statistics sensor measuring as on the entire period."""
+    await async_init_recorder_component(hass)
+
     start_time = dt_util.utcnow() - timedelta(minutes=60)
     t0 = start_time + timedelta(minutes=20)
     t1 = t0 + timedelta(minutes=10)
@@ -517,6 +521,8 @@ async def test_async_on_entire_period(hass):
 
 async def test_async_off_entire_period(hass):
     """Test the history statistics sensor measuring as off the entire period."""
+    await async_init_recorder_component(hass)
+
     start_time = dt_util.utcnow() - timedelta(minutes=60)
     t0 = start_time + timedelta(minutes=20)
     t1 = t0 + timedelta(minutes=10)
@@ -599,6 +605,8 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_sin
     hass,
 ):
     """Test we startup from history and switch to watching state changes."""
+    await async_init_recorder_component(hass)
+
     hass.config.set_time_zone("UTC")
     utcnow = dt_util.utcnow()
     start_time = utcnow.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -689,6 +697,8 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_mul
     hass,
 ):
     """Test we startup from history and switch to watching state changes."""
+    await async_init_recorder_component(hass)
+
     hass.config.set_time_zone("UTC")
     utcnow = dt_util.utcnow()
     start_time = utcnow.replace(hour=0, minute=0, second=0, microsecond=0)
