@@ -973,47 +973,53 @@ def custom_serializer(schema: Any) -> Any:
     return voluptuous_serialize.UNSUPPORTED
 
 
-def boolean_condition_shorthand(condition: str) -> Callable[[Any], dict[Hashable, Any]]:
-    """Create a validator for shorthand format of boolean conditions."""
-    schema = vol.Schema(
-        vol.All(
-            {
-                **CONDITION_BASE_SCHEMA,
-                vol.Required(condition): vol.All(
-                    ensure_list,
-                    # pylint: disable=unnecessary-lambda
-                    [lambda value: CONDITION_SCHEMA(value)],
-                ),
-            },
-            lambda config: {
-                CONF_CONDITION: condition,
-                CONF_CONDITIONS: config.get(condition),
-                **{k: config[k] for k in config if k != condition},
-            },
-        )
-    )
+def expand_condition_shorthand(value: Any | None) -> Any:
+    """Expand boolean condition shorthand notations."""
 
-    def validator(value: dict[Hashable, Any]) -> Any:
-        if value is None:
-            raise vol.Invalid("Condition is none")
-        if condition not in value:
-            raise vol.Invalid("Incorrect shorthand condition")
-        if CONF_CONDITION in value or CONF_CONDITIONS in value:
-            raise vol.Invalid("Shorthand and longhand condition found")
-        return schema(value)
+    if not isinstance(value, dict):
+        return value
 
-    return validator
+    if CONF_CONDITIONS not in value:
+        try:
+            AND_CONDITION_SHORTHAND_SCHEMA(value)
+            return {
+                CONF_CONDITION: "and",
+                CONF_CONDITIONS: value["and"],
+                **{k: value[k] for k in value if k != "and"},
+            }
+        except vol.MultipleInvalid:
+            pass
 
+        try:
+            OR_CONDITION_SHORTHAND_SCHEMA(value)
+            return {
+                CONF_CONDITION: "or",
+                CONF_CONDITIONS: value["or"],
+                **{k: value[k] for k in value if k != "or"},
+            }
+        except vol.MultipleInvalid:
+            pass
 
-def ensure_default_condition(value: dict[Hashable, Any]) -> Any:
-    """Assume AND condition if only a list of conditions is given."""
-    if (
-        isinstance(value, dict)
-        and isinstance(value.get(CONF_CONDITION), list)
-        and CONF_CONDITIONS not in value
-    ):
-        value[CONF_CONDITIONS] = value.get(CONF_CONDITION)
-        value[CONF_CONDITION] = "and"
+        try:
+            NOT_CONDITION_SHORTHAND_SCHEMA(value)
+            return {
+                CONF_CONDITION: "not",
+                CONF_CONDITIONS: value["not"],
+                **{k: value[k] for k in value if k != "not"},
+            }
+        except vol.MultipleInvalid:
+            pass
+
+        if isinstance(value[CONF_CONDITION], list):
+            try:
+                CONDITION_SHORTHAND_SCHEMA(value)
+                return {
+                    CONF_CONDITION: "and",
+                    CONF_CONDITIONS: value[CONF_CONDITION],
+                    **{k: value[k] for k in value if k != CONF_CONDITION},
+                }
+            except vol.MultipleInvalid:
+                pass
     return value
 
 
@@ -1280,6 +1286,17 @@ AND_CONDITION_SCHEMA = vol.Schema(
     }
 )
 
+AND_CONDITION_SHORTHAND_SCHEMA = vol.Schema(
+    {
+        **CONDITION_BASE_SCHEMA,
+        vol.Required("and"): vol.All(
+            ensure_list,
+            # pylint: disable=unnecessary-lambda
+            [lambda value: CONDITION_SCHEMA(value)],
+        ),
+    }
+)
+
 OR_CONDITION_SCHEMA = vol.Schema(
     {
         **CONDITION_BASE_SCHEMA,
@@ -1292,11 +1309,33 @@ OR_CONDITION_SCHEMA = vol.Schema(
     }
 )
 
+OR_CONDITION_SHORTHAND_SCHEMA = vol.Schema(
+    {
+        **CONDITION_BASE_SCHEMA,
+        vol.Required("or"): vol.All(
+            ensure_list,
+            # pylint: disable=unnecessary-lambda
+            [lambda value: CONDITION_SCHEMA(value)],
+        ),
+    }
+)
+
 NOT_CONDITION_SCHEMA = vol.Schema(
     {
         **CONDITION_BASE_SCHEMA,
         vol.Required(CONF_CONDITION): "not",
         vol.Required(CONF_CONDITIONS): vol.All(
+            ensure_list,
+            # pylint: disable=unnecessary-lambda
+            [lambda value: CONDITION_SCHEMA(value)],
+        ),
+    }
+)
+
+NOT_CONDITION_SHORTHAND_SCHEMA = vol.Schema(
+    {
+        **CONDITION_BASE_SCHEMA,
+        vol.Required("not"): vol.All(
             ensure_list,
             # pylint: disable=unnecessary-lambda
             [lambda value: CONDITION_SCHEMA(value)],
@@ -1324,11 +1363,21 @@ dynamic_template_condition_action = vol.All(
     },
 )
 
+CONDITION_SHORTHAND_SCHEMA = vol.Schema(
+    {
+        **CONDITION_BASE_SCHEMA,
+        vol.Required(CONF_CONDITION): vol.All(
+            ensure_list,
+            # pylint: disable=unnecessary-lambda
+            [lambda value: CONDITION_SCHEMA(value)],
+        ),
+    }
+)
 
 CONDITION_SCHEMA: vol.Schema = vol.Schema(
     vol.Any(
         vol.All(
-            ensure_default_condition,
+            expand_condition_shorthand,
             key_value_schemas(
                 CONF_CONDITION,
                 {
@@ -1347,9 +1396,6 @@ CONDITION_SCHEMA: vol.Schema = vol.Schema(
             ),
         ),
         dynamic_template_condition_action,
-        boolean_condition_shorthand("and"),
-        boolean_condition_shorthand("or"),
-        boolean_condition_shorthand("not"),
     )
 )
 
@@ -1369,7 +1415,7 @@ dynamic_template_condition_action = vol.All(
 
 CONDITION_ACTION_SCHEMA: vol.Schema = vol.Schema(
     vol.All(
-        ensure_default_condition,
+        expand_condition_shorthand,
         key_value_schemas(
             CONF_CONDITION,
             {
