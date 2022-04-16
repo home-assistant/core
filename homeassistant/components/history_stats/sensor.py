@@ -350,16 +350,13 @@ class HistoryStatsSensor(SensorEntity):
         # Calculate start or end using the duration
         if start is None:
             start = end - self._duration
-        if end is None:
-            end = start + self._duration
 
         if start > dt_util.now():
             # History hasn't been written yet for this period
             return
 
-        # If we reduce the period because we haven't reached the end
-        # yet, the ratio calculations will be for a reduced period
-        # size and thus unexpected.
+        if end is None:
+            end = start + self._duration
 
         self._period = start, end
 
