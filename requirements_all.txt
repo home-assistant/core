@@ -1619,7 +1619,7 @@ pymailgunner==1.4
 pymata-express==1.19
 
 # homeassistant.components.mazda
-pymazda==0.3.2
+pymazda==0.3.3
 
 # homeassistant.components.mediaroom
 pymediaroom==0.6.5.4
@@ -2435,7 +2435,7 @@ xbox-webapi==2.0.11
 xboxapi==2.0.1
 
 # homeassistant.components.knx
-xknx==0.20.2
+xknx==0.20.3
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz

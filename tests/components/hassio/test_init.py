@@ -646,7 +646,8 @@ async def test_device_registry_calls(hass):
 
 
 async def test_coordinator_updates(hass, caplog):
-    """Test coordinator."""
+    """Test coordinator updates."""
+    await async_setup_component(hass, "homeassistant", {})
     with patch.dict(os.environ, MOCK_ENVIRON), patch(
         "homeassistant.components.hassio.HassIO.refresh_updates"
     ) as refresh_updates_mock:
@@ -658,12 +659,45 @@ async def test_coordinator_updates(hass, caplog):
 
     with patch(
         "homeassistant.components.hassio.HassIO.refresh_updates",
+    ) as refresh_updates_mock:
+        async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=20))
+        await hass.async_block_till_done()
+        assert refresh_updates_mock.call_count == 0
+
+    with patch(
+        "homeassistant.components.hassio.HassIO.refresh_updates",
+    ) as refresh_updates_mock:
+        await hass.services.async_call(
+            "homeassistant",
+            "update_entity",
+            {
+                "entity_id": [
+                    "update.home_assistant_core_update",
+                    "update.home_assistant_supervisor_update",
+                ]
+            },
+            blocking=True,
+        )
+        assert refresh_updates_mock.call_count == 1
+
+    # There is a 10s cooldown on the debouncer
+    async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=10))
+    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.hassio.HassIO.refresh_updates",
         side_effect=HassioAPIError("Unknown"),
     ) as refresh_updates_mock:
-        async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=5))
-        await hass.async_block_till_done()
-        assert refresh_updates_mock.call_count == 1
-        assert (
-            "Error fetching hassio data: Error on Supervisor API: Unknown"
-            in caplog.text
+        await hass.services.async_call(
+            "homeassistant",
+            "update_entity",
+            {
+                "entity_id": [
+                    "update.home_assistant_core_update",
+                    "update.home_assistant_supervisor_update",
+                ]
+            },
+            blocking=True,
         )
+        assert refresh_updates_mock.call_count == 1
+        assert "Error on Supervisor API: Unknown" in caplog.text
