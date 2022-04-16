@@ -249,7 +249,7 @@ class HistoryStatsSensor(SensorEntity):
             if not had_history and not self._history_current_period:
                 return
 
-        self.value, self.count = self._async_compute_hours_and_changes(
+        self._async_compute_hours_and_changes(
             now_timestamp,
             start_timestamp,
             end_timestamp,
@@ -269,40 +269,42 @@ class HistoryStatsSensor(SensorEntity):
 
     def _async_compute_hours_and_changes(
         self, now_timestamp: float, start_timestamp: float, end_timestamp: float
-    ) -> tuple[float, int]:
+    ) -> None:
         """Compute the hours matched and changes from the history list and first state."""
         # state_changes_during_period is called with include_start_time_state=True
         # which is the default and always provides the state at the start
         # of the period
-        previous_state_matches = (
+        last_state = (
             self._history_current_period
             and self._history_current_period[0].state in self._entity_states
         )
-        last_state_change_timestamp = start_timestamp
+        last_time = start_timestamp
         elapsed = 0.0
-        changes_to_match_state = 0
+        count = 0
 
         # Make calculations
         for item in self._history_current_period:
-            current_state_matches = item.state in self._entity_states
-            state_change_timestamp = item.last_changed.timestamp()
+            current_state = item.state in self._entity_states
+            current_time = item.last_changed.timestamp()
 
-            if previous_state_matches:
-                elapsed += state_change_timestamp - last_state_change_timestamp
-            elif current_state_matches:
-                changes_to_match_state += 1
+            if last_state:
+                elapsed += current_time - last_time
+            if current_state and not last_state:
+                count += 1
 
-            previous_state_matches = current_state_matches
-            last_state_change_timestamp = state_change_timestamp
+            last_state = current_state
+            last_time = current_time
 
         # Count time elapsed between last history state and end of measure
-        if previous_state_matches:
+        if last_state:
             measure_end = min(end_timestamp, now_timestamp)
-            elapsed += measure_end - last_state_change_timestamp
+            elapsed += measure_end - last_time
 
         # Save value in hours
-        hours_matched = elapsed / 3600
-        return hours_matched, changes_to_match_state
+        self.value = elapsed / 3600
+
+        # Save counter
+        self.count = count
 
     def update_period(self):
         """Parse the templates and store a datetime tuple in _period."""
