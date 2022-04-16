@@ -257,7 +257,7 @@ class HistoryStatsSensor(SensorEntity):
             self._history_current_period = []
             self._previous_run_before_start = True
         #
-        # We avoid querying the database the below did NOT happen:
+        # We avoid querying the database if the below did NOT happen:
         #
         # - The previous run happened before the start time
         # - The start time changed
