@@ -8,7 +8,9 @@ import logging
 from typing import Any
 
 import aiohttp
-from httplib2.error import ServerNotFoundError
+from gcal_sync.api import GoogleCalendarService
+from gcal_sync.exceptions import ApiException
+from gcal_sync.model import DateOrDatetime, Event
 from oauth2client.file import Storage
 import voluptuous as vol
 from voluptuous.error import Error as VoluptuousError
@@ -31,13 +33,14 @@ from homeassistant.exceptions import (
     HomeAssistantError,
 )
 from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.typing import ConfigType
 
 from . import config_flow
-from .api import DeviceAuth, GoogleCalendarService
+from .api import ApiAuthImpl, DeviceAuth
 from .const import (
     CONF_CALENDAR_ACCESS,
     DATA_CONFIG,
@@ -212,7 +215,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryAuthFailed(
             "Required scopes are not available, reauth required"
         )
-    calendar_service = GoogleCalendarService(hass, session)
+    calendar_service = GoogleCalendarService(
+        ApiAuthImpl(async_get_clientsession(hass), session)
+    )
     hass.data[DOMAIN][DATA_SERVICE] = calendar_service
 
     await async_setup_services(hass, hass.data[DOMAIN][DATA_CONFIG], calendar_service)
@@ -263,11 +268,12 @@ async def async_setup_services(
     async def _scan_for_calendars(call: ServiceCall) -> None:
         """Scan for new calendars."""
         try:
-            calendars = await calendar_service.async_list_calendars()
-        except ServerNotFoundError as err:
+            result = await calendar_service.async_list_calendars()
+        except ApiException as err:
             raise HomeAssistantError(str(err)) from err
         tasks = []
-        for calendar in calendars:
+        for calendar_item in result.items:
+            calendar = calendar_item.dict(exclude_unset=True)
             calendar[CONF_TRACK] = config[CONF_TRACK_NEW]
             tasks.append(
                 hass.services.async_call(DOMAIN, SERVICE_FOUND_CALENDARS, calendar)
@@ -278,8 +284,8 @@ async def async_setup_services(
 
     async def _add_event(call: ServiceCall) -> None:
         """Add a new event to calendar."""
-        start = {}
-        end = {}
+        start: DateOrDatetime | None = None
+        end: DateOrDatetime | None = None
 
         if EVENT_IN in call.data:
             if EVENT_IN_DAYS in call.data[EVENT_IN]:
@@ -288,8 +294,8 @@ async def async_setup_services(
                 start_in = now + timedelta(days=call.data[EVENT_IN][EVENT_IN_DAYS])
                 end_in = start_in + timedelta(days=1)
 
-                start = {"date": start_in.strftime("%Y-%m-%d")}
-                end = {"date": end_in.strftime("%Y-%m-%d")}
+                start = DateOrDatetime(date=start_in)
+                end = DateOrDatetime(date=end_in)
 
             elif EVENT_IN_WEEKS in call.data[EVENT_IN]:
                 now = datetime.now()
@@ -297,29 +303,34 @@ async def async_setup_services(
                 start_in = now + timedelta(weeks=call.data[EVENT_IN][EVENT_IN_WEEKS])
                 end_in = start_in + timedelta(days=1)
 
-                start = {"date": start_in.strftime("%Y-%m-%d")}
-                end = {"date": end_in.strftime("%Y-%m-%d")}
+                start = DateOrDatetime(date=start_in)
+                end = DateOrDatetime(date=end_in)
 
         elif EVENT_START_DATE in call.data:
-            start = {"date": str(call.data[EVENT_START_DATE])}
-            end = {"date": str(call.data[EVENT_END_DATE])}
+            start = DateOrDatetime(date=call.data[EVENT_START_DATE])
+            end = DateOrDatetime(date=call.data[EVENT_END_DATE])
 
         elif EVENT_START_DATETIME in call.data:
-            start_dt = str(
-                call.data[EVENT_START_DATETIME].strftime("%Y-%m-%dT%H:%M:%S")
+            start_dt = call.data[EVENT_START_DATETIME]
+            end_dt = call.data[EVENT_END_DATETIME]
+            start = DateOrDatetime(
+                date_time=start_dt, timezone=str(hass.config.time_zone)
             )
-            end_dt = str(call.data[EVENT_END_DATETIME].strftime("%Y-%m-%dT%H:%M:%S"))
-            start = {"dateTime": start_dt, "timeZone": str(hass.config.time_zone)}
-            end = {"dateTime": end_dt, "timeZone": str(hass.config.time_zone)}
+            end = DateOrDatetime(date_time=end_dt, timezone=str(hass.config.time_zone))
+
+        if start is None or end is None:
+            raise ValueError(
+                "Missing required fields to set start or end date/datetime"
+            )
 
         await calendar_service.async_create_event(
             call.data[EVENT_CALENDAR_ID],
-            {
-                "summary": call.data[EVENT_SUMMARY],
-                "description": call.data[EVENT_DESCRIPTION],
-                "start": start,
-                "end": end,
-            },
+            Event(
+                summary=call.data[EVENT_SUMMARY],
+                description=call.data[EVENT_DESCRIPTION],
+                start=start,
+                end=end,
+            ),
         )
 
     # Only expose the add event service if we have the correct permissions
