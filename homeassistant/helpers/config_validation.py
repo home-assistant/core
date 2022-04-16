@@ -976,50 +976,35 @@ def custom_serializer(schema: Any) -> Any:
 def expand_condition_shorthand(value: Any | None) -> Any:
     """Expand boolean condition shorthand notations."""
 
-    if not isinstance(value, dict):
+    if not isinstance(value, dict) or CONF_CONDITIONS in value:
         return value
 
-    if CONF_CONDITIONS not in value:
+    for key, schema in (
+        ("and", AND_CONDITION_SHORTHAND_SCHEMA),
+        ("or", OR_CONDITION_SHORTHAND_SCHEMA),
+        ("not", NOT_CONDITION_SHORTHAND_SCHEMA),
+    ):
         try:
-            AND_CONDITION_SHORTHAND_SCHEMA(value)
+            schema(value)
+            return {
+                CONF_CONDITION: key,
+                CONF_CONDITIONS: value[key],
+                **{k: value[k] for k in value if k != key},
+            }
+        except vol.MultipleInvalid:
+            pass
+
+    if isinstance(value.get(CONF_CONDITION), list):
+        try:
+            CONDITION_SHORTHAND_SCHEMA(value)
             return {
                 CONF_CONDITION: "and",
-                CONF_CONDITIONS: value["and"],
-                **{k: value[k] for k in value if k != "and"},
+                CONF_CONDITIONS: value[CONF_CONDITION],
+                **{k: value[k] for k in value if k != CONF_CONDITION},
             }
         except vol.MultipleInvalid:
             pass
 
-        try:
-            OR_CONDITION_SHORTHAND_SCHEMA(value)
-            return {
-                CONF_CONDITION: "or",
-                CONF_CONDITIONS: value["or"],
-                **{k: value[k] for k in value if k != "or"},
-            }
-        except vol.MultipleInvalid:
-            pass
-
-        try:
-            NOT_CONDITION_SHORTHAND_SCHEMA(value)
-            return {
-                CONF_CONDITION: "not",
-                CONF_CONDITIONS: value["not"],
-                **{k: value[k] for k in value if k != "not"},
-            }
-        except vol.MultipleInvalid:
-            pass
-
-        if isinstance(value.get(CONF_CONDITION), list):
-            try:
-                CONDITION_SHORTHAND_SCHEMA(value)
-                return {
-                    CONF_CONDITION: "and",
-                    CONF_CONDITIONS: value[CONF_CONDITION],
-                    **{k: value[k] for k in value if k != CONF_CONDITION},
-                }
-            except vol.MultipleInvalid:
-                pass
     return value
 
 
