@@ -226,9 +226,15 @@ class HistoryStatsSensor(SensorEntity):
             # History cannot tell the future
             self._history_current_period = []
             self._previous_run_before_start = True
-        # If the period is the same or expanding and it was already
-        # in the start window we can accept state change events
-        # instead of doing database queries
+        #
+        # We avoid querying the database if we are calculating history
+        # as long as the following did NOT happen:
+        #
+        # - The previous run happened before the start time
+        # - The start time changed
+        # - The period shrank in size
+        # - The previous period ended before now
+        #
         elif (
             not self._previous_run_before_start
             and start_timestamp == p_start_timestamp
@@ -240,12 +246,6 @@ class HistoryStatsSensor(SensorEntity):
                 (end_timestamp >= p_end_timestamp and p_end_timestamp <= now_timestamp)
             )
         ):
-            # As long as the period window doesn't shrink
-            # there can never be any new states in the database
-            # that this code would not have seen from state_changed
-            # events since we would have already run the query
-            # for them when the start time changed and any
-            # state change events would have been appended
             new_data = False
             if event and event.data["new_state"] is not None:
                 new_state: State = event.data["new_state"]
