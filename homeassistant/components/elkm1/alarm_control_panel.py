@@ -26,7 +26,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from . import ElkAttachedEntity, create_elk_entities
+from . import ElkAttachedEntity, ElkEntity, create_elk_entities
 from .const import (
     ATTR_CHANGED_BY_ID,
     ATTR_CHANGED_BY_KEYPAD,
@@ -61,7 +61,7 @@ async def async_setup_entry(
     """Set up the ElkM1 alarm platform."""
     elk_data = hass.data[DOMAIN][config_entry.entry_id]
     elk = elk_data["elk"]
-    entities: list[ElkArea] = []
+    entities: list[ElkEntity] = []
     create_elk_entities(elk_data, elk.areas, "area", ElkArea, entities)
     async_add_entities(entities, True)
 
