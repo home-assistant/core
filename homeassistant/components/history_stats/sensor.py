@@ -133,10 +133,16 @@ def async_calculate_period(
         assert end is not None
         assert duration is not None
         start = end - duration
+
+    if start > dt_util.now():
+        # History hasn't been written yet for this period
+        return None
+
     if end is None:
         assert start is not None
         assert duration is not None
         end = start + duration
+
     return start, end
 
 
