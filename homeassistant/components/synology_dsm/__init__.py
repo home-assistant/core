@@ -306,11 +306,13 @@ class SynologyDSMDeviceEntity(SynologyDSMBaseEntity):
             self._device_firmware = disk["firm"]
             self._device_type = disk["diskType"]
 
-        self._attr_name = f"{self._api.network.hostname} ({self._device_name} - {self._device_type}) {description.name}"
+        self._attr_name = (
+            f"{self._api.network.hostname} ({self._device_name}) {description.name}"
+        )
         self._attr_unique_id += f"_{self._device_id}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{self._api.information.serial}_{self._device_id}")},
-            name=f"{self._api.network.hostname} ({self._device_name} - {self._device_type})",
+            name=f"{self._api.network.hostname} ({self._device_name})",
             manufacturer=self._device_manufacturer,
             model=self._device_model,
             sw_version=self._device_firmware,
