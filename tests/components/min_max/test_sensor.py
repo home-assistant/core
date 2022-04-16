@@ -27,6 +27,31 @@ MEAN_4_DIGITS = round(sum(VALUES) / COUNT, 4)
 MEDIAN = round(statistics.median(VALUES), 2)
 
 
+async def test_default_name_sensor(hass):
+    """Test the min sensor with a default name."""
+    config = {
+        "sensor": {
+            "platform": "min_max",
+            "type": "min",
+            "entity_ids": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+        }
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    entity_ids = config["sensor"]["entity_ids"]
+
+    for entity_id, value in dict(zip(entity_ids, VALUES)).items():
+        hass.states.async_set(entity_id, value)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.min_sensor")
+
+    assert str(float(MIN_VALUE)) == state.state
+    assert entity_ids[2] == state.attributes.get("min_entity_id")
+
+
 async def test_min_sensor(hass):
     """Test the min sensor."""
     config = {
