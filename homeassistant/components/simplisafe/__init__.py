@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Iterable
 from datetime import timedelta
-from typing import Any, cast
+from typing import Any
 
 from simplipy import API
 from simplipy.device import Device, DeviceTypes
@@ -51,6 +51,7 @@ from homeassistant.const import (
     ATTR_DEVICE_ID,
     CONF_CODE,
     CONF_TOKEN,
+    CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
@@ -90,7 +91,6 @@ from .const import (
     ATTR_EXIT_DELAY_HOME,
     ATTR_LIGHT,
     ATTR_VOICE_PROMPT_VOLUME,
-    CONF_USER_ID,
     DOMAIN,
     LOGGER,
 )
@@ -253,7 +253,7 @@ def _async_get_system_for_service_call(
     for entry_id in base_station_device_entry.config_entries:
         if (simplisafe := hass.data[DOMAIN].get(entry_id)) is None:
             continue
-        return cast(SystemType, simplisafe.systems[system_id])
+        return simplisafe.systems[system_id]
 
     raise ValueError(f"No system for device ID: {device_id}")
 
@@ -280,11 +280,15 @@ def _async_standardize_config_entry(hass: HomeAssistant, entry: ConfigEntry) -> 
         raise ConfigEntryAuthFailed(
             "New SimpliSafe OAuth standard requires re-authentication"
         )
+    if CONF_USERNAME not in entry.data:
+        raise ConfigEntryAuthFailed(
+            "Must re-authenticate with SimpliSafe username/email"
+        )
 
     entry_updates = {}
     if not entry.unique_id:
         # If the config entry doesn't already have a unique ID, set one:
-        entry_updates["unique_id"] = entry.data[CONF_USER_ID]
+        entry_updates["unique_id"] = entry.data[CONF_USERNAME]
     if CONF_CODE in entry.data:
         # If an alarm code was provided as part of configuration.yaml, pop it out of
         # the config entry's data and move it to options:
@@ -598,7 +602,7 @@ class SimpliSafe:
         self.coordinator = DataUpdateCoordinator(
             self._hass,
             LOGGER,
-            name=self.entry.data[CONF_USER_ID],
+            name=self.entry.data[CONF_USERNAME],
             update_interval=DEFAULT_SCAN_INTERVAL,
             update_method=self.async_update,
         )
