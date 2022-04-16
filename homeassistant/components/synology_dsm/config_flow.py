@@ -18,7 +18,12 @@ import voluptuous as vol
 
 from homeassistant import exceptions
 from homeassistant.components import ssdp
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigEntryState,
+    ConfigFlow,
+    OptionsFlow,
+)
 from homeassistant.const import (
     CONF_DISKS,
     CONF_HOST,
@@ -264,6 +269,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if (
             existing_entry
+            and existing_entry.state != ConfigEntryState.LOADED
             and existing_entry.data[CONF_HOST] != parsed_url.hostname
             and not fqdn_with_ssl_verification
         ):
