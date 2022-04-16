@@ -229,7 +229,7 @@ class HistoryStatsSensor(SensorEntity):
                 new_state: State = event.data["new_state"]
                 if start <= new_state.last_changed <= end:
                     self._history_current_period.append(new_state)
-            elif end_timestamp < now_timestamp:
+            if end_timestamp < now_timestamp:
                 # If period has not changed and current time after the period end...
                 # Don't compute anything as the value cannot have changed
                 return
