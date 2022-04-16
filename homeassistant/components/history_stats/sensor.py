@@ -18,7 +18,7 @@ from homeassistant.const import (
     PERCENTAGE,
     TIME_HOURS,
 )
-from homeassistant.core import CoreState, HomeAssistant, callback
+from homeassistant.core import CoreState, Event, HomeAssistant, State, callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -127,32 +127,36 @@ class HistoryStatsSensor(SensorEntity):
         self._period = (datetime.datetime.now(), datetime.datetime.now())
         self.value = None
         self.count = None
+        self._history_current_period: list[State] = []
+
+    @callback
+    def _async_start_refresh(self, *_) -> None:
+        """Register state tracking."""
+        self.async_schedule_update_ha_state(True)
+        self.async_on_remove(
+            async_track_state_change_event(
+                self.hass, [self._entity_id], self._async_update_from_event
+            )
+        )
 
     async def async_added_to_hass(self):
         """Create listeners when the entity is added."""
-
-        @callback
-        def start_refresh(*args):
-            """Register state tracking."""
-
-            @callback
-            def force_refresh(*args):
-                """Force the component to refresh."""
-                self.async_schedule_update_ha_state(True)
-
-            force_refresh()
-            self.async_on_remove(
-                async_track_state_change_event(
-                    self.hass, [self._entity_id], force_refresh
-                )
-            )
-
         if self.hass.state == CoreState.running:
-            start_refresh()
+            self._async_start_refresh()
             return
-
         # Delay first refresh to keep startup fast
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_refresh)
+        self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_START, self._async_start_refresh
+        )
+
+    async def async_update(self) -> None:
+        """Get the latest data and updates the states."""
+        await self._async_update(None)
+
+    async def _async_update_from_event(self, event: Event) -> None:
+        """Do an update and write the state if its changed."""
+        await self._async_update(event)
+        self.async_write_ha_state()
 
     @property
     def name(self):
@@ -193,8 +197,8 @@ class HistoryStatsSensor(SensorEntity):
         """Return the icon to use in the frontend, if any."""
         return ICON
 
-    async def async_update(self):
-        """Get the latest data and updates the states."""
+    async def _async_update(self, event: Event | None) -> None:
+        """Process an update."""
         # Get previous values of start and end
         p_start, p_end = self._period
 
@@ -216,60 +220,87 @@ class HistoryStatsSensor(SensorEntity):
         p_end_timestamp = math.floor(dt_util.as_timestamp(p_end))
         now_timestamp = math.floor(dt_util.as_timestamp(now))
 
-        # If period has not changed and current time after the period end...
-        if (
-            start_timestamp == p_start_timestamp
-            and end_timestamp == p_end_timestamp
-            and end_timestamp <= now_timestamp
-        ):
-            # Don't compute anything as the value cannot have changed
-            return
-
-        await get_instance(self.hass).async_add_executor_job(
-            self._update, start, end, now_timestamp, start_timestamp, end_timestamp
+        period_is_the_same = (
+            start_timestamp == p_start_timestamp and end_timestamp == p_end_timestamp
         )
 
-    def _update(self, start, end, now_timestamp, start_timestamp, end_timestamp):
-        # Get history between start and end
-        history_list = history.state_changes_during_period(
-            self.hass, start, end, str(self._entity_id), no_attributes=True
+        if period_is_the_same:
+            if event and event.data["new_state"] is not None:
+                new_state: State = event.data["new_state"]
+                if start <= new_state.last_changed <= end:
+                    self._history_current_period.append(new_state)
+            elif end_timestamp < now_timestamp:
+                # If period has not changed and current time after the period end...
+                # Don't compute anything as the value cannot have changed
+                return
+        else:
+            # The period has changed, load from db
+            had_history = bool(self._history_current_period)
+            self._history_current_period = await get_instance(
+                self.hass
+            ).async_add_executor_job(
+                self._update_from_database,
+                start,
+                end,
+            )
+            # If we never had any history, the state is unknown
+            if not had_history and not self._history_current_period:
+                return
+
+        self.value, self.count = self._async_compute_hours_and_changes(
+            now_timestamp,
+            start_timestamp,
+            end_timestamp,
         )
 
-        if self._entity_id not in history_list:
-            return
+    def _update_from_database(
+        self, start: datetime.datetime, end: datetime.datetime
+    ) -> list[State]:
+        return history.state_changes_during_period(
+            self.hass,
+            start,
+            end,
+            self._entity_id,
+            include_start_time_state=True,
+            no_attributes=True,
+        ).get(self._entity_id, [])
 
-        # Get the first state
-        last_state = history.get_state(
-            self.hass, start, self._entity_id, no_attributes=True
+    def _async_compute_hours_and_changes(
+        self, now_timestamp: float, start_timestamp: float, end_timestamp: float
+    ) -> tuple[float, int]:
+        """Compute the hours matched and changes from the history list and first state."""
+        # state_changes_during_period is called with include_start_time_state=True
+        # which is the default and always provides the state at the start
+        # of the period
+        previous_state_matches = (
+            self._history_current_period
+            and self._history_current_period[0].state in self._entity_states
         )
-        last_state = last_state is not None and last_state in self._entity_states
-        last_time = start_timestamp
-        elapsed = 0
-        count = 0
+        last_state_change_timestamp = start_timestamp
+        elapsed = 0.0
+        changes_to_match_state = 0
 
         # Make calculations
-        for item in history_list.get(self._entity_id):
-            current_state = item.state in self._entity_states
-            current_time = item.last_changed.timestamp()
+        for item in self._history_current_period:
+            current_state_matches = item.state in self._entity_states
+            state_change_timestamp = item.last_changed.timestamp()
 
-            if last_state:
-                elapsed += current_time - last_time
-            if current_state and not last_state:
-                count += 1
+            if previous_state_matches:
+                elapsed += state_change_timestamp - last_state_change_timestamp
+            elif current_state_matches:
+                changes_to_match_state += 1
 
-            last_state = current_state
-            last_time = current_time
+            previous_state_matches = current_state_matches
+            last_state_change_timestamp = state_change_timestamp
 
         # Count time elapsed between last history state and end of measure
-        if last_state:
+        if previous_state_matches:
             measure_end = min(end_timestamp, now_timestamp)
-            elapsed += measure_end - last_time
+            elapsed += measure_end - last_state_change_timestamp
 
         # Save value in hours
-        self.value = elapsed / 3600
-
-        # Save counter
-        self.count = count
+        hours_matched = elapsed / 3600
+        return hours_matched, changes_to_match_state
 
     def update_period(self):
         """Parse the templates and store a datetime tuple in _period."""
@@ -325,9 +356,10 @@ class HistoryStatsSensor(SensorEntity):
         if start > dt_util.now():
             # History hasn't been written yet for this period
             return
-        if dt_util.now() < end:
-            # No point in making stats of the future
-            end = dt_util.now()
+
+        # If we reduce the period because we haven't reached the end
+        # yet, the ratio calculations will be for a reduced period
+        # size and thus unexpected.
 
         self._period = start, end
 
