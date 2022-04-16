@@ -128,6 +128,7 @@ class HistoryStatsSensor(SensorEntity):
         self.value = None
         self.count = None
         self._history_current_period: list[State] = []
+        self._previous_run_before_start = False
 
     @callback
     def _async_start_refresh(self, *_) -> None:
@@ -221,15 +222,24 @@ class HistoryStatsSensor(SensorEntity):
         p_end_timestamp = math.floor(dt_util.as_timestamp(p_end))
         now_timestamp = math.floor(dt_util.as_timestamp(now))
 
-        start_is_fixed_and_end_did_not_shrink_or_miss_events = start_timestamp == p_start_timestamp and (
-            end_timestamp == p_end_timestamp
-            or
-            # The period can expand as long as the previous period end
-            # was not before now (otherwise it would miss events)
-            (end_timestamp >= p_end_timestamp and p_end_timestamp <= now_timestamp)
-        )
-
-        if start_is_fixed_and_end_did_not_shrink_or_miss_events:
+        if now_timestamp < start_timestamp:
+            # History cannot tell the future
+            self._history_current_period = []
+            self._previous_run_before_start = True
+        # If the period is the same or exapanding and it was already
+        # in the start window we can accept state change events
+        # instead of doing database queries
+        elif (
+            not self._previous_run_before_start
+            and start_timestamp == p_start_timestamp
+            and (
+                end_timestamp == p_end_timestamp
+                or
+                # The period can expand as long as the previous period end
+                # was not before now (otherwise it would miss events)
+                (end_timestamp >= p_end_timestamp and p_end_timestamp <= now_timestamp)
+            )
+        ):
             # As long as the period window doesn't shrink
             # there can never be any new states in the database
             # that this code would not have seen from state_changed
@@ -247,8 +257,6 @@ class HistoryStatsSensor(SensorEntity):
                 # Don't compute anything as the value cannot have changed
                 return
         else:
-            # The period has changed, load from db
-            had_history = bool(self._history_current_period)
             self._history_current_period = await get_instance(
                 self.hass
             ).async_add_executor_job(
@@ -256,9 +264,12 @@ class HistoryStatsSensor(SensorEntity):
                 start,
                 end,
             )
-            # If we never had any history, the state is unknown
-            if not had_history and not self._history_current_period:
-                return
+            self._previous_run_before_start = False
+
+        if not self._history_current_period:
+            self.value = None
+            self.count = None
+            return
 
         self._async_compute_hours_and_changes(
             now_timestamp,
@@ -371,11 +382,6 @@ class HistoryStatsSensor(SensorEntity):
         # Calculate start or end using the duration
         if start is None:
             start = end - self._duration
-
-        if start > dt_util.now():
-            # History hasn't been written yet for this period
-            return
-
         if end is None:
             end = start + self._duration
 
