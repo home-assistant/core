@@ -94,10 +94,10 @@ class AemetWeather(CoordinatorEntity[WeatherUpdateCoordinator], WeatherEntity):
 
     @property
     def wind_bearing(self):
-        """Return the temperature."""
+        """Return the wind bearing."""
         return self.coordinator.data[ATTR_API_WIND_BEARING]
 
     @property
     def wind_speed(self):
-        """Return the temperature."""
+        """Return the wind speed."""
         return self.coordinator.data[ATTR_API_WIND_SPEED]
