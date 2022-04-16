@@ -1063,6 +1063,7 @@ SCRIPT_ACTION_BASE_SCHEMA = {
     vol.Optional(CONF_ALIAS): string,
     vol.Optional(CONF_CONTINUE_ON_ERROR): boolean,
     vol.Optional(CONF_ENABLED): boolean,
+    vol.Optional(CONF_VARIABLES): SCRIPT_VARIABLES_SCHEMA,
 }
 
 EVENT_SCHEMA = vol.Schema(
@@ -1104,6 +1105,7 @@ NUMERIC_STATE_THRESHOLD_SCHEMA = vol.Any(
 CONDITION_BASE_SCHEMA = {
     vol.Optional(CONF_ALIAS): string,
     vol.Optional(CONF_ENABLED): boolean,
+    vol.Optional(CONF_VARIABLES): SCRIPT_VARIABLES_SCHEMA,
 }
 
 NUMERIC_STATE_CONDITION_SCHEMA = vol.All(
@@ -1542,9 +1544,6 @@ def determine_script_action(action: dict[str, Any]) -> str:
     if CONF_WAIT_FOR_TRIGGER in action:
         return SCRIPT_ACTION_WAIT_FOR_TRIGGER
 
-    if CONF_VARIABLES in action:
-        return SCRIPT_ACTION_VARIABLES
-
     if CONF_IF in action:
         return SCRIPT_ACTION_IF
 
@@ -1559,6 +1558,11 @@ def determine_script_action(action: dict[str, Any]) -> str:
 
     if CONF_PARALLEL in action:
         return SCRIPT_ACTION_PARALLEL
+
+    # All actions support variables, so if no other action matches,
+    # but it has a variable section: it's a variable action.
+    if CONF_VARIABLES in action:
+        return SCRIPT_ACTION_VARIABLES
 
     raise ValueError("Unable to determine action")
 
