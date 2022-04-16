@@ -226,7 +226,7 @@ class HistoryStatsSensor(SensorEntity):
             # History cannot tell the future
             self._history_current_period = []
             self._previous_run_before_start = True
-        # If the period is the same or exapanding and it was already
+        # If the period is the same or expanding and it was already
         # in the start window we can accept state change events
         # instead of doing database queries
         elif (
