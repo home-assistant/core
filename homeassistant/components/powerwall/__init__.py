@@ -162,6 +162,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.debug("Authentication failed", exc_info=err)
         http_session.close()
         raise ConfigEntryAuthFailed from err
+    except APIError as err:
+        http_session.close()
+        raise ConfigEntryNotReady from err
 
     gateway_din = base_info.gateway_din
     if gateway_din and entry.unique_id is not None and is_ip_address(entry.unique_id):
