@@ -240,10 +240,10 @@ class HistoryStatsSensor(SensorEntity):
             and start_timestamp == p_start_timestamp
             and (
                 end_timestamp == p_end_timestamp
-                or
-                # The period can expand as long as the previous period end
-                # was not before now (otherwise it would miss events)
-                (end_timestamp >= p_end_timestamp and p_end_timestamp <= now_timestamp)
+                or (
+                    end_timestamp >= p_end_timestamp
+                    and p_end_timestamp <= now_timestamp
+                )
             )
         ):
             new_data = False
