@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from geocachingapi.exceptions import GeocachingApiError
 from geocachingapi.geocachingapi import GeocachingApi
-from geocachingapi.models import GeocachingApiEnvironment, GeocachingStatus
+from geocachingapi.models import GeocachingStatus
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -11,7 +11,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, LOGGER, UPDATE_INTERVAL
+from .const import DOMAIN, ENVIRONMENT, LOGGER, UPDATE_INTERVAL
 
 
 class GeocachingDataUpdateCoordinator(DataUpdateCoordinator[GeocachingStatus]):
@@ -32,7 +32,7 @@ class GeocachingDataUpdateCoordinator(DataUpdateCoordinator[GeocachingStatus]):
 
         client_session = async_get_clientsession(hass)
         self.geocaching = GeocachingApi(
-            environment=GeocachingApiEnvironment.Staging,
+            environment=ENVIRONMENT,
             token=session.token["access_token"],
             session=client_session,
             token_refresh_method=async_token_refresh,

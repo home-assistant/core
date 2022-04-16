@@ -7,8 +7,8 @@ from aiohttp.test_utils import TestClient
 
 from homeassistant.components.geocaching.const import (
     DOMAIN,
+    ENVIRONMENT,
     ENVIRONMENT_URLS,
-    GeocachingApiEnvironment,
 )
 from homeassistant.config_entries import (
     DEFAULT_DISCOVERY_UNIQUE_ID,
@@ -27,7 +27,7 @@ from . import CLIENT_ID, CLIENT_SECRET, REDIRECT_URI
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
-CURRENT_ENVIRONMENT_URLS = ENVIRONMENT_URLS[GeocachingApiEnvironment.Staging]
+CURRENT_ENVIRONMENT_URLS = ENVIRONMENT_URLS[ENVIRONMENT]
 
 
 async def setup_geocaching_component(hass: HomeAssistant) -> bool:
