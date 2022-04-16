@@ -256,28 +256,25 @@ class HistoryStatsSensor(SensorEntity):
             # History cannot tell the future
             self._history_current_period = []
             self._previous_run_before_start = True
-        # If the period is the same or exapanding and it was already
-        # in the start window we can accept state change events
-        # instead of doing database queries
+        #
+        # We avoid querying the database the below did NOT happen:
+        #
+        # - The previous run happened before the start time
+        # - The start time changed
+        # - The period shrank in size
+        # - The previous period ended before now
+        #
         elif (
             not self._previous_run_before_start
             and current_period_start_timestamp == previous_period_start_timestamp
             and (
                 current_period_end_timestamp == previous_period_end_timestamp
-                or
-                # The period can expand as long as the previous period end
-                # was not before now (otherwise it would miss events)
-                (
+                or (
                     current_period_end_timestamp >= previous_period_end_timestamp
                     and previous_period_end_timestamp <= now_timestamp
                 )
             )
         ):
-            # As long as the period window doesn't shrink
-            # there can never be any new states in the database
-            # since we would have already run the query
-            # for them when the start time changed and any
-            # state change events would have been appended
             new_data = False
             if event and event.data["new_state"] is not None:
                 new_state: State = event.data["new_state"]
@@ -289,7 +286,6 @@ class HistoryStatsSensor(SensorEntity):
                 # Don't compute anything as the value cannot have changed
                 return
         else:
-            # The period has changed, load from db
             self._history_current_period = await get_instance(
                 self.hass
             ).async_add_executor_job(
