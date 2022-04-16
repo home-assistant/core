@@ -70,7 +70,6 @@ HVAC_MODE_TO_DECONZ: dict[str, str] = {
     HVAC_MODE_HEAT: THERMOSTAT_MODE_HEAT,
     HVAC_MODE_OFF: THERMOSTAT_MODE_OFF,
 }
-DECONZ_TO_HVAC_MODE = {value: key for key, value in HVAC_MODE_TO_DECONZ.items()}
 
 DECONZ_PRESET_AUTO = "auto"
 DECONZ_PRESET_COMPLEX = "complex"
@@ -156,6 +155,10 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
             if "coolsetpoint" in device.raw["config"]:
                 self._attr_hvac_modes.append(HVAC_MODE_COOL)
 
+        self._deconz_to_hvac_mode = {
+            HVAC_MODE_TO_DECONZ[item]: item for item in self._attr_hvac_modes
+        }
+
         self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
 
         if device.fan_mode:
@@ -190,8 +193,8 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
 
         Need to be one of HVAC_MODE_*.
         """
-        if self._device.mode in self._attr_hvac_modes:
-            return DECONZ_TO_HVAC_MODE[self._device.mode]
+        if self._device.mode in self._deconz_to_hvac_mode:
+            return self._deconz_to_hvac_mode[self._device.mode]
         return HVAC_MODE_HEAT if self._device.state_on else HVAC_MODE_OFF
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
