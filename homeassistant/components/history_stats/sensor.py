@@ -124,7 +124,7 @@ class HistoryStatsSensor(SensorEntity):
         self._name = name
         self._unit_of_measurement = UNITS[sensor_type]
 
-        self._period = (datetime.datetime.now(), datetime.datetime.now())
+        self._period = (datetime.datetime.min, datetime.datetime.min)
         self.value = None
         self.count = None
         self._history_current_period: list[State] = []
@@ -200,6 +200,7 @@ class HistoryStatsSensor(SensorEntity):
     async def _async_update(self, event: Event | None) -> None:
         """Process an update."""
         # Get previous values of start and end
+
         p_start, p_end = self._period
 
         # Parse templates
@@ -220,11 +221,20 @@ class HistoryStatsSensor(SensorEntity):
         p_end_timestamp = math.floor(dt_util.as_timestamp(p_end))
         now_timestamp = math.floor(dt_util.as_timestamp(now))
 
-        period_is_the_same = (
-            start_timestamp == p_start_timestamp and end_timestamp == p_end_timestamp
+        start_is_fixed_and_end_did_not_shrink_or_miss_events = start_timestamp == p_start_timestamp and (
+            end_timestamp == p_end_timestamp
+            or
+            # The period can expand as long as the previous period end
+            # was not before now (otherwise it would miss events)
+            (end_timestamp >= p_end_timestamp and p_end_timestamp <= now_timestamp)
         )
 
-        if period_is_the_same:
+        if start_is_fixed_and_end_did_not_shrink_or_miss_events:
+            # As long as the period window doesn't shrink
+            # there can never be any new states in the database
+            # since we would have already run the query
+            # for them when the start time changed and any
+            # state change events would have been appended
             new_data = False
             if event and event.data["new_state"] is not None:
                 new_state: State = event.data["new_state"]
