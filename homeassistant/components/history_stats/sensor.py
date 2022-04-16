@@ -232,6 +232,7 @@ class HistoryStatsSensor(SensorEntity):
         if start_is_fixed_and_end_did_not_shrink_or_miss_events:
             # As long as the period window doesn't shrink
             # there can never be any new states in the database
+            # that this code would not have seen from state_changed events
             # since we would have already run the query
             # for them when the start time changed and any
             # state change events would have been appended
