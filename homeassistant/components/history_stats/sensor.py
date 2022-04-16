@@ -198,7 +198,7 @@ class HistoryStatsSensor(SensorEntity):
         return ICON
 
     async def _async_update(self, event: Event | None) -> None:
-        """Process an update."""
+        """Get the latest data and updates the states."""
         # Get previous values of start and end
 
         p_start, p_end = self._period
