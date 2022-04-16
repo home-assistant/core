@@ -64,6 +64,7 @@ homeassistant.components.crownstone.*
 homeassistant.components.cpuspeed.*
 homeassistant.components.deconz
 homeassistant.components.deconz.alarm_control_panel
+homeassistant.components.deconz.binary_sensor
 homeassistant.components.deconz.climate
 homeassistant.components.deconz.config_flow
 homeassistant.components.deconz.diagnostics
