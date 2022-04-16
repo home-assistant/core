@@ -1024,9 +1024,6 @@ async def test_does_not_work_into_the_future(
         assert hass.states.get("sensor.sensor1").state == "0.08"
 
     past_the_window = start_time + timedelta(hours=25)
-    import pprint
-
-    pprint.pprint(["fire at", past_the_window])
     with patch(
         "homeassistant.components.recorder.history.state_changes_during_period",
         return_value=[],
