@@ -271,6 +271,12 @@ class HistoryStatsSensor(SensorEntity):
         self, now_timestamp: float, start_timestamp: float, end_timestamp: float
     ) -> None:
         """Compute the hours matched and changes from the history list and first state."""
+        _LOGGER.debug(
+            "%s: _async_compute_hours_and_changes: %s (%s)",
+            self.entity_id,
+            self._history_current_period,
+            self._entity_states,
+        )
         # state_changes_during_period is called with include_start_time_state=True
         # which is the default and always provides the state at the start
         # of the period
