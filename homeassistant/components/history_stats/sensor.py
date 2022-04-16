@@ -241,7 +241,7 @@ class HistoryStatsSensor(SensorEntity):
             self._history_current_period = await get_instance(
                 self.hass
             ).async_add_executor_job(
-                self._update_from_database,
+                self._update,
                 start,
                 end,
             )
@@ -255,9 +255,9 @@ class HistoryStatsSensor(SensorEntity):
             end_timestamp,
         )
 
-    def _update_from_database(
-        self, start: datetime.datetime, end: datetime.datetime
-    ) -> list[State]:
+    def _update(self, start: datetime.datetime, end: datetime.datetime) -> list[State]:
+        """Update from the database."""
+        # Get history between start and end
         return history.state_changes_during_period(
             self.hass,
             start,
