@@ -3,7 +3,7 @@
     "flow_title": "{name} ({host})",
     "step": {
       "user": {
-        "title": "{name}",
+        "title": "Setup a new Viessmann device",
         "description": "Set up ViCare integration. To generate API key go to https://developer.viessmann.com",
         "data": {
           "username": "[%key:common::config_flow::data::email%]",
