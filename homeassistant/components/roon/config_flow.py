@@ -23,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 DATA_SCHEMA = vol.Schema(
     {
         vol.Required("host", default="192.168.1.X"): cv.string,
-        vol.Required("port", default="9330"): cv.port,
+        vol.Required("port", default=9330): cv.port,
     }
 )
 
