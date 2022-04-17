@@ -571,6 +571,9 @@ dweepy==0.3.0
 # homeassistant.components.dynalite
 dynalite_devices==0.1.46
 
+# homeassistant.components.rainforest_eagle
+eagle100==0.1.0
+
 # homeassistant.components.ebusd
 ebusdpy==0.0.17
 
@@ -2347,9 +2350,6 @@ twilio==6.32.0
 
 # homeassistant.components.twitch
 twitchAPI==2.5.2
-
-# homeassistant.components.rainforest_eagle
-eagle100==0.1.0
 
 # homeassistant.components.ukraine_alarm
 uasiren==0.0.1
