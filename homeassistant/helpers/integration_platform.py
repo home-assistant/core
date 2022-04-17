@@ -29,12 +29,12 @@ async def _async_process_single_integration_platform(
     hass: HomeAssistant, component_name: str, integration_platform: IntegrationPlatform
 ) -> None:
     """Process a single integration platform."""
-    platform_name = integration_platform.platform_name
     if component_name in integration_platform.seen_components:
         return
     integration_platform.seen_components.add(component_name)
 
     integration = await async_get_integration(hass, component_name)
+    platform_name = integration_platform.platform_name
 
     try:
         platform = integration.get_platform(platform_name)
