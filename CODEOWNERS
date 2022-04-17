@@ -78,6 +78,8 @@ build.json @home-assistant/supervisor
 /tests/components/anthemav/ @hyralex
 /homeassistant/components/apache_kafka/ @bachya
 /tests/components/apache_kafka/ @bachya
+/homeassistant/components/apcupsd/ @yxwangcs
+/tests/components/apcupsd/ @yxwangcs
 /homeassistant/components/api/ @home-assistant/core
 /tests/components/api/ @home-assistant/core
 /homeassistant/components/apple_tv/ @postlund
