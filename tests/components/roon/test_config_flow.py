@@ -153,22 +153,19 @@ async def test_unsuccessful_discovery_user_form_and_auth(hass):
 async def test_duplicate_config(hass):
     """Test user adding the host via the form for host that is already configured."""
 
+    CONFIG = {"host": "1.1.1.1"}
+
+    MockConfigEntry(domain=DOMAIN, unique_id="0123456789", data=CONFIG).add_to_hass(
+        hass
+    )
+
     with patch(
         "homeassistant.components.roon.config_flow.RoonApi",
         return_value=RoonApiMock(),
     ), patch(
         "homeassistant.components.roon.config_flow.RoonDiscovery",
         return_value=RoonDiscoveryFailedMock(),
-    ), patch(
-        "homeassistant.components.roon.async_setup_entry",
-        return_value=True,
     ):
-
-        CONFIG = {"host": "1.1.1.1"}
-
-        MockConfigEntry(domain=DOMAIN, unique_id="0123456789", data=CONFIG).add_to_hass(
-            hass
-        )
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
