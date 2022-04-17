@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 import logging
 from typing import Any
 
-from aioasuswrt.asuswrt import AsusWrt
+from aioasuswrt.asuswrt import AsusWrt, Device as WrtDevice
 
 from homeassistant.components.device_tracker.const import (
     CONF_CONSIDER_HOME,
@@ -79,17 +79,17 @@ def _get_dict(keys: list, values: list) -> dict[str, Any]:
 class AsusWrtSensorDataHandler:
     """Data handler for AsusWrt sensor."""
 
-    def __init__(self, hass, api):
+    def __init__(self, hass: HomeAssistant, api: AsusWrt) -> None:
         """Initialize a AsusWrt sensor data handler."""
         self._hass = hass
         self._api = api
         self._connected_devices = 0
 
-    async def _get_connected_devices(self):
+    async def _get_connected_devices(self) -> dict[str, int]:
         """Return number of connected devices."""
         return {SENSORS_CONNECTED_DEVICE[0]: self._connected_devices}
 
-    async def _get_bytes(self):
+    async def _get_bytes(self) -> dict[str, Any]:
         """Fetch byte information from the router."""
         try:
             datas = await self._api.async_get_bytes_total()
@@ -98,7 +98,7 @@ class AsusWrtSensorDataHandler:
 
         return _get_dict(SENSORS_BYTES, datas)
 
-    async def _get_rates(self):
+    async def _get_rates(self) -> dict[str, Any]:
         """Fetch rates information from the router."""
         try:
             rates = await self._api.async_get_current_transfer_rates()
@@ -107,7 +107,7 @@ class AsusWrtSensorDataHandler:
 
         return _get_dict(SENSORS_RATES, rates)
 
-    async def _get_load_avg(self):
+    async def _get_load_avg(self) -> dict[str, Any]:
         """Fetch load average information from the router."""
         try:
             avg = await self._api.async_get_loadavg()
@@ -116,7 +116,7 @@ class AsusWrtSensorDataHandler:
 
         return _get_dict(SENSORS_LOAD_AVG, avg)
 
-    async def _get_temperatures(self):
+    async def _get_temperatures(self) -> dict[str, Any]:
         """Fetch temperatures information from the router."""
         try:
             temperatures = await self._api.async_get_temperature()
@@ -125,14 +125,16 @@ class AsusWrtSensorDataHandler:
 
         return temperatures
 
-    def update_device_count(self, conn_devices: int):
+    def update_device_count(self, conn_devices: int) -> bool:
         """Update connected devices attribute."""
         if self._connected_devices == conn_devices:
             return False
         self._connected_devices = conn_devices
         return True
 
-    async def get_coordinator(self, sensor_type: str, should_poll=True):
+    async def get_coordinator(
+        self, sensor_type: str, should_poll: bool = True
+    ) -> DataUpdateCoordinator:
         """Get the coordinator for a specific sensor type."""
         if sensor_type == SENSORS_TYPE_COUNT:
             method = self._get_connected_devices
@@ -163,15 +165,15 @@ class AsusWrtSensorDataHandler:
 class AsusWrtDevInfo:
     """Representation of a AsusWrt device info."""
 
-    def __init__(self, mac, name=None):
+    def __init__(self, mac: str, name: str | None = None) -> None:
         """Initialize a AsusWrt device info."""
         self._mac = mac
         self._name = name
-        self._ip_address = None
-        self._last_activity = None
+        self._ip_address: str | None = None
+        self._last_activity: datetime | None = None
         self._connected = False
 
-    def update(self, dev_info=None, consider_home=0):
+    def update(self, dev_info: WrtDevice | None = None, consider_home: int = 0) -> None:
         """Update AsusWrt device info."""
         utc_point_in_time = dt_util.utcnow()
         if dev_info:
@@ -183,32 +185,34 @@ class AsusWrtDevInfo:
 
         elif self._connected:
             self._connected = (
-                utc_point_in_time - self._last_activity
-            ).total_seconds() < consider_home
+                self._last_activity is not None
+                and (utc_point_in_time - self._last_activity).total_seconds()
+                < consider_home
+            )
             self._ip_address = None
 
     @property
-    def is_connected(self):
+    def is_connected(self) -> bool:
         """Return connected status."""
         return self._connected
 
     @property
-    def mac(self):
+    def mac(self) -> str:
         """Return device mac address."""
         return self._mac
 
     @property
-    def name(self):
+    def name(self) -> str | None:
         """Return device name."""
         return self._name
 
     @property
-    def ip_address(self):
+    def ip_address(self) -> str | None:
         """Return device ip address."""
         return self._ip_address
 
     @property
-    def last_activity(self):
+    def last_activity(self) -> datetime | None:
         """Return device last activity."""
         return self._last_activity
 
@@ -227,7 +231,7 @@ class AsusWrtRouter:
         self._model = "Asus Router"
         self._sw_v: str | None = None
 
-        self._devices: dict[str, Any] = {}
+        self._devices: dict[str, AsusWrtDevInfo] = {}
         self._connected_devices = 0
         self._connect_error = False
 
@@ -334,7 +338,7 @@ class AsusWrtRouter:
         wrt_devices = {format_mac(mac): dev for mac, dev in api_devices.items()}
         for device_mac, device in self._devices.items():
             dev_info = wrt_devices.pop(device_mac, None)
-            device.update(dev_info, consider_home)
+            device.update(dev_info, consider_home)  # type: ignore[arg-type]
 
         for device_mac, dev_info in wrt_devices.items():
             if not track_unknown and not dev_info.name:
@@ -388,7 +392,7 @@ class AsusWrtRouter:
             if self._sensors_data_handler.update_device_count(self._connected_devices):
                 await coordinator.async_refresh()
 
-    async def _get_available_temperature_sensors(self):
+    async def _get_available_temperature_sensors(self) -> list[str]:
         """Check which temperature information is available on the router."""
         try:
             availability = await self._api.async_find_temperature_commands()
@@ -426,7 +430,7 @@ class AsusWrtRouter:
         for name, new_opt in new_options.items():
             if name in CONF_REQ_RELOAD:
                 old_opt = self._options.get(name)
-                if not old_opt or old_opt != new_opt:
+                if old_opt is None or old_opt != new_opt:
                     req_reload = True
                     break
 
@@ -461,7 +465,7 @@ class AsusWrtRouter:
         return self._host
 
     @property
-    def devices(self) -> dict[str, Any]:
+    def devices(self) -> dict[str, AsusWrtDevInfo]:
         """Return devices."""
         return self._devices
 
