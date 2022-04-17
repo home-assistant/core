@@ -202,6 +202,7 @@ async def test_form_only_stream(hass, mock_av_open, fakeimgbytes_jpg):
     )
     data = TESTDATA.copy()
     data.pop(CONF_STILL_IMAGE_URL)
+    data[CONF_STREAM_SOURCE] = "rtsp://user:pass@127.0.0.1/testurl/2"
     with mock_av_open as mock_setup:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -217,7 +218,7 @@ async def test_form_only_stream(hass, mock_av_open, fakeimgbytes_jpg):
     assert result3["title"] == "127_0_0_1_testurl_2"
     assert result3["options"] == {
         CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
-        CONF_STREAM_SOURCE: "http://127.0.0.1/testurl/2",
+        CONF_STREAM_SOURCE: "rtsp://user:pass@127.0.0.1/testurl/2",
         CONF_USERNAME: "fred_flintstone",
         CONF_PASSWORD: "bambam",
         CONF_LIMIT_REFETCH_TO_URL_CHANGE: False,
