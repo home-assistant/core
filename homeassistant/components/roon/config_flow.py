@@ -155,6 +155,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle linking and authenticting with the roon server."""
         errors = {}
         if user_input is not None:
+            # Do not authenticate if the host is already configured
+            self._async_abort_entries_match({CONF_HOST: self._host})
+
             try:
                 info = await authenticate(
                     self.hass, self._host, self._port, self._servers

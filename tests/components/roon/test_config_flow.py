@@ -1,8 +1,10 @@
 """Test the roon config flow."""
 from unittest.mock import patch
 
-from homeassistant import config_entries
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.roon.const import DOMAIN
+
+from tests.common import MockConfigEntry
 
 
 class RoonApiMock:
@@ -146,6 +148,48 @@ async def test_unsuccessful_discovery_user_form_and_auth(hass):
         "roon_server_id": "core_id",
         "roon_server_name": "Roon Core",
     }
+
+
+async def test_duplicate_config(hass):
+    """Test user adding the host via the form for host that is already configured."""
+
+    with patch(
+        "homeassistant.components.roon.config_flow.RoonApi",
+        return_value=RoonApiMock(),
+    ), patch(
+        "homeassistant.components.roon.config_flow.RoonDiscovery",
+        return_value=RoonDiscoveryFailedMock(),
+    ), patch(
+        "homeassistant.components.roon.async_setup_entry",
+        return_value=True,
+    ):
+
+        CONFIG = {"host": "1.1.1.1"}
+
+        MockConfigEntry(domain=DOMAIN, unique_id="0123456789", data=CONFIG).add_to_hass(
+            hass
+        )
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        await hass.async_block_till_done()
+
+        # Should show the form if server was not discovered
+        assert result["type"] == "form"
+        assert result["step_id"] == "fallback"
+        assert result["errors"] == {}
+
+        await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"host": "1.1.1.1", "port": 9331}
+        )
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+        await hass.async_block_till_done()
+
+        assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result2["reason"] == "already_configured"
 
 
 async def test_successful_discovery_no_auth(hass):
