@@ -911,6 +911,7 @@ FLOWS = {
         "senseme",
         "sensibo",
         "sentry",
+        "senz",
         "sharkiq",
         "shelly",
         "shopping_list",
