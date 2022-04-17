@@ -226,10 +226,12 @@ class PowerViewShade(ShadeEntity, CoverEntity):
     @callback
     def _async_cancel_scheduled_transition_update(self):
         """Cancel any previous updates."""
-        if not self._scheduled_transition_update:
-            return
-        self._scheduled_transition_update()
-        self._scheduled_transition_update = None
+        if self._scheduled_transition_update:
+            self._scheduled_transition_update()
+            self._scheduled_transition_update = None
+        if self._forced_resync:
+            self._forced_resync()
+            self._forced_resync = None
 
     @callback
     def _async_schedule_update_for_transition(self, steps):
@@ -266,8 +268,8 @@ class PowerViewShade(ShadeEntity, CoverEntity):
             self.hass, RESYNC_DELAY, self._async_force_resync
         )
 
-    async def _async_force_resync(self):
-        """Force a resync have an update since the hub may have stale state."""
+    async def _async_force_resync(self, *_):
+        """Force a resync after an update since the hub may have stale state."""
         self._forced_resync = None
         await self._async_force_refresh_state()
 
@@ -286,12 +288,7 @@ class PowerViewShade(ShadeEntity, CoverEntity):
 
     async def async_will_remove_from_hass(self):
         """Cancel any pending refreshes."""
-        if self._scheduled_transition_update:
-            self._scheduled_transition_update()
-            self._scheduled_transition_update = None
-        if self._forced_resync:
-            self._forced_resync()
-            self._forced_resync = None
+        self._async_cancel_scheduled_transition_update()
 
     @callback
     def _async_update_shade_from_group(self):
