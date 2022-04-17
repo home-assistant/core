@@ -305,6 +305,7 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator):
                 [
                     TMRW_ATTR_TEMPERATURE_LOW,
                     TMRW_ATTR_TEMPERATURE_HIGH,
+                    TMRW_ATTR_HUMIDITY,
                     TMRW_ATTR_WIND_SPEED,
                     TMRW_ATTR_WIND_DIRECTION,
                     TMRW_ATTR_CONDITION,
