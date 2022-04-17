@@ -6,6 +6,7 @@ import datetime
 from typing import Any, Generator, TypeVar
 from unittest.mock import mock_open, patch
 
+from gcal_sync.auth import API_BASE_URL
 from oauth2client.client import Credentials, OAuth2Credentials
 import pytest
 import yaml
@@ -210,7 +211,7 @@ def mock_events_list(
         if calendar_id is None:
             calendar_id = CALENDAR_ID
         aioclient_mock.get(
-            f"https://www.googleapis.com/calendar/v3/calendars/{calendar_id}/events",
+            f"{API_BASE_URL}/calendars/{calendar_id}/events",
             json=response,
             exc=exc,
         )
@@ -240,7 +241,7 @@ def mock_calendars_list(
 
     def _put_result(response: dict[str, Any], exc=None) -> None:
         aioclient_mock.get(
-            "https://www.googleapis.com/calendar/v3/users/me/calendarList",
+            f"{API_BASE_URL}/users/me/calendarList",
             json=response,
             exc=exc,
         )
@@ -259,7 +260,7 @@ def mock_insert_event(
         if calendar_id is None:
             calendar_id = CALENDAR_ID
         aioclient_mock.post(
-            f"https://www.googleapis.com/calendar/v3/calendars/{calendar_id}/events",
+            f"{API_BASE_URL}/calendars/{calendar_id}/events",
         )
         return
 
