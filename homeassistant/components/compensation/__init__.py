@@ -1,7 +1,6 @@
 """The Compensation integration."""
 import logging
 
-import numpy as np
 from numpy.polynomial import Polynomial
 import voluptuous as vol
 
@@ -89,16 +88,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         x_values, y_values = zip(*conf[CONF_DATAPOINTS])
 
         # try to get valid coefficients for a polynomial
-        polynomial = None
-        with np.errstate(all="raise"):
-            try:
-                polynomial = Polynomial.fit(x_values, y_values, degree, domain=[])
-            except FloatingPointError as error:
-                _LOGGER.error(
-                    "Setup of %s encountered an error, %s",
-                    compensation,
-                    error,
-                )
+        polynomial = Polynomial.fit(x_values, y_values, degree, domain=[])
 
         if polynomial is not None:
             data = {
