@@ -241,7 +241,7 @@ class TomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
                     forecast_dt,
                     use_datetime,
                     condition,
-                    humidity,
+                    None if self.forecast_type == DAILY else humidity,
                     precipitation,
                     precipitation_probability,
                     temp,
