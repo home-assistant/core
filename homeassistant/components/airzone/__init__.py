@@ -11,6 +11,7 @@ from aioairzone.const import (
     AZD_THERMOSTAT_FW,
     AZD_THERMOSTAT_MODEL,
     AZD_ZONES,
+    DEFAULT_SYSTEM_ID,
 )
 from aioairzone.localapi import AirzoneLocalApi
 
@@ -21,7 +22,7 @@ from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DEFAULT_SYSTEM_ID, DOMAIN, MANUFACTURER
+from .const import DOMAIN, MANUFACTURER
 from .coordinator import AirzoneUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.CLIMATE, Platform.SENSOR]

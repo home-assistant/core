@@ -28,6 +28,7 @@ from homeassistant.const import (
     CONF_CHOOSE,
     CONF_CONDITION,
     CONF_CONDITIONS,
+    CONF_CONTINUE_ON_ERROR,
     CONF_CONTINUE_ON_TIMEOUT,
     CONF_COUNT,
     CONF_DEFAULT,
@@ -35,10 +36,12 @@ from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_ELSE,
+    CONF_ENABLED,
     CONF_ERROR,
     CONF_EVENT,
     CONF_EVENT_DATA,
     CONF_EVENT_DATA_TEMPLATE,
+    CONF_FOR_EACH,
     CONF_IF,
     CONF_MODE,
     CONF_PARALLEL,
@@ -404,19 +407,28 @@ class _ScriptRun:
             self._finish()
 
     async def _async_step(self, log_exceptions):
+        continue_on_error = self._action.get(CONF_CONTINUE_ON_ERROR, False)
+
         with trace_path(str(self._step)):
             async with trace_action(self._hass, self, self._stop, self._variables):
                 if self._stop.is_set():
                     return
+
+                action = cv.determine_script_action(self._action)
+
+                if not self._action.get(CONF_ENABLED, True):
+                    self._log(
+                        "Skipped disabled step %s", self._action.get(CONF_ALIAS, action)
+                    )
+                    return
+
                 try:
-                    handler = f"_async_{cv.determine_script_action(self._action)}_step"
+                    handler = f"_async_{action}_step"
                     await getattr(self, handler)()
-                except Exception as ex:
-                    if not isinstance(ex, (_AbortScript, _StopScript)) and (
-                        self._log_exceptions or log_exceptions
-                    ):
-                        self._log_exception(ex)
-                    raise
+                except Exception as ex:  # pylint: disable=broad-except
+                    self._handle_exception(
+                        ex, continue_on_error, self._log_exceptions or log_exceptions
+                    )
 
     def _finish(self) -> None:
         self._script._runs.remove(self)  # pylint: disable=protected-access
@@ -429,6 +441,38 @@ class _ScriptRun:
         """Stop script run."""
         self._stop.set()
         await self._stopped.wait()
+
+    def _handle_exception(
+        self, exception: Exception, continue_on_error: bool, log_exceptions: bool
+    ) -> None:
+        if not isinstance(exception, (_AbortScript, _StopScript)) and log_exceptions:
+            self._log_exception(exception)
+
+        if not continue_on_error:
+            raise exception
+
+        # An explicit request to stop the script has been raised.
+        if isinstance(exception, _StopScript):
+            raise exception
+
+        # These are incorrect scripts, and not runtime errors that need to
+        # be handled and thus cannot be stopped by `continue_on_error`.
+        if isinstance(
+            exception,
+            (
+                vol.Invalid,
+                exceptions.TemplateError,
+                exceptions.ServiceNotFound,
+                exceptions.InvalidEntityFormatError,
+                exceptions.NoEntitySpecifiedError,
+                exceptions.ConditionError,
+            ),
+        ):
+            raise exception
+
+        # Only Home Assistant errors can be ignored.
+        if not isinstance(exception, exceptions.HomeAssistantError):
+            raise exception
 
     def _log_exception(self, exception):
         action_type = cv.determine_script_action(self._action)
@@ -701,17 +745,21 @@ class _ScriptRun:
         return result
 
     @async_trace_path("repeat")
-    async def _async_repeat_step(self):
+    async def _async_repeat_step(self):  # noqa: C901
         """Repeat a sequence."""
         description = self._action.get(CONF_ALIAS, "sequence")
         repeat = self._action[CONF_REPEAT]
 
         saved_repeat_vars = self._variables.get("repeat")
 
-        def set_repeat_var(iteration, count=None):
+        def set_repeat_var(
+            iteration: int, count: int | None = None, item: Any = None
+        ) -> None:
             repeat_vars = {"first": iteration == 1, "index": iteration}
             if count:
                 repeat_vars["last"] = iteration == count
+            if item is not None:
+                repeat_vars["item"] = item
             self._variables["repeat"] = repeat_vars
 
         # pylint: disable=protected-access
@@ -741,6 +789,35 @@ class _ScriptRun:
                 await async_run_sequence(iteration, extra_msg)
                 if self._stop.is_set():
                     break
+
+        elif CONF_FOR_EACH in repeat:
+            try:
+                items = template.render_complex(repeat[CONF_FOR_EACH], self._variables)
+            except (exceptions.TemplateError, ValueError) as ex:
+                self._log(
+                    "Error rendering %s repeat for each items template: %s",
+                    self._script.name,
+                    ex,
+                    level=logging.ERROR,
+                )
+                raise _AbortScript from ex
+
+            if not isinstance(items, list):
+                self._log(
+                    "Repeat 'for_each' must be a list of items in %s, got: %s",
+                    self._script.name,
+                    items,
+                    level=logging.ERROR,
+                )
+                raise _AbortScript("Repeat 'for_each' must be a list of items")
+
+            count = len(items)
+            for iteration, item in enumerate(items, 1):
+                set_repeat_var(iteration, count, item)
+                extra_msg = f" of {count} with item: {repr(item)}"
+                if self._stop.is_set():
+                    break
+                await async_run_sequence(iteration, extra_msg)
 
         elif CONF_WHILE in repeat:
             conditions = [

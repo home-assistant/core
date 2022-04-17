@@ -36,6 +36,7 @@ from homeassistant.const import (
     CONF_CHOOSE,
     CONF_CONDITION,
     CONF_CONDITIONS,
+    CONF_CONTINUE_ON_ERROR,
     CONF_CONTINUE_ON_TIMEOUT,
     CONF_COUNT,
     CONF_DEFAULT,
@@ -43,6 +44,7 @@ from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_ELSE,
+    CONF_ENABLED,
     CONF_ENTITY_ID,
     CONF_ENTITY_NAMESPACE,
     CONF_ERROR,
@@ -50,6 +52,7 @@ from homeassistant.const import (
     CONF_EVENT_DATA,
     CONF_EVENT_DATA_TEMPLATE,
     CONF_FOR,
+    CONF_FOR_EACH,
     CONF_ID,
     CONF_IF,
     CONF_MATCH,
@@ -1056,7 +1059,11 @@ def script_action(value: Any) -> dict:
 
 SCRIPT_SCHEMA = vol.All(ensure_list, [script_action])
 
-SCRIPT_ACTION_BASE_SCHEMA = {vol.Optional(CONF_ALIAS): string}
+SCRIPT_ACTION_BASE_SCHEMA = {
+    vol.Optional(CONF_ALIAS): string,
+    vol.Optional(CONF_CONTINUE_ON_ERROR): boolean,
+    vol.Optional(CONF_ENABLED): boolean,
+}
 
 EVENT_SCHEMA = vol.Schema(
     {
@@ -1094,7 +1101,10 @@ NUMERIC_STATE_THRESHOLD_SCHEMA = vol.Any(
     vol.Coerce(float), vol.All(str, entity_domain(["input_number", "number", "sensor"]))
 )
 
-CONDITION_BASE_SCHEMA = {vol.Optional(CONF_ALIAS): string}
+CONDITION_BASE_SCHEMA = {
+    vol.Optional(CONF_ALIAS): string,
+    vol.Optional(CONF_ENABLED): boolean,
+}
 
 NUMERIC_STATE_CONDITION_SCHEMA = vol.All(
     vol.Schema(
@@ -1333,6 +1343,7 @@ TRIGGER_BASE_SCHEMA = vol.Schema(
         vol.Required(CONF_PLATFORM): str,
         vol.Optional(CONF_ID): str,
         vol.Optional(CONF_VARIABLES): SCRIPT_VARIABLES_SCHEMA,
+        vol.Optional(CONF_ENABLED): boolean,
     }
 )
 
@@ -1385,6 +1396,9 @@ _SCRIPT_REPEAT_SCHEMA = vol.Schema(
         vol.Required(CONF_REPEAT): vol.All(
             {
                 vol.Exclusive(CONF_COUNT, "repeat"): vol.Any(vol.Coerce(int), template),
+                vol.Exclusive(CONF_FOR_EACH, "repeat"): vol.Any(
+                    dynamic_template, vol.All(list, template_complex)
+                ),
                 vol.Exclusive(CONF_WHILE, "repeat"): vol.All(
                     ensure_list, [CONDITION_SCHEMA]
                 ),
@@ -1393,7 +1407,7 @@ _SCRIPT_REPEAT_SCHEMA = vol.Schema(
                 ),
                 vol.Required(CONF_SEQUENCE): SCRIPT_SCHEMA,
             },
-            has_at_least_one_key(CONF_COUNT, CONF_WHILE, CONF_UNTIL),
+            has_at_least_one_key(CONF_COUNT, CONF_FOR_EACH, CONF_WHILE, CONF_UNTIL),
         ),
     }
 )

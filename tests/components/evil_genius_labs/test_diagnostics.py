@@ -8,7 +8,7 @@ from tests.components.diagnostics import get_diagnostics_for_config_entry
 
 @pytest.mark.parametrize("platforms", [[]])
 async def test_entry_diagnostics(
-    hass, hass_client, setup_evil_genius_labs, config_entry, data_fixture, info_fixture
+    hass, hass_client, setup_evil_genius_labs, config_entry, all_fixture, info_fixture
 ):
     """Test config entry diagnostics."""
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
@@ -17,5 +17,5 @@ async def test_entry_diagnostics(
             "wiFiSsidDefault": REDACTED,
             "wiFiSSID": REDACTED,
         },
-        "data": data_fixture,
+        "all": all_fixture,
     }
