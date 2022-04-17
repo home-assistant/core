@@ -33,12 +33,12 @@ class DeviceBaseEntityDescriptionMixin:
 class SensiboDeviceUpdateEntityDescription(
     UpdateEntityDescription, DeviceBaseEntityDescriptionMixin
 ):
-    """Describes Sensibo Motion sensor entity."""
+    """Describes Sensibo Update entity."""
 
 
 DEVICE_SENSOR_TYPES: tuple[SensiboDeviceUpdateEntityDescription, ...] = (
     SensiboDeviceUpdateEntityDescription(
-        key="update_available",
+        key="fw_ver_available",
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.DIAGNOSTIC,
         name="Update Available",
@@ -52,7 +52,7 @@ DEVICE_SENSOR_TYPES: tuple[SensiboDeviceUpdateEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up Sensibo binary sensor platform."""
+    """Set up Sensibo Update platform."""
 
     coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
@@ -65,7 +65,7 @@ async def async_setup_entry(
 
 
 class SensiboDeviceUpdate(SensiboDeviceBaseEntity, UpdateEntity):
-    """Representation of a Sensibo Device Binary Sensor."""
+    """Representation of a Sensibo Device Update."""
 
     entity_description: SensiboDeviceUpdateEntityDescription
 
@@ -76,10 +76,7 @@ class SensiboDeviceUpdate(SensiboDeviceBaseEntity, UpdateEntity):
         entity_description: SensiboDeviceUpdateEntityDescription,
     ) -> None:
         """Initiate Sensibo Device Update."""
-        super().__init__(
-            coordinator,
-            device_id,
-        )
+        super().__init__(coordinator, device_id)
         self.entity_description = entity_description
         self._attr_unique_id = f"{device_id}-{entity_description.key}"
         self._attr_name = f"{self.device_data.name} {entity_description.name}"
