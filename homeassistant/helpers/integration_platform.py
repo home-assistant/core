@@ -22,7 +22,7 @@ class IntegrationPlatform:
 
     platform_name: str
     process_platform: Callable[[HomeAssistant, str, Any], Awaitable[None]]
-    processed_platforms: set[str]
+    seen_components: set[str]
 
 
 async def async_process_integration_platform(
@@ -39,9 +39,9 @@ async def async_process_integration_platform(
     ]
     for integration_platform in integration_platforms:
         platform_name = integration_platform.platform_name
-        if component_name in integration_platform.processed_platforms:
+        if component_name in integration_platform.seen_components:
             continue
-        integration_platform.processed_platforms.add(component_name)
+        integration_platform.seen_components.add(component_name)
 
         try:
             platform = integration.get_platform(platform_name)
