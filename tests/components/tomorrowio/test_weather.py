@@ -42,7 +42,7 @@ from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.entity_registry import async_get
 from homeassistant.util import dt as dt_util
 
-from .const import API_V4_ENTRY_DATA, ATTR_FORECAST_HUMIDITY
+from .const import API_V4_ENTRY_DATA
 
 from tests.common import MockConfigEntry
 
@@ -94,7 +94,6 @@ async def test_v4_weather(hass: HomeAssistant) -> None:
     assert weather_state.attributes[ATTR_FORECAST][0] == {
         ATTR_FORECAST_CONDITION: ATTR_CONDITION_SUNNY,
         ATTR_FORECAST_TIME: "2021-03-07T11:00:00+00:00",
-        ATTR_FORECAST_HUMIDITY: 74,
         ATTR_FORECAST_PRECIPITATION: 0,
         ATTR_FORECAST_PRECIPITATION_PROBABILITY: 0,
         ATTR_FORECAST_TEMP: 45.9,
