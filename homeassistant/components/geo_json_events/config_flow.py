@@ -13,12 +13,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import config_validation as cv
 
-from .const import (
-    DEFAULT_RADIUS_IN_KM,
-    DEFAULT_SCAN_INTERVAL,
-    DEFAULT_SCAN_INTERVAL_SECONDS,
-    DOMAIN,
-)
+from .const import DEFAULT_RADIUS_IN_KM, DEFAULT_SCAN_INTERVAL_SECONDS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,7 +65,9 @@ class GeoJsonEventsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(identifier)
         self._abort_if_unique_id_configured()
 
-        scan_interval = user_input.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+        scan_interval = user_input.get(
+            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL_SECONDS
+        )
         user_input[CONF_SCAN_INTERVAL] = scan_interval
 
         return self.async_create_entry(title=identifier, data=user_input)
