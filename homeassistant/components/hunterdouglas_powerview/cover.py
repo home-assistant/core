@@ -269,7 +269,7 @@ class PowerViewShade(ShadeEntity, CoverEntity):
         )
 
     async def _async_force_resync(self, *_):
-        """Force a resync have an update since the hub may have stale state."""
+        """Force a resync after an update since the hub may have stale state."""
         self._forced_resync = None
         await self._async_force_refresh_state()
 
