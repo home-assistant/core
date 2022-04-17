@@ -12,6 +12,7 @@ from homeassistant.const import (
     CONF_UNIT_SYSTEM_IMPERIAL,
     CONF_URL,
     LENGTH_MILES,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
@@ -19,6 +20,10 @@ from homeassistant.helpers.typing import ConfigType
 
 from ...config_entries import SOURCE_IMPORT, ConfigEntry
 from ...helpers.dispatcher import async_dispatcher_send
+from ...helpers.entity_registry import (
+    async_entries_for_config_entry,
+    async_get_registry,
+)
 from ...helpers.update_coordinator import DataUpdateCoordinator
 from ...util.unit_system import METRIC_SYSTEM
 from .const import DEFAULT_SCAN_INTERVAL_SECONDS, DOMAIN, FEED, PLATFORMS
@@ -57,7 +62,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     """Set up the GeoJSON events component as config entry."""
     hass.data.setdefault(DOMAIN, {})
     feeds = hass.data[DOMAIN].setdefault(FEED, {})
-
     radius = config_entry.data[CONF_RADIUS]
     if hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL:
         radius = METRIC_SYSTEM.length(radius, LENGTH_MILES)
@@ -66,6 +70,16 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     feeds[config_entry.entry_id] = coordinator
     _LOGGER.debug("Feed entity coordinator added for %s", config_entry.entry_id)
     await coordinator.async_config_entry_first_refresh()
+    # Remove orphaned geo_location entities.
+    entity_registry = await async_get_registry(hass)
+    orphaned_entries = async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
+    )
+    if orphaned_entries is not None:
+        for entry in orphaned_entries:
+            if entry.domain == Platform.GEO_LOCATION:
+                _LOGGER.debug("Removing entry %s", entry.entity_id)
+                entity_registry.async_remove(entry.entity_id)
     hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
     return True
 
