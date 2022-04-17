@@ -191,9 +191,8 @@ class GoogleCalendarEntity(CalendarEntity):
             _LOGGER.error("Unable to connect to Google: %s", err)
             return
 
-        items = result.items
         # Pick the first visible event and apply offset calculations.
-        valid_items = filter(self._event_filter, items)
+        valid_items = filter(self._event_filter, result.items)
         event = copy.deepcopy(next(valid_items, None))
         if event:
             (event.summary, offset) = extract_offset(event.summary, self._offset)
