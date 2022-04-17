@@ -35,3 +35,9 @@ async def test_process_integration_platforms(hass):
     assert len(processed) == 2
     assert processed[1][0] == "event"
     assert processed[1][1] == event_platform
+
+    # Verify we only process the platform once if we call it manually
+    await hass.helpers.integration_platform.async_process_integration_platform(
+        hass, "event"
+    )
+    assert len(processed) == 2
