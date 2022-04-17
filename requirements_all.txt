@@ -647,7 +647,7 @@ fjaraskupan==1.0.2
 flipr-api==1.4.2
 
 # homeassistant.components.flux_led
-flux_led==0.28.27
+flux_led==0.28.28
 
 # homeassistant.components.homekit
 # homeassistant.components.recorder
@@ -742,7 +742,7 @@ gpiozero==1.6.2
 gps3==0.33.3
 
 # homeassistant.components.gree
-greeclimate==1.1.0
+greeclimate==1.1.1
 
 # homeassistant.components.greeneye_monitor
 greeneye_monitor==3.0.3
@@ -1622,7 +1622,7 @@ pymailgunner==1.4
 pymata-express==1.19
 
 # homeassistant.components.mazda
-pymazda==0.3.2
+pymazda==0.3.3
 
 # homeassistant.components.mediaroom
 pymediaroom==0.6.5.4
