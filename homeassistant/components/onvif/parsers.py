@@ -344,8 +344,8 @@ async def async_parse_last_reboot(uid: str, msg) -> Event:
 
     Topic: tns1:Monitoring/OperatingTime/LastReboot
     """
-    date_time = datetime_or_zero(msg.Message._value_1.Data.SimpleItem[0].Value)
     try:
+        date_time = datetime_or_zero(msg.Message._value_1.Data.SimpleItem[0].Value)
         return Event(
             f"{uid}_{msg.Topic._value_1}",
             "Last Reboot",
@@ -388,8 +388,8 @@ async def async_parse_backup_last(uid: str, msg) -> Event:
     Topic: tns1:Monitoring/Backup/Last
     """
 
-    date_time = datetime_or_zero(msg.Message._value_1.Data.SimpleItem[0].Value)
     try:
+        date_time = datetime_or_zero(msg.Message._value_1.Data.SimpleItem[0].Value)
         return Event(
             f"{uid}_{msg.Topic._value_1}",
             "Last Backup",
