@@ -10,6 +10,7 @@ from homeassistant.components.compensation.const import (
 from homeassistant.components.compensation.sensor import ATTR_COEFFICIENTS
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
     EVENT_HOMEASSISTANT_START,
     EVENT_STATE_CHANGED,
@@ -33,6 +34,7 @@ async def test_config_overrides(hass: HomeAssistant):
                     [2.0, 3.0],
                 ],
                 "precision": 2,
+                "device_class": "gas",
             }
         }
     }
@@ -49,6 +51,7 @@ async def test_config_overrides(hass: HomeAssistant):
     assert state is not None
 
     assert state.name == "Some Sensor"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == "gas"
 
     ent_reg = entity_registry.async_get(hass)
     registry_entry = ent_reg.async_get(expected_entity_id)
