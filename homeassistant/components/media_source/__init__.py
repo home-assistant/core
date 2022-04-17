@@ -140,7 +140,7 @@ async def async_resolve_media(hass: HomeAssistant, media_content_id: str) -> Pla
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "media_source/browse_media",
-        vol.Optional(ATTR_MEDIA_CONTENT_ID, default=""): str,
+        vol.Optional(ATTR_MEDIA_CONTENT_ID, default="media-source://media_source"): str,
     }
 )
 @websocket_api.async_response
