@@ -25,41 +25,51 @@ class IntegrationPlatform:
     seen_components: set[str]
 
 
+async def _async_process_single_integration_platform(
+    hass: HomeAssistant, component_name: str, integration_platform: IntegrationPlatform
+) -> None:
+    """Process a single integration platform."""
+    platform_name = integration_platform.platform_name
+    if component_name in integration_platform.seen_components:
+        return
+    integration_platform.seen_components.add(component_name)
+
+    integration = await async_get_integration(hass, component_name)
+
+    try:
+        platform = integration.get_platform(platform_name)
+    except ImportError as err:
+        if f"{component_name}.{platform_name}" not in str(err):
+            _LOGGER.exception(
+                "Unexpected error importing %s/%s.py",
+                component_name,
+                platform_name,
+            )
+        return
+
+    try:
+        await integration_platform.process_platform(hass, component_name, platform)  # type: ignore[misc,operator] # https://github.com/python/mypy/issues/5485
+    except Exception:  # pylint: disable=broad-except
+        _LOGGER.exception(
+            "Error processing platform %s.%s", component_name, platform_name
+        )
+
+
 async def async_process_integration_platform(
     hass: HomeAssistant, component_name: str
 ) -> None:
     """Process component being loaded or on demand."""
-    if "." in component_name:
-        return
-
-    integration = await async_get_integration(hass, component_name)
-
     integration_platforms: list[IntegrationPlatform] = hass.data[
         DATA_INTEGRATION_PLATFORMS
     ]
-    for integration_platform in integration_platforms:
-        platform_name = integration_platform.platform_name
-        if component_name in integration_platform.seen_components:
-            continue
-        integration_platform.seen_components.add(component_name)
-
-        try:
-            platform = integration.get_platform(platform_name)
-        except ImportError as err:
-            if f"{component_name}.{platform_name}" not in str(err):
-                _LOGGER.exception(
-                    "Unexpected error importing %s/%s.py",
-                    component_name,
-                    platform_name,
-                )
-            continue
-
-        try:
-            await integration_platform.process_platform(hass, component_name, platform)  # type: ignore[misc,operator] # https://github.com/python/mypy/issues/5485
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception(
-                "Error processing platform %s.%s", component_name, platform_name
+    await asyncio.gather(
+        *[
+            _async_process_single_integration_platform(
+                hass, component_name, integration_platform
             )
+            for integration_platform in integration_platforms
+        ]
+    )
 
 
 @bind_hass
@@ -75,21 +85,25 @@ async def async_process_integration_platforms(
 
         async def _async_component_loaded(event: Event) -> None:
             """Handle a new component loaded."""
-            await async_process_integration_platform(hass, event.data[ATTR_COMPONENT])
+            comp = event.data[ATTR_COMPONENT]
+            if "." not in comp:
+                await async_process_integration_platform(hass, comp)
 
         hass.bus.async_listen(EVENT_COMPONENT_LOADED, _async_component_loaded)
 
     integration_platforms: list[IntegrationPlatform] = hass.data[
         DATA_INTEGRATION_PLATFORMS
     ]
-    integration_platforms.append(
-        IntegrationPlatform(platform_name, process_platform, set())
-    )
-
-    if hass.config.components:
+    integration_platform = IntegrationPlatform(platform_name, process_platform, set())
+    integration_platforms.append(integration_platform)
+    if top_level_components := (
+        comp for comp in hass.config.components if "." not in comp
+    ):
         await asyncio.gather(
             *[
-                async_process_integration_platform(hass, comp)
-                for comp in hass.config.components
+                _async_process_single_integration_platform(
+                    hass, comp, integration_platform
+                )
+                for comp in top_level_components
             ]
         )
