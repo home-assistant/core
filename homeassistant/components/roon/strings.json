@@ -1,7 +1,7 @@
 {
   "config": {
     "step": {
-      "user":{},
+      "user": {},
       "fallback": {
         "description": "Could not discover Roon server, please enter your Hostname and Port.",
         "data": {
