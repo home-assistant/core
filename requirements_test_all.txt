@@ -1537,7 +1537,7 @@ twilio==6.32.0
 twitchAPI==2.5.2
 
 # homeassistant.components.rainforest_eagle
-uEagle==0.0.2
+eagle100==0.1.0
 
 # homeassistant.components.ukraine_alarm
 uasiren==0.0.1
