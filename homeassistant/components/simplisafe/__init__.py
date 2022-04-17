@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Iterable
 from datetime import timedelta
-from typing import Any
+from typing import Any, cast
 
 from simplipy import API
 from simplipy.device import Device, DeviceTypes
@@ -253,7 +253,7 @@ def _async_get_system_for_service_call(
     for entry_id in base_station_device_entry.config_entries:
         if (simplisafe := hass.data[DOMAIN].get(entry_id)) is None:
             continue
-        return simplisafe.systems[system_id]
+        return cast(SystemType, simplisafe.systems[system_id])
 
     raise ValueError(f"No system for device ID: {device_id}")
 
@@ -281,9 +281,7 @@ def _async_standardize_config_entry(hass: HomeAssistant, entry: ConfigEntry) -> 
             "New SimpliSafe OAuth standard requires re-authentication"
         )
     if CONF_USERNAME not in entry.data:
-        raise ConfigEntryAuthFailed(
-            "Must re-authenticate with SimpliSafe username/email"
-        )
+        raise ConfigEntryAuthFailed("Need to re-auth with username/password")
 
     entry_updates = {}
     if not entry.unique_id:
@@ -602,7 +600,7 @@ class SimpliSafe:
         self.coordinator = DataUpdateCoordinator(
             self._hass,
             LOGGER,
-            name=self.entry.data[CONF_USERNAME],
+            name=self.entry.title,
             update_interval=DEFAULT_SCAN_INTERVAL,
             update_method=self.async_update,
         )
