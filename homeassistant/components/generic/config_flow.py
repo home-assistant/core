@@ -6,6 +6,7 @@ from errno import EHOSTUNREACH, EIO
 from functools import partial
 import io
 import logging
+import re
 from types import MappingProxyType
 from typing import Any
 from urllib.parse import urlparse, urlunparse
@@ -182,10 +183,14 @@ async def async_test_still(hass, info) -> tuple[dict[str, str], str | None]:
     return {}, f"image/{fmt}"
 
 
+URL_RE = re.compile("//.*:.*@")
+
+
 def slug_url(url) -> str | None:
     """Convert a camera url into a string suitable for a camera name."""
     if not url:
         return None
+    url = URL_RE.sub("//", url)
     url_no_scheme = urlparse(url)._replace(scheme="")
     return slugify(urlunparse(url_no_scheme).strip("/"))
 
