@@ -12,6 +12,7 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
+    DEVICE_CLASS_GAS,
     EVENT_HOMEASSISTANT_START,
     EVENT_STATE_CHANGED,
     STATE_UNKNOWN,
@@ -51,7 +52,7 @@ async def test_config_overrides(hass: HomeAssistant):
     assert state is not None
 
     assert state.name == "Some Sensor"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == "gas"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_GAS
 
     ent_reg = entity_registry.async_get(hass)
     registry_entry = ent_reg.async_get(expected_entity_id)
