@@ -64,7 +64,7 @@ class RoonServer:
 
         # Default to 'host' for compatibility with older configs without core_id
         self.roon_id = (
-            core_id if core_id is not None else self.config_entry.data.get(CONF_HOST)
+            core_id if core_id is not None else self.config_entry.data[CONF_HOST]
         )
 
         # initialize media_player platform
