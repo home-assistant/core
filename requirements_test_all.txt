@@ -94,7 +94,7 @@ aio_geojson_nsw_rfs_incidents==0.4
 aio_georss_gdacs==0.7
 
 # homeassistant.components.airzone
-aioairzone==0.3.6
+aioairzone==0.3.8
 
 # homeassistant.components.ambient_station
 aioambient==2021.11.0
@@ -200,6 +200,9 @@ aioridwell==2022.03.0
 # homeassistant.components.senseme
 aiosenseme==0.6.1
 
+# homeassistant.components.senz
+aiosenz==1.0.0
+
 # homeassistant.components.shelly
 aioshelly==2.0.0
 
@@ -277,10 +280,6 @@ auroranoaa==0.0.2
 # homeassistant.components.aurora_abb_powerone
 aurorapy==0.2.6
 
-# homeassistant.components.generic
-# homeassistant.components.stream
-av==8.1.0
-
 # homeassistant.components.axis
 axis==44
 
@@ -291,7 +290,7 @@ azure-eventhub==5.7.0
 base36==0.1.1
 
 # homeassistant.components.scrape
-beautifulsoup4==4.10.0
+beautifulsoup4==4.11.1
 
 # homeassistant.components.zha
 bellows==0.29.0
@@ -409,7 +408,7 @@ dynalite_devices==0.1.46
 elgato==3.0.0
 
 # homeassistant.components.elkm1
-elkm1-lib==1.3.0
+elkm1-lib==1.3.3
 
 # homeassistant.components.elmax
 elmax_api==0.0.2
@@ -451,7 +450,7 @@ fjaraskupan==1.0.2
 flipr-api==1.4.2
 
 # homeassistant.components.flux_led
-flux_led==0.28.27
+flux_led==0.28.28
 
 # homeassistant.components.homekit
 # homeassistant.components.recorder
@@ -522,7 +521,7 @@ google-nest-sdm==1.8.0
 googlemaps==2.5.1
 
 # homeassistant.components.gree
-greeclimate==1.1.0
+greeclimate==1.1.1
 
 # homeassistant.components.greeneye_monitor
 greeneye_monitor==3.0.3
@@ -535,6 +534,10 @@ growattServer==1.1.0
 
 # homeassistant.components.profiler
 guppy3==3.1.2
+
+# homeassistant.components.generic
+# homeassistant.components.stream
+ha-av==9.1.1-3
 
 # homeassistant.components.ffmpeg
 ha-ffmpeg==3.0.2
@@ -832,7 +835,7 @@ plumlightpad==0.0.11
 poolsense==0.0.8
 
 # homeassistant.components.reddit
-praw==7.4.0
+praw==7.5.0
 
 # homeassistant.components.islamic_prayer_times
 prayer_times_calculator==0.0.5
@@ -959,7 +962,7 @@ pyefergy==22.1.1
 pyeverlights==0.1.0
 
 # homeassistant.components.evil_genius_labs
-pyevilgenius==1.0.0
+pyevilgenius==2.0.0
 
 # homeassistant.components.ezviz
 pyezviz==0.2.0.6
@@ -1080,7 +1083,7 @@ pymailgunner==1.4
 pymata-express==1.19
 
 # homeassistant.components.mazda
-pymazda==0.3.2
+pymazda==0.3.3
 
 # homeassistant.components.melcloud
 pymelcloud==2.5.6
@@ -1578,7 +1581,7 @@ wolf_smartset==0.1.11
 xbox-webapi==2.0.11
 
 # homeassistant.components.knx
-xknx==0.20.2
+xknx==0.20.3
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz

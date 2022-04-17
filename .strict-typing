@@ -64,9 +64,11 @@ homeassistant.components.crownstone.*
 homeassistant.components.cpuspeed.*
 homeassistant.components.deconz
 homeassistant.components.deconz.alarm_control_panel
+homeassistant.components.deconz.climate
 homeassistant.components.deconz.config_flow
 homeassistant.components.deconz.diagnostics
 homeassistant.components.deconz.gateway
+homeassistant.components.deconz.light
 homeassistant.components.deconz.services
 homeassistant.components.device_automation.*
 homeassistant.components.device_tracker.*
@@ -79,6 +81,7 @@ homeassistant.components.dsmr.*
 homeassistant.components.dunehd.*
 homeassistant.components.efergy.*
 homeassistant.components.elgato.*
+homeassistant.components.elkm1.__init__
 homeassistant.components.esphome.*
 homeassistant.components.energy.*
 homeassistant.components.evil_genius_labs.*
@@ -197,6 +200,7 @@ homeassistant.components.scene.*
 homeassistant.components.select.*
 homeassistant.components.sensor.*
 homeassistant.components.senseme.*
+homeassistant.components.senz.*
 homeassistant.components.shelly.*
 homeassistant.components.simplisafe.*
 homeassistant.components.slack.*

@@ -28,9 +28,10 @@ from homeassistant.core import (
     Context,
     CoreState,
     HomeAssistant,
+    ServiceCall,
     callback,
 )
-from homeassistant.exceptions import ConditionError, ServiceNotFound
+from homeassistant.exceptions import ConditionError, HomeAssistantError, ServiceNotFound
 from homeassistant.helpers import (
     config_validation as cv,
     entity_registry as er,
@@ -1783,6 +1784,232 @@ async def test_repeat_count_0(hass, caplog):
         {
             "0": [{}],
         }
+    )
+
+
+async def test_repeat_for_each(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test repeat action using for each."""
+    events = async_capture_events(hass, "test_event")
+    sequence = cv.SCRIPT_SCHEMA(
+        {
+            "alias": "For each!",
+            "repeat": {
+                "for_each": ["one", "two", "{{ 'thr' + 'ee' }}"],
+                "sequence": {
+                    "event": "test_event",
+                    "event_data": {
+                        "first": "{{ repeat.first }}",
+                        "index": "{{ repeat.index }}",
+                        "last": "{{ repeat.last }}",
+                        "item": "{{ repeat.item }}",
+                    },
+                },
+            },
+        }
+    )
+
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert len(events) == 3
+    assert "Repeating For each!: Iteration 1 of 3 with item: 'one'" in caplog.text
+    assert "Repeating For each!: Iteration 2 of 3 with item: 'two'" in caplog.text
+    assert "Repeating For each!: Iteration 3 of 3 with item: 'three'" in caplog.text
+
+    assert_action_trace(
+        {
+            "0": [{}],
+            "0/repeat/sequence/0": [
+                {
+                    "result": {
+                        "event": "test_event",
+                        "event_data": {
+                            "first": True,
+                            "index": 1,
+                            "last": False,
+                            "item": "one",
+                        },
+                    },
+                    "variables": {
+                        "repeat": {
+                            "first": True,
+                            "index": 1,
+                            "last": False,
+                            "item": "one",
+                        }
+                    },
+                },
+                {
+                    "result": {
+                        "event": "test_event",
+                        "event_data": {
+                            "first": False,
+                            "index": 2,
+                            "last": False,
+                            "item": "two",
+                        },
+                    },
+                    "variables": {
+                        "repeat": {
+                            "first": False,
+                            "index": 2,
+                            "last": False,
+                            "item": "two",
+                        }
+                    },
+                },
+                {
+                    "result": {
+                        "event": "test_event",
+                        "event_data": {
+                            "first": False,
+                            "index": 3,
+                            "last": True,
+                            "item": "three",
+                        },
+                    },
+                    "variables": {
+                        "repeat": {
+                            "first": False,
+                            "index": 3,
+                            "last": True,
+                            "item": "three",
+                        }
+                    },
+                },
+            ],
+        }
+    )
+
+
+async def test_repeat_for_each_template(hass: HomeAssistant) -> None:
+    """Test repeat action using for each template."""
+    events = async_capture_events(hass, "test_event")
+    sequence = cv.SCRIPT_SCHEMA(
+        {
+            "alias": "",
+            "repeat": {
+                "for_each": (
+                    "{% set var = ['light.bulb_one', 'light.bulb_two'] %} {{ var }}"
+                ),
+                "sequence": {
+                    "event": "test_event",
+                },
+            },
+        }
+    )
+
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert len(events) == 2
+
+    assert_action_trace(
+        {
+            "0": [{}],
+            "0/repeat/sequence/0": [
+                {
+                    "result": {
+                        "event": "test_event",
+                        "event_data": {},
+                    },
+                    "variables": {
+                        "repeat": {
+                            "first": True,
+                            "index": 1,
+                            "last": False,
+                            "item": "light.bulb_one",
+                        }
+                    },
+                },
+                {
+                    "result": {
+                        "event": "test_event",
+                        "event_data": {},
+                    },
+                    "variables": {
+                        "repeat": {
+                            "first": False,
+                            "index": 2,
+                            "last": True,
+                            "item": "light.bulb_two",
+                        }
+                    },
+                },
+            ],
+        }
+    )
+
+
+async def test_repeat_for_each_non_list_template(hass: HomeAssistant) -> None:
+    """Test repeat action using for each with a template not resulting in a list."""
+    events = async_capture_events(hass, "test_event")
+    sequence = cv.SCRIPT_SCHEMA(
+        {
+            "repeat": {
+                "for_each": "{{ 'Not a list' }}",
+                "sequence": {
+                    "event": "test_event",
+                },
+            },
+        }
+    )
+
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert len(events) == 0
+
+    assert_action_trace(
+        {
+            "0": [
+                {
+                    "error_type": script._AbortScript,
+                }
+            ],
+        },
+        expected_script_execution="aborted",
+    )
+
+
+async def test_repeat_for_each_invalid_template(hass: HomeAssistant, caplog) -> None:
+    """Test repeat action using for each with an invalid template."""
+    events = async_capture_events(hass, "test_event")
+    sequence = cv.SCRIPT_SCHEMA(
+        {
+            "repeat": {
+                "for_each": "{{ Muhaha }}",
+                "sequence": {
+                    "event": "test_event",
+                },
+            },
+        }
+    )
+
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert (
+        "Test Name: Repeat 'for_each' must be a list of items in Test Name, got"
+        in caplog.text
+    )
+    assert len(events) == 0
+
+    assert_action_trace(
+        {
+            "0": [{"error_type": script._AbortScript}],
+        },
+        expected_script_execution="aborted",
     )
 
 
@@ -4256,4 +4483,225 @@ async def test_error_action(hass, caplog):
             ],
         },
         expected_script_execution="aborted",
+    )
+
+
+async def test_continue_on_error(hass: HomeAssistant) -> None:
+    """Test if automation continue when a step fails."""
+    events = async_capture_events(hass, "test_event")
+
+    @callback
+    def broken_service(service: ServiceCall) -> None:
+        """Break this service with an error."""
+        raise HomeAssistantError("It is not working!")
+
+    hass.services.async_register("broken", "service", broken_service)
+
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {"event": "test_event"},
+            {
+                "continue_on_error": True,
+                "service": "broken.service",
+            },
+            {"event": "test_event"},
+            {
+                "continue_on_error": False,
+                "service": "broken.service",
+            },
+            {"event": "test_event"},
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    with pytest.raises(exceptions.HomeAssistantError, match="It is not working!"):
+        await script_obj.async_run(context=Context())
+
+    assert len(events) == 2
+
+    assert_action_trace(
+        {
+            "0": [{"result": {"event": "test_event", "event_data": {}}}],
+            "1": [
+                {
+                    "result": {
+                        "limit": 10,
+                        "params": {
+                            "domain": "broken",
+                            "service": "service",
+                            "service_data": {},
+                            "target": {},
+                        },
+                        "running_script": False,
+                    },
+                }
+            ],
+            "2": [{"result": {"event": "test_event", "event_data": {}}}],
+            "3": [
+                {
+                    "error_type": HomeAssistantError,
+                    "result": {
+                        "limit": 10,
+                        "params": {
+                            "domain": "broken",
+                            "service": "service",
+                            "service_data": {},
+                            "target": {},
+                        },
+                        "running_script": False,
+                    },
+                }
+            ],
+        },
+        expected_script_execution="error",
+    )
+
+
+async def test_continue_on_error_with_stop(hass: HomeAssistant) -> None:
+    """Test continue on error doesn't work with explicit an stop."""
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {
+                "continue_on_error": True,
+                "stop": "Stop it!",
+            },
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    await script_obj.async_run(context=Context())
+
+    assert_action_trace(
+        {
+            "0": [{"result": {"stop": "Stop it!"}}],
+        },
+        expected_script_execution="finished",
+    )
+
+
+async def test_continue_on_error_automation_issue(hass: HomeAssistant) -> None:
+    """Test continue on error doesn't block action automation errors."""
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {
+                "continue_on_error": True,
+                "service": "service.not_found",
+            },
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    with pytest.raises(exceptions.ServiceNotFound):
+        await script_obj.async_run(context=Context())
+
+    assert_action_trace(
+        {
+            "0": [
+                {
+                    "error_type": ServiceNotFound,
+                    "result": {
+                        "limit": 10,
+                        "params": {
+                            "domain": "service",
+                            "service": "not_found",
+                            "service_data": {},
+                            "target": {},
+                        },
+                        "running_script": False,
+                    },
+                }
+            ],
+        },
+        expected_script_execution="error",
+    )
+
+
+async def test_continue_on_error_unknown_error(hass: HomeAssistant) -> None:
+    """Test continue on error doesn't block unknown errors from e.g., libraries."""
+
+    class MyLibraryError(Exception):
+        """My custom library error."""
+
+    @callback
+    def some_service(service: ServiceCall) -> None:
+        """Break this service with an error."""
+        raise MyLibraryError("It is not working!")
+
+    hass.services.async_register("some", "service", some_service)
+
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {
+                "continue_on_error": True,
+                "service": "some.service",
+            },
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    with pytest.raises(MyLibraryError):
+        await script_obj.async_run(context=Context())
+
+    assert_action_trace(
+        {
+            "0": [
+                {
+                    "error_type": MyLibraryError,
+                    "result": {
+                        "limit": 10,
+                        "params": {
+                            "domain": "some",
+                            "service": "service",
+                            "service_data": {},
+                            "target": {},
+                        },
+                        "running_script": False,
+                    },
+                }
+            ],
+        },
+        expected_script_execution="error",
+    )
+
+
+async def test_disabled_actions(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test disabled action steps."""
+    events = async_capture_events(hass, "test_event")
+
+    @callback
+    def broken_service(service: ServiceCall) -> None:
+        """Break this service with an error."""
+        raise HomeAssistantError("This service should not be called")
+
+    hass.services.async_register("broken", "service", broken_service)
+
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {"event": "test_event"},
+            {
+                "alias": "Hello",
+                "enabled": False,
+                "service": "broken.service",
+            },
+            {"alias": "World", "enabled": False, "event": "test_event"},
+            {"event": "test_event"},
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    await script_obj.async_run(context=Context())
+
+    assert len(events) == 2
+    assert "Test Name: Skipped disabled step Hello" in caplog.text
+    assert "Test Name: Skipped disabled step World" in caplog.text
+
+    assert_action_trace(
+        {
+            "0": [{"result": {"event": "test_event", "event_data": {}}}],
+            "1": [{}],
+            "2": [{}],
+            "3": [{"result": {"event": "test_event", "event_data": {}}}],
+        },
     )
