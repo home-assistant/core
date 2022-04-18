@@ -25,7 +25,6 @@ pillow==9.0.1
 pip>=21.0,<22.1
 pyserial==3.5
 python-slugify==4.0.1
-python-ulid==1.1.0
 pyudev==0.22.0
 pyyaml==6.0
 requests==2.27.1
