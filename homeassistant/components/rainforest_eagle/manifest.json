@@ -3,7 +3,7 @@
   "name": "Rainforest Eagle",
   "documentation": "https://www.home-assistant.io/integrations/rainforest_eagle",
   "requirements": ["aioeagle==1.1.0", "eagle100==0.1.0"],
-  "codeowners": ["@gtdiehl", "@jcalbert"],
+  "codeowners": ["@gtdiehl", "@jcalbert", "@hastarin"],
   "iot_class": "local_polling",
   "config_flow": true,
   "dhcp": [
