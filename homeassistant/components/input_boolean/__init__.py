@@ -92,7 +92,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     # Process integration platforms right away since
     # we will create entities before firing EVENT_COMPONENT_LOADED
-    async_process_integration_platform_for_component(hass, DOMAIN)
+    await async_process_integration_platform_for_component(hass, DOMAIN)
 
     id_manager = collection.IDManager()
 
