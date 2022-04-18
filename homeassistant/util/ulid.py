@@ -13,6 +13,4 @@ def ulid_hex() -> str:
        48bits             80bits
 
     """
-    return (
-        f'{int.to_bytes(int(time.time()*1000), 6, "big").hex()}{getrandbits(80):010x}'
-    )
+    return f"{int(time.time()*1000):012x}{getrandbits(80):020x}"
