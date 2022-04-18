@@ -6,9 +6,9 @@ import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel import (
     ATTR_CHANGED_BY,
-    FORMAT_NUMBER,
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
+    CodeFormat,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -164,7 +164,7 @@ class ElkArea(ElkAttachedEntity, AlarmControlPanelEntity, RestoreEntity):
     @property
     def code_format(self):
         """Return the alarm code format."""
-        return FORMAT_NUMBER
+        return CodeFormat.NUMBER
 
     @property
     def state(self):

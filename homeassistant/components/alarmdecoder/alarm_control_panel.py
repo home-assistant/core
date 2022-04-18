@@ -2,9 +2,9 @@
 import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel import (
-    FORMAT_NUMBER,
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
+    CodeFormat,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -77,7 +77,7 @@ class AlarmDecoderAlarmPanel(AlarmControlPanelEntity):
 
     _attr_name = "Alarm Panel"
     _attr_should_poll = False
-    _attr_code_format = FORMAT_NUMBER
+    _attr_code_format = CodeFormat.NUMBER
     _attr_supported_features = (
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY
