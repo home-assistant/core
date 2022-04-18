@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import event
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.integration_platform import (
-    async_process_integration_platform,
+    async_process_integration_platform_for_component,
 )
 from homeassistant.helpers.sun import (
     get_astral_location,
@@ -98,7 +98,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up from a config entry."""
     # Process integration platforms right away since
     # we will create entities before firing EVENT_COMPONENT_LOADED
-    await async_process_integration_platform(hass, DOMAIN)
+    await async_process_integration_platform_for_component(hass, DOMAIN)
     hass.data[DOMAIN] = Sun(hass)
     return True
 
