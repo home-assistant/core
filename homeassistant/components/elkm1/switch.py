@@ -1,6 +1,8 @@
 """Support for control of ElkM1 outputs (relays)."""
 from __future__ import annotations
 
+from typing import Any
+
 from elkm1_lib.outputs import Output
 
 from homeassistant.components.switch import SwitchEntity
@@ -35,10 +37,10 @@ class ElkOutput(ElkAttachedEntity, SwitchEntity):
         """Get the current output status."""
         return self._element.output_on
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the output."""
         self._element.turn_on(0)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the output."""
         self._element.turn_off()
