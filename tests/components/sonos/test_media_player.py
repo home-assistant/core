@@ -1,27 +1,11 @@
 """Tests for the Sonos Media Player platform."""
-from unittest.mock import PropertyMock
-
 import pytest
-from soco.exceptions import NotSupportedException
 
-from homeassistant.components.sonos import DATA_SONOS, DOMAIN, media_player
+from homeassistant.components.sonos import DOMAIN, media_player
 from homeassistant.const import STATE_IDLE
 from homeassistant.core import Context
 from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import device_registry as dr
-
-
-async def test_discovery_ignore_unsupported_device(
-    hass, async_setup_sonos, soco, caplog
-):
-    """Test discovery setup."""
-    message = f"GetVolume not supported on {soco.ip_address}"
-    type(soco).volume = PropertyMock(side_effect=NotSupportedException(message))
-
-    await async_setup_sonos()
-
-    assert message in caplog.text
-    assert not hass.data[DATA_SONOS].discovered
 
 
 async def test_services(hass, async_autosetup_sonos, hass_read_only_user):
