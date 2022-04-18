@@ -7,6 +7,9 @@ import time
 def ulid_hex() -> str:
     """Generate a ULID in hex.
 
+    This ulid should not be used for cryptographically secure
+    operations.
+
      01AN4Z07BY      79KA1307SR9X4MV3
     |----------|    |----------------|
      Timestamp          Randomness
