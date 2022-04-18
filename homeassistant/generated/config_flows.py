@@ -68,6 +68,7 @@ FLOWS = {
         "braviatv",
         "broadlink",
         "brother",
+        "brottsplatskartan",
         "brunt",
         "bsblan",
         "bthome",
