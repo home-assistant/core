@@ -8,6 +8,7 @@ import bellows
 import pkg_resources
 import zigpy
 from zigpy.config import CONF_NWK_EXTENDED_PAN_ID
+from zigpy.profiles import PROFILES
 import zigpy_deconz
 import zigpy_xbee
 import zigpy_zigate
@@ -19,7 +20,15 @@ from homeassistant.const import CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .core.const import ATTR_IEEE, DATA_ZHA, DATA_ZHA_CONFIG, DATA_ZHA_GATEWAY
+from .core.const import (
+    ATTR_IEEE,
+    ATTR_IN_CLUSTERS,
+    ATTR_OUT_CLUSTERS,
+    CONF_ALARM_MASTER_CODE,
+    DATA_ZHA,
+    DATA_ZHA_CONFIG,
+    DATA_ZHA_GATEWAY,
+)
 from .core.device import ZHADevice
 from .core.gateway import ZHAGateway
 from .core.helpers import async_get_zha_device
@@ -27,10 +36,13 @@ from .core.helpers import async_get_zha_device
 KEYS_TO_REDACT = {
     ATTR_IEEE,
     CONF_UNIQUE_ID,
+    CONF_ALARM_MASTER_CODE,
     "network_key",
     CONF_NWK_EXTENDED_PAN_ID,
     "partner_ieee",
 }
+
+CLUSTER_DETAILS = "cluster_details"
 
 
 def shallow_asdict(obj: Any) -> dict:
@@ -76,5 +88,35 @@ async def async_get_device_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry, device: dr.DeviceEntry
 ) -> dict:
     """Return diagnostics for a device."""
-    zha_device: ZHADevice = async_get_zha_device(hass, device.id)
-    return async_redact_data(zha_device.zha_device_info, KEYS_TO_REDACT)
+    zha_device: ZHADevice = await async_get_zha_device(hass, device.id)
+    device_info: dict[str, Any] = zha_device.zha_device_info
+    device_info[CLUSTER_DETAILS] = {}
+    for ep_id, endpoint in zha_device.device.endpoints.items():
+        if ep_id == 0:
+            continue
+        endpoint_key = (
+            f"{PROFILES.get(endpoint.profile_id).DeviceType(endpoint.device_type).name}[{ep_id}]"
+            if PROFILES.get(endpoint.profile_id) is not None
+            and endpoint.device_type is not None
+            else ep_id
+        )
+        device_info[CLUSTER_DETAILS][endpoint_key] = {
+            ATTR_IN_CLUSTERS: {
+                f"{cluster.ep_attribute}[0x{cluster.cluster_id:04x}]": {
+                    f"{attr_def.name}[0x{attr_id:04x}]": attr_value
+                    for attr_id, attr_def in cluster.attributes.items()
+                    if (attr_value := cluster.get(attr_def.name)) is not None
+                }
+                for cluster_id, cluster in endpoint.in_clusters.items()
+            },
+            ATTR_OUT_CLUSTERS: {
+                f"{cluster.ep_attribute}[0x{cluster.cluster_id:04x}]": {
+                    f"{attr_def.name}[0x{attr_id:04x}]": attr_value
+                    for attr_id, attr_def in cluster.attributes.items()
+                    if (attr_value := cluster.get(attr_def.name)) is not None
+                }
+                for cluster_id, cluster in endpoint.out_clusters.items()
+            },
+        }
+
+    return async_redact_data(device_info, KEYS_TO_REDACT)
