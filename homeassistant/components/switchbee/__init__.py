@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
 
 import switchbee
@@ -10,9 +9,10 @@ import switchbee
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
+from .const import DOMAIN, SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,6 +28,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     password = entry.data[CONF_PASSWORD]
 
     api = switchbee.SwitchBee(central_unit, user, password)
+    resp = await api.login()
+    if resp[switchbee.ATTR_STATUS] != switchbee.STATUS_OK:
+        _LOGGER.error(
+            "Failed to login to the central unit (%s) with the user %s %s",
+            central_unit,
+            central_unit,
+            resp,
+        )
+        raise PlatformNotReady
+
     coordinator = SwitchBeeCoordinator(hass, api)
     await coordinator.async_config_entry_first_refresh()
     entry.async_on_unload(entry.add_update_listener(update_listener))
@@ -41,6 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        hass.data[DOMAIN][entry.entry_id].api.close()
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
@@ -61,8 +72,7 @@ class SwitchBeeCoordinator(DataUpdateCoordinator):
         self._devices = None
         self._mac = ""
 
-        update_interval = timedelta(seconds=3)
-        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=update_interval)
+        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
 
     @property
     def api(self):
@@ -71,14 +81,15 @@ class SwitchBeeCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self):
         if self._devices is None:
-            if not await self._api.login():
-                raise UpdateFailed()
-
             result = await self._api.get_configuration()
             if (
                 switchbee.ATTR_STATUS not in result
                 or result[switchbee.ATTR_STATUS] != switchbee.STATUS_OK
             ):
+                _LOGGER.warning(
+                    "Failed to fetch configuration from the central unit status=%s",
+                    result[switchbee.ATTR_STATUS],
+                )
                 raise UpdateFailed()
 
             self._devices = {}
@@ -93,6 +104,9 @@ class SwitchBeeCoordinator(DataUpdateCoordinator):
             switchbee.ATTR_STATUS not in result
             or result[switchbee.ATTR_STATUS] != switchbee.STATUS_OK
         ):
+            _LOGGER.warning(
+                "Failed to fetch devices states from the central unit status=%s", result
+            )
             raise UpdateFailed()
 
         result = result[switchbee.ATTR_DATA]

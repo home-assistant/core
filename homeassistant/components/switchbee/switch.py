@@ -1,5 +1,5 @@
 """Support for SwitchBee switch."""
-import json
+import logging
 
 import switchbee
 
@@ -12,6 +12,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -65,12 +67,34 @@ class Device(CoordinatorEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs):
         """Async function to set on to switch."""
-        await self.coordinator.api.set_state(self._device_id, switchbee.STATE_ON)
+        result = await self.coordinator.api.set_state(
+            self._device_id, switchbee.STATE_ON
+        )
+        if (
+            result[switchbee.ATTR_STATUS] != switchbee.STATUS_OK
+            or result[switchbee.ATTR_DATA] != switchbee.STATE_ON
+        ):
+            _LOGGER.error(
+                "Failed to set %s state ON, status=%s, state=%s",
+                self._attr_name,
+                result[switchbee.ATTR_STATUS],
+                result[switchbee.ATTR_DATA],
+            )
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs):
         """Async function to set off to switch."""
-        payload = {"on": False}
-        payload = json.dumps(payload)
-        await self.coordinator.api.set_state(self._device_id, switchbee.STATE_OFF)
+        result = await self.coordinator.api.set_state(
+            self._device_id, switchbee.STATE_OFF
+        )
+        if (
+            result[switchbee.ATTR_STATUS] != switchbee.STATUS_OK
+            or result[switchbee.ATTR_DATA] != switchbee.STATE_OFF
+        ):
+            _LOGGER.error(
+                "Failed to set %s state ON, status=%s, state=%s",
+                self._attr_name,
+                result[switchbee.ATTR_STATUS],
+                result[switchbee.ATTR_DATA],
+            )
         await self.coordinator.async_request_refresh()
