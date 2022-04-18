@@ -1508,6 +1508,42 @@ async def test_condition_basic(hass, caplog):
     )
 
 
+async def test_and_default_condition(hass, caplog):
+    """Test that a list of conditions evaluates as AND."""
+    alias = "condition step"
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {
+                "alias": alias,
+                "condition": [
+                    {
+                        "condition": "template",
+                        "value_template": "{{ states.test.entity.state == 'hello' }}",
+                    },
+                    {
+                        "condition": "numeric_state",
+                        "entity_id": "sensor.temperature",
+                        "below": 110,
+                    },
+                ],
+            },
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    hass.states.async_set("sensor.temperature", 100)
+    hass.states.async_set("test.entity", "hello")
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+    assert f"Test condition {alias}: True" in caplog.text
+    caplog.clear()
+
+    hass.states.async_set("sensor.temperature", 120)
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+    assert f"Test condition {alias}: False" in caplog.text
+
+
 async def test_shorthand_template_condition(hass, caplog):
     """Test if we can use shorthand template conditions in a script."""
     event = "test_event"

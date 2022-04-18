@@ -24,6 +24,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.start import async_at_start
+from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
@@ -42,7 +43,7 @@ CONF_TYPE_COUNT = "count"
 CONF_TYPE_KEYS = [CONF_TYPE_TIME, CONF_TYPE_RATIO, CONF_TYPE_COUNT]
 
 DEFAULT_NAME = "unnamed statistics"
-UNITS = {
+UNITS: dict[str, str] = {
     CONF_TYPE_TIME: TIME_HOURS,
     CONF_TYPE_RATIO: PERCENTAGE,
     CONF_TYPE_COUNT: "",
@@ -77,6 +78,69 @@ PLATFORM_SCHEMA = vol.All(
 )
 
 
+def _floored_timestamp(incoming_dt: datetime.datetime) -> float:
+    return math.floor(dt_util.as_timestamp(incoming_dt))
+
+
+@callback
+def async_calculate_period(
+    duration: datetime.timedelta | None,
+    start_template: Template | None,
+    end_template: Template | None,
+) -> tuple[datetime.datetime, datetime.datetime] | None:
+    """Parse the templates and return the period."""
+    start: datetime.datetime | None = None
+    end: datetime.datetime | None = None
+
+    # Parse start
+    if start_template is not None:
+        try:
+            start_rendered = start_template.async_render()
+        except (TemplateError, TypeError) as ex:
+            HistoryStatsHelper.handle_template_exception(ex, "start")
+            return None
+        if isinstance(start_rendered, str):
+            start = dt_util.parse_datetime(start_rendered)
+        if start is None:
+            try:
+                start = dt_util.as_local(
+                    dt_util.utc_from_timestamp(math.floor(float(start_rendered)))
+                )
+            except ValueError:
+                _LOGGER.error("Parsing error: start must be a datetime or a timestamp")
+                return None
+
+    # Parse end
+    if end_template is not None:
+        try:
+            end_rendered = end_template.async_render()
+        except (TemplateError, TypeError) as ex:
+            HistoryStatsHelper.handle_template_exception(ex, "end")
+            return None
+        if isinstance(end_rendered, str):
+            end = dt_util.parse_datetime(end_rendered)
+        if end is None:
+            try:
+                end = dt_util.as_local(
+                    dt_util.utc_from_timestamp(math.floor(float(end_rendered)))
+                )
+            except ValueError:
+                _LOGGER.error("Parsing error: end must be a datetime or a timestamp")
+                return None
+
+    # Calculate start or end using the duration
+    if start is None:
+        assert end is not None
+        assert duration is not None
+        start = end - duration
+    if end is None:
+        assert start is not None
+        assert duration is not None
+        end = start + duration
+
+    return start, end
+
+
 # noinspection PyUnusedLocal
 async def async_setup_platform(
     hass: HomeAssistant,
@@ -87,13 +151,13 @@ async def async_setup_platform(
     """Set up the History Stats sensor."""
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
 
-    entity_id = config.get(CONF_ENTITY_ID)
-    entity_states = config.get(CONF_STATE)
-    start = config.get(CONF_START)
-    end = config.get(CONF_END)
-    duration = config.get(CONF_DURATION)
-    sensor_type = config.get(CONF_TYPE)
-    name = config.get(CONF_NAME)
+    entity_id: str = config[CONF_ENTITY_ID]
+    entity_states: list[str] = config[CONF_STATE]
+    start: Template | None = config.get(CONF_START)
+    end: Template | None = config.get(CONF_END)
+    duration: datetime.timedelta | None = config.get(CONF_DURATION)
+    sensor_type: str = config[CONF_TYPE]
+    name: str = config[CONF_NAME]
 
     for template in (start, end):
         if template is not None:
@@ -102,7 +166,7 @@ async def async_setup_platform(
     async_add_entities(
         [
             HistoryStatsSensor(
-                hass, entity_id, entity_states, start, end, duration, sensor_type, name
+                entity_id, entity_states, start, end, duration, sensor_type, name
             )
         ]
     )
@@ -111,22 +175,30 @@ async def async_setup_platform(
 class HistoryStatsSensor(SensorEntity):
     """Representation of a HistoryStats sensor."""
 
+    _attr_icon = ICON
+
     def __init__(
-        self, hass, entity_id, entity_states, start, end, duration, sensor_type, name
-    ):
+        self,
+        entity_id: str,
+        entity_states: list[str],
+        start: Template | None,
+        end: Template | None,
+        duration: datetime.timedelta | None,
+        sensor_type: str,
+        name: str,
+    ) -> None:
         """Initialize the HistoryStats sensor."""
+        self._attr_name = name
+        self._attr_native_unit_of_measurement = UNITS[sensor_type]
+
         self._entity_id = entity_id
-        self._entity_states = entity_states
+        self._entity_states = set(entity_states)
         self._duration = duration
         self._start = start
         self._end = end
         self._type = sensor_type
-        self._name = name
-        self._unit_of_measurement = UNITS[sensor_type]
-
         self._period = (datetime.datetime.min, datetime.datetime.min)
-        self.value = None
-        self.count = None
+
         self._history_current_period: list[State] = []
         self._previous_run_before_start = False
 
@@ -153,70 +225,28 @@ class HistoryStatsSensor(SensorEntity):
         await self._async_update(event)
         self.async_write_ha_state()
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        if self.value is None or self.count is None:
-            return None
-
-        if self._type == CONF_TYPE_TIME:
-            return round(self.value, 2)
-
-        if self._type == CONF_TYPE_RATIO:
-            return HistoryStatsHelper.pretty_ratio(self.value, self._period)
-
-        if self._type == CONF_TYPE_COUNT:
-            return self.count
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return self._unit_of_measurement
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes of the sensor."""
-        if self.value is None:
-            return {}
-
-        hsh = HistoryStatsHelper
-        return {ATTR_VALUE: hsh.pretty_duration(self.value)}
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return ICON
-
     async def _async_update(self, event: Event | None) -> None:
-        """Get the latest data and updates the states."""
+        """Process an update."""
         # Get previous values of start and end
-
-        p_start, p_end = self._period
-
+        previous_period_start, previous_period_end = self._period
         # Parse templates
         self.update_period()
-        start, end = self._period
+        current_period_start, current_period_end = self._period
 
         # Convert times to UTC
-        start = dt_util.as_utc(start)
-        end = dt_util.as_utc(end)
-        p_start = dt_util.as_utc(p_start)
-        p_end = dt_util.as_utc(p_end)
-        now = datetime.datetime.now()
+        current_period_start = dt_util.as_utc(current_period_start)
+        current_period_end = dt_util.as_utc(current_period_end)
+        previous_period_start = dt_util.as_utc(previous_period_start)
+        previous_period_end = dt_util.as_utc(previous_period_end)
 
         # Compute integer timestamps
-        start_timestamp = math.floor(dt_util.as_timestamp(start))
-        end_timestamp = math.floor(dt_util.as_timestamp(end))
-        p_start_timestamp = math.floor(dt_util.as_timestamp(p_start))
-        p_end_timestamp = math.floor(dt_util.as_timestamp(p_end))
-        now_timestamp = math.floor(dt_util.as_timestamp(now))
+        current_period_start_timestamp = _floored_timestamp(current_period_start)
+        current_period_end_timestamp = _floored_timestamp(current_period_end)
+        previous_period_start_timestamp = _floored_timestamp(previous_period_start)
+        previous_period_end_timestamp = _floored_timestamp(previous_period_end)
+        now_timestamp = _floored_timestamp(datetime.datetime.now())
 
-        if now_timestamp < start_timestamp:
+        if now_timestamp < current_period_start_timestamp:
             # History cannot tell the future
             self._history_current_period = []
             self._previous_run_before_start = True
@@ -230,22 +260,22 @@ class HistoryStatsSensor(SensorEntity):
         #
         elif (
             not self._previous_run_before_start
-            and start_timestamp == p_start_timestamp
+            and current_period_start_timestamp == previous_period_start_timestamp
             and (
-                end_timestamp == p_end_timestamp
+                current_period_end_timestamp == previous_period_end_timestamp
                 or (
-                    end_timestamp >= p_end_timestamp
-                    and p_end_timestamp <= now_timestamp
+                    current_period_end_timestamp >= previous_period_end_timestamp
+                    and previous_period_end_timestamp <= now_timestamp
                 )
             )
         ):
             new_data = False
             if event and event.data["new_state"] is not None:
                 new_state: State = event.data["new_state"]
-                if start <= new_state.last_changed <= end:
+                if current_period_start <= new_state.last_changed <= current_period_end:
                     self._history_current_period.append(new_state)
                     new_data = True
-            if not new_data and end_timestamp < now_timestamp:
+            if not new_data and current_period_end_timestamp < now_timestamp:
                 # If period has not changed and current time after the period end...
                 # Don't compute anything as the value cannot have changed
                 return
@@ -253,26 +283,26 @@ class HistoryStatsSensor(SensorEntity):
             self._history_current_period = await get_instance(
                 self.hass
             ).async_add_executor_job(
-                self._update,
-                start,
-                end,
+                self._update_from_database,
+                current_period_start,
+                current_period_end,
             )
             self._previous_run_before_start = False
 
         if not self._history_current_period:
-            self.value = None
-            self.count = None
+            self._async_set_native_value(None, None)
             return
 
-        self._async_compute_hours_and_changes(
+        hours_matched, changes_to_match_state = self._async_compute_hours_and_changes(
             now_timestamp,
-            start_timestamp,
-            end_timestamp,
+            current_period_start_timestamp,
+            current_period_end_timestamp,
         )
+        self._async_set_native_value(hours_matched, changes_to_match_state)
 
-    def _update(self, start: datetime.datetime, end: datetime.datetime) -> list[State]:
-        """Update from the database."""
-        # Get history between start and end
+    def _update_from_database(
+        self, start: datetime.datetime, end: datetime.datetime
+    ) -> list[State]:
         return history.state_changes_during_period(
             self.hass,
             start,
@@ -284,7 +314,7 @@ class HistoryStatsSensor(SensorEntity):
 
     def _async_compute_hours_and_changes(
         self, now_timestamp: float, start_timestamp: float, end_timestamp: float
-    ) -> None:
+    ) -> tuple[float, int]:
         """Compute the hours matched and changes from the history list and first state."""
         _LOGGER.debug(
             "%s: _async_compute_hours_and_changes: %s (%s)",
@@ -295,90 +325,61 @@ class HistoryStatsSensor(SensorEntity):
         # state_changes_during_period is called with include_start_time_state=True
         # which is the default and always provides the state at the start
         # of the period
-        last_state = (
+        previous_state_matches = (
             self._history_current_period
             and self._history_current_period[0].state in self._entity_states
         )
-        last_time = start_timestamp
+        last_state_change_timestamp = start_timestamp
         elapsed = 0.0
-        count = 0
+        changes_to_match_state = 0
 
         # Make calculations
         for item in self._history_current_period:
-            current_state = item.state in self._entity_states
-            current_time = item.last_changed.timestamp()
+            current_state_matches = item.state in self._entity_states
+            state_change_timestamp = item.last_changed.timestamp()
 
-            if last_state:
-                elapsed += current_time - last_time
-            if current_state and not last_state:
-                count += 1
+            if previous_state_matches:
+                elapsed += state_change_timestamp - last_state_change_timestamp
+            elif current_state_matches:
+                changes_to_match_state += 1
 
-            last_state = current_state
-            last_time = current_time
+            previous_state_matches = current_state_matches
+            last_state_change_timestamp = state_change_timestamp
 
         # Count time elapsed between last history state and end of measure
-        if last_state:
+        if previous_state_matches:
             measure_end = min(end_timestamp, now_timestamp)
-            elapsed += measure_end - last_time
+            elapsed += measure_end - last_state_change_timestamp
 
         # Save value in hours
-        self.value = elapsed / 3600
+        hours_matched = elapsed / 3600
+        return hours_matched, changes_to_match_state
 
-        # Save counter
-        self.count = count
+    def _async_set_native_value(
+        self, hours_matched: float | None, changes_to_match_state: int | None
+    ) -> None:
+        """Set attrs from value and count."""
+        if hours_matched is None:
+            self._attr_native_value = None
+            self._attr_extra_state_attributes = {}
+            return
 
-    def update_period(self):
+        if self._type == CONF_TYPE_TIME:
+            self._attr_native_value = round(hours_matched, 2)
+        elif self._type == CONF_TYPE_RATIO:
+            self._attr_native_value = HistoryStatsHelper.pretty_ratio(
+                hours_matched, self._period
+            )
+        elif self._type == CONF_TYPE_COUNT:
+            self._attr_native_value = changes_to_match_state
+        self._attr_extra_state_attributes = {
+            ATTR_VALUE: HistoryStatsHelper.pretty_duration(hours_matched)
+        }
+
+    def update_period(self) -> None:
         """Parse the templates and store a datetime tuple in _period."""
-        start = None
-        end = None
-
-        # Parse start
-        if self._start is not None:
-            try:
-                start_rendered = self._start.async_render()
-            except (TemplateError, TypeError) as ex:
-                HistoryStatsHelper.handle_template_exception(ex, "start")
-                return
-            if isinstance(start_rendered, str):
-                start = dt_util.parse_datetime(start_rendered)
-            if start is None:
-                try:
-                    start = dt_util.as_local(
-                        dt_util.utc_from_timestamp(math.floor(float(start_rendered)))
-                    )
-                except ValueError:
-                    _LOGGER.error(
-                        "Parsing error: start must be a datetime or a timestamp"
-                    )
-                    return
-
-        # Parse end
-        if self._end is not None:
-            try:
-                end_rendered = self._end.async_render()
-            except (TemplateError, TypeError) as ex:
-                HistoryStatsHelper.handle_template_exception(ex, "end")
-                return
-            if isinstance(end_rendered, str):
-                end = dt_util.parse_datetime(end_rendered)
-            if end is None:
-                try:
-                    end = dt_util.as_local(
-                        dt_util.utc_from_timestamp(math.floor(float(end_rendered)))
-                    )
-                except ValueError:
-                    _LOGGER.error(
-                        "Parsing error: end must be a datetime or a timestamp"
-                    )
-                    return
-
-        # Calculate start or end using the duration
-        if start is None:
-            start = end - self._duration
-        if end is None:
-            end = start + self._duration
-
-        self._period = start, end
+        if new_period := async_calculate_period(self._duration, self._start, self._end):
+            self._period = new_period
 
 
 class HistoryStatsHelper:
