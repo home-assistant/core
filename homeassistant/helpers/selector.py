@@ -765,6 +765,27 @@ class TargetSelector(Selector):
         return target
 
 
+class TemplateSelectorConfig(TypedDict):
+    """Class to represent an template selector config."""
+
+
+@SELECTORS.register("template")
+class TemplateSelector(Selector):
+    """Selector for an template."""
+
+    selector_type = "template"
+
+    CONFIG_SCHEMA = vol.Schema({})
+
+    def __init__(self, config: TemplateSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> str:
+        """Validate the passed selection."""
+        return cast(str, data)
+
+
 class TextSelectorConfig(TypedDict, total=False):
     """Class to represent a text selector config."""
 
