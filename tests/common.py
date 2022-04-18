@@ -40,7 +40,6 @@ from homeassistant.const import (
     DEVICE_DEFAULT_NAME,
     EVENT_HOMEASSISTANT_CLOSE,
     EVENT_STATE_CHANGED,
-    EVENT_TIME_CHANGED,
     STATE_OFF,
     STATE_ON,
 )
@@ -314,9 +313,7 @@ async def async_test_home_assistant(loop, load_registries=True):
     async def mock_async_start():
         """Start the mocking."""
         # We only mock time during tests and we want to track tasks
-        with patch("homeassistant.core._async_create_timer"), patch.object(
-            hass, "async_stop_track_tasks"
-        ):
+        with patch.object(hass, "async_stop_track_tasks"):
             await orig_start()
 
     hass.async_start = mock_async_start
@@ -385,8 +382,6 @@ def async_fire_time_changed(
     """Fire a time changed event."""
     if datetime_ is None:
         datetime_ = date_util.utcnow()
-
-    hass.bus.async_fire(EVENT_TIME_CHANGED, {"now": date_util.as_utc(datetime_)})
 
     for task in list(hass.loop._scheduled):
         if not isinstance(task, asyncio.TimerHandle):
@@ -910,10 +905,16 @@ def init_recorder_component(hass, add_config=None):
         if recorder.CONF_COMMIT_INTERVAL not in config:
             config[recorder.CONF_COMMIT_INTERVAL] = 0
 
-    with patch("homeassistant.components.recorder.migration.migrate_schema"):
+    with patch(
+        "homeassistant.components.recorder.ALLOW_IN_MEMORY_DB",
+        True,
+    ), patch("homeassistant.components.recorder.migration.migrate_schema"):
         assert setup_component(hass, recorder.DOMAIN, {recorder.DOMAIN: config})
         assert recorder.DOMAIN in hass.config.components
-    _LOGGER.info("In-memory recorder successfully started")
+    _LOGGER.info(
+        "Test recorder successfully started, database location: %s",
+        config[recorder.CONF_DB_URL],
+    )
 
 
 async def async_init_recorder_component(hass, add_config=None):
@@ -924,12 +925,18 @@ async def async_init_recorder_component(hass, add_config=None):
         if recorder.CONF_COMMIT_INTERVAL not in config:
             config[recorder.CONF_COMMIT_INTERVAL] = 0
 
-    with patch("homeassistant.components.recorder.migration.migrate_schema"):
+    with patch(
+        "homeassistant.components.recorder.ALLOW_IN_MEMORY_DB",
+        True,
+    ), patch("homeassistant.components.recorder.migration.migrate_schema"):
         assert await async_setup_component(
             hass, recorder.DOMAIN, {recorder.DOMAIN: config}
         )
         assert recorder.DOMAIN in hass.config.components
-    _LOGGER.info("In-memory recorder successfully started")
+    _LOGGER.info(
+        "Test recorder successfully started, database location: %s",
+        config[recorder.CONF_DB_URL],
+    )
 
 
 def mock_restore_cache(hass, states):

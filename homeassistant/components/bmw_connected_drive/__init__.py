@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import logging
-from typing import Any, cast
+from typing import Any
 
 from bimmer_connected.account import ConnectedDriveAccount
 from bimmer_connected.country_selector import get_region_from_name
@@ -22,7 +22,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry, discovery
+from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.event import track_utc_time_change
@@ -67,14 +67,6 @@ PLATFORMS = [
 UPDATE_INTERVAL = 5  # in minutes
 
 SERVICE_UPDATE_STATE = "update_state"
-
-_SERVICE_MAP = {
-    "light_flash": "trigger_remote_light_flash",
-    "sound_horn": "trigger_remote_horn",
-    "activate_air_conditioning": "trigger_remote_air_conditioning",
-    "deactivate_air_conditioning": "trigger_remote_air_conditioning_stop",
-    "find_vehicle": "trigger_remote_vehicle_finder",
-}
 
 UNDO_UPDATE_LISTENER = "undo_update_listener"
 
@@ -133,9 +125,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         UNDO_UPDATE_LISTENER: undo_listener,
     }
 
-    # Service to manually trigger updates for all accounts.
-    hass.services.async_register(DOMAIN, SERVICE_UPDATE_STATE, _async_update_all)
-
     await _async_update_all()
 
     hass.config_entries.async_setup_platforms(
@@ -162,15 +151,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(
         entry, [platform for platform in PLATFORMS if platform != Platform.NOTIFY]
     )
-
-    # Only remove services if it is the last account and not read only
-    if (
-        len(hass.data[DOMAIN][DATA_ENTRIES]) == 1
-        and not hass.data[DOMAIN][DATA_ENTRIES][entry.entry_id][CONF_ACCOUNT].read_only
-    ):
-        services = list(_SERVICE_MAP) + [SERVICE_UPDATE_STATE]
-        for service in services:
-            hass.services.async_remove(DOMAIN, service)
 
     for vehicle in hass.data[DOMAIN][DATA_ENTRIES][entry.entry_id][
         CONF_ACCOUNT
@@ -204,57 +184,6 @@ def setup_account(
     cd_account = BMWConnectedDriveAccount(
         username, password, region, name, read_only, *pos
     )
-
-    def execute_service(call: ServiceCall) -> None:
-        """Execute a service for a vehicle."""
-        _LOGGER.warning(
-            "BMW Connected Drive services are deprecated. Please migrate to the dedicated button entities. "
-            "See https://www.home-assistant.io/integrations/bmw_connected_drive/#buttons for details"
-        )
-
-        vin: str | None = call.data.get(ATTR_VIN)
-        device_id: str | None = call.data.get(CONF_DEVICE_ID)
-
-        vehicle: ConnectedDriveVehicle | None = None
-
-        if not vin and device_id:
-            # If vin is None, device_id must be set (given by SERVICE_SCHEMA)
-            if not (device := device_registry.async_get(hass).async_get(device_id)):
-                _LOGGER.error("Could not find a device for id: %s", device_id)
-                return
-            vin = next(iter(device.identifiers))[1]
-        else:
-            vin = cast(str, vin)
-
-        # Double check for read_only accounts as another account could create the services
-        for entry_data in [
-            e
-            for e in hass.data[DOMAIN][DATA_ENTRIES].values()
-            if not e[CONF_ACCOUNT].read_only
-        ]:
-            account: ConnectedDriveAccount = entry_data[CONF_ACCOUNT].account
-            if vehicle := account.get_vehicle(vin):
-                break
-        if not vehicle:
-            _LOGGER.error("Could not find a vehicle for VIN %s", vin)
-            return
-        function_name = _SERVICE_MAP[call.service]
-        function_call = getattr(vehicle.remote_services, function_name)
-        function_call()
-
-        if call.service in [
-            "find_vehicle",
-            "activate_air_conditioning",
-            "deactivate_air_conditioning",
-        ]:
-            cd_account.update()
-
-    if not read_only:
-        # register the remote services
-        for service in _SERVICE_MAP:
-            hass.services.register(
-                DOMAIN, service, execute_service, schema=SERVICE_SCHEMA
-            )
 
     # update every UPDATE_INTERVAL minutes, starting now
     # this should even out the load on the servers

@@ -215,7 +215,6 @@ omit =
     homeassistant/components/devolo_home_control/subscriber.py
     homeassistant/components/devolo_home_control/switch.py
     homeassistant/components/digital_ocean/*
-    homeassistant/components/digitalloggers/switch.py
     homeassistant/components/discogs/sensor.py
     homeassistant/components/discord/__init__.py
     homeassistant/components/discord/notify.py
@@ -593,10 +592,6 @@ omit =
     homeassistant/components/keyboard_remote/*
     homeassistant/components/kira/*
     homeassistant/components/kiwi/lock.py
-    homeassistant/components/knx/__init__.py
-    homeassistant/components/knx/climate.py
-    homeassistant/components/knx/cover.py
-    homeassistant/components/knx/notify.py
     homeassistant/components/kodi/__init__.py
     homeassistant/components/kodi/browse_media.py
     homeassistant/components/kodi/const.py
@@ -1033,6 +1028,9 @@ omit =
     homeassistant/components/sensibo/number.py
     homeassistant/components/sensibo/select.py
     homeassistant/components/sensibo/sensor.py
+    homeassistant/components/senz/__init__.py
+    homeassistant/components/senz/api.py
+    homeassistant/components/senz/climate.py
     homeassistant/components/serial/sensor.py
     homeassistant/components/serial_pm/sensor.py
     homeassistant/components/sesame/lock.py
@@ -1268,6 +1266,7 @@ omit =
     homeassistant/components/tractive/__init__.py
     homeassistant/components/tractive/binary_sensor.py
     homeassistant/components/tractive/device_tracker.py
+    homeassistant/components/tractive/diagnostics.py
     homeassistant/components/tractive/entity.py
     homeassistant/components/tractive/sensor.py
     homeassistant/components/tractive/switch.py
@@ -1368,6 +1367,7 @@ omit =
     homeassistant/components/vicare/button.py
     homeassistant/components/vicare/climate.py
     homeassistant/components/vicare/const.py
+    homeassistant/components/vicare/diagnostics.py
     homeassistant/components/vicare/__init__.py
     homeassistant/components/vicare/sensor.py
     homeassistant/components/vicare/water_heater.py
@@ -1431,6 +1431,7 @@ omit =
     homeassistant/components/xiaomi_miio/button.py
     homeassistant/components/xiaomi_miio/device.py
     homeassistant/components/xiaomi_miio/device_tracker.py
+    homeassistant/components/xiaomi_miio/diagnostics.py
     homeassistant/components/xiaomi_miio/fan.py
     homeassistant/components/xiaomi_miio/gateway.py
     homeassistant/components/xiaomi_miio/humidifier.py

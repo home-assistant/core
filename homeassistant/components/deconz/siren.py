@@ -1,5 +1,4 @@
 """Support for deCONZ siren."""
-
 from __future__ import annotations
 
 from typing import Any
@@ -9,10 +8,8 @@ from pydeconz.light import Siren
 from homeassistant.components.siren import (
     ATTR_DURATION,
     DOMAIN,
-    SUPPORT_DURATION,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
     SirenEntity,
+    SirenEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -20,7 +17,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .deconz_device import DeconzDevice
-from .gateway import DeconzGateway, get_gateway_from_config_entry
+from .gateway import get_gateway_from_config_entry
 
 
 async def async_setup_entry(
@@ -66,15 +63,12 @@ class DeconzSiren(DeconzDevice, SirenEntity):
     """Representation of a deCONZ siren."""
 
     TYPE = DOMAIN
+    _attr_supported_features = (
+        SirenEntityFeature.TURN_ON
+        | SirenEntityFeature.TURN_OFF
+        | SirenEntityFeature.DURATION
+    )
     _device: Siren
-
-    def __init__(self, device: Siren, gateway: DeconzGateway) -> None:
-        """Set up siren."""
-        super().__init__(device, gateway)
-
-        self._attr_supported_features = (
-            SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_DURATION
-        )
 
     @property
     def is_on(self) -> bool:

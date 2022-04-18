@@ -27,7 +27,7 @@ from aioairzone.const import (
 )
 
 from homeassistant.components.airzone import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_ID, CONF_PORT
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -35,6 +35,18 @@ from tests.common import MockConfigEntry
 CONFIG = {
     CONF_HOST: "192.168.1.100",
     CONF_PORT: 3000,
+    CONF_ID: 0,
+}
+
+CONFIG_NO_ID = {
+    CONF_HOST: CONFIG[CONF_HOST],
+    CONF_PORT: CONFIG[CONF_PORT],
+}
+
+CONFIG_ID1 = {
+    CONF_HOST: CONFIG[CONF_HOST],
+    CONF_PORT: CONFIG[CONF_PORT],
+    CONF_ID: 1,
 }
 
 HVAC_MOCK = {
@@ -74,13 +86,13 @@ HVAC_MOCK = {
                     API_MODE: 3,
                     API_COLD_STAGES: 1,
                     API_COLD_STAGE: 1,
-                    API_HEAT_STAGES: 1,
-                    API_HEAT_STAGE: 1,
+                    API_HEAT_STAGES: 3,
+                    API_HEAT_STAGE: 3,
                     API_HUMIDITY: 39,
                     API_UNITS: 0,
                     API_ERRORS: [],
                     API_AIR_DEMAND: 1,
-                    API_FLOOR_DEMAND: 0,
+                    API_FLOOR_DEMAND: 1,
                 },
                 {
                     API_SYSTEM_ID: 1,
@@ -94,8 +106,8 @@ HVAC_MOCK = {
                     API_MODE: 3,
                     API_COLD_STAGES: 1,
                     API_COLD_STAGE: 1,
-                    API_HEAT_STAGES: 1,
-                    API_HEAT_STAGE: 1,
+                    API_HEAT_STAGES: 2,
+                    API_HEAT_STAGE: 2,
                     API_HUMIDITY: 35,
                     API_UNITS: 0,
                     API_ERRORS: [],
