@@ -14,16 +14,16 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_STATE,
     CONF_TYPE,
-    EVENT_HOMEASSISTANT_START,
     PERCENTAGE,
     TIME_HOURS,
 )
-from homeassistant.core import CoreState, Event, HomeAssistant, State, callback
+from homeassistant.core import Event, HomeAssistant, State, callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.reload import async_setup_reload_service
+from homeassistant.helpers.start import async_at_start
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
@@ -214,13 +214,7 @@ class HistoryStatsSensor(SensorEntity):
 
     async def async_added_to_hass(self):
         """Create listeners when the entity is added."""
-        if self.hass.state == CoreState.running:
-            self._async_start_refresh()
-            return
-        # Delay first refresh to keep startup fast
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_START, self._async_start_refresh
-        )
+        self.async_on_remove(async_at_start(self.hass, self._async_start_refresh))
 
     async def async_update(self) -> None:
         """Get the latest data and updates the states."""
