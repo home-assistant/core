@@ -17,7 +17,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["errors"] is None
 
     with patch(
-        "homeassistant.components.switchbee.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.switchbee.config_flow.Hub.authenticate",
         return_value=True,
     ), patch(
         "homeassistant.components.switchbee.async_setup_entry",
@@ -26,7 +26,7 @@ async def test_form(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "ip_address": "1.1.1.1",
+                "host": "1.1.1.1",
                 "username": "test-username",
                 "password": "test-password",
             },
@@ -36,7 +36,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result2["title"] == "Name of the device"
     assert result2["data"] == {
-        "ip_address": "1.1.1.1",
+        "host": "1.1.1.1",
         "username": "test-username",
         "password": "test-password",
     }
@@ -50,13 +50,13 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.switchbee.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.switchbee.config_flow.Hub.authenticate",
         side_effect=InvalidAuth,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "ip_address": "1.1.1.1",
+                "host": "1.1.1.1",
                 "username": "test-username",
                 "password": "test-password",
             },
@@ -73,13 +73,13 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.switchbee.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.switchbee.config_flow.Hub.authenticate",
         side_effect=CannotConnect,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "ip_address": "1.1.1.1",
+                "host": "1.1.1.1",
                 "username": "test-username",
                 "password": "test-password",
             },
