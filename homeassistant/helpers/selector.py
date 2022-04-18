@@ -783,7 +783,8 @@ class TemplateSelector(Selector):
 
     def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
-        return cast(str, data)
+        template = cv.template(data)
+        return template.template
 
 
 class TextSelectorConfig(TypedDict, total=False):

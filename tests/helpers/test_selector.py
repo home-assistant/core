@@ -631,7 +631,7 @@ def test_datetime_selector_schema(schema, valid_selections, invalid_selections):
 
 @pytest.mark.parametrize(
     "schema,valid_selections,invalid_selections",
-    (({}, ("abc123",), ()),),
+    (({}, ("abc123", "{{ now() }}"), (None, "{{ incomplete }", "{% if True %}Hi!")),),
 )
 def test_template_selector_schema(schema, valid_selections, invalid_selections):
     """Test template selector."""
