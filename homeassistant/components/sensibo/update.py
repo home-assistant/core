@@ -80,11 +80,7 @@ class SensiboDeviceUpdate(SensiboDeviceBaseEntity, UpdateEntity):
         self.entity_description = entity_description
         self._attr_unique_id = f"{device_id}-{entity_description.key}"
         self._attr_name = f"{self.device_data.name} {entity_description.name}"
-
-    @property
-    def title(self) -> str:
-        """Return title of software model."""
-        return f"{self.device_data.model}"
+        self._attr_title = self.device_data.model
 
     @property
     def installed_version(self) -> str | None:
