@@ -54,4 +54,4 @@ async def test_exclude_attributes(
     states: list[State] = await hass.async_add_executor_job(_fetch_states)
     assert len(states) == 1
     assert ATTR_EDITABLE not in states[0].attributes
-    assert ATTR_OPTIONS not in states[0].attributes
+    assert ATTR_OPTIONS in states[0].attributes
