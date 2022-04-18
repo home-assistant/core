@@ -18,6 +18,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
+    CONF_UNIQUE_ID,
     ENERGY_KILO_WATT_HOUR,
     ENERGY_WATT_HOUR,
     STATE_UNAVAILABLE,
@@ -176,13 +177,23 @@ async def async_setup_platform(
 ) -> None:
     """Set up the utility meter sensor."""
     if discovery_info is None:
-        _LOGGER.error("This platform is only available through discovery")
+        _LOGGER.error(
+            "This platform is not available to configure "
+            "from 'sensor:' in configuration.yaml"
+        )
         return
 
     meters = []
     for conf in discovery_info.values():
         meter = conf[CONF_METER]
         conf_meter_source = hass.data[DATA_UTILITY][meter][CONF_SOURCE_SENSOR]
+        conf_meter_unique_id = hass.data[DATA_UTILITY][meter].get(CONF_UNIQUE_ID)
+        conf_sensor_tariff = conf.get(CONF_TARIFF, "single_tariff")
+        conf_sensor_unique_id = (
+            f"{conf_meter_unique_id}_{conf_sensor_tariff}"
+            if conf_meter_unique_id
+            else None
+        )
         conf_meter_type = hass.data[DATA_UTILITY][meter].get(CONF_METER_TYPE)
         conf_meter_offset = hass.data[DATA_UTILITY][meter][CONF_METER_OFFSET]
         conf_meter_delta_values = hass.data[DATA_UTILITY][meter][
@@ -205,8 +216,8 @@ async def async_setup_platform(
             parent_meter=meter,
             source_entity=conf_meter_source,
             tariff_entity=conf_meter_tariff_entity,
-            tariff=conf.get(CONF_TARIFF),
-            unique_id=None,
+            tariff=conf_sensor_tariff,
+            unique_id=conf_sensor_unique_id,
         )
         meters.append(meter_sensor)
 

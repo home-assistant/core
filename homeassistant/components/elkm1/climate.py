@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from elkm1_lib.const import ThermostatFan, ThermostatMode, ThermostatSetting
 
-from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
@@ -14,9 +14,6 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
-    SUPPORT_AUX_HEAT,
-    SUPPORT_FAN_MODE,
-    SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PRECISION_WHOLE
@@ -64,7 +61,7 @@ async def async_setup_entry(
 ) -> None:
     """Create the Elk-M1 thermostat platform."""
     elk_data = hass.data[DOMAIN][config_entry.entry_id]
-    entities: list[ElkThermostat] = []
+    entities: list[ElkEntity] = []
     elk = elk_data["elk"]
     create_elk_entities(
         elk_data, elk.thermostats, "thermostat", ElkThermostat, entities
@@ -75,15 +72,16 @@ async def async_setup_entry(
 class ElkThermostat(ElkEntity, ClimateEntity):
     """Representation of an Elk-M1 Thermostat."""
 
+    _attr_supported_features = (
+        ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.AUX_HEAT
+        | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+    )
+
     def __init__(self, element, elk, elk_data):
         """Initialize climate entity."""
         super().__init__(element, elk, elk_data)
         self._state = None
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_FAN_MODE | SUPPORT_AUX_HEAT | SUPPORT_TARGET_TEMPERATURE_RANGE
 
     @property
     def temperature_unit(self):

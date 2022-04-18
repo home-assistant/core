@@ -10,8 +10,8 @@ import async_timeout
 from pydeconz import DeconzSession, errors, group, light, sensor
 from pydeconz.alarm_system import AlarmSystem as DeconzAlarmSystem
 from pydeconz.group import Group as DeconzGroup
-from pydeconz.light import DeconzLight
-from pydeconz.sensor import DeconzSensor
+from pydeconz.light import LightBase as DeconzLight
+from pydeconz.sensor import SensorBase as DeconzSensor
 
 from homeassistant.config_entries import SOURCE_HASSIO, ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
@@ -158,6 +158,9 @@ class DeconzGateway:
 
     async def async_update_device_registry(self) -> None:
         """Update device registry."""
+        if self.api.config.mac is None:
+            return
+
         device_registry = dr.async_get(self.hass)
 
         # Host device
@@ -241,7 +244,7 @@ class DeconzGateway:
 
     async def async_reset(self) -> bool:
         """Reset this gateway to default state."""
-        self.api.async_connection_status_callback = None
+        self.api.connection_status_callback = None
         self.api.close()
 
         await self.hass.config_entries.async_unload_platforms(

@@ -8,17 +8,15 @@ from typing import Any
 from somecomfort import Device
 
 from homeassistant.components.sensor import (
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import (
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_TEMPERATURE,
-    PERCENTAGE,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import PERCENTAGE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN, HUMIDITY_STATUS_KEY, TEMPERATURE_STATUS_KEY
@@ -48,7 +46,7 @@ SENSOR_TYPES: tuple[HoneywellSensorEntityDescription, ...] = (
     HoneywellSensorEntityDescription(
         key=TEMPERATURE_STATUS_KEY,
         name="Temperature",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.outdoor_temperature,
         unit_fn=_get_temperature_sensor_unit,
@@ -56,7 +54,7 @@ SENSOR_TYPES: tuple[HoneywellSensorEntityDescription, ...] = (
     HoneywellSensorEntityDescription(
         key=HUMIDITY_STATUS_KEY,
         name="Humidity",
-        device_class=DEVICE_CLASS_HUMIDITY,
+        device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.outdoor_humidity,
         unit_fn=lambda device: PERCENTAGE,
@@ -64,9 +62,13 @@ SENSOR_TYPES: tuple[HoneywellSensorEntityDescription, ...] = (
 )
 
 
-async def async_setup_entry(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Honeywell thermostat."""
-    data = hass.data[DOMAIN][config.entry_id]
+    data = hass.data[DOMAIN][config_entry.entry_id]
     sensors = []
 
     for device in data.devices.values():
@@ -86,7 +88,7 @@ class HoneywellSensor(SensorEntity):
         """Initialize the outdoor temperature sensor."""
         self._device = device
         self.entity_description = description
-        self._attr_unique_id = f"{device.deviceid}_outdoor_{description.device_class}"
+        self._attr_unique_id = f"{device.deviceid}_{description.key}"
         self._attr_name = f"{device.name} outdoor {description.device_class}"
         self._attr_native_unit_of_measurement = description.unit_fn(device)
 

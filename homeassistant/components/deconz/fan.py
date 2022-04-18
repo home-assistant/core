@@ -1,7 +1,6 @@
 """Support for deCONZ fans."""
 from __future__ import annotations
 
-from collections.abc import ValuesView
 from typing import Any
 
 from pydeconz.light import (
@@ -13,7 +12,7 @@ from pydeconz.light import (
     Fan,
 )
 
-from homeassistant.components.fan import DOMAIN, SUPPORT_SET_SPEED, FanEntity
+from homeassistant.components.fan import DOMAIN, FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -44,11 +43,12 @@ async def async_setup_entry(
     gateway.entities[DOMAIN] = set()
 
     @callback
-    def async_add_fan(
-        lights: list[Fan] | ValuesView[Fan] = gateway.api.lights.values(),
-    ) -> None:
+    def async_add_fan(lights: list[Fan] | None = None) -> None:
         """Add fan from deCONZ."""
         entities = []
+
+        if lights is None:
+            lights = list(gateway.api.lights.fans.values())
 
         for light in lights:
 
@@ -78,7 +78,7 @@ class DeconzFan(DeconzDevice, FanEntity):
     TYPE = DOMAIN
     _device: Fan
 
-    _attr_supported_features = SUPPORT_SET_SPEED
+    _attr_supported_features = FanEntityFeature.SET_SPEED
 
     def __init__(self, device: Fan, gateway: DeconzGateway) -> None:
         """Set up fan."""

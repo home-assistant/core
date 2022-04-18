@@ -3,7 +3,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_OFF,
     FAN_AUTO,
@@ -11,10 +11,6 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_OFF,
     PRESET_AWAY,
     PRESET_HOME,
-    SUPPORT_FAN_MODE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_SWING_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, TEMP_CELSIUS
@@ -128,7 +124,9 @@ def create_climate_entity(tado, name: str, zone_id: int, device_info: dict):
     _LOGGER.debug("Capabilities for zone %s: %s", zone_id, capabilities)
 
     zone_type = capabilities["type"]
-    support_flags = SUPPORT_PRESET_MODE | SUPPORT_TARGET_TEMPERATURE
+    support_flags = (
+        ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
+    )
     supported_hvac_modes = [
         TADO_TO_HA_HVAC_MODE_MAP[CONST_MODE_OFF],
         TADO_TO_HA_HVAC_MODE_MAP[CONST_MODE_SMART_SCHEDULE],
@@ -145,12 +143,12 @@ def create_climate_entity(tado, name: str, zone_id: int, device_info: dict):
 
             supported_hvac_modes.append(TADO_TO_HA_HVAC_MODE_MAP[mode])
             if capabilities[mode].get("swings"):
-                support_flags |= SUPPORT_SWING_MODE
+                support_flags |= ClimateEntityFeature.SWING_MODE
 
             if not capabilities[mode].get("fanSpeeds"):
                 continue
 
-            support_flags |= SUPPORT_FAN_MODE
+            support_flags |= ClimateEntityFeature.FAN_MODE
 
             if supported_fan_modes:
                 continue
@@ -469,7 +467,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
     @property
     def swing_modes(self):
         """Swing modes for the device."""
-        if self._support_flags & SUPPORT_SWING_MODE:
+        if self._support_flags & ClimateEntityFeature.SWING_MODE:
             return [TADO_SWING_ON, TADO_SWING_OFF]
         return None
 
@@ -621,10 +619,10 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
             temperature_to_send = None
 
         fan_speed = None
-        if self._support_flags & SUPPORT_FAN_MODE:
+        if self._support_flags & ClimateEntityFeature.FAN_MODE:
             fan_speed = self._current_tado_fan_speed
         swing = None
-        if self._support_flags & SUPPORT_SWING_MODE:
+        if self._support_flags & ClimateEntityFeature.SWING_MODE:
             swing = self._current_tado_swing_mode
 
         self._tado.set_zone_overlay(
