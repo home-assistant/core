@@ -57,7 +57,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
 
             if len(errors) == 0:
-                title = f"QNAP QSW {serial}"
+                title = f"QNAP QSW {system_board.get_product()}"
                 return self.async_create_entry(title=title, data=user_input)
 
         return self.async_show_form(

@@ -83,17 +83,15 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Add QNAP QSW sensors from a config_entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
-
-    sensors = []
-    for description in SENSOR_TYPES:
+    coordinator: QswUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    async_add_entities(
+        QswSensor(coordinator, description, entry)
+        for description in SENSOR_TYPES
         if (
             description.key in coordinator.data
             and description.subkey in coordinator.data[description.key]
-        ):
-            sensors.append(QswSensor(coordinator, description, entry))
-
-    async_add_entities(sensors)
+        )
+    )
 
 
 class QswSensor(QswEntity, SensorEntity):

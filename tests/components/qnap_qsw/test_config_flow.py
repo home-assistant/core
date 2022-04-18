@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
-from aioqsw.const import API_RESULT, API_SERIAL
+from aioqsw.const import API_PRODUCT, API_RESULT, API_SERIAL
 from aioqsw.exceptions import LoginError, QswError
 
 from homeassistant import data_entry_flow
@@ -52,7 +52,7 @@ async def test_form(hass: HomeAssistant) -> None:
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert (
-            result["title"] == f"QNAP QSW {SYSTEM_BOARD_MOCK[API_RESULT][API_SERIAL]}"
+            result["title"] == f"QNAP QSW {SYSTEM_BOARD_MOCK[API_RESULT][API_PRODUCT]}"
         )
         assert result["data"][CONF_URL] == CONFIG[CONF_URL]
         assert result["data"][CONF_USERNAME] == CONFIG[CONF_USERNAME]
