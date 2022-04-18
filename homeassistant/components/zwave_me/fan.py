@@ -25,11 +25,11 @@ async def async_setup_entry(
     @callback
     def add_new_device(new_device):
         controller = hass.data[DOMAIN][config_entry.entry_id]
-        switch = ZWaveMeFan(controller, new_device)
+        fan = ZWaveMeFan(controller, new_device)
 
         async_add_entities(
             [
-                switch,
+                fan,
             ]
         )
 
@@ -53,7 +53,7 @@ class ZWaveMeFan(ZWaveMeEntity, FanEntity):
     def set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
         self.controller.zwave_api.send_command(
-            self.device.id, f"exact?level={str(str(min(percentage, 99)))}"
+            self.device.id, f"exact?level={min(percentage, 99)}"
         )
 
     def turn_off(self, **kwargs: Any) -> None:
