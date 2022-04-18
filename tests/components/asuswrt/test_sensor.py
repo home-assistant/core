@@ -313,7 +313,7 @@ async def test_sensors_fail(
     hass,
     connect_sens_fail,
 ):
-    """Test AsusWRT sensors fail."""
+    """Test AsusWRT sensors are unavailable when polling fails."""
     config_entry, sensor_prefix = _setup_entry(hass)
     config_entry.add_to_hass(hass)
 
