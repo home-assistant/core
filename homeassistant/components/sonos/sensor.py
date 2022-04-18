@@ -160,6 +160,6 @@ class SonosFavoritesEntity(SensorEntity):
     async def _async_update_state(self) -> None:
         self._attr_native_value = self.favorites.count
         self._attr_extra_state_attributes = {
-            "items": {fav.title: fav.item_id for fav in self.favorites}
+            "items": {fav.item_id: fav.title for fav in self.favorites}
         }
         self.async_write_ha_state()
