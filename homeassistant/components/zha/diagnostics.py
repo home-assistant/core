@@ -9,6 +9,7 @@ import pkg_resources
 import zigpy
 from zigpy.config import CONF_NWK_EXTENDED_PAN_ID
 from zigpy.profiles import PROFILES
+from zigpy.zcl import Cluster
 import zigpy_deconz
 import zigpy_xbee
 import zigpy_zigate
@@ -42,7 +43,9 @@ KEYS_TO_REDACT = {
     "partner_ieee",
 }
 
+ATTRIBUTES = "attributes"
 CLUSTER_DETAILS = "cluster_details"
+UNSUPPORTED_ATTRIBUTES = "unsupported_attributes"
 
 
 def shallow_asdict(obj: Any) -> dict:
@@ -90,7 +93,13 @@ async def async_get_device_diagnostics(
     """Return diagnostics for a device."""
     zha_device: ZHADevice = await async_get_zha_device(hass, device.id)
     device_info: dict[str, Any] = zha_device.zha_device_info
-    device_info[CLUSTER_DETAILS] = {}
+    device_info[CLUSTER_DETAILS] = get_endpoint_cluster_attr_data(zha_device)
+    return async_redact_data(device_info, KEYS_TO_REDACT)
+
+
+def get_endpoint_cluster_attr_data(zha_device: ZHADevice) -> dict:
+    """Return endpoint cluster attribute data."""
+    cluster_details = {}
     for ep_id, endpoint in zha_device.device.endpoints.items():
         if ep_id == 0:
             continue
@@ -100,23 +109,33 @@ async def async_get_device_diagnostics(
             and endpoint.device_type is not None
             else ep_id
         )
-        device_info[CLUSTER_DETAILS][endpoint_key] = {
+        cluster_details[endpoint_key] = {
             ATTR_IN_CLUSTERS: {
-                f"{cluster.ep_attribute}[0x{cluster.cluster_id:04x}]": {
-                    f"{attr_def.name}[0x{attr_id:04x}]": attr_value
-                    for attr_id, attr_def in cluster.attributes.items()
-                    if (attr_value := cluster.get(attr_def.name)) is not None
-                }
+                f"{cluster.ep_attribute}[0x{cluster.cluster_id:04x}]": get_cluster_attr_data(
+                    cluster
+                )
                 for cluster_id, cluster in endpoint.in_clusters.items()
             },
             ATTR_OUT_CLUSTERS: {
-                f"{cluster.ep_attribute}[0x{cluster.cluster_id:04x}]": {
-                    f"{attr_def.name}[0x{attr_id:04x}]": attr_value
-                    for attr_id, attr_def in cluster.attributes.items()
-                    if (attr_value := cluster.get(attr_def.name)) is not None
-                }
+                f"{cluster.ep_attribute}[0x{cluster.cluster_id:04x}]": get_cluster_attr_data(
+                    cluster
+                )
                 for cluster_id, cluster in endpoint.out_clusters.items()
             },
         }
+    return cluster_details
 
-    return async_redact_data(device_info, KEYS_TO_REDACT)
+
+def get_cluster_attr_data(cluster: Cluster) -> dict:
+    """Return cluster attribute data."""
+    return {
+        ATTRIBUTES: {
+            f"{attr_def.name}[0x{attr_id:04x}]": attr_value
+            for attr_id, attr_def in cluster.attributes.items()
+            if (attr_value := cluster.get(attr_def.name)) is not None
+        },
+        UNSUPPORTED_ATTRIBUTES: {
+            f"{cluster.find_attribute(u_attr).name}[0x{cluster.find_attribute(u_attr).id:04x}]"
+            for u_attr in cluster.unsupported_attributes
+        },
+    }
