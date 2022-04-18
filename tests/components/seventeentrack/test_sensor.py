@@ -4,14 +4,14 @@ from __future__ import annotations
 import datetime
 from unittest.mock import patch
 
-from py17track.package import Package
+from seventeentrack.package import Package
 import pytest
 
 from homeassistant.components.seventeentrack.sensor import (
     CONF_SHOW_ARCHIVED,
     CONF_SHOW_DELIVERED,
 )
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_TOKEN
 from homeassistant.setup import async_setup_component
 from homeassistant.util import utcnow
 
@@ -20,8 +20,7 @@ from tests.common import async_fire_time_changed
 VALID_CONFIG_MINIMAL = {
     "sensor": {
         "platform": "seventeentrack",
-        CONF_USERNAME: "test",
-        CONF_PASSWORD: "test",
+        CONF_TOKEN: "123abc",
     }
 }
 
@@ -30,8 +29,7 @@ INVALID_CONFIG = {"sensor": {"platform": "seventeentrack", "boom": "test"}}
 VALID_CONFIG_FULL = {
     "sensor": {
         "platform": "seventeentrack",
-        CONF_USERNAME: "test",
-        CONF_PASSWORD: "test",
+        CONF_TOKEN: "123abc",
         CONF_SHOW_ARCHIVED: True,
         CONF_SHOW_DELIVERED: True,
     }
@@ -40,8 +38,7 @@ VALID_CONFIG_FULL = {
 VALID_CONFIG_FULL_NO_DELIVERED = {
     "sensor": {
         "platform": "seventeentrack",
-        CONF_USERNAME: "test",
-        CONF_PASSWORD: "test",
+        CONF_TOKEN: "123abc",
         CONF_SHOW_ARCHIVED: False,
         CONF_SHOW_DELIVERED: False,
     }
@@ -69,7 +66,7 @@ NEW_SUMMARY_DATA = {
 
 
 class ClientMock:
-    """Mock the py17track client to inject the ProfileMock."""
+    """Mock the seventeentrack client to inject the ProfileMock."""
 
     def __init__(self, session) -> None:
         """Mock the profile."""
@@ -82,7 +79,7 @@ class ProfileMock:
     package_list = []
     login_result = True
     summary_data = DEFAULT_SUMMARY
-    account_id = "123"
+    account_id = "user@email.com"
 
     @classmethod
     def reset(cls):
@@ -90,13 +87,13 @@ class ProfileMock:
         cls.package_list = []
         cls.login_result = True
         cls.summary_data = DEFAULT_SUMMARY
-        cls.account_id = "123"
+        cls.account_id = "user@email.com"
 
     def __init__(self) -> None:
         """Override Account id."""
         self.account_id = self.__class__.account_id
 
-    async def login(self, email: str, password: str) -> bool:
+    async def login(self, token: str) -> bool:
         """Login mock."""
         return self.__class__.login_result
 
@@ -116,7 +113,7 @@ class ProfileMock:
 
 @pytest.fixture(autouse=True, name="mock_client")
 def fixture_mock_client():
-    """Mock py17track client."""
+    """Mock seventeentrack client."""
     with patch(
         "homeassistant.components.seventeentrack.sensor.SeventeenTrackClient",
         new=ClientMock,

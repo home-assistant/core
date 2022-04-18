@@ -4,8 +4,9 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from py17track import Client as SeventeenTrackClient
-from py17track.errors import SeventeenTrackError
+from seventeentrack import Client as SeventeenTrackClient
+from seventeentrack import Version as SeventeenTrackVersion
+from seventeentrack.errors import SeventeenTrackError
 import voluptuous as vol
 
 from homeassistant.components import persistent_notification
@@ -14,9 +15,8 @@ from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_FRIENDLY_NAME,
     ATTR_LOCATION,
-    CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
-    CONF_USERNAME,
+    CONF_TOKEN,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
@@ -57,15 +57,14 @@ NOTIFICATION_DELIVERED_ID = "package_delivered_{0}"
 NOTIFICATION_DELIVERED_TITLE = "Package {0} delivered"
 NOTIFICATION_DELIVERED_MESSAGE = (
     "Package Delivered: {0}<br />Visit 17.track for more information: "
-    "https://t.17track.net/track#nums={1}"
+    "https://api.17track.net/en/admin/tracking#nums={1}"
 )
 
 VALUE_DELIVERED = "Delivered"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Required(CONF_TOKEN): cv.string,
         vol.Optional(CONF_SHOW_ARCHIVED, default=False): cv.boolean,
         vol.Optional(CONF_SHOW_DELIVERED, default=False): cv.boolean,
     }
@@ -82,15 +81,15 @@ async def async_setup_platform(
 
     session = aiohttp_client.async_get_clientsession(hass)
 
-    client = SeventeenTrackClient(session=session)
+    client = SeventeenTrackClient(version=SeventeenTrackVersion.V1, session=session)
 
     try:
         login_result = await client.profile.login(
-            config[CONF_USERNAME], config[CONF_PASSWORD]
+            config[CONF_TOKEN]
         )
 
         if not login_result:
-            _LOGGER.error("Invalid username and password provided")
+            _LOGGER.error("Invalid token provided")
             return
     except SeventeenTrackError as err:
         _LOGGER.error("There was an error while logging in: %s", err)

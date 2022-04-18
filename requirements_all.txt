@@ -1336,9 +1336,6 @@ py-synologydsm-api==1.0.8
 # homeassistant.components.zabbix
 py-zabbix==1.1.7
 
-# homeassistant.components.seventeentrack
-py17track==2021.12.2
-
 # homeassistant.components.hdmi_cec
 pyCEC==0.5.2
 
@@ -2177,6 +2174,9 @@ sensorpush-ble==1.5.1
 
 # homeassistant.components.sentry
 sentry-sdk==1.9.3
+
+# homeassistant.components.seventeentrack
+seventeentrack==2022.4.4
 
 # homeassistant.components.sharkiq
 sharkiq==0.0.1
