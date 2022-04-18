@@ -25,7 +25,7 @@ class IntegrationPlatform:
     seen_components: set[str]
 
 
-async def _async_process_single_integration_platform(
+async def _async_process_single_integration_platform_component(
     hass: HomeAssistant, component_name: str, integration_platform: IntegrationPlatform
 ) -> None:
     """Process a single integration platform."""
@@ -55,10 +55,10 @@ async def _async_process_single_integration_platform(
         )
 
 
-async def async_process_integration_platform(
+async def async_process_integration_platform_for_component(
     hass: HomeAssistant, component_name: str
 ) -> None:
-    """Process integration platforms on demand.
+    """Process integration platforms on demand for a component.
 
     This function will load the integration platforms
     for an integration instead of waiting for the EVENT_COMPONENT_LOADED
@@ -77,7 +77,7 @@ async def async_process_integration_platform(
     ]
     await asyncio.gather(
         *[
-            _async_process_single_integration_platform(
+            _async_process_single_integration_platform_component(
                 hass, component_name, integration_platform
             )
             for integration_platform in integration_platforms
@@ -100,7 +100,7 @@ async def async_process_integration_platforms(
             """Handle a new component loaded."""
             comp = event.data[ATTR_COMPONENT]
             if "." not in comp:
-                await async_process_integration_platform(hass, comp)
+                await async_process_integration_platform_for_component(hass, comp)
 
         hass.bus.async_listen(EVENT_COMPONENT_LOADED, _async_component_loaded)
 
@@ -114,7 +114,7 @@ async def async_process_integration_platforms(
     ):
         await asyncio.gather(
             *[
-                _async_process_single_integration_platform(
+                _async_process_single_integration_platform_component(
                     hass, comp, integration_platform
                 )
                 for comp in top_level_components
