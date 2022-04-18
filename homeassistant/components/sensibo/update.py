@@ -60,7 +60,7 @@ async def async_setup_entry(
         SensiboDeviceUpdate(coordinator, device_id, description)
         for description in DEVICE_SENSOR_TYPES
         for device_id, device_data in coordinator.data.parsed.items()
-        if getattr(device_data, description.key) is not None
+        if description.value_available(device_data) is not None
     )
 
 
@@ -80,6 +80,11 @@ class SensiboDeviceUpdate(SensiboDeviceBaseEntity, UpdateEntity):
         self.entity_description = entity_description
         self._attr_unique_id = f"{device_id}-{entity_description.key}"
         self._attr_name = f"{self.device_data.name} {entity_description.name}"
+
+    @property
+    def title(self) -> str:
+        """Return title of software model."""
+        return f"{self.device_data.model}"
 
     @property
     def installed_version(self) -> str | None:
