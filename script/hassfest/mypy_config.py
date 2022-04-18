@@ -29,7 +29,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.deconz.lock",
     "homeassistant.components.deconz.logbook",
     "homeassistant.components.deconz.number",
-    "homeassistant.components.deconz.sensor",
     "homeassistant.components.deconz.siren",
     "homeassistant.components.deconz.switch",
     "homeassistant.components.denonavr.config_flow",
