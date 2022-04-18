@@ -8,7 +8,6 @@ import io
 import logging
 from types import MappingProxyType
 from typing import Any
-from urllib.parse import urlparse, urlunparse
 
 import PIL
 from async_timeout import timeout
@@ -187,10 +186,7 @@ def slug_url(url) -> str | None:
     """Convert a camera url into a string suitable for a camera name."""
     if not url:
         return None
-    # Strip out username/password if present
-    url = str(yarl.URL(url).with_user(None))
-    url_no_scheme = urlparse(url)._replace(scheme="")
-    return slugify(urlunparse(url_no_scheme).strip("/"))
+    return slugify(yarl.URL(url).host)
 
 
 async def async_test_stream(hass, info) -> dict[str, str]:

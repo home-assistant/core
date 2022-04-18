@@ -62,7 +62,7 @@ async def test_form(hass, fakeimg_png, mock_av_open, user_flow):
             TESTDATA,
         )
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result2["title"] == "127_0_0_1_testurl_1"
+    assert result2["title"] == "127_0_0_1"
     assert result2["options"] == {
         CONF_STILL_IMAGE_URL: "http://127.0.0.1/testurl/1",
         CONF_STREAM_SOURCE: "http://127.0.0.1/testurl/2",
@@ -96,7 +96,7 @@ async def test_form_only_stillimage(hass, fakeimg_png, user_flow):
         data,
     )
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result2["title"] == "127_0_0_1_testurl_1"
+    assert result2["title"] == "127_0_0_1"
     assert result2["options"] == {
         CONF_STILL_IMAGE_URL: "http://127.0.0.1/testurl/1",
         CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
@@ -176,7 +176,7 @@ async def test_form_rtsp_mode(hass, fakeimg_png, mock_av_open, user_flow):
         )
     assert "errors" not in result2, f"errors={result2['errors']}"
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result2["title"] == "127_0_0_1_testurl_1"
+    assert result2["title"] == "127_0_0_1"
     assert result2["options"] == {
         CONF_STILL_IMAGE_URL: "http://127.0.0.1/testurl/1",
         CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
@@ -215,7 +215,7 @@ async def test_form_only_stream(hass, mock_av_open, fakeimgbytes_jpg):
     )
 
     assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result3["title"] == "127_0_0_1_testurl_2"
+    assert result3["title"] == "127_0_0_1"
     assert result3["options"] == {
         CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
         CONF_STREAM_SOURCE: "rtsp://user:pass@127.0.0.1/testurl/2",
@@ -233,7 +233,7 @@ async def test_form_only_stream(hass, mock_av_open, fakeimgbytes_jpg):
         "homeassistant.components.generic.camera.GenericCamera.async_camera_image",
         return_value=fakeimgbytes_jpg,
     ):
-        image_obj = await async_get_image(hass, "camera.127_0_0_1_testurl_2")
+        image_obj = await async_get_image(hass, "camera.127_0_0_1")
         assert image_obj.content == fakeimgbytes_jpg
     assert len(mock_setup.mock_calls) == 1
 
