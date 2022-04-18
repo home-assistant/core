@@ -309,7 +309,7 @@ async def test_connect_fail(hass, side_effect):
         assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_sensors_fail(
+async def test_sensors_polling_fails(
     hass,
     connect_sens_fail,
 ):
