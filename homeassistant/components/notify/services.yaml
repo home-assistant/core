@@ -36,7 +36,7 @@ notify:
 
 persistent_notification:
   name: Send a persistent notification
-  description: Sends a notification to the visible in the front-end.
+  description: Sends a notification that is visible in the front-end.
   fields:
     message:
       name: Message
