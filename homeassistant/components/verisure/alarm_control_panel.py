@@ -4,9 +4,9 @@ from __future__ import annotations
 import asyncio
 
 from homeassistant.components.alarm_control_panel import (
-    FORMAT_NUMBER,
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
+    CodeFormat,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -32,7 +32,7 @@ class VerisureAlarm(
 ):
     """Representation of a Verisure alarm status."""
 
-    _attr_code_format = FORMAT_NUMBER
+    _attr_code_format = CodeFormat.NUMBER
     _attr_name = "Verisure Alarm"
     _attr_supported_features = (
         AlarmControlPanelEntityFeature.ARM_HOME
