@@ -1,5 +1,7 @@
 """Support for SwitchBee light."""
 
+import logging
+
 import switchbee
 
 from homeassistant.components.light import (
@@ -17,6 +19,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN
 
 MAX_BRIGHTNESS = 255
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -56,6 +60,7 @@ class Device(CoordinatorEntity, LightEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
+
         state = self.coordinator.data[self._device_id][switchbee.ATTR_STATE]
         if isinstance(state, str):
             if state == switchbee.STATE_OFF:
@@ -69,9 +74,6 @@ class Device(CoordinatorEntity, LightEntity):
             if state > 0:
                 self._attr_is_on = True
                 self._attr_brightness = int((state * MAX_BRIGHTNESS) / 100)
-            else:
-                self._attr_is_on = False
-                self._attr_brightness = 0
 
         super()._handle_coordinator_update()
 
@@ -85,12 +87,37 @@ class Device(CoordinatorEntity, LightEntity):
         if ATTR_BRIGHTNESS in kwargs:
             state = int((kwargs[ATTR_BRIGHTNESS] * 100) / MAX_BRIGHTNESS)
         else:
-            state = switchbee.STATE_ON
+            state = 100
 
-        await self.coordinator.api.set_state(self._device_id, state)
+        result = await self.coordinator.api.set_state(self._device_id, state)
+        if (
+            result[switchbee.ATTR_STATUS] != switchbee.STATUS_OK
+            or result[switchbee.ATTR_DATA] != state
+        ):
+            _LOGGER.error(
+                "Failed to set %s state %s, status=%s, state=%s",
+                self._attr_name,
+                state,
+                result[switchbee.ATTR_STATUS],
+                result[switchbee.ATTR_DATA],
+            )
+
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs):
         """Set the light state using the SwitchBee API."""
-        await self.coordinator.api.set_state(self._device_id, switchbee.STATE_OFF)
+        result = await self.coordinator.api.set_state(
+            self._device_id, switchbee.STATE_OFF
+        )
+        if (
+            result[switchbee.ATTR_STATUS] != switchbee.STATUS_OK
+            or result[switchbee.ATTR_DATA] != switchbee.STATE_OFF
+        ):
+            _LOGGER.error(
+                "Failed to set %s state OFF, status=%s, state=%s",
+                self._attr_name,
+                result[switchbee.ATTR_STATUS],
+                result[switchbee.ATTR_DATA],
+            )
+
         await self.coordinator.async_request_refresh()

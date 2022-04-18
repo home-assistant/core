@@ -1,4 +1,6 @@
 """Support for SwitchBee cover."""
+import logging
+
 import switchbee
 
 from homeassistant.components.cover import (
@@ -20,13 +22,16 @@ DEVICE_CLASS_MAP = {
     "SHUTTER": CoverDeviceClass.SHUTTER,
 }
 
+_LOGGER = logging.getLogger(__name__)
+
+shutter_state_map = {0: switchbee.STATE_OFF, 100: switchbee.STATE_ON}
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Freedompro switch."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
-    print(coordinator.data)
     async_add_entities(
         Device(hass, coordinator.data[device], coordinator)
         for device in coordinator.data
@@ -65,8 +70,12 @@ class Device(CoordinatorEntity, CoverEntity):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         position = self.coordinator.data[self._device_id][switchbee.ATTR_STATE]
-        if isinstance(position, str) and position == switchbee.STATE_OFF:
-            self._attr_current_cover_position = 0
+        if isinstance(position, str):
+            if position == switchbee.STATE_OFF:
+                self._attr_current_cover_position = 0
+            elif position == switchbee.STATE_ON:
+                self._attr_current_cover_position = 100
+
         elif isinstance(position, int):
             self._attr_current_cover_position = position
 
@@ -85,17 +94,26 @@ class Device(CoordinatorEntity, CoverEntity):
         """Open the cover."""
         if self._attr_current_cover_position == 100:
             return
-        await self.async_set_cover_position(position=100)
+        await self.async_set_cover_position(position=shutter_state_map[100])
 
     async def async_close_cover(self, **kwargs):
         """Close the cover."""
         if self._attr_current_cover_position == 0:
             return
-        await self.async_set_cover_position(position=0)
+        await self.async_set_cover_position(position=shutter_state_map[0])
 
     async def async_set_cover_position(self, **kwargs):
         """Async function to set position to cover."""
         if self._attr_current_cover_position == kwargs[ATTR_POSITION]:
             return
-        await self.coordinator.api.set_state(self._device_id, kwargs[ATTR_POSITION])
+        result = await self.coordinator.api.set_state(
+            self._device_id, kwargs[ATTR_POSITION]
+        )
+        if result[switchbee.ATTR_STATUS] != switchbee.STATUS_OK:
+            _LOGGER.error(
+                "Failed to set %s state to %s, status=%s",
+                self._attr_name,
+                kwargs[ATTR_POSITION],
+                result[switchbee.ATTR_STATUS],
+            )
         await self.coordinator.async_request_refresh()
