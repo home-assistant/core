@@ -7,9 +7,10 @@ import logging
 import switchbee
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, SCAN_INTERVAL
@@ -23,11 +24,12 @@ PLATFORMS: list[Platform] = [Platform.SWITCH, Platform.COVER, Platform.LIGHT]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up SwitchBee Smart Home from a config entry."""
     hass.data.setdefault(DOMAIN, {})
-    central_unit = entry.data[CONF_IP_ADDRESS]
+    central_unit = entry.data[CONF_HOST]
     user = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
 
-    api = switchbee.SwitchBee(central_unit, user, password)
+    websession = async_get_clientsession(hass, verify_ssl=False)
+    api = switchbee.SwitchBee(central_unit, user, password, websession)
     resp = await api.login()
     if resp[switchbee.ATTR_STATUS] != switchbee.STATUS_OK:
         _LOGGER.error(
@@ -51,7 +53,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN][entry.entry_id].api.close()
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
@@ -71,7 +72,7 @@ class SwitchBeeCoordinator(DataUpdateCoordinator):
         self._api = swb_api
         self._devices = None
         self._mac = ""
-
+        self._reconnect_counts = 0
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
 
     @property
@@ -80,8 +81,16 @@ class SwitchBeeCoordinator(DataUpdateCoordinator):
         return self._api
 
     async def _async_update_data(self):
+        if self._reconnect_counts != self._api.reconnect_count:
+            self._reconnect_counts = self._api.reconnect_count
+            _LOGGER.info(
+                "Central Unit re-connected again due to invalid token, total %i",
+                self._reconnect_counts,
+            )
+
         if self._devices is None:
             result = await self._api.get_configuration()
+            _LOGGER.info("Loaded devices")
             if (
                 switchbee.ATTR_STATUS not in result
                 or result[switchbee.ATTR_STATUS] != switchbee.STATUS_OK
@@ -90,14 +99,22 @@ class SwitchBeeCoordinator(DataUpdateCoordinator):
                     "Failed to fetch configuration from the central unit status=%s",
                     result[switchbee.ATTR_STATUS],
                 )
-                raise UpdateFailed()
+                raise UpdateFailed(f"Error communicating with API: {result}")
 
             self._devices = {}
             self._mac = result[switchbee.ATTR_DATA][switchbee.ATTR_MAC]
             for zone in result[switchbee.ATTR_DATA][switchbee.ATTR_ZONES]:
                 for item in zone[switchbee.ATTR_ITEMS]:
-                    if item[switchbee.ATTR_TYPE] in switchbee.SUPPORTED_ITEMS:
+                    if item[switchbee.ATTR_TYPE] in [
+                        switchbee.TYPE_DIMMER,
+                        switchbee.TYPE_SWITCH,
+                        switchbee.TYPE_SHUTTER,
+                        switchbee.TYPE_OUTLET,
+                    ]:
                         self._devices[item[switchbee.ATTR_ID]] = item
+
+        if self._devices is None:
+            raise UpdateFailed("Failed to fetch devices")
 
         result = await self._api.get_multiple_states(list(self._devices.keys()))
         if (
@@ -107,7 +124,7 @@ class SwitchBeeCoordinator(DataUpdateCoordinator):
             _LOGGER.warning(
                 "Failed to fetch devices states from the central unit status=%s", result
             )
-            raise UpdateFailed()
+            raise UpdateFailed(f"Error communicating with API: {result}")
 
         result = result[switchbee.ATTR_DATA]
         for device in result:

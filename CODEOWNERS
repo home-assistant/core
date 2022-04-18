@@ -1308,6 +1308,8 @@ build.json @home-assistant/supervisor
 /tests/components/zwave_js/ @home-assistant/z-wave
 /homeassistant/components/zwave_me/ @lawfulchaos @Z-Wave-Me
 /tests/components/zwave_me/ @lawfulchaos @Z-Wave-Me
+/homeassistant/components/switchbee/ @jafar-atili
+/tests/components/switchbee/ @jafar-atili
 
 # Individual files
 /homeassistant/components/demo/weather.py @fabaff

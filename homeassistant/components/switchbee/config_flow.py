@@ -8,9 +8,10 @@ import switchbee
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
 from .const import DOMAIN
@@ -19,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_IP_ADDRESS): cv.string,
+        vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
     }
@@ -36,19 +37,22 @@ class Hub:
         """Initialize."""
         self.central_unit_ip = central_unit_ip
 
-    async def authenticate(self, username: str, password: str) -> dict:
+    async def authenticate(
+        self, hass: HomeAssistant, username: str, password: str
+    ) -> dict:
         """Test if we can authenticate with the host."""
+        websession = async_get_clientsession(hass, verify_ssl=False)
         return await switchbee.SwitchBee(
-            self.central_unit_ip, username, password
+            self.central_unit_ip, username, password, websession
         ).login()
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]):
     """Validate the user input allows us to connect."""
 
-    hub = Hub(data[CONF_IP_ADDRESS])
+    hub = Hub(data[CONF_HOST])
 
-    resp = await hub.authenticate(data[CONF_USERNAME], data[CONF_PASSWORD])
+    resp = await hub.authenticate(hass, data[CONF_USERNAME], data[CONF_PASSWORD])
     if resp[switchbee.ATTR_STATUS] == switchbee.STATUS_LOGIN_FAILED:
         raise InvalidAuth
 

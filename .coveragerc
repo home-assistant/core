@@ -1585,13 +1585,18 @@ omit =
     homeassistant/components/zwave_me/sensor.py
     homeassistant/components/zwave_me/siren.py
     homeassistant/components/zwave_me/switch.py
+    homeassistant/components/switchbee/__init__.py
+    homeassistant/components/switchbee/const.py
+    homeassistant/components/switchbee/cover.py
+    homeassistant/components/switchbee/light.py
+    homeassistant/components/switchbee/switch.py
+
 
 [report]
 # Regexes for lines to exclude from consideration
 exclude_lines =
     # Have to re-enable the standard pragma
     pragma: no cover
-
     # Don't complain about missing debug-only code:
     def __repr__
 
