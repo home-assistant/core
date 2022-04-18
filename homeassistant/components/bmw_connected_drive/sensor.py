@@ -22,7 +22,7 @@ from homeassistant.const import (
     VOLUME_GALLONS,
     VOLUME_LITERS,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.unit_system import UnitSystem
@@ -172,8 +172,14 @@ class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, SensorEntity):
         else:
             self._attr_native_unit_of_measurement = description.unit_metric
 
-    @property
-    def native_value(self) -> StateType:
-        """Return the state."""
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        _LOGGER.debug(
+            "Updating sensor '%s' of %s", self.entity_description.key, self.vehicle.name
+        )
         state = getattr(self.vehicle.status, self.entity_description.key)
-        return cast(StateType, self.entity_description.value(state, self.hass))
+        self._attr_native_value = cast(
+            StateType, self.entity_description.value(state, self.hass)
+        )
+        super()._handle_coordinator_update()

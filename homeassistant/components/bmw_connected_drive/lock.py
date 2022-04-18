@@ -9,7 +9,7 @@ from bimmer_connected.vehicle_status import LockState
 
 from homeassistant.components.lock import LockEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BMWConnectedDriveBaseEntity
@@ -55,33 +55,45 @@ class BMWLock(BMWConnectedDriveBaseEntity, LockEntity):
         self._sensor_name = sensor_name
         self.door_lock_state_available = DOOR_LOCK_STATE in vehicle.available_attributes
 
-    @property
-    def extra_state_attributes(self) -> dict:
-        """Return entity specific state attributes."""
-        return {"door_lock_state": self.vehicle.status.door_lock_state.value}
-
-    @property
-    def is_locked(self) -> bool | None:
-        """Return true if lock is locked."""
-        _LOGGER.debug(
-            "Updating lock data for '%s' of %s", self._attribute, self.vehicle.name
-        )
-        vehicle_state = self.vehicle.status
-        if not self.door_lock_state_available:
-            return None
-        return vehicle_state.door_lock_state in {
-            LockState.LOCKED,
-            LockState.SECURED,
-        }
-
     def lock(self, **kwargs: Any) -> None:
         """Lock the car."""
         _LOGGER.debug("%s: locking doors", self.vehicle.name)
+        # Only update the HA state machine if the vehicle reliably reports its lock state
+        if self.door_lock_state_available:
+            # Optimistic state set here because it takes some time before the
+            # update callback response
+            self._attr_is_locked = True
+            self.schedule_update_ha_state()
         self.vehicle.remote_services.trigger_remote_door_lock()
-        self.schedule_update_ha_state()
 
     def unlock(self, **kwargs: Any) -> None:
         """Unlock the car."""
         _LOGGER.debug("%s: unlocking doors", self.vehicle.name)
+        # Only update the HA state machine if the vehicle reliably reports its lock state
+        if self.door_lock_state_available:
+            # Optimistic state set here because it takes some time before the
+            # update callback response
+            self._attr_is_locked = False
+            self.schedule_update_ha_state()
         self.vehicle.remote_services.trigger_remote_door_unlock()
-        self.schedule_update_ha_state()
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        _LOGGER.debug("Updating lock data of %s", self.vehicle.name)
+        # Only update the HA state machine if the vehicle reliably reports its lock state
+        if self.door_lock_state_available:
+            vehicle_state = self.vehicle.status
+            self._attr_is_locked = vehicle_state.door_lock_state in {
+                LockState.LOCKED,
+                LockState.SECURED,
+            }
+            self._attr_extra_state_attributes = dict(
+                self._attrs,
+                **{
+                    "door_lock_state": vehicle_state.door_lock_state.value,
+                    "last_update_reason": vehicle_state.last_update_reason,
+                },
+            )
+
+        super()._handle_coordinator_update()

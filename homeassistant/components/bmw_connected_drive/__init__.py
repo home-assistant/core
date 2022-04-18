@@ -158,3 +158,8 @@ class BMWConnectedDriveBaseEntity(CoordinatorEntity, Entity):
             model=vehicle.name,
             name=f"{vehicle.brand.name} {vehicle.name}",
         )
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        self._handle_coordinator_update()

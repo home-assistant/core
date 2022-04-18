@@ -20,7 +20,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.unit_system import UnitSystem
 
@@ -244,17 +244,19 @@ class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, BinarySensorEntity):
         self._attr_name = f"{vehicle.name} {description.key}"
         self._attr_unique_id = f"{vehicle.vin}-{description.key}"
 
-    @property
-    def is_on(self) -> bool:
-        """Return true if the binary sensor is on."""
-        _LOGGER.debug("Updating binary sensors of %s", self.vehicle.name)
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        _LOGGER.debug(
+            "Updating binary sensor '%s' of %s",
+            self.entity_description.key,
+            self.vehicle.name,
+        )
         vehicle_state = self.vehicle.status
         result = self._attrs.copy()
 
-        sensor_value = self.entity_description.value_fn(
+        self._attr_is_on = self.entity_description.value_fn(
             vehicle_state, result, self._unit_system
         )
-
         self._attr_extra_state_attributes = result
-
-        return sensor_value
+        super()._handle_coordinator_update()
