@@ -5,7 +5,7 @@ import time
 
 
 def ulid_hex() -> str:
-    """Generate a ULID in hex.
+    """Generate a ULID in hex that will work for a UUID.
 
     This ulid should not be used for cryptographically secure
     operations.
@@ -15,5 +15,8 @@ def ulid_hex() -> str:
      Timestamp          Randomness
        48bits             80bits
 
+    This string can be converted with https://github.com/ahawker/ulid
+
+    ulid.from_uuid(uuid.UUID(value))
     """
     return f"{int(time.time()*1000):012x}{getrandbits(80):020x}"
