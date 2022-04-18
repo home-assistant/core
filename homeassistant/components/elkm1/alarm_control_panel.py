@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from elkm1_lib.const import AlarmState, ArmedStatus, ArmLevel, ArmUpState
-from elkm1_lib.util import username
 import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel import (
@@ -27,7 +26,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from . import ElkAttachedEntity, create_elk_entities
+from . import ElkAttachedEntity, ElkEntity, create_elk_entities
 from .const import (
     ATTR_CHANGED_BY_ID,
     ATTR_CHANGED_BY_KEYPAD,
@@ -62,7 +61,7 @@ async def async_setup_entry(
     """Set up the ElkM1 alarm platform."""
     elk_data = hass.data[DOMAIN][config_entry.entry_id]
     elk = elk_data["elk"]
-    entities: list[ElkArea] = []
+    entities: list[ElkEntity] = []
     create_elk_entities(elk_data, elk.areas, "area", ElkArea, entities)
     async_add_entities(entities, True)
 
@@ -147,7 +146,7 @@ class ElkArea(ElkAttachedEntity, AlarmControlPanelEntity, RestoreEntity):
             self._changed_by_keypad = keypad.name
             self._changed_by_time = keypad.last_user_time.isoformat()
             self._changed_by_id = keypad.last_user + 1
-            self._changed_by = username(self._elk, keypad.last_user)
+            self._changed_by = self._elk.users.username(keypad.last_user)
             self.async_write_ha_state()
 
     def _watch_area(self, area, changeset):
@@ -158,7 +157,7 @@ class ElkArea(ElkAttachedEntity, AlarmControlPanelEntity, RestoreEntity):
             return
         self._changed_by_keypad = None
         self._changed_by_id = last_log["user_number"]
-        self._changed_by = username(self._elk, self._changed_by_id - 1)
+        self._changed_by = self._elk.users.username(self._changed_by_id - 1)
         self._changed_by_time = last_log["timestamp"]
         self.async_write_ha_state()
 
