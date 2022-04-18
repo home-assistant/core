@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-from homeassistant.components.input_select import DOMAIN
+from homeassistant.components.input_select import ATTR_OPTIONS, DOMAIN
 from homeassistant.components.recorder.models import StateAttributes, States
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import ATTR_EDITABLE
@@ -54,3 +54,4 @@ async def test_exclude_attributes(
     states: list[State] = await hass.async_add_executor_job(_fetch_states)
     assert len(states) == 1
     assert ATTR_EDITABLE not in states[0].attributes
+    assert ATTR_OPTIONS not in states[0].attributes
