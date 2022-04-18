@@ -25,7 +25,7 @@ from .const import (
     ST_IGD_V1,
     ST_IGD_V2,
 )
-from .device import get_mac_address_from_host
+from .device import async_get_mac_address_from_host
 
 
 def _friendly_name_from_discovery(discovery_info: ssdp.SsdpServiceInfo) -> str:
@@ -100,10 +100,12 @@ async def _async_discover_igd_devices(
     ) + await ssdp.async_get_discovery_info_by_st(hass, ST_IGD_V2)
 
 
-def _mac_address_from_discovery(discovery: SsdpServiceInfo) -> str | None:
+async def _async_mac_address_from_discovery(
+    hass: HomeAssistant, discovery: SsdpServiceInfo
+) -> str | None:
     """Get the mac address from a discovery."""
     host = discovery.ssdp_headers["_host"]
-    return get_mac_address_from_host(host)
+    return await async_get_mac_address_from_host(hass, host)
 
 
 class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -226,7 +228,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # Ensure not already configuring/configured.
         unique_id = discovery_info.ssdp_usn
         await self.async_set_unique_id(unique_id)
-        mac_address = _mac_address_from_discovery(discovery_info)
+        mac_address = await _async_mac_address_from_discovery(self.hass, discovery_info)
         self._abort_if_unique_id_configured(
             # Store mac address for older entries.
             # The location is stored in the config entry such that when the location changes, the entry is reloaded.
@@ -300,7 +302,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         title = _friendly_name_from_discovery(discovery)
-        mac_address = _mac_address_from_discovery(discovery)
+        mac_address = await _async_mac_address_from_discovery(self.hass, discovery)
         data = {
             CONFIG_ENTRY_UDN: discovery.upnp[ssdp.ATTR_UPNP_UDN],
             CONFIG_ENTRY_ST: discovery.ssdp_st,

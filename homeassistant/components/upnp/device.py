@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Mapping
+from functools import partial
 from ipaddress import ip_address
 from typing import Any
 from urllib.parse import urlparse
@@ -32,13 +33,17 @@ from .const import (
 )
 
 
-def get_mac_address_from_host(host: str) -> str | None:
+async def async_get_mac_address_from_host(hass: HomeAssistant, host: str) -> str | None:
     """Get mac address from host."""
     ip_addr = ip_address(host)
     if ip_addr.version == 4:
-        mac_address = get_mac_address(ip=host)
+        mac_address = await hass.async_add_executor_job(
+            partial(get_mac_address, ip=host)
+        )
     else:
-        mac_address = get_mac_address(ip6=host)
+        mac_address = await hass.async_add_executor_job(
+            partial(get_mac_address, ip6=host)
+        )
     return mac_address
 
 

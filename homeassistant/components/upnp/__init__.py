@@ -39,7 +39,7 @@ from .const import (
     DOMAIN,
     LOGGER,
 )
-from .device import Device, get_mac_address_from_host
+from .device import Device, async_get_mac_address_from_host
 
 NOTIFICATION_ID = "upnp_notification"
 NOTIFICATION_TITLE = "UPnP/IGD Setup"
@@ -143,7 +143,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Store mac address for changed UDN matching.
     if device.host:
-        device.mac_address = get_mac_address_from_host(device.host)
+        device.mac_address = await async_get_mac_address_from_host(hass, device.host)
     if device.mac_address and CONFIG_ENTRY_MAC_ADDRESS not in entry.data:
         hass.config_entries.async_update_entry(
             entry=entry,
