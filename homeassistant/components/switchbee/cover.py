@@ -30,7 +30,7 @@ shutter_state_map = {0: switchbee.STATE_OFF, 100: switchbee.STATE_ON}
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up Freedompro switch."""
+    """Set up Switchbee switch."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         Device(hass, coordinator.data[device], coordinator)
@@ -40,10 +40,10 @@ async def async_setup_entry(
 
 
 class Device(CoordinatorEntity, CoverEntity):
-    """Representation of an Freedompro cover."""
+    """Representation of an Switchbee cover."""
 
     def __init__(self, hass, device, coordinator):
-        """Initialize the Freedompro cover."""
+        """Initialize the Switchbee cover."""
         super().__init__(coordinator)
         self._session = aiohttp_client.async_get_clientsession(hass)
         self._attr_name = device["name"]
@@ -54,7 +54,7 @@ class Device(CoordinatorEntity, CoverEntity):
                 (DOMAIN, device["uid"]),
             },
             manufacturer="SwitchBee",
-            model=device["type"],
+            model=device["type"].title(),
             name=self.name,
         )
         self._attr_current_cover_position = 0

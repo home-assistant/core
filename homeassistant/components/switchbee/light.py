@@ -26,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up Freedompro light."""
+    """Set up Switchbee light."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         Device(hass, coordinator.data[device], coordinator)
@@ -36,10 +36,10 @@ async def async_setup_entry(
 
 
 class Device(CoordinatorEntity, LightEntity):
-    """Representation of an Freedompro light."""
+    """Representation of an Switchbee light."""
 
     def __init__(self, hass, device, coordinator):
-        """Initialize the Freedompro light."""
+        """Initialize the Switchbee light."""
         super().__init__(coordinator)
         self._session = aiohttp_client.async_get_clientsession(hass)
         self._attr_name = device["name"]
@@ -50,7 +50,7 @@ class Device(CoordinatorEntity, LightEntity):
                 (DOMAIN, device["uid"]),
             },
             manufacturer="SwitchBee",
-            model="Dimmer",
+            model=device["type"].title(),
             name=self.name,
         )
         self._attr_is_on = False
