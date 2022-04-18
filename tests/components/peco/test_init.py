@@ -2,7 +2,7 @@
 import asyncio
 from unittest.mock import patch
 
-from peco import BadJSONError, HttpError
+from peco import AlertResults, BadJSONError, HttpError, OutageResults
 import pytest
 
 from homeassistant.components.peco.const import DOMAIN
@@ -23,15 +23,21 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
 
     with patch(
         "peco.PecoOutageApi.get_outage_totals",
-        return_value={
-            "customers_out": 0,
-            "percent_customers_out": 0,
-            "outage_count": 0,
-            "customers_served": 350394,
-        },
+        return_value=OutageResults(
+            customers_out=0,
+            percent_customers_out=0,
+            outage_count=0,
+            customers_served=350394,
+        ),
     ):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+        with patch(
+            "peco.PecoOutageApi.get_map_alerts",
+            return_value=AlertResults(
+                alert_content="Testing 1234", alert_title="Testing 4321"
+            ),
+        ):
+            assert await hass.config_entries.async_setup(config_entry.entry_id)
+            await hass.async_block_till_done()
     assert hass.data[DOMAIN]
 
     entries = hass.config_entries.async_entries(DOMAIN)
