@@ -1,6 +1,10 @@
 {
   "title": "Update",
   "device_automation": {
+    "action_type": {
+      "install": "Install latest update for {entity_name}",
+      "skip": "Skip update notification for {entity_name}"
+    },
     "trigger_type": {
       "changed_states": "{entity_name} update availability changed",
       "turned_on": "{entity_name} got an update available",
