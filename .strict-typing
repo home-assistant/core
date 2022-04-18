@@ -83,6 +83,7 @@ homeassistant.components.dunehd.*
 homeassistant.components.efergy.*
 homeassistant.components.elgato.*
 homeassistant.components.elkm1.__init__
+homeassistant.components.elkm1.climate
 homeassistant.components.elkm1.discovery
 homeassistant.components.elkm1.light
 homeassistant.components.elkm1.scene
