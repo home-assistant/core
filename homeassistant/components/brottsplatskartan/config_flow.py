@@ -34,16 +34,16 @@ class BPKConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     entry: config_entries.ConfigEntry | None
 
-    async def async_step_import(self, config: dict[str, Any] | None) -> FlowResult:
+    async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
         """Import a configuration from config.yaml."""
-        if config:
-            if config.get(CONF_LATITUDE):
-                config[CONF_LOCATION] = {
-                    CONF_LATITUDE: config[CONF_LATITUDE],
-                    CONF_LONGITUDE: config[CONF_LONGITUDE],
-                }
-            if not config.get(CONF_AREA):
-                config[CONF_AREA] = "N/A"
+
+        if config.get(CONF_LATITUDE):
+            config[CONF_LOCATION] = {
+                CONF_LATITUDE: config[CONF_LATITUDE],
+                CONF_LONGITUDE: config[CONF_LONGITUDE],
+            }
+        if not config.get(CONF_AREA):
+            config[CONF_AREA] = "N/A"
 
         return await self.async_step_user(user_input=config)
 
