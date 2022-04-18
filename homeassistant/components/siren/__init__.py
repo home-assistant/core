@@ -152,6 +152,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class SirenEntityDescription(ToggleEntityDescription):
     """A class that describes siren entities."""
 
+    available_tones: list[int | str] | dict[int, str] | None = None
+
 
 class SirenEntity(ToggleEntity):
     """Representation of a siren device."""
@@ -180,4 +182,8 @@ class SirenEntity(ToggleEntity):
 
         Requires SirenEntityFeature.TONES.
         """
-        return self._attr_available_tones
+        if hasattr(self, "_attr_available_tones"):
+            return self._attr_available_tones
+        if hasattr(self, "entity_description"):
+            return self.entity_description.available_tones
+        return None
