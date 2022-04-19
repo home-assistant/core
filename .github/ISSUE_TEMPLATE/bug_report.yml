@@ -84,7 +84,7 @@ body:
         on the device page (and on the integration dashboard).
 
         **It would really help if you could download the diagnostics data for the device you are having issues with,
-        and drag-and-drop that file into the textbox below.**
+        and <ins>drag-and-drop that file into the textbox below.</ins>**
 
         It generally allows pinpointing defects and thus resolving issues faster.
   - type: textarea
