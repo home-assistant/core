@@ -343,6 +343,61 @@ async def test_unique_id(hass):
 
 
 @pytest.mark.parametrize(
+    "yaml_config,entity_id, name",
+    (
+        (
+            {
+                "utility_meter": {
+                    "energy_bill": {
+                        "name": "dog",
+                        "source": "sensor.energy",
+                        "tariffs": ["onpeak", "midpeak", "offpeak"],
+                    }
+                }
+            },
+            "sensor.energy_bill_onpeak",
+            "dog onpeak",
+        ),
+        (
+            {
+                "utility_meter": {
+                    "energy_bill": {
+                        "name": "dog",
+                        "source": "sensor.energy",
+                    }
+                }
+            },
+            "sensor.dog",
+            "dog",
+        ),
+        (
+            {
+                "utility_meter": {
+                    "energy_bill": {
+                        "source": "sensor.energy",
+                    }
+                }
+            },
+            "sensor.energy_bill",
+            "energy_bill",
+        ),
+    ),
+)
+async def test_entity_name(hass, yaml_config, entity_id, name):
+    """Test utility sensor state initializtion."""
+    assert await async_setup_component(hass, DOMAIN, yaml_config)
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+    assert state.name == name
+
+
+@pytest.mark.parametrize(
     "yaml_config,config_entry_configs",
     (
         (
