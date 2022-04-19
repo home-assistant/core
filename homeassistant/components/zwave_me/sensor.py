@@ -36,6 +36,12 @@ SENSORS_MAP: dict[str, SensorEntityDescription] = {
     ),
     "co": SensorEntityDescription(
         key="co",
+        device_class=SensorDeviceClass.CO,
+        native_unit_of_measurement="ppm",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "co2": SensorEntityDescription(
+        key="co2",
         device_class=SensorDeviceClass.CO2,
         native_unit_of_measurement="ppm",
         state_class=SensorStateClass.MEASUREMENT,
