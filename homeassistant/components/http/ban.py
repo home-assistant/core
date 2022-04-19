@@ -7,6 +7,7 @@ from contextlib import suppress
 from datetime import datetime
 from http import HTTPStatus
 from ipaddress import IPv4Address, IPv6Address, ip_address
+from json.decoder import JSONDecodeError
 import logging
 from socket import gethostbyaddr, herror
 from typing import Any, Final
@@ -118,7 +119,14 @@ async def process_wrong_login(request: Request) -> None:
 
     # The user-agent is unsanitized input so we only include it in the log
     user_agent = request.headers.get("user-agent")
-    log_msg = f"{base_msg} ({user_agent})"
+
+    username_str = ""
+    with suppress(JSONDecodeError):
+        request_json = await request.json()
+        if "username" in request_json:
+            username_str = f", username: '{request_json['username']}'"
+
+    log_msg = f"{base_msg} ({user_agent}) path: '{request.path}'{username_str}"
 
     notification_msg = f"{base_msg} See the log for details."
 
