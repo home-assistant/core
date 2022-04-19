@@ -19,7 +19,7 @@ from . import SkybellEntity
 from .const import DOMAIN, IMAGE_ACTIVITY, IMAGE_AVATAR
 from .coordinator import SkybellDataUpdateCoordinator
 
-# Deprecated in Home Assistant 2022.4
+# Deprecated in Home Assistant 2022.5
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_MONITORED_CONDITIONS, default=[IMAGE_AVATAR]): vol.All(

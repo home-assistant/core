@@ -29,7 +29,7 @@ from .coordinator import SkybellDataUpdateCoordinator
 
 CONFIG_SCHEMA = vol.Schema(
     vol.All(
-        # Deprecated in Home Assistant 2022.4
+        # Deprecated in Home Assistant 2022.5
         cv.deprecated(DOMAIN),
         {
             DOMAIN: vol.Schema(

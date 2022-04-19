@@ -16,8 +16,6 @@ from .const import DOMAIN
 class SkybellFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Skybell."""
 
-    VERSION = 1
-
     async def async_step_import(self, user_input: ConfigType) -> FlowResult:
         """Import a config entry from configuration.yaml."""
         if self._async_current_entries():
