@@ -19,7 +19,6 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.orm.session import Session
-from sqlalchemy.pool import StaticPool
 import voluptuous as vol
 
 from homeassistant.components import persistent_notification
@@ -79,7 +78,7 @@ from .models import (
     StatisticsRuns,
     process_timestamp,
 )
-from .pool import POOL_SIZE, RecorderPool
+from .pool import POOL_SIZE, MutexPool, RecorderPool
 from .util import (
     dburl_to_path,
     end_incomplete_runs,
@@ -736,10 +735,13 @@ class Recorder(threading.Thread):
         """
         size = self.queue.qsize()
         _LOGGER.debug("Recorder queue size is: %s", size)
-        if self.queue.qsize() <= MAX_QUEUE_BACKLOG:
+        if size <= MAX_QUEUE_BACKLOG:
             return
         _LOGGER.error(
-            "The recorder queue reached the maximum size of %s; Events are no longer being recorded",
+            "The recorder backlog queue reached the maximum size of %s events; "
+            "usually, the system is CPU bound, I/O bound, or the database "
+            "is corrupt due to a disk problem; The recorder will stop "
+            "recording events to avoid running out of memory",
             MAX_QUEUE_BACKLOG,
         )
         self._async_stop_queue_watcher_and_event_listener()
@@ -1405,7 +1407,8 @@ class Recorder(threading.Thread):
 
         if self.db_url == SQLITE_URL_PREFIX or ":memory:" in self.db_url:
             kwargs["connect_args"] = {"check_same_thread": False}
-            kwargs["poolclass"] = StaticPool
+            kwargs["poolclass"] = MutexPool
+            MutexPool.pool_lock = threading.RLock()
             kwargs["pool_reset_on_return"] = None
         elif self.db_url.startswith(SQLITE_URL_PREFIX):
             kwargs["poolclass"] = RecorderPool
