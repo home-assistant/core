@@ -4,11 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from homeassistant.components.update import (
-    UpdateEntity,
-    UpdateEntityDescription,
-    UpdateEntityFeature,
-)
+from homeassistant.components.update import UpdateEntity, UpdateEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -17,11 +13,6 @@ from .common import AvmWrapper, FritzBoxBaseEntity
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-ENTITY_DESCRIPTION = UpdateEntityDescription(
-    name="Firmware Update",
-    key="update",
-)
 
 
 async def async_setup_entry(
@@ -45,10 +36,8 @@ class FritzBoxUpdateEntity(FritzBoxBaseEntity, UpdateEntity):
         device_friendly_name: str,
     ) -> None:
         """Init FRITZ!Box connectivity class."""
-        self.entity_description = ENTITY_DESCRIPTION
-
-        self._attr_name = f"{device_friendly_name} {ENTITY_DESCRIPTION.name}"
-        self._attr_unique_id = f"{avm_wrapper.unique_id}-{ENTITY_DESCRIPTION.key}"
+        self._attr_name = f"{device_friendly_name} FRITZ!OS"
+        self._attr_unique_id = f"{avm_wrapper.unique_id}-update"
         super().__init__(avm_wrapper, device_friendly_name)
 
     _attr_supported_features = UpdateEntityFeature.INSTALL

@@ -47,7 +47,7 @@ async def test_update_available(
         await hass.async_block_till_done()
         assert entry.state == ConfigEntryState.LOADED
 
-        update = hass.states.get("update.mock_title_firmware_update")
+        update = hass.states.get("update.update.mock_title_fritz_os")
         assert update is not None
         assert update.state == "on"
         assert update.attributes.get("installed_version") == MOCK_FIRMWARE
@@ -66,7 +66,7 @@ async def test_no_update_available(
     await hass.async_block_till_done()
     assert entry.state == ConfigEntryState.LOADED
 
-    update = hass.states.get("update.mock_title_firmware_update")
+    update = hass.states.get("update.mock_title_fritz_os")
     assert update is not None
     assert update.state == "off"
     assert update.attributes.get("installed_version") == MOCK_FIRMWARE
