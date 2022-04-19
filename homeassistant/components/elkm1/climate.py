@@ -205,6 +205,6 @@ class ElkThermostat(ElkEntity, ClimateEntity):
             self._element.set(ThermostatSetting.COOL_SETPOINT.value, round(high_temp))
 
     def _element_changed(self, element: Element, changeset: Any) -> None:
-        self._state = ELK_TO_HASS_HVAC_MODES.get(self._element.mode, HVAC_MODE_OFF)
+        self._state = ELK_TO_HASS_HVAC_MODES[self._element.mode]
         if self._state == HVAC_MODE_OFF and self._element.fan == ThermostatFan.ON.value:
             self._state = HVAC_MODE_FAN_ONLY
