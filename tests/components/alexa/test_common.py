@@ -1,5 +1,4 @@
-"""Tests for the Alexa integration."""
-import re
+"""Test helpers for the Alexa integration."""
 from unittest.mock import Mock
 from uuid import uuid4
 
@@ -147,19 +146,25 @@ async def assert_request_fails(
     return msg
 
 
-async def assert_power_controller_works(endpoint, on_service, off_service, hass):
+async def assert_power_controller_works(
+    endpoint, on_service, off_service, hass, timestamp
+):
     """Assert PowerController API requests work."""
-    await assert_request_calls_service(
+    _, response = await assert_request_calls_service(
         "Alexa.PowerController", "TurnOn", endpoint, on_service, hass
     )
+    for property in response["context"]["properties"]:
+        assert property["timeOfSample"] == timestamp
 
-    await assert_request_calls_service(
+    _, response = await assert_request_calls_service(
         "Alexa.PowerController", "TurnOff", endpoint, off_service, hass
     )
+    for property in response["context"]["properties"]:
+        assert property["timeOfSample"] == timestamp
 
 
 async def assert_scene_controller_works(
-    endpoint, activate_service, deactivate_service, hass
+    endpoint, activate_service, deactivate_service, hass, timestamp
 ):
     """Assert SceneController API requests work."""
     _, response = await assert_request_calls_service(
@@ -171,11 +176,9 @@ async def assert_scene_controller_works(
         response_type="ActivationStarted",
     )
     assert response["event"]["payload"]["cause"]["type"] == "VOICE_INTERACTION"
-    assert "timestamp" in response["event"]["payload"]
-    pattern = r"^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\.0Z"
-    assert re.search(pattern, response["event"]["payload"]["timestamp"])
+    assert response["event"]["payload"]["timestamp"] == timestamp
     if deactivate_service:
-        await assert_request_calls_service(
+        _, response = await assert_request_calls_service(
             "Alexa.SceneController",
             "Deactivate",
             endpoint,
@@ -185,8 +188,7 @@ async def assert_scene_controller_works(
         )
         cause_type = response["event"]["payload"]["cause"]["type"]
         assert cause_type == "VOICE_INTERACTION"
-        assert "timestamp" in response["event"]["payload"]
-        assert re.search(pattern, response["event"]["payload"]["timestamp"])
+        assert response["event"]["payload"]["timestamp"] == timestamp
 
 
 async def reported_properties(hass, endpoint, return_full_response=False):
