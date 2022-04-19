@@ -34,7 +34,7 @@ CONFIG = {calendar.DOMAIN: {"platform": "demo"}}
 
 TEST_AUTOMATION_ACTION = {
     "service": "test.automation",
-    "data_template": {
+    "data": {
         "platform": "{{ trigger.platform }}",
         "event": "{{ trigger.event }}",
         "calendar_event": "{{ trigger.calendar_event }}",
