@@ -1374,6 +1374,7 @@ DEVICE_ACTION_BASE_SCHEMA = vol.Schema(
         **SCRIPT_ACTION_BASE_SCHEMA,
         vol.Required(CONF_DEVICE_ID): string,
         vol.Required(CONF_DOMAIN): str,
+        vol.Remove("secondary"): dict,
     }
 )
 

@@ -14,7 +14,7 @@ import voluptuous_serialize
 
 from homeassistant.components import websocket_api
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -164,6 +164,16 @@ async def async_get_device_automation_platform(
         ) from err
 
     return platform
+
+
+@callback
+def async_set_entity_device_automation_metadata(
+    automation: dict[str, Any], entry: er.RegistryEntry
+) -> None:
+    """Set device automation metadata based on entity registry entry data."""
+    if "metadata" not in automation:
+        automation["metadata"] = {}
+    automation["metadata"]["secondary"] = bool(entry.entity_category or entry.hidden_by)
 
 
 async def _async_get_device_automations_from_domain(

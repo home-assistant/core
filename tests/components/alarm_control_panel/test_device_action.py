@@ -127,6 +127,7 @@ async def test_get_actions(
             "type": action,
             "device_id": device_entry.id,
             "entity_id": f"{DOMAIN}.test_5678",
+            "metadata": {"secondary": False},
         }
         for action in expected_action_types
     ]
@@ -175,7 +176,7 @@ async def test_get_actions_hidden_auxiliary(
             "type": action,
             "device_id": device_entry.id,
             "entity_id": f"{DOMAIN}.test_5678",
-            "secondary": True,
+            "metadata": {"secondary": True},
         }
         for action in ["disarm", "arm_away"]
     ]
@@ -203,12 +204,14 @@ async def test_get_actions_arm_night_only(hass, device_reg, entity_reg):
             "type": "arm_night",
             "device_id": device_entry.id,
             "entity_id": "alarm_control_panel.test_5678",
+            "metadata": {"secondary": False},
         },
         {
             "domain": DOMAIN,
             "type": "disarm",
             "device_id": device_entry.id,
             "entity_id": "alarm_control_panel.test_5678",
+            "metadata": {"secondary": False},
         },
     ]
     actions = await async_get_device_automations(
