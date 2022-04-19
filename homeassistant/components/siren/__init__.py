@@ -159,7 +159,7 @@ class SirenEntity(ToggleEntity):
     """Representation of a siren device."""
 
     entity_description: SirenEntityDescription
-    _attr_available_tones: list[int | str] | dict[int, str] | None = None
+    _attr_available_tones: list[int | str] | dict[int, str] | None
 
     @final
     @property
