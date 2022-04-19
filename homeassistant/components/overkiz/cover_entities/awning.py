@@ -7,11 +7,8 @@ from pyoverkiz.enums import OverkizCommand, OverkizState
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    SUPPORT_CLOSE,
-    SUPPORT_OPEN,
-    SUPPORT_SET_POSITION,
-    SUPPORT_STOP,
     CoverDeviceClass,
+    CoverEntityFeature,
 )
 
 from .generic_cover import COMMANDS_STOP, OverkizGenericCover
@@ -28,16 +25,16 @@ class Awning(OverkizGenericCover):
         supported_features: int = super().supported_features
 
         if self.executor.has_command(OverkizCommand.SET_DEPLOYMENT):
-            supported_features |= SUPPORT_SET_POSITION
+            supported_features |= CoverEntityFeature.SET_POSITION
 
         if self.executor.has_command(OverkizCommand.DEPLOY):
-            supported_features |= SUPPORT_OPEN
+            supported_features |= CoverEntityFeature.OPEN
 
             if self.executor.has_command(*COMMANDS_STOP):
-                supported_features |= SUPPORT_STOP
+                supported_features |= CoverEntityFeature.STOP
 
         if self.executor.has_command(OverkizCommand.UNDEPLOY):
-            supported_features |= SUPPORT_CLOSE
+            supported_features |= CoverEntityFeature.CLOSE
 
         return supported_features
 

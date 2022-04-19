@@ -96,7 +96,7 @@ class Concord232Alarm(alarm.AlarmControlPanelEntity):
     @property
     def code_format(self):
         """Return the characters if code is defined."""
-        return alarm.FORMAT_NUMBER
+        return alarm.CodeFormat.NUMBER
 
     @property
     def state(self):

@@ -165,16 +165,16 @@ async def test_reproducing_states(hass, caplog):
 @pytest.mark.parametrize(
     "color_mode",
     (
-        light.COLOR_MODE_COLOR_TEMP,
-        light.COLOR_MODE_BRIGHTNESS,
-        light.COLOR_MODE_HS,
-        light.COLOR_MODE_ONOFF,
-        light.COLOR_MODE_RGB,
-        light.COLOR_MODE_RGBW,
-        light.COLOR_MODE_RGBWW,
-        light.COLOR_MODE_UNKNOWN,
-        light.COLOR_MODE_WHITE,
-        light.COLOR_MODE_XY,
+        light.ColorMode.COLOR_TEMP,
+        light.ColorMode.BRIGHTNESS,
+        light.ColorMode.HS,
+        light.ColorMode.ONOFF,
+        light.ColorMode.RGB,
+        light.ColorMode.RGBW,
+        light.ColorMode.RGBWW,
+        light.ColorMode.UNKNOWN,
+        light.ColorMode.WHITE,
+        light.ColorMode.XY,
     ),
 )
 async def test_filter_color_modes(hass, caplog, color_mode):
@@ -200,23 +200,23 @@ async def test_filter_color_modes(hass, caplog, color_mode):
     )
 
     expected_map = {
-        light.COLOR_MODE_COLOR_TEMP: {**VALID_BRIGHTNESS, **VALID_COLOR_TEMP},
-        light.COLOR_MODE_BRIGHTNESS: VALID_BRIGHTNESS,
-        light.COLOR_MODE_HS: {**VALID_BRIGHTNESS, **VALID_HS_COLOR},
-        light.COLOR_MODE_ONOFF: {**VALID_BRIGHTNESS},
-        light.COLOR_MODE_RGB: {**VALID_BRIGHTNESS, **VALID_RGB_COLOR},
-        light.COLOR_MODE_RGBW: {**VALID_BRIGHTNESS, **VALID_RGBW_COLOR},
-        light.COLOR_MODE_RGBWW: {**VALID_BRIGHTNESS, **VALID_RGBWW_COLOR},
-        light.COLOR_MODE_UNKNOWN: {
+        light.ColorMode.COLOR_TEMP: {**VALID_BRIGHTNESS, **VALID_COLOR_TEMP},
+        light.ColorMode.BRIGHTNESS: VALID_BRIGHTNESS,
+        light.ColorMode.HS: {**VALID_BRIGHTNESS, **VALID_HS_COLOR},
+        light.ColorMode.ONOFF: {**VALID_BRIGHTNESS},
+        light.ColorMode.RGB: {**VALID_BRIGHTNESS, **VALID_RGB_COLOR},
+        light.ColorMode.RGBW: {**VALID_BRIGHTNESS, **VALID_RGBW_COLOR},
+        light.ColorMode.RGBWW: {**VALID_BRIGHTNESS, **VALID_RGBWW_COLOR},
+        light.ColorMode.UNKNOWN: {
             **VALID_BRIGHTNESS,
             **VALID_HS_COLOR,
             **VALID_WHITE_VALUE,
         },
-        light.COLOR_MODE_WHITE: {
+        light.ColorMode.WHITE: {
             **VALID_BRIGHTNESS,
             light.ATTR_WHITE: VALID_BRIGHTNESS[light.ATTR_BRIGHTNESS],
         },
-        light.COLOR_MODE_XY: {**VALID_BRIGHTNESS, **VALID_XY_COLOR},
+        light.ColorMode.XY: {**VALID_BRIGHTNESS, **VALID_XY_COLOR},
     }
     expected = expected_map[color_mode]
 

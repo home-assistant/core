@@ -4,8 +4,8 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
+from aioairzone.exceptions import AirzoneError
 from aioairzone.localapi import AirzoneLocalApi
-from aiohttp.client_exceptions import ClientConnectorError
 import async_timeout
 
 from homeassistant.core import HomeAssistant
@@ -37,6 +37,6 @@ class AirzoneUpdateCoordinator(DataUpdateCoordinator):
         async with async_timeout.timeout(AIOAIRZONE_DEVICE_TIMEOUT_SEC):
             try:
                 await self.airzone.update_airzone()
-            except ClientConnectorError as error:
+            except AirzoneError as error:
                 raise UpdateFailed(error) from error
             return self.airzone.data()
