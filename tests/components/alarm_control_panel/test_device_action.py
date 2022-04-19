@@ -153,7 +153,7 @@ async def test_get_actions_hidden_auxiliary(
     hidden_by,
     entity_category,
 ):
-    """Test we get the expected actions from a hidden or secondary alarm_control_panel."""
+    """Test we get the expected actions from a hidden or auxiliary entity."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
     device_entry = device_reg.async_get_or_create(
