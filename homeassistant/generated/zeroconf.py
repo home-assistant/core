@@ -131,12 +131,6 @@ ZEROCONF = {
             "name": "tube*"
         }
     ],
-    "_zigate-zigbee-gateway._tcp.local.": [
-        {
-            "domain": "zha",
-            "name": "*zigate*"
-        }
-    ],
     "_fbx-api._tcp.local.": [
         {
             "domain": "freebox"
@@ -382,6 +376,12 @@ ZEROCONF = {
     "_xbmc-jsonrpc-h._tcp.local.": [
         {
             "domain": "kodi"
+        }
+    ],
+    "_zigate-zigbee-gateway._tcp.local.": [
+        {
+            "domain": "zha",
+            "name": "*zigate*"
         }
     ],
     "_zwave-js-server._tcp.local.": [
