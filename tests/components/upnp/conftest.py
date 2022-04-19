@@ -216,13 +216,13 @@ def mock_upnp_device():
 
 
 @pytest.fixture(autouse=True)
-def mock_get_mac_address_from_host():
+def mock_mac_address_from_host():
     """Get mac address."""
     with patch(
-        "homeassistant.components.upnp.config_flow.get_mac_address_from_host",
+        "homeassistant.components.upnp.config_flow.async_get_mac_address_from_host",
         return_value=TEST_MAC_ADDRESS,
     ), patch(
-        "homeassistant.components.upnp.get_mac_address_from_host",
+        "homeassistant.components.upnp.async_get_mac_address_from_host",
         return_value=TEST_MAC_ADDRESS,
     ):
         yield
