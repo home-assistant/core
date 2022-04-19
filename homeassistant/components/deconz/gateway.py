@@ -158,6 +158,9 @@ class DeconzGateway:
 
     async def async_update_device_registry(self) -> None:
         """Update device registry."""
+        if self.api.config.mac is None:
+            return
+
         device_registry = dr.async_get(self.hass)
 
         # Host device
@@ -241,7 +244,7 @@ class DeconzGateway:
 
     async def async_reset(self) -> bool:
         """Reset this gateway to default state."""
-        self.api.async_connection_status_callback = None
+        self.api.connection_status_callback = None
         self.api.close()
 
         await self.hass.config_entries.async_unload_platforms(
