@@ -1,6 +1,6 @@
 """The test for the History Statistics sensor platform."""
 # pylint: disable=protected-access
-from datetime import datetime, timedelta
+from datetime import timedelta
 import unittest
 from unittest.mock import patch
 
@@ -9,11 +9,9 @@ import pytest
 
 from homeassistant import config as hass_config
 from homeassistant.components.history_stats import DOMAIN
-from homeassistant.components.history_stats.sensor import HistoryStatsSensor
 from homeassistant.const import SERVICE_RELOAD, STATE_UNKNOWN
 import homeassistant.core as ha
 from homeassistant.helpers.entity_component import async_update_entity
-from homeassistant.helpers.template import Template
 from homeassistant.setup import async_setup_component, setup_component
 import homeassistant.util.dt as dt_util
 
@@ -76,73 +74,6 @@ class TestHistoryStatsSensor(unittest.TestCase):
         state = self.hass.states.get("sensor.test")
         assert state.state == STATE_UNKNOWN
 
-    @patch(
-        "homeassistant.helpers.template.TemplateEnvironment.is_safe_callable",
-        return_value=True,
-    )
-    def test_period_parsing(self, mock):
-        """Test the conversion from templates to period."""
-        now = datetime(2019, 1, 1, 23, 30, 0, tzinfo=dt_util.UTC)
-        with patch("homeassistant.util.dt.now", return_value=now):
-            today = Template(
-                "{{ now().replace(hour=0).replace(minute=0).replace(second=0) }}",
-                self.hass,
-            )
-            duration = timedelta(hours=2, minutes=1)
-
-            sensor1 = HistoryStatsSensor(
-                "test", "on", today, None, duration, "time", "test"
-            )
-            sensor1.hass = self.hass
-            sensor2 = HistoryStatsSensor(
-                "test", "on", None, today, duration, "time", "test"
-            )
-            sensor2.hass = self.hass
-
-            sensor1.update_period()
-            sensor1_start, sensor1_end = sensor1._period
-            sensor2.update_period()
-            sensor2_start, sensor2_end = sensor2._period
-
-        # Start = 00:00:00
-        assert sensor1_start.hour == 0
-        assert sensor1_start.minute == 0
-        assert sensor1_start.second == 0
-
-        # End = 02:01:00
-        assert sensor1_end.hour == 2
-        assert sensor1_end.minute == 1
-        assert sensor1_end.second == 0
-
-        # Start = 21:59:00
-        assert sensor2_start.hour == 21
-        assert sensor2_start.minute == 59
-        assert sensor2_start.second == 0
-
-        # End = 00:00:00
-        assert sensor2_end.hour == 0
-        assert sensor2_end.minute == 0
-        assert sensor2_end.second == 0
-
-    def test_wrong_date(self):
-        """Test when start or end value is not a timestamp or a date."""
-        good = Template("{{ now() }}", self.hass)
-        bad = Template("{{ TEST }}", self.hass)
-
-        sensor1 = HistoryStatsSensor("test", "on", good, bad, None, "time", "Test")
-        sensor1.hass = self.hass
-        sensor2 = HistoryStatsSensor("test", "on", bad, good, None, "time", "Test")
-        sensor2.hass = self.hass
-
-        before_update1 = sensor1._period
-        before_update2 = sensor2._period
-
-        sensor1.update_period()
-        sensor2.update_period()
-
-        assert before_update1 == sensor1._period
-        assert before_update2 == sensor2._period
-
     def test_wrong_duration(self):
         """Test when duration value is not a timedelta."""
         self.init_recorder()
@@ -161,25 +92,6 @@ class TestHistoryStatsSensor(unittest.TestCase):
         assert self.hass.states.get("sensor.test") is None
         with pytest.raises(TypeError):
             setup_component(self.hass, "sensor", config)()
-
-    def test_bad_template(self):
-        """Test Exception when the template cannot be parsed."""
-        bad = Template("{{ x - 12 }}", self.hass)  # x is undefined
-        duration = "01:00"
-
-        sensor1 = HistoryStatsSensor("test", "on", bad, None, duration, "time", "Test")
-        sensor1.hass = self.hass
-        sensor2 = HistoryStatsSensor("test", "on", None, bad, duration, "time", "Test")
-        sensor2.hass = self.hass
-
-        before_update1 = sensor1._period
-        before_update2 = sensor2._period
-
-        sensor1.update_period()
-        sensor2.update_period()
-
-        assert before_update1 == sensor1._period
-        assert before_update2 == sensor2._period
 
     def test_not_enough_arguments(self):
         """Test config when not enough arguments provided."""
@@ -223,6 +135,48 @@ class TestHistoryStatsSensor(unittest.TestCase):
         """Initialize the recorder."""
         init_recorder_component(self.hass)
         self.hass.start()
+
+
+async def test_invalid_date_for_start(hass):
+    """Verify with an invalid date for start."""
+    await async_init_recorder_component(hass)
+    await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": {
+                "platform": "history_stats",
+                "entity_id": "binary_sensor.test_id",
+                "name": "test",
+                "state": "on",
+                "start": "{{ INVALID }}",
+                "duration": "01:00",
+            },
+        },
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.test").state == STATE_UNKNOWN
+
+
+async def test_invalid_date_for_end(hass):
+    """Verify with an invalid date for end."""
+    await async_init_recorder_component(hass)
+    await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": {
+                "platform": "history_stats",
+                "entity_id": "binary_sensor.test_id",
+                "name": "test",
+                "state": "on",
+                "end": "{{ INVALID }}",
+                "duration": "01:00",
+            },
+        },
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.test").state == STATE_UNKNOWN
 
 
 async def test_reload(hass):
@@ -339,6 +293,7 @@ async def test_measure_multiple(hass):
             ]
         },
     )
+    await hass.async_block_till_done()
 
     with patch(
         "homeassistant.components.recorder.history.state_changes_during_period",
@@ -420,6 +375,7 @@ async def async_test_measure(hass):
             ]
         },
     )
+    await hass.async_block_till_done()
 
     with patch(
         "homeassistant.components.recorder.history.state_changes_during_period",
@@ -502,6 +458,7 @@ async def test_async_on_entire_period(hass):
             ]
         },
     )
+    await hass.async_block_till_done()
 
     with patch(
         "homeassistant.components.recorder.history.state_changes_during_period",
@@ -584,6 +541,7 @@ async def test_async_off_entire_period(hass):
             ]
         },
     )
+    await hass.async_block_till_done()
 
     with patch(
         "homeassistant.components.recorder.history.state_changes_during_period",
@@ -648,6 +606,7 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_sin
                     ]
                 },
             )
+            await hass.async_block_till_done()
 
             await async_update_entity(hass, "sensor.sensor1")
             await hass.async_block_till_done()
@@ -740,6 +699,7 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_sin
                     ]
                 },
             )
+            await hass.async_block_till_done()
 
             await async_update_entity(hass, "sensor.sensor1")
             await hass.async_block_till_done()
@@ -859,6 +819,8 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_mul
                     ]
                 },
             )
+            await hass.async_block_till_done()
+
             for i in range(1, 5):
                 await async_update_entity(hass, f"sensor.sensor{i}")
             await hass.async_block_till_done()
