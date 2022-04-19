@@ -73,6 +73,7 @@ FLOWS = {
         "dexcom",
         "dialogflow",
         "directv",
+        "discord",
         "dlna_dmr",
         "dlna_dms",
         "dnsip",
@@ -195,6 +196,7 @@ FLOWS = {
         "lyric",
         "mailgun",
         "mazda",
+        "meater",
         "melcloud",
         "met",
         "met_eireann",
@@ -294,6 +296,7 @@ FLOWS = {
         "senseme",
         "sensibo",
         "sentry",
+        "senz",
         "sharkiq",
         "shelly",
         "shopping_list",
@@ -335,6 +338,7 @@ FLOWS = {
         "system_bridge",
         "tado",
         "tailscale",
+        "tankerkoenig",
         "tasmota",
         "tellduslive",
         "tesla_wall_connector",
@@ -348,6 +352,7 @@ FLOWS = {
         "traccar",
         "tractive",
         "tradfri",
+        "trafikverket_train",
         "trafikverket_weatherstation",
         "transmission",
         "tuya",
@@ -373,6 +378,7 @@ FLOWS = {
         "vizio",
         "vlc_telnet",
         "volumio",
+        "vulcan",
         "wallbox",
         "watttime",
         "waze_travel_time",
@@ -405,6 +411,7 @@ FLOWS = {
         "min_max",
         "switch_as_x",
         "threshold",
-        "tod"
+        "tod",
+        "utility_meter"
     ]
 }

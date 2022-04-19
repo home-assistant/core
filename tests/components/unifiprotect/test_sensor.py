@@ -403,8 +403,8 @@ async def test_sensor_setup_camera(
     hass: HomeAssistant, mock_entry: MockEntityFixture, camera: Camera, now: datetime
 ):
     """Test sensor entity setup for camera devices."""
-    # 3 from all, 8 from camera, 12 NVR
-    assert_entity_counts(hass, Platform.SENSOR, 24, 14)
+    # 3 from all, 7 from camera, 12 NVR
+    assert_entity_counts(hass, Platform.SENSOR, 24, 13)
 
     entity_registry = er.async_get(hass)
 
@@ -528,8 +528,8 @@ async def test_sensor_update_motion(
     hass: HomeAssistant, mock_entry: MockEntityFixture, camera: Camera, now: datetime
 ):
     """Test sensor motion entity."""
-    # 3 from all, 8 from camera, 12 NVR
-    assert_entity_counts(hass, Platform.SENSOR, 24, 14)
+    # 3 from all, 7 from camera, 12 NVR
+    assert_entity_counts(hass, Platform.SENSOR, 24, 13)
 
     _, entity_id = ids_from_device_description(
         Platform.SENSOR, camera, MOTION_SENSORS[0]

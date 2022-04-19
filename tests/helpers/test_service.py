@@ -25,6 +25,7 @@ from homeassistant.helpers import (
     template,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -119,7 +120,7 @@ def area_mock(hass):
         unique_id="config-in-own-area-id",
         platform="test",
         area_id="own-area",
-        entity_category="config",
+        entity_category=EntityCategory.CONFIG,
     )
     hidden_entity_in_own_area = ent_reg.RegistryEntry(
         entity_id="light.hidden_in_own_area",
@@ -139,7 +140,7 @@ def area_mock(hass):
         unique_id="config-in-area-id",
         platform="test",
         device_id=device_in_area.id,
-        entity_category="config",
+        entity_category=EntityCategory.CONFIG,
     )
     hidden_entity_in_area = ent_reg.RegistryEntry(
         entity_id="light.hidden_in_area",
@@ -173,7 +174,7 @@ def area_mock(hass):
         unique_id="config-no-area-id",
         platform="test",
         device_id=device_no_area.id,
-        entity_category="config",
+        entity_category=EntityCategory.CONFIG,
     )
     hidden_entity_no_area = ent_reg.RegistryEntry(
         entity_id="light.hidden_no_area",

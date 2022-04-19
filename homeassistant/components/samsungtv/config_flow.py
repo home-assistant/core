@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
     CONF_METHOD,
+    CONF_MODEL,
     CONF_NAME,
     CONF_PORT,
     CONF_TOKEN,
@@ -28,7 +29,6 @@ from homeassistant.helpers.device_registry import format_mac
 from .bridge import SamsungTVBridge, async_get_device_info, mac_from_device_info
 from .const import (
     CONF_MANUFACTURER,
-    CONF_MODEL,
     CONF_SESSION_ID,
     CONF_SSDP_MAIN_TV_AGENT_LOCATION,
     CONF_SSDP_RENDERING_CONTROL_LOCATION,
@@ -363,9 +363,8 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not entry:
             return None
         entry_kw_args: dict = {}
-        if (
-            self.unique_id
-            and entry.unique_id is None
+        if self.unique_id and (
+            entry.unique_id is None
             or (is_unique_match and self.unique_id != entry.unique_id)
         ):
             entry_kw_args["unique_id"] = self.unique_id
@@ -469,6 +468,13 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self._async_set_unique_id_from_udn()
         self._async_update_and_abort_for_matching_unique_id()
         self._async_abort_if_host_already_in_progress()
+        if self._method == METHOD_LEGACY and discovery_info.ssdp_st in (
+            UPNP_SVC_RENDERING_CONTROL,
+            UPNP_SVC_MAIN_TV_AGENT,
+        ):
+            # The UDN we use for the unique id cannot be determined
+            # from device_info for legacy devices
+            return self.async_abort(reason="not_supported")
         self.context["title_placeholders"] = {"device": self._title}
         return await self.async_step_confirm()
 

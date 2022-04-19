@@ -3,7 +3,11 @@ import logging
 
 from pyotgw import vars as gw_vars
 
-from homeassistant.components.climate import ENTITY_ID_FORMAT, ClimateEntity
+from homeassistant.components.climate import (
+    ENTITY_ID_FORMAT,
+    ClimateEntity,
+    ClimateEntityFeature,
+)
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_COOL,
     CURRENT_HVAC_HEAT,
@@ -12,8 +16,6 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT,
     PRESET_AWAY,
     PRESET_NONE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -43,8 +45,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_FLOOR_TEMP = False
 
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -65,6 +65,10 @@ async def async_setup_entry(
 
 class OpenThermClimate(ClimateEntity):
     """Representation of a climate device."""
+
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+    )
 
     def __init__(self, gw_dev, options):
         """Initialize the device."""
@@ -283,11 +287,6 @@ class OpenThermClimate(ClimateEntity):
                 temp, self.temporary_ovrd_mode
             )
             self.async_write_ha_state()
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_FLAGS
 
     @property
     def min_temp(self):

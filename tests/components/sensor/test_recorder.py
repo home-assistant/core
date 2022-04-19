@@ -325,20 +325,20 @@ def test_compile_hourly_statistics_unsupported(hass_recorder, caplog, attributes
 
 @pytest.mark.parametrize("state_class", ["total"])
 @pytest.mark.parametrize(
-    "units,device_class,unit,display_unit,factor,factor2",
+    "units,device_class,unit,display_unit,factor",
     [
-        (IMPERIAL_SYSTEM, "energy", "kWh", "kWh", 1, 1),
-        (IMPERIAL_SYSTEM, "energy", "Wh", "kWh", 1 / 1000, 1),
-        (IMPERIAL_SYSTEM, "monetary", "EUR", "EUR", 1, 1),
-        (IMPERIAL_SYSTEM, "monetary", "SEK", "SEK", 1, 1),
-        (IMPERIAL_SYSTEM, "gas", "m³", "ft³", 35.314666711, 35.314666711),
-        (IMPERIAL_SYSTEM, "gas", "ft³", "ft³", 1, 35.314666711),
-        (METRIC_SYSTEM, "energy", "kWh", "kWh", 1, 1),
-        (METRIC_SYSTEM, "energy", "Wh", "kWh", 1 / 1000, 1),
-        (METRIC_SYSTEM, "monetary", "EUR", "EUR", 1, 1),
-        (METRIC_SYSTEM, "monetary", "SEK", "SEK", 1, 1),
-        (METRIC_SYSTEM, "gas", "m³", "m³", 1, 1),
-        (METRIC_SYSTEM, "gas", "ft³", "m³", 0.0283168466, 1),
+        (IMPERIAL_SYSTEM, "energy", "kWh", "kWh", 1),
+        (IMPERIAL_SYSTEM, "energy", "Wh", "kWh", 1 / 1000),
+        (IMPERIAL_SYSTEM, "monetary", "EUR", "EUR", 1),
+        (IMPERIAL_SYSTEM, "monetary", "SEK", "SEK", 1),
+        (IMPERIAL_SYSTEM, "gas", "m³", "ft³", 35.314666711),
+        (IMPERIAL_SYSTEM, "gas", "ft³", "ft³", 1),
+        (METRIC_SYSTEM, "energy", "kWh", "kWh", 1),
+        (METRIC_SYSTEM, "energy", "Wh", "kWh", 1 / 1000),
+        (METRIC_SYSTEM, "monetary", "EUR", "EUR", 1),
+        (METRIC_SYSTEM, "monetary", "SEK", "SEK", 1),
+        (METRIC_SYSTEM, "gas", "m³", "m³", 1),
+        (METRIC_SYSTEM, "gas", "ft³", "m³", 0.0283168466),
     ],
 )
 async def test_compile_hourly_sum_statistics_amount(
@@ -351,7 +351,6 @@ async def test_compile_hourly_sum_statistics_amount(
     unit,
     display_unit,
     factor,
-    factor2,
 ):
     """Test compiling hourly statistics."""
     period0 = dt_util.utcnow()
@@ -480,8 +479,8 @@ async def test_compile_hourly_sum_statistics_amount(
     assert response["success"]
     await async_wait_recording_done_without_instance(hass)
 
-    expected_stats["sensor.test1"][1]["sum"] = approx(factor * 40.0 + factor2 * 100)
-    expected_stats["sensor.test1"][2]["sum"] = approx(factor * 70.0 + factor2 * 100)
+    expected_stats["sensor.test1"][1]["sum"] = approx(factor * 40.0 + 100)
+    expected_stats["sensor.test1"][2]["sum"] = approx(factor * 70.0 + 100)
     stats = statistics_during_period(hass, period0, period="5minute")
     assert stats == expected_stats
 
@@ -499,8 +498,8 @@ async def test_compile_hourly_sum_statistics_amount(
     assert response["success"]
     await async_wait_recording_done_without_instance(hass)
 
-    expected_stats["sensor.test1"][1]["sum"] = approx(factor * 40.0 + factor2 * 100)
-    expected_stats["sensor.test1"][2]["sum"] = approx(factor * 70.0 - factor2 * 300)
+    expected_stats["sensor.test1"][1]["sum"] = approx(factor * 40.0 + 100)
+    expected_stats["sensor.test1"][2]["sum"] = approx(factor * 70.0 - 300)
     stats = statistics_during_period(hass, period0, period="5minute")
     assert stats == expected_stats
 
@@ -2463,6 +2462,16 @@ def test_compile_statistics_hourly_daily_monthly_summary(
             "unit_of_measurement": "EUR",
         },
     ]
+
+    # Adjust the inserted statistics
+    sum_adjustment = -10
+    sum_adjustement_start = zero + timedelta(minutes=65)
+    for i in range(13, 24):
+        expected_sums["sensor.test4"][i] += sum_adjustment
+    recorder.async_adjust_statistics(
+        "sensor.test4", sum_adjustement_start, sum_adjustment
+    )
+    wait_recording_done(hass)
 
     stats = statistics_during_period(hass, zero, period="5minute")
     expected_stats = {

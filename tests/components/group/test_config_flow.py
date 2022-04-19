@@ -24,6 +24,7 @@ from tests.common import MockConfigEntry
         ("cover", "open", "open", {}, {}, {}, {}),
         ("fan", "on", "on", {}, {}, {}, {}),
         ("light", "on", "on", {}, {}, {}, {}),
+        ("lock", "locked", "locked", {}, {}, {}, {}),
         ("media_player", "on", "on", {}, {}, {}, {}),
         ("switch", "on", "on", {}, {}, {}, {}),
     ),
@@ -108,6 +109,7 @@ async def test_config_flow(
         ("cover", {}),
         ("fan", {}),
         ("light", {}),
+        ("lock", {}),
         ("media_player", {}),
         ("switch", {}),
     ),
@@ -179,6 +181,7 @@ def get_suggested(schema, key):
         ("cover", "open", {}),
         ("fan", "on", {}),
         ("light", "on", {"all": False}),
+        ("lock", "locked", {}),
         ("media_player", "on", {}),
         ("switch", "on", {"all": False}),
     ),
@@ -221,6 +224,9 @@ async def test_options(
     assert result["step_id"] == group_type
     assert get_suggested(result["data_schema"].schema, "entities") == members1
     assert "name" not in result["data_schema"].schema
+    assert result["data_schema"].schema["entities"].config["exclude_entities"] == [
+        f"{group_type}.bed_room"
+    ]
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -351,6 +357,7 @@ async def test_all_options(
         ("cover", {}),
         ("fan", {}),
         ("light", {}),
+        ("lock", {}),
         ("media_player", {}),
         ("switch", {}),
     ),

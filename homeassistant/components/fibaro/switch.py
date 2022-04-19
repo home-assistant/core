@@ -5,7 +5,6 @@ from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import convert
 
 from . import FIBARO_DEVICES, FibaroDevice
 from .const import DOMAIN
@@ -44,20 +43,6 @@ class FibaroSwitch(FibaroDevice, SwitchEntity):
         """Turn device off."""
         self.call_turn_off()
         self._state = False
-
-    @property
-    def current_power_w(self):
-        """Return the current power usage in W."""
-        if "power" in self.fibaro_device.interfaces:
-            return convert(self.fibaro_device.properties.power, float, 0.0)
-        return None
-
-    @property
-    def today_energy_kwh(self):
-        """Return the today total energy usage in kWh."""
-        if "energy" in self.fibaro_device.interfaces:
-            return convert(self.fibaro_device.properties.energy, float, 0.0)
-        return None
 
     @property
     def is_on(self):

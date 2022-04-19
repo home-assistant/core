@@ -383,6 +383,11 @@ ZEROCONF = {
         {
             "domain": "kodi"
         }
+    ],
+    "_zwave-js-server._tcp.local.": [
+        {
+            "domain": "zwave_js"
+        }
     ]
 }
 
@@ -399,7 +404,19 @@ HOMEKIT = {
     "EB-*": "ecobee",
     "Healty Home Coach": "netatmo",
     "Iota": "abode",
-    "LIFX": "lifx",
+    "LIFX A19": "lifx",
+    "LIFX BR30": "lifx",
+    "LIFX Beam": "lifx",
+    "LIFX Candle": "lifx",
+    "LIFX Clean": "lifx",
+    "LIFX Color": "lifx",
+    "LIFX Dlight": "lifx",
+    "LIFX Filament": "lifx",
+    "LIFX GU10": "lifx",
+    "LIFX Mini": "lifx",
+    "LIFX Nightvision": "lifx",
+    "LIFX White": "lifx",
+    "LIFX Z": "lifx",
     "MYQ": "myq",
     "NL29": "nanoleaf",
     "NL42": "nanoleaf",

@@ -6,8 +6,8 @@ from homeassistant.components.climate import (
     DEFAULT_MIN_TEMP,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
-    SUPPORT_TARGET_TEMPERATURE,
     ClimateEntity,
+    ClimateEntityFeature,
 )
 from homeassistant.components.climate.const import CURRENT_HVAC_HEAT, CURRENT_HVAC_OFF
 from homeassistant.const import ATTR_TEMPERATURE, CONF_NAME, TEMP_CELSIUS
@@ -46,7 +46,7 @@ class LightwaveTrv(ClimateEntity):
     _attr_hvac_modes = [HVAC_MODE_HEAT, HVAC_MODE_OFF]
     _attr_min_temp = DEFAULT_MIN_TEMP
     _attr_max_temp = DEFAULT_MAX_TEMP
-    _attr_supported_features = SUPPORT_TARGET_TEMPERATURE
+    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
     _attr_target_temperature_step = 0.5
     _attr_temperature_unit = TEMP_CELSIUS
 

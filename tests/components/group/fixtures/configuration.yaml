@@ -10,6 +10,18 @@ light:
       - light.outside_patio_lights
       - light.outside_patio_lights_2
 
+lock:
+  - platform: group
+    name: Inside Locks G
+    entities:
+      - lock.front_lock
+      - lock.back_lock
+  - platform: group
+    name: Outside Locks G
+    entities:
+      - lock.outside_lock
+      - lock.outside_lock_2
+
 switch:
   - platform: group
     name: Master Switches G

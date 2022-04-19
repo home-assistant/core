@@ -127,6 +127,22 @@ async def test_media_player_playback(
     )
     assert playmedia_mock.called
 
+    # Test movie success with media browser URL and resuming
+    playmedia_mock.reset()
+    assert await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: media_player,
+            ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MOVIE,
+            ATTR_MEDIA_CONTENT_ID: PLEX_URI_SCHEME
+            + f"{DEFAULT_DATA[CONF_SERVER_IDENTIFIER]}/1?resume=1",
+        },
+        True,
+    )
+    assert playmedia_mock.called
+    assert playmedia_mock.last_request.qs["offset"][0] == "555"
+
     # Test movie success with legacy media browser URL
     playmedia_mock.reset()
     assert await hass.services.async_call(

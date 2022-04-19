@@ -7,20 +7,12 @@ import logging
 import plexapi.exceptions
 import requests.exceptions
 
-from homeassistant.components.media_player import DOMAIN as MP_DOMAIN, MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_MUSIC,
-    SUPPORT_BROWSE_MEDIA,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SEEK,
-    SUPPORT_STOP,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
+from homeassistant.components.media_player import (
+    DOMAIN as MP_DOMAIN,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
 )
+from homeassistant.components.media_player.const import MEDIA_TYPE_MUSIC
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_IDLE, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import HomeAssistant, callback
@@ -389,19 +381,21 @@ class PlexMediaPlayer(MediaPlayerEntity):
         """Flag media player features that are supported."""
         if self.device and "playback" in self._device_protocol_capabilities:
             return (
-                SUPPORT_PAUSE
-                | SUPPORT_PREVIOUS_TRACK
-                | SUPPORT_NEXT_TRACK
-                | SUPPORT_STOP
-                | SUPPORT_SEEK
-                | SUPPORT_VOLUME_SET
-                | SUPPORT_PLAY
-                | SUPPORT_PLAY_MEDIA
-                | SUPPORT_VOLUME_MUTE
-                | SUPPORT_BROWSE_MEDIA
+                MediaPlayerEntityFeature.PAUSE
+                | MediaPlayerEntityFeature.PREVIOUS_TRACK
+                | MediaPlayerEntityFeature.NEXT_TRACK
+                | MediaPlayerEntityFeature.STOP
+                | MediaPlayerEntityFeature.SEEK
+                | MediaPlayerEntityFeature.VOLUME_SET
+                | MediaPlayerEntityFeature.PLAY
+                | MediaPlayerEntityFeature.PLAY_MEDIA
+                | MediaPlayerEntityFeature.VOLUME_MUTE
+                | MediaPlayerEntityFeature.BROWSE_MEDIA
             )
 
-        return SUPPORT_BROWSE_MEDIA | SUPPORT_PLAY_MEDIA
+        return (
+            MediaPlayerEntityFeature.BROWSE_MEDIA | MediaPlayerEntityFeature.PLAY_MEDIA
+        )
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""

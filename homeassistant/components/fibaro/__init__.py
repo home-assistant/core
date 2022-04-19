@@ -27,13 +27,11 @@ from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import convert, slugify
+from homeassistant.util import slugify
 
 from .const import CONF_IMPORT_PLUGINS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-ATTR_CURRENT_POWER_W = "current_power_w"
 
 CONF_COLOR = "color"
 CONF_DEVICE_CONFIG = "device_config"
@@ -530,15 +528,6 @@ class FibaroDevice(Entity):
             self.dont_know_message(cmd)
 
     @property
-    def current_power_w(self):
-        """Return the current power usage in W."""
-        if "power" in self.fibaro_device.properties and (
-            power := self.fibaro_device.properties.power
-        ):
-            return convert(power, float, 0.0)
-        return None
-
-    @property
     def current_binary_state(self):
         """Return the current binary state."""
         if self.fibaro_device.properties.value == "false":
@@ -567,10 +556,6 @@ class FibaroDevice(Entity):
                 )
             if "fibaroAlarmArm" in self.fibaro_device.interfaces:
                 attr[ATTR_ARMED] = bool(self.fibaro_device.properties.armed)
-            if "power" in self.fibaro_device.interfaces:
-                attr[ATTR_CURRENT_POWER_W] = convert(
-                    self.fibaro_device.properties.power, float, 0.0
-                )
         except (ValueError, KeyError):
             pass
 
