@@ -1,7 +1,6 @@
 """Support for AVM FRITZ!Box update platform."""
 from __future__ import annotations
 
-from dataclasses import dataclass
 import logging
 from typing import Any
 
@@ -18,12 +17,6 @@ from .common import AvmWrapper, FritzBoxBaseEntity
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-
-@dataclass
-class FritzUpdateEntityEntityDescription(UpdateEntityDescription):
-    """Describes AVM FRITZ!Box update entity."""
-
 
 ENTITY_DESCRIPTION = UpdateEntityDescription(
     name="Firmware Update",
