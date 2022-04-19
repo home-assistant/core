@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
-from typing import Any, Final
+from typing import Any
 
 from homeassistant.components.update import (
     UpdateEntity,
@@ -12,7 +12,6 @@ from homeassistant.components.update import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .common import AvmWrapper, FritzBoxBaseEntity
@@ -26,13 +25,10 @@ class FritzUpdateEntityEntityDescription(UpdateEntityDescription):
     """Describes AVM FRITZ!Box update entity."""
 
 
-UPDATE_ENTITIES: Final = [
-    FritzUpdateEntityEntityDescription(
-        key="update",
-        name="Firmware Update",
-        entity_category=EntityCategory.DIAGNOSTIC,
-    )
-]
+ENTITY_DESCRIPTION = UpdateEntityDescription(
+    name="Firmware Update",
+    key="update",
+)
 
 
 async def async_setup_entry(
@@ -42,10 +38,9 @@ async def async_setup_entry(
     _LOGGER.debug("Setting up AVM FRITZ!Box update entities")
     avm_wrapper: AvmWrapper = hass.data[DOMAIN][entry.entry_id]
 
-    async_add_entities(
-        FritzBoxUpdateEntity(avm_wrapper, entry.title, description)
-        for description in UPDATE_ENTITIES
-    )
+    entities = [FritzBoxUpdateEntity(avm_wrapper, entry.title)]
+
+    async_add_entities(entities)
 
 
 class FritzBoxUpdateEntity(FritzBoxBaseEntity, UpdateEntity):
@@ -55,12 +50,12 @@ class FritzBoxUpdateEntity(FritzBoxBaseEntity, UpdateEntity):
         self,
         avm_wrapper: AvmWrapper,
         device_friendly_name: str,
-        description: FritzUpdateEntityEntityDescription,
     ) -> None:
         """Init FRITZ!Box connectivity class."""
-        self.entity_description = description
-        self._attr_name = f"{device_friendly_name} {description.name}"
-        self._attr_unique_id = f"{avm_wrapper.unique_id}-{description.key}"
+        self.entity_description = ENTITY_DESCRIPTION
+        self._attr_title = f"{device_friendly_name}"
+        self._attr_name = f"{device_friendly_name} {ENTITY_DESCRIPTION.name}"
+        self._attr_unique_id = f"{avm_wrapper.unique_id}-{ENTITY_DESCRIPTION.key}"
         super().__init__(avm_wrapper, device_friendly_name)
 
     _attr_supported_features = UpdateEntityFeature.INSTALL
