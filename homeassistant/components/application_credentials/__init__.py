@@ -152,6 +152,15 @@ async def async_import_client_credential(
     await storage_collection.async_import_item(item)
 
 
+class AuthImplementation(config_entry_oauth2_flow.LocalOAuth2Implementation):
+    """Application Credentials local oauth2 implementation."""
+
+    @property
+    def name(self) -> str:
+        """Name of the implementation."""
+        return self.client_id
+
+
 async def _async_provide_implementation(
     hass: HomeAssistant, domain: str
 ) -> list[config_entry_oauth2_flow.AbstractOAuth2Implementation]:
@@ -165,7 +174,7 @@ async def _async_provide_implementation(
     storage_collection = hass.data[DOMAIN][DATA_STORAGE]
     credentials = storage_collection.async_client_credentials(domain)
     return [
-        config_entry_oauth2_flow.LocalOAuth2Implementation(
+        AuthImplementation(
             hass,
             auth_domain,
             credential.client_id,

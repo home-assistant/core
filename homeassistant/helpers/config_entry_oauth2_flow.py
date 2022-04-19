@@ -347,8 +347,7 @@ async def async_get_implementations(
         return registered
 
     registered = dict(registered)
-
-    for get_impl in hass.data[DATA_PROVIDERS].values():
+    for get_impl in list(hass.data[DATA_PROVIDERS].values()):
         for impl in await get_impl(hass, domain):
             registered[impl.domain] = impl
 
