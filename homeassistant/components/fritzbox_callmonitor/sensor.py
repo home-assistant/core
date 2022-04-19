@@ -6,6 +6,7 @@ import logging
 import queue
 from threading import Event as ThreadingEvent, Thread
 from time import sleep
+from typing import Any
 
 from fritzconnection.core.fritzmonitor import FritzMonitor
 import voluptuous as vol
@@ -117,7 +118,7 @@ async def async_setup_entry(
     )
 
     hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, sensor.async_will_remove_from_hass()
+        EVENT_HOMEASSISTANT_STOP, sensor.async_will_remove_from_hass
     )
 
     async_add_entities([sensor])
@@ -138,8 +139,9 @@ class FritzBoxCallSensor(SensorEntity):
         self._port = port
         self._monitor = None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Connect to FRITZ!Box to monitor its call state."""
+        await super().async_added_to_hass()
         _LOGGER.debug("Starting monitor for: %s", self.entity_id)
         self._monitor = FritzBoxCallMonitor(
             host=self._host,
@@ -148,8 +150,9 @@ class FritzBoxCallSensor(SensorEntity):
         )
         self._monitor.connect()
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self, *args: Any) -> None:
         """Disconnect from FRITZ!Box by stopping monitor."""
+        await super().async_will_remove_from_hass()
         if (
             self._monitor
             and self._monitor.stopped
