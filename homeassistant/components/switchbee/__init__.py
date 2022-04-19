@@ -18,7 +18,7 @@ from .const import DOMAIN, SCAN_INTERVAL
 _LOGGER = logging.getLogger(__name__)
 
 
-PLATFORMS: list[Platform] = [Platform.SWITCH, Platform.COVER, Platform.LIGHT]
+PLATFORMS: list[Platform] = [Platform.SWITCH]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -126,12 +126,12 @@ class SwitchBeeCoordinator(DataUpdateCoordinator):
             )
             raise UpdateFailed(f"Error communicating with API: {result}")
 
-        result = result[switchbee.ATTR_DATA]
-        for device in result:
-            if device[switchbee.ATTR_ID] in self._devices:
-                self._devices[device[switchbee.ATTR_ID]]["state"] = device["state"]
-                self._devices[device[switchbee.ATTR_ID]][
+        states = result[switchbee.ATTR_DATA]
+        for state in states:
+            if state[switchbee.ATTR_ID] in self._devices:
+                self._devices[state[switchbee.ATTR_ID]]["state"] = state["state"]
+                self._devices[state[switchbee.ATTR_ID]][
                     "uid"
-                ] = f"{self._mac}-{device[switchbee.ATTR_ID]}"
+                ] = f"{self._mac}-{state[switchbee.ATTR_ID]}"
 
         return self._devices

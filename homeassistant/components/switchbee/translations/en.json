@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured_device": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Failed to Authenticate with the Central Unit",
+            "unknown": "Unexpected error"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Central Unit IP address",
+                    "username": "User",
+                    "password": "Password"
+                },
+                "title": "Setup SwitchBee Central Unit"
+            }
+        }
+    }
+}
