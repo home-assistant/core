@@ -7,8 +7,11 @@ from hatasmota import const as tasmota_const, fan as tasmota_fan
 from hatasmota.entity import TasmotaEntity as HATasmotaEntity
 from hatasmota.models import DiscoveryHashType
 
-from homeassistant.components import fan
-from homeassistant.components.fan import FanEntity
+from homeassistant.components.fan import (
+    DOMAIN as FAN_DOMAIN,
+    FanEntity,
+    FanEntityFeature,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -46,10 +49,10 @@ async def async_setup_entry(
         )
 
     hass.data[
-        DATA_REMOVE_DISCOVER_COMPONENT.format(fan.DOMAIN)
+        DATA_REMOVE_DISCOVER_COMPONENT.format(FAN_DOMAIN)
     ] = async_dispatcher_connect(
         hass,
-        TASMOTA_DISCOVERY_ENTITY_NEW.format(fan.DOMAIN),
+        TASMOTA_DISCOVERY_ENTITY_NEW.format(FAN_DOMAIN),
         async_discover,
     )
 
@@ -61,6 +64,7 @@ class TasmotaFan(
 ):
     """Representation of a Tasmota fan."""
 
+    _attr_supported_features = FanEntityFeature.SET_SPEED
     _tasmota_entity: tasmota_fan.TasmotaFan
 
     def __init__(self, **kwds: Any) -> None:
@@ -95,11 +99,6 @@ class TasmotaFan(
         if self._state == 0:
             return 0
         return ordered_list_item_to_percentage(ORDERED_NAMED_FAN_SPEEDS, self._state)
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return fan.SUPPORT_SET_SPEED
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan."""

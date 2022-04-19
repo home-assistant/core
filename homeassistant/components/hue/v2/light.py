@@ -194,7 +194,7 @@ class HueLight(HueBaseEntity, LightEntity):
         brightness = normalize_hue_brightness(kwargs.get(ATTR_BRIGHTNESS))
         flash = kwargs.get(ATTR_FLASH)
         effect = effect_str = kwargs.get(ATTR_EFFECT)
-        if effect_str == EFFECT_NONE:
+        if effect_str in (EFFECT_NONE, EFFECT_NONE.lower()):
             effect = EffectStatus.NO_EFFECT
         elif effect_str is not None:
             # work out if we got a regular effect or timed effect

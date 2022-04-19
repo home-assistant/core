@@ -1,8 +1,8 @@
 """Define tests for the Airzone coordinator."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
-from aiohttp import ClientConnectorError
+from aioairzone.exceptions import AirzoneError, InvalidMethod, SystemOutOfRange
 
 from homeassistant.components.airzone.const import DOMAIN
 from homeassistant.components.airzone.coordinator import SCAN_INTERVAL
@@ -15,7 +15,7 @@ from .util import CONFIG, HVAC_MOCK
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_coordinator_client_connector_error(hass: HomeAssistant):
+async def test_coordinator_client_connector_error(hass: HomeAssistant) -> None:
     """Test ClientConnectorError on coordinator update."""
 
     entry = MockConfigEntry(domain=DOMAIN, data=CONFIG)
@@ -24,13 +24,19 @@ async def test_coordinator_client_connector_error(hass: HomeAssistant):
     with patch(
         "homeassistant.components.airzone.AirzoneLocalApi.get_hvac",
         return_value=HVAC_MOCK,
-    ) as mock_hvac:
+    ) as mock_hvac, patch(
+        "homeassistant.components.airzone.AirzoneLocalApi.get_hvac_systems",
+        side_effect=SystemOutOfRange,
+    ), patch(
+        "homeassistant.components.airzone.AirzoneLocalApi.get_webserver",
+        side_effect=InvalidMethod,
+    ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         mock_hvac.assert_called_once()
         mock_hvac.reset_mock()
 
-        mock_hvac.side_effect = ClientConnectorError(MagicMock(), MagicMock())
+        mock_hvac.side_effect = AirzoneError
         async_fire_time_changed(hass, utcnow() + SCAN_INTERVAL)
         await hass.async_block_till_done()
         mock_hvac.assert_called_once()

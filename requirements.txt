@@ -20,6 +20,6 @@ python-slugify==4.0.1
 pyyaml==6.0
 requests==2.27.1
 typing-extensions>=3.10.0.2,<5.0
-voluptuous==0.13.0
+voluptuous==0.13.1
 voluptuous-serialize==2.5.0
 yarl==1.7.2

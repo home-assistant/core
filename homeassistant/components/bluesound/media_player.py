@@ -16,27 +16,17 @@ import voluptuous as vol
 import xmltodict
 
 from homeassistant.components import media_source
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
+from homeassistant.components.media_player import (
+    PLATFORM_SCHEMA,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
+)
 from homeassistant.components.media_player.browse_media import (
     async_process_play_media_url,
 )
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_ENQUEUE,
     MEDIA_TYPE_MUSIC,
-    SUPPORT_BROWSE_MEDIA,
-    SUPPORT_CLEAR_PLAYLIST,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SEEK,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_SHUFFLE_SET,
-    SUPPORT_STOP,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -803,34 +793,41 @@ class BluesoundPlayer(MediaPlayerEntity):
             return 0
 
         if self.is_grouped and not self.is_master:
-            return SUPPORT_VOLUME_STEP | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE
+            return (
+                MediaPlayerEntityFeature.VOLUME_STEP
+                | MediaPlayerEntityFeature.VOLUME_SET
+                | MediaPlayerEntityFeature.VOLUME_MUTE
+            )
 
-        supported = SUPPORT_CLEAR_PLAYLIST | SUPPORT_BROWSE_MEDIA
+        supported = (
+            MediaPlayerEntityFeature.CLEAR_PLAYLIST
+            | MediaPlayerEntityFeature.BROWSE_MEDIA
+        )
 
         if self._status.get("indexing", "0") == "0":
             supported = (
                 supported
-                | SUPPORT_PAUSE
-                | SUPPORT_PREVIOUS_TRACK
-                | SUPPORT_NEXT_TRACK
-                | SUPPORT_PLAY_MEDIA
-                | SUPPORT_STOP
-                | SUPPORT_PLAY
-                | SUPPORT_SELECT_SOURCE
-                | SUPPORT_SHUFFLE_SET
+                | MediaPlayerEntityFeature.PAUSE
+                | MediaPlayerEntityFeature.PREVIOUS_TRACK
+                | MediaPlayerEntityFeature.NEXT_TRACK
+                | MediaPlayerEntityFeature.PLAY_MEDIA
+                | MediaPlayerEntityFeature.STOP
+                | MediaPlayerEntityFeature.PLAY
+                | MediaPlayerEntityFeature.SELECT_SOURCE
+                | MediaPlayerEntityFeature.SHUFFLE_SET
             )
 
         current_vol = self.volume_level
         if current_vol is not None and current_vol >= 0:
             supported = (
                 supported
-                | SUPPORT_VOLUME_STEP
-                | SUPPORT_VOLUME_SET
-                | SUPPORT_VOLUME_MUTE
+                | MediaPlayerEntityFeature.VOLUME_STEP
+                | MediaPlayerEntityFeature.VOLUME_SET
+                | MediaPlayerEntityFeature.VOLUME_MUTE
             )
 
         if self._status.get("canSeek", "") == "1":
-            supported = supported | SUPPORT_SEEK
+            supported = supported | MediaPlayerEntityFeature.SEEK
 
         return supported
 

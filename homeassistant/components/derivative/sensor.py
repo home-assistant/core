@@ -250,8 +250,10 @@ class DerivativeSensor(RestoreEntity, SensorEntity):
             self._state = derivative
             self.async_write_ha_state()
 
-        async_track_state_change_event(
-            self.hass, self._sensor_source_id, calc_derivative
+        self.async_on_remove(
+            async_track_state_change_event(
+                self.hass, self._sensor_source_id, calc_derivative
+            )
         )
 
     @property

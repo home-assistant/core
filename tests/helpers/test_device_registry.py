@@ -1128,6 +1128,16 @@ async def test_update_suggested_area(hass, registry, area_registry, update_event
     assert update_events[1]["device_id"] == entry.id
     assert update_events[1]["changes"] == {"area_id": None, "suggested_area": None}
 
+    # Do not save or fire the event if the suggested
+    # area does not result in a change of area
+    # but still update the actual entry
+    with patch.object(registry, "async_schedule_save") as mock_save_2:
+        updated_entry = registry.async_update_device(entry.id, suggested_area="Other")
+    assert len(update_events) == 2
+    assert mock_save_2.call_count == 0
+    assert updated_entry != entry
+    assert updated_entry.suggested_area == "Other"
+
 
 async def test_cleanup_device_registry(hass, registry):
     """Test cleanup works."""

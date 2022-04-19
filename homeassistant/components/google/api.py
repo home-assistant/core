@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable
 import datetime
 import logging
+import time
 from typing import Any
 
 from googleapiclient import discovery as google_discovery
@@ -58,7 +59,7 @@ class DeviceAuth(config_entry_oauth2_flow.LocalOAuth2Implementation):
             "refresh_token": creds.refresh_token,
             "scope": " ".join(creds.scopes),
             "token_type": "Bearer",
-            "expires_in": creds.token_expiry.timestamp(),
+            "expires_in": creds.token_expiry.timestamp() - time.time(),
         }
 
 
@@ -157,16 +158,16 @@ def _async_google_creds(hass: HomeAssistant, token: dict[str, Any]) -> Credentia
         client_id=conf[CONF_CLIENT_ID],
         client_secret=conf[CONF_CLIENT_SECRET],
         refresh_token=token["refresh_token"],
-        token_expiry=token["expires_at"],
+        token_expiry=datetime.datetime.fromtimestamp(token["expires_at"]),
         token_uri=oauth2client.GOOGLE_TOKEN_URI,
         scopes=[conf[CONF_CALENDAR_ACCESS].scope],
         user_agent=None,
     )
 
 
-def _api_time_format(time: datetime.datetime | None) -> str | None:
+def _api_time_format(date_time: datetime.datetime | None) -> str | None:
     """Convert a datetime to the api string format."""
-    return time.isoformat("T") if time else None
+    return date_time.isoformat("T") if date_time else None
 
 
 class GoogleCalendarService:

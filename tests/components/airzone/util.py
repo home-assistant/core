@@ -28,9 +28,10 @@ from aioairzone.const import (
     API_UNITS,
     API_ZONE_ID,
 )
+from aioairzone.exceptions import InvalidMethod, SystemOutOfRange
 
 from homeassistant.components.airzone import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_ID, CONF_PORT
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -38,6 +39,18 @@ from tests.common import MockConfigEntry
 CONFIG = {
     CONF_HOST: "192.168.1.100",
     CONF_PORT: 3000,
+    CONF_ID: 0,
+}
+
+CONFIG_NO_ID = {
+    CONF_HOST: CONFIG[CONF_HOST],
+    CONF_PORT: CONFIG[CONF_PORT],
+}
+
+CONFIG_ID1 = {
+    CONF_HOST: CONFIG[CONF_HOST],
+    CONF_PORT: CONFIG[CONF_PORT],
+    CONF_ID: 1,
 }
 
 HVAC_MOCK = {
@@ -83,13 +96,13 @@ HVAC_MOCK = {
                     API_MODE: 3,
                     API_COLD_STAGES: 1,
                     API_COLD_STAGE: 1,
-                    API_HEAT_STAGES: 1,
-                    API_HEAT_STAGE: 1,
+                    API_HEAT_STAGES: 3,
+                    API_HEAT_STAGE: 3,
                     API_HUMIDITY: 39,
                     API_UNITS: 0,
                     API_ERRORS: [],
                     API_AIR_DEMAND: 1,
-                    API_FLOOR_DEMAND: 0,
+                    API_FLOOR_DEMAND: 1,
                 },
                 {
                     API_SYSTEM_ID: 1,
@@ -106,8 +119,8 @@ HVAC_MOCK = {
                     API_MODE: 3,
                     API_COLD_STAGES: 1,
                     API_COLD_STAGE: 1,
-                    API_HEAT_STAGES: 1,
-                    API_HEAT_STAGE: 1,
+                    API_HEAT_STAGES: 2,
+                    API_HEAT_STAGE: 2,
                     API_HUMIDITY: 35,
                     API_UNITS: 0,
                     API_ERRORS: [],
@@ -172,7 +185,7 @@ HVAC_MOCK = {
 
 async def async_init_integration(
     hass: HomeAssistant,
-):
+) -> None:
     """Set up the Airzone integration in Home Assistant."""
 
     entry = MockConfigEntry(domain=DOMAIN, data=CONFIG)
@@ -181,6 +194,12 @@ async def async_init_integration(
     with patch(
         "homeassistant.components.airzone.AirzoneLocalApi.get_hvac",
         return_value=HVAC_MOCK,
+    ), patch(
+        "homeassistant.components.airzone.AirzoneLocalApi.get_hvac_systems",
+        side_effect=SystemOutOfRange,
+    ), patch(
+        "homeassistant.components.airzone.AirzoneLocalApi.get_webserver",
+        side_effect=InvalidMethod,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()

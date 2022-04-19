@@ -285,6 +285,7 @@ class HERETravelTimeSensor(SensorEntity, CoordinatorEntity):
         """Return the attribution."""
         if self.coordinator.data is not None:
             return self.coordinator.data.get(ATTR_ATTRIBUTION)
+        return None
 
     @property
     def icon(self) -> str:

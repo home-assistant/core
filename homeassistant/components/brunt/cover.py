@@ -9,11 +9,9 @@ from brunt import BruntClientAsync, Thing
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    SUPPORT_CLOSE,
-    SUPPORT_OPEN,
-    SUPPORT_SET_POSITION,
     CoverDeviceClass,
     CoverEntity,
+    CoverEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -36,8 +34,6 @@ from .const import (
     OPEN_POSITION,
     REGULAR_INTERVAL,
 )
-
-COVER_FEATURES = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
 
 
 async def async_setup_entry(
@@ -62,6 +58,12 @@ class BruntDevice(CoordinatorEntity, CoverEntity):
     Contains the common logic for all Brunt devices.
     """
 
+    _attr_supported_features = (
+        CoverEntityFeature.OPEN
+        | CoverEntityFeature.CLOSE
+        | CoverEntityFeature.SET_POSITION
+    )
+
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
@@ -81,7 +83,6 @@ class BruntDevice(CoordinatorEntity, CoverEntity):
 
         self._attr_name = self._thing.name
         self._attr_device_class = CoverDeviceClass.BLIND
-        self._attr_supported_features = COVER_FEATURES
         self._attr_attribution = ATTRIBUTION
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._attr_unique_id)},

@@ -4,6 +4,7 @@ from __future__ import annotations
 import math
 
 from iglo import Lamp
+from iglo.lamp import MODE_WHITE
 import voluptuous as vol
 
 from homeassistant.components.light import (
@@ -11,12 +12,11 @@ from homeassistant.components.light import (
     ATTR_COLOR_TEMP,
     ATTR_EFFECT,
     ATTR_HS_COLOR,
+    COLOR_MODE_COLOR_TEMP,
+    COLOR_MODE_HS,
     PLATFORM_SCHEMA,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_COLOR_TEMP,
-    SUPPORT_EFFECT,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
@@ -53,6 +53,9 @@ def setup_platform(
 class IGloLamp(LightEntity):
     """Representation of an iGlo light."""
 
+    _attr_supported_color_modes = {COLOR_MODE_COLOR_TEMP, COLOR_MODE_HS}
+    _attr_supported_features = LightEntityFeature.EFFECT
+
     def __init__(self, name, host, port):
         """Initialize the light."""
 
@@ -68,6 +71,15 @@ class IGloLamp(LightEntity):
     def brightness(self):
         """Return the brightness of this light between 0..255."""
         return int((self._lamp.state()["brightness"] / 200.0) * 255)
+
+    @property
+    def color_mode(self) -> str | None:
+        """Return the color mode of the light."""
+        if self._lamp.state()["mode"] == MODE_WHITE:
+            return COLOR_MODE_COLOR_TEMP
+        # The iglo library reports MODE_WHITE when an effect is active, this is not
+        # supported by Home Assistant, just report COLOR_MODE_HS
+        return COLOR_MODE_HS
 
     @property
     def color_temp(self):
@@ -102,11 +114,6 @@ class IGloLamp(LightEntity):
     def effect_list(self):
         """Return the list of supported effects."""
         return self._lamp.effect_list()
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_COLOR | SUPPORT_EFFECT
 
     @property
     def is_on(self):

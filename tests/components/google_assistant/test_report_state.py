@@ -11,7 +11,7 @@ from . import BASIC_CONFIG
 from tests.common import async_fire_time_changed
 
 
-async def test_report_state(hass, caplog, legacy_patchable_time):
+async def test_report_state(hass, caplog):
     """Test report state works."""
     assert await async_setup_component(hass, "switch", {})
     hass.states.async_set("light.ceiling", "off")
