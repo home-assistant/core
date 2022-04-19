@@ -588,14 +588,13 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
             media_id = sourced_media.url
 
         extra = kwargs.get(ATTR_MEDIA_EXTRA, {})
-        metadata = extra.get("metadata")
 
         # Handle media supported by a known cast app
         if media_type == CAST_DOMAIN:
             try:
                 app_data = json.loads(media_id)
-                if metadata is not None:
-                    app_data["metadata"] = extra.get("metadata")
+                if metadata := extra.get("metadata"):
+                    app_data["metadata"] = metadata
             except json.JSONDecodeError:
                 _LOGGER.error("Invalid JSON in media_content_id")
                 raise
@@ -661,6 +660,11 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
                     media_id,
                 )
                 media_id = playlist[0].url
+                if title := playlist[0].title:
+                    extra = {
+                        **extra,
+                        "metadata": {"title": title},
+                    }
             except PlaylistSupported as err:
                 _LOGGER.info(
                     "[%s %s] Playlist %s is supported: %s",
