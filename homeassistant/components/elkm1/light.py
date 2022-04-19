@@ -1,6 +1,12 @@
 """Support for control of ElkM1 lighting (X10, UPB, etc)."""
 from __future__ import annotations
 
+from typing import Any
+
+from elkm1_lib.elements import Element
+from elkm1_lib.elk import Elk
+from elkm1_lib.lights import Light
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     COLOR_MODE_BRIGHTNESS,
@@ -32,14 +38,15 @@ class ElkLight(ElkEntity, LightEntity):
 
     _attr_color_mode = COLOR_MODE_BRIGHTNESS
     _attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
+    _element: Light
 
-    def __init__(self, element, elk, elk_data):
+    def __init__(self, element: Element, elk: Elk, elk_data: dict[str, Any]) -> None:
         """Initialize the Elk light."""
         super().__init__(element, elk, elk_data)
         self._brightness = self._element.status
 
     @property
-    def brightness(self):
+    def brightness(self) -> int:
         """Get the brightness."""
         return self._brightness
 
@@ -48,14 +55,14 @@ class ElkLight(ElkEntity, LightEntity):
         """Get the current brightness."""
         return self._brightness != 0
 
-    def _element_changed(self, element, changeset):
+    def _element_changed(self, element: Element, changeset: Any) -> None:
         status = self._element.status if self._element.status != 1 else 100
         self._brightness = round(status * 2.55)
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
         self._element.level(round(kwargs.get(ATTR_BRIGHTNESS, 255) / 2.55))
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
         self._element.level(0)

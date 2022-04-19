@@ -155,36 +155,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         for entity_entry in er.async_entries_for_config_entry(
             ent_reg, old_config_entry_id
         ):
-            _LOGGER.debug("Removing %s", entity_entry.entity_id)
-            ent_reg.async_remove(entity_entry.entity_id)
+            old_platform = entity_entry.platform
             # In case the API key has changed due to a V3 -> V4 change, we need to
             # generate the new entity's unique ID
             new_unique_id = (
                 f"{entry.data[CONF_API_KEY]}_"
                 f"{'_'.join(entity_entry.unique_id.split('_')[1:])}"
             )
-            _LOGGER.debug(
-                "Re-creating %s for the new config entry", entity_entry.entity_id
-            )
-            # We will precreate the entity so that any customizations can be preserved
-            new_entity_entry = ent_reg.async_get_or_create(
-                entity_entry.domain,
+            ent_reg.async_update_entity_platform(
+                entity_entry.entity_id,
                 DOMAIN,
-                new_unique_id,
-                suggested_object_id=entity_entry.entity_id.split(".")[1],
-                disabled_by=entity_entry.disabled_by,
-                config_entry=entry,
-                original_name=entity_entry.original_name,
-                original_icon=entity_entry.original_icon,
+                new_unique_id=new_unique_id,
+                new_config_entry_id=entry.entry_id,
+                new_device_id=device.id,
             )
-            _LOGGER.debug("Re-created %s", new_entity_entry.entity_id)
-            # If there are customizations on the old entity, apply them to the new one
-            if entity_entry.name or entity_entry.icon:
-                ent_reg.async_update_entity(
-                    new_entity_entry.entity_id,
-                    name=entity_entry.name,
-                    icon=entity_entry.icon,
-                )
+            assert entity_entry
+            _LOGGER.debug(
+                "Migrated %s from %s to %s",
+                entity_entry.entity_id,
+                old_platform,
+                DOMAIN,
+            )
 
         # We only have one device in the registry but we will do a loop just in case
         for old_device in dr.async_entries_for_config_entry(
@@ -306,6 +297,7 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator):
                 [
                     TMRW_ATTR_TEMPERATURE_LOW,
                     TMRW_ATTR_TEMPERATURE_HIGH,
+                    TMRW_ATTR_HUMIDITY,
                     TMRW_ATTR_WIND_SPEED,
                     TMRW_ATTR_WIND_DIRECTION,
                     TMRW_ATTR_CONDITION,

@@ -277,7 +277,7 @@ class AsusWrtRouter:
             # migrate entity unique ID if wrong formatted
             if device_mac != entry.unique_id:
                 existing_entity_id = entity_reg.async_get_entity_id(
-                    DOMAIN, TRACKER_DOMAIN, device_mac
+                    TRACKER_DOMAIN, DOMAIN, device_mac
                 )
                 if existing_entity_id:
                     # entity with uniqueid properly formatted already
@@ -469,11 +469,6 @@ class AsusWrtRouter:
     def sensors_coordinator(self) -> dict[str, Any]:
         """Return sensors coordinators."""
         return self._sensors_coordinator
-
-    @property
-    def api(self) -> AsusWrt:
-        """Return router API."""
-        return self._api
 
 
 async def _get_nvram_info(api: AsusWrt, info_type: str) -> dict[str, Any]:

@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from aioairzone.common import ConnectionOptions
 from aioairzone.const import (
     AZD_ID,
     AZD_NAME,
@@ -13,7 +12,7 @@ from aioairzone.const import (
     AZD_ZONES,
     DEFAULT_SYSTEM_ID,
 )
-from aioairzone.localapi import AirzoneLocalApi
+from aioairzone.localapi import AirzoneLocalApi, ConnectionOptions
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_ID, CONF_PORT, Platform
