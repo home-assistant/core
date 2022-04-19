@@ -18,6 +18,9 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_WINDY,
 )
 
+# Attribute missing from homeassistant.components.weather
+ATTR_FORECAST_HUMIDITY = "humidity"
+
 CONF_TIMESTEP = "timestep"
 FORECAST_TYPES = [DAILY, HOURLY, NOWCAST]
 
@@ -29,7 +32,7 @@ INTEGRATION_NAME = "Tomorrow.io"
 DEFAULT_NAME = INTEGRATION_NAME
 ATTRIBUTION = "Powered by Tomorrow.io"
 
-MAX_REQUESTS_PER_DAY = 500
+MAX_REQUESTS_PER_DAY = 100
 
 CLEAR_CONDITIONS = {"night": ATTR_CONDITION_CLEAR_NIGHT, "day": ATTR_CONDITION_SUNNY}
 

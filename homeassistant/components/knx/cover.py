@@ -160,10 +160,10 @@ class KNXCover(KnxEntity, CoverEntity):
     @property
     def current_cover_tilt_position(self) -> int | None:
         """Return current tilt position of cover."""
-        if not self._device.supports_angle:
-            return None
-        ang = self._device.current_angle()
-        return 100 - ang if ang is not None else None
+        if self._device.supports_angle:
+            ang = self._device.current_angle()
+            return 100 - ang if ang is not None else None
+        return None
 
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""

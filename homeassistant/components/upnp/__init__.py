@@ -31,7 +31,6 @@ from homeassistant.helpers.update_coordinator import (
 from .const import (
     CONF_LOCAL_IP,
     CONFIG_ENTRY_HOSTNAME,
-    CONFIG_ENTRY_SCAN_INTERVAL,
     CONFIG_ENTRY_ST,
     CONFIG_ENTRY_UDN,
     DEFAULT_SCAN_INTERVAL,
@@ -163,10 +162,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         model=device.model_name,
     )
 
-    update_interval_sec = entry.options.get(
-        CONFIG_ENTRY_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-    )
-    update_interval = timedelta(seconds=update_interval_sec)
+    update_interval = timedelta(seconds=DEFAULT_SCAN_INTERVAL)
     LOGGER.debug("update_interval: %s", update_interval)
     coordinator = UpnpDataUpdateCoordinator(
         hass,

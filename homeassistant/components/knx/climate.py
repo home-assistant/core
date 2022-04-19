@@ -151,12 +151,6 @@ class KNXClimate(KnxEntity, ClimateEntity):
         )
         self.default_hvac_mode: str = config[ClimateSchema.CONF_DEFAULT_CONTROLLER_MODE]
 
-    async def async_update(self) -> None:
-        """Request a state update from KNX bus."""
-        await self._device.sync()
-        if self._device.mode is not None:
-            await self._device.mode.sync()
-
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
@@ -181,10 +175,10 @@ class KNXClimate(KnxEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
-            return
-        await self._device.set_target_temperature(temperature)
-        self.async_write_ha_state()
+        temperature = kwargs.get(ATTR_TEMPERATURE)
+        if temperature is not None:
+            await self._device.set_target_temperature(temperature)
+            self.async_write_ha_state()
 
     @property
     def hvac_mode(self) -> str:
@@ -294,9 +288,3 @@ class KNXClimate(KnxEntity, ClimateEntity):
         await super().async_added_to_hass()
         if self._device.mode is not None:
             self._device.mode.register_device_updated_cb(self.after_update_callback)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Disconnect device object when removed."""
-        await super().async_will_remove_from_hass()
-        if self._device.mode is not None:
-            self._device.mode.unregister_device_updated_cb(self.after_update_callback)

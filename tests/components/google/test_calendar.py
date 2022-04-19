@@ -505,3 +505,77 @@ async def test_scan_calendar_error(
         assert await component_setup()
 
     assert not hass.states.get(TEST_ENTITY)
+
+
+async def test_future_event_update_behavior(
+    hass, mock_events_list_items, component_setup
+):
+    """Test an future event that becomes active."""
+    now = dt_util.now()
+    now_utc = dt_util.utcnow()
+    one_hour_from_now = now + datetime.timedelta(minutes=60)
+    end_event = one_hour_from_now + datetime.timedelta(minutes=90)
+    event = {
+        **TEST_EVENT,
+        "start": {"dateTime": one_hour_from_now.isoformat()},
+        "end": {"dateTime": end_event.isoformat()},
+    }
+    mock_events_list_items([event])
+    assert await component_setup()
+
+    # Event has not started yet
+    state = hass.states.get(TEST_ENTITY)
+    assert state.name == TEST_ENTITY_NAME
+    assert state.state == STATE_OFF
+
+    # Advance time until event has started
+    now += datetime.timedelta(minutes=60)
+    now_utc += datetime.timedelta(minutes=30)
+    with patch("homeassistant.util.dt.utcnow", return_value=now_utc), patch(
+        "homeassistant.util.dt.now", return_value=now
+    ):
+        async_fire_time_changed(hass, now)
+        await hass.async_block_till_done()
+
+    # Event has started
+    state = hass.states.get(TEST_ENTITY)
+    assert state.state == STATE_ON
+
+
+async def test_future_event_offset_update_behavior(
+    hass, mock_events_list_items, component_setup
+):
+    """Test an future event that becomes active."""
+    now = dt_util.now()
+    now_utc = dt_util.utcnow()
+    one_hour_from_now = now + datetime.timedelta(minutes=60)
+    end_event = one_hour_from_now + datetime.timedelta(minutes=90)
+    event_summary = "Test Event in Progress"
+    event = {
+        **TEST_EVENT,
+        "start": {"dateTime": one_hour_from_now.isoformat()},
+        "end": {"dateTime": end_event.isoformat()},
+        "summary": f"{event_summary} !!-15",
+    }
+    mock_events_list_items([event])
+    assert await component_setup()
+
+    # Event has not started yet
+    state = hass.states.get(TEST_ENTITY)
+    assert state.name == TEST_ENTITY_NAME
+    assert state.state == STATE_OFF
+    assert not state.attributes["offset_reached"]
+
+    # Advance time until event has started
+    now += datetime.timedelta(minutes=45)
+    now_utc += datetime.timedelta(minutes=45)
+    with patch("homeassistant.util.dt.utcnow", return_value=now_utc), patch(
+        "homeassistant.util.dt.now", return_value=now
+    ):
+        async_fire_time_changed(hass, now)
+        await hass.async_block_till_done()
+
+    # Event has not started, but the offset was reached
+    state = hass.states.get(TEST_ENTITY)
+    assert state.state == STATE_OFF
+    assert state.attributes["offset_reached"]
