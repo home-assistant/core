@@ -25,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_DB_URL): selector.selector({"text": {}}),
+        vol.Optional(CONF_DB_URL): selector.TextSelector(selector.TextSelectorConfig()),
         vol.Required(CONF_COLUMN_NAME): selector.selector({"text": {}}),
         vol.Required(CONF_QUERY): selector.selector({"text": {}}),
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): selector.selector({"text": {}}),
