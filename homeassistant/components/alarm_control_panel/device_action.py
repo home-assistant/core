@@ -5,9 +5,6 @@ from typing import Final
 
 import voluptuous as vol
 
-from homeassistant.components.device_automation import (
-    async_set_entity_device_automation_metadata,
-)
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_ENTITY_ID,
@@ -75,7 +72,6 @@ async def async_get_actions(
             CONF_DOMAIN: DOMAIN,
             CONF_ENTITY_ID: entry.entity_id,
         }
-        async_set_entity_device_automation_metadata(base_action, entry)
 
         # Add actions for each entity that belongs to this integration
         if supported_features & SUPPORT_ALARM_ARM_AWAY:
