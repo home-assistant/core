@@ -75,6 +75,7 @@ from .const import (  # noqa: F401
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
     ClimateEntityFeature,
+    HVACMode,
 )
 
 DEFAULT_MIN_TEMP = 7
@@ -188,8 +189,8 @@ class ClimateEntity(Entity):
     _attr_fan_mode: str | None
     _attr_fan_modes: list[str] | None
     _attr_hvac_action: str | None = None
-    _attr_hvac_mode: str
-    _attr_hvac_modes: list[str]
+    _attr_hvac_mode: HVACMode | str
+    _attr_hvac_modes: list[HVACMode | str]
     _attr_is_aux_heat: bool | None
     _attr_max_humidity: int = DEFAULT_MAX_HUMIDITY
     _attr_max_temp: float
@@ -208,10 +209,13 @@ class ClimateEntity(Entity):
     _attr_target_temperature: float | None = None
     _attr_temperature_unit: str
 
+    @final
     @property
     def state(self) -> str:
         """Return the current state."""
-        return self.hvac_mode
+        if not isinstance(self.hvac_mode, HVACMode):
+            return HVACMode(self.hvac_mode).value
+        return self.hvac_mode.value
 
     @property
     def precision(self) -> float:
@@ -226,7 +230,7 @@ class ClimateEntity(Entity):
     def capability_attributes(self) -> dict[str, Any] | None:
         """Return the capability attributes."""
         supported_features = self.supported_features
-        data = {
+        data: dict[str, Any] = {
             ATTR_HVAC_MODES: self.hvac_modes,
             ATTR_MIN_TEMP: show_temp(
                 self.hass, self.min_temp, self.temperature_unit, self.precision
@@ -329,19 +333,13 @@ class ClimateEntity(Entity):
         return self._attr_target_humidity
 
     @property
-    def hvac_mode(self) -> str:
-        """Return hvac operation ie. heat, cool mode.
-
-        Need to be one of HVAC_MODE_*.
-        """
+    def hvac_mode(self) -> HVACMode | str:
+        """Return hvac operation ie. heat, cool mode."""
         return self._attr_hvac_mode
 
     @property
-    def hvac_modes(self) -> list[str]:
-        """Return the list of available hvac operation modes.
-
-        Need to be a subset of HVAC_MODES.
-        """
+    def hvac_modes(self) -> list[HVACMode | str]:
+        """Return the list of available hvac operation modes."""
         return self._attr_hvac_modes
 
     @property
@@ -512,7 +510,7 @@ class ClimateEntity(Entity):
             return
 
         # Fake turn on
-        for mode in (HVAC_MODE_HEAT_COOL, HVAC_MODE_HEAT, HVAC_MODE_COOL):
+        for mode in (HVACMode.HEAT_COOL, HVACMode.HEAT, HVACMode.COOL):
             if mode not in self.hvac_modes:
                 continue
             await self.async_set_hvac_mode(mode)
@@ -525,8 +523,8 @@ class ClimateEntity(Entity):
             return
 
         # Fake turn off
-        if HVAC_MODE_OFF in self.hvac_modes:
-            await self.async_set_hvac_mode(HVAC_MODE_OFF)
+        if HVACMode.OFF in self.hvac_modes:
+            await self.async_set_hvac_mode(HVACMode.OFF)
 
     @property
     def supported_features(self) -> int:
