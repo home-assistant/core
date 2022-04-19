@@ -40,9 +40,6 @@ async def test_flow_discovery(hass):
                 SL_GATEWAY_NAME: "Pentair: 01-01-01",
             },
         ],
-    ), patch(
-        "homeassistant.components.screenlogic.config_flow.login.async_get_mac_address",
-        return_value="00-C0-33-01-01-01",
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -181,9 +178,6 @@ async def test_form_manual_entry(hass):
                 SL_GATEWAY_NAME: "Pentair: 01-01-01",
             },
         ],
-    ), patch(
-        "homeassistant.components.screenlogic.config_flow.login.async_get_mac_address",
-        return_value="00-C0-33-01-01-01",
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}

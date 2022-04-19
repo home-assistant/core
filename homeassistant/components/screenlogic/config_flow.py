@@ -35,20 +35,16 @@ async def async_discover_gateways_by_unique_id(hass):
         return discovered_gateways
 
     for host in hosts:
-        if host[SL_GATEWAY_NAME].startswith("Pentair:"):
-            try:
-                mac = format_mac(
-                    await login.async_get_mac_address(
-                        host[SL_GATEWAY_IP], host[SL_GATEWAY_PORT]
-                    )
-                )
-                discovered_gateways[mac] = host
-            except ScreenLogicError as ex:
-                _LOGGER.debug(ex)
-                continue
+        if (name := host[SL_GATEWAY_NAME]).startswith("Pentair:"):
+            mac = _extract_mac_from_name(name)
+            discovered_gateways[mac] = host
 
     _LOGGER.debug("Discovered gateways: %s", discovered_gateways)
     return discovered_gateways
+
+
+def _extract_mac_from_name(name):
+    return format_mac(f"{PENTAIR_OUI}-{name.split(':')[1].strip()}")
 
 
 def short_mac(mac):
