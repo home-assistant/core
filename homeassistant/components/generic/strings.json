@@ -31,7 +31,9 @@
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]",
           "framerate": "Frame Rate (Hz)",
-          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
+          "motion_sensor_id": "[%key:component::generic::config::step::user::data::motion_sensor_id%]",
+          "doorbell_sensor_id": "[%key:component::generic::config::step::user::data::doorbell_sensor_id%]"
         }
       },
       "content_type": {
@@ -57,7 +59,9 @@
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]",
           "framerate": "[%key:component::generic::config::step::user::data::framerate%]",
-          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
+          "motion_sensor_id": "[%key:component::generic::config::step::user::data::motion_sensor_id%]",
+          "doorbell_sensor_id": "[%key:component::generic::config::step::user::data::doorbell_sensor_id%]"
         }
       },
       "content_type": {

@@ -5,7 +5,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 DOMAIN = "generic"
-PLATFORMS = [Platform.CAMERA]
+PLATFORMS = [Platform.CAMERA, Platform.BINARY_SENSOR]
 
 
 async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:

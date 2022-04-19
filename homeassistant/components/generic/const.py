@@ -8,6 +8,8 @@ CONF_STILL_IMAGE_URL = "still_image_url"
 CONF_STREAM_SOURCE = "stream_source"
 CONF_FRAMERATE = "framerate"
 CONF_RTSP_TRANSPORT = "rtsp_transport"
+CONF_MOTION_SENSOR = "motion_sensor_id"
+CONF_DOORBELL_SENSOR = "doorbell_sensor_id"
 FFMPEG_OPTION_MAP = {CONF_RTSP_TRANSPORT: "rtsp_transport"}
 RTSP_TRANSPORTS = {
     "tcp": "TCP",

@@ -39,7 +39,9 @@
                     "still_image_url": "Still Image URL (e.g. http://...)",
                     "stream_source": "Stream Source URL (e.g. rtsp://...)",
                     "username": "Username",
-                    "verify_ssl": "Verify SSL certificate"
+                    "verify_ssl": "Verify SSL certificate",
+                    "motion_sensor_id": "Entity ID of camera's motion sensor",
+                    "doorbell_sensor_id": "Entity ID of camera's doorbell sensor"
                 },
                 "description": "Enter the settings to connect to the camera."
             }
@@ -78,7 +80,9 @@
                     "still_image_url": "Still Image URL (e.g. http://...)",
                     "stream_source": "Stream Source URL (e.g. rtsp://...)",
                     "username": "Username",
-                    "verify_ssl": "Verify SSL certificate"
+                    "verify_ssl": "Verify SSL certificate",
+                    "motion_sensor_id": "Entity ID of camera's motion sensor",
+                    "doorbell_sensor_id": "Entity ID of camera's doorbell sensor"
                 }
             }
         }

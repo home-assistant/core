@@ -215,3 +215,13 @@ class GenericCamera(Camera):
         except TemplateError as err:
             _LOGGER.error("Error parsing template %s: %s", self._stream_source, err)
             return None
+
+    @property
+    def device_info(self):
+        """Return Device description based on camera name."""
+        return {
+            "identifiers": {(DOMAIN, self._attr_unique_id)},
+            "name": self.name,
+            "manufacturer": "Home Assistant",
+            "model": "Generic Camera",
+        }

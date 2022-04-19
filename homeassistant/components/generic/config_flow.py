@@ -36,8 +36,10 @@ from homeassistant.util import slugify
 from .camera import generate_auth
 from .const import (
     CONF_CONTENT_TYPE,
+    CONF_DOORBELL_SENSOR,
     CONF_FRAMERATE,
     CONF_LIMIT_REFETCH_TO_URL_CHANGE,
+    CONF_MOTION_SENSOR,
     CONF_RTSP_TRANSPORT,
     CONF_STILL_IMAGE_URL,
     CONF_STREAM_SOURCE,
@@ -56,6 +58,8 @@ DEFAULT_DATA = {
     CONF_LIMIT_REFETCH_TO_URL_CHANGE: False,
     CONF_FRAMERATE: 2,
     CONF_VERIFY_SSL: True,
+    CONF_MOTION_SENSOR: "",
+    CONF_DOORBELL_SENSOR: "",
 }
 
 SUPPORTED_IMAGE_TYPES = {"png", "jpeg", "gif", "svg+xml", "webp"}
@@ -98,6 +102,14 @@ def build_schema(
         vol.Required(
             CONF_VERIFY_SSL, default=user_input.get(CONF_VERIFY_SSL, True)
         ): bool,
+        vol.Optional(
+            CONF_MOTION_SENSOR,
+            description={"suggested_value": user_input.get(CONF_MOTION_SENSOR, "")},
+        ): str,
+        vol.Optional(
+            CONF_DOORBELL_SENSOR,
+            description={"suggested_value": user_input.get(CONF_DOORBELL_SENSOR, "")},
+        ): str,
     }
     if is_options_flow:
         spec[
@@ -328,6 +340,7 @@ class GenericOptionsFlowHandler(OptionsFlow):
             errors = errors | await async_test_stream(self.hass, user_input)
             still_url = user_input.get(CONF_STILL_IMAGE_URL)
             stream_url = user_input.get(CONF_STREAM_SOURCE)
+
             if not errors:
                 title = slug_url(still_url) or slug_url(stream_url) or DEFAULT_NAME
                 if still_url is None:
@@ -348,6 +361,8 @@ class GenericOptionsFlowHandler(OptionsFlow):
                     ],
                     CONF_FRAMERATE: user_input[CONF_FRAMERATE],
                     CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
+                    CONF_MOTION_SENSOR: user_input.get(CONF_MOTION_SENSOR),
+                    CONF_DOORBELL_SENSOR: user_input.get(CONF_DOORBELL_SENSOR),
                 }
                 return self.async_create_entry(
                     title=title,
