@@ -12,6 +12,7 @@ from aioairzone.const import (
     API_HEAT_STAGE,
     API_HEAT_STAGES,
     API_HUMIDITY,
+    API_MAC,
     API_MAX_TEMP,
     API_MIN_TEMP,
     API_MODE,
@@ -23,6 +24,8 @@ from aioairzone.const import (
     API_SYSTEM_ID,
     API_SYSTEMS,
     API_UNITS,
+    API_WIFI_CHANNEL,
+    API_WIFI_RSSI,
     API_ZONE_ID,
 )
 from aioairzone.exceptions import InvalidMethod, SystemOutOfRange
@@ -158,6 +161,12 @@ HVAC_MOCK = {
             ]
         }
     ]
+}
+
+HVAC_WEBSERVER_MOCK = {
+    API_MAC: "11:22:33:44:55:66",
+    API_WIFI_CHANNEL: 6,
+    API_WIFI_RSSI: -42,
 }
 
 
