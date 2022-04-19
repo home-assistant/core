@@ -87,7 +87,7 @@ class ElkThermostat(ElkEntity, ClimateEntity):
     def __init__(self, element: Element, elk: Elk, elk_data: dict[str, Any]) -> None:
         """Initialize climate entity."""
         super().__init__(element, elk, elk_data)
-        self._state: str | None = HVAC_MODE_OFF
+        self._state: str = HVAC_MODE_OFF
 
     @property
     def temperature_unit(self) -> str:
@@ -132,7 +132,7 @@ class ElkThermostat(ElkEntity, ClimateEntity):
         return self._element.humidity
 
     @property
-    def hvac_mode(self) -> str | None :
+    def hvac_mode(self) -> str:
         """Return current operation ie. heat, cool, idle."""
         return self._state
 
@@ -205,6 +205,6 @@ class ElkThermostat(ElkEntity, ClimateEntity):
             self._element.set(ThermostatSetting.COOL_SETPOINT.value, round(high_temp))
 
     def _element_changed(self, element: Element, changeset: Any) -> None:
-        self._state = ELK_TO_HASS_HVAC_MODES.get(self._element.mode)
+        self._state = ELK_TO_HASS_HVAC_MODES.get(self._element.mode, HVAC_MODE_OFF)
         if self._state == HVAC_MODE_OFF and self._element.fan == ThermostatFan.ON.value:
             self._state = HVAC_MODE_FAN_ONLY
