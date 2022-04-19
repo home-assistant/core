@@ -78,16 +78,16 @@ async def test_discovery(detect_mock, hass):
 
 
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
-@patch("zigpy_zigate.api.ZiGate._probe")
+@patch("zigpy_zigate.zigbee.application.ControllerApplication.probe")
 async def test_zigate_via_zeroconf(probe_mock, hass):
     """Test zeroconf flow -- zigate radio detected."""
     service_info = zeroconf.ZeroconfServiceInfo(
         host="192.168.1.200",
         addresses=["192.168.1.200"],
         hostname="_zigate-zigbee-gateway._tcp.local.",
-        name="zigate",
+        name="any",
         port=1234,
-        properties={},
+        properties={"radio_type": "zigate"},
         type="mock_type",
     )
     flow = await hass.config_entries.flow.async_init(
@@ -104,6 +104,38 @@ async def test_zigate_via_zeroconf(probe_mock, hass):
             CONF_DEVICE_PATH: "socket://192.168.1.200:1234",
         },
         CONF_RADIO_TYPE: "zigate",
+    }
+
+
+@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
+@patch("bellows.zigbee.application.ControllerApplication.probe", return_value=True)
+async def test_efr32_via_zeroconf(probe_mock, hass):
+    """Test zeroconf flow -- efr32 radio detected."""
+    service_info = zeroconf.ZeroconfServiceInfo(
+        host="192.168.1.200",
+        addresses=["192.168.1.200"],
+        hostname="efr32._esphomelib._tcp.local.",
+        name="efr32",
+        port=1234,
+        properties={},
+        type="mock_type",
+    )
+    flow = await hass.config_entries.flow.async_init(
+        "zha", context={"source": SOURCE_ZEROCONF}, data=service_info
+    )
+    result = await hass.config_entries.flow.async_configure(
+        flow["flow_id"], user_input={"baudrate": 115200}
+    )
+
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == "socket://192.168.1.200:6638"
+    assert result["data"] == {
+        CONF_DEVICE: {
+            CONF_DEVICE_PATH: "socket://192.168.1.200:6638",
+            CONF_BAUDRATE: 115200,
+            CONF_FLOWCONTROL: "software",
+        },
+        CONF_RADIO_TYPE: "ezsp",
     }
 
 
@@ -213,7 +245,7 @@ async def test_discovery_via_usb(detect_mock, hass):
     }
 
 
-@patch("zigpy_zigate.api.ZiGate._probe")
+@patch("zigpy_zigate.zigbee.application.ControllerApplication.probe")
 async def test_zigate_discovery_via_usb(detect_mock, hass):
     """Test zigate usb flow -- radio detected."""
     discovery_info = usb.UsbServiceInfo(
