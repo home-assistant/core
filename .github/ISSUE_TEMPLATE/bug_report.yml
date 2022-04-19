@@ -78,7 +78,7 @@ body:
   - type: textarea
     attributes:
       label: Diagnostics information
-      render: json
+      placeholder: "drag-and-drop the diagnostics data file here (do not copy-and-paste the content)"
       description: >-
         Many integrations provide the ability to download diagnostic data
         on the device page (and on the integration dashboard).
