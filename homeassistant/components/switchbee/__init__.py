@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
 
 import switchbee
@@ -13,7 +14,7 @@ from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, SCAN_INTERVAL
+from .const import DOMAIN, SCAN_INTERVAL_SEC
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,13 +33,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     api = switchbee.SwitchBee(central_unit, user, password, websession)
     resp = await api.login()
     if resp[switchbee.ATTR_STATUS] != switchbee.STATUS_OK:
-        _LOGGER.error(
-            "Failed to login to the central unit (%s) with the user %s %s",
-            central_unit,
-            central_unit,
-            resp,
+        raise PlatformNotReady(
+            f"Failed to login to the central unit {central_unit} with the user {user}: {resp}"
         )
-        raise PlatformNotReady
 
     coordinator = SwitchBeeCoordinator(hass, api)
     await coordinator.async_config_entry_first_refresh()
@@ -68,12 +65,16 @@ class SwitchBeeCoordinator(DataUpdateCoordinator):
 
     def __init__(self, hass, swb_api):
         """Initialize."""
-        self._hass = hass
         self._api = swb_api
         self._devices = None
         self._mac = ""
         self._reconnect_counts = 0
-        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=DOMAIN,
+            update_interval=timedelta(seconds=SCAN_INTERVAL_SEC),
+        )
 
     @property
     def api(self):
@@ -83,14 +84,14 @@ class SwitchBeeCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         if self._reconnect_counts != self._api.reconnect_count:
             self._reconnect_counts = self._api.reconnect_count
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Central Unit re-connected again due to invalid token, total %i",
                 self._reconnect_counts,
             )
 
         if self._devices is None:
             result = await self._api.get_configuration()
-            _LOGGER.info("Loaded devices")
+            _LOGGER.debug("Loaded devices")
             if (
                 switchbee.ATTR_STATUS not in result
                 or result[switchbee.ATTR_STATUS] != switchbee.STATUS_OK
