@@ -48,6 +48,8 @@ class ZWaveMeFan(ZWaveMeEntity, FanEntity):
     @property
     def percentage(self) -> int:
         """Return the current speed as a percentage."""
+        if self.device.level == 99:  # Scale max value
+            return 100
         return self.device.level
 
     def set_percentage(self, percentage: int) -> None:
