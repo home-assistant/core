@@ -143,23 +143,22 @@ class FritzboxLight(FritzBoxEntity, LightEntity):
                 )
             # This will raise 400 BAD REQUEST if the setunmappedcolor is not available
             except HTTPError as err:
-                if err.response.status_code == 400:
-                    LOGGER.debug(
-                        "fritzbox does not support method 'setunmappedcolor', fallback to 'setcolor'"
-                    )
-                    # find supported hs values closest to what user selected
-                    hue = min(
-                        self._supported_hs.keys(), key=lambda x: abs(x - unmapped_hue)
-                    )
-                    saturation = min(
-                        self._supported_hs[hue],
-                        key=lambda x: abs(x - unmapped_saturation),
-                    )
-                    await self.hass.async_add_executor_job(
-                        self.device.set_color, (hue, saturation)
-                    )
-                else:
+                if err.response.status_code != 400:
                     raise
+                LOGGER.debug(
+                    "fritzbox does not support method 'setunmappedcolor', fallback to 'setcolor'"
+                )
+                # find supported hs values closest to what user selected
+                hue = min(
+                    self._supported_hs.keys(), key=lambda x: abs(x - unmapped_hue)
+                )
+                saturation = min(
+                    self._supported_hs[hue],
+                    key=lambda x: abs(x - unmapped_saturation),
+                )
+                await self.hass.async_add_executor_job(
+                    self.device.set_color, (hue, saturation)
+                )
 
         if kwargs.get(ATTR_COLOR_TEMP) is not None:
             kelvin = color.color_temperature_kelvin_to_mired(kwargs[ATTR_COLOR_TEMP])
