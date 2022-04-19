@@ -7,7 +7,7 @@ from typing import Any
 from homeassistant.components.recorder import CONF_DB_URL
 from homeassistant.components.sql.const import CONF_COLUMN_NAME, CONF_QUERY, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE
+from homeassistant.const import CONF_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, get_test_config_dir
@@ -25,14 +25,6 @@ ENTRY_CONFIG_INVALID_QUERY = {
     CONF_DB_URL: "sqlite://",
     CONF_QUERY: "UPDATE 5 as value",
     CONF_COLUMN_NAME: "size",
-    CONF_UNIT_OF_MEASUREMENT: "MiB",
-}
-
-ENTRY_CONFIG_INVALID_TEMPLATE = {
-    CONF_DB_URL: "sqlite://",
-    CONF_QUERY: "SELECT 5 as value",
-    CONF_COLUMN_NAME: "value",
-    CONF_VALUE_TEMPLATE: "{% if %}",
     CONF_UNIT_OF_MEASUREMENT: "MiB",
 }
 

@@ -14,12 +14,7 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_FORM,
 )
 
-from . import (
-    ENTRY_CONFIG,
-    ENTRY_CONFIG_INVALID_QUERY,
-    ENTRY_CONFIG_INVALID_TEMPLATE,
-    ENTRY_CONFIG_NO_RESULTS,
-)
+from . import ENTRY_CONFIG, ENTRY_CONFIG_INVALID_QUERY, ENTRY_CONFIG_NO_RESULTS
 
 from tests.common import MockConfigEntry
 
@@ -128,7 +123,7 @@ async def test_flow_fails_db_url(hass: HomeAssistant) -> None:
     assert result4["errors"] == {"db_url": "db_url_invalid"}
 
 
-async def test_flow_fails_invalid_query_and_template(hass: HomeAssistant) -> None:
+async def test_flow_fails_invalid_query(hass: HomeAssistant) -> None:
     """Test config flow fails incorrect db url."""
     result4 = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -145,16 +140,6 @@ async def test_flow_fails_invalid_query_and_template(hass: HomeAssistant) -> Non
     assert result5["type"] == RESULT_TYPE_FORM
     assert result5["errors"] == {
         "query": "query_invalid",
-    }
-
-    result5 = await hass.config_entries.flow.async_configure(
-        result4["flow_id"],
-        user_input=ENTRY_CONFIG_INVALID_TEMPLATE,
-    )
-
-    assert result5["type"] == RESULT_TYPE_FORM
-    assert result5["errors"] == {
-        "value_template": "value_template_invalid",
     }
 
     result5 = await hass.config_entries.flow.async_configure(
@@ -273,7 +258,7 @@ async def test_options_flow_fails_db_url(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"db_url": "db_url_invalid"}
 
 
-async def test_options_flow_fails_invalid_query_and_template(
+async def test_options_flow_fails_invalid_query(
     hass: HomeAssistant,
 ) -> None:
     """Test options flow fails incorrect query and template."""
@@ -308,16 +293,6 @@ async def test_options_flow_fails_invalid_query_and_template(
     assert result2["type"] == RESULT_TYPE_FORM
     assert result2["errors"] == {
         "query": "query_invalid",
-    }
-
-    result3 = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input=ENTRY_CONFIG_INVALID_TEMPLATE,
-    )
-
-    assert result3["type"] == RESULT_TYPE_FORM
-    assert result3["errors"] == {
-        "value_template": "value_template_invalid",
     }
 
     result4 = await hass.config_entries.options.async_configure(

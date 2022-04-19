@@ -15,9 +15,7 @@ from homeassistant.components.recorder import CONF_DB_URL, DEFAULT_DB_FILE, DEFA
 from homeassistant.const import CONF_NAME, CONF_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import selector
-import homeassistant.helpers.template as template_helper
 
 from .const import CONF_COLUMN_NAME, CONF_QUERY, DOMAIN
 
@@ -45,13 +43,6 @@ def validate_sql_select(value: str) -> str | None:
     if not value.lstrip().lower().startswith("select"):
         raise ValueError("Incorrect Query")
     return value
-
-
-def validate_template(value: str | None) -> template_helper.Template | None:
-    """Validate template syntax."""
-    template_value = template_helper.Template(str(value))
-    template_value.ensure_valid()
-    return template_value
 
 
 def validate_query(db_url: str, query: str, column: str) -> bool:
@@ -126,13 +117,10 @@ class SQLConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.hass.async_add_executor_job(
                     validate_query, db_url, query, column
                 )
-                validate_template(value_template)
             except SQLAlchemyError:
                 errors["db_url"] = "db_url_invalid"
             except ValueError:
                 errors["query"] = "query_invalid"
-            except TemplateError:
-                errors["value_template"] = "value_template_invalid"
 
             if not errors:
                 return self.async_create_entry(
@@ -172,20 +160,16 @@ class SQLOptionsFlowHandler(config_entries.OptionsFlow):
             db_url = user_input[CONF_DB_URL]
             query = user_input[CONF_QUERY]
             column = user_input[CONF_COLUMN_NAME]
-            value_template = user_input.get(CONF_VALUE_TEMPLATE)
 
             try:
                 validate_sql_select(query)
                 await self.hass.async_add_executor_job(
                     validate_query, db_url, query, column
                 )
-                validate_template(value_template)
             except SQLAlchemyError:
                 errors["db_url"] = "db_url_invalid"
             except ValueError:
                 errors["query"] = "query_invalid"
-            except TemplateError:
-                errors["value_template"] = "value_template_invalid"
             else:
                 return self.async_create_entry(title="", data=user_input)
 
