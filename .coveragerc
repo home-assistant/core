@@ -1587,8 +1587,6 @@ omit =
     homeassistant/components/zwave_me/switch.py
     homeassistant/components/switchbee/__init__.py
     homeassistant/components/switchbee/const.py
-    homeassistant/components/switchbee/cover.py
-    homeassistant/components/switchbee/light.py
     homeassistant/components/switchbee/switch.py
 
 

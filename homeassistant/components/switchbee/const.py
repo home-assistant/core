@@ -3,4 +3,5 @@
 from datetime import timedelta
 
 DOMAIN = "switchbee"
-SCAN_INTERVAL = timedelta(seconds=3)
+SCAN_INTERVAL_SEC = 5
+SCAN_INTERVAL = timedelta(seconds=SCAN_INTERVAL_SEC)
