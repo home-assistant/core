@@ -9,8 +9,9 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.device_registry import format_mac
 
 from .const import DOMAIN
 
@@ -34,7 +35,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 ConnectionOptions(url, username, password),
             )
 
-            serial = None
             try:
                 system_board = await qsw.validate()
             except LoginError:
@@ -42,22 +42,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except QswError:
                 errors["base"] = "cannot_connect"
             else:
-                serial = system_board.get_serial()
+                mac = system_board.get_mac()
+                if mac is None:
+                    raise AbortFlow("invalid_id")
 
-            if serial:
-                await self.async_set_unique_id(serial)
+                await self.async_set_unique_id(format_mac(mac))
                 self._abort_if_unique_id_configured()
-            else:
-                self._async_abort_entries_match(
-                    {
-                        CONF_URL: url,
-                        CONF_USERNAME: username,
-                        CONF_PASSWORD: password,
-                    }
-                )
 
-            if len(errors) == 0:
-                title = f"QNAP QSW {system_board.get_product()}"
+                title = f"QNAP {system_board.get_product()} {mac}"
                 return self.async_create_entry(title=title, data=user_input)
 
         return self.async_show_form(
