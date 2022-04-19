@@ -31,6 +31,7 @@ class QswEntity(CoordinatorEntity[QswUpdateCoordinator]):
         super().__init__(coordinator)
 
         self._attr_device_info: DeviceInfo = {
+            "configuration_url": entry.data[CONF_URL],
             "identifiers": {(DOMAIN, entry.entry_id)},
             "manufacturer": MANUFACTURER,
             "model": self.get_entity_value(QSD_SYSTEM_BOARD, QSD_PRODUCT),
