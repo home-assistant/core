@@ -1,17 +1,20 @@
 """Utility meter from sensors providing raw data."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal, DecimalException, InvalidOperation
 import logging
+from typing import Any
 
 from croniter import croniter
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
     ATTR_LAST_RESET,
+    RestoreSensor,
     SensorDeviceClass,
-    SensorEntity,
+    SensorExtraStoredData,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -32,7 +35,6 @@ from homeassistant.helpers.event import (
     async_track_point_in_time,
     async_track_state_change_event,
 )
-from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.start import async_at_start
 from homeassistant.helpers.template import is_number
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -247,7 +249,52 @@ async def async_setup_platform(
     )
 
 
-class UtilityMeterSensor(RestoreEntity, SensorEntity):
+@dataclass
+class UtilitySensorExtraStoredData(SensorExtraStoredData):
+    """Object to hold extra stored data."""
+
+    last_period: Decimal
+    last_reset: datetime | None
+    status: str
+
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of the utility sensor data."""
+        data = super().as_dict()
+        data["last_period"] = str(self.last_period)
+        if isinstance(self.last_reset, (datetime)):
+            data["last_reset"] = self.last_reset.isoformat()
+        data["status"] = self.status
+
+        return data
+
+    @classmethod
+    def from_dict(cls, restored: dict[str, Any]) -> UtilitySensorExtraStoredData | None:
+        """Initialize a stored sensor state from a dict."""
+        extra = SensorExtraStoredData.from_dict(restored)
+        if extra is None:
+            return None
+
+        try:
+            last_period: Decimal = Decimal(restored["last_period"])
+            last_reset: datetime | None = dt_util.parse_datetime(restored["last_reset"])
+            status: str = restored["status"]
+        except KeyError:
+            # restored is a dict, but does not have all values
+            return None
+        except InvalidOperation:
+            # last_period is corrupted
+            return None
+
+        return cls(
+            extra.native_value,
+            extra.native_unit_of_measurement,
+            last_period,
+            last_reset,
+            status,
+        )
+
+
+class UtilityMeterSensor(RestoreSensor):
     """Representation of an utility meter sensor."""
 
     def __init__(
@@ -422,7 +469,18 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
             )
         )
 
-        if state := await self.async_get_last_state():
+        if (last_sensor_data := await self.async_get_last_sensor_data()) is not None:
+            # new introduced in 2022.04
+            self._state = last_sensor_data.native_value
+            self._unit_of_measurement = last_sensor_data.native_unit_of_measurement
+            self._last_period = last_sensor_data.last_period
+            self._last_reset = last_sensor_data.last_reset
+            if last_sensor_data.status == COLLECTING:
+                # Null lambda to allow cancelling the collection on tariff change
+                self._collecting = lambda: None
+
+        elif state := await self.async_get_last_state():
+            # legacy to be removed on 2022.10 (we are keeping this to avoid utility_meter counter losses)
             try:
                 self._state = Decimal(state.state)
             except InvalidOperation:
@@ -445,7 +503,7 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
                     dt_util.parse_datetime(state.attributes.get(ATTR_LAST_RESET))
                 )
                 if state.attributes.get(ATTR_STATUS) == COLLECTING:
-                    # Fake cancellation function to init the meter in similar state
+                    # Null lambda to allow cancelling the collection on tariff change
                     self._collecting = lambda: None
 
         @callback
@@ -549,3 +607,23 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
     def icon(self):
         """Return the icon to use in the frontend, if any."""
         return ICON
+
+    @property
+    def extra_restore_state_data(self) -> UtilitySensorExtraStoredData:
+        """Return sensor specific state data to be restored."""
+        return UtilitySensorExtraStoredData(
+            self.native_value,
+            self.native_unit_of_measurement,
+            self._last_period,
+            self._last_reset,
+            PAUSED if self._collecting is None else COLLECTING,
+        )
+
+    async def async_get_last_sensor_data(self) -> UtilitySensorExtraStoredData | None:
+        """Restore Utility Meter Sensor Extra Stored Data."""
+        if (restored_last_extra_data := await self.async_get_last_extra_data()) is None:
+            return None
+
+        return UtilitySensorExtraStoredData.from_dict(
+            restored_last_extra_data.as_dict()
+        )
