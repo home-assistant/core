@@ -30,17 +30,13 @@ HOST = "myrouter.asuswrt.com"
 IP_ADDRESS = "192.168.1.1"
 SSH_KEY = "1234"
 
-CONFIG_DATA_NO_PORT = {
+CONFIG_DATA = {
     CONF_HOST: HOST,
+    CONF_PORT: 22,
     CONF_PROTOCOL: "telnet",
     CONF_USERNAME: "user",
     CONF_PASSWORD: "pwd",
     CONF_MODE: "ap",
-}
-
-CONFIG_DATA = {
-    **CONFIG_DATA_NO_PORT,
-    CONF_PORT: 22,
 }
 
 
@@ -54,11 +50,7 @@ def mock_controller_connect():
         yield service_mock
 
 
-@pytest.mark.parametrize(
-    "config",
-    [CONFIG_DATA, CONFIG_DATA_NO_PORT],
-)
-async def test_user(hass, connect, config):
+async def test_user(hass, connect):
     """Test user config."""
     flow_result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER, "show_advanced_options": True}
@@ -75,13 +67,13 @@ async def test_user(hass, connect, config):
         return_value=IP_ADDRESS,
     ):
         result = await hass.config_entries.flow.async_configure(
-            flow_result["flow_id"], user_input=config
+            flow_result["flow_id"], user_input=CONFIG_DATA
         )
         await hass.async_block_till_done()
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["title"] == HOST
-        assert result["data"] == config
+        assert result["data"] == CONFIG_DATA
 
         assert len(mock_setup_entry.mock_calls) == 1
 
