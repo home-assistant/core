@@ -28,10 +28,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 
 class Hub:
-    """Placeholder class to make tests pass.
-
-    TODO Remove this placeholder class and replace with things from your PyPI package.
-    """
+    """Placeholder class to make tests pass."""
 
     def __init__(self, central_unit_ip: str) -> None:
         """Initialize."""

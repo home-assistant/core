@@ -1589,12 +1589,12 @@ omit =
     homeassistant/components/switchbee/const.py
     homeassistant/components/switchbee/switch.py
 
-
 [report]
 # Regexes for lines to exclude from consideration
 exclude_lines =
     # Have to re-enable the standard pragma
     pragma: no cover
+
     # Don't complain about missing debug-only code:
     def __repr__
 

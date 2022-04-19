@@ -80,7 +80,7 @@ class Device(CoordinatorEntity, SwitchEntity):
                 result[switchbee.ATTR_STATUS],
                 result[switchbee.ATTR_DATA],
             )
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_refresh()
 
     async def async_turn_off(self, **kwargs):
         """Async function to set off to switch."""
@@ -97,4 +97,4 @@ class Device(CoordinatorEntity, SwitchEntity):
                 result[switchbee.ATTR_STATUS],
                 result[switchbee.ATTR_DATA],
             )
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_refresh()
