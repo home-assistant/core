@@ -36,13 +36,13 @@ async def async_get_config_entry_diagnostics(
             include_disabled_entities=True,
         )
 
-        for entity in registry_entities:
+        for entity_entry in registry_entities:
             state_dict = None
-            if state := hass.states.get(entity.entity_id):
+            if state := hass.states.get(entity_entry.entity_id):
                 state_dict = dict(state.as_dict())
                 state_dict.pop("context", None)
 
-            entities.append({"entry": asdict(entity), "state": state_dict})
+            entities.append({"entry": asdict(entity_entry), "state": state_dict})
 
         devices.append({"device": asdict(device), "entities": entities})
 

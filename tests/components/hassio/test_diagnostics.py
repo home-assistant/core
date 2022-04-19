@@ -156,7 +156,7 @@ async def test_diagnostics(
             {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
         )
         assert result
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
     diagnostics = await get_diagnostics_for_config_entry(
         hass, hass_client, config_entry
