@@ -3,10 +3,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from aioairzone.common import ConnectionOptions
 from aioairzone.const import DEFAULT_PORT, DEFAULT_SYSTEM_ID
 from aioairzone.exceptions import AirzoneError, InvalidSystem
-from aioairzone.localapi import AirzoneLocalApi
+from aioairzone.localapi import AirzoneLocalApi, ConnectionOptions
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -62,7 +61,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
             try:
-                await airzone.validate_airzone()
+                await airzone.validate()
             except InvalidSystem:
                 data_schema = SYSTEM_ID_SCHEMA
                 errors["base"] = "invalid_system_id"
