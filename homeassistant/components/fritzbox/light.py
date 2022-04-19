@@ -145,7 +145,7 @@ class FritzboxLight(FritzBoxEntity, LightEntity):
             except HTTPError as err:
                 if err.response.status_code == 400:
                     LOGGER.debug(
-                        "400 BAD REQUEST - fritzbox does not support method 'setunmappedcolor'"
+                        "fritzbox does not support method 'setunmappedcolor', fallback to 'setcolor'"
                     )
                     # find supported hs values closest to what user selected
                     hue = min(
