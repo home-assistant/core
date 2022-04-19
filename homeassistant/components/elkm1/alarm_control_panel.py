@@ -1,7 +1,7 @@
 """Each ElkM1 area will be created as a separate alarm_control_panel."""
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import Any
 
 from elkm1_lib.areas import Area
 from elkm1_lib.const import AlarmState, ArmedStatus, ArmLevel, ArmUpState
@@ -146,8 +146,8 @@ class ElkArea(ElkAttachedEntity, AlarmControlPanelEntity, RestoreEntity):
         if ATTR_CHANGED_BY in last_state.attributes:
             self._changed_by = last_state.attributes[ATTR_CHANGED_BY]
 
-    def _watch_keypad(self, keypad_: Element, changeset: dict[str, Any]) -> None:
-        keypad = cast(Keypad, keypad_)
+    def _watch_keypad(self, keypad: Element, changeset: dict[str, Any]) -> None:
+        assert isinstance(keypad, Keypad)
         if keypad.area != self._element.index:
             return
         if changeset.get("last_user") is not None:
