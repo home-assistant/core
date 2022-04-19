@@ -215,7 +215,7 @@ def mock_upnp_device():
         yield mock_async_create_upnp_device, mock_igd_device
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 def mock_mac_address_from_host():
     """Get mac address."""
     with patch(
@@ -224,6 +224,19 @@ def mock_mac_address_from_host():
     ), patch(
         "homeassistant.components.upnp.async_get_mac_address_from_host",
         return_value=TEST_MAC_ADDRESS,
+    ):
+        yield
+
+
+@pytest.fixture
+def mock_no_mac_address_from_host():
+    """Get no mac address."""
+    with patch(
+        "homeassistant.components.upnp.config_flow.async_get_mac_address_from_host",
+        return_value=None,
+    ), patch(
+        "homeassistant.components.upnp.async_get_mac_address_from_host",
+        return_value=None,
     ):
         yield
 
@@ -291,7 +304,11 @@ async def ssdp_no_discovery():
 
 @pytest.fixture
 async def config_entry(
-    hass: HomeAssistant, mock_get_source_ip, ssdp_instant_discovery, mock_upnp_device
+    hass: HomeAssistant,
+    mock_get_source_ip,
+    ssdp_instant_discovery,
+    mock_upnp_device,
+    mock_mac_address_from_host,
 ):
     """Create an initialized integration."""
     entry = MockConfigEntry(
