@@ -219,10 +219,7 @@ def mock_upnp_device():
 def mock_mac_address_from_host():
     """Get mac address."""
     with patch(
-        "homeassistant.components.upnp.config_flow.async_get_mac_address_from_host",
-        return_value=TEST_MAC_ADDRESS,
-    ), patch(
-        "homeassistant.components.upnp.async_get_mac_address_from_host",
+        "homeassistant.components.upnp.device.get_mac_address",
         return_value=TEST_MAC_ADDRESS,
     ):
         yield
@@ -232,10 +229,7 @@ def mock_mac_address_from_host():
 def mock_no_mac_address_from_host():
     """Get no mac address."""
     with patch(
-        "homeassistant.components.upnp.config_flow.async_get_mac_address_from_host",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.upnp.async_get_mac_address_from_host",
+        "homeassistant.components.upnp.device.get_mac_address",
         return_value=None,
     ):
         yield
