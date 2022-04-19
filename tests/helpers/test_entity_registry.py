@@ -1247,3 +1247,74 @@ async def test_entity_category_str_not_allowed(hass):
         reg.async_update_entity(
             entity_id, entity_category=EntityCategory.DIAGNOSTIC.value
         )
+
+
+def test_migrate_entity_to_new_platform(hass, registry):
+    """Test migrate_entity_to_new_platform."""
+    orig_config_entry = MockConfigEntry(domain="light")
+    orig_unique_id = "5678"
+
+    orig_entry = registry.async_get_or_create(
+        "light",
+        "hue",
+        orig_unique_id,
+        suggested_object_id="light",
+        config_entry=orig_config_entry,
+        disabled_by=er.RegistryEntryDisabler.USER,
+        entity_category=EntityCategory.CONFIG,
+        original_device_class="mock-device-class",
+        original_icon="initial-original_icon",
+        original_name="initial-original_name",
+    )
+    assert registry.async_get("light.light") is orig_entry
+    registry.async_update_entity(
+        "light.light",
+        name="new_name",
+        icon="new_icon",
+    )
+
+    new_config_entry = MockConfigEntry(domain="light")
+    new_unique_id = "1234"
+
+    assert registry.async_update_entity_platform(
+        "light.light",
+        "hue2",
+        new_unique_id=new_unique_id,
+        new_config_entry_id=new_config_entry.entry_id,
+    )
+
+    assert not registry.async_get_entity_id("light", "hue", orig_unique_id)
+
+    assert (new_entry := registry.async_get("light.light")) is not orig_entry
+
+    assert new_entry.config_entry_id == new_config_entry.entry_id
+    assert new_entry.unique_id == new_unique_id
+    assert new_entry.name == "new_name"
+    assert new_entry.icon == "new_icon"
+    assert new_entry.platform == "hue2"
+
+    # Test nonexisting entity
+    with pytest.raises(KeyError):
+        registry.async_update_entity_platform(
+            "light.not_a_real_light",
+            "hue2",
+            new_unique_id=new_unique_id,
+            new_config_entry_id=new_config_entry.entry_id,
+        )
+
+    # Test migrate entity without new config entry ID
+    with pytest.raises(ValueError):
+        registry.async_update_entity_platform(
+            "light.light",
+            "hue3",
+        )
+
+    # Test entity with a state
+    hass.states.async_set("light.light", "on")
+    with pytest.raises(ValueError):
+        registry.async_update_entity_platform(
+            "light.light",
+            "hue2",
+            new_unique_id=new_unique_id,
+            new_config_entry_id=new_config_entry.entry_id,
+        )
