@@ -162,9 +162,9 @@ class ElkThermostat(ElkEntity, ClimateEntity):
         return 99
 
     @property
-    def fan_mode(self) -> str | None:
+    def fan_mode(self) -> str:
         """Return the fan setting."""
-        return ELK_TO_HASS_FAN_MODES.get(self._element.fan)
+        return ELK_TO_HASS_FAN_MODES[self._element.fan]
 
     def _elk_set(self, mode: int | None, fan: int | None) -> None:
         if mode is not None:
