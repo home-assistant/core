@@ -269,7 +269,7 @@ def hass(loop, load_registries, hass_storage, request):
 
     exceptions = []
     hass = loop.run_until_complete(async_test_home_assistant(loop, load_registries))
-    orig_temperature_units = hass.config.units.temperature_unit
+    orig_units = hass.config.units
     orig_exception_handler = loop.get_exception_handler()
     loop.set_exception_handler(exc_handle)
 
@@ -279,8 +279,8 @@ def hass(loop, load_registries, hass_storage, request):
 
     # Restore timezone, it is set when creating the hass object
     dt_util.DEFAULT_TIME_ZONE = orig_tz
-    # Restore the temperature units as well
-    hass.config.units.temperature_unit = orig_temperature_units
+    # Restore the units as well
+    hass.config.units = orig_units
 
     for ex in exceptions:
         if (
