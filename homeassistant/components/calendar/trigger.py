@@ -34,7 +34,7 @@ TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_PLATFORM): DOMAIN,
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
-        vol.Required(CONF_EVENT, default=EVENT_START): vol.In({EVENT_START}),
+        vol.Optional(CONF_EVENT, default=EVENT_START): vol.In({EVENT_START}),
     }
 )
 
