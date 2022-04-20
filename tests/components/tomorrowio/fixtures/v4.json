@@ -40,7 +40,6 @@
         "values": {
           "temperatureMin": 44.13,
           "temperatureMax": 44.13,
-          "humidity": 33,
           "windSpeed": 9.33,
           "windDirection": 315.14,
           "weatherCode": 1000,
@@ -53,7 +52,6 @@
         "values": {
           "temperatureMin": 43.9,
           "temperatureMax": 43.9,
-          "humidity": 32.24,
           "windSpeed": 9.31,
           "windDirection": 315.14,
           "weatherCode": 1000,
@@ -66,7 +64,6 @@
         "values": {
           "temperatureMin": 43.68,
           "temperatureMax": 43.68,
-          "humidity": 31.3,
           "windSpeed": 9.28,
           "windDirection": 315.14,
           "weatherCode": 1000,
@@ -79,7 +76,6 @@
         "values": {
           "temperatureMin": 43.66,
           "temperatureMax": 43.66,
-          "humidity": 30.35,
           "windSpeed": 9.26,
           "windDirection": 315.14,
           "weatherCode": 1000,
@@ -92,7 +88,6 @@
         "values": {
           "temperatureMin": 43.79,
           "temperatureMax": 43.79,
-          "humidity": 29.41,
           "windSpeed": 9.22,
           "windDirection": 315.14,
           "weatherCode": 1000,
@@ -105,7 +100,6 @@
         "values": {
           "temperatureMin": 43.92,
           "temperatureMax": 43.92,
-          "humidity": 28.47,
           "windSpeed": 9.17,
           "windDirection": 315.14,
           "weatherCode": 1000,
@@ -118,7 +112,6 @@
         "values": {
           "temperatureMin": 44.04,
           "temperatureMax": 44.04,
-          "humidity": 27.52,
           "windSpeed": 9.13,
           "windDirection": 315.14,
           "weatherCode": 1000,
@@ -131,7 +124,6 @@
         "values": {
           "temperatureMin": 44.17,
           "temperatureMax": 44.17,
-          "humidity": 26.58,
           "windSpeed": 9.06,
           "windDirection": 315.14,
           "weatherCode": 1000,
@@ -144,7 +136,6 @@
         "values": {
           "temperatureMin": 44.31,
           "temperatureMax": 44.31,
-          "humidity": 25.63,
           "windSpeed": 9.02,
           "windDirection": 315.14,
           "weatherCode": 1000,
@@ -157,7 +148,6 @@
         "values": {
           "temperatureMin": 44.44,
           "temperatureMax": 44.44,
-          "humidity": 24.69,
           "windSpeed": 8.97,
           "windDirection": 321.71,
           "weatherCode": 1000,
@@ -170,7 +160,6 @@
         "values": {
           "temperatureMin": 44.56,
           "temperatureMax": 44.56,
-          "humidity": 23.74,
           "windSpeed": 8.93,
           "windDirection": 321.71,
           "weatherCode": 1000,
@@ -183,7 +172,6 @@
         "values": {
           "temperatureMin": 44.69,
           "temperatureMax": 44.69,
-          "humidity": 22.8,
           "windSpeed": 8.88,
           "windDirection": 321.71,
           "weatherCode": 1000,
@@ -196,7 +184,6 @@
         "values": {
           "temperatureMin": 44.82,
           "temperatureMax": 44.82,
-          "humidity": 22.56,
           "windSpeed": 8.84,
           "windDirection": 321.71,
           "weatherCode": 1000,
@@ -209,7 +196,6 @@
         "values": {
           "temperatureMin": 44.94,
           "temperatureMax": 44.94,
-          "humidity": 22.32,
           "windSpeed": 8.79,
           "windDirection": 321.71,
           "weatherCode": 1000,
@@ -222,7 +208,6 @@
         "values": {
           "temperatureMin": 45.07,
           "temperatureMax": 45.07,
-          "humidity": 22.09,
           "windSpeed": 8.75,
           "windDirection": 321.71,
           "weatherCode": 1000,
@@ -235,7 +220,6 @@
         "values": {
           "temperatureMin": 45.16,
           "temperatureMax": 45.16,
-          "humidity": 21.85,
           "windSpeed": 8.75,
           "windDirection": 321.71,
           "weatherCode": 1000,
@@ -248,7 +232,6 @@
         "values": {
           "temperatureMin": 45.23,
           "temperatureMax": 45.23,
-          "humidity": 21.62,
           "windSpeed": 8.75,
           "windDirection": 321.71,
           "weatherCode": 1000,
@@ -261,7 +244,6 @@
         "values": {
           "temperatureMin": 45.28,
           "temperatureMax": 45.28,
-          "humidity": 21.38,
           "windSpeed": 8.77,
           "windDirection": 321.71,
           "weatherCode": 1000,
@@ -274,7 +256,6 @@
         "values": {
           "temperatureMin": 45.36,
           "temperatureMax": 45.36,
-          "humidity": 21.14,
           "windSpeed": 8.79,
           "windDirection": 321.71,
           "weatherCode": 1000,
@@ -287,7 +268,6 @@
         "values": {
           "temperatureMin": 45.43,
           "temperatureMax": 45.43,
-          "humidity": 20.91,
           "windSpeed": 8.81,
           "windDirection": 321.71,
           "weatherCode": 1000,
@@ -300,7 +280,6 @@
         "values": {
           "temperatureMin": 45.5,
           "temperatureMax": 45.5,
-          "humidity": 20.67,
           "windSpeed": 8.81,
           "windDirection": 321.71,
           "weatherCode": 1000,
@@ -313,7 +292,6 @@
         "values": {
           "temperatureMin": 45.55,
           "temperatureMax": 45.55,
-          "humidity": 20.43,
           "windSpeed": 8.84,
           "windDirection": 323.38,
           "weatherCode": 1000,
@@ -326,7 +304,6 @@
         "values": {
           "temperatureMin": 45.63,
           "temperatureMax": 45.63,
-          "humidity": 20.2,
           "windSpeed": 8.86,
           "windDirection": 323.38,
           "weatherCode": 1000,
@@ -339,7 +316,6 @@
         "values": {
           "temperatureMin": 45.7,
           "temperatureMax": 45.7,
-          "humidity": 19.96,
           "windSpeed": 8.88,
           "windDirection": 323.38,
           "weatherCode": 1000,
@@ -352,7 +328,6 @@
         "values": {
           "temperatureMin": 45.75,
           "temperatureMax": 45.75,
-          "humidity": 19.74,
           "windSpeed": 8.9,
           "windDirection": 323.38,
           "weatherCode": 1000,
@@ -365,7 +340,6 @@
         "values": {
           "temperatureMin": 45.82,
           "temperatureMax": 45.82,
-          "humidity": 19.53,
           "windSpeed": 8.9,
           "windDirection": 323.38,
           "weatherCode": 1000,
@@ -378,7 +352,6 @@
         "values": {
           "temperatureMin": 45.9,
           "temperatureMax": 45.9,
-          "humidity": 19.31,
           "windSpeed": 8.93,
           "windDirection": 323.38,
           "weatherCode": 1000,
@@ -391,7 +364,6 @@
         "values": {
           "temperatureMin": 45.88,
           "temperatureMax": 45.88,
-          "humidity": 19.09,
           "windSpeed": 8.97,
           "windDirection": 323.38,
           "weatherCode": 1000,
@@ -404,7 +376,6 @@
         "values": {
           "temperatureMin": 45.82,
           "temperatureMax": 45.82,
-          "humidity": 18.88,
           "windSpeed": 9.02,
           "windDirection": 323.38,
           "weatherCode": 1000,
@@ -417,7 +388,6 @@
         "values": {
           "temperatureMin": 45.75,
           "temperatureMax": 45.75,
-          "humidity": 18.66,
           "windSpeed": 9.06,
           "windDirection": 323.38,
           "weatherCode": 1000,
@@ -430,7 +400,6 @@
         "values": {
           "temperatureMin": 45.7,
           "temperatureMax": 45.7,
-          "humidity": 18.44,
           "windSpeed": 9.1,
           "windDirection": 323.38,
           "weatherCode": 1000,
@@ -443,7 +412,6 @@
         "values": {
           "temperatureMin": 45.63,
           "temperatureMax": 45.63,
-          "humidity": 18.23,
           "windSpeed": 9.15,
           "windDirection": 323.38,
           "weatherCode": 1000,
@@ -456,7 +424,6 @@
         "values": {
           "temperatureMin": 45.57,
           "temperatureMax": 45.57,
-          "humidity": 18.01,
           "windSpeed": 9.19,
           "windDirection": 323.38,
           "weatherCode": 1000,
@@ -469,7 +436,6 @@
         "values": {
           "temperatureMin": 45.5,
           "temperatureMax": 45.5,
-          "humidity": 17.79,
           "windSpeed": 9.24,
           "windDirection": 318.43,
           "weatherCode": 1000,
@@ -482,7 +448,6 @@
         "values": {
           "temperatureMin": 45.45,
           "temperatureMax": 45.45,
-          "humidity": 17.58,
           "windSpeed": 9.28,
           "windDirection": 318.43,
           "weatherCode": 1000,
@@ -495,7 +460,6 @@
         "values": {
           "temperatureMin": 45.39,
           "temperatureMax": 45.39,
-          "humidity": 17.36,
           "windSpeed": 9.33,
           "windDirection": 318.43,
           "weatherCode": 1000,
@@ -508,7 +472,6 @@
         "values": {
           "temperatureMin": 45.32,
           "temperatureMax": 45.32,
-          "humidity": 17.26,
           "windSpeed": 9.37,
           "windDirection": 318.43,
           "weatherCode": 1000,
@@ -521,7 +484,6 @@
         "values": {
           "temperatureMin": 45.27,
           "temperatureMax": 45.27,
-          "humidity": 17.17,
           "windSpeed": 9.42,
           "windDirection": 318.43,
           "weatherCode": 1000,
@@ -534,7 +496,6 @@
         "values": {
           "temperatureMin": 45.19,
           "temperatureMax": 45.19,
-          "humidity": 17.07,
           "windSpeed": 9.46,
           "windDirection": 318.43,
           "weatherCode": 1000,
@@ -547,7 +508,6 @@
         "values": {
           "temperatureMin": 45.14,
           "temperatureMax": 45.14,
-          "humidity": 16.97,
           "windSpeed": 9.4,
           "windDirection": 318.43,
           "weatherCode": 1000,
@@ -560,7 +520,6 @@
         "values": {
           "temperatureMin": 45.07,
           "temperatureMax": 45.07,
-          "humidity": 16.88,
           "windSpeed": 9.24,
           "windDirection": 318.43,
           "weatherCode": 1000,
@@ -573,7 +532,6 @@
         "values": {
           "temperatureMin": 45.01,
           "temperatureMax": 45.01,
-          "humidity": 16.78,
           "windSpeed": 9.08,
           "windDirection": 318.43,
           "weatherCode": 1000,
@@ -586,7 +544,6 @@
         "values": {
           "temperatureMin": 44.94,
           "temperatureMax": 44.94,
-          "humidity": 16.68,
           "windSpeed": 8.95,
           "windDirection": 318.43,
           "weatherCode": 1000,
@@ -599,7 +556,6 @@
         "values": {
           "temperatureMin": 44.89,
           "temperatureMax": 44.89,
-          "humidity": 16.59,
           "windSpeed": 8.79,
           "windDirection": 318.43,
           "weatherCode": 1000,
@@ -612,7 +568,6 @@
         "values": {
           "temperatureMin": 44.82,
           "temperatureMax": 44.82,
-          "humidity": 16.49,
           "windSpeed": 8.63,
           "windDirection": 318.43,
           "weatherCode": 1000,
@@ -625,7 +580,6 @@
         "values": {
           "temperatureMin": 44.76,
           "temperatureMax": 44.76,
-          "humidity": 16.39,
           "windSpeed": 8.5,
           "windDirection": 320.9,
           "weatherCode": 1000,
@@ -638,7 +592,6 @@
         "values": {
           "temperatureMin": 44.69,
           "temperatureMax": 44.69,
-          "humidity": 16.29,
           "windSpeed": 8.34,
           "windDirection": 320.9,
           "weatherCode": 1000,
@@ -651,7 +604,6 @@
         "values": {
           "temperatureMin": 44.64,
           "temperatureMax": 44.64,
-          "humidity": 16.2,
           "windSpeed": 8.19,
           "windDirection": 320.9,
           "weatherCode": 1000,
@@ -664,7 +616,6 @@
         "values": {
           "temperatureMin": 44.56,
           "temperatureMax": 44.56,
-          "humidity": 16.05,
           "windSpeed": 8.05,
           "windDirection": 320.9,
           "weatherCode": 1000,
@@ -677,7 +628,6 @@
         "values": {
           "temperatureMin": 44.51,
           "temperatureMax": 44.51,
-          "humidity": 15.9,
           "windSpeed": 7.9,
           "windDirection": 320.9,
           "weatherCode": 1000,
@@ -690,7 +640,6 @@
         "values": {
           "temperatureMin": 44.44,
           "temperatureMax": 44.44,
-          "humidity": 15.76,
           "windSpeed": 7.74,
           "windDirection": 320.9,
           "weatherCode": 1000,
@@ -703,7 +652,6 @@
         "values": {
           "temperatureMin": 44.26,
           "temperatureMax": 44.26,
-          "humidity": 15.61,
           "windSpeed": 7.47,
           "windDirection": 320.9,
           "weatherCode": 1000,
@@ -716,7 +664,6 @@
         "values": {
           "temperatureMin": 44.01,
           "temperatureMax": 44.01,
-          "humidity": 15.46,
           "windSpeed": 7.14,
           "windDirection": 320.9,
           "weatherCode": 1000,
@@ -729,7 +676,6 @@
         "values": {
           "temperatureMin": 43.74,
           "temperatureMax": 43.74,
-          "humidity": 15.31,
           "windSpeed": 6.78,
           "windDirection": 320.9,
           "weatherCode": 1000,
@@ -742,7 +688,6 @@
         "values": {
           "temperatureMin": 43.48,
           "temperatureMax": 43.48,
-          "humidity": 15.17,
           "windSpeed": 6.44,
           "windDirection": 320.9,
           "weatherCode": 1000,
@@ -755,7 +700,6 @@
         "values": {
           "temperatureMin": 43.23,
           "temperatureMax": 43.23,
-          "humidity": 15.02,
           "windSpeed": 6.08,
           "windDirection": 320.9,
           "weatherCode": 1000,
@@ -768,7 +712,6 @@
         "values": {
           "temperatureMin": 42.98,
           "temperatureMax": 42.98,
-          "humidity": 14.87,
           "windSpeed": 5.75,
           "windDirection": 320.9,
           "weatherCode": 1000,
@@ -781,7 +724,6 @@
         "values": {
           "temperatureMin": 42.71,
           "temperatureMax": 42.71,
-          "humidity": 14.72,
           "windSpeed": 5.39,
           "windDirection": 322.11,
           "weatherCode": 1000,
@@ -794,7 +736,6 @@
         "values": {
           "temperatureMin": 42.46,
           "temperatureMax": 42.46,
-          "humidity": 14.58,
           "windSpeed": 5.06,
           "windDirection": 322.11,
           "weatherCode": 1000,
@@ -807,7 +748,6 @@
         "values": {
           "temperatureMin": 42.21,
           "temperatureMax": 42.21,
-          "humidity": 14.43,
           "windSpeed": 4.7,
           "windDirection": 322.11,
           "weatherCode": 1000,
@@ -820,7 +760,6 @@
         "values": {
           "temperatureMin": 41.94,
           "temperatureMax": 41.94,
-          "humidity": 14.36,
           "windSpeed": 4.36,
           "windDirection": 322.11,
           "weatherCode": 1000,
@@ -833,7 +772,6 @@
         "values": {
           "temperatureMin": 41.68,
           "temperatureMax": 41.68,
-          "humidity": 14.28,
           "windSpeed": 4,
           "windDirection": 322.11,
           "weatherCode": 1000,
@@ -846,7 +784,6 @@
         "values": {
           "temperatureMin": 41.43,
           "temperatureMax": 41.43,
-          "humidity": 14.21,
           "windSpeed": 3.67,
           "windDirection": 322.11,
           "weatherCode": 1000,
@@ -859,7 +796,6 @@
         "values": {
           "temperatureMin": 41.16,
           "temperatureMax": 41.16,
-          "humidity": 14.14,
           "windSpeed": 3.6,
           "windDirection": 322.11,
           "weatherCode": 1000,
@@ -872,7 +808,6 @@
         "values": {
           "temperatureMin": 40.91,
           "temperatureMax": 40.91,
-          "humidity": 14.07,
           "windSpeed": 3.76,
           "windDirection": 322.11,
           "weatherCode": 1000,
@@ -885,7 +820,6 @@
         "values": {
           "temperatureMin": 40.66,
           "temperatureMax": 40.66,
-          "humidity": 14,
           "windSpeed": 3.91,
           "windDirection": 322.11,
           "weatherCode": 1000,
@@ -898,7 +832,6 @@
         "values": {
           "temperatureMin": 40.41,
           "temperatureMax": 40.41,
-          "humidity": 13.92,
           "windSpeed": 4.05,
           "windDirection": 322.11,
           "weatherCode": 1000,
@@ -911,7 +844,6 @@
         "values": {
           "temperatureMin": 40.14,
           "temperatureMax": 40.14,
-          "humidity": 13.85,
           "windSpeed": 4.21,
           "windDirection": 322.11,
           "weatherCode": 1000,
@@ -924,7 +856,6 @@
         "values": {
           "temperatureMin": 39.88,
           "temperatureMax": 39.88,
-          "humidity": 13.78,
           "windSpeed": 4.36,
           "windDirection": 322.11,
           "weatherCode": 1000,
@@ -937,7 +868,6 @@
         "values": {
           "temperatureMin": 39.63,
           "temperatureMax": 39.63,
-          "humidity": 13.71,
           "windSpeed": 4.5,
           "windDirection": 295.94,
           "weatherCode": 1000,
@@ -950,7 +880,6 @@
         "values": {
           "temperatureMin": 39.38,
           "temperatureMax": 39.38,
-          "humidity": 13.63,
           "windSpeed": 4.65,
           "windDirection": 295.94,
           "weatherCode": 1000,
@@ -963,7 +892,6 @@
         "values": {
           "temperatureMin": 39.11,
           "temperatureMax": 39.11,
-          "humidity": 13.56,
           "windSpeed": 4.79,
           "windDirection": 295.94,
           "weatherCode": 1000,
@@ -978,7 +906,6 @@
         "values": {
           "temperatureMin": 44.13,
           "temperatureMax": 44.13,
-          "humidity": 33,
           "windSpeed": 9.33,
           "windDirection": 315.14,
           "weatherCode": 1000,
@@ -991,7 +918,6 @@
         "values": {
           "temperatureMin": 44.82,
           "temperatureMax": 44.82,
-          "humidity": 22.8,
           "windSpeed": 8.84,
           "windDirection": 321.71,
           "weatherCode": 1000,
@@ -1004,7 +930,6 @@
         "values": {
           "temperatureMin": 45.75,
           "temperatureMax": 45.75,
-          "humidity": 19.96,
           "windSpeed": 8.9,
           "windDirection": 323.38,
           "weatherCode": 1000,
@@ -1017,7 +942,6 @@
         "values": {
           "temperatureMin": 45.32,
           "temperatureMax": 45.32,
-          "humidity": 17.36,
           "windSpeed": 9.37,
           "windDirection": 318.43,
           "weatherCode": 1000,
@@ -1030,7 +954,6 @@
         "values": {
           "temperatureMin": 44.56,
           "temperatureMax": 44.56,
-          "humidity": 16.2,
           "windSpeed": 8.05,
           "windDirection": 320.9,
           "weatherCode": 1000,
@@ -1043,7 +966,6 @@
         "values": {
           "temperatureMin": 41.94,
           "temperatureMax": 41.94,
-          "humidity": 14.43,
           "windSpeed": 4.36,
           "windDirection": 322.11,
           "weatherCode": 1000,
@@ -1056,7 +978,6 @@
         "values": {
           "temperatureMin": 38.86,
           "temperatureMax": 38.86,
-          "humidity": 13.56,
           "windSpeed": 4.94,
           "windDirection": 295.94,
           "weatherCode": 1000,
@@ -1069,7 +990,6 @@
         "values": {
           "temperatureMin": 36.18,
           "temperatureMax": 36.18,
-          "humidity": 14.06,
           "windSpeed": 5.59,
           "windDirection": 11.94,
           "weatherCode": 1000,
@@ -1082,7 +1002,6 @@
         "values": {
           "temperatureMin": 34.3,
           "temperatureMax": 34.3,
-          "humidity": 13.83,
           "windSpeed": 5.57,
           "windDirection": 13.68,
           "weatherCode": 1000,
@@ -1095,7 +1014,6 @@
         "values": {
           "temperatureMin": 32.88,
           "temperatureMax": 32.88,
-          "humidity": 22.92,
           "windSpeed": 5.41,
           "windDirection": 14.93,
           "weatherCode": 1000,
@@ -1108,7 +1026,6 @@
         "values": {
           "temperatureMin": 31.91,
           "temperatureMax": 31.91,
-          "humidity": 47.32,
           "windSpeed": 4.61,
           "windDirection": 26.07,
           "weatherCode": 1000,
@@ -1121,7 +1038,6 @@
         "values": {
           "temperatureMin": 29.17,
           "temperatureMax": 29.17,
-          "humidity": 37.14,
           "windSpeed": 2.59,
           "windDirection": 51.27,
           "weatherCode": 1000,
@@ -1134,7 +1050,6 @@
         "values": {
           "temperatureMin": 27.37,
           "temperatureMax": 27.37,
-          "humidity": 46.83,
           "windSpeed": 3.31,
           "windDirection": 343.25,
           "weatherCode": 1000,
@@ -1147,7 +1062,6 @@
         "values": {
           "temperatureMin": 26.73,
           "temperatureMax": 26.73,
-          "humidity": 52.8,
           "windSpeed": 4.27,
           "windDirection": 341.46,
           "weatherCode": 1000,
@@ -1160,7 +1074,6 @@
         "values": {
           "temperatureMin": 26.38,
           "temperatureMax": 26.38,
-          "humidity": 58.56,
           "windSpeed": 3.53,
           "windDirection": 322.34,
           "weatherCode": 1000,
@@ -1173,7 +1086,6 @@
         "values": {
           "temperatureMin": 26.15,
           "temperatureMax": 26.15,
-          "humidity": 63.54,
           "windSpeed": 3.65,
           "windDirection": 294.69,
           "weatherCode": 1000,
@@ -1186,7 +1098,6 @@
         "values": {
           "temperatureMin": 30.07,
           "temperatureMax": 30.07,
-          "humidity": 67.53,
           "windSpeed": 3.2,
           "windDirection": 325.32,
           "weatherCode": 1000,
@@ -1199,7 +1110,6 @@
         "values": {
           "temperatureMin": 31.03,
           "temperatureMax": 31.03,
-          "humidity": 70.96,
           "windSpeed": 2.84,
           "windDirection": 322.27,
           "weatherCode": 1000,
@@ -1212,7 +1122,6 @@
         "values": {
           "temperatureMin": 27.23,
           "temperatureMax": 27.23,
-          "humidity": 73.95,
           "windSpeed": 5.59,
           "windDirection": 310.14,
           "weatherCode": 1000,
@@ -1225,7 +1134,6 @@
         "values": {
           "temperatureMin": 29.21,
           "temperatureMax": 29.21,
-          "humidity": 86.03,
           "windSpeed": 7.05,
           "windDirection": 324.8,
           "weatherCode": 1100,
@@ -1238,7 +1146,6 @@
         "values": {
           "temperatureMin": 33.19,
           "temperatureMax": 33.19,
-          "humidity": 88.5,
           "windSpeed": 6.46,
           "windDirection": 335.16,
           "weatherCode": 1101,
@@ -1251,7 +1158,6 @@
         "values": {
           "temperatureMin": 37.02,
           "temperatureMax": 37.02,
-          "humidity": 84.03,
           "windSpeed": 5.88,
           "windDirection": 324.49,
           "weatherCode": 1001,
@@ -1264,7 +1170,6 @@
         "values": {
           "temperatureMin": 40.01,
           "temperatureMax": 40.01,
-          "humidity": 70.49,
           "windSpeed": 5.55,
           "windDirection": 310.68,
           "weatherCode": 1001,
@@ -1277,7 +1182,6 @@
         "values": {
           "temperatureMin": 42.37,
           "temperatureMax": 42.37,
-          "humidity": 58.48,
           "windSpeed": 5.46,
           "windDirection": 304.18,
           "weatherCode": 1101,
@@ -1290,7 +1194,6 @@
         "values": {
           "temperatureMin": 44.62,
           "temperatureMax": 44.62,
-          "humidity": 51.83,
           "windSpeed": 4.99,
           "windDirection": 301.19,
           "weatherCode": 1000,
@@ -1303,7 +1206,6 @@
         "values": {
           "temperatureMin": 46.78,
           "temperatureMax": 46.78,
-          "humidity": 44.23,
           "windSpeed": 4.72,
           "windDirection": 295.05,
           "weatherCode": 1100,
@@ -1316,7 +1218,6 @@
         "values": {
           "temperatureMin": 48.42,
           "temperatureMax": 48.42,
-          "humidity": 38.91,
           "windSpeed": 4.81,
           "windDirection": 287.4,
           "weatherCode": 1000,
@@ -1329,7 +1230,6 @@
         "values": {
           "temperatureMin": 49.28,
           "temperatureMax": 49.28,
-          "humidity": 35.39,
           "windSpeed": 4.74,
           "windDirection": 282.48,
           "weatherCode": 1100,
@@ -1342,7 +1242,6 @@
         "values": {
           "temperatureMin": 48.72,
           "temperatureMax": 48.72,
-          "humidity": 33.63,
           "windSpeed": 2.51,
           "windDirection": 268.74,
           "weatherCode": 1100,
@@ -1355,7 +1254,6 @@
         "values": {
           "temperatureMin": 44.37,
           "temperatureMax": 44.37,
-          "humidity": 41.47,
           "windSpeed": 3.56,
           "windDirection": 180.04,
           "weatherCode": 1101,
@@ -1368,7 +1266,6 @@
         "values": {
           "temperatureMin": 39.9,
           "temperatureMax": 39.9,
-          "humidity": 46.36,
           "windSpeed": 4.68,
           "windDirection": 177.89,
           "weatherCode": 1101,
@@ -1381,7 +1278,6 @@
         "values": {
           "temperatureMin": 37.87,
           "temperatureMax": 37.87,
-          "humidity": 51.22,
           "windSpeed": 5.21,
           "windDirection": 197.47,
           "weatherCode": 1101,
@@ -1394,7 +1290,6 @@
         "values": {
           "temperatureMin": 36.91,
           "temperatureMax": 36.91,
-          "humidity": 58.57,
           "windSpeed": 5.46,
           "windDirection": 209.77,
           "weatherCode": 1100,
@@ -1407,7 +1302,6 @@
         "values": {
           "temperatureMin": 36.64,
           "temperatureMax": 36.64,
-          "humidity": 70.37,
           "windSpeed": 6.11,
           "windDirection": 210.14,
           "weatherCode": 1000,
@@ -1420,7 +1314,6 @@
         "values": {
           "temperatureMin": 36.63,
           "temperatureMax": 36.63,
-          "humidity": 74.95,
           "windSpeed": 6.4,
           "windDirection": 216,
           "weatherCode": 1000,
@@ -1433,7 +1326,6 @@
         "values": {
           "temperatureMin": 36.23,
           "temperatureMax": 36.23,
-          "humidity": 79.21,
           "windSpeed": 6.22,
           "windDirection": 223.92,
           "weatherCode": 1000,
@@ -1446,7 +1338,6 @@
         "values": {
           "temperatureMin": 35.58,
           "temperatureMax": 35.58,
-          "humidity": 70.57,
           "windSpeed": 5.75,
           "windDirection": 229.68,
           "weatherCode": 1000,
@@ -1459,7 +1350,6 @@
         "values": {
           "temperatureMin": 34.68,
           "temperatureMax": 34.68,
-          "humidity": 63.71,
           "windSpeed": 5.21,
           "windDirection": 235.24,
           "weatherCode": 1000,
@@ -1472,7 +1362,6 @@
         "values": {
           "temperatureMin": 33.69,
           "temperatureMax": 33.69,
-          "humidity": 69.02,
           "windSpeed": 4.81,
           "windDirection": 237.24,
           "weatherCode": 1000,
@@ -1485,7 +1374,6 @@
         "values": {
           "temperatureMin": 32.74,
           "temperatureMax": 32.74,
-          "humidity": 77.96,
           "windSpeed": 4.52,
           "windDirection": 239.35,
           "weatherCode": 1000,
@@ -1498,7 +1386,6 @@
         "values": {
           "temperatureMin": 32.05,
           "temperatureMax": 32.05,
-          "humidity": 81.44,
           "windSpeed": 4.32,
           "windDirection": 245.68,
           "weatherCode": 1000,
@@ -1511,7 +1398,6 @@
         "values": {
           "temperatureMin": 31.57,
           "temperatureMax": 31.57,
-          "humidity": 82.39,
           "windSpeed": 4.14,
           "windDirection": 248.11,
           "weatherCode": 1100,
@@ -1524,7 +1410,6 @@
         "values": {
           "temperatureMin": 32.92,
           "temperatureMax": 32.92,
-          "humidity": 83.53,
           "windSpeed": 4.32,
           "windDirection": 249.54,
           "weatherCode": 1100,
@@ -1537,7 +1422,6 @@
         "values": {
           "temperatureMin": 38.5,
           "temperatureMax": 38.5,
-          "humidity": 84.7,
           "windSpeed": 4.7,
           "windDirection": 253.3,
           "weatherCode": 1100,
@@ -1550,7 +1434,6 @@
         "values": {
           "temperatureMin": 46.08,
           "temperatureMax": 46.08,
-          "humidity": 84.37,
           "windSpeed": 4.41,
           "windDirection": 258.49,
           "weatherCode": 1100,
@@ -1563,7 +1446,6 @@
         "values": {
           "temperatureMin": 53.26,
           "temperatureMax": 53.26,
-          "humidity": 80.54,
           "windSpeed": 4.9,
           "windDirection": 260.49,
           "weatherCode": 1101,
@@ -1576,7 +1458,6 @@
         "values": {
           "temperatureMin": 58.15,
           "temperatureMax": 58.15,
-          "humidity": 67.69,
           "windSpeed": 5.55,
           "windDirection": 261.29,
           "weatherCode": 1100,
@@ -1589,7 +1470,6 @@
         "values": {
           "temperatureMin": 61.56,
           "temperatureMax": 61.56,
-          "humidity": 56.6,
           "windSpeed": 6.35,
           "windDirection": 264.3,
           "weatherCode": 1101,
@@ -1602,7 +1482,6 @@
         "values": {
           "temperatureMin": 64,
           "temperatureMax": 64,
-          "humidity": 48.38,
           "windSpeed": 6.6,
           "windDirection": 257.54,
           "weatherCode": 1101,
@@ -1615,7 +1494,6 @@
         "values": {
           "temperatureMin": 65.79,
           "temperatureMax": 65.79,
-          "humidity": 44.01,
           "windSpeed": 6.96,
           "windDirection": 253.12,
           "weatherCode": 1100,
@@ -1628,7 +1506,6 @@
         "values": {
           "temperatureMin": 66.74,
           "temperatureMax": 66.74,
-          "humidity": 40.57,
           "windSpeed": 6.8,
           "windDirection": 259.46,
           "weatherCode": 1100,
@@ -1641,7 +1518,6 @@
         "values": {
           "temperatureMin": 66.96,
           "temperatureMax": 66.96,
-          "humidity": 38.64,
           "windSpeed": 6.33,
           "windDirection": 294.25,
           "weatherCode": 1101,
@@ -1654,7 +1530,6 @@
         "values": {
           "temperatureMin": 64.35,
           "temperatureMax": 64.35,
-          "humidity": 45.64,
           "windSpeed": 3.91,
           "windDirection": 279.37,
           "weatherCode": 1100,
@@ -1667,7 +1542,6 @@
         "values": {
           "temperatureMin": 61.07,
           "temperatureMax": 61.07,
-          "humidity": 45.97,
           "windSpeed": 3.65,
           "windDirection": 218.19,
           "weatherCode": 1100,
@@ -1680,7 +1554,6 @@
         "values": {
           "temperatureMin": 56.3,
           "temperatureMax": 56.3,
-          "humidity": 47.55,
           "windSpeed": 4.09,
           "windDirection": 208.3,
           "weatherCode": 1101,
@@ -1693,7 +1566,6 @@
         "values": {
           "temperatureMin": 53.19,
           "temperatureMax": 53.19,
-          "humidity": 50.76,
           "windSpeed": 4.21,
           "windDirection": 216.42,
           "weatherCode": 1102,
@@ -1706,7 +1578,6 @@
         "values": {
           "temperatureMin": 51.94,
           "temperatureMax": 51.94,
-          "humidity": 58.01,
           "windSpeed": 3.38,
           "windDirection": 257.19,
           "weatherCode": 1001,
@@ -1719,7 +1590,6 @@
         "values": {
           "temperatureMin": 49.82,
           "temperatureMax": 49.82,
-          "humidity": 67.67,
           "windSpeed": 2.71,
           "windDirection": 288.85,
           "weatherCode": 1001,
@@ -1732,7 +1602,6 @@
         "values": {
           "temperatureMin": 48.24,
           "temperatureMax": 48.24,
-          "humidity": 72.66,
           "windSpeed": 2.8,
           "windDirection": 334.41,
           "weatherCode": 1001,
@@ -1745,7 +1614,6 @@
         "values": {
           "temperatureMin": 47.44,
           "temperatureMax": 47.44,
-          "humidity": 74.99,
           "windSpeed": 2.26,
           "windDirection": 342.01,
           "weatherCode": 1001,
@@ -1758,7 +1626,6 @@
         "values": {
           "temperatureMin": 45.59,
           "temperatureMax": 45.59,
-          "humidity": 72.46,
           "windSpeed": 2.35,
           "windDirection": 2.43,
           "weatherCode": 1001,
@@ -1771,7 +1638,6 @@
         "values": {
           "temperatureMin": 43.43,
           "temperatureMax": 43.43,
-          "humidity": 63.6,
           "windSpeed": 2.3,
           "windDirection": 336.56,
           "weatherCode": 1001,
@@ -1784,7 +1650,6 @@
         "values": {
           "temperatureMin": 41.11,
           "temperatureMax": 41.11,
-          "humidity": 68.07,
           "windSpeed": 2.71,
           "windDirection": 4.41,
           "weatherCode": 1001,
@@ -1797,7 +1662,6 @@
         "values": {
           "temperatureMin": 39.58,
           "temperatureMax": 39.58,
-          "humidity": 71.75,
           "windSpeed": 3.4,
           "windDirection": 21.26,
           "weatherCode": 1001,
@@ -1810,7 +1674,6 @@
         "values": {
           "temperatureMin": 39.85,
           "temperatureMax": 39.85,
-          "humidity": 77.28,
           "windSpeed": 3.31,
           "windDirection": 22.76,
           "weatherCode": 1001,
@@ -1823,7 +1686,6 @@
         "values": {
           "temperatureMin": 37.85,
           "temperatureMax": 37.85,
-          "humidity": 81.49,
           "windSpeed": 4.03,
           "windDirection": 29.3,
           "weatherCode": 1101,
@@ -1836,7 +1698,6 @@
         "values": {
           "temperatureMin": 38.97,
           "temperatureMax": 38.97,
-          "humidity": 83.59,
           "windSpeed": 3.15,
           "windDirection": 21.82,
           "weatherCode": 1000,
@@ -1849,7 +1710,6 @@
         "values": {
           "temperatureMin": 44.31,
           "temperatureMax": 44.31,
-          "humidity": 84.41,
           "windSpeed": 3.53,
           "windDirection": 14.25,
           "weatherCode": 1000,
@@ -1862,7 +1722,6 @@
         "values": {
           "temperatureMin": 50.25,
           "temperatureMax": 50.25,
-          "humidity": 84.73,
           "windSpeed": 2.82,
           "windDirection": 42.41,
           "weatherCode": 1000,
@@ -1875,7 +1734,6 @@
         "values": {
           "temperatureMin": 54.97,
           "temperatureMax": 54.97,
-          "humidity": 80.26,
           "windSpeed": 2.53,
           "windDirection": 87.81,
           "weatherCode": 1000,
@@ -1888,7 +1746,6 @@
         "values": {
           "temperatureMin": 58.46,
           "temperatureMax": 58.46,
-          "humidity": 67.38,
           "windSpeed": 3.09,
           "windDirection": 125.82,
           "weatherCode": 1000,
@@ -1901,7 +1758,6 @@
         "values": {
           "temperatureMin": 61.21,
           "temperatureMax": 61.21,
-          "humidity": 55.81,
           "windSpeed": 4.03,
           "windDirection": 157.54,
           "weatherCode": 1000,
@@ -1914,7 +1770,6 @@
         "values": {
           "temperatureMin": 63.36,
           "temperatureMax": 63.36,
-          "humidity": 49.04,
           "windSpeed": 5.21,
           "windDirection": 166.66,
           "weatherCode": 1000,
@@ -1927,7 +1782,6 @@
         "values": {
           "temperatureMin": 64.83,
           "temperatureMax": 64.83,
-          "humidity": 43.9,
           "windSpeed": 6.93,
           "windDirection": 189.24,
           "weatherCode": 1000,
@@ -1940,7 +1794,6 @@
         "values": {
           "temperatureMin": 65.23,
           "temperatureMax": 65.23,
-          "humidity": 42.73,
           "windSpeed": 8.95,
           "windDirection": 194.58,
           "weatherCode": 1000,
@@ -1953,7 +1806,6 @@
         "values": {
           "temperatureMin": 64.98,
           "temperatureMax": 64.98,
-          "humidity": 45.95,
           "windSpeed": 9.4,
           "windDirection": 193.22,
           "weatherCode": 1100,
@@ -1966,7 +1818,6 @@
         "values": {
           "temperatureMin": 64.06,
           "temperatureMax": 64.06,
-          "humidity": 45.58,
           "windSpeed": 8.55,
           "windDirection": 186.39,
           "weatherCode": 1100,
@@ -1979,7 +1830,6 @@
         "values": {
           "temperatureMin": 61.9,
           "temperatureMax": 61.9,
-          "humidity": 46.66,
           "windSpeed": 7.49,
           "windDirection": 171.81,
           "weatherCode": 1100,
@@ -1992,7 +1842,6 @@
         "values": {
           "temperatureMin": 59.4,
           "temperatureMax": 59.4,
-          "humidity": 47.59,
           "windSpeed": 7.54,
           "windDirection": 165.51,
           "weatherCode": 1100,
@@ -2005,7 +1854,6 @@
         "values": {
           "temperatureMin": 57.63,
           "temperatureMax": 57.63,
-          "humidity": 54.03,
           "windSpeed": 8.12,
           "windDirection": 171.94,
           "weatherCode": 1102,
@@ -2018,7 +1866,6 @@
         "values": {
           "temperatureMin": 56.17,
           "temperatureMax": 56.17,
-          "humidity": 63.19,
           "windSpeed": 8.7,
           "windDirection": 176.84,
           "weatherCode": 1001,
@@ -2031,7 +1878,6 @@
         "values": {
           "temperatureMin": 55.36,
           "temperatureMax": 55.36,
-          "humidity": 75.53,
           "windSpeed": 9.42,
           "windDirection": 184.14,
           "weatherCode": 1001,
@@ -2044,7 +1890,6 @@
         "values": {
           "temperatureMin": 54.88,
           "temperatureMax": 54.88,
-          "humidity": 76.73,
           "windSpeed": 10,
           "windDirection": 195.54,
           "weatherCode": 1001,
@@ -2057,7 +1902,6 @@
         "values": {
           "temperatureMin": 54.14,
           "temperatureMax": 54.14,
-          "humidity": 75.06,
           "windSpeed": 10.4,
           "windDirection": 200.56,
           "weatherCode": 1001,
@@ -2070,7 +1914,6 @@
         "values": {
           "temperatureMin": 53.46,
           "temperatureMax": 53.46,
-          "humidity": 71.19,
           "windSpeed": 10.04,
           "windDirection": 198.08,
           "weatherCode": 1001,
@@ -2083,7 +1926,6 @@
         "values": {
           "temperatureMin": 52.11,
           "temperatureMax": 52.11,
-          "humidity": 64.48,
           "windSpeed": 10.02,
           "windDirection": 199.54,
           "weatherCode": 1101,
@@ -2096,7 +1938,6 @@
         "values": {
           "temperatureMin": 51.64,
           "temperatureMax": 51.64,
-          "humidity": 67.5,
           "windSpeed": 10.51,
           "windDirection": 202.73,
           "weatherCode": 1102,
@@ -2109,7 +1950,6 @@
         "values": {
           "temperatureMin": 50.79,
           "temperatureMax": 50.79,
-          "humidity": 72.02,
           "windSpeed": 10.38,
           "windDirection": 203.35,
           "weatherCode": 1001,
@@ -2122,7 +1962,6 @@
         "values": {
           "temperatureMin": 49.93,
           "temperatureMax": 49.93,
-          "humidity": 74.63,
           "windSpeed": 9.51,
           "windDirection": 210.36,
           "weatherCode": 1001,
@@ -2135,7 +1974,6 @@
         "values": {
           "temperatureMin": 49.1,
           "temperatureMax": 49.1,
-          "humidity": 76.26,
           "windSpeed": 8.61,
           "windDirection": 210.6,
           "weatherCode": 1001,
@@ -2148,7 +1986,6 @@
         "values": {
           "temperatureMin": 48.42,
           "temperatureMax": 48.42,
-          "humidity": 79.4,
           "windSpeed": 9.15,
           "windDirection": 211.29,
           "weatherCode": 1001,
@@ -2161,7 +1998,6 @@
         "values": {
           "temperatureMin": 48.9,
           "temperatureMax": 48.9,
-          "humidity": 83.4,
           "windSpeed": 10.25,
           "windDirection": 215.59,
           "weatherCode": 1001,
@@ -2174,7 +2010,6 @@
         "values": {
           "temperatureMin": 50.54,
           "temperatureMax": 50.54,
-          "humidity": 85.15,
           "windSpeed": 10.18,
           "windDirection": 215.48,
           "weatherCode": 1102,
@@ -2187,7 +2022,6 @@
         "values": {
           "temperatureMin": 53.19,
           "temperatureMax": 53.19,
-          "humidity": 82.61,
           "windSpeed": 9.4,
           "windDirection": 208.76,
           "weatherCode": 1101,
@@ -2200,7 +2034,6 @@
         "values": {
           "temperatureMin": 56.19,
           "temperatureMax": 56.19,
-          "humidity": 71.78,
           "windSpeed": 9.73,
           "windDirection": 197.59,
           "weatherCode": 1101,
@@ -2213,7 +2046,6 @@
         "values": {
           "temperatureMin": 59.34,
           "temperatureMax": 59.34,
-          "humidity": 61.31,
           "windSpeed": 10.69,
           "windDirection": 204.29,
           "weatherCode": 1100,
@@ -2226,7 +2058,6 @@
         "values": {
           "temperatureMin": 62.35,
           "temperatureMax": 62.35,
-          "humidity": 54.79,
           "windSpeed": 11.81,
           "windDirection": 204.56,
           "weatherCode": 1100,
@@ -2239,7 +2070,6 @@
         "values": {
           "temperatureMin": 64.6,
           "temperatureMax": 64.6,
-          "humidity": 53.17,
           "windSpeed": 13.09,
           "windDirection": 206.85,
           "weatherCode": 1000,
@@ -2252,7 +2082,6 @@
         "values": {
           "temperatureMin": 65.91,
           "temperatureMax": 65.91,
-          "humidity": 53.71,
           "windSpeed": 13.82,
           "windDirection": 204.82,
           "weatherCode": 1100,
@@ -2265,7 +2094,6 @@
         "values": {
           "temperatureMin": 66.22,
           "temperatureMax": 66.22,
-          "humidity": 52.48,
           "windSpeed": 14.54,
           "windDirection": 208.43,
           "weatherCode": 1100,
@@ -2278,7 +2106,6 @@
         "values": {
           "temperatureMin": 65.46,
           "temperatureMax": 65.46,
-          "humidity": 53.59,
           "windSpeed": 13.2,
           "windDirection": 208.3,
           "weatherCode": 1101,
@@ -2291,7 +2118,6 @@
         "values": {
           "temperatureMin": 64.35,
           "temperatureMax": 64.35,
-          "humidity": 55.9,
           "windSpeed": 12.35,
           "windDirection": 208.58,
           "weatherCode": 1101,
@@ -2304,7 +2130,6 @@
         "values": {
           "temperatureMin": 62.85,
           "temperatureMax": 62.85,
-          "humidity": 59.04,
           "windSpeed": 12.86,
           "windDirection": 205.39,
           "weatherCode": 1101,
@@ -2317,7 +2142,6 @@
         "values": {
           "temperatureMin": 61.75,
           "temperatureMax": 61.75,
-          "humidity": 62.65,
           "windSpeed": 14.7,
           "windDirection": 209.51,
           "weatherCode": 1102,
@@ -2330,7 +2154,6 @@
         "values": {
           "temperatureMin": 61.2,
           "temperatureMax": 61.2,
-          "humidity": 66.74,
           "windSpeed": 15.57,
           "windDirection": 211.47,
           "weatherCode": 1001,
@@ -2343,7 +2166,6 @@
         "values": {
           "temperatureMin": 60.46,
           "temperatureMax": 60.46,
-          "humidity": 78.39,
           "windSpeed": 14.94,
           "windDirection": 211.57,
           "weatherCode": 1001,
@@ -2356,7 +2178,6 @@
         "values": {
           "temperatureMin": 59.94,
           "temperatureMax": 59.94,
-          "humidity": 82.48,
           "windSpeed": 14.29,
           "windDirection": 208.93,
           "weatherCode": 1001,
@@ -2369,7 +2190,6 @@
         "values": {
           "temperatureMin": 59.52,
           "temperatureMax": 59.52,
-          "humidity": 82.05,
           "windSpeed": 14.36,
           "windDirection": 217.91,
           "weatherCode": 1001,
@@ -2384,7 +2204,6 @@
         "values": {
           "temperatureMin": 26.11,
           "temperatureMax": 45.93,
-          "humidity": 74,
           "windSpeed": 9.49,
           "windDirection": 239.6,
           "weatherCode": 1000,
@@ -2397,7 +2216,6 @@
         "values": {
           "temperatureMin": 26.28,
           "temperatureMax": 49.42,
-          "humidity": 88.5,
           "windSpeed": 7.24,
           "windDirection": 262.82,
           "weatherCode": 1102,
@@ -2410,7 +2228,6 @@
         "values": {
           "temperatureMin": 31.48,
           "temperatureMax": 66.98,
-          "humidity": 84.37,
           "windSpeed": 7.05,
           "windDirection": 229.3,
           "weatherCode": 1102,
@@ -2423,7 +2240,6 @@
         "values": {
           "temperatureMin": 37.32,
           "temperatureMax": 65.28,
-          "humidity": 84.73,
           "windSpeed": 10.64,
           "windDirection": 149.91,
           "weatherCode": 1102,
@@ -2436,7 +2252,6 @@
         "values": {
           "temperatureMin": 48.29,
           "temperatureMax": 66.25,
-          "humidity": 85.15,
           "windSpeed": 15.69,
           "windDirection": 210.45,
           "weatherCode": 1102,
@@ -2449,7 +2264,6 @@
         "values": {
           "temperatureMin": 53.83,
           "temperatureMax": 67.91,
-          "humidity": 80.52,
           "windSpeed": 12.3,
           "windDirection": 217.98,
           "weatherCode": 4000,
@@ -2462,7 +2276,6 @@
         "values": {
           "temperatureMin": 42.91,
           "temperatureMax": 54.48,
-          "humidity": 81.73,
           "windSpeed": 9.72,
           "windDirection": 58.79,
           "weatherCode": 1001,
@@ -2475,7 +2288,6 @@
         "values": {
           "temperatureMin": 33.35,
           "temperatureMax": 42.91,
-          "humidity": 86.48,
           "windSpeed": 16.25,
           "windDirection": 70.25,
           "weatherCode": 5101,
@@ -2488,7 +2300,6 @@
         "values": {
           "temperatureMin": 29.35,
           "temperatureMax": 43.67,
-          "humidity": 91.44,
           "windSpeed": 15.89,
           "windDirection": 84.47,
           "weatherCode": 5001,
@@ -2501,7 +2312,6 @@
         "values": {
           "temperatureMin": 29.1,
           "temperatureMax": 43,
-          "humidity": 86.84,
           "windSpeed": 6.71,
           "windDirection": 103.85,
           "weatherCode": 1102,
@@ -2514,7 +2324,6 @@
         "values": {
           "temperatureMin": 34.32,
           "temperatureMax": 52.4,
-          "humidity": 82.38,
           "windSpeed": 7.27,
           "windDirection": 145.41,
           "weatherCode": 1102,
@@ -2527,7 +2336,6 @@
         "values": {
           "temperatureMin": 41.32,
           "temperatureMax": 54.07,
-          "humidity": 68.98,
           "windSpeed": 6.58,
           "windDirection": 62.99,
           "weatherCode": 1001,
@@ -2540,7 +2348,6 @@
         "values": {
           "temperatureMin": 39.4,
           "temperatureMax": 48.94,
-          "humidity": 72.59,
           "windSpeed": 13.91,
           "windDirection": 68.54,
           "weatherCode": 4000,
@@ -2553,7 +2360,6 @@
         "values": {
           "temperatureMin": 35.06,
           "temperatureMax": 40.12,
-          "humidity": 81.44,
           "windSpeed": 17.35,
           "windDirection": 56.98,
           "weatherCode": 5001,
@@ -2566,7 +2372,6 @@
         "values": {
           "temperatureMin": 33.66,
           "temperatureMax": 66.54,
-          "humidity": 77.03,
           "windSpeed": 15.93,
           "windDirection": 82.57,
           "weatherCode": 5001,
