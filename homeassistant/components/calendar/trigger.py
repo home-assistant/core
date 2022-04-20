@@ -125,7 +125,7 @@ class CalendarEventListener:
         _LOGGER.debug("Calendar event @ %s", now)
 
         # Consume all events that are eligible to fire
-        while len(self._events) > 0 and self._events[0][0] <= now:
+        while self._events and self._events[0][0] <= now:
             (_fire_time, event) = self._events.pop(0)
             _LOGGER.debug("Event: %s", event)
             self._hass.async_run_hass_job(
