@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
+import logging
 from typing import TYPE_CHECKING
 
 from bimmer_connected.vehicle import ConnectedDriveVehicle
@@ -17,6 +18,8 @@ from .const import DOMAIN
 
 if TYPE_CHECKING:
     from .coordinator import BMWDataUpdateCoordinator
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -120,6 +123,11 @@ class BMWButton(BMWConnectedDriveBaseEntity, ButtonEntity):
                 )
             )
         elif self.entity_description.account_function:
+            _LOGGER.warning(
+                "The 'Refresh from cloud' button is deprecated. Use the 'homeassistant.update_entity' "
+                "service with any BMW entity for a full reload. See https://www.home-assistant.io/"
+                "integrations/bmw_connected_drive/#update-the-state--refresh-from-api for details"
+            )
             await self.entity_description.account_function(self.coordinator)
 
         # Always update HA states after a button was executed.
