@@ -1,12 +1,12 @@
 """Sensor to monitor incoming/outgoing phone calls on a Fritz!Box router."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
 import queue
 from threading import Event as ThreadingEvent, Thread
 from time import sleep
-from typing import Any
 
 from fritzconnection.core.fritzmonitor import FritzMonitor
 import voluptuous as vol
@@ -21,7 +21,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -117,10 +117,6 @@ async def async_setup_entry(
         port=port,
     )
 
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, sensor.async_will_remove_from_hass
-    )
-
     async_add_entities([sensor])
 
 
@@ -138,6 +134,7 @@ class FritzBoxCallSensor(SensorEntity):
         self._host = host
         self._port = port
         self._monitor = None
+        self._remove_listener: Callable[[], None] | None = None
 
     async def async_added_to_hass(self) -> None:
         """Connect to FRITZ!Box to monitor its call state."""
@@ -149,10 +146,19 @@ class FritzBoxCallSensor(SensorEntity):
             sensor=self,
         )
         self._monitor.connect()
+        self._remove_listener = self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, self._stop_call_monitor
+        )
 
-    async def async_will_remove_from_hass(self, *args: Any) -> None:
+    async def async_will_remove_from_hass(self) -> None:
         """Disconnect from FRITZ!Box by stopping monitor."""
         await super().async_will_remove_from_hass()
+        await self.hass.async_add_executor_job(self._stop_call_monitor)
+        if self._remove_listener:
+            self._remove_listener()
+
+    def _stop_call_monitor(self, event: Event | None = None) -> None:
+        """Stop callmonitor thread."""
         if (
             self._monitor
             and self._monitor.stopped
