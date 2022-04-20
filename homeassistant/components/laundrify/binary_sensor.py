@@ -9,6 +9,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -38,22 +39,20 @@ class LaundrifyPowerPlug(CoordinatorEntity, BinarySensorEntity):
     def __init__(self, coordinator, device):
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(coordinator)
+        self._device = device
         self._attr_unique_id = device["_id"]
         self._attr_name = device["name"]
 
     @property
     def device_info(self):
         """Configure the Device of this Entity."""
-        return {
-            "identifiers": {
-                # Serial numbers are unique identifiers within a specific domain
-                (DOMAIN, self.unique_id)
-            },
-            "name": self.name,
-            "manufacturer": MANUFACTURER,
-            "model": MODEL,
-            "sw_version": self.coordinator.data[self.unique_id]["firmwareVersion"],
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._device["_id"])},
+            name=self.name,
+            manufacturer=MANUFACTURER,
+            model=MODEL,
+            sw_version=self.coordinator.data[self.unique_id]["firmwareVersion"],
+        )
 
     @property
     def available(self) -> bool:
@@ -63,7 +62,4 @@ class LaundrifyPowerPlug(CoordinatorEntity, BinarySensorEntity):
     @property
     def is_on(self):
         """Return entity state."""
-        if self.available:
-            return self.coordinator.data[self.unique_id]["status"] == "ON"
-
-        return None
+        return self.coordinator.data[self.unique_id]["status"] == "ON"
