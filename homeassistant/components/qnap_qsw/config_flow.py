@@ -38,9 +38,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 system_board = await qsw.validate()
             except LoginError:
-                errors["base"] = "invalid_auth"
+                errors[CONF_PASSWORD] = "invalid_auth"
             except QswError:
-                errors["base"] = "cannot_connect"
+                errors[CONF_URL] = "cannot_connect"
             else:
                 mac = system_board.get_mac()
                 if mac is None:

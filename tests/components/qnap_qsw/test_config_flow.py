@@ -119,7 +119,7 @@ async def test_connection_error(hass: HomeAssistant):
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
         )
 
-        assert result["errors"] == {"base": "cannot_connect"}
+        assert result["errors"] == {CONF_URL: "cannot_connect"}
 
 
 async def test_login_error(hass: HomeAssistant):
@@ -133,4 +133,4 @@ async def test_login_error(hass: HomeAssistant):
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
         )
 
-        assert result["errors"] == {"base": "invalid_auth"}
+        assert result["errors"] == {CONF_PASSWORD: "invalid_auth"}
