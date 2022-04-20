@@ -5,16 +5,16 @@ import logging
 from typing import Any
 
 from aioairzone.const import (
-    API_MAC,
     AZD_ID,
+    AZD_MAC,
     AZD_NAME,
     AZD_SYSTEM,
     AZD_THERMOSTAT_FW,
     AZD_THERMOSTAT_MODEL,
+    AZD_WEBSERVER,
     AZD_ZONES,
     DEFAULT_SYSTEM_ID,
 )
-from aioairzone.exceptions import AirzoneError
 from aioairzone.localapi import AirzoneLocalApi, ConnectionOptions
 
 from homeassistant.config_entries import ConfigEntry
@@ -77,7 +77,7 @@ class AirzoneEntity(CoordinatorEntity[AirzoneUpdateCoordinator]):
 async def _async_migrate_unique_ids(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    airzone: AirzoneLocalApi,
+    coordinator: AirzoneUpdateCoordinator,
 ) -> None:
     """Migrate entities when the mac address gets discovered."""
 
@@ -100,14 +100,12 @@ async def _async_migrate_unique_ids(
 
         return updates
 
-    if entry.unique_id is None:
-        try:
-            webserver_data = await airzone.get_webserver()
-        except AirzoneError:
-            mac = None
-        else:
-            mac = webserver_data.get(API_MAC)
-
+    if (
+        entry.unique_id is None
+        and AZD_WEBSERVER in coordinator.data
+        and AZD_MAC in coordinator.data[AZD_WEBSERVER]
+    ):
+        mac = coordinator.data[AZD_WEBSERVER][AZD_MAC]
         if mac is not None:
             updates: dict[str, Any] = {
                 "unique_id": dr.format_mac(mac),
@@ -126,10 +124,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     airzone = AirzoneLocalApi(aiohttp_client.async_get_clientsession(hass), options)
-    await _async_migrate_unique_ids(hass, entry, airzone)
-
     coordinator = AirzoneUpdateCoordinator(hass, airzone)
     await coordinator.async_config_entry_first_refresh()
+    await _async_migrate_unique_ids(hass, entry, coordinator)
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
