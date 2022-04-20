@@ -45,31 +45,26 @@ TEST_AUTOMATION_ACTION = {
 # to refresh the schedule. The test advances the time an arbitrary
 # amount to trigger either type of event with a small jitter.
 TEST_TIME_ADVANCE_INTERVAL = datetime.timedelta(minutes=1)
-TEST_UPDATE_INTERVAL = datetime.timedelta(minutes=15)
-
-
-@pytest.fixture
-async def now() -> datetime.datetime:
-    """Fixture to provide a base time for tests."""
-    return dt_util.utcnow()
+TEST_UPDATE_INTERVAL = datetime.timedelta(minutes=7)
 
 
 class FakeSchedule:
     """Test fixture class for return events in a specific date range."""
 
-    def __init__(self, now: datetime.datetime) -> None:
+    def __init__(self, hass, freezer):
         """Initiailize FakeSchedule."""
+        self.hass = hass
+        self.freezer = freezer
         # Map of event start time to event
         self.events: list[calendar.CalendarEvent] = []
-        self.now = now
 
     def create_event(
-        self, start_timedelta: datetime.timedelta, end_timedelta: datetime.timedelta
+        self, start: datetime.timedelta, end: datetime.timedelta
     ) -> dict[str, Any]:
         """Create a new fake event, used by tests."""
         event = calendar.CalendarEvent(
-            start=(self.now + start_timedelta),
-            end=(self.now + end_timedelta),
+            start=start,
+            end=end,
             summary=f"Event {secrets.token_hex(16)}",  # Arbitrary unique data
         )
         self.events.append(event)
@@ -85,18 +80,32 @@ class FakeSchedule:
         assert start_date < end_date
         values = []
         for event in self.events:
-            if (
-                start_date < event.start_datetime_local < end_date
-                or start_date < event.end_datetime_local < end_date
-            ):
+            if start_date < event.start < end_date or start_date < event.end < end_date:
                 values.append(event)
         return values
 
+    async def fire_time(self, trigger_time: datetime.datetime) -> None:
+        """Fire an alarm and wait."""
+        _LOGGER.debug(f"Firing alarm @ {trigger_time}")
+        self.freezer.move_to(trigger_time)
+        async_fire_time_changed(self.hass, trigger_time)
+        await self.hass.async_block_till_done()
+
+    async def fire_until(self, end: datetime.timedelta) -> None:
+        """Simulate the passage of time by firing alarms until the time is reached."""
+        while dt_util.utcnow() < end:
+            self.freezer.tick(TEST_TIME_ADVANCE_INTERVAL)
+            await self.fire_time(dt_util.utcnow())
+
 
 @pytest.fixture
-def fake_schedule(now: datetime.datetime) -> Generator[FakeSchedule, None, None]:
+def fake_schedule(hass, freezer):
     """Fixture that tests can use to make fake events."""
-    schedule = FakeSchedule(now)
+
+    # Setup start time for all tests
+    freezer.move_to("2022-04-19 10:31:02+00:00")
+
+    schedule = FakeSchedule(hass, freezer)
     with patch(
         "homeassistant.components.demo.calendar.DemoCalendar.async_get_events",
         new=schedule.async_get_events,
@@ -111,17 +120,13 @@ async def setup_calendar(hass: HomeAssistant, fake_schedule: FakeSchedule) -> No
     await hass.async_block_till_done()
 
 
-async def create_automation(
-    hass: HomeAssistant, event_type: str, offset: str | None = None
-) -> None:
+async def create_automation(hass: HomeAssistant, event_type: str) -> None:
     """Register an automation."""
     trigger_data = {
         "platform": calendar.DOMAIN,
         "entity_id": CALENDAR_ENTITY_ID,
         "event": event_type,
     }
-    if offset:
-        trigger_data["offset"] = offset
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -157,37 +162,18 @@ def mock_update_interval() -> Generator[None, None, None]:
         yield
 
 
-async def fire_time(hass: HomeAssistant, trigger_time: datetime.datetime) -> None:
-    """Fire an alarm and wait."""
-    _LOGGER.debug(f"Firing alarm @ {trigger_time}")
-    with patch("homeassistant.util.dt.utcnow", return_value=trigger_time):
-        async_fire_time_changed(hass, trigger_time)
-        await hass.async_block_till_done()
-
-
-async def fire_between(
-    hass: HomeAssistant,
-    now: datetime.datetime,
-    end_delta: datetime.timedelta,
-) -> datetime.datetime:
-    """Simulate the passage of time by firing alarms until the time is reached."""
-    trigger_time = now
-    while trigger_time < (now + end_delta):
-        trigger_time = trigger_time + TEST_TIME_ADVANCE_INTERVAL
-        await fire_time(hass, trigger_time)
-    return trigger_time
-
-
-async def test_event_start_trigger(hass, calls, fake_schedule, now):
+async def test_event_start_trigger(hass, calls, fake_schedule):
     """Test the a calendar trigger based on start time."""
     event_data = fake_schedule.create_event(
-        start_timedelta=datetime.timedelta(minutes=30),
-        end_timedelta=datetime.timedelta(minutes=60),
+        start=datetime.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
+        end=datetime.datetime.fromisoformat("2022-04-19 11:30:00+00:00"),
     )
     await create_automation(hass, EVENT_START)
     assert len(calls()) == 0
 
-    await fire_between(hass, now, datetime.timedelta(hours=1, minutes=5))
+    await fake_schedule.fire_until(
+        datetime.datetime.fromisoformat("2022-04-19 11:15:00+00:00")
+    )
     assert calls() == [
         {
             "platform": "calendar",
@@ -197,30 +183,34 @@ async def test_event_start_trigger(hass, calls, fake_schedule, now):
     ]
 
 
-async def test_calendar_trigger_with_no_events(hass, calls, fake_schedule, now):
+async def test_calendar_trigger_with_no_events(hass, calls, fake_schedule):
     """Test a calendar trigger setup  with no events."""
 
     await create_automation(hass, EVENT_START)
 
     # No calls, at arbitrary times
-    await fire_between(hass, now, datetime.timedelta(minutes=30))
+    await fake_schedule.fire_until(
+        datetime.datetime.fromisoformat("2022-04-19 11:00:00+00:00")
+    )
     assert len(calls()) == 0
 
 
-async def test_multiple_events(hass, calls, fake_schedule, now):
+async def test_multiple_events(hass, calls, fake_schedule):
     """Test that a trigger fires for multiple events."""
 
     event_data1 = fake_schedule.create_event(
-        start_timedelta=datetime.timedelta(minutes=15),
-        end_timedelta=datetime.timedelta(minutes=30),
+        start=datetime.datetime.fromisoformat("2022-04-19 10:45:00+00:00"),
+        end=datetime.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
     )
     event_data2 = fake_schedule.create_event(
-        start_timedelta=datetime.timedelta(minutes=45),
-        end_timedelta=datetime.timedelta(minutes=60),
+        start=datetime.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
+        end=datetime.datetime.fromisoformat("2022-04-19 11:15:00+00:00"),
     )
     await create_automation(hass, EVENT_START)
 
-    await fire_between(hass, now, datetime.timedelta(minutes=75))
+    await fake_schedule.fire_until(
+        datetime.datetime.fromisoformat("2022-04-19 11:30:00+00:00")
+    )
     assert calls() == [
         {
             "platform": "calendar",
@@ -235,20 +225,22 @@ async def test_multiple_events(hass, calls, fake_schedule, now):
     ]
 
 
-async def test_multiple_events_sharing_start_time(hass, calls, fake_schedule, now):
+async def test_multiple_events_sharing_start_time(hass, calls, fake_schedule):
     """Test that a trigger fires for every event sharing a start time."""
 
     event_data1 = fake_schedule.create_event(
-        start_timedelta=datetime.timedelta(minutes=30),
-        end_timedelta=datetime.timedelta(minutes=60),
+        start=datetime.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
+        end=datetime.datetime.fromisoformat("2022-04-19 11:30:00+00:00"),
     )
     event_data2 = fake_schedule.create_event(
-        start_timedelta=datetime.timedelta(minutes=30),
-        end_timedelta=datetime.timedelta(minutes=60),
+        start=datetime.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
+        end=datetime.datetime.fromisoformat("2022-04-19 11:30:00+00:00"),
     )
     await create_automation(hass, EVENT_START)
 
-    await fire_between(hass, now, datetime.timedelta(minutes=75))
+    await fake_schedule.fire_until(
+        datetime.datetime.fromisoformat("2022-04-19 11:35:00+00:00")
+    )
     assert calls() == [
         {
             "platform": "calendar",
@@ -263,20 +255,22 @@ async def test_multiple_events_sharing_start_time(hass, calls, fake_schedule, no
     ]
 
 
-async def test_overlap_events(hass, calls, fake_schedule, now):
+async def test_overlap_events(hass, calls, fake_schedule):
     """Test that a trigger fires for events that overlap."""
 
     event_data1 = fake_schedule.create_event(
-        start_timedelta=datetime.timedelta(minutes=15),
-        end_timedelta=datetime.timedelta(minutes=45),
+        start=datetime.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
+        end=datetime.datetime.fromisoformat("2022-04-19 11:30:00+00:00"),
     )
     event_data2 = fake_schedule.create_event(
-        start_timedelta=datetime.timedelta(minutes=30),
-        end_timedelta=datetime.timedelta(minutes=60),
+        start=datetime.datetime.fromisoformat("2022-04-19 11:15:00+00:00"),
+        end=datetime.datetime.fromisoformat("2022-04-19 11:45:00+00:00"),
     )
     await create_automation(hass, EVENT_START)
 
-    await fire_between(hass, now, datetime.timedelta(minutes=75))
+    await fake_schedule.fire_until(
+        datetime.datetime.fromisoformat("2022-04-19 11:20:00+00:00")
+    )
     assert calls() == [
         {
             "platform": "calendar",
@@ -310,27 +304,31 @@ async def test_invalid_calendar_id(hass, caplog):
     assert "Invalid config for [automation]" in caplog.text
 
 
-async def test_update_next_event(hass, calls, fake_schedule, now):
+async def test_update_next_event(hass, calls, fake_schedule):
     """Test detection of a new event after initial trigger is setup."""
 
     event_data1 = fake_schedule.create_event(
-        start_timedelta=datetime.timedelta(minutes=45),
-        end_timedelta=datetime.timedelta(minutes=60),
+        start=datetime.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
+        end=datetime.datetime.fromisoformat("2022-04-19 11:15:00+00:00"),
     )
     await create_automation(hass, EVENT_START)
 
     # No calls before event start
-    current_time = await fire_between(hass, now, datetime.timedelta(minutes=10))
+    await fake_schedule.fire_until(
+        datetime.datetime.fromisoformat("2022-04-19 10:45:00+00:00")
+    )
     assert len(calls()) == 0
 
     # Create a new event between now and when the event fires
     event_data2 = fake_schedule.create_event(
-        start_timedelta=datetime.timedelta(minutes=30),
-        end_timedelta=datetime.timedelta(minutes=40),
+        start=datetime.datetime.fromisoformat("2022-04-19 10:55:00+00:00"),
+        end=datetime.datetime.fromisoformat("2022-04-19 11:05:00+00:00"),
     )
 
     # Advance past the end of the events
-    await fire_between(hass, current_time, datetime.timedelta(minutes=60))
+    await fake_schedule.fire_until(
+        datetime.datetime.fromisoformat("2022-04-19 11:30:00+00:00")
+    )
     assert calls() == [
         {
             "platform": "calendar",
@@ -345,27 +343,31 @@ async def test_update_next_event(hass, calls, fake_schedule, now):
     ]
 
 
-async def test_update_missed(hass, calls, fake_schedule, now):
+async def test_update_missed(hass, calls, fake_schedule):
     """Test that new events are missed if they arrive outside the update interval."""
 
     event_data1 = fake_schedule.create_event(
-        start_timedelta=datetime.timedelta(minutes=45),
-        end_timedelta=datetime.timedelta(minutes=60),
+        start=datetime.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
+        end=datetime.datetime.fromisoformat("2022-04-19 11:30:00+00:00"),
     )
     await create_automation(hass, EVENT_START)
 
-    # Events are refreshed at t+15 minutes. A new event is added, but the next
-    # update happens after the event is already over.
-    current_time = await fire_between(hass, now, datetime.timedelta(minutes=20))
+    # Events are refreshed at t+TEST_UPDATE_INTERVAL minutes. A new event is
+    # added, but the next update happens after the event is already over.
+    await fake_schedule.fire_until(
+        datetime.datetime.fromisoformat("2022-04-19 10:38:00+00:00")
+    )
     assert len(calls()) == 0
 
     fake_schedule.create_event(
-        start_timedelta=datetime.timedelta(minutes=30),
-        end_timedelta=datetime.timedelta(minutes=40),
+        start=datetime.datetime.fromisoformat("2022-04-19 10:40:00+00:00"),
+        end=datetime.datetime.fromisoformat("2022-04-19 10:55:00+00:00"),
     )
 
     # Only the first event is returned
-    await fire_between(hass, current_time, datetime.timedelta(minutes=60))
+    await fake_schedule.fire_until(
+        datetime.datetime.fromisoformat("2022-04-19 11:05:00+00:00")
+    )
     assert calls() == [
         {
             "platform": "calendar",

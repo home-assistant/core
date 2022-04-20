@@ -82,7 +82,7 @@ class CalendarEventListener:
     async def _fetch_events(self, now: datetime.datetime) -> None:
         """Update the set of eligible events."""
         start_date = now
-        end_date = now + UPDATE_INTERVAL * 2
+        end_date = now + UPDATE_INTERVAL
         _LOGGER.debug("Fetching events between %s, %s", start_date, end_date)
         events = await self._entity.async_get_events(self._hass, start_date, end_date)
 
@@ -90,14 +90,18 @@ class CalendarEventListener:
         # returned events may have already started but matched the start/end time
         # filtering above, so exclude any events that have already passed the
         # trigger time.
-        event_list = [(event.start_datetime_local, event) for event in events]
+        event_list = [
+            (dt_util.as_utc(event.start_datetime_local), event) for event in events
+        ]
         event_list.sort(key=lambda x: x[0])
 
-        self._events = [
-            (trigger_time, event)
-            for (trigger_time, event) in event_list
-            if trigger_time > now
-        ]
+        self._events.extend(
+            [
+                (trigger_time, event)
+                for (trigger_time, event) in event_list
+                if trigger_time > now
+            ]
+        )
         _LOGGER.debug("Populated event list %s", self._events)
 
     @callback
