@@ -109,7 +109,7 @@ class QswSensor(QswEntity, SensorEntity):
             f"{self.get_entity_value(QSD_SYSTEM_BOARD, QSD_PRODUCT)} {description.name}"
         )
         self._attr_unique_id = (
-            f"{entry.entry_id}_{description.key}_{description.subkey}"
+            f"{entry.unique_id}_{description.key}_{description.subkey}"
         )
         self.attributes = description.attributes
         self.entity_description = description
