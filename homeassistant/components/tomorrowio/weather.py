@@ -20,11 +20,11 @@ from homeassistant.components.weather import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_NAME,
-    LENGTH_INCHES,
-    LENGTH_MILES,
-    PRESSURE_INHG,
-    SPEED_MILES_PER_HOUR,
-    TEMP_FAHRENHEIT,
+    LENGTH_KILOMETERS,
+    LENGTH_MILLIMETERS,
+    PRESSURE_HPA,
+    SPEED_METERS_PER_SECOND,
+    TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -33,6 +33,7 @@ from homeassistant.util import dt as dt_util
 
 from . import TomorrowioDataUpdateCoordinator, TomorrowioEntity
 from .const import (
+    ATTR_FORECAST_HUMIDITY,
     CLEAR_CONDITIONS,
     CONDITIONS,
     CONF_TIMESTEP,
@@ -73,11 +74,11 @@ async def async_setup_entry(
 class TomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
     """Entity that talks to Tomorrow.io v4 API to retrieve weather data."""
 
-    _attr_temperature_unit = TEMP_FAHRENHEIT
-    _attr_pressure_unit = PRESSURE_INHG
-    _attr_wind_speed_unit = SPEED_MILES_PER_HOUR
-    _attr_visibility_unit = LENGTH_MILES
-    _attr_precipitation_unit = LENGTH_INCHES
+    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_pressure_unit = PRESSURE_HPA
+    _attr_wind_speed_unit = SPEED_METERS_PER_SECOND
+    _attr_visibility_unit = LENGTH_KILOMETERS
+    _attr_precipitation_unit = LENGTH_MILLIMETERS
 
     def __init__(
         self,
@@ -100,6 +101,7 @@ class TomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
         forecast_dt: datetime,
         use_datetime: bool,
         condition: int,
+        humidity: float | None,
         precipitation: float | None,
         precipitation_probability: float | None,
         temp: float | None,
@@ -118,6 +120,7 @@ class TomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
         data = {
             ATTR_FORECAST_TIME: forecast_dt.isoformat(),
             ATTR_FORECAST_CONDITION: translated_condition,
+            ATTR_FORECAST_HUMIDITY: humidity,
             ATTR_FORECAST_PRECIPITATION: precipitation,
             ATTR_FORECAST_PRECIPITATION_PROBABILITY: precipitation_probability,
             ATTR_FORECAST_TEMP: temp,
@@ -211,6 +214,7 @@ class TomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
             use_datetime = True
 
             condition = values.get(TMRW_ATTR_CONDITION)
+            humidity = values.get(TMRW_ATTR_HUMIDITY)
             precipitation = values.get(TMRW_ATTR_PRECIPITATION)
             precipitation_probability = values.get(TMRW_ATTR_PRECIPITATION_PROBABILITY)
 
@@ -237,6 +241,7 @@ class TomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
                     forecast_dt,
                     use_datetime,
                     condition,
+                    None if self.forecast_type == DAILY else humidity,
                     precipitation,
                     precipitation_probability,
                     temp,
