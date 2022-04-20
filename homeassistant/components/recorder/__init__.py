@@ -605,6 +605,7 @@ class AddRecorderPlatformTask(RecorderTask):
 
     domain: str
     platform: Any
+    commit_before = False
 
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
