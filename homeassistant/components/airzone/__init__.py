@@ -1,6 +1,7 @@
 """The Airzone integration."""
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from aioairzone.const import (
@@ -16,8 +17,12 @@ from aioairzone.localapi import AirzoneLocalApi, ConnectionOptions
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_ID, CONF_PORT, Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import aiohttp_client
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import (
+    aiohttp_client,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -25,6 +30,8 @@ from .const import DOMAIN, MANUFACTURER
 from .coordinator import AirzoneUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.CLIMATE, Platform.SENSOR]
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class AirzoneEntity(CoordinatorEntity[AirzoneUpdateCoordinator]):
@@ -40,6 +47,7 @@ class AirzoneEntity(CoordinatorEntity[AirzoneUpdateCoordinator]):
         """Initialize."""
         super().__init__(coordinator)
 
+        self.device_id = entry.entry_id if entry.unique_id is None else entry.unique_id
         self.system_id = zone_data[AZD_SYSTEM]
         self.system_zone_id = system_zone_id
         self.zone_id = zone_data[AZD_ID]
@@ -52,6 +60,10 @@ class AirzoneEntity(CoordinatorEntity[AirzoneUpdateCoordinator]):
             "sw_version": self.get_zone_value(AZD_THERMOSTAT_FW),
         }
 
+    def get_device_id(self) -> str:
+        """Return device ID."""
+        return self.device_id
+
     def get_zone_value(self, key):
         """Return zone value by key."""
         value = None
@@ -60,6 +72,43 @@ class AirzoneEntity(CoordinatorEntity[AirzoneUpdateCoordinator]):
             if key in zone:
                 value = zone[key]
         return value
+
+
+async def _async_migrate_unique_ids(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    airzone: AirzoneLocalApi,
+) -> None:
+    """Migrate entities when the mac address gets discovered."""
+
+    @callback
+    def _async_migrator(entity_entry: er.RegistryEntry) -> dict[str, Any] | None:
+        updates = None
+
+        unique_id = entry.unique_id
+        entry_id = entry.entry_id
+        entity_unique_id = entity_entry.unique_id
+
+        if entity_unique_id.startswith(entry_id):
+            new_unique_id = f"{unique_id}{entity_unique_id[len(entry_id):]}"
+            _LOGGER.info(
+                "Migrating unique_id from [%s] to [%s]",
+                entity_unique_id,
+                new_unique_id,
+            )
+            updates = {"new_unique_id": new_unique_id}
+
+        return updates
+
+    if entry.unique_id is None:
+        mac = await airzone.validate()
+        if mac is not None:
+            updates: dict[str, Any] = {
+                "unique_id": dr.format_mac(mac),
+            }
+            hass.config_entries.async_update_entry(entry, **updates)
+
+            await er.async_migrate_entries(hass, entry.entry_id, _async_migrator)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -71,6 +120,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     airzone = AirzoneLocalApi(aiohttp_client.async_get_clientsession(hass), options)
+    await _async_migrate_unique_ids(hass, entry, airzone)
 
     coordinator = AirzoneUpdateCoordinator(hass, airzone)
     await coordinator.async_config_entry_first_refresh()
