@@ -1275,28 +1275,48 @@ async def test_entity_device_class_errors_works(hass):
                 "sensor": {
                     "name": "test",
                     "state": "{{ trigger.event.data.beer }}",
+                    "picture": "{{ '/local/dogs.png' }}",
+                    "icon": "{{ 'mdi:pirate' }}",
+                    "attributes": {
+                        "plus_one": "{{ trigger.event.data.beer + 1 }}",
+                        "another": "{{ trigger.event.data.uno_mas or 1 }}",
+                    },
                 },
             },
         },
     ],
 )
 @pytest.mark.parametrize(
-    "restored_state, restored_native_value, initial_state",
+    "restored_state, restored_native_value, initial_state, initial_attributes",
     [
-        ("dog", 10, "10"),  # the native value should be used, not the state
-        (STATE_UNAVAILABLE, 10, STATE_UNKNOWN),
-        (STATE_UNKNOWN, 10, STATE_UNKNOWN),
+        # the native value should be used, not the state
+        ("dog", 10, "10", ["entity_picture", "icon", "plus_one"]),
+        (STATE_UNAVAILABLE, 10, STATE_UNKNOWN, []),
+        (STATE_UNKNOWN, 10, STATE_UNKNOWN, []),
     ],
 )
 async def test_trigger_entity_restore_state(
-    hass, count, domain, config, restored_state, restored_native_value, initial_state
+    hass,
+    count,
+    domain,
+    config,
+    restored_state,
+    restored_native_value,
+    initial_state,
+    initial_attributes,
 ):
     """Test restoring trigger template binary sensor."""
+
+    restored_attributes = {
+        "entity_picture": "/local/cats.png",
+        "icon": "mdi:ship",
+        "plus_one": 55,
+    }
 
     fake_state = State(
         "sensor.test",
         restored_state,
-        {},
+        restored_attributes,
     )
     fake_extra_data = {
         "native_value": restored_native_value,
@@ -1316,3 +1336,19 @@ async def test_trigger_entity_restore_state(
 
     state = hass.states.get("sensor.test")
     assert state.state == initial_state
+    for attr in restored_attributes:
+        if attr in initial_attributes:
+            assert state.attributes[attr] == restored_attributes[attr]
+        else:
+            assert attr not in state.attributes
+    assert "another" not in state.attributes
+
+    hass.bus.async_fire("test_event", {"beer": 2})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test")
+    assert state.state == "2"
+    assert state.attributes["icon"] == "mdi:pirate"
+    assert state.attributes["entity_picture"] == "/local/dogs.png"
+    assert state.attributes["plus_one"] == 3
+    assert state.attributes["another"] == 1

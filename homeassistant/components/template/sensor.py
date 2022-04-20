@@ -258,6 +258,7 @@ class TriggerSensorEntity(TriggerEntity, RestoreSensor):
             and CONF_STATE not in self._rendered
         ):
             self._rendered[CONF_STATE] = extra_data.native_value
+            self.restore_attributes(last_state)
 
     @property
     def native_value(self) -> str | datetime | date | None:
