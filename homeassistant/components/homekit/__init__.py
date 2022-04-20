@@ -509,7 +509,6 @@ class HomeKit:
     def setup(self, async_zeroconf_instance: AsyncZeroconf, uuid: UUID) -> None:
         """Set up bridge and accessory driver."""
         persist_file = get_persist_fullpath_for_entry_id(self.hass, self._entry_id)
-        loader = get_loader()
 
         self.driver = HomeDriver(
             self.hass,
