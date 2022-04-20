@@ -94,14 +94,7 @@ homeassistant.components.dsmr.*
 homeassistant.components.dunehd.*
 homeassistant.components.efergy.*
 homeassistant.components.elgato.*
-homeassistant.components.elkm1.__init__
-homeassistant.components.elkm1.alarm_control_panel
-homeassistant.components.elkm1.climate
-homeassistant.components.elkm1.config_flow
-homeassistant.components.elkm1.discovery
-homeassistant.components.elkm1.light
-homeassistant.components.elkm1.scene
-homeassistant.components.elkm1.switch
+homeassistant.components.elkm1.*
 homeassistant.components.esphome.*
 homeassistant.components.energy.*
 homeassistant.components.evil_genius_labs.*
