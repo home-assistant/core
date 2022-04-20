@@ -100,7 +100,7 @@ SET_TEMPERATURE_SCHEMA = vol.All(
             vol.Exclusive(ATTR_TEMPERATURE, "temperature"): vol.Coerce(float),
             vol.Inclusive(ATTR_TARGET_TEMP_HIGH, "temperature"): vol.Coerce(float),
             vol.Inclusive(ATTR_TARGET_TEMP_LOW, "temperature"): vol.Coerce(float),
-            vol.Optional(ATTR_HVAC_MODE): vol.In(HVAC_MODES),
+            vol.Optional(ATTR_HVAC_MODE): cv.enum(HVACMode),
         }
     ),
 )
@@ -117,7 +117,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(SERVICE_TURN_OFF, {}, "async_turn_off")
     component.async_register_entity_service(
         SERVICE_SET_HVAC_MODE,
-        {vol.Required(ATTR_HVAC_MODE): vol.In(HVAC_MODES)},
+        {vol.Required(ATTR_HVAC_MODE): cv.enum(HVACMode)},
         "async_set_hvac_mode",
     )
     component.async_register_entity_service(
@@ -465,11 +465,11 @@ class ClimateEntity(Entity):
         """Set new target fan mode."""
         await self.hass.async_add_executor_job(self.set_fan_mode, fan_mode)
 
-    def set_hvac_mode(self, hvac_mode: str) -> None:
+    def set_hvac_mode(self, hvac_mode: HVACMode | str) -> None:
         """Set new target hvac mode."""
         raise NotImplementedError()
 
-    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode | str) -> None:
         """Set new target hvac mode."""
         await self.hass.async_add_executor_job(self.set_hvac_mode, hvac_mode)
 
