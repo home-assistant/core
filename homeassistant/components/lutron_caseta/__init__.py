@@ -204,8 +204,9 @@ def _async_register_button_devices(
             "model": f"{device['model']} ({device['type']})",
             "via_device": (DOMAIN, bridge_device["serial"]),
         }
-        if "_" in device["name"]:
-            device_args["suggested_area"] = _area_and_name_from_name(device["name"])[0]
+        area, _ = _area_and_name_from_name(device["name"])
+        if area != UNASSIGNED_AREA:
+            device_args["suggested_area"] = area
 
         dr_device = device_registry.async_get_or_create(**device_args)
         button_devices_by_dr_id[dr_device.id] = device
@@ -340,8 +341,9 @@ class LutronCasetaDevice(Entity):
             via_device=(DOMAIN, self._bridge_device["serial"]),
             configuration_url="https://device-login.lutron.com",
         )
-        if "_" in device["name"]:
-            info[ATTR_SUGGESTED_AREA] = _area_and_name_from_name(device["name"])[0]
+        area, _ = _area_and_name_from_name(device["name"])
+        if area != UNASSIGNED_AREA:
+            info[ATTR_SUGGESTED_AREA] = area
 
     @property
     def extra_state_attributes(self):
