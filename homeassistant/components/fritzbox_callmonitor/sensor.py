@@ -139,13 +139,7 @@ class FritzBoxCallSensor(SensorEntity):
     async def async_added_to_hass(self) -> None:
         """Connect to FRITZ!Box to monitor its call state."""
         await super().async_added_to_hass()
-        _LOGGER.debug("Starting monitor for: %s", self.entity_id)
-        self._monitor = FritzBoxCallMonitor(
-            host=self._host,
-            port=self._port,
-            sensor=self,
-        )
-        self._monitor.connect()
+        await self.hass.async_add_executor_job(self._start_call_monitor)
         self._remove_listener = self.hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_STOP, self._stop_call_monitor
         )
@@ -156,6 +150,16 @@ class FritzBoxCallSensor(SensorEntity):
         await self.hass.async_add_executor_job(self._stop_call_monitor)
         if self._remove_listener:
             self._remove_listener()
+
+    def _start_call_monitor(self) -> None:
+        """Check connection and start callmonitor thread."""
+        _LOGGER.debug("Starting monitor for: %s", self.entity_id)
+        self._monitor = FritzBoxCallMonitor(
+            host=self._host,
+            port=self._port,
+            sensor=self,
+        )
+        self._monitor.connect()
 
     def _stop_call_monitor(self, event: Event | None = None) -> None:
         """Stop callmonitor thread."""
