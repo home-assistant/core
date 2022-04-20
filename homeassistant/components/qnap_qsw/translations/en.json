@@ -14,8 +14,7 @@
                     "url": "URL",
                     "username": "Username",
                     "password": "Password"
-                },
-                "description": "Set up QNAP QSW integration."
+                }
             }
         }
     }
