@@ -75,6 +75,7 @@ from .const import (  # noqa: F401
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
     ClimateEntityFeature,
+    HVACAction,
     HVACMode,
 )
 
@@ -188,7 +189,7 @@ class ClimateEntity(Entity):
     _attr_current_temperature: float | None = None
     _attr_fan_mode: str | None
     _attr_fan_modes: list[str] | None
-    _attr_hvac_action: str | None = None
+    _attr_hvac_action: HVACAction | str | None = None
     _attr_hvac_mode: HVACMode | str | None
     _attr_hvac_modes: list[HVACMode | str]
     _attr_is_aux_heat: bool | None
@@ -345,11 +346,8 @@ class ClimateEntity(Entity):
         return self._attr_hvac_modes
 
     @property
-    def hvac_action(self) -> str | None:
-        """Return the current running hvac operation if supported.
-
-        Need to be one of CURRENT_HVAC_*.
-        """
+    def hvac_action(self) -> HVACAction | str | None:
+        """Return the current running hvac operation if supported."""
         return self._attr_hvac_action
 
     @property
