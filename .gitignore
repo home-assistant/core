@@ -28,6 +28,7 @@ Icon
 # pytest
 .pytest_cache
 .cache
+homeassistant-[0-9]*.[0-9]*.[0-9]*.*
 
 # GITHUB Proposed Python stuff:
 *.py[cod]
