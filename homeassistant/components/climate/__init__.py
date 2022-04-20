@@ -189,7 +189,7 @@ class ClimateEntity(Entity):
     _attr_fan_mode: str | None
     _attr_fan_modes: list[str] | None
     _attr_hvac_action: str | None = None
-    _attr_hvac_mode: HVACMode | str
+    _attr_hvac_mode: HVACMode | str | None
     _attr_hvac_modes: list[HVACMode | str]
     _attr_is_aux_heat: bool | None
     _attr_max_humidity: int = DEFAULT_MAX_HUMIDITY
@@ -211,8 +211,10 @@ class ClimateEntity(Entity):
 
     @final
     @property
-    def state(self) -> str:
+    def state(self) -> str | None:
         """Return the current state."""
+        if self.hvac_mode is None:
+            return None
         if not isinstance(self.hvac_mode, HVACMode):
             return HVACMode(self.hvac_mode).value
         return self.hvac_mode.value
@@ -333,7 +335,7 @@ class ClimateEntity(Entity):
         return self._attr_target_humidity
 
     @property
-    def hvac_mode(self) -> HVACMode | str:
+    def hvac_mode(self) -> HVACMode | str | None:
         """Return hvac operation ie. heat, cool mode."""
         return self._attr_hvac_mode
 
