@@ -20,7 +20,7 @@ class DeconzBase:
 
     def __init__(
         self,
-        device: DeconzGroup | DeconzLight | DeconzSensor,
+        device: DeconzGroup | DeconzLight | DeconzSensor | PydeconzScene,
         gateway: DeconzGateway,
     ) -> None:
         """Set up device and add update callback to get data from websocket."""
@@ -30,20 +30,25 @@ class DeconzBase:
     @property
     def unique_id(self) -> str:
         """Return a unique identifier for this device."""
-        return self._device.unique_id
+        if isinstance(self._device, PydeconzScene):
+            return ""
+        return self._device.unique_id  # type: ignore[no-any-return]
 
     @property
     def serial(self) -> str | None:
         """Return a serial number for this device."""
-        if not self._device.unique_id or self._device.unique_id.count(":") != 7:
+        if (
+            isinstance(self._device, PydeconzScene)
+            or not self._device.unique_id
+            or self._device.unique_id.count(":") != 7
+        ):
             return None
-
-        return self._device.unique_id.split("-", 1)[0]
+        return self._device.unique_id.split("-", 1)[0]  # type: ignore[no-any-return]
 
     @property
     def device_info(self) -> DeviceInfo | None:
         """Return a device description for device registry."""
-        if self.serial is None:
+        if isinstance(self._device, PydeconzScene) or self.serial is None:
             return None
 
         return DeviceInfo(
@@ -66,7 +71,7 @@ class DeconzDevice(DeconzBase, Entity):
 
     def __init__(
         self,
-        device: DeconzGroup | DeconzLight | DeconzSensor,
+        device: DeconzGroup | DeconzLight | DeconzSensor | PydeconzScene,
         gateway: DeconzGateway,
     ) -> None:
         """Set up device and add update callback to get data from websocket."""
@@ -109,6 +114,8 @@ class DeconzDevice(DeconzBase, Entity):
     @property
     def available(self) -> bool:
         """Return True if device is available."""
+        if isinstance(self._device, PydeconzScene):
+            return self.gateway.available
         return self.gateway.available and self._device.reachable
 
 
@@ -117,11 +124,15 @@ class DeconzSceneMixin(DeconzDevice):
 
     _device: PydeconzScene
 
-    def __init__(self, device: PydeconzScene, gateway: DeconzGateway) -> None:
+    def __init__(
+        self,
+        device: DeconzGroup | DeconzLight | DeconzSensor | PydeconzScene,
+        gateway: DeconzGateway,
+    ) -> None:
         """Set up a scene."""
         super().__init__(device, gateway)
 
-        self._attr_name = device.full_name
+        self._attr_name = self._device.full_name
         self._group_identifier = self.get_parent_identifier()
 
     def get_device_identifier(self) -> str:
@@ -131,11 +142,6 @@ class DeconzSceneMixin(DeconzDevice):
     def get_parent_identifier(self) -> str:
         """Describe a unique identifier for group this scene belongs to."""
         return f"{self.gateway.bridgeid}-{self._device.group_deconz_id}"
-
-    @property
-    def available(self) -> bool:
-        """Return True if scene is available."""
-        return self.gateway.available
 
     @property
     def unique_id(self) -> str:
