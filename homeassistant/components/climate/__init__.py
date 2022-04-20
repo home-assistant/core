@@ -100,7 +100,7 @@ SET_TEMPERATURE_SCHEMA = vol.All(
             vol.Exclusive(ATTR_TEMPERATURE, "temperature"): vol.Coerce(float),
             vol.Inclusive(ATTR_TARGET_TEMP_HIGH, "temperature"): vol.Coerce(float),
             vol.Inclusive(ATTR_TARGET_TEMP_LOW, "temperature"): vol.Coerce(float),
-            vol.Optional(ATTR_HVAC_MODE): cv.enum(HVACMode),
+            vol.Optional(ATTR_HVAC_MODE): vol.Coerce(HVACMode),
         }
     ),
 )
@@ -117,7 +117,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(SERVICE_TURN_OFF, {}, "async_turn_off")
     component.async_register_entity_service(
         SERVICE_SET_HVAC_MODE,
-        {vol.Required(ATTR_HVAC_MODE): cv.enum(HVACMode)},
+        {vol.Required(ATTR_HVAC_MODE): vol.Coerce(HVACMode)},
         "async_set_hvac_mode",
     )
     component.async_register_entity_service(
