@@ -7,6 +7,8 @@ from homeassistant.components.climate import DOMAIN, const, device_trigger
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers import config_validation as cv, device_registry
+from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -61,24 +63,78 @@ async def test_get_triggers(hass, device_reg, entity_reg):
         {
             "platform": "device",
             "domain": DOMAIN,
-            "type": "hvac_mode_changed",
+            "type": trigger,
             "device_id": device_entry.id,
             "entity_id": entity_id,
+            "metadata": {"secondary": False},
+        }
+        for trigger in [
+            "hvac_mode_changed",
+            "current_temperature_changed",
+            "current_humidity_changed",
+        ]
+    ]
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device_entry.id
+    )
+    assert_lists_same(triggers, expected_triggers)
+
+
+@pytest.mark.parametrize(
+    "hidden_by,entity_category",
+    (
+        (RegistryEntryHider.INTEGRATION, None),
+        (RegistryEntryHider.USER, None),
+        (None, EntityCategory.CONFIG),
+        (None, EntityCategory.DIAGNOSTIC),
+    ),
+)
+async def test_get_triggers_hidden_auxiliary(
+    hass,
+    device_reg,
+    entity_reg,
+    hidden_by,
+    entity_category,
+):
+    """Test we get the expected triggers from a hidden or auxiliary entity."""
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_reg.async_get_or_create(
+        DOMAIN,
+        "test",
+        "5678",
+        device_id=device_entry.id,
+        entity_category=entity_category,
+        hidden_by=hidden_by,
+    )
+    entity_id = f"{DOMAIN}.test_5678"
+    hass.states.async_set(
+        entity_id,
+        const.HVAC_MODE_COOL,
+        {
+            const.ATTR_HVAC_ACTION: const.CURRENT_HVAC_IDLE,
+            const.ATTR_CURRENT_HUMIDITY: 23,
+            const.ATTR_CURRENT_TEMPERATURE: 18,
         },
+    )
+    expected_triggers = [
         {
             "platform": "device",
             "domain": DOMAIN,
-            "type": "current_temperature_changed",
+            "type": trigger,
             "device_id": device_entry.id,
-            "entity_id": entity_id,
-        },
-        {
-            "platform": "device",
-            "domain": DOMAIN,
-            "type": "current_humidity_changed",
-            "device_id": device_entry.id,
-            "entity_id": entity_id,
-        },
+            "entity_id": f"{DOMAIN}.test_5678",
+            "metadata": {"secondary": True},
+        }
+        for trigger in [
+            "hvac_mode_changed",
+            "current_temperature_changed",
+            "current_humidity_changed",
+        ]
     ]
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id

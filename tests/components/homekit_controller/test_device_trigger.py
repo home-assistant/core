@@ -97,6 +97,7 @@ async def test_enumerate_remote(hass, utcnow):
             "entity_id": "sensor.testdevice_battery",
             "platform": "device",
             "type": "battery_level",
+            "metadata": {"secondary": False},
         },
         {
             "device_id": device.id,
@@ -104,6 +105,7 @@ async def test_enumerate_remote(hass, utcnow):
             "entity_id": "button.testdevice_identify",
             "platform": "device",
             "type": "pressed",
+            "metadata": {"secondary": True},
         },
     ]
 
@@ -116,6 +118,7 @@ async def test_enumerate_remote(hass, utcnow):
                     "platform": "device",
                     "type": button,
                     "subtype": subtype,
+                    "metadata": {},
                 }
             )
 
@@ -142,6 +145,7 @@ async def test_enumerate_button(hass, utcnow):
             "entity_id": "sensor.testdevice_battery",
             "platform": "device",
             "type": "battery_level",
+            "metadata": {"secondary": False},
         },
         {
             "device_id": device.id,
@@ -149,6 +153,7 @@ async def test_enumerate_button(hass, utcnow):
             "entity_id": "button.testdevice_identify",
             "platform": "device",
             "type": "pressed",
+            "metadata": {"secondary": True},
         },
     ]
 
@@ -160,6 +165,7 @@ async def test_enumerate_button(hass, utcnow):
                 "platform": "device",
                 "type": "button1",
                 "subtype": subtype,
+                "metadata": {},
             }
         )
 
@@ -186,6 +192,7 @@ async def test_enumerate_doorbell(hass, utcnow):
             "entity_id": "sensor.testdevice_battery",
             "platform": "device",
             "type": "battery_level",
+            "metadata": {"secondary": False},
         },
         {
             "device_id": device.id,
@@ -193,6 +200,7 @@ async def test_enumerate_doorbell(hass, utcnow):
             "entity_id": "button.testdevice_identify",
             "platform": "device",
             "type": "pressed",
+            "metadata": {"secondary": True},
         },
     ]
 
@@ -204,6 +212,7 @@ async def test_enumerate_doorbell(hass, utcnow):
                 "platform": "device",
                 "type": "doorbell",
                 "subtype": subtype,
+                "metadata": {},
             }
         )
 

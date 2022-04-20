@@ -151,6 +151,7 @@ async def test_websocket_get_triggers(hass, hass_ws_client, device_reg, entity_r
             "type": "changed_states",
             "device_id": device_entry.id,
             "entity_id": "light.test_5678",
+            "metadata": {"secondary": False},
         },
         {
             "platform": "device",
@@ -158,6 +159,7 @@ async def test_websocket_get_triggers(hass, hass_ws_client, device_reg, entity_r
             "type": "turned_off",
             "device_id": device_entry.id,
             "entity_id": "light.test_5678",
+            "metadata": {"secondary": False},
         },
         {
             "platform": "device",
@@ -165,6 +167,7 @@ async def test_websocket_get_triggers(hass, hass_ws_client, device_reg, entity_r
             "type": "turned_on",
             "device_id": device_entry.id,
             "entity_id": "light.test_5678",
+            "metadata": {"secondary": False},
         },
     ]
 
