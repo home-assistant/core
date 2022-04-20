@@ -1,0 +1,240 @@
+"""Support for the Airzone climate."""
+from __future__ import annotations
+
+import logging
+
+import electra
+
+from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate.const import (
+    CURRENT_HVAC_COOL,
+    CURRENT_HVAC_DRY,
+    CURRENT_HVAC_FAN,
+    CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_OFF,
+    FAN_AUTO,
+    FAN_HIGH,
+    FAN_LOW,
+    FAN_MEDIUM,
+    HVAC_MODE_AUTO,
+    HVAC_MODE_COOL,
+    HVAC_MODE_DRY,
+    HVAC_MODE_FAN_ONLY,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_OFF,
+    SWING_BOTH,
+    SWING_HORIZONTAL,
+    SWING_OFF,
+    SWING_VERTICAL,
+    ClimateEntityFeature,
+)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from .const import DOMAIN
+
+FAN_ELECTRA_TO_HASS = {
+    electra.OPER_FAN_SPEED_AUTO: FAN_AUTO,
+    electra.OPER_FAN_SPEED_LOW: FAN_LOW,
+    electra.OPER_FAN_SPEED_MED: FAN_MEDIUM,
+    electra.OPER_FAN_SPEED_HIGH: FAN_HIGH,
+}
+
+FAN_HASS_TO_ELECTRA = {
+    FAN_AUTO: electra.OPER_FAN_SPEED_AUTO,
+    FAN_LOW: electra.OPER_FAN_SPEED_LOW,
+    FAN_MEDIUM: electra.OPER_FAN_SPEED_MED,
+    FAN_HIGH: electra.OPER_FAN_SPEED_HIGH,
+}
+
+HVAC_MODE_ELECTRA_TO_HASS = {
+    electra.OPER_MODE_COOL: HVAC_MODE_COOL,
+    electra.OPER_MODE_HEAT: HVAC_MODE_HEAT,
+    electra.OPER_MODE_FAN: HVAC_MODE_FAN_ONLY,
+    electra.OPER_MODE_DRY: HVAC_MODE_DRY,
+    electra.OPER_MODE_AUTO: HVAC_MODE_AUTO,
+}
+
+HVAC_MODE_HASS_TO_ELECTRA = {
+    HVAC_MODE_COOL: electra.OPER_MODE_COOL,
+    HVAC_MODE_HEAT: electra.OPER_MODE_HEAT,
+    HVAC_MODE_FAN_ONLY: electra.OPER_MODE_FAN,
+    HVAC_MODE_DRY: electra.OPER_MODE_DRY,
+    HVAC_MODE_AUTO: electra.OPER_MODE_AUTO,
+}
+
+HVAC_ACTION_ELECTRA_TO_HASS = {
+    electra.OPER_MODE_COOL: CURRENT_HVAC_COOL,
+    electra.OPER_MODE_HEAT: CURRENT_HVAC_HEAT,
+    electra.OPER_MODE_FAN: CURRENT_HVAC_FAN,
+    electra.OPER_MODE_DRY: CURRENT_HVAC_DRY,
+}
+
+_LOGGER = logging.getLogger(__name__)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Add Electra AC devices."""
+    coordinator = hass.data[DOMAIN][entry.entry_id]
+    async_add_entities(
+        ElectraClimate(coordinator.data[device_mac], coordinator)
+        for device_mac in coordinator.data
+    )
+
+
+class ElectraClimate(CoordinatorEntity, ClimateEntity):
+    """Define an Airzone sensor."""
+
+    def __init__(self, device: electra.ElectraAirConditioner, coordinator) -> None:
+        """Initialize Airzone climate entity."""
+        super().__init__(coordinator)
+        self._electra_ac_device = device
+        self._attr_name = device.name
+        self._attr_unique_id = device.mac
+
+        self._attr_supported_features = (
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.SWING_MODE
+            | ClimateEntityFeature.FAN_MODE
+        )
+        self._attr_fan_modes = [FAN_AUTO, FAN_HIGH, FAN_MEDIUM, FAN_LOW]
+        self._attr_target_temperature_step = 1
+        self._attr_max_temp = electra.MAX_TEMP
+        self._attr_min_temp = electra.MIN_TEMP
+        self._attr_temperature_unit = TEMP_CELSIUS
+        self._attr_swing_modes = [
+            SWING_BOTH,
+            SWING_HORIZONTAL,
+            SWING_VERTICAL,
+            SWING_OFF,
+        ]
+        self._attr_hvac_modes = [
+            HVAC_MODE_OFF,
+            HVAC_MODE_HEAT,
+            HVAC_MODE_COOL,
+            HVAC_MODE_DRY,
+            HVAC_MODE_FAN_ONLY,
+            HVAC_MODE_AUTO,
+        ]
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._electra_ac_device.mac)},
+            name=self.name,
+            model=self._electra_ac_device.model,
+            manufacturer=self._electra_ac_device.manufactor,
+        )
+
+        self._update_device_attrs(device)
+
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
+        """Set AC fand mode."""
+        mode = FAN_HASS_TO_ELECTRA[fan_mode]
+        self._electra_ac_device.set_fan_speed(mode)
+        await self._async_update_electra_ac_state()
+
+    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
+        """Set hvac mode."""
+
+        if hvac_mode == HVAC_MODE_OFF:
+            self._electra_ac_device.turn_off()
+        else:
+            self._electra_ac_device.set_mode(HVAC_MODE_HASS_TO_ELECTRA[hvac_mode])
+            self._electra_ac_device.turn_on()
+
+        await self._async_update_electra_ac_state()
+
+    async def async_set_temperature(self, **kwargs) -> None:
+        """Set new target temperature."""
+        self._electra_ac_device.set_temperature(int(kwargs[ATTR_TEMPERATURE]))
+        await self._async_update_electra_ac_state()
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Update attributes when the coordinator updates."""
+        self._update_device_attrs(self.coordinator.data[self._attr_unique_id])
+        super()._handle_coordinator_update()
+
+    @callback
+    def _update_device_attrs(self, device: electra.ElectraAirConditioner):
+
+        self._attr_fan_mode = FAN_ELECTRA_TO_HASS[device.get_fan_speed()]
+        self._attr_current_temperature = device.get_sensor_temperature()
+        self._attr_target_temperature = device.get_temperature()
+
+        self._attr_hvac_mode = (
+            HVAC_MODE_OFF
+            if not device.is_on()
+            else HVAC_MODE_ELECTRA_TO_HASS[device.get_mode()]
+        )
+
+        if device.get_mode() == electra.OPER_MODE_AUTO:
+            self._attr_hvac_action = None
+        else:
+            self._attr_hvac_action = (
+                CURRENT_HVAC_OFF
+                if not device.is_on()
+                else HVAC_ACTION_ELECTRA_TO_HASS[device.get_mode()]
+            )
+
+        if device.is_horizontal_swing() and device.is_vertical_swing():
+            self._attr_swing_mode = SWING_BOTH
+        elif device.is_horizontal_swing():
+            self._attr_swing_mode = SWING_HORIZONTAL
+        elif device.is_vertical_swing():
+            self._attr_swing_mode = SWING_VERTICAL
+        else:
+            self._attr_swing_mode = SWING_OFF
+
+    async def async_set_swing_mode(self, swing_mode: str) -> None:
+        """Set AC swing mdde."""
+        if swing_mode == SWING_BOTH:
+            self._electra_ac_device.set_horizontal_swing(True)
+            self._electra_ac_device.set_vertical_swing(True)
+
+        elif swing_mode == SWING_VERTICAL:
+            self._electra_ac_device.set_horizontal_swing(False)
+            self._electra_ac_device.set_vertical_swing(True)
+
+        elif swing_mode == SWING_HORIZONTAL:
+            self._electra_ac_device.set_horizontal_swing(True)
+            self._electra_ac_device.set_vertical_swing(False)
+        else:
+            self._electra_ac_device.set_horizontal_swing(False)
+            self._electra_ac_device.set_vertical_swing(False)
+
+        await self._async_update_electra_ac_state()
+
+    async def _async_update_electra_ac_state(self) -> None:
+        """Send HVAC parameters to API."""
+
+        # No need to communicate with the API as the AC is off,
+        # the change will be done once the AC is turned on
+        if self._electra_ac_device.is_on() or (
+            not self._electra_ac_device.is_on()
+            and self._attr_hvac_mode != HVAC_MODE_OFF
+        ):
+            try:
+                resp = await self.coordinator.api.set_state(self._electra_ac_device)
+            except electra.ElectraApiError as exp:
+                raise HomeAssistantError(
+                    f"Failed to communicate with Electra API: {exp}"
+                ) from electra.ElectraApiError
+            if not (
+                resp[electra.ATTR_STATUS] == electra.STATUS_SUCCESS
+                and resp[electra.ATTR_DATA][electra.ATTR_RES] == electra.STATUS_SUCCESS
+            ):
+                # request immediate update restore the state of self._electra_ac_device object
+                await self.coordinator.async_refresh()
+                raise HomeAssistantError(
+                    f"Failed to communicate with Electra API {self.name}"
+                )
+
+        self.coordinator.data[self._attr_unique_id] = self._electra_ac_device
+        self.coordinator.async_set_updated_data(self.coordinator.data)
