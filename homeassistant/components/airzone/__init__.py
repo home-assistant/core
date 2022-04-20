@@ -59,10 +59,9 @@ class AirzoneEntity(CoordinatorEntity[AirzoneUpdateCoordinator]):
             "name": f"Airzone [{system_zone_id}] {zone_data[AZD_NAME]}",
             "sw_version": self.get_zone_value(AZD_THERMOSTAT_FW),
         }
-
-    def get_device_id(self) -> str:
-        """Return device ID."""
-        return self.device_id
+        self._attr_unique_id = (
+            entry.entry_id if entry.unique_id is None else entry.unique_id
+        )
 
     def get_zone_value(self, key):
         """Return zone value by key."""
