@@ -73,7 +73,7 @@ SENSORS_MAP: dict[str, SensorEntityDescription] = {
     "meterElectric_power_factor": SensorEntityDescription(
         key="meterElectric_power_factor",
         device_class=SensorDeviceClass.POWER_FACTOR,
-        native_unit_of_measurement="PF",
+        native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "meterElectric_voltage": SensorEntityDescription(
