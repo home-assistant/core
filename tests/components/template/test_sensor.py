@@ -628,6 +628,35 @@ async def test_sun_renders_once_per_sensor(hass, start_ha):
             "sensor": {
                 "platform": "template",
                 "sensors": {
+                    "test_template_sensor": {
+                        "value_template": "{{ this.attributes.test }}: {{ this.entity_id }}",
+                        "attribute_templates": {
+                            "test": "It {{ states.sensor.test_state.state }}"
+                        },
+                    }
+                },
+            },
+        },
+    ],
+)
+async def test_this_variable(hass, start_ha):
+    """Test template."""
+    assert hass.states.get(TEST_NAME).state == "It: " + TEST_NAME
+
+    hass.states.async_set("sensor.test_state", "Works")
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    assert hass.states.get(TEST_NAME).state == "It Works: " + TEST_NAME
+
+
+@pytest.mark.parametrize("count,domain", [(1, sensor.DOMAIN)])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "sensor": {
+                "platform": "template",
+                "sensors": {
                     "test": {
                         "value_template": "{{ ((states.sensor.test.state or 0) | int) + 1 }}",
                     },
