@@ -74,8 +74,11 @@ class AirzoneSensor(AirzoneEntity, SensorEntity):
     ) -> None:
         """Initialize."""
         super().__init__(coordinator, entry, system_zone_id, zone_data)
+
+        _id = entry.entry_id if (entry.unique_id is None) else entry.unique_id
+
         self._attr_name = f"{zone_data[AZD_NAME]} {description.name}"
-        self._attr_unique_id = f"{entry.entry_id}_{system_zone_id}_{description.key}"
+        self._attr_unique_id = f"{_id}_{system_zone_id}_{description.key}"
         self.entity_description = description
 
         if description.key == AZD_TEMP:
