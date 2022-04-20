@@ -19,6 +19,7 @@ RUN \
         libpcap-dev \
         libturbojpeg0 \
         git \
+        cmake \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
