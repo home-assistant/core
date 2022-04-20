@@ -5,6 +5,7 @@ import logging
 from typing import Any
 
 from aioairzone.const import (
+    API_MAC,
     AZD_ID,
     AZD_NAME,
     AZD_SYSTEM,
@@ -13,6 +14,7 @@ from aioairzone.const import (
     AZD_ZONES,
     DEFAULT_SYSTEM_ID,
 )
+from aioairzone.exceptions import AirzoneError
 from aioairzone.localapi import AirzoneLocalApi, ConnectionOptions
 
 from homeassistant.config_entries import ConfigEntry
@@ -99,7 +101,13 @@ async def _async_migrate_unique_ids(
         return updates
 
     if entry.unique_id is None:
-        mac = await airzone.validate()
+        try:
+            webserver_data = await airzone.get_webserver()
+        except AirzoneError:
+            mac = None
+        else:
+            mac = webserver_data.get(API_MAC)
+
         if mac is not None:
             updates: dict[str, Any] = {
                 "unique_id": dr.format_mac(mac),
