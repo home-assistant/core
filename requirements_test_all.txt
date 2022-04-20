@@ -574,7 +574,7 @@ hole==0.7.0
 holidays==0.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220405.0
+home-assistant-frontend==20220420.0
 
 # homeassistant.components.home_connect
 homeconnect==0.7.0
@@ -1582,7 +1582,7 @@ wolf_smartset==0.1.11
 xbox-webapi==2.0.11
 
 # homeassistant.components.knx
-xknx==0.20.3
+xknx==0.20.4
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz
