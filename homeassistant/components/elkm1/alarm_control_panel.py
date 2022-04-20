@@ -161,12 +161,13 @@ class ElkArea(ElkAttachedEntity, AlarmControlPanelEntity, RestoreEntity):
         if not (last_log := changeset.get("last_log")):
             return
         # user_number only set for arm/disarm logs
-        if (user_number := last_log.get("user_number")) is not None:
-            self._changed_by_keypad = None
-            self._changed_by_id = user_number
-            self._changed_by = self._elk.users.username(user_number - 1)
-            self._changed_by_time = last_log["timestamp"]
-            self.async_write_ha_state()
+        if (user_number := last_log.get("user_number")) is None:
+            return
+        self._changed_by_keypad = None
+        self._changed_by_id = user_number
+        self._changed_by = self._elk.users.username(user_number - 1)
+        self._changed_by_time = last_log["timestamp"]
+        self.async_write_ha_state()
 
     @property
     def code_format(self) -> CodeFormat | None:
