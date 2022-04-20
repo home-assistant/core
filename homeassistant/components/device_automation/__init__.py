@@ -265,7 +265,10 @@ async def async_get_device_automations(
                 )
                 continue
             for automation in device_results:
-                if automation_type == DeviceAutomationType.ACTION:
+                if automation_type in (
+                    DeviceAutomationType.ACTION,
+                    DeviceAutomationType.CONDITION,
+                ):
                     _async_set_entity_device_automation_metadata(hass, automation)
                 combined_results[automation["device_id"]].append(automation)
 
