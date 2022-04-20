@@ -121,23 +121,19 @@ async def test_form_duplicated_id(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(domain=DOMAIN, data=CONFIG)
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.airzone.AirzoneLocalApi.get_hvac",
-        return_value=HVAC_MOCK,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+    )
 
-        assert result["type"] == "abort"
-        assert result["reason"] == "already_configured"
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
 
 
 async def test_connection_error(hass: HomeAssistant):
     """Test connection to host error."""
 
     with patch(
-        "homeassistant.components.airzone.AirzoneLocalApi.validate_airzone",
+        "homeassistant.components.airzone.AirzoneLocalApi.validate",
         side_effect=AirzoneError,
     ):
         result = await hass.config_entries.flow.async_init(

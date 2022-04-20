@@ -8,13 +8,13 @@ import io
 import logging
 from types import MappingProxyType
 from typing import Any
-from urllib.parse import urlparse, urlunparse
 
 import PIL
 from async_timeout import timeout
 import av
 from httpx import HTTPStatusError, RequestError, TimeoutException
 import voluptuous as vol
+import yarl
 
 from homeassistant.components.stream.const import SOURCE_TIMEOUT
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
@@ -172,8 +172,7 @@ def slug_url(url) -> str | None:
     """Convert a camera url into a string suitable for a camera name."""
     if not url:
         return None
-    url_no_scheme = urlparse(url)._replace(scheme="")
-    return slugify(urlunparse(url_no_scheme).strip("/"))
+    return slugify(yarl.URL(url).host)
 
 
 async def async_test_stream(hass, info) -> dict[str, str]:
