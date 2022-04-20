@@ -1260,7 +1260,7 @@ prometheus_client==0.7.1
 proxmoxer==1.1.1
 
 # homeassistant.components.systemmonitor
-psutil==5.8.0
+psutil==5.9.0
 
 # homeassistant.components.pulseaudio_loopback
 pulsectl==20.2.4
