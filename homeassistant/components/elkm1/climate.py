@@ -162,9 +162,9 @@ class ElkThermostat(ElkEntity, ClimateEntity):
         return 99
 
     @property
-    def fan_mode(self) -> str | None:
+    def fan_mode(self) -> str:
         """Return the fan setting."""
-        return ELK_TO_HASS_FAN_MODES.get(self._element.fan)
+        return ELK_TO_HASS_FAN_MODES[self._element.fan]
 
     def _elk_set(self, mode: int | None, fan: int | None) -> None:
         if mode is not None:
@@ -205,6 +205,6 @@ class ElkThermostat(ElkEntity, ClimateEntity):
             self._element.set(ThermostatSetting.COOL_SETPOINT.value, round(high_temp))
 
     def _element_changed(self, element: Element, changeset: Any) -> None:
-        self._state = ELK_TO_HASS_HVAC_MODES.get(self._element.mode, HVAC_MODE_OFF)
+        self._state = ELK_TO_HASS_HVAC_MODES[self._element.mode]
         if self._state == HVAC_MODE_OFF and self._element.fan == ThermostatFan.ON.value:
             self._state = HVAC_MODE_FAN_ONLY

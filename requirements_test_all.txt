@@ -94,7 +94,7 @@ aio_geojson_nsw_rfs_incidents==0.4
 aio_georss_gdacs==0.7
 
 # homeassistant.components.airzone
-aioairzone==0.3.8
+aioairzone==0.4.0
 
 # homeassistant.components.ambient_station
 aioambient==2021.11.0
@@ -143,7 +143,7 @@ aioguardian==2022.03.2
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==0.7.16
+aiohomekit==0.7.17
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -814,7 +814,7 @@ pilight==0.1.1
 # homeassistant.components.seven_segments
 # homeassistant.components.sighthound
 # homeassistant.components.tensorflow
-pillow==9.0.1
+pillow==9.1.0
 
 # homeassistant.components.plex
 plexapi==4.10.1
@@ -1382,7 +1382,7 @@ securetar==2022.2.0
 sense_energy==0.10.4
 
 # homeassistant.components.sentry
-sentry-sdk==1.5.9
+sentry-sdk==1.5.10
 
 # homeassistant.components.sharkiq
 sharkiq==0.0.1
@@ -1628,4 +1628,4 @@ zigpy==0.44.2
 zwave-js-server-python==0.35.2
 
 # homeassistant.components.zwave_me
-zwave_me_ws==0.2.3
+zwave_me_ws==0.2.4

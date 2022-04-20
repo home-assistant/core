@@ -16,7 +16,6 @@ from homeassistant.const import (
     PRESSURE_PSI,
 )
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
 from . import init_integration
 
@@ -126,10 +125,8 @@ async def test_sensors(hass):
     assert entry.unique_id == "JM000000000000000_rear_right_tire_pressure"
 
 
-async def test_sensors_imperial_units(hass):
+async def test_sensors_imperial_units(hass, units_imperial):
     """Test that the sensors work properly with imperial units."""
-    hass.config.units = IMPERIAL_SYSTEM
-
     await init_integration(hass)
 
     # Fuel Distance Remaining

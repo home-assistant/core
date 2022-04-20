@@ -140,6 +140,7 @@ class FileSizeCoordinator(DataUpdateCoordinator):
         last_updated = datetime.utcfromtimestamp(statinfo.st_mtime).replace(
             tzinfo=dt_util.UTC
         )
+
         _LOGGER.debug("size %s, last updated %s", size, last_updated)
         data: dict[str, int | float | datetime] = {
             "file": round(size / 1e6, 2),
