@@ -14,6 +14,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER, MODEL
+from .coordinator import LaundrifyUpdateCoordinator
+from .model import LaundrifyDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,13 +32,19 @@ async def async_setup_entry(
     )
 
 
-class LaundrifyPowerPlug(CoordinatorEntity, BinarySensorEntity):
+class LaundrifyPowerPlug(
+    CoordinatorEntity[LaundrifyUpdateCoordinator], BinarySensorEntity
+):
     """Representation of a laundrify Power Plug."""
 
     _attr_device_class = BinarySensorDeviceClass.RUNNING
     _attr_icon = "mdi:washing-machine"
 
-    def __init__(self, coordinator, device):
+    coordinator: LaundrifyUpdateCoordinator
+
+    def __init__(
+        self, coordinator: LaundrifyUpdateCoordinator, device: LaundrifyDevice
+    ) -> None:
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(coordinator)
         self._device = device
@@ -44,14 +52,14 @@ class LaundrifyPowerPlug(CoordinatorEntity, BinarySensorEntity):
         self._attr_name = device["name"]
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Configure the Device of this Entity."""
         return DeviceInfo(
             identifiers={(DOMAIN, self._device["_id"])},
             name=self.name,
             manufacturer=MANUFACTURER,
             model=MODEL,
-            sw_version=self.coordinator.data[self.unique_id]["firmwareVersion"],
+            sw_version=self._device["firmwareVersion"],
         )
 
     @property
@@ -60,6 +68,6 @@ class LaundrifyPowerPlug(CoordinatorEntity, BinarySensorEntity):
         return self.unique_id in self.coordinator.data
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return entity state."""
-        return self.coordinator.data[self.unique_id]["status"] == "ON"
+        return bool(self.coordinator.data[self.unique_id]["status"] == "ON")

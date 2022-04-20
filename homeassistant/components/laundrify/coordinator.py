@@ -1,10 +1,13 @@
 """Custom DataUpdateCoordinator for the laundrify integration."""
 from datetime import timedelta
 import logging
+from typing import Any
 
 import async_timeout
+from laundrify_aio import LaundrifyAPI
 from laundrify_aio.exceptions import ApiConnectionException, UnauthorizedException
 
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -16,7 +19,9 @@ _LOGGER = logging.getLogger(__name__)
 class LaundrifyUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching laundrify API data."""
 
-    def __init__(self, hass, laundrify_api, poll_interval):
+    def __init__(
+        self, hass: HomeAssistant, laundrify_api: LaundrifyAPI, poll_interval: int
+    ) -> None:
         """Initialize laundrify coordinator."""
         super().__init__(
             hass,
@@ -26,7 +31,7 @@ class LaundrifyUpdateCoordinator(DataUpdateCoordinator):
         )
         self.laundrify_api = laundrify_api
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from laundrify API."""
         try:
             # Note: asyncio.TimeoutError and aiohttp.ClientError are already

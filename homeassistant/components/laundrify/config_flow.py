@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from laundrify_aio import LaundrifyAPI
 from laundrify_aio.exceptions import (
@@ -11,7 +12,7 @@ from laundrify_aio.exceptions import (
 )
 from voluptuous import All, Optional, Range, Required, Schema
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CODE
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
@@ -24,16 +25,20 @@ _LOGGER = logging.getLogger(__name__)
 CONFIG_SCHEMA = Schema({Required(CONF_CODE): str})
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class LaundrifyConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for laundrify."""
 
     VERSION = 1
 
-    async def async_step_user(self, user_input=None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initialized by the user."""
         return await self.async_step_init(user_input)
 
-    async def async_step_init(self, user_input=None) -> FlowResult:
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the initial step."""
         if user_input is None:
             return self.async_show_form(step_id="init", data_schema=CONFIG_SCHEMA)
@@ -72,11 +77,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="init", data_schema=CONFIG_SCHEMA, errors=errors
         )
 
-    async def async_step_reauth(self, user_input=None):
+    async def async_step_reauth(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Perform reauth upon an API authentication error."""
         return await self.async_step_reauth_confirm()
 
-    async def async_step_reauth_confirm(self, user_input=None):
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Dialog that informs the user that reauth is required."""
         if user_input is None:
             return self.async_show_form(
@@ -87,19 +96,23 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> LaundrifyOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return OptionsFlowHandler(config_entry)
+        return LaundrifyOptionsFlowHandler(config_entry)
 
 
-class OptionsFlowHandler(config_entries.OptionsFlow):
+class LaundrifyOptionsFlowHandler(OptionsFlow):
     """Handle options flow for laundrify."""
 
-    def __init__(self, config_entry):
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)

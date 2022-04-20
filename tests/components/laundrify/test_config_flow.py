@@ -143,7 +143,7 @@ async def test_integration_already_exists(hass: HomeAssistant):
         assert result["reason"] == "already_configured"
 
 
-async def test_setup_entry_api_unauthorized(hass):
+async def test_setup_entry_api_unauthorized(hass: HomeAssistant):
     """Test that ConfigEntryAuthFailed is thrown when authentication fails."""
     with _patch_setup_entry(), _patch_laundrify_get_machines() as laundrify_mock:
         laundrify_mock.side_effect = exceptions.UnauthorizedException
@@ -157,7 +157,7 @@ async def test_setup_entry_api_unauthorized(hass):
     assert not hass.data.get(DOMAIN)
 
 
-async def test_options_flow(hass):
+async def test_options_flow(hass: HomeAssistant):
     """Test options flow is shown."""
     with _patch_laundrify_exchange_code(), _patch_laundrify_validate_token(), _patch_laundrify_get_machines():
         config_entry = create_entry(hass)
