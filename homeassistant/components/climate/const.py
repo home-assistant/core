@@ -87,24 +87,26 @@ SWING_VERTICAL = "vertical"
 SWING_HORIZONTAL = "horizontal"
 
 
-# This are support current states of HVAC
+class HVACAction(StrEnum):
+    """HVAC action for climate devices."""
+
+    COOLING = "cooling"
+    DRYING = "drying"
+    FAN = "fan"
+    HEATING = "heating"
+    IDLE = "idle"
+    OFF = "off"
+
+
+# These CURRENT_HVAC_* constants are deprecated as of Home Assistant 2022.5.
+# Please use the HVACAction enum instead.
 CURRENT_HVAC_OFF = "off"
 CURRENT_HVAC_HEAT = "heating"
 CURRENT_HVAC_COOL = "cooling"
 CURRENT_HVAC_DRY = "drying"
 CURRENT_HVAC_IDLE = "idle"
 CURRENT_HVAC_FAN = "fan"
-
-
-# A list of possible HVAC actions.
-CURRENT_HVAC_ACTIONS = [
-    CURRENT_HVAC_OFF,
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_COOL,
-    CURRENT_HVAC_DRY,
-    CURRENT_HVAC_IDLE,
-    CURRENT_HVAC_FAN,
-]
+CURRENT_HVAC_ACTIONS = [cls.value for cls in HVACAction]
 
 
 ATTR_AUX_HEAT = "aux_heat"
