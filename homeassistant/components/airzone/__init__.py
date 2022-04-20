@@ -47,7 +47,6 @@ class AirzoneEntity(CoordinatorEntity[AirzoneUpdateCoordinator]):
         """Initialize."""
         super().__init__(coordinator)
 
-        self.device_id = entry.entry_id if entry.unique_id is None else entry.unique_id
         self.system_id = zone_data[AZD_SYSTEM]
         self.system_zone_id = system_zone_id
         self.zone_id = zone_data[AZD_ID]
