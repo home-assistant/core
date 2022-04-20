@@ -1,9 +1,8 @@
 """Support for the QNAP QSW sensors."""
 from __future__ import annotations
 
-from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any, Final
+from typing import Final
 
 from aioqsw.const import (
     QSD_FAN1_SPEED,
@@ -25,7 +24,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import TEMP_CELSIUS, TIME_SECONDS
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -39,7 +38,7 @@ class QswSensorEntityDescription(SensorEntityDescription):
     """A class that describes QNAP QSW sensor entities."""
 
     attributes: dict[str, list[str]] | None = None
-    subkey: str | None = None
+    subkey: str = ""
 
 
 SENSOR_TYPES: Final[tuple[QswSensorEntityDescription, ...]] = (
@@ -97,6 +96,8 @@ async def async_setup_entry(
 class QswSensor(QswEntity, SensorEntity):
     """Define a QNAP QSW sensor."""
 
+    entity_description: QswSensorEntityDescription
+
     def __init__(
         self,
         coordinator: QswUpdateCoordinator,
@@ -106,27 +107,29 @@ class QswSensor(QswEntity, SensorEntity):
         """Initialize."""
         super().__init__(coordinator, entry)
         self._attr_name = (
-            f"{self.get_entity_value(QSD_SYSTEM_BOARD, QSD_PRODUCT)} {description.name}"
+            f"{self.get_device_value(QSD_SYSTEM_BOARD, QSD_PRODUCT)} {description.name}"
         )
         self._attr_unique_id = (
             f"{entry.unique_id}_{description.key}_{description.subkey}"
         )
-        self.attributes = description.attributes
         self.entity_description = description
+        self._async_update_attrs()
 
-    @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
-        """Return state attributes."""
-        if not self.attributes:
-            return None
-        return {
-            key: self.get_entity_value(val[0], val[1])
-            for key, val in self.attributes.items()
-        }
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Update attributes when the coordinator updates."""
+        self._async_update_attrs()
+        super()._handle_coordinator_update()
 
-    @property
-    def native_value(self):
-        """Return the state."""
-        return self.get_entity_value(
+    @callback
+    def _async_update_attrs(self) -> None:
+        """Update sensor attributes."""
+        self._attr_native_value = self.get_device_value(
             self.entity_description.key, self.entity_description.subkey
         )
+
+        if self.entity_description.attributes:
+            self._attr_extra_state_attributes = {
+                key: self.get_device_value(val[0], val[1])
+                for key, val in self.entity_description.attributes.items()
+            }

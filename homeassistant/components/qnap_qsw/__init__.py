@@ -42,17 +42,17 @@ class QswEntity(CoordinatorEntity[QswUpdateCoordinator]):
             connections={
                 (
                     CONNECTION_NETWORK_MAC,
-                    self.get_entity_value(QSD_SYSTEM_BOARD, QSD_MAC),
+                    self.get_device_value(QSD_SYSTEM_BOARD, QSD_MAC),
                 )
             },
             manufacturer=MANUFACTURER,
-            model=self.get_entity_value(QSD_SYSTEM_BOARD, QSD_PRODUCT),
-            name=self.get_entity_value(QSD_SYSTEM_BOARD, QSD_PRODUCT),
-            sw_version=self.get_entity_value(QSD_FIRMWARE_INFO, QSD_FIRMWARE),
+            model=self.get_device_value(QSD_SYSTEM_BOARD, QSD_PRODUCT),
+            name=self.get_device_value(QSD_SYSTEM_BOARD, QSD_PRODUCT),
+            sw_version=self.get_device_value(QSD_FIRMWARE_INFO, QSD_FIRMWARE),
         )
 
-    def get_entity_value(self, key: str, subkey: str) -> Any:
-        """Return zone value by key."""
+    def get_device_value(self, key: str, subkey: str) -> Any:
+        """Return device value by key."""
         value = None
         if key in self.coordinator.data:
             data = self.coordinator.data[key]
