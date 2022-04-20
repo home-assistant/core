@@ -1,7 +1,7 @@
 """Test UPnP/IGD config flow."""
 
 from copy import deepcopy
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -146,6 +146,64 @@ async def test_flow_ssdp_discovery_changed_udn(hass: HomeAssistant):
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "config_entry_updated"
+
+
+@pytest.mark.usefixtures(
+    "ssdp_instant_discovery",
+    "mock_setup_entry",
+    "mock_get_source_ip",
+)
+async def test_flow_ssdp_discovery_changed_udn_but_st_differs(hass: HomeAssistant):
+    """Test config flow: discovery through ssdp, same device, but new UDN, and different ST, so not matched --> new discovery."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_USN,
+        data={
+            CONFIG_ENTRY_ST: TEST_ST,
+            CONFIG_ENTRY_UDN: TEST_UDN,
+            CONFIG_ENTRY_ORIGINAL_UDN: TEST_UDN,
+            CONFIG_ENTRY_LOCATION: TEST_LOCATION,
+            CONFIG_ENTRY_MAC_ADDRESS: TEST_MAC_ADDRESS,
+        },
+        source=config_entries.SOURCE_SSDP,
+        state=config_entries.ConfigEntryState.LOADED,
+    )
+    entry.add_to_hass(hass)
+
+    # UDN + mac address different: New discovery via step ssdp.
+    new_udn = TEST_UDN + "2"
+    with patch(
+        "homeassistant.components.upnp.device.get_mac_address",
+        return_value=TEST_MAC_ADDRESS + "2",
+    ):
+        new_discovery = deepcopy(TEST_DISCOVERY)
+        new_discovery.ssdp_usn = f"{new_udn}::{TEST_ST}"
+        new_discovery.upnp["_udn"] = new_udn
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_SSDP},
+            data=new_discovery,
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "ssdp_confirm"
+
+    # UDN + ST different: New discovery via step ssdp.
+    with patch(
+        "homeassistant.components.upnp.device.get_mac_address",
+        return_value=TEST_MAC_ADDRESS,
+    ):
+        new_st = TEST_ST + "2"
+        new_discovery = deepcopy(TEST_DISCOVERY)
+        new_discovery.ssdp_usn = f"{new_udn}::{new_st}"
+        new_discovery.ssdp_st = new_st
+        new_discovery.upnp["_udn"] = new_udn
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_SSDP},
+            data=new_discovery,
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "ssdp_confirm"
 
 
 @pytest.mark.usefixtures("mock_mac_address_from_host")
@@ -308,7 +366,9 @@ async def test_flow_import(hass: HomeAssistant):
     }
 
 
-@pytest.mark.usefixtures("mock_get_source_ip")
+@pytest.mark.usefixtures(
+    "mock_get_source_ip",
+)
 async def test_flow_import_incomplete_discovery(hass: HomeAssistant):
     """Test config flow: configured through configuration.yaml, but incomplete discovery."""
     incomplete_discovery = ssdp.SsdpServiceInfo(
@@ -319,8 +379,17 @@ async def test_flow_import_incomplete_discovery(hass: HomeAssistant):
             # ssdp.ATTR_UPNP_UDN: TEST_UDN,  # Not provided.
         },
     )
+
+    async def register_callback(hass, callback, match_dict):
+        """Immediately do callback."""
+        await callback(incomplete_discovery, ssdp.SsdpChange.ALIVE)
+        return MagicMock()
+
     with patch(
-        "homeassistant.components.ssdp.async_get_discovery_info_by_st",
+        "homeassistant.components.ssdp.async_register_callback",
+        side_effect=register_callback,
+    ), patch(
+        "homeassistant.components.upnp.ssdp.async_get_discovery_info_by_st",
         return_value=[incomplete_discovery],
     ):
         result = await hass.config_entries.flow.async_init(

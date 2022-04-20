@@ -53,15 +53,13 @@ async def _async_wait_for_discoveries(hass: HomeAssistant) -> bool:
     device_discovered_event = asyncio.Event()
 
     async def device_discovered(info: SsdpServiceInfo, change: SsdpChange) -> None:
-        if change == SsdpChange.BYEBYE:
-            return
-
-        LOGGER.info(
-            "Device discovered: %s, at: %s",
-            info.ssdp_usn,
-            info.ssdp_location,
-        )
-        device_discovered_event.set()
+        if change != SsdpChange.BYEBYE:
+            LOGGER.info(
+                "Device discovered: %s, at: %s",
+                info.ssdp_usn,
+                info.ssdp_location,
+            )
+            device_discovered_event.set()
 
     cancel_discovered_callback_1 = await ssdp.async_register_callback(
         hass,
@@ -129,15 +127,13 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             # Ensure wanted device was discovered.
             assert self._discoveries
-            matching_discoveries = [
-                discovery
-                for discovery in self._discoveries
-                if discovery.ssdp_usn == user_input["unique_id"]
-            ]
-            if not matching_discoveries:
-                return self.async_abort(reason="no_devices_found")
-
-            discovery = matching_discoveries[0]
+            discovery = next(
+                iter(
+                    discovery
+                    for discovery in self._discoveries
+                    if discovery.ssdp_usn == user_input["unique_id"]
+                )
+            )
             await self.async_set_unique_id(discovery.ssdp_usn, raise_on_progress=False)
             return await self._async_create_entry_from_discovery(discovery)
 
@@ -246,7 +242,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 continue
 
             if discovery_info.ssdp_st != entry_st:
-                # Prevent swapping between IGDv1 and IGDv2.
+                # Check ssdp_st to prevent swapping between IGDv1 and IGDv2.
                 continue
 
             if entry.source == config_entries.SOURCE_IGNORE:
