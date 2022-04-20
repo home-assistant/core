@@ -52,7 +52,7 @@ async def test_get_triggers(hass, device_reg, entity_reg):
         entity_id,
         const.HVAC_MODE_COOL,
         {
-            const.ATTR_HVAC_ACTION: const.CURRENT_HVAC_IDLE,
+            const.ATTR_HVAC_ACTION: const.HVACAction.IDLE,
             const.ATTR_CURRENT_HUMIDITY: 23,
             const.ATTR_CURRENT_TEMPERATURE: 18,
         },
@@ -92,7 +92,7 @@ async def test_if_fires_on_state_change(hass, calls):
         "climate.entity",
         const.HVAC_MODE_COOL,
         {
-            const.ATTR_HVAC_ACTION: const.CURRENT_HVAC_IDLE,
+            const.ATTR_HVAC_ACTION: const.HVACAction.IDLE,
             const.ATTR_CURRENT_HUMIDITY: 23,
             const.ATTR_CURRENT_TEMPERATURE: 18,
         },
@@ -154,7 +154,7 @@ async def test_if_fires_on_state_change(hass, calls):
         "climate.entity",
         const.HVAC_MODE_AUTO,
         {
-            const.ATTR_HVAC_ACTION: const.CURRENT_HVAC_COOL,
+            const.ATTR_HVAC_ACTION: const.HVACAction.COOLING,
             const.ATTR_CURRENT_HUMIDITY: 23,
             const.ATTR_CURRENT_TEMPERATURE: 18,
         },
@@ -168,7 +168,7 @@ async def test_if_fires_on_state_change(hass, calls):
         "climate.entity",
         const.HVAC_MODE_AUTO,
         {
-            const.ATTR_HVAC_ACTION: const.CURRENT_HVAC_COOL,
+            const.ATTR_HVAC_ACTION: const.HVACAction.COOLING,
             const.ATTR_CURRENT_HUMIDITY: 23,
             const.ATTR_CURRENT_TEMPERATURE: 23,
         },
@@ -182,7 +182,7 @@ async def test_if_fires_on_state_change(hass, calls):
         "climate.entity",
         const.HVAC_MODE_AUTO,
         {
-            const.ATTR_HVAC_ACTION: const.CURRENT_HVAC_COOL,
+            const.ATTR_HVAC_ACTION: const.HVACAction.COOLING,
             const.ATTR_CURRENT_HUMIDITY: 7,
             const.ATTR_CURRENT_TEMPERATURE: 23,
         },

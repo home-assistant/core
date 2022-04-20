@@ -57,18 +57,21 @@ async def test_websocket_get_actions(hass, hass_ws_client, device_reg, entity_re
             "type": "turn_off",
             "device_id": device_entry.id,
             "entity_id": "light.test_5678",
+            "metadata": {"secondary": False},
         },
         {
             "domain": "light",
             "type": "turn_on",
             "device_id": device_entry.id,
             "entity_id": "light.test_5678",
+            "metadata": {"secondary": False},
         },
         {
             "domain": "light",
             "type": "toggle",
             "device_id": device_entry.id,
             "entity_id": "light.test_5678",
+            "metadata": {"secondary": False},
         },
     ]
 
@@ -102,6 +105,7 @@ async def test_websocket_get_conditions(hass, hass_ws_client, device_reg, entity
             "type": "is_off",
             "device_id": device_entry.id,
             "entity_id": "light.test_5678",
+            "metadata": {"secondary": False},
         },
         {
             "condition": "device",
@@ -109,6 +113,7 @@ async def test_websocket_get_conditions(hass, hass_ws_client, device_reg, entity
             "type": "is_on",
             "device_id": device_entry.id,
             "entity_id": "light.test_5678",
+            "metadata": {"secondary": False},
         },
     ]
 
