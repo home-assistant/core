@@ -486,7 +486,7 @@ class ElkEntity(Entity):
         """Is the entity available to be updated."""
         return self._elk.is_connected()
 
-    def initial_attrs(self) -> dict[str, int]:
+    def initial_attrs(self) -> dict[str, Any]:
         """Return the underlying element's attributes as a dict."""
         attrs = {}
         attrs["index"] = self._element.index + 1
