@@ -12,6 +12,7 @@ from uuid import UUID
 
 from aiohttp import web
 from pyhap.const import STANDALONE_AID
+from pyhap.loader import get_loader
 import voluptuous as vol
 from zeroconf.asyncio import AsyncZeroconf
 
@@ -203,6 +204,10 @@ def _async_get_entries_by_name(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the HomeKit from yaml."""
     hass.data.setdefault(DOMAIN, {})[PERSIST_LOCK] = asyncio.Lock()
+
+    # Initialize the loader so there race during setup when
+    # there are multiple homekit entries
+    await hass.async_add_executor_job(get_loader)
 
     _async_register_events_and_services(hass)
 
@@ -503,6 +508,7 @@ class HomeKit:
     def setup(self, async_zeroconf_instance: AsyncZeroconf, uuid: UUID) -> None:
         """Set up bridge and accessory driver."""
         persist_file = get_persist_fullpath_for_entry_id(self.hass, self._entry_id)
+        loader = get_loader()
 
         self.driver = HomeDriver(
             self.hass,
@@ -516,6 +522,7 @@ class HomeKit:
             advertised_address=self._advertise_ip,
             async_zeroconf_instance=async_zeroconf_instance,
             zeroconf_server=f"{uuid}-hap.local.",
+            loader=loader,
         )
 
         # If we do not load the mac address will be wrong
