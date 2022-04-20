@@ -9,7 +9,11 @@ from aiolyric.objects.device import LyricDevice
 from aiolyric.objects.location import LyricLocation
 import voluptuous as vol
 
-from homeassistant.components.climate import ClimateEntity, ClimateEntityDescription
+from homeassistant.components.climate import (
+    ClimateEntity,
+    ClimateEntityDescription,
+    ClimateEntityFeature,
+)
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
@@ -21,9 +25,6 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE
@@ -49,9 +50,14 @@ _LOGGER = logging.getLogger(__name__)
 
 # Only LCC models support presets
 SUPPORT_FLAGS_LCC = (
-    SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE | SUPPORT_TARGET_TEMPERATURE_RANGE
+    ClimateEntityFeature.TARGET_TEMPERATURE
+    | ClimateEntityFeature.PRESET_MODE
+    | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
 )
-SUPPORT_FLAGS_TCC = SUPPORT_TARGET_TEMPERATURE | SUPPORT_TARGET_TEMPERATURE_RANGE
+SUPPORT_FLAGS_TCC = (
+    ClimateEntityFeature.TARGET_TEMPERATURE
+    | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+)
 
 LYRIC_HVAC_ACTION_OFF = "EquipmentOff"
 LYRIC_HVAC_ACTION_HEAT = "Heat"
@@ -211,29 +217,35 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         """Return the temperature we try to reach."""
         device = self.device
         if (
-            not device.changeableValues.autoChangeoverActive
-            and HVAC_MODES[device.changeableValues.mode] != HVAC_MODE_OFF
+            device.changeableValues.autoChangeoverActive
+            or HVAC_MODES[device.changeableValues.mode] == HVAC_MODE_OFF
         ):
-            if self.hvac_mode == HVAC_MODE_COOL:
-                return device.changeableValues.coolSetpoint
-            return device.changeableValues.heatSetpoint
-        return None
+            return None
+        if self.hvac_mode == HVAC_MODE_COOL:
+            return device.changeableValues.coolSetpoint
+        return device.changeableValues.heatSetpoint
 
     @property
     def target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach."""
         device = self.device
-        if device.changeableValues.autoChangeoverActive:
-            return device.changeableValues.coolSetpoint
-        return None
+        if (
+            not device.changeableValues.autoChangeoverActive
+            or HVAC_MODES[device.changeableValues.mode] == HVAC_MODE_OFF
+        ):
+            return None
+        return device.changeableValues.coolSetpoint
 
     @property
     def target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
         device = self.device
-        if device.changeableValues.autoChangeoverActive:
-            return device.changeableValues.heatSetpoint
-        return None
+        if (
+            not device.changeableValues.autoChangeoverActive
+            or HVAC_MODES[device.changeableValues.mode] == HVAC_MODE_OFF
+        ):
+            return None
+        return device.changeableValues.heatSetpoint
 
     @property
     def preset_mode(self) -> str | None:
@@ -269,6 +281,9 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""
+        if self.hvac_mode == HVAC_MODE_OFF:
+            return
+
         device = self.device
         target_temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
         target_temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)

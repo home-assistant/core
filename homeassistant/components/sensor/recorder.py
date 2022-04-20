@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, MutableMapping
 import datetime
 import itertools
 import logging
@@ -416,9 +416,9 @@ def _compile_statistics(  # noqa: C901
     entities_full_history = [
         i.entity_id for i in sensor_states if "sum" in wanted_statistics[i.entity_id]
     ]
-    history_list = {}
+    history_list: MutableMapping[str, list[State]] = {}
     if entities_full_history:
-        history_list = history.get_significant_states_with_session(  # type: ignore[no-untyped-call]
+        history_list = history.get_full_significant_states_with_session(
             hass,
             session,
             start - datetime.timedelta.resolution,
@@ -432,7 +432,7 @@ def _compile_statistics(  # noqa: C901
         if "sum" not in wanted_statistics[i.entity_id]
     ]
     if entities_significant_history:
-        _history_list = history.get_significant_states_with_session(  # type: ignore[no-untyped-call]
+        _history_list = history.get_full_significant_states_with_session(
             hass,
             session,
             start - datetime.timedelta.resolution,
@@ -444,23 +444,42 @@ def _compile_statistics(  # noqa: C901
     # from the recorder. Get the state from the state machine instead.
     for _state in sensor_states:
         if _state.entity_id not in history_list:
-            history_list[_state.entity_id] = (_state,)
+            history_list[_state.entity_id] = [_state]
 
-    for _state in sensor_states:  # pylint: disable=too-many-nested-blocks
+    to_process = []
+    to_query = []
+    for _state in sensor_states:
         entity_id = _state.entity_id
         if entity_id not in history_list:
             continue
 
-        state_class = _state.attributes[ATTR_STATE_CLASS]
         device_class = _state.attributes.get(ATTR_DEVICE_CLASS)
         entity_history = history_list[entity_id]
         unit, fstates = _normalize_states(
-            hass, session, old_metadatas, entity_history, device_class, entity_id
+            hass,
+            session,
+            old_metadatas,
+            entity_history,
+            device_class,
+            entity_id,
         )
 
         if not fstates:
             continue
 
+        state_class = _state.attributes[ATTR_STATE_CLASS]
+
+        to_process.append((entity_id, unit, state_class, fstates))
+        if "sum" in wanted_statistics[entity_id]:
+            to_query.append(entity_id)
+
+    last_stats = statistics.get_latest_short_term_statistics(hass, to_query)
+    for (  # pylint: disable=too-many-nested-blocks
+        entity_id,
+        unit,
+        state_class,
+        fstates,
+    ) in to_process:
         # Check metadata
         if old_metadata := old_metadatas.get(entity_id):
             if old_metadata[1]["unit_of_measurement"] != unit:
@@ -506,9 +525,6 @@ def _compile_statistics(  # noqa: C901
             last_reset = old_last_reset = None
             new_state = old_state = None
             _sum = 0.0
-            last_stats = statistics.get_last_short_term_statistics(
-                hass, 1, entity_id, False
-            )
             if entity_id in last_stats:
                 # We have compiled history for this sensor before, use that as a starting point
                 last_reset = old_last_reset = last_stats[entity_id][0]["last_reset"]
@@ -596,11 +612,15 @@ def _compile_statistics(  # noqa: C901
     return result
 
 
-def list_statistic_ids(hass: HomeAssistant, statistic_type: str | None = None) -> dict:
-    """Return statistic_ids and meta data."""
+def list_statistic_ids(
+    hass: HomeAssistant,
+    statistic_ids: list[str] | tuple[str] | None = None,
+    statistic_type: str | None = None,
+) -> dict:
+    """Return all or filtered statistic_ids and meta data."""
     entities = _get_sensor_states(hass)
 
-    statistic_ids = {}
+    result = {}
 
     for state in entities:
         state_class = state.attributes[ATTR_STATE_CLASS]
@@ -611,6 +631,9 @@ def list_statistic_ids(hass: HomeAssistant, statistic_type: str | None = None) -
         if statistic_type is not None and statistic_type not in provided_statistics:
             continue
 
+        if statistic_ids is not None and state.entity_id not in statistic_ids:
+            continue
+
         if (
             "sum" in provided_statistics
             and ATTR_LAST_RESET not in state.attributes
@@ -619,7 +642,9 @@ def list_statistic_ids(hass: HomeAssistant, statistic_type: str | None = None) -
             continue
 
         if device_class not in UNIT_CONVERSIONS:
-            statistic_ids[state.entity_id] = {
+            result[state.entity_id] = {
+                "has_mean": "mean" in provided_statistics,
+                "has_sum": "sum" in provided_statistics,
                 "source": RECORDER_DOMAIN,
                 "unit_of_measurement": native_unit,
             }
@@ -629,12 +654,14 @@ def list_statistic_ids(hass: HomeAssistant, statistic_type: str | None = None) -
             continue
 
         statistics_unit = DEVICE_CLASS_UNITS[device_class]
-        statistic_ids[state.entity_id] = {
+        result[state.entity_id] = {
+            "has_mean": "mean" in provided_statistics,
+            "has_sum": "sum" in provided_statistics,
             "source": RECORDER_DOMAIN,
             "unit_of_measurement": statistics_unit,
         }
 
-    return statistic_ids
+    return result
 
 
 def validate_statistics(

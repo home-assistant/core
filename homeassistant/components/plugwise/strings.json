@@ -25,7 +25,7 @@
           "password": "Smile ID",
           "host": "[%key:common::config_flow::data::ip%]",
           "port": "[%key:common::config_flow::data::port%]",
-          "username" : "Smile Username"
+          "username": "Smile Username"
         }
       }
     },

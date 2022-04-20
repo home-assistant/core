@@ -12,8 +12,18 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
 from homeassistant.helpers import entity_registry as er
 
+from tests.common import MockConfigEntry
 
-@pytest.mark.parametrize("target_domain", (Platform.LIGHT,))
+PLATFORMS_TO_TEST = (
+    Platform.COVER,
+    Platform.FAN,
+    Platform.LIGHT,
+    Platform.LOCK,
+    Platform.SIREN,
+)
+
+
+@pytest.mark.parametrize("target_domain", PLATFORMS_TO_TEST)
 async def test_config_flow(
     hass: HomeAssistant,
     target_domain: Platform,
@@ -59,7 +69,7 @@ async def test_config_flow(
         (None, er.RegistryEntryHider.INTEGRATION.value),
     ),
 )
-@pytest.mark.parametrize("target_domain", (Platform.LIGHT,))
+@pytest.mark.parametrize("target_domain", PLATFORMS_TO_TEST)
 async def test_config_flow_registered_entity(
     hass: HomeAssistant,
     target_domain: Platform,
@@ -110,29 +120,26 @@ async def test_config_flow_registered_entity(
     assert switch_entity_entry.hidden_by == hidden_by_after
 
 
-@pytest.mark.parametrize("target_domain", (Platform.LIGHT,))
+@pytest.mark.parametrize("target_domain", PLATFORMS_TO_TEST)
 async def test_options(
     hass: HomeAssistant,
     target_domain: Platform,
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test reconfiguring."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["errors"] is None
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
+    switch_as_x_config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
             CONF_ENTITY_ID: "switch.ceiling",
             CONF_TARGET_DOMAIN: target_domain,
         },
+        title="ABC",
     )
-    await hass.async_block_till_done()
+    switch_as_x_config_entry.add_to_hass(hass)
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert await hass.config_entries.async_setup(switch_as_x_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert config_entry

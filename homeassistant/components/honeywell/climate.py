@@ -6,7 +6,7 @@ from typing import Any
 
 import somecomfort
 
-from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
@@ -14,6 +14,8 @@ from homeassistant.components.climate.const import (
     CURRENT_HVAC_FAN,
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
+    DEFAULT_MAX_TEMP,
+    DEFAULT_MIN_TEMP,
     FAN_AUTO,
     FAN_DIFFUSE,
     FAN_ON,
@@ -23,12 +25,6 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_OFF,
     PRESET_AWAY,
     PRESET_NONE,
-    SUPPORT_AUX_HEAT,
-    SUPPORT_FAN_MODE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_HUMIDITY,
-    SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 
@@ -81,8 +77,8 @@ PARALLEL_UPDATES = 1
 
 async def async_setup_entry(hass, config, async_add_entities, discovery_info=None):
     """Set up the Honeywell thermostat."""
-    cool_away_temp = config.data.get(CONF_COOL_AWAY_TEMPERATURE)
-    heat_away_temp = config.data.get(CONF_HEAT_AWAY_TEMPERATURE)
+    cool_away_temp = config.options.get(CONF_COOL_AWAY_TEMPERATURE)
+    heat_away_temp = config.options.get(CONF_HEAT_AWAY_TEMPERATURE)
 
     data = hass.data[DOMAIN][config.entry_id]
 
@@ -119,16 +115,16 @@ class HoneywellUSThermostat(ClimateEntity):
         self._attr_hvac_modes = list(self._hvac_mode_map)
 
         self._attr_supported_features = (
-            SUPPORT_PRESET_MODE
-            | SUPPORT_TARGET_TEMPERATURE
-            | SUPPORT_TARGET_TEMPERATURE_RANGE
+            ClimateEntityFeature.PRESET_MODE
+            | ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         )
 
         if device._data["canControlHumidification"]:
-            self._attr_supported_features |= SUPPORT_TARGET_HUMIDITY
+            self._attr_supported_features |= ClimateEntityFeature.TARGET_HUMIDITY
 
         if device.raw_ui_data["SwitchEmergencyHeatAllowed"]:
-            self._attr_supported_features |= SUPPORT_AUX_HEAT
+            self._attr_supported_features |= ClimateEntityFeature.AUX_HEAT
 
         if not device._data["hasFan"]:
             return
@@ -139,12 +135,12 @@ class HoneywellUSThermostat(ClimateEntity):
 
         self._attr_fan_modes = list(self._fan_mode_map)
 
-        self._attr_supported_features |= SUPPORT_FAN_MODE
+        self._attr_supported_features |= ClimateEntityFeature.FAN_MODE
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device specific state attributes."""
-        data = {}
+        data: dict[str, Any] = {}
         data[ATTR_FAN_ACTION] = "running" if self._device.fan_running else "idle"
         data[ATTR_PERMANENT_HOLD] = self._is_permanent_hold()
         if self._device.raw_dr_data:
@@ -158,7 +154,7 @@ class HoneywellUSThermostat(ClimateEntity):
             return self._device.raw_ui_data["CoolLowerSetptLimit"]
         if self.hvac_mode == HVAC_MODE_HEAT:
             return self._device.raw_ui_data["HeatLowerSetptLimit"]
-        return None
+        return DEFAULT_MIN_TEMP
 
     @property
     def max_temp(self) -> float:
@@ -167,7 +163,7 @@ class HoneywellUSThermostat(ClimateEntity):
             return self._device.raw_ui_data["CoolUpperSetptLimit"]
         if self.hvac_mode in [HVAC_MODE_HEAT, HVAC_MODE_HEAT_COOL]:
             return self._device.raw_ui_data["HeatUpperSetptLimit"]
-        return None
+        return DEFAULT_MAX_TEMP
 
     @property
     def current_humidity(self) -> int | None:

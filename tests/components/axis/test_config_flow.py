@@ -9,7 +9,6 @@ from homeassistant.components import dhcp, ssdp, zeroconf
 from homeassistant.components.axis import config_flow
 from homeassistant.components.axis.const import (
     CONF_EVENTS,
-    CONF_MODEL,
     CONF_STREAM_PROFILE,
     CONF_VIDEO_SOURCE,
     DEFAULT_STREAM_PROFILE,
@@ -26,6 +25,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import (
     CONF_HOST,
+    CONF_MODEL,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,

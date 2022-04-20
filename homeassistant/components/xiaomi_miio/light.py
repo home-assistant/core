@@ -25,7 +25,7 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_TOKEN
+from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_MODEL, CONF_TOKEN
 from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
@@ -36,7 +36,6 @@ from .const import (
     CONF_DEVICE,
     CONF_FLOW_TYPE,
     CONF_GATEWAY,
-    CONF_MODEL,
     DOMAIN,
     KEY_COORDINATOR,
     MODELS_LIGHT_BULB,

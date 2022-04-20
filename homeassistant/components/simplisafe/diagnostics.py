@@ -5,7 +5,7 @@ from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ADDRESS
+from homeassistant.const import CONF_ADDRESS, CONF_LOCATION
 from homeassistant.core import HomeAssistant
 
 from . import SimpliSafe
@@ -13,7 +13,6 @@ from .const import DOMAIN
 
 CONF_CREDIT_CARD = "creditCard"
 CONF_EXPIRES = "expires"
-CONF_LOCATION = "location"
 CONF_LOCATION_NAME = "locationName"
 CONF_PAYMENT_PROFILE_ID = "paymentProfileId"
 CONF_SERIAL = "serial"

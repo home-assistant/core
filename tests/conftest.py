@@ -1,6 +1,5 @@
 """Set up some common test helper things."""
 import asyncio
-import datetime
 import functools
 import logging
 import socket
@@ -26,10 +25,10 @@ from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH_REQUIRED,
 )
 from homeassistant.components.websocket_api.http import URL
-from homeassistant.const import ATTR_NOW, EVENT_TIME_CHANGED, HASSIO_USER_NAME
-from homeassistant.helpers import config_entry_oauth2_flow, event
+from homeassistant.const import HASSIO_USER_NAME
+from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
-from homeassistant.util import location
+from homeassistant.util import dt as dt_util, location
 
 from tests.ignore_uncaught_exceptions import IGNORE_UNCAUGHT_EXCEPTIONS
 
@@ -41,6 +40,7 @@ from tests.common import (  # noqa: E402, isort:skip
     MockConfigEntry,
     MockUser,
     async_fire_mqtt_message,
+    async_init_recorder_component,
     async_test_home_assistant,
     get_test_home_assistant,
     init_recorder_component,
@@ -249,6 +249,8 @@ def load_registries():
 def hass(loop, load_registries, hass_storage, request):
     """Fixture to provide a test instance of Home Assistant."""
 
+    orig_tz = dt_util.DEFAULT_TIME_ZONE
+
     def exc_handle(loop, context):
         """Handle exceptions by rethrowing them, which will fail the test."""
         # Most of these contexts will contain an exception, but not all.
@@ -267,12 +269,19 @@ def hass(loop, load_registries, hass_storage, request):
 
     exceptions = []
     hass = loop.run_until_complete(async_test_home_assistant(loop, load_registries))
+    orig_units = hass.config.units
     orig_exception_handler = loop.get_exception_handler()
     loop.set_exception_handler(exc_handle)
 
     yield hass
 
     loop.run_until_complete(hass.async_stop(force=True))
+
+    # Restore timezone, it is set when creating the hass object
+    dt_util.DEFAULT_TIME_ZONE = orig_tz
+    # Restore the units as well
+    hass.config.units = orig_units
+
     for ex in exceptions:
         if (
             request.module.__name__,
@@ -611,6 +620,8 @@ async def mqtt_mock(hass, mqtt_client_mock, mqtt_config):
     )
     mqtt_component_mock.conf = hass.data["mqtt"].conf  # For diagnostics
     mqtt_component_mock._mqttc = mqtt_client_mock
+    # connected set to True to get a more realistics behavior when subscribing
+    hass.data["mqtt"].connected = True
 
     hass.data["mqtt"] = mqtt_component_mock
     component = hass.data["mqtt"]
@@ -653,115 +664,6 @@ def mock_async_zeroconf(mock_zeroconf):
 
 
 @pytest.fixture
-def legacy_patchable_time():
-    """Allow time to be patchable by using event listeners instead of asyncio loop."""
-
-    @ha.callback
-    @loader.bind_hass
-    def async_track_point_in_utc_time(hass, action, point_in_time):
-        """Add a listener that fires once after a specific point in UTC time."""
-        # Ensure point_in_time is UTC
-        point_in_time = event.dt_util.as_utc(point_in_time)
-
-        # Since this is called once, we accept a HassJob so we can avoid
-        # having to figure out how to call the action every time its called.
-        job = action if isinstance(action, ha.HassJob) else ha.HassJob(action)
-
-        @ha.callback
-        def point_in_time_listener(event):
-            """Listen for matching time_changed events."""
-            now = event.data[ATTR_NOW]
-
-            if now < point_in_time or hasattr(point_in_time_listener, "run"):
-                return
-
-            # Set variable so that we will never run twice.
-            # Because the event bus might have to wait till a thread comes
-            # available to execute this listener it might occur that the
-            # listener gets lined up twice to be executed. This will make
-            # sure the second time it does nothing.
-            setattr(point_in_time_listener, "run", True)
-            async_unsub()
-
-            hass.async_run_hass_job(job, now)
-
-        async_unsub = hass.bus.async_listen(EVENT_TIME_CHANGED, point_in_time_listener)
-
-        return async_unsub
-
-    @ha.callback
-    @loader.bind_hass
-    def async_track_utc_time_change(
-        hass, action, hour=None, minute=None, second=None, local=False
-    ):
-        """Add a listener that will fire if time matches a pattern."""
-
-        job = ha.HassJob(action)
-        # We do not have to wrap the function with time pattern matching logic
-        # if no pattern given
-        if all(val is None for val in (hour, minute, second)):
-
-            @ha.callback
-            def time_change_listener(ev) -> None:
-                """Fire every time event that comes in."""
-                hass.async_run_hass_job(job, ev.data[ATTR_NOW])
-
-            return hass.bus.async_listen(EVENT_TIME_CHANGED, time_change_listener)
-
-        matching_seconds = event.dt_util.parse_time_expression(second, 0, 59)
-        matching_minutes = event.dt_util.parse_time_expression(minute, 0, 59)
-        matching_hours = event.dt_util.parse_time_expression(hour, 0, 23)
-
-        next_time = None
-
-        def calculate_next(now) -> None:
-            """Calculate and set the next time the trigger should fire."""
-            nonlocal next_time
-
-            localized_now = event.dt_util.as_local(now) if local else now
-            next_time = event.dt_util.find_next_time_expression_time(
-                localized_now, matching_seconds, matching_minutes, matching_hours
-            )
-
-        # Make sure rolling back the clock doesn't prevent the timer from
-        # triggering.
-        last_now = None
-
-        @ha.callback
-        def pattern_time_change_listener(ev) -> None:
-            """Listen for matching time_changed events."""
-            nonlocal next_time, last_now
-
-            now = ev.data[ATTR_NOW]
-
-            if last_now is None or now < last_now:
-                # Time rolled back or next time not yet calculated
-                calculate_next(now)
-
-            last_now = now
-
-            if next_time <= now:
-                hass.async_run_hass_job(
-                    job, event.dt_util.as_local(now) if local else now
-                )
-                calculate_next(now + datetime.timedelta(seconds=1))
-
-        # We can't use async_track_point_in_utc_time here because it would
-        # break in the case that the system time abruptly jumps backwards.
-        # Our custom last_now logic takes care of resolving that scenario.
-        return hass.bus.async_listen(EVENT_TIME_CHANGED, pattern_time_change_listener)
-
-    with patch(
-        "homeassistant.helpers.event.async_track_point_in_utc_time",
-        async_track_point_in_utc_time,
-    ), patch(
-        "homeassistant.helpers.event.async_track_utc_time_change",
-        async_track_utc_time_change,
-    ):
-        yield
-
-
-@pytest.fixture
 def enable_custom_integrations(hass):
     """Enable custom integrations defined in the test dir."""
     hass.data.pop(loader.DATA_CUSTOM_COMPONENTS)
@@ -778,13 +680,30 @@ def enable_statistics():
 
 
 @pytest.fixture
-def hass_recorder(enable_statistics, hass_storage):
+def enable_nightly_purge():
+    """Fixture to control enabling of recorder's nightly purge job.
+
+    To enable nightly purgin, tests can be marked with:
+    @pytest.mark.parametrize("enable_nightly_purge", [True])
+    """
+    return False
+
+
+@pytest.fixture
+def hass_recorder(enable_nightly_purge, enable_statistics, hass_storage):
     """Home Assistant fixture with in-memory recorder."""
+    original_tz = dt_util.DEFAULT_TIME_ZONE
+
     hass = get_test_home_assistant()
     stats = recorder.Recorder.async_periodic_statistics if enable_statistics else None
+    nightly = recorder.Recorder.async_nightly_tasks if enable_nightly_purge else None
     with patch(
         "homeassistant.components.recorder.Recorder.async_periodic_statistics",
         side_effect=stats,
+        autospec=True,
+    ), patch(
+        "homeassistant.components.recorder.Recorder.async_nightly_tasks",
+        side_effect=nightly,
         autospec=True,
     ):
 
@@ -798,6 +717,31 @@ def hass_recorder(enable_statistics, hass_storage):
 
         yield setup_recorder
         hass.stop()
+
+    # Restore timezone, it is set when creating the hass object
+    dt_util.DEFAULT_TIME_ZONE = original_tz
+
+
+@pytest.fixture
+async def recorder_mock(enable_nightly_purge, enable_statistics, hass):
+    """Fixture with in-memory recorder."""
+    stats = recorder.Recorder.async_periodic_statistics if enable_statistics else None
+    nightly = recorder.Recorder.async_nightly_tasks if enable_nightly_purge else None
+    with patch(
+        "homeassistant.components.recorder.Recorder.async_periodic_statistics",
+        side_effect=stats,
+        autospec=True,
+    ), patch(
+        "homeassistant.components.recorder.Recorder.async_nightly_tasks",
+        side_effect=nightly,
+        autospec=True,
+    ):
+        await async_init_recorder_component(hass)
+        await hass.async_start()
+        await hass.async_block_till_done()
+        await hass.async_add_executor_job(
+            hass.data[recorder.DATA_INSTANCE].block_till_done
+        )
 
 
 @pytest.fixture

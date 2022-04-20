@@ -63,14 +63,3 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
-
-    async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
-        """Handle import of solax config from YAML."""
-
-        import_data = {
-            CONF_IP_ADDRESS: config[CONF_IP_ADDRESS],
-            CONF_PORT: config[CONF_PORT],
-            CONF_PASSWORD: DEFAULT_PASSWORD,
-        }
-
-        return await self.async_step_user(user_input=import_data)

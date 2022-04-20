@@ -7,7 +7,11 @@ import voluptuous as vol
 from zhong_hong_hvac.hub import ZhongHongGateway
 from zhong_hong_hvac.hvac import HVAC as ZhongHongHVAC
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
+from homeassistant.components.climate import (
+    PLATFORM_SCHEMA,
+    ClimateEntity,
+    ClimateEntityFeature,
+)
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
     HVAC_MODE_COOL,
@@ -15,8 +19,6 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_FAN_ONLY,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
-    SUPPORT_FAN_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
@@ -130,6 +132,10 @@ def setup_platform(
 class ZhongHongClimate(ClimateEntity):
     """Representation of a ZhongHong controller support HVAC."""
 
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
+    )
+
     def __init__(self, hub, addr_out, addr_in):
         """Set up the ZhongHong climate devices."""
 
@@ -176,11 +182,6 @@ class ZhongHongClimate(ClimateEntity):
     def unique_id(self):
         """Return the unique ID of the HVAC."""
         return f"zhong_hong_hvac_{self._device.addr_out}_{self._device.addr_in}"
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
 
     @property
     def temperature_unit(self):

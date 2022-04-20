@@ -7,7 +7,7 @@ from elkm1_lib.const import (
     ZonePhysicalStatus,
     ZoneType,
 )
-from elkm1_lib.util import pretty_const, username
+from elkm1_lib.util import pretty_const
 import voluptuous as vol
 
 from homeassistant.components.sensor import SensorEntity
@@ -19,7 +19,7 @@ from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ElkAttachedEntity, create_elk_entities
+from . import ElkAttachedEntity, ElkEntity, create_elk_entities
 from .const import ATTR_VALUE, DOMAIN, ELK_USER_CODE_SERVICE_SCHEMA
 
 SERVICE_SENSOR_COUNTER_REFRESH = "sensor_counter_refresh"
@@ -40,7 +40,7 @@ async def async_setup_entry(
 ) -> None:
     """Create the Elk-M1 sensor platform."""
     elk_data = hass.data[DOMAIN][config_entry.entry_id]
-    entities: list[ElkSensor] = []
+    entities: list[ElkEntity] = []
     elk = elk_data["elk"]
     create_elk_entities(elk_data, elk.counters, "counter", ElkCounter, entities)
     create_elk_entities(elk_data, elk.keypads, "keypad", ElkKeypad, entities)
@@ -155,7 +155,7 @@ class ElkKeypad(ElkSensor):
         attrs["last_user_time"] = self._element.last_user_time.isoformat()
         attrs["last_user"] = self._element.last_user + 1
         attrs["code"] = self._element.code
-        attrs["last_user_name"] = username(self._elk, self._element.last_user)
+        attrs["last_user_name"] = self._elk.users.username(self._element.last_user)
         attrs["last_keypress"] = self._element.last_keypress
         return attrs
 

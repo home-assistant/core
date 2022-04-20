@@ -1,6 +1,6 @@
 """The Backup integration."""
 from homeassistant.components.hassio import is_hassio
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, LOGGER
@@ -18,7 +18,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
         return False
 
-    hass.data[DOMAIN] = BackupManager(hass)
+    backup_manager = BackupManager(hass)
+    hass.data[DOMAIN] = backup_manager
+
+    async def async_handle_create_service(call: ServiceCall) -> None:
+        """Service handler for creating backups."""
+        await backup_manager.generate_backup()
+
+    hass.services.async_register(DOMAIN, "create", async_handle_create_service)
 
     async_register_websocket_handlers(hass)
     async_register_http_views(hass)

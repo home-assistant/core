@@ -3,14 +3,12 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
 from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
     PRESET_ECO,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
@@ -27,7 +25,6 @@ PRESET_DAY = "day"
 PRESET_SETBACK = "setback"
 PRESET_EMERGENCY = "emergency"
 
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 SUPPORT_HVAC = [HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_OFF]
 SUPPORT_PRESET = [PRESET_ECO, PRESET_DAY, PRESET_EMERGENCY, PRESET_SETBACK]
 
@@ -74,6 +71,10 @@ def setup_platform(
 class StiebelEltron(ClimateEntity):
     """Representation of a STIEBEL ELTRON heat pump."""
 
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+    )
+
     def __init__(self, name, ste_data):
         """Initialize the unit."""
         self._name = name
@@ -84,11 +85,6 @@ class StiebelEltron(ClimateEntity):
         self._filter_alarm = None
         self._force_update = False
         self._ste_data = ste_data
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_FLAGS
 
     def update(self):
         """Update unit attributes."""
@@ -115,7 +111,7 @@ class StiebelEltron(ClimateEntity):
         """Return the name of the climate device."""
         return self._name
 
-    # Handle SUPPORT_TARGET_TEMPERATURE
+    # Handle ClimateEntityFeature.TARGET_TEMPERATURE
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""

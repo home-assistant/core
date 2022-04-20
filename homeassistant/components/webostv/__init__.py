@@ -1,33 +1,24 @@
 """Support for LG webOS Smart TV."""
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable
 from contextlib import suppress
-import json
 import logging
-import os
-from pickle import loads
 from typing import Any
 
 from aiowebostv import WebOsClient, WebOsTvPairError
-import sqlalchemy as db
 import voluptuous as vol
 
 from homeassistant.components import notify as hass_notify
 from homeassistant.components.automation import AutomationActionType
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_COMMAND,
     ATTR_ENTITY_ID,
     CONF_CLIENT_SECRET,
-    CONF_CUSTOMIZE,
     CONF_HOST,
-    CONF_ICON,
     CONF_NAME,
-    CONF_UNIQUE_ID,
     EVENT_HOMEASSISTANT_STOP,
-    Platform,
 )
 from homeassistant.core import (
     Context,
@@ -37,7 +28,7 @@ from homeassistant.core import (
     ServiceCall,
     callback,
 )
-from homeassistant.helpers import config_validation as cv, discovery, entity_registry
+from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 
@@ -46,46 +37,17 @@ from .const import (
     ATTR_CONFIG_ENTRY_ID,
     ATTR_PAYLOAD,
     ATTR_SOUND_OUTPUT,
-    CONF_ON_ACTION,
-    CONF_SOURCES,
     DATA_CONFIG_ENTRY,
     DATA_HASS_CONFIG,
-    DEFAULT_NAME,
     DOMAIN,
     PLATFORMS,
     SERVICE_BUTTON,
     SERVICE_COMMAND,
     SERVICE_SELECT_SOUND_OUTPUT,
-    WEBOSTV_CONFIG_FILE,
     WEBOSTV_EXCEPTIONS,
 )
 
-CUSTOMIZE_SCHEMA = vol.Schema(
-    {vol.Optional(CONF_SOURCES, default=[]): vol.All(cv.ensure_list, [cv.string])}
-)
-
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        {
-            DOMAIN: vol.All(
-                cv.ensure_list,
-                [
-                    vol.Schema(
-                        {
-                            vol.Optional(CONF_CUSTOMIZE, default={}): CUSTOMIZE_SCHEMA,
-                            vol.Required(CONF_HOST): cv.string,
-                            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-                            vol.Optional(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
-                            vol.Optional(CONF_ICON): cv.string,
-                        }
-                    )
-                ],
-            )
-        },
-    ),
-    extra=vol.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 CALL_SCHEMA = vol.Schema({vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids})
 
@@ -109,112 +71,11 @@ SERVICE_TO_METHOD = {
 _LOGGER = logging.getLogger(__name__)
 
 
-def read_client_keys(config_file: str) -> dict[str, str]:
-    """Read legacy client keys from file."""
-    if not os.path.isfile(config_file):
-        return {}
-
-    # Try to parse the file as being JSON
-    with open(config_file, encoding="utf8") as json_file:
-        try:
-            client_keys = json.load(json_file)
-            if isinstance(client_keys, dict):
-                return client_keys
-            return {}
-        except (json.JSONDecodeError, UnicodeDecodeError):
-            pass
-
-    # If the file is not JSON, read it as Sqlite DB
-    engine = db.create_engine(f"sqlite:///{config_file}")
-    table = db.Table("unnamed", db.MetaData(), autoload=True, autoload_with=engine)
-    results = engine.connect().execute(db.select([table])).fetchall()
-    db_client_keys = {k: loads(v) for k, v in results}
-    return db_client_keys
-
-
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the LG WebOS TV platform."""
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN].setdefault(DATA_CONFIG_ENTRY, {})
     hass.data[DOMAIN][DATA_HASS_CONFIG] = config
-
-    if DOMAIN not in config:
-        return True
-
-    config_file = hass.config.path(WEBOSTV_CONFIG_FILE)
-    if not (
-        client_keys := await hass.async_add_executor_job(read_client_keys, config_file)
-    ):
-        _LOGGER.debug("No pairing keys, Not importing webOS Smart TV YAML config")
-        return True
-
-    async def async_migrate_task(
-        entity_id: str, conf: dict[str, str], key: str
-    ) -> None:
-        _LOGGER.debug("Migrating webOS Smart TV entity %s unique_id", entity_id)
-        client = WebOsClient(conf[CONF_HOST], key)
-        tries = 0
-        while not client.is_connected():
-            try:
-                await client.connect()
-            except WEBOSTV_EXCEPTIONS:
-                if tries == 0:
-                    _LOGGER.warning(
-                        "Please make sure webOS TV %s is turned on to complete "
-                        "the migration of configuration.yaml to the UI",
-                        entity_id,
-                    )
-                wait_time = 2 ** min(tries, 4) * 5
-                tries += 1
-                await asyncio.sleep(wait_time)
-            except WebOsTvPairError:
-                return
-
-        ent_reg = entity_registry.async_get(hass)
-        if not (
-            new_entity_id := ent_reg.async_get_entity_id(
-                Platform.MEDIA_PLAYER, DOMAIN, key
-            )
-        ):
-            _LOGGER.debug(
-                "Not updating webOSTV Smart TV entity %s unique_id, entity missing",
-                entity_id,
-            )
-            return
-
-        uuid = client.hello_info["deviceUUID"]
-        ent_reg.async_update_entity(new_entity_id, new_unique_id=uuid)
-        await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={
-                **conf,
-                CONF_CLIENT_SECRET: key,
-                CONF_UNIQUE_ID: uuid,
-            },
-        )
-
-    ent_reg = entity_registry.async_get(hass)
-
-    tasks = []
-    for conf in config[DOMAIN]:
-        host = conf[CONF_HOST]
-        if (key := client_keys.get(host)) is None:
-            _LOGGER.debug(
-                "Not importing webOS Smart TV host %s without pairing key", host
-            )
-            continue
-
-        if entity_id := ent_reg.async_get_entity_id(Platform.MEDIA_PLAYER, DOMAIN, key):
-            tasks.append(asyncio.create_task(async_migrate_task(entity_id, conf, key)))
-
-    async def async_tasks_cancel(_event: Event) -> None:
-        """Cancel config flow import tasks."""
-        for task in tasks:
-            if not task.done():
-                task.cancel()
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_tasks_cancel)
 
     return True
 

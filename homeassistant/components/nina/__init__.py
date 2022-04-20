@@ -1,7 +1,6 @@
 """The Nina integration."""
 from __future__ import annotations
 
-import datetime as dt
 from typing import Any
 
 from async_timeout import timeout
@@ -12,14 +11,16 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util import dt as dt_util
 
 from .const import (
     _LOGGER,
+    ATTR_DESCRIPTION,
     ATTR_EXPIRES,
     ATTR_HEADLINE,
     ATTR_ID,
+    ATTR_SENDER,
     ATTR_SENT,
+    ATTR_SEVERITY,
     ATTR_START,
     CONF_FILTER_CORONA,
     CONF_REGIONS,
@@ -89,22 +90,15 @@ class NINADataUpdateCoordinator(DataUpdateCoordinator):
                 warn_obj: dict[str, Any] = {
                     ATTR_ID: raw_warn.id,
                     ATTR_HEADLINE: raw_warn.headline,
-                    ATTR_SENT: self._to_utc(raw_warn.sent),
-                    ATTR_START: self._to_utc(raw_warn.start),
-                    ATTR_EXPIRES: self._to_utc(raw_warn.expires),
+                    ATTR_DESCRIPTION: raw_warn.description,
+                    ATTR_SENDER: raw_warn.sender,
+                    ATTR_SEVERITY: raw_warn.severity,
+                    ATTR_SENT: raw_warn.sent or "",
+                    ATTR_START: raw_warn.start or "",
+                    ATTR_EXPIRES: raw_warn.expires or "",
                 }
                 warnings_for_regions.append(warn_obj)
 
             return_data[region_id] = warnings_for_regions
 
         return return_data
-
-    @staticmethod
-    def _to_utc(input_time: str) -> str | None:
-        if input_time:
-            return (
-                dt.datetime.fromisoformat(input_time)
-                .astimezone(dt_util.UTC)
-                .isoformat()
-            )
-        return None

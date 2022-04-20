@@ -1,8 +1,9 @@
 """Notifications for Android TV notification service."""
 from __future__ import annotations
 
+from io import BufferedReader
 import logging
-from typing import Any, BinaryIO
+from typing import Any
 
 from notifications_android_tv import Notifications
 import requests
@@ -116,7 +117,7 @@ class NFAndroidTVNotificationService(BaseNotificationService):
         position = None
         transparency = None
         bkgcolor = None
-        interrupt = None
+        interrupt = False
         icon = None
         image_file = None
         if data:
@@ -203,7 +204,7 @@ class NFAndroidTVNotificationService(BaseNotificationService):
         username: str | None = None,
         password: str | None = None,
         auth: str | None = None,
-    ) -> bytes | BinaryIO | None:
+    ) -> BufferedReader | bytes | None:
         """Load image/document/etc from a local path or URL."""
         try:
             if url is not None:

@@ -49,7 +49,7 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     payload: dict[str, Any] = {"current_timestamp": time.monotonic()}
 
-    for section in ("discovered", "discovery_known", "discovery_ignored"):
+    for section in ("discovered", "discovery_known"):
         payload[section] = {}
         data: dict[str, Any] = getattr(hass.data[DATA_SONOS], section)
         if isinstance(data, set):
