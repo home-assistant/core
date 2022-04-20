@@ -24,9 +24,9 @@ class MockSirenEntity(SirenEntity):
     ):
         """Initialize mock siren entity."""
         self._attr_supported_features = supported_features
-        if available_tones_as_attr:
+        if available_tones_as_attr is not None:
             self._attr_available_tones = available_tones_as_attr
-        else:
+        elif available_tones_in_desc is not None:
             self.entity_description = SirenEntityDescription(
                 "mock", available_tones=available_tones_in_desc
             )
@@ -64,18 +64,21 @@ async def test_no_available_tones(hass):
 
 async def test_available_tones_list(hass):
     """Test that valid tones from tone list will get passed in."""
-    siren = MockSirenEntity(SirenEntityFeature.TONES, ["a", "b"])
-    siren.hass = hass
-    assert process_turn_on_params(siren, {"tone": "a"}) == {"tone": "a"}
-
-
-async def test_available_tones_in_description(hass):
-    """Test that valid tones from tone list get passed in from entity description."""
     siren = MockSirenEntity(
-        SirenEntityFeature.TONES, available_tones_in_desc=["a", "b"]
+        SirenEntityFeature.TONES, available_tones_as_attr=["a", "b"]
     )
     siren.hass = hass
     assert process_turn_on_params(siren, {"tone": "a"}) == {"tone": "a"}
+
+
+async def test_available_tones(hass):
+    """Test different available tones scenarios."""
+    siren = MockSirenEntity(
+        SirenEntityFeature.TONES, available_tones_in_desc=["a", "b"]
+    )
+    assert siren.available_tones == ["a", "b"]
+    siren = MockSirenEntity(SirenEntityFeature.TONES)
+    assert siren.available_tones is None
 
 
 async def test_available_tones_dict(hass):
