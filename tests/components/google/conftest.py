@@ -256,9 +256,7 @@ def mock_insert_event(
 ) -> Callable[[..., dict[str, Any]], None]:
     """Fixture for capturing event creation."""
 
-    def _expect_result(calendar_id: str | None = None) -> None:
-        if calendar_id is None:
-            calendar_id = CALENDAR_ID
+    def _expect_result(calendar_id: str = CALENDAR_ID) -> None:
         aioclient_mock.post(
             f"{API_BASE_URL}/calendars/{calendar_id}/events",
         )
