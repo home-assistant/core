@@ -20,7 +20,6 @@ from homeassistant.components.climate.const import (
     ATTR_SWING_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
-    CURRENT_HVAC_COOL,
     DOMAIN,
     PRESET_AWAY,
     PRESET_ECO,
@@ -31,6 +30,7 @@ from homeassistant.components.climate.const import (
     SERVICE_SET_PRESET_MODE,
     SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE,
+    HVACAction,
     HVACMode,
 )
 from homeassistant.const import (
@@ -290,7 +290,7 @@ async def test_set_hvac_bad_attr_and_state(hass):
     Also check the state.
     """
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get(ATTR_HVAC_ACTION) == CURRENT_HVAC_COOL
+    assert state.attributes.get(ATTR_HVAC_ACTION) == HVACAction.COOLING
     assert state.state == HVACMode.COOL
 
     with pytest.raises(vol.Invalid):
@@ -302,7 +302,7 @@ async def test_set_hvac_bad_attr_and_state(hass):
         )
 
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get(ATTR_HVAC_ACTION) == CURRENT_HVAC_COOL
+    assert state.attributes.get(ATTR_HVAC_ACTION) == HVACAction.COOLING
     assert state.state == HVACMode.COOL
 
 
