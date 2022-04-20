@@ -522,7 +522,7 @@ class HomeKit:
             advertised_address=self._advertise_ip,
             async_zeroconf_instance=async_zeroconf_instance,
             zeroconf_server=f"{uuid}-hap.local.",
-            loader=loader,
+            loader=get_loader(),
         )
 
         # If we do not load the mac address will be wrong
