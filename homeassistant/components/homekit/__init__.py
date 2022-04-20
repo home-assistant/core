@@ -205,8 +205,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the HomeKit from yaml."""
     hass.data.setdefault(DOMAIN, {})[PERSIST_LOCK] = asyncio.Lock()
 
-    # Initialize the loader so there race during setup when
-    # there are multiple homekit entries
+    # Initialize the loader before loading entries to ensure
+    # there is no race where multiple entries try to load it
+    # at the same time.
     await hass.async_add_executor_job(get_loader)
 
     _async_register_events_and_services(hass)
