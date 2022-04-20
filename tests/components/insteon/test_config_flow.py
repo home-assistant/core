@@ -614,9 +614,9 @@ async def test_discovery_via_usb(hass):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "confirm_usb"
 
-    with patch(
-        "homeassistant.components.insteon.config_flow.async_connect"
-    ), patch("homeassistant.components.insteon.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.insteon.config_flow.async_connect"), patch(
+        "homeassistant.components.insteon.async_setup_entry", return_value=True
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
         )
