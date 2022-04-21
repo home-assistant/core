@@ -2,7 +2,7 @@
 from datetime import timedelta
 from unittest.mock import patch
 
-from pytest import fixture
+import pytest
 
 from homeassistant import config as hass_config
 from homeassistant.components.filter.sensor import (
@@ -33,7 +33,7 @@ import homeassistant.util.dt as dt_util
 from tests.common import assert_setup_component, get_fixture_path
 
 
-@fixture
+@pytest.fixture
 def values():
     """Fixture for a list of test States."""
     values = []
@@ -86,8 +86,9 @@ async def test_chain(hass, recorder_mock, values):
         assert state.state == "18.05"
 
 
-async def test_chain_history(hass, recorder_mock, values, missing=False):
-    """Test if filter chaining works."""
+@pytest.mark.parametrize("missing", (True, False))
+async def test_chain_history(hass, recorder_mock, values, missing):
+    """Test if filter chaining works, when a source is and isn't recorded."""
     config = {
         "sensor": {
             "platform": "filter",
@@ -198,11 +199,6 @@ async def test_source_state_none(hass, recorder_mock, values):
     # Filter sensor ignores None state setting state to STATE_UNKNOWN
     state = hass.states.get("sensor.test")
     assert state.state == STATE_UNKNOWN
-
-
-async def test_chain_history_missing(hass, values):
-    """Test if filter chaining works when recorder is enabled but the source is not recorded."""
-    await test_chain_history(hass, values, missing=True)
 
 
 async def test_history_time(hass, recorder_mock):
