@@ -18,7 +18,8 @@ def repack_database(instance: Recorder) -> None:
     # Execute sqlite command to free up space on disk
     if dialect_name == "sqlite":
         _LOGGER.debug("Vacuuming SQL DB to free space")
-        instance.engine.execute("VACUUM")
+        with instance.engine.connect() as conn:
+            conn.execute("VACUUM")
         return
 
     # Execute postgresql vacuum command to free up space on disk
@@ -33,5 +34,6 @@ def repack_database(instance: Recorder) -> None:
     # Optimize mysql / mariadb tables to free up space on disk
     if dialect_name == "mysql":
         _LOGGER.debug("Optimizing SQL DB to free space")
-        instance.engine.execute("OPTIMIZE TABLE states, events, recorder_runs")
+        with instance.engine.connect() as conn:
+            conn.execute("OPTIMIZE TABLE states, events, recorder_runs")
         return
