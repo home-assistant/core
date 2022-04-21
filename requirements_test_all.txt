@@ -475,6 +475,9 @@ gTTS==2.2.4
 # homeassistant.components.garages_amsterdam
 garages-amsterdam==3.0.0
 
+# homeassistant.components.google
+gcal-sync==0.5.0
+
 # homeassistant.components.usgs_earthquakes_feed
 geojson_client==0.6
 
@@ -508,9 +511,6 @@ goalzero==0.2.1
 
 # homeassistant.components.goodwe
 goodwe==0.2.15
-
-# homeassistant.components.google
-google-api-python-client==2.38.0
 
 # homeassistant.components.google_pubsub
 google-cloud-pubsub==2.11.0
@@ -585,7 +585,6 @@ homematicip==1.0.2
 # homeassistant.components.home_plus_control
 homepluscontrol==0.0.5
 
-# homeassistant.components.google
 # homeassistant.components.remember_the_milk
 httplib2==0.20.4
 
