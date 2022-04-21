@@ -12,7 +12,7 @@ import logging
 import os
 import re
 from statistics import mean
-from typing import TYPE_CHECKING, Any, Literal, overload
+from typing import TYPE_CHECKING, Any, Literal, cast, overload
 
 from sqlalchemy import bindparam, func
 from sqlalchemy.exc import SQLAlchemyError, StatementError
@@ -550,25 +550,26 @@ def compile_statistics(instance: Recorder, start: datetime) -> bool:
 
     _LOGGER.debug("Compiling statistics for %s-%s", start, end)
     platform_stats: list[StatisticResult] = []
+    old_metadata_dict: dict[str, tuple[int, StatisticMetaData]] = {}
     # Collect statistics from all platforms implementing support
     for domain, platform in instance.hass.data[DOMAIN].items():
         if not hasattr(platform, "compile_statistics"):
             continue
-        platform_stat = platform.compile_statistics(instance.hass, start, end)
+        platform_stat, metadata_dict = cast(
+            tuple[list[StatisticResult], dict[str, tuple[int, StatisticMetaData]]],
+            platform.compile_statistics(instance.hass, start, end),
+        )
         _LOGGER.debug(
             "Statistics for %s during %s-%s: %s", domain, start, end, platform_stat
         )
         platform_stats.extend(platform_stat)
+        old_metadata_dict.update(metadata_dict)
 
     # Insert collected statistics in the database
     with session_scope(
         session=instance.get_session(),  # type: ignore[misc]
         exception_filter=_filter_unique_constraint_integrity_error(instance),
     ) as session:
-        statistic_ids = [stats["meta"]["statistic_id"] for stats in platform_stats]
-        old_metadata_dict = get_metadata_with_session(
-            instance.hass, session, statistic_ids=statistic_ids
-        )
         for stats in platform_stats:
             metadata_id = _update_or_add_metadata(
                 session, stats["meta"], old_metadata_dict
@@ -1102,14 +1103,19 @@ def get_last_short_term_statistics(
 
 
 def get_latest_short_term_statistics(
-    hass: HomeAssistant, statistic_ids: list[str]
+    hass: HomeAssistant,
+    statistic_ids: list[str],
+    metadata: dict[str, tuple[int, StatisticMetaData]] | None = None,
 ) -> dict[str, list[dict]]:
     """Return the latest short term statistics for a list of statistic_ids."""
     # This function doesn't use a baked query, we instead rely on the
     # "Transparent SQL Compilation Caching" feature introduced in SQLAlchemy 1.4
     with session_scope(hass=hass) as session:
         # Fetch metadata for the given statistic_ids
-        metadata = get_metadata_with_session(hass, session, statistic_ids=statistic_ids)
+        if not metadata:
+            metadata = get_metadata_with_session(
+                hass, session, statistic_ids=statistic_ids
+            )
         if not metadata:
             return {}
         metadata_ids = [
