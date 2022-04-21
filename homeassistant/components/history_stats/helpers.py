@@ -13,6 +13,10 @@ import homeassistant.util.dt as dt_util
 _LOGGER = logging.getLogger(__name__)
 
 
+DURATION_START = "start"
+DURATION_END = "end"
+
+
 @callback
 def async_calculate_period(
     duration: datetime.timedelta | None,
@@ -20,44 +24,36 @@ def async_calculate_period(
     end_template: Template | None,
 ) -> tuple[datetime.datetime, datetime.datetime] | None:
     """Parse the templates and return the period."""
-    start: datetime.datetime | None = None
-    end: datetime.datetime | None = None
-
-    # Parse start
-    if start_template is not None:
+    bounds: dict[str, datetime.datetime | None] = {
+        DURATION_START: None,
+        DURATION_END: None,
+    }
+    for bound, template in (
+        (DURATION_START, start_template),
+        (DURATION_END, end_template),
+    ):
+        # Parse start
+        if template is None:
+            continue
         try:
-            start_rendered = start_template.async_render()
+            rendered = template.async_render()
         except (TemplateError, TypeError) as ex:
-            HistoryStatsHelper.handle_template_exception(ex, "start")
+            HistoryStatsHelper.handle_template_exception(ex, bound)
             return None
-        if isinstance(start_rendered, str):
-            start = dt_util.parse_datetime(start_rendered)
-        if start is None:
-            try:
-                start = dt_util.as_local(
-                    dt_util.utc_from_timestamp(math.floor(float(start_rendered)))
-                )
-            except ValueError:
-                _LOGGER.error("Parsing error: start must be a datetime or a timestamp")
-                return None
-
-    # Parse end
-    if end_template is not None:
+        if isinstance(rendered, str):
+            result = dt_util.parse_datetime(rendered)
+        if result is not None:
+            continue
         try:
-            end_rendered = end_template.async_render()
-        except (TemplateError, TypeError) as ex:
-            HistoryStatsHelper.handle_template_exception(ex, "end")
+            bounds[bound] = dt_util.as_local(
+                dt_util.utc_from_timestamp(math.floor(float(rendered)))
+            )
+        except ValueError:
+            _LOGGER.error("Parsing error: %s must be a datetime or a timestamp", bound)
             return None
-        if isinstance(end_rendered, str):
-            end = dt_util.parse_datetime(end_rendered)
-        if end is None:
-            try:
-                end = dt_util.as_local(
-                    dt_util.utc_from_timestamp(math.floor(float(end_rendered)))
-                )
-            except ValueError:
-                _LOGGER.error("Parsing error: end must be a datetime or a timestamp")
-                return None
+
+    start: datetime.datetime | None = bounds[DURATION_START]
+    end: datetime.datetime | None = bounds[DURATION_END]
 
     # Calculate start or end using the duration
     if start is None:
