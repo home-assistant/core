@@ -30,25 +30,22 @@ class DeconzBase:
     @property
     def unique_id(self) -> str:
         """Return a unique identifier for this device."""
-        if isinstance(self._device, PydeconzScene):
-            return ""
+        assert not isinstance(self._device, PydeconzScene)
         return self._device.unique_id  # type: ignore[no-any-return]
 
     @property
     def serial(self) -> str | None:
         """Return a serial number for this device."""
-        if (
-            isinstance(self._device, PydeconzScene)
-            or not self._device.unique_id
-            or self._device.unique_id.count(":") != 7
-        ):
+        assert not isinstance(self._device, PydeconzScene)
+        if not self._device.unique_id or self._device.unique_id.count(":") != 7:
             return None
         return self._device.unique_id.split("-", 1)[0]  # type: ignore[no-any-return]
 
     @property
     def device_info(self) -> DeviceInfo | None:
         """Return a device description for device registry."""
-        if isinstance(self._device, PydeconzScene) or self.serial is None:
+        assert not isinstance(self._device, PydeconzScene)
+        if self.serial is None:
             return None
 
         return DeviceInfo(
@@ -126,13 +123,13 @@ class DeconzSceneMixin(DeconzDevice):
 
     def __init__(
         self,
-        device: DeconzGroup | DeconzLight | DeconzSensor | PydeconzScene,
+        device: PydeconzScene,
         gateway: DeconzGateway,
     ) -> None:
         """Set up a scene."""
         super().__init__(device, gateway)
 
-        self._attr_name = self._device.full_name
+        self._attr_name = device.full_name
         self._group_identifier = self.get_parent_identifier()
 
     def get_device_identifier(self) -> str:
