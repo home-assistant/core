@@ -27,11 +27,7 @@ from homeassistant.setup import setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
 
-from tests.common import (
-    async_init_recorder_component,
-    async_setup_component,
-    init_recorder_component,
-)
+from tests.common import async_setup_component, init_recorder_component
 from tests.components.recorder.common import (
     async_wait_recording_done_without_instance,
     wait_recording_done,
@@ -344,6 +340,7 @@ def test_compile_hourly_statistics_unsupported(hass_recorder, caplog, attributes
 async def test_compile_hourly_sum_statistics_amount(
     hass,
     hass_ws_client,
+    recorder_mock,
     caplog,
     units,
     state_class,
@@ -358,7 +355,6 @@ async def test_compile_hourly_sum_statistics_amount(
     period1_end = period2 = period0 + timedelta(minutes=10)
     period2_end = period0 + timedelta(minutes=15)
     client = await hass_ws_client()
-    await async_init_recorder_component(hass)
     hass.config.units = units
     recorder = hass.data[DATA_INSTANCE]
     await async_setup_component(hass, "sensor", {})

@@ -31,7 +31,8 @@ from .common import (
     async_wait_recording_done,
     async_wait_recording_done_without_instance,
 )
-from .conftest import SetupRecorderInstanceT
+
+from tests.common import SetupRecorderInstanceT
 
 
 async def test_purge_old_states(

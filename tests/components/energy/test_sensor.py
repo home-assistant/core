@@ -25,7 +25,6 @@ from homeassistant.const import (
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import async_init_recorder_component
 from tests.components.recorder.common import async_wait_recording_done_without_instance
 
 
@@ -113,7 +112,6 @@ async def test_cost_sensor_price_entity_total_increasing(
         ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
     }
 
-    await async_init_recorder_component(hass)
     energy_data = data.EnergyManager.default_preferences()
     energy_data["energy_sources"].append(
         {
@@ -318,7 +316,6 @@ async def test_cost_sensor_price_entity_total(
         ATTR_STATE_CLASS: energy_state_class,
     }
 
-    await async_init_recorder_component(hass)
     energy_data = data.EnergyManager.default_preferences()
     energy_data["energy_sources"].append(
         {
@@ -525,7 +522,6 @@ async def test_cost_sensor_price_entity_total_no_reset(
         ATTR_STATE_CLASS: energy_state_class,
     }
 
-    await async_init_recorder_component(hass)
     energy_data = data.EnergyManager.default_preferences()
     energy_data["energy_sources"].append(
         {

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import OrderedDict
-from collections.abc import Awaitable, Collection
+from collections.abc import Awaitable, Callable, Collection
 from contextlib import contextmanager
 from datetime import datetime, timedelta
 import functools as ft
@@ -894,6 +894,9 @@ def assert_setup_component(count, domain=None):
     assert (
         res_len == count
     ), f"setup_component failed, expected {count} got {res_len}: {res}"
+
+
+SetupRecorderInstanceT = Callable[..., Awaitable[recorder.Recorder]]
 
 
 def init_recorder_component(hass, add_config=None):

@@ -19,9 +19,7 @@ import homeassistant.core as ha
 from homeassistant.helpers.json import JSONEncoder
 import homeassistant.util.dt as dt_util
 
-from .conftest import SetupRecorderInstanceT
-
-from tests.common import mock_state_change_event
+from tests.common import SetupRecorderInstanceT, mock_state_change_event
 from tests.components.recorder.common import wait_recording_done
 
 
