@@ -69,7 +69,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     coordinator = GeoJsonEventsFeedEntityCoordinator(hass, config_entry, radius)
     feeds[config_entry.entry_id] = coordinator
     _LOGGER.debug("Feed entity coordinator added for %s", config_entry.entry_id)
-    await coordinator.async_config_entry_first_refresh()
     # Remove orphaned geo_location entities.
     entity_registry = await async_get_registry(hass)
     orphaned_entries = async_entries_for_config_entry(
@@ -114,7 +113,6 @@ class GeoJsonEventsFeedEntityCoordinator(DataUpdateCoordinator):
             status_callback=self._status_update,
         )
         self._config_entry_id = config_entry.entry_id
-        self._first_update = True
         self._status_info = None
         self.listeners = []
         super().__init__(
@@ -134,7 +132,6 @@ class GeoJsonEventsFeedEntityCoordinator(DataUpdateCoordinator):
         """Refresh data."""
         await self._feed_manager.update()
         _LOGGER.debug("Feed entity coordinator updated")
-        self._first_update = False
         return self._feed_manager.feed_entries
 
     async def async_stop(self):
@@ -163,24 +160,22 @@ class GeoJsonEventsFeedEntityCoordinator(DataUpdateCoordinator):
 
     async def _generate_entity(self, external_id: str):
         """Generate new entity."""
-        if not self._first_update:
-            _LOGGER.debug("New entry received for: %s", external_id)
-            async_dispatcher_send(
-                self.hass,
-                self.async_event_new_entity(),
-                self,
-                self.config_entry.unique_id,
-                external_id,
-            )
+        _LOGGER.debug("New entry received for: %s", external_id)
+        async_dispatcher_send(
+            self.hass,
+            self.async_event_new_entity(),
+            self,
+            self.config_entry.unique_id,
+            external_id,
+        )
 
     async def _update_entity(self, external_id: str):
         """Ignore update call; this is handled by the coordinator."""
 
     async def _remove_entity(self, external_id: str):
         """Remove entity."""
-        if not self._first_update:
-            _LOGGER.debug("Remove received for: %s", external_id)
-            async_dispatcher_send(self.hass, f"{DOMAIN}_delete_{external_id}")
+        _LOGGER.debug("Remove received for: %s", external_id)
+        async_dispatcher_send(self.hass, f"{DOMAIN}_delete_{external_id}")
 
     async def _status_update(self, status_info):
         """Store status update."""
