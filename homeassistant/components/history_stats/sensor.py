@@ -26,7 +26,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from . import DOMAIN, PLATFORMS
 from .coordinator import HistoryStatsUpdateCoordinator
 from .data import HistoryStats
-from .helpers import HistoryStatsHelper
+from .helpers import pretty_duration, pretty_ratio
 
 CONF_START = "start"
 CONF_END = "end"
@@ -98,7 +98,12 @@ async def async_setup_platform(
 
     history_stats = HistoryStats(hass, entity_id, entity_states, start, end, duration)
     coordinator = HistoryStatsUpdateCoordinator(hass, history_stats, name)
-    async_add_entities([HistoryStatsSensor(coordinator, sensor_type, name)])
+    async_add_entities(
+        [
+            HistoryStatsSensor(coordinator, sensor_type, name),
+            HistoryStatsDurationSensor(coordinator, name),
+        ]
+    )
 
 
 class HistoryStatsSensorBase(
@@ -153,17 +158,31 @@ class HistoryStatsSensor(HistoryStatsSensorBase):
         state = self.coordinator.data
         if state is None or state.hours_matched is None:
             self._attr_native_value = None
-            self._attr_extra_state_attributes = {}
-            return
-
-        if self._type == CONF_TYPE_TIME:
+        elif self._type == CONF_TYPE_TIME:
             self._attr_native_value = round(state.hours_matched, 2)
         elif self._type == CONF_TYPE_RATIO:
-            self._attr_native_value = HistoryStatsHelper.pretty_ratio(
-                state.hours_matched, state.period
-            )
+            self._attr_native_value = pretty_ratio(state.hours_matched, state.period)
         elif self._type == CONF_TYPE_COUNT:
             self._attr_native_value = state.changes_to_match_state
-        self._attr_extra_state_attributes = {
-            ATTR_VALUE: HistoryStatsHelper.pretty_duration(state.hours_matched)
-        }
+
+
+class HistoryStatsDurationSensor(HistoryStatsSensorBase):
+    """A HistoryStats pretty duration sensor."""
+
+    def __init__(
+        self,
+        coordinator: HistoryStatsUpdateCoordinator,
+        name: str,
+    ) -> None:
+        """Initialize the HistoryStats time matched sensor."""
+        super().__init__(coordinator, f"{name} Duration")
+        self._attr_native_unit_of_measurement = "duration"
+
+    @callback
+    def _process_update(self) -> None:
+        """Process an update from the coordinator."""
+        state = self.coordinator.data
+        if state is None or state.hours_matched is None:
+            self._attr_native_value = None
+        else:
+            self._attr_native_value = pretty_duration(state.hours_matched)
