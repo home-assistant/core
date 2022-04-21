@@ -76,15 +76,6 @@ class HistoryStatsHelper:
     """Static methods to make the HistoryStatsSensor code lighter."""
 
     @staticmethod
-    def handle_template_exception(ex: Exception, field: str) -> None:
-        """Log an error nicely if the template cannot be interpreted."""
-        if ex.args and ex.args[0].startswith("UndefinedError: 'None' has no attribute"):
-            # Common during HA startup - so just a warning
-            _LOGGER.warning(ex)
-            return
-        _LOGGER.error("Error parsing template for field %s", field, exc_info=ex)
-
-    @staticmethod
     def pretty_duration(hours: float) -> str:
         """Format a duration in days, hours, minutes, seconds."""
         seconds = int(3600 * hours)
@@ -107,6 +98,15 @@ class HistoryStatsHelper:
 
         ratio = 100 * 3600 * value / (period[1] - period[0]).total_seconds()
         return round(ratio, 1)
+
+    @staticmethod
+    def handle_template_exception(ex: Exception, field: str) -> None:
+        """Log an error nicely if the template cannot be interpreted."""
+        if ex.args and ex.args[0].startswith("UndefinedError: 'None' has no attribute"):
+            # Common during HA startup - so just a warning
+            _LOGGER.warning(ex)
+            return
+        _LOGGER.error("Error parsing template for field %s", field, exc_info=ex)
 
 
 def floored_timestamp(incoming_dt: datetime.datetime) -> float:
