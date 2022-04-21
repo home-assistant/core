@@ -71,12 +71,9 @@ class CalendarEventListener:
     @callback
     def async_detach(self) -> None:
         """Detach the calendar event listener."""
-        assert self._unsub_event is not None
-        assert self._unsub_refresh is not None
-
-        self._unsub_event()
-        self._unsub_event = None
-        self._unsub_refresh()
+        self._clear_event_listener()
+        if self._unsub_refresh:
+            self._unsub_refresh()
         self._unsub_refresh = None
 
     async def _fetch_events(self, now: datetime.datetime) -> None:
@@ -107,8 +104,6 @@ class CalendarEventListener:
     @callback
     def _listen_next_calendar_event(self) -> None:
         """Set up the calendar event listener."""
-        assert self._unsub_event is None
-
         if not self._events:
             return
 
@@ -119,6 +114,12 @@ class CalendarEventListener:
             self._handle_calendar_event,
             event_datetime,
         )
+
+    def _clear_event_listener(self) -> None:
+        """Reset the event listener."""
+        if self._unsub_event:
+            self._unsub_event()
+        self._unsub_event = None
 
     async def _handle_calendar_event(self, now: datetime.datetime) -> None:
         """Handle calendar event."""
@@ -132,15 +133,13 @@ class CalendarEventListener:
                 self._job,
                 {"trigger": {**self._trigger_data, "calendar_event": event.as_dict()}},
             )
-        self._unsub_event = None
+        self._clear_event_listener()
         self._listen_next_calendar_event()
 
     async def _handle_refresh(self, now: datetime.datetime) -> None:
         """Handle core config update."""
         _LOGGER.debug("Refresh events @ %s", now)
-        if self._unsub_event:
-            self._unsub_event()
-            self._unsub_event = None
+        self._clear_event_listener()
         await self._fetch_events(now)
         self._listen_next_calendar_event()
 
@@ -156,10 +155,12 @@ async def async_attach_trigger(
     event_type = config[CONF_EVENT]
 
     component: EntityComponent = hass.data[DOMAIN]
-    if not (entity := component.get_entity(entity_id)):
-        raise HomeAssistantError(f"Entity does not exist {entity_id}")
-    if not isinstance(entity, CalendarEntity):
-        raise HomeAssistantError(f"Entity {entity_id} is not a calendar entity")
+    if not (entity := component.get_entity(entity_id)) or not isinstance(
+        entity, CalendarEntity
+    ):
+        raise HomeAssistantError(
+            f"Entity does not exist {entity_id} or is not a calendar entity"
+        )
 
     trigger_data = {
         **automation_info["trigger_data"],

@@ -59,13 +59,19 @@ class FakeSchedule:
         self.events: list[calendar.CalendarEvent] = []
 
     def create_event(
-        self, start: datetime.timedelta, end: datetime.timedelta
+        self,
+        start: datetime.timedelta,
+        end: datetime.timedelta,
+        description: str = None,
+        location: str = None,
     ) -> dict[str, Any]:
         """Create a new fake event, used by tests."""
         event = calendar.CalendarEvent(
             start=start,
             end=end,
             summary=f"Event {secrets.token_hex(16)}",  # Arbitrary unique data
+            description=description,
+            location=location,
         )
         self.events.append(event)
         return event.as_dict()
@@ -304,6 +310,25 @@ async def test_invalid_calendar_id(hass, caplog):
     assert "Invalid config for [automation]" in caplog.text
 
 
+async def test_legacy_entity_type(hass, caplog):
+    """Test creating a trigger with an invalid calendar id."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "action": TEST_AUTOMATION_ACTION,
+                "trigger": {
+                    "platform": calendar.DOMAIN,
+                    "entity_id": "calendar.calendar_3",
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert "is not a calendar entity" in caplog.text
+
+
 async def test_update_next_event(hass, calls, fake_schedule):
     """Test detection of a new event after initial trigger is setup."""
 
@@ -374,4 +399,27 @@ async def test_update_missed(hass, calls, fake_schedule):
             "event": EVENT_START,
             "calendar_event": event_data1,
         },
+    ]
+
+
+async def test_event_payload(hass, calls, fake_schedule):
+    """Test the a calendar trigger based on start time."""
+    event_data = fake_schedule.create_event(
+        start=datetime.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
+        end=datetime.datetime.fromisoformat("2022-04-19 11:30:00+00:00"),
+        description="Description",
+        location="Location",
+    )
+    await create_automation(hass, EVENT_START)
+    assert len(calls()) == 0
+
+    await fake_schedule.fire_until(
+        datetime.datetime.fromisoformat("2022-04-19 11:15:00+00:00")
+    )
+    assert calls() == [
+        {
+            "platform": "calendar",
+            "event": EVENT_START,
+            "calendar_event": event_data,
+        }
     ]
