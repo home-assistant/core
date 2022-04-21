@@ -1,6 +1,6 @@
 PyJWT==2.3.0
 PyNaCl==1.5.0
-aiodiscover==1.4.8
+aiodiscover==1.4.9
 aiohttp==3.8.1
 aiohttp_cors==0.7.0
 astral==2.2
