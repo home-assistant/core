@@ -28,13 +28,14 @@ from . import DOMAIN, CalendarEntity, CalendarEvent
 _LOGGER = logging.getLogger(__name__)
 
 EVENT_START = "start"
+EVENT_END = "end"
 UPDATE_INTERVAL = datetime.timedelta(minutes=15)
 
 TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_PLATFORM): DOMAIN,
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
-        vol.Optional(CONF_EVENT, default=EVENT_START): vol.In({EVENT_START}),
+        vol.Optional(CONF_EVENT, default=EVENT_START): vol.In({EVENT_START, EVENT_END}),
     }
 )
 
@@ -48,6 +49,7 @@ class CalendarEventListener:
         job: HassJob,
         trigger_data: dict[str, Any],
         entity: CalendarEntity,
+        event_type: str,
     ) -> None:
         """Initialize CalendarEventListener."""
         self._hass = hass
@@ -58,6 +60,7 @@ class CalendarEventListener:
         self._unsub_refresh: CALLBACK_TYPE | None = None
         # Upcoming set of events with their trigger time
         self._events: list[tuple[datetime.datetime, CalendarEvent]] = []
+        self._event_type = event_type
 
     async def async_attach(self) -> None:
         """Attach a calendar event listener."""
@@ -87,18 +90,17 @@ class CalendarEventListener:
         # returned events may have already started but matched the start/end time
         # filtering above, so exclude any events that have already passed the
         # trigger time.
-        event_list = [
-            (dt_util.as_utc(event.start_datetime_local), event) for event in events
-        ]
+        event_list = []
+        for event in events:
+            event_time = (
+                event.start_datetime_local
+                if self._event_type == EVENT_START
+                else event.end_datetime_local
+            )
+            if event_time > now:
+                event_list.append((event_time, event))
         event_list.sort(key=lambda x: x[0])
-
-        self._events.extend(
-            [
-                (trigger_time, event)
-                for (trigger_time, event) in event_list
-                if trigger_time > now
-            ]
-        )
+        self._events = event_list
         _LOGGER.debug("Populated event list %s", self._events)
 
     @callback
@@ -168,6 +170,8 @@ async def async_attach_trigger(
         "event": event_type,
     }
 
-    listener = CalendarEventListener(hass, HassJob(action), trigger_data, entity)
+    listener = CalendarEventListener(
+        hass, HassJob(action), trigger_data, entity, event_type
+    )
     await listener.async_attach()
     return listener.async_detach
