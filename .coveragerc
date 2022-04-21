@@ -541,6 +541,7 @@ omit =
     homeassistant/components/insteon/utils.py
     homeassistant/components/intellifire/__init__.py
     homeassistant/components/intellifire/coordinator.py
+    homeassistant/components/intellifire/climate.py
     homeassistant/components/intellifire/binary_sensor.py
     homeassistant/components/intellifire/sensor.py
     homeassistant/components/intellifire/entity.py
