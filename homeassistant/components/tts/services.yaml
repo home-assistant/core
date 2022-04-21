@@ -24,6 +24,15 @@ say:
       default: false
       selector:
         boolean:
+    extra:
+      name: Extra play_media` data
+      description:
+        A dictionary containing platform-specific extra data passed to
+        `media_player.play_media`, e.g., enqueue, title, thumbnail.
+      advanced: true
+      example: platform specific
+      selector:
+        object:
     language:
       name: Language
       description: Language to use for speech generation.

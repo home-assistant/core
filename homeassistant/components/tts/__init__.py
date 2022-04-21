@@ -23,6 +23,7 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
+    ATTR_MEDIA_EXTRA,
     DOMAIN as DOMAIN_MP,
     MEDIA_TYPE_MUSIC,
     SERVICE_PLAY_MEDIA,
@@ -124,6 +125,7 @@ SCHEMA_SERVICE_SAY = vol.Schema(
         vol.Optional(ATTR_CACHE): cv.boolean,
         vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids,
         vol.Optional(ATTR_LANGUAGE): cv.string,
+        vol.Optional(ATTR_MEDIA_EXTRA): dict,
         vol.Optional(ATTR_OPTIONS): dict,
     }
 )
@@ -214,6 +216,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC,
                 ATTR_ENTITY_ID: entity_ids,
             }
+            if extra := service.data.get(ATTR_MEDIA_EXTRA):
+                data[ATTR_MEDIA_EXTRA] = extra
 
             await hass.services.async_call(
                 DOMAIN_MP,

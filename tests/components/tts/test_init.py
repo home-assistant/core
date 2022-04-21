@@ -11,6 +11,7 @@ from homeassistant.components.demo.tts import DemoProvider
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
+    ATTR_MEDIA_EXTRA,
     DOMAIN as DOMAIN_MP,
     MEDIA_TYPE_MUSIC,
     SERVICE_PLAY_MEDIA,
@@ -87,11 +88,11 @@ async def test_setup_component_and_test_service(hass, empty_cache_dir):
     )
 
     assert len(calls) == 1
-    assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_MUSIC
-    assert (
-        calls[0].data[ATTR_MEDIA_CONTENT_ID]
-        == "http://example.local:8123/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3"
-    )
+    assert calls[0].data == {
+        tts.ATTR_ENTITY_ID: ["media_player.something"],
+        ATTR_MEDIA_CONTENT_ID: "http://example.local:8123/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3",
+        ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC,
+    }
     await hass.async_block_till_done()
     assert (
         empty_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3"
@@ -119,11 +120,11 @@ async def test_setup_component_and_test_service_with_config_language(
         blocking=True,
     )
     assert len(calls) == 1
-    assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_MUSIC
-    assert (
-        calls[0].data[ATTR_MEDIA_CONTENT_ID]
-        == "http://example.local:8123/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_de_-_demo.mp3"
-    )
+    assert calls[0].data == {
+        tts.ATTR_ENTITY_ID: ["media_player.something"],
+        ATTR_MEDIA_CONTENT_ID: "http://example.local:8123/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_de_-_demo.mp3",
+        ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC,
+    }
     await hass.async_block_till_done()
     assert (
         empty_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_de_-_demo.mp3"
@@ -154,11 +155,11 @@ async def test_setup_component_and_test_service_with_config_language_special(
         blocking=True,
     )
     assert len(calls) == 1
-    assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_MUSIC
-    assert (
-        calls[0].data[ATTR_MEDIA_CONTENT_ID]
-        == "http://example.local:8123/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_demo.mp3"
-    )
+    assert calls[0].data == {
+        tts.ATTR_ENTITY_ID: ["media_player.something"],
+        ATTR_MEDIA_CONTENT_ID: "http://example.local:8123/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_demo.mp3",
+        ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC,
+    }
     await hass.async_block_till_done()
     assert (
         empty_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_demo.mp3"
@@ -195,11 +196,11 @@ async def test_setup_component_and_test_service_with_service_language(
         blocking=True,
     )
     assert len(calls) == 1
-    assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_MUSIC
-    assert (
-        calls[0].data[ATTR_MEDIA_CONTENT_ID]
-        == "http://example.local:8123/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_de_-_demo.mp3"
-    )
+    assert calls[0].data == {
+        tts.ATTR_ENTITY_ID: ["media_player.something"],
+        ATTR_MEDIA_CONTENT_ID: "http://example.local:8123/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_de_-_demo.mp3",
+        ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC,
+    }
     await hass.async_block_till_done()
     assert (
         empty_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_de_-_demo.mp3"
@@ -259,11 +260,11 @@ async def test_setup_component_and_test_service_with_service_options(
     opt_hash = tts._hash_options({"voice": "alex", "age": 5})
 
     assert len(calls) == 1
-    assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_MUSIC
-    assert (
-        calls[0].data[ATTR_MEDIA_CONTENT_ID]
-        == f"http://example.local:8123/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_de_{opt_hash}_demo.mp3"
-    )
+    assert calls[0].data == {
+        tts.ATTR_ENTITY_ID: ["media_player.something"],
+        ATTR_MEDIA_CONTENT_ID: f"http://example.local:8123/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_de_{opt_hash}_demo.mp3",
+        ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC,
+    }
     await hass.async_block_till_done()
     assert (
         empty_cache_dir
@@ -296,11 +297,11 @@ async def test_setup_component_and_test_with_service_options_def(hass, empty_cac
         opt_hash = tts._hash_options({"voice": "alex"})
 
         assert len(calls) == 1
-        assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_MUSIC
-        assert (
-            calls[0].data[ATTR_MEDIA_CONTENT_ID]
-            == f"http://example.local:8123/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_de_{opt_hash}_demo.mp3"
-        )
+        assert calls[0].data == {
+            tts.ATTR_ENTITY_ID: ["media_player.something"],
+            ATTR_MEDIA_CONTENT_ID: f"http://example.local:8123/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_de_{opt_hash}_demo.mp3",
+            ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC,
+        }
         await hass.async_block_till_done()
         assert (
             empty_cache_dir
@@ -359,12 +360,11 @@ async def test_setup_component_and_test_service_with_base_url_set(hass):
         blocking=True,
     )
     assert len(calls) == 1
-    assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_MUSIC
-    assert (
-        calls[0].data[ATTR_MEDIA_CONTENT_ID] == "http://fnord"
-        "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491"
-        "_en_-_demo.mp3"
-    )
+    assert calls[0].data == {
+        tts.ATTR_ENTITY_ID: ["media_player.something"],
+        ATTR_MEDIA_CONTENT_ID: "http://fnord/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3",
+        ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC,
+    }
 
 
 async def test_setup_component_and_test_service_clear_cache(hass, empty_cache_dir):
@@ -729,3 +729,39 @@ def test_invalid_base_url(value):
     """Test we catch bad base urls."""
     with pytest.raises(vol.Invalid):
         tts.valid_base_url(value)
+
+
+async def test_setup_component_and_test_service_with_extra_play_media(
+    hass, empty_cache_dir
+):
+    """Set up the demo platform and call service with extra play_media data."""
+    calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+
+    config = {tts.DOMAIN: {"platform": "demo"}}
+
+    with assert_setup_component(1, tts.DOMAIN):
+        assert await async_setup_component(hass, tts.DOMAIN, config)
+
+    await hass.services.async_call(
+        tts.DOMAIN,
+        "demo_say",
+        {
+            "entity_id": "media_player.something",
+            tts.ATTR_MESSAGE: "There is someone at the door.",
+            tts.ATTR_LANGUAGE: "de",
+            ATTR_MEDIA_EXTRA: {"enqueue": True},
+        },
+        blocking=True,
+    )
+
+    assert len(calls) == 1
+    assert calls[0].data == {
+        tts.ATTR_ENTITY_ID: ["media_player.something"],
+        ATTR_MEDIA_EXTRA: {"enqueue": True},
+        ATTR_MEDIA_CONTENT_ID: "http://example.local:8123/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_de_-_demo.mp3",
+        ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC,
+    }
+    await hass.async_block_till_done()
+    assert (
+        empty_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_de_-_demo.mp3"
+    ).is_file()
