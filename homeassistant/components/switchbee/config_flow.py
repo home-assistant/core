@@ -19,7 +19,12 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
-from .const import CONF_EXPOSE_GROUP_SWITCHES, CONF_EXPOSE_SCENARIOS, DOMAIN
+from .const import (
+    CONF_EXPOSE_GROUP_SWITCHES,
+    CONF_EXPOSE_SCENARIOS,
+    DOMAIN,
+    SCAN_INTERVAL_SEC,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,7 +38,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 STEP_ADVANCED_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_SCAN_INTERVAL, default=5): cv.positive_int,
+        vol.Required(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL_SEC): cv.positive_int,
         vol.Required(CONF_EXPOSE_SCENARIOS, default=False): cv.boolean,
         vol.Required(CONF_EXPOSE_GROUP_SWITCHES, default=False): cv.boolean,
     }
