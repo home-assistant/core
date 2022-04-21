@@ -52,7 +52,6 @@ class IntellifireClimate(IntellifireEntity, ClimateEntity):
 
     entity_description: IntellifireClimateEntityDescription
 
-    # _attr_hvac_mode = HVAC_MODE_OFF
     _attr_hvac_modes = [HVAC_MODE_HEAT, HVAC_MODE_OFF]
     _attr_min_temp = 0
     _attr_max_temp = 37
@@ -107,19 +106,19 @@ class IntellifireClimate(IntellifireEntity, ClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set HVAC mode to normal or thermostat control."""
         LOGGER.info(
-            "Setting mode to[%s] - using last temp: %s", hvac_mode, self.last_temp
+            "Setting mode to [%s] - using last temp: %s", hvac_mode, self.last_temp
         )
 
-        # Is there a way to use a := here?
+        # Dear Reviewer - Is there a way to use a := here?
         if hvac_mode == HVAC_MODE_HEAT:
-            # 1) Make sure the fireplace is on!
-            await self.coordinator.control_api.flame_on(
-                fireplace=self.coordinator.control_api.default_fireplace,
-            )
-            # 2) Set the desired target temp
+            # 1) Set the desired target temp
             await self.coordinator.control_api.set_thermostat_c(
                 fireplace=self.coordinator.control_api.default_fireplace,
                 temp_c=self.last_temp,
+            )
+            # 2) Make sure the fireplace is on!
+            await self.coordinator.control_api.flame_on(
+                fireplace=self.coordinator.control_api.default_fireplace,
             )
         if hvac_mode == HVAC_MODE_OFF:
             await self.coordinator.control_api.turn_off_thermostat(
