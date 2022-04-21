@@ -43,16 +43,16 @@ async def async_setup_entry(
 class ONVIFBinarySensor(ONVIFBaseEntity, BinarySensorEntity):
     """Representation of a binary ONVIF event."""
 
+    _attr_should_poll = False
+
     def __init__(self, uid, device):
         """Initialize the ONVIF binary sensor."""
-        self._attr_device_class = device.events.get_uid(uid).device_class
-        self._attr_entity_category = device.events.get_uid(uid).entity_category
-        self._attr_entity_registry_enabled_default = device.events.get_uid(
-            uid
-        ).entity_enabled
-        self._attr_name = device.events.get_uid(uid).name
-        self._attr_is_on = device.events.get_uid(uid).value
-        self._attr_should_poll = False
+        event = device.events.get_uid(uid)
+        self._attr_device_class = event.device_class
+        self._attr_entity_category = event.entity_category
+        self._attr_entity_registry_enabled_default = event.entity_enabled
+        self._attr_name = event.name
+        self._attr_is_on = event.value
         self._attr_unique_id = uid
 
         super().__init__(device)
