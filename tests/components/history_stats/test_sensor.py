@@ -649,6 +649,14 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_sin
 
     assert hass.states.get("sensor.sensor1").state == "1.75"
 
+    # The window has ended, it should not change again
+    after_end_time = start_time + timedelta(minutes=125)
+    with freeze_time(after_end_time):
+        async_fire_time_changed(hass, after_end_time)
+        await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.sensor1").state == "1.75"
+
 
 async def test_async_start_from_history_and_switch_to_watching_state_changes_single_expanding_window(
     hass,
@@ -734,6 +742,13 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_sin
         await hass.async_block_till_done()
 
     assert hass.states.get("sensor.sensor1").state == "1.5"
+
+    next_update_time = start_time + timedelta(minutes=107)
+    with freeze_time(next_update_time):
+        async_fire_time_changed(hass, next_update_time)
+        await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.sensor1").state == "1.53"
 
     end_time = start_time + timedelta(minutes=120)
     with freeze_time(end_time):
@@ -1022,3 +1037,46 @@ async def test_does_not_work_into_the_future(hass):
         await hass.async_block_till_done()
 
     assert hass.states.get("sensor.sensor1").state == "0.0"
+
+
+async def test_reload_before_start_event(hass):
+    """Verify we can reload history_stats sensors before the start event."""
+    await async_init_recorder_component(hass)
+
+    hass.state = ha.CoreState.not_running
+    hass.states.async_set("binary_sensor.test_id", "on")
+
+    await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": {
+                "platform": "history_stats",
+                "entity_id": "binary_sensor.test_id",
+                "name": "test",
+                "state": "on",
+                "start": "{{ as_timestamp(now()) - 3600 }}",
+                "duration": "01:00",
+            },
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 2
+
+    assert hass.states.get("sensor.test")
+
+    yaml_path = get_fixture_path("configuration.yaml", "history_stats")
+    with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_RELOAD,
+            {},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 2
+
+    assert hass.states.get("sensor.test") is None
+    assert hass.states.get("sensor.second_test")
