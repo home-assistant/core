@@ -318,6 +318,27 @@ async def async_parse_digital_input(uid: str, msg) -> Event:
         return None
 
 
+@PARSERS.register("tns1:Device/Trigger/Relay")
+# pylint: disable=protected-access
+async def async_parse_relay(uid: str, msg) -> Event:
+    """Handle parsing event message.
+
+    Topic: tns1:Device/Trigger/Relay
+    """
+    try:
+        source = msg.Message._value_1.Source.SimpleItem[0].Value
+        return Event(
+            f"{uid}_{msg.Topic._value_1}_{source}",
+            "Digital Input",
+            "binary_sensor",
+            None,
+            None,
+            msg.Message._value_1.Data.SimpleItem[0].Value == "active",
+        )
+    except (AttributeError, KeyError):
+        return None
+
+
 @PARSERS.register("tns1:Device/HardwareFailure/StorageFailure")
 # pylint: disable=protected-access
 async def async_parse_storage_failure(uid: str, msg) -> Event:
