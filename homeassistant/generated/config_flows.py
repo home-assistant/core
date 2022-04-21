@@ -290,7 +290,7 @@ FLOWS = {
         "rtsp_to_webrtc",
         "ruckus_unleashed",
         "sabnzbd",
-    "samsungtv",
+        "samsungtv",
         "screenlogic",
         "season",
         "sense",

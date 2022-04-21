@@ -18,7 +18,7 @@ from .const import KEY_API, KEY_NAME
 class SabnzbdRequiredKeysMixin:
     """Mixin for required keys."""
 
-    field_name: str
+    key: str
 
 
 @dataclass
@@ -28,68 +28,57 @@ class SabnzbdSensorEntityDescription(SensorEntityDescription, SabnzbdRequiredKey
 
 SENSOR_TYPES: tuple[SabnzbdSensorEntityDescription, ...] = (
     SabnzbdSensorEntityDescription(
-        key="current_status",
+        key="status",
         name="Status",
-        field_name="status",
     ),
     SabnzbdSensorEntityDescription(
-        key="speed",
+        key="kbpersec",
         name="Speed",
         native_unit_of_measurement=DATA_RATE_MEGABYTES_PER_SECOND,
-        field_name="kbpersec",
     ),
     SabnzbdSensorEntityDescription(
-        key="queue_size",
+        key="mb",
         name="Queue",
         native_unit_of_measurement=DATA_MEGABYTES,
-        field_name="mb",
     ),
     SabnzbdSensorEntityDescription(
-        key="queue_remaining",
+        key="mbleft",
         name="Left",
         native_unit_of_measurement=DATA_MEGABYTES,
-        field_name="mbleft",
     ),
     SabnzbdSensorEntityDescription(
-        key="disk_size",
+        key="diskspacetotal1",
         name="Disk",
         native_unit_of_measurement=DATA_GIGABYTES,
-        field_name="diskspacetotal1",
     ),
     SabnzbdSensorEntityDescription(
-        key="disk_free",
+        key="diskspace1",
         name="Disk Free",
         native_unit_of_measurement=DATA_GIGABYTES,
-        field_name="diskspace1",
     ),
     SabnzbdSensorEntityDescription(
-        key="queue_count",
+        key="noofslots_total",
         name="Queue Count",
-        field_name="noofslots_total",
     ),
     SabnzbdSensorEntityDescription(
         key="day_size",
         name="Daily Total",
         native_unit_of_measurement=DATA_GIGABYTES,
-        field_name="day_size",
     ),
     SabnzbdSensorEntityDescription(
         key="week_size",
         name="Weekly Total",
         native_unit_of_measurement=DATA_GIGABYTES,
-        field_name="week_size",
     ),
     SabnzbdSensorEntityDescription(
         key="month_size",
         name="Monthly Total",
         native_unit_of_measurement=DATA_GIGABYTES,
-        field_name="month_size",
     ),
     SabnzbdSensorEntityDescription(
         key="total_size",
         name="Total",
         native_unit_of_measurement=DATA_GIGABYTES,
-        field_name="total_size",
     ),
 )
 
@@ -137,7 +126,7 @@ class SabnzbdSensor(SensorEntity):
     def update_state(self, args):
         """Get the latest data and updates the states."""
         self._attr_native_value = self._sabnzbd_api.get_queue_field(
-            self.entity_description.field_name
+            self.entity_description.key
         )
 
         if self.entity_description.key == "speed":
