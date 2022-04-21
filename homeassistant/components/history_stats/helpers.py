@@ -22,7 +22,7 @@ def async_calculate_period(
     duration: datetime.timedelta | None,
     start_template: Template | None,
     end_template: Template | None,
-) -> tuple[datetime.datetime, datetime.datetime] | None:
+) -> tuple[datetime.datetime, datetime.datetime]:
     """Parse the templates and return the period."""
     bounds: dict[str, datetime.datetime | None] = {
         DURATION_START: None,
@@ -39,7 +39,7 @@ def async_calculate_period(
             rendered = template.async_render()
         except (TemplateError, TypeError) as ex:
             HistoryStatsHelper.handle_template_exception(ex, bound)
-            return None
+            raise
         if isinstance(rendered, str):
             bounds[bound] = dt_util.parse_datetime(rendered)
         if bounds[bound] is not None:
@@ -50,7 +50,7 @@ def async_calculate_period(
             )
         except ValueError:
             _LOGGER.error("Parsing error: %s must be a datetime or a timestamp", bound)
-            return None
+            raise
 
     start = bounds[DURATION_START]
     end = bounds[DURATION_END]

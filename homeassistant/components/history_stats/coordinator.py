@@ -42,7 +42,7 @@ class HistoryStatsUpdateCoordinator(DataUpdateCoordinator):
         )
 
     @callback
-    def async_setup_listener(self) -> CALLBACK_TYPE:
+    def async_setup_state_listener(self) -> CALLBACK_TYPE:
         """Set up listeners and return a callback to cancel them."""
 
         @callback
@@ -77,6 +77,7 @@ class HistoryStatsUpdateCoordinator(DataUpdateCoordinator):
 
     @callback
     def _async_add_events_listener(self, *_: Any) -> None:
+        """Handle hass starting and start tracking events."""
         self._at_start_listener = None
         self._track_events_listener = async_track_state_change_event(
             self.hass, [self._history_stats.entity_id], self._async_update_from_event

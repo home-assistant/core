@@ -44,13 +44,15 @@ class HistoryStats:
         self._duration = duration
         self._start = start
         self._end = end
+        self._template_error = False
 
     async def async_update(self, event: Event | None) -> HistoryStatsState:
         """Update the stats at a given time."""
         # Get previous values of start and end
         previous_period_start, previous_period_end = self._period
         # Parse templates
-        self.update_period()
+        self._period = async_calculate_period(self._duration, self._start, self._end)
+        # Get the current period
         current_period_start, current_period_end = self._period
 
         # Convert times to UTC
@@ -172,8 +174,3 @@ class HistoryStats:
         # Save value in hours
         hours_matched = elapsed / 3600
         return hours_matched, changes_to_match_state
-
-    def update_period(self) -> None:
-        """Parse the templates and store a datetime tuple in _period."""
-        if new_period := async_calculate_period(self._duration, self._start, self._end):
-            self._period = new_period

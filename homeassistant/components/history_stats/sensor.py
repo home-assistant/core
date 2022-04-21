@@ -120,7 +120,7 @@ class HistoryStatsSensorBase(
     async def async_added_to_hass(self) -> None:
         """Entity has been added to hass."""
         await super().async_added_to_hass()
-        self.async_on_remove(self.coordinator.async_setup_listener())
+        self.async_on_remove(self.coordinator.async_setup_state_listener())
 
     def _handle_coordinator_update(self) -> None:
         """Set attrs from value and count."""
@@ -151,7 +151,7 @@ class HistoryStatsSensor(HistoryStatsSensorBase):
     def _process_update(self) -> None:
         """Process an update from the coordinator."""
         state = self.coordinator.data
-        if state.hours_matched is None:
+        if state is None or state.hours_matched is None:
             self._attr_native_value = None
             self._attr_extra_state_attributes = {}
             return

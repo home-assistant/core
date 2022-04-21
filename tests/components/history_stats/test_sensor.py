@@ -9,7 +9,7 @@ import pytest
 
 from homeassistant import config as hass_config
 from homeassistant.components.history_stats import DOMAIN
-from homeassistant.const import SERVICE_RELOAD, STATE_UNKNOWN
+from homeassistant.const import SERVICE_RELOAD, STATE_UNAVAILABLE, STATE_UNKNOWN
 import homeassistant.core as ha
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.setup import async_setup_component, setup_component
@@ -156,6 +156,11 @@ async def test_invalid_date_for_start(hass):
     )
     await hass.async_block_till_done()
     assert hass.states.get("sensor.test").state == STATE_UNKNOWN
+    next_update_time = dt_util.utcnow() + timedelta(minutes=1)
+    with freeze_time(next_update_time):
+        async_fire_time_changed(hass, next_update_time)
+        await hass.async_block_till_done()
+    assert hass.states.get("sensor.test").state == STATE_UNAVAILABLE
 
 
 async def test_invalid_date_for_end(hass):
@@ -177,6 +182,11 @@ async def test_invalid_date_for_end(hass):
     )
     await hass.async_block_till_done()
     assert hass.states.get("sensor.test").state == STATE_UNKNOWN
+    next_update_time = dt_util.utcnow() + timedelta(minutes=1)
+    with freeze_time(next_update_time):
+        async_fire_time_changed(hass, next_update_time)
+        await hass.async_block_till_done()
+    assert hass.states.get("sensor.test").state == STATE_UNAVAILABLE
 
 
 async def test_reload(hass):
