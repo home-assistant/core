@@ -572,7 +572,7 @@ dweepy==0.3.0
 dynalite_devices==0.1.46
 
 # homeassistant.components.rainforest_eagle
-eagle100==0.1.0
+eagle100==0.1.1
 
 # homeassistant.components.ebusd
 ebusdpy==0.0.17

@@ -421,7 +421,7 @@ dsmr_parser==0.33
 dynalite_devices==0.1.46
 
 # homeassistant.components.rainforest_eagle
-eagle100==0.1.0
+eagle100==0.1.1
 
 # homeassistant.components.elgato
 elgato==3.0.0
