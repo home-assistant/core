@@ -29,7 +29,6 @@ from .const import (
     CONF_TRACK_UNKNOWN,
     DEFAULT_DNSMASQ,
     DEFAULT_INTERFACE,
-    DEFAULT_SSH_PORT,
     DEFAULT_TRACK_UNKNOWN,
     DOMAIN,
     MODE_AP,
@@ -76,25 +75,28 @@ class AsusWrtFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             user_input = {}
 
+        schema = {
+            vol.Required(CONF_HOST, default=user_input.get(CONF_HOST, "")): str,
+            vol.Required(CONF_USERNAME, default=user_input.get(CONF_USERNAME, "")): str,
+            vol.Optional(CONF_PASSWORD)
+            if self.show_advanced_options
+            else vol.Required(CONF_PASSWORD): str,
+            vol.Required(CONF_PROTOCOL, default=PROTOCOL_SSH): vol.In(
+                {PROTOCOL_SSH: "SSH", PROTOCOL_TELNET: "Telnet"}
+            ),
+        }
+
+        if self.show_advanced_options:
+            schema[vol.Optional(CONF_PORT)] = cv.port
+            schema[vol.Optional(CONF_SSH_KEY)] = str
+
+        schema[vol.Required(CONF_MODE, default=MODE_ROUTER)] = vol.In(
+            {MODE_ROUTER: "Router", MODE_AP: "Access Point"}
+        )
+
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_HOST, default=user_input.get(CONF_HOST, "")): str,
-                    vol.Required(
-                        CONF_USERNAME, default=user_input.get(CONF_USERNAME, "")
-                    ): str,
-                    vol.Optional(CONF_PASSWORD): str,
-                    vol.Optional(CONF_SSH_KEY): str,
-                    vol.Required(CONF_PROTOCOL, default=PROTOCOL_SSH): vol.In(
-                        {PROTOCOL_SSH: "SSH", PROTOCOL_TELNET: "Telnet"}
-                    ),
-                    vol.Required(CONF_PORT, default=DEFAULT_SSH_PORT): cv.port,
-                    vol.Required(CONF_MODE, default=MODE_ROUTER): vol.In(
-                        {MODE_ROUTER: "Router", MODE_AP: "Access Point"}
-                    ),
-                }
-            ),
+            data_schema=vol.Schema(schema),
             errors=errors or {},
         )
 
@@ -134,6 +136,7 @@ class AsusWrtFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         errors = {}
         self._host = user_input[CONF_HOST]
+
         pwd = user_input.get(CONF_PASSWORD)
         ssh = user_input.get(CONF_SSH_KEY)
 
