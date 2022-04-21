@@ -17,14 +17,18 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Context, CoreState, callback
+from homeassistant.core import Context, CoreState, State, callback
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.helpers.template import Template
 from homeassistant.setup import ATTR_COMPONENT, async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import async_fire_time_changed
+from tests.common import (
+    assert_setup_component,
+    async_fire_time_changed,
+    mock_restore_cache_with_extra_data,
+)
 
 TEST_NAME = "sensor.test_template_sensor"
 
@@ -1288,3 +1292,92 @@ async def test_entity_device_class_errors_works(hass):
     ts_state = hass.states.get("sensor.timestamp_entity")
     assert ts_state is not None
     assert ts_state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize("count,domain", [(1, "template")])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "template": {
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "sensor": {
+                    "name": "test",
+                    "state": "{{ trigger.event.data.beer }}",
+                    "picture": "{{ '/local/dogs.png' }}",
+                    "icon": "{{ 'mdi:pirate' }}",
+                    "attributes": {
+                        "plus_one": "{{ trigger.event.data.beer + 1 }}",
+                        "another": "{{ trigger.event.data.uno_mas or 1 }}",
+                    },
+                },
+            },
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    "restored_state, restored_native_value, initial_state, initial_attributes",
+    [
+        # the native value should be used, not the state
+        ("dog", 10, "10", ["entity_picture", "icon", "plus_one"]),
+        (STATE_UNAVAILABLE, 10, STATE_UNKNOWN, []),
+        (STATE_UNKNOWN, 10, STATE_UNKNOWN, []),
+    ],
+)
+async def test_trigger_entity_restore_state(
+    hass,
+    count,
+    domain,
+    config,
+    restored_state,
+    restored_native_value,
+    initial_state,
+    initial_attributes,
+):
+    """Test restoring trigger template binary sensor."""
+
+    restored_attributes = {
+        "entity_picture": "/local/cats.png",
+        "icon": "mdi:ship",
+        "plus_one": 55,
+    }
+
+    fake_state = State(
+        "sensor.test",
+        restored_state,
+        restored_attributes,
+    )
+    fake_extra_data = {
+        "native_value": restored_native_value,
+        "native_unit_of_measurement": None,
+    }
+    mock_restore_cache_with_extra_data(hass, ((fake_state, fake_extra_data),))
+    with assert_setup_component(count, domain):
+        assert await async_setup_component(
+            hass,
+            domain,
+            config,
+        )
+
+        await hass.async_block_till_done()
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test")
+    assert state.state == initial_state
+    for attr in restored_attributes:
+        if attr in initial_attributes:
+            assert state.attributes[attr] == restored_attributes[attr]
+        else:
+            assert attr not in state.attributes
+    assert "another" not in state.attributes
+
+    hass.bus.async_fire("test_event", {"beer": 2})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test")
+    assert state.state == "2"
+    assert state.attributes["icon"] == "mdi:pirate"
+    assert state.attributes["entity_picture"] == "/local/dogs.png"
+    assert state.attributes["plus_one"] == 3
+    assert state.attributes["another"] == 1
