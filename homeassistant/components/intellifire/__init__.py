@@ -21,7 +21,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     LOGGER.debug("Setting up config entry: %s", entry.unique_id)
 
     if "username" not in entry.data:
-        LOGGER.debug("Auth Failed: %s", entry.unique_id)
+        LOGGER.debug("Old config entry format detected: %s", entry.unique_id)
         raise ConfigEntryAuthFailed
 
     # Define the API Objects
