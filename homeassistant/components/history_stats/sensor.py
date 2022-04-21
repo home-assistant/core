@@ -25,7 +25,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import DOMAIN, PLATFORMS
 from .coordinator import HistoryStatsUpdateCoordinator
-from .helpers import HistoryStats, HistoryStatsHelper
+from .data import HistoryStats
+from .helpers import HistoryStatsHelper
 
 CONF_START = "start"
 CONF_END = "end"
