@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "auth_failed": "Failed to retrieve application api key",
+            "cannot_connect": "Failed to connect",
+            "unknown": "Unexpected error"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "unknown": "Unexpected error"
+        },
+        "flow_title": "Moonraker Printer: {host}",
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API Key",
+                    "host": "Host",
+                    "port": "Port",
+                    "ssl": "Uses an SSL certificate"
+                }
+            }
+        }
+    }
+}

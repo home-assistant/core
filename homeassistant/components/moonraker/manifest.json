@@ -1,0 +1,10 @@
+{
+  "domain": "moonraker",
+  "name": "moonraker",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/moonraker",
+  "requirements": ["moonraker-api==2.0.4"],
+  "codeowners": ["@cmroche"],
+  "zeroconf": ["_moonraker._tcp.local."],
+  "iot_class": "local_push"
+}

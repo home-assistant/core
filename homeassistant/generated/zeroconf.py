@@ -249,6 +249,11 @@ ZEROCONF = {
             "name": "yeelink-*"
         }
     ],
+    "_moonraker._tcp.local.": [
+        {
+            "domain": "moonraker"
+        }
+    ],
     "_nanoleafapi._tcp.local.": [
         {
             "domain": "nanoleaf"

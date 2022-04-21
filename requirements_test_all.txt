@@ -690,6 +690,9 @@ minio==5.0.10
 # homeassistant.components.moehlenhoff_alpha2
 moehlenhoff-alpha2==1.1.2
 
+# homeassistant.components.moonraker
+moonraker-api==2.0.4
+
 # homeassistant.components.motion_blinds
 motionblinds==0.6.4
 

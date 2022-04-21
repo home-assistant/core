@@ -629,6 +629,8 @@ build.json @home-assistant/supervisor
 /tests/components/monoprice/ @etsinko @OnFreund
 /homeassistant/components/moon/ @fabaff @frenck
 /tests/components/moon/ @fabaff @frenck
+/homeassistant/components/moonraker/ @cmroche
+/tests/components/moonraker/ @cmroche
 /homeassistant/components/motion_blinds/ @starkillerOG
 /tests/components/motion_blinds/ @starkillerOG
 /homeassistant/components/motioneye/ @dermotduffy
