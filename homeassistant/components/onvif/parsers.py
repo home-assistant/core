@@ -2,6 +2,7 @@
 from collections.abc import Callable, Coroutine
 from typing import Any
 
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.util import dt as dt_util
 from homeassistant.util.decorator import Registry
 
@@ -49,6 +50,7 @@ async def async_parse_image_too_blurry(uid: str, msg) -> Event:
             "problem",
             None,
             msg.Message._value_1.Data.SimpleItem[0].Value == "true",
+            EntityCategory.DIAGNOSTIC,
         )
     except (AttributeError, KeyError):
         return None
@@ -72,6 +74,7 @@ async def async_parse_image_too_dark(uid: str, msg) -> Event:
             "problem",
             None,
             msg.Message._value_1.Data.SimpleItem[0].Value == "true",
+            EntityCategory.DIAGNOSTIC,
         )
     except (AttributeError, KeyError):
         return None
@@ -95,6 +98,7 @@ async def async_parse_image_too_bright(uid: str, msg) -> Event:
             "problem",
             None,
             msg.Message._value_1.Data.SimpleItem[0].Value == "true",
+            EntityCategory.DIAGNOSTIC,
         )
     except (AttributeError, KeyError):
         return None
@@ -274,6 +278,7 @@ async def async_parse_tamper_detector(uid: str, msg) -> Event:
             "problem",
             None,
             msg.Message._value_1.Data.SimpleItem[0].Value == "true",
+            EntityCategory.DIAGNOSTIC,
         )
     except (AttributeError, KeyError):
         return None
@@ -295,6 +300,7 @@ async def async_parse_storage_failure(uid: str, msg) -> Event:
             "problem",
             None,
             msg.Message._value_1.Data.SimpleItem[0].Value == "true",
+            EntityCategory.DIAGNOSTIC,
         )
     except (AttributeError, KeyError):
         return None
@@ -319,6 +325,7 @@ async def async_parse_processor_usage(uid: str, msg) -> Event:
             None,
             "percent",
             int(usage),
+            EntityCategory.DIAGNOSTIC,
         )
     except (AttributeError, KeyError):
         return None
@@ -341,6 +348,7 @@ async def async_parse_last_reboot(uid: str, msg) -> Event:
             dt_util.as_local(
                 dt_util.parse_datetime(msg.Message._value_1.Data.SimpleItem[0].Value)
             ),
+            EntityCategory.DIAGNOSTIC,
         )
     except (AttributeError, KeyError, ValueError):
         return None
@@ -363,6 +371,7 @@ async def async_parse_last_reset(uid: str, msg) -> Event:
             dt_util.as_local(
                 dt_util.parse_datetime(msg.Message._value_1.Data.SimpleItem[0].Value)
             ),
+            EntityCategory.DIAGNOSTIC,
             entity_enabled=False,
         )
     except (AttributeError, KeyError, ValueError):
@@ -386,6 +395,7 @@ async def async_parse_last_clock_sync(uid: str, msg) -> Event:
             dt_util.as_local(
                 dt_util.parse_datetime(msg.Message._value_1.Data.SimpleItem[0].Value)
             ),
+            EntityCategory.DIAGNOSTIC,
             entity_enabled=False,
         )
     except (AttributeError, KeyError, ValueError):
@@ -409,6 +419,7 @@ async def async_parse_jobstate(uid: str, msg) -> Event:
             None,
             None,
             msg.Message._value_1.Data.SimpleItem[0].Value == "Active",
+            EntityCategory.DIAGNOSTIC,
         )
     except (AttributeError, KeyError):
         return None

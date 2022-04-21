@@ -341,10 +341,8 @@ async def _process_recorder_platform(
     hass: HomeAssistant, domain: str, platform: Any
 ) -> None:
     """Process a recorder platform."""
-    platforms: dict[str, Any] = hass.data[DOMAIN]
-    platforms[domain] = platform
-    if hasattr(platform, "exclude_attributes"):
-        hass.data[EXCLUDE_ATTRIBUTES][domain] = platform.exclude_attributes(hass)
+    instance: Recorder = hass.data[DATA_INSTANCE]
+    instance.queue.put(AddRecorderPlatformTask(domain, platform))
 
 
 @callback
@@ -599,6 +597,26 @@ class CommitTask(RecorderTask):
         """Handle the task."""
         # pylint: disable-next=[protected-access]
         instance._commit_event_session_or_retry()
+
+
+@dataclass
+class AddRecorderPlatformTask(RecorderTask):
+    """Add a recorder platform."""
+
+    domain: str
+    platform: Any
+    commit_before = False
+
+    def run(self, instance: Recorder) -> None:
+        """Handle the task."""
+        hass = instance.hass
+        domain = self.domain
+        platform = self.platform
+
+        platforms: dict[str, Any] = hass.data[DOMAIN]
+        platforms[domain] = platform
+        if hasattr(self.platform, "exclude_attributes"):
+            hass.data[EXCLUDE_ATTRIBUTES][domain] = platform.exclude_attributes(hass)
 
 
 COMMIT_TASK = CommitTask()

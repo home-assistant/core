@@ -72,7 +72,7 @@ from .exceptions import (
     ServiceNotFound,
     Unauthorized,
 )
-from .util import dt as dt_util, location, uuid as uuid_util
+from .util import dt as dt_util, location, ulid as ulid_util
 from .util.async_ import (
     fire_coroutine_threadsafe,
     run_callback_threadsafe,
@@ -696,7 +696,7 @@ class Context:
 
     user_id: str | None = attr.ib(default=None)
     parent_id: str | None = attr.ib(default=None)
-    id: str = attr.ib(factory=uuid_util.random_uuid_hex)
+    id: str = attr.ib(factory=ulid_util.ulid_hex)
 
     def as_dict(self) -> dict[str, str | None]:
         """Return a dictionary representation of the context."""

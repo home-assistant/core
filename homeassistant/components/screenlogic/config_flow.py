@@ -35,8 +35,9 @@ async def async_discover_gateways_by_unique_id(hass):
         return discovered_gateways
 
     for host in hosts:
-        mac = _extract_mac_from_name(host[SL_GATEWAY_NAME])
-        discovered_gateways[mac] = host
+        if (name := host[SL_GATEWAY_NAME]).startswith("Pentair:"):
+            mac = _extract_mac_from_name(name)
+            discovered_gateways[mac] = host
 
     _LOGGER.debug("Discovered gateways: %s", discovered_gateways)
     return discovered_gateways

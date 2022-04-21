@@ -118,6 +118,7 @@ omit =
     homeassistant/components/bmw_connected_drive/__init__.py
     homeassistant/components/bmw_connected_drive/binary_sensor.py
     homeassistant/components/bmw_connected_drive/button.py
+    homeassistant/components/bmw_connected_drive/coordinator.py
     homeassistant/components/bmw_connected_drive/device_tracker.py
     homeassistant/components/bmw_connected_drive/lock.py
     homeassistant/components/bmw_connected_drive/notify.py
@@ -1492,6 +1493,7 @@ omit =
     homeassistant/components/zwave_me/button.py
     homeassistant/components/zwave_me/cover.py
     homeassistant/components/zwave_me/climate.py
+    homeassistant/components/zwave_me/fan.py
     homeassistant/components/zwave_me/helpers.py
     homeassistant/components/zwave_me/light.py
     homeassistant/components/zwave_me/lock.py
