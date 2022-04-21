@@ -41,8 +41,8 @@ def async_calculate_period(
             HistoryStatsHelper.handle_template_exception(ex, bound)
             return None
         if isinstance(rendered, str):
-            result = dt_util.parse_datetime(rendered)
-        if result is not None:
+            bounds[bound] = dt_util.parse_datetime(rendered)
+        if bounds[bound] is not None:
             continue
         try:
             bounds[bound] = dt_util.as_local(

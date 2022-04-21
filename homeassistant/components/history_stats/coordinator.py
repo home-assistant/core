@@ -10,7 +10,7 @@ from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.start import async_at_start
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .helpers import HistoryStats, HistoryStatsState
+from .data import HistoryStats, HistoryStatsState
 
 _LOGGER = logging.getLogger(__name__)
 
