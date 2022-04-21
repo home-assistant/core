@@ -3,9 +3,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from aioairzone.common import ConnectionOptions
+from aioairzone.const import DEFAULT_PORT, DEFAULT_SYSTEM_ID
 from aioairzone.exceptions import AirzoneError, InvalidSystem
-from aioairzone.localapi import AirzoneLocalApi
+from aioairzone.localapi import AirzoneLocalApi, ConnectionOptions
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -13,18 +13,18 @@ from homeassistant.const import CONF_HOST, CONF_ID, CONF_PORT
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
 
-from .const import DEFAULT_LOCAL_API_PORT, DEFAULT_SYSTEM_ID, DOMAIN
+from .const import DOMAIN
 
 CONFIG_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
-        vol.Required(CONF_PORT, default=DEFAULT_LOCAL_API_PORT): int,
+        vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
     }
 )
 SYSTEM_ID_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
-        vol.Required(CONF_PORT, default=DEFAULT_LOCAL_API_PORT): int,
+        vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
         vol.Required(CONF_ID, default=1): int,
     }
 )
@@ -61,7 +61,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
             try:
-                await airzone.validate_airzone()
+                await airzone.validate()
             except InvalidSystem:
                 data_schema = SYSTEM_ID_SCHEMA
                 errors["base"] = "invalid_system_id"
