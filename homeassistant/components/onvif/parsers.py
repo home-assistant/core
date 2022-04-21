@@ -362,7 +362,7 @@ async def async_parse_last_reboot(uid: str, msg) -> Event:
             dt_util.as_local(date_time),
             EntityCategory.DIAGNOSTIC,
         )
-    except (AttributeError, KeyError, ValueError):
+    except (AttributeError, KeyError):
         return None
 
 
@@ -385,7 +385,7 @@ async def async_parse_last_reset(uid: str, msg) -> Event:
             EntityCategory.DIAGNOSTIC,
             entity_enabled=False,
         )
-    except (AttributeError, KeyError, ValueError):
+    except (AttributeError, KeyError):
         return None
 
 
@@ -409,7 +409,7 @@ async def async_parse_backup_last(uid: str, msg) -> Event:
             EntityCategory.DIAGNOSTIC,
             entity_enabled=False,
         )
-    except (AttributeError, KeyError, ValueError):
+    except (AttributeError, KeyError):
         return None
 
 
@@ -432,7 +432,7 @@ async def async_parse_last_clock_sync(uid: str, msg) -> Event:
             EntityCategory.DIAGNOSTIC,
             entity_enabled=False,
         )
-    except (AttributeError, KeyError, ValueError):
+    except (AttributeError, KeyError):
         return None
 
 
