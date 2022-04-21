@@ -22,6 +22,7 @@ def repack_database(instance: Recorder) -> None:
         _LOGGER.debug("Vacuuming SQL DB to free space")
         with instance.engine.connect() as conn:
             conn.execute(text("VACUUM"))
+            conn.commit()
         return
 
     # Execute postgresql vacuum command to free up space on disk
@@ -31,6 +32,7 @@ def repack_database(instance: Recorder) -> None:
             isolation_level="AUTOCOMMIT"
         ) as conn:
             conn.execute(text("VACUUM"))
+            conn.commit()
         return
 
     # Optimize mysql / mariadb tables to free up space on disk
@@ -38,4 +40,5 @@ def repack_database(instance: Recorder) -> None:
         _LOGGER.debug("Optimizing SQL DB to free space")
         with instance.engine.connect() as conn:
             conn.execute(text("OPTIMIZE TABLE states, events, recorder_runs"))
+            conn.commit()
         return
