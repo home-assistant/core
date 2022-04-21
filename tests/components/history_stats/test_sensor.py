@@ -266,7 +266,7 @@ async def test_reload(hass):
     await hass.async_start()
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_all()) == 3
+    assert len(hass.states.async_all()) == 2
 
     assert hass.states.get("sensor.test")
 
@@ -280,7 +280,7 @@ async def test_reload(hass):
         )
         await hass.async_block_till_done()
 
-    assert len(hass.states.async_all()) == 3
+    assert len(hass.states.async_all()) == 2
 
     assert hass.states.get("sensor.test") is None
     assert hass.states.get("sensor.second_test")
@@ -371,7 +371,7 @@ async def test_measure_multiple(hass):
     assert hass.states.get("sensor.sensor4").state == "50.0"
 
 
-async def async_test_measure(hass):
+async def test_measure(hass):
     """Test the history statistics sensor measure."""
     await async_init_recorder_component(hass)
 
@@ -447,10 +447,10 @@ async def async_test_measure(hass):
             await async_update_entity(hass, f"sensor.sensor{i}")
         await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.sensor1").state == "0.5"
-    assert hass.states.get("sensor.sensor2").state == STATE_UNKNOWN
-    assert hass.states.get("sensor.sensor3").state == "2"
-    assert hass.states.get("sensor.sensor4").state == "50.0"
+    assert hass.states.get("sensor.sensor1").state == "0.83"
+    assert hass.states.get("sensor.sensor2").state == "0.83"
+    assert hass.states.get("sensor.sensor3").state == "1"
+    assert hass.states.get("sensor.sensor4").state == "83.3"
 
 
 async def test_async_on_entire_period(hass):
@@ -1124,7 +1124,7 @@ async def test_reload_before_start_event(hass):
     )
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_all()) == 3
+    assert len(hass.states.async_all()) == 2
 
     assert hass.states.get("sensor.test")
 
@@ -1138,7 +1138,7 @@ async def test_reload_before_start_event(hass):
         )
         await hass.async_block_till_done()
 
-    assert len(hass.states.async_all()) == 3
+    assert len(hass.states.async_all()) == 2
 
     assert hass.states.get("sensor.test") is None
     assert hass.states.get("sensor.second_test")
