@@ -6,7 +6,6 @@ import re
 
 from astroid import nodes
 from pylint.checkers import BaseChecker
-from pylint.interfaces import IAstroidChecker
 from pylint.lint import PyLinter
 
 from homeassistant.const import Platform
@@ -539,8 +538,6 @@ def _get_module_platform(module_name: str) -> str | None:
 
 class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
     """Checker for setup type hints."""
-
-    __implements__ = IAstroidChecker
 
     name = "hass_enforce_type_hints"
     priority = -1

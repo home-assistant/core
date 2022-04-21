@@ -3,14 +3,11 @@ from __future__ import annotations
 
 from astroid import nodes
 from pylint.checkers import BaseChecker
-from pylint.interfaces import IAstroidChecker
 from pylint.lint import PyLinter
 
 
 class HassConstructorFormatChecker(BaseChecker):  # type: ignore[misc]
     """Checker for __init__ definitions."""
-
-    __implements__ = IAstroidChecker
 
     name = "hass_constructor"
     priority = -1

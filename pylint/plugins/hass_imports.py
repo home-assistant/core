@@ -6,7 +6,6 @@ import re
 
 from astroid import nodes
 from pylint.checkers import BaseChecker
-from pylint.interfaces import IAstroidChecker
 from pylint.lint import PyLinter
 
 
@@ -232,8 +231,6 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
 
 class HassImportsFormatChecker(BaseChecker):  # type: ignore[misc]
     """Checker for imports."""
-
-    __implements__ = IAstroidChecker
 
     name = "hass_imports"
     priority = -1

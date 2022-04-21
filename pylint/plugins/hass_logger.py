@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from astroid import nodes
 from pylint.checkers import BaseChecker
-from pylint.interfaces import IAstroidChecker
 from pylint.lint import PyLinter
 
 LOGGER_NAMES = ("LOGGER", "_LOGGER")
@@ -12,8 +11,6 @@ LOG_LEVEL_ALLOWED_LOWER_START = ("debug",)
 
 class HassLoggerFormatChecker(BaseChecker):  # type: ignore[misc]
     """Checker for logger invocations."""
-
-    __implements__ = IAstroidChecker
 
     name = "hass_logger"
     priority = -1
