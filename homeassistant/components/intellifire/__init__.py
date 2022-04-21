@@ -36,7 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     except (ConnectionError, ClientConnectionError) as err:
         raise ConfigEntryNotReady from err
-    except (LoginException, KeyError) as err:
+    except LoginException as err:
         raise ConfigEntryAuthFailed(err) from err
 
     finally:
