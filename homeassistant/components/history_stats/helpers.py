@@ -52,8 +52,8 @@ def async_calculate_period(
             _LOGGER.error("Parsing error: %s must be a datetime or a timestamp", bound)
             return None
 
-    start: datetime.datetime | None = bounds[DURATION_START]
-    end: datetime.datetime | None = bounds[DURATION_END]
+    start = bounds[DURATION_START]
+    end = bounds[DURATION_END]
 
     # Calculate start or end using the duration
     if start is None:
