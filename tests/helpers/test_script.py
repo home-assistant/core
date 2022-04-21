@@ -1508,6 +1508,42 @@ async def test_condition_basic(hass, caplog):
     )
 
 
+async def test_and_default_condition(hass, caplog):
+    """Test that a list of conditions evaluates as AND."""
+    alias = "condition step"
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {
+                "alias": alias,
+                "condition": [
+                    {
+                        "condition": "template",
+                        "value_template": "{{ states.test.entity.state == 'hello' }}",
+                    },
+                    {
+                        "condition": "numeric_state",
+                        "entity_id": "sensor.temperature",
+                        "below": 110,
+                    },
+                ],
+            },
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    hass.states.async_set("sensor.temperature", 100)
+    hass.states.async_set("test.entity", "hello")
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+    assert f"Test condition {alias}: True" in caplog.text
+    caplog.clear()
+
+    hass.states.async_set("sensor.temperature", 120)
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+    assert f"Test condition {alias}: False" in caplog.text
+
+
 async def test_shorthand_template_condition(hass, caplog):
     """Test if we can use shorthand template conditions in a script."""
     event = "test_event"
@@ -4128,7 +4164,6 @@ async def test_validate_action_config(hass):
         },
         cv.SCRIPT_ACTION_VARIABLES: {"variables": {"hello": "world"}},
         cv.SCRIPT_ACTION_STOP: {"stop": "Stop it right there buddy..."},
-        cv.SCRIPT_ACTION_ERROR: {"error": "Stand up, and try again!"},
         cv.SCRIPT_ACTION_IF: {
             "if": [
                 {
@@ -4445,12 +4480,12 @@ async def test_stop_action(hass, caplog):
     assert_action_trace(
         {
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
-            "1": [{"result": {"stop": "In the name of love"}}],
+            "1": [{"result": {"stop": "In the name of love", "error": False}}],
         }
     )
 
 
-async def test_error_action(hass, caplog):
+async def test_stop_action_with_error(hass, caplog):
     """Test if automation fails on calling the error action."""
     event = "test_event"
     events = async_capture_events(hass, event)
@@ -4461,7 +4496,8 @@ async def test_error_action(hass, caplog):
             {"event": event},
             {
                 "alias": alias,
-                "error": "Epic one...",
+                "stop": "Epic one...",
+                "error": True,
             },
             {"event": event},
         ]
@@ -4479,7 +4515,10 @@ async def test_error_action(hass, caplog):
         {
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
             "1": [
-                {"error_type": script._AbortScript, "result": {"error": "Epic one..."}}
+                {
+                    "error_type": script._AbortScript,
+                    "result": {"stop": "Epic one...", "error": True},
+                }
             ],
         },
         expected_script_execution="aborted",
@@ -4573,7 +4612,7 @@ async def test_continue_on_error_with_stop(hass: HomeAssistant) -> None:
 
     assert_action_trace(
         {
-            "0": [{"result": {"stop": "Stop it!"}}],
+            "0": [{"result": {"stop": "Stop it!", "error": False}}],
         },
         expected_script_execution="finished",
     )
