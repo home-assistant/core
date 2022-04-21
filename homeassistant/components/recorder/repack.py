@@ -4,6 +4,8 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
+from sqlalchemy import text
+
 if TYPE_CHECKING:
     from . import Recorder
 
@@ -19,7 +21,7 @@ def repack_database(instance: Recorder) -> None:
     if dialect_name == "sqlite":
         _LOGGER.debug("Vacuuming SQL DB to free space")
         with instance.engine.connect() as conn:
-            conn.execute("VACUUM")
+            conn.execute(text("VACUUM"))
         return
 
     # Execute postgresql vacuum command to free up space on disk
@@ -28,12 +30,12 @@ def repack_database(instance: Recorder) -> None:
         with instance.engine.connect().execution_options(
             isolation_level="AUTOCOMMIT"
         ) as conn:
-            conn.execute("VACUUM")
+            conn.execute(text("VACUUM"))
         return
 
     # Optimize mysql / mariadb tables to free up space on disk
     if dialect_name == "mysql":
         _LOGGER.debug("Optimizing SQL DB to free space")
         with instance.engine.connect() as conn:
-            conn.execute("OPTIMIZE TABLE states, events, recorder_runs")
+            conn.execute(text("OPTIMIZE TABLE states, events, recorder_runs"))
         return
