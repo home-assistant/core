@@ -492,7 +492,7 @@ def get_api(conf: dict[str, Any], options: dict[str, Any] | None = None) -> Asus
 
     return AsusWrt(
         conf[CONF_HOST],
-        conf[CONF_PORT],
+        conf.get(CONF_PORT),
         conf[CONF_PROTOCOL] == PROTOCOL_TELNET,
         conf[CONF_USERNAME],
         conf.get(CONF_PASSWORD, ""),
