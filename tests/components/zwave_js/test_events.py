@@ -307,3 +307,26 @@ async def test_unknown_notification(hass, hank_binary_switch, integration, clien
     notification_obj.node = node
     with pytest.raises(TypeError):
         node.emit("notification", {"notification": notification_obj})
+
+    notification_events = async_capture_events(hass, "zwave_js_notification")
+
+    # Test a valid notification with an unsupported command class
+    event = Event(
+        type="notification",
+        data={
+            "source": "node",
+            "event": "notification",
+            "nodeId": node.node_id,
+            "ccId": 0,
+            "args": {
+                "commandClassName": "No Operation",
+                "commandClass": 0,
+                "testNodeId": 1,
+                "status": 0,
+                "acknowledgedFrames": 2,
+            },
+        },
+    )
+    node.receive_event(event)
+
+    assert not notification_events
