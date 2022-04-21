@@ -6,6 +6,7 @@ import json
 from unittest.mock import patch, sentinel
 
 import pytest
+from sqlalchemy import text
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder import history
@@ -628,8 +629,10 @@ async def test_state_changes_during_period_query_during_migration_to_schema_25(
     state = hist[entity_id][0]
     assert state.attributes == {"name": "the shared light"}
 
-    instance.engine.execute("update states set attributes_id=NULL;")
-    instance.engine.execute("drop table state_attributes;")
+    with instance.engine.connect() as conn:
+        conn.execute(text("update states set attributes_id=NULL;"))
+        conn.execute(text("drop table state_attributes;"))
+        conn.commit()
 
     with patch.object(instance, "migration_in_progress", True):
         no_attributes = True
@@ -670,8 +673,10 @@ async def test_get_states_query_during_migration_to_schema_25(
     state = hist[0]
     assert state.attributes == {"name": "the shared light"}
 
-    instance.engine.execute("update states set attributes_id=NULL;")
-    instance.engine.execute("drop table state_attributes;")
+    with instance.engine.connect() as conn:
+        conn.execute(text("update states set attributes_id=NULL;"))
+        conn.execute(text("drop table state_attributes;"))
+        conn.commit()
 
     with patch.object(instance, "migration_in_progress", True):
         no_attributes = True
@@ -711,8 +716,10 @@ async def test_get_states_query_during_migration_to_schema_25_multiple_entities(
     assert hist[0].attributes == {"name": "the shared light"}
     assert hist[1].attributes == {"name": "the shared light"}
 
-    instance.engine.execute("update states set attributes_id=NULL;")
-    instance.engine.execute("drop table state_attributes;")
+    with instance.engine.connect() as conn:
+        conn.execute(text("update states set attributes_id=NULL;"))
+        conn.execute(text("drop table state_attributes;"))
+        conn.commit()
 
     with patch.object(instance, "migration_in_progress", True):
         no_attributes = True
