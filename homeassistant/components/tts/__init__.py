@@ -105,20 +105,17 @@ def valid_base_url(value: str) -> str:
     return normalize_url(value)
 
 
-PLATFORM_SCHEMA = vol.All(
-    cv.PLATFORM_SCHEMA.extend(
-        {
-            vol.Required(CONF_PLATFORM): vol.All(cv.string, _deprecated_platform),
-            vol.Optional(CONF_CACHE, default=DEFAULT_CACHE): cv.boolean,
-            vol.Optional(CONF_CACHE_DIR, default=DEFAULT_CACHE_DIR): cv.string,
-            vol.Optional(CONF_TIME_MEMORY, default=DEFAULT_TIME_MEMORY): vol.All(
-                vol.Coerce(int), vol.Range(min=60, max=57600)
-            ),
-            vol.Optional(CONF_BASE_URL): valid_base_url,
-            vol.Optional(CONF_SERVICE_NAME): cv.string,
-        }
-    ),
-    cv.deprecated(CONF_BASE_URL),
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_PLATFORM): vol.All(cv.string, _deprecated_platform),
+        vol.Optional(CONF_CACHE, default=DEFAULT_CACHE): cv.boolean,
+        vol.Optional(CONF_CACHE_DIR, default=DEFAULT_CACHE_DIR): cv.string,
+        vol.Optional(CONF_TIME_MEMORY, default=DEFAULT_TIME_MEMORY): vol.All(
+            vol.Coerce(int), vol.Range(min=60, max=57600)
+        ),
+        vol.Optional(CONF_BASE_URL): valid_base_url,
+        vol.Optional(CONF_SERVICE_NAME): cv.string,
+    }
 )
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE.extend(PLATFORM_SCHEMA.schema)
 
@@ -145,6 +142,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         cache_dir = conf.get(CONF_CACHE_DIR, DEFAULT_CACHE_DIR)
         time_memory = conf.get(CONF_TIME_MEMORY, DEFAULT_TIME_MEMORY)
         base_url = conf.get(CONF_BASE_URL)
+        if base_url is not None:
+            _LOGGER.warning(
+                "TTS base_url option is deprecated. Configure internal/external URL instead"
+            )
         hass.data[BASE_URL_KEY] = base_url
 
         await tts.async_init_cache(use_cache, cache_dir, time_memory, base_url)
