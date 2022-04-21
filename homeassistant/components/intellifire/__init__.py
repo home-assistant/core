@@ -20,7 +20,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up IntelliFire from a config entry."""
     LOGGER.debug("Setting up config entry: %s", entry.unique_id)
 
-    if "username" not in entry.data:
+    if CONF_USERNAME not in entry.data:
         LOGGER.debug("Old config entry format detected: %s", entry.unique_id)
         raise ConfigEntryAuthFailed
 
