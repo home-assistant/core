@@ -2,11 +2,13 @@
 from __future__ import annotations
 
 import copy
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 import logging
 from typing import Any
 
-from httplib2 import ServerNotFoundError
+from gcal_sync.api import GoogleCalendarService, ListEventsRequest
+from gcal_sync.exceptions import ApiException
+from gcal_sync.model import Event
 
 from homeassistant.components.calendar import (
     ENTITY_ID_FORMAT,
@@ -22,7 +24,7 @@ from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import Throttle, dt
+from homeassistant.util import Throttle
 
 from . import (
     CONF_CAL_ID,
@@ -34,7 +36,6 @@ from . import (
     DOMAIN,
     SERVICE_SCAN_CALENDARS,
 )
-from .api import GoogleCalendarService
 from .const import DISCOVER_CALENDAR
 
 _LOGGER = logging.getLogger(__name__)
@@ -147,77 +148,66 @@ class GoogleCalendarEntity(CalendarEntity):
         """Return the name of the entity."""
         return self._name
 
-    def _event_filter(self, event: dict[str, Any]) -> bool:
+    def _event_filter(self, event: Event) -> bool:
         """Return True if the event is visible."""
         if self._ignore_availability:
             return True
-        return event.get(TRANSPARENCY, OPAQUE) == OPAQUE
+        return event.transparency == OPAQUE
 
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
         """Get all events in a specific time frame."""
         event_list: list[dict[str, Any]] = []
-        page_token: str | None = None
+
+        request = ListEventsRequest(
+            calendar_id=self._calendar_id,
+            start_time=start_date,
+            end_time=end_date,
+            search=self._search,
+        )
         while True:
             try:
-                items, page_token = await self._calendar_service.async_list_events(
-                    self._calendar_id,
-                    start_time=start_date,
-                    end_time=end_date,
-                    search=self._search,
-                    page_token=page_token,
-                )
-            except ServerNotFoundError as err:
+                result = await self._calendar_service.async_list_events(request)
+            except ApiException as err:
                 _LOGGER.error("Unable to connect to Google: %s", err)
                 return []
 
-            event_list.extend(filter(self._event_filter, items))
-            if not page_token:
+            event_list.extend(filter(self._event_filter, result.items))
+            if not result.page_token:
                 break
+
+            request.page_token = result.page_token
 
         return [_get_calendar_event(event) for event in event_list]
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self) -> None:
         """Get the latest data."""
+        request = ListEventsRequest(calendar_id=self._calendar_id, search=self._search)
         try:
-            items, _ = await self._calendar_service.async_list_events(
-                self._calendar_id, search=self._search
-            )
-        except ServerNotFoundError as err:
+            result = await self._calendar_service.async_list_events(request)
+        except ApiException as err:
             _LOGGER.error("Unable to connect to Google: %s", err)
             return
 
         # Pick the first visible event and apply offset calculations.
-        valid_items = filter(self._event_filter, items)
+        valid_items = filter(self._event_filter, result.items)
         event = copy.deepcopy(next(valid_items, None))
         if event:
-            (summary, offset) = extract_offset(event.get("summary", ""), self._offset)
-            event["summary"] = summary
+            (event.summary, offset) = extract_offset(event.summary, self._offset)
             self._event = _get_calendar_event(event)
             self._offset_value = offset
         else:
             self._event = None
 
 
-def _get_date_or_datetime(date_dict: dict[str, str]) -> datetime | date:
-    """Convert a google calendar API response to a datetime or date object."""
-    if "date" in date_dict:
-        parsed_date = dt.parse_date(date_dict["date"])
-        assert parsed_date
-        return parsed_date
-    parsed_datetime = dt.parse_datetime(date_dict["dateTime"])
-    assert parsed_datetime
-    return parsed_datetime
-
-
-def _get_calendar_event(event: dict[str, Any]) -> CalendarEvent:
+def _get_calendar_event(event: Event) -> CalendarEvent:
     """Return a CalendarEvent from an API event."""
     return CalendarEvent(
-        summary=event["summary"],
-        start=_get_date_or_datetime(event["start"]),
-        end=_get_date_or_datetime(event["end"]),
-        description=event.get("description"),
-        location=event.get("location"),
+        summary=event.summary,
+        start=event.start.value,
+        end=event.end.value,
+        description=event.description,
+        location=event.location,
     )
