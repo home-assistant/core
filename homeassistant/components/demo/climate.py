@@ -5,15 +5,9 @@ from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
-    CURRENT_HVAC_COOL,
-    CURRENT_HVAC_HEAT,
-    HVAC_MODE_AUTO,
-    HVAC_MODE_COOL,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_HEAT_COOL,
-    HVAC_MODE_OFF,
-    HVAC_MODES,
     ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
@@ -47,12 +41,12 @@ async def async_setup_platform(
                 target_humidity=None,
                 current_humidity=None,
                 swing_mode=None,
-                hvac_mode=HVAC_MODE_HEAT,
-                hvac_action=CURRENT_HVAC_HEAT,
+                hvac_mode=HVACMode.HEAT,
+                hvac_action=HVACAction.HEATING,
                 aux=None,
                 target_temp_high=None,
                 target_temp_low=None,
-                hvac_modes=[HVAC_MODE_HEAT, HVAC_MODE_OFF],
+                hvac_modes=[HVACMode.HEAT, HVACMode.OFF],
             ),
             DemoClimate(
                 unique_id="climate_2",
@@ -65,12 +59,12 @@ async def async_setup_platform(
                 target_humidity=67,
                 current_humidity=54,
                 swing_mode="Off",
-                hvac_mode=HVAC_MODE_COOL,
-                hvac_action=CURRENT_HVAC_COOL,
+                hvac_mode=HVACMode.COOL,
+                hvac_action=HVACAction.COOLING,
                 aux=False,
                 target_temp_high=None,
                 target_temp_low=None,
-                hvac_modes=[mode for mode in HVAC_MODES if mode != HVAC_MODE_HEAT_COOL],
+                hvac_modes=[cls.value for cls in HVACMode if cls != HVACMode.HEAT_COOL],
             ),
             DemoClimate(
                 unique_id="climate_3",
@@ -84,12 +78,12 @@ async def async_setup_platform(
                 target_humidity=None,
                 current_humidity=None,
                 swing_mode="Auto",
-                hvac_mode=HVAC_MODE_HEAT_COOL,
+                hvac_mode=HVACMode.HEAT_COOL,
                 hvac_action=None,
                 aux=None,
                 target_temp_high=24,
                 target_temp_low=21,
-                hvac_modes=[HVAC_MODE_HEAT_COOL, HVAC_MODE_COOL, HVAC_MODE_HEAT],
+                hvac_modes=[cls.value for cls in HVACMode if cls != HVACMode.HEAT],
             ),
         ]
     )
@@ -147,7 +141,7 @@ class DemoClimate(ClimateEntity):
             self._support_flags = self._support_flags | ClimateEntityFeature.SWING_MODE
         if aux is not None:
             self._support_flags = self._support_flags | ClimateEntityFeature.AUX_HEAT
-        if HVAC_MODE_HEAT_COOL in hvac_modes or HVAC_MODE_AUTO in hvac_modes:
+        if HVACMode.HEAT_COOL in hvac_modes or HVACMode.AUTO in hvac_modes:
             self._support_flags = (
                 self._support_flags | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
             )

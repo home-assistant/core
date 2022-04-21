@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from aioairzone.common import ConnectionOptions
 from aioairzone.const import (
     AZD_ID,
     AZD_NAME,
@@ -11,11 +10,12 @@ from aioairzone.const import (
     AZD_THERMOSTAT_FW,
     AZD_THERMOSTAT_MODEL,
     AZD_ZONES,
+    DEFAULT_SYSTEM_ID,
 )
-from aioairzone.localapi import AirzoneLocalApi
+from aioairzone.localapi import AirzoneLocalApi, ConnectionOptions
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT, Platform
+from homeassistant.const import CONF_HOST, CONF_ID, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.entity import DeviceInfo
@@ -67,6 +67,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     options = ConnectionOptions(
         entry.data[CONF_HOST],
         entry.data[CONF_PORT],
+        entry.data.get(CONF_ID, DEFAULT_SYSTEM_ID),
     )
 
     airzone = AirzoneLocalApi(aiohttp_client.async_get_clientsession(hass), options)
