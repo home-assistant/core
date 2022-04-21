@@ -1,0 +1,319 @@
+turn_on:
+  name: Turn on Heating
+  description: Turn on Heating for one hour or until max temperature is reached
+  target:
+    entity:
+      domain: water_heater
+  fields:
+    full_utilization:
+      name: Full Utilization
+      description: Choose if heating should be on until max temperature (True) is reached or for one hour (False)
+      required: true
+      default: false
+      example: false
+      selector:
+        boolean:
+turn_off:
+  name: Turn off Heating
+  description: Turn off Heating for one hour or until min temperature is reached
+  target:
+    entity:
+      domain: water_heater
+  fields:
+    full_utilization:
+      name: Full Utilization
+      description: Choose if heating should be off until min temperature (True) is reached or for one hour (False)
+      required: true
+      default: false
+      example: false
+      selector:
+        boolean:
+set_v40_min:
+  name: Set V40 Min
+  description: Set the minimum quantity of water at 40°C for a heater
+  target:
+    entity:
+      domain: water_heater
+  fields:
+    v40_min:
+      name: V40 Min
+      description: Minimum quantity of water at 40°C (200-350 for SAGA S200, 300-550 for SAGA S300)
+      required: true
+      example: 240
+      selector:
+        number:
+          min: 200
+          max: 550
+          step: 1
+          unit_of_measurement: L
+set_profile:
+  name: Set Heater Profile
+  description: Set temperature profile of water heater
+  target:
+    entity:
+      domain: water_heater
+  fields:
+    hour_00:
+      name: "00:00"
+      description: 00:00 Hour
+      required: true
+      example: 75
+      selector:
+        number:
+          min: 10
+          max: 75
+          step: 1
+          unit_of_measurement: °C
+    hour_01:
+      name: "01:00"
+      description: 01:00 Hour
+      required: true
+      example: 75
+      selector:
+        number:
+          min: 10
+          max: 75
+          step: 1
+          unit_of_measurement: °C
+    hour_02:
+      name: "02:00"
+      description: 02:00 Hour
+      required: true
+      example: 75
+      selector:
+        number:
+          min: 10
+          max: 75
+          step: 1
+          unit_of_measurement: °C
+    hour_03:
+      name: "03:00"
+      description: 03:00 Hour
+      required: true
+      example: 75
+      selector:
+        number:
+          min: 10
+          max: 75
+          step: 1
+          unit_of_measurement: °C
+    hour_04:
+      name: "04:00"
+      description: 04:00 Hour
+      required: true
+      example: 75
+      selector:
+        number:
+          min: 10
+          max: 75
+          step: 1
+          unit_of_measurement: °C
+    hour_05:
+      name: "05:00"
+      description: 05:00 Hour
+      required: true
+      example: 75
+      selector:
+        number:
+          min: 10
+          max: 75
+          step: 1
+          unit_of_measurement: °C
+    hour_06:
+      name: "06:00"
+      description: 06:00 Hour
+      required: true
+      example: 75
+      selector:
+        number:
+          min: 10
+          max: 75
+          step: 1
+          unit_of_measurement: °C
+    hour_07:
+      name: "07:00"
+      description: 07:00 Hour
+      required: true
+      example: 75
+      selector:
+        number:
+          min: 10
+          max: 75
+          step: 1
+          unit_of_measurement: °C
+    hour_08:
+      name: "08:00"
+      description: 08:00 Hour
+      required: true
+      example: 75
+      selector:
+        number:
+          min: 10
+          max: 75
+          step: 1
+          unit_of_measurement: °C
+    hour_09:
+      name: "09:00"
+      description: 09:00 Hour
+      required: true
+      example: 75
+      selector:
+        number:
+          min: 10
+          max: 75
+          step: 1
+          unit_of_measurement: °C
+    hour_10:
+      name: "10:00"
+      description: 10:00 Hour
+      required: true
+      example: 75
+      selector:
+        number:
+          min: 10
+          max: 75
+          step: 1
+          unit_of_measurement: °C
+    hour_11:
+      name: "11:00"
+      description: 11:00 Hour
+      required: true
+      example: 75
+      selector:
+        number:
+          min: 10
+          max: 75
+          step: 1
+          unit_of_measurement: °C
+    hour_12:
+      name: "12:00"
+      description: 12:00 Hour
+      required: true
+      example: 75
+      selector:
+        number:
+          min: 10
+          max: 75
+          step: 1
+          unit_of_measurement: °C
+    hour_13:
+      name: "13:00"
+      description: 13:00 Hour
+      required: true
+      example: 75
+      selector:
+        number:
+          min: 10
+          max: 75
+          step: 1
+          unit_of_measurement: °C
+    hour_14:
+      name: "14:00"
+      description: 14:00 Hour
+      required: true
+      example: 75
+      selector:
+        number:
+          min: 10
+          max: 75
+          step: 1
+          unit_of_measurement: °C
+    hour_15:
+      name: "15:00"
+      description: 15:00 Hour
+      required: true
+      example: 75
+      selector:
+        number:
+          min: 10
+          max: 75
+          step: 1
+          unit_of_measurement: °C
+    hour_16:
+      name: "16:00"
+      description: 16:00 Hour
+      required: true
+      example: 75
+      selector:
+        number:
+          min: 10
+          max: 75
+          step: 1
+          unit_of_measurement: °C
+    hour_17:
+      name: "17:00"
+      description: 17:00 Hour
+      required: true
+      example: 75
+      selector:
+        number:
+          min: 10
+          max: 75
+          step: 1
+          unit_of_measurement: °C
+    hour_18:
+      name: "18:00"
+      description: 18:00 Hour
+      required: true
+      example: 75
+      selector:
+        number:
+          min: 10
+          max: 75
+          step: 1
+          unit_of_measurement: °C
+    hour_19:
+      name: "19:00"
+      description: 19:00 Hour
+      required: true
+      example: 75
+      selector:
+        number:
+          min: 10
+          max: 75
+          step: 1
+          unit_of_measurement: °C
+    hour_20:
+      name: "20:00"
+      description: 20:00 Hour
+      required: true
+      example: 75
+      selector:
+        number:
+          min: 10
+          max: 75
+          step: 1
+          unit_of_measurement: °C
+    hour_21:
+      name: "21:00"
+      description: 21:00 Hour
+      required: true
+      example: 75
+      selector:
+        number:
+          min: 10
+          max: 75
+          step: 1
+          unit_of_measurement: °C
+    hour_22:
+      name: "22:00"
+      description: 22:00 Hour
+      required: true
+      example: 75
+      selector:
+        number:
+          min: 10
+          max: 75
+          step: 1
+          unit_of_measurement: °C
+    hour_23:
+      name: "23:00"
+      description: 23:00 Hour
+      required: true
+      example: 75
+      selector:
+        number:
+          min: 10
+          max: 75
+          step: 1
+          unit_of_measurement: °C

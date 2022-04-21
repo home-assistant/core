@@ -280,6 +280,7 @@ FLOWS = {
         "opentherm_gw",
         "openuv",
         "openweathermap",
+        "osoenergy",
         "overkiz",
         "ovo_energy",
         "owntracks",

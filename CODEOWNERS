@@ -822,6 +822,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/opnsense/ @mtreinish
 /tests/components/opnsense/ @mtreinish
 /homeassistant/components/oru/ @bvlaicu
+/homeassistant/components/osoenergy/ @osohotwateriot
+/tests/components/osoenergy/ @osohotwateriot
 /homeassistant/components/overkiz/ @imicknl @vlebourl @tetienne
 /tests/components/overkiz/ @imicknl @vlebourl @tetienne
 /homeassistant/components/ovo_energy/ @timmo001
