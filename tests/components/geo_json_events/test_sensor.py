@@ -2,6 +2,8 @@
 from datetime import timedelta
 from unittest.mock import patch
 
+from freezegun import freeze_time
+
 from homeassistant.components import geo_json_events
 from homeassistant.components.geo_json_events.const import DEFAULT_SCAN_INTERVAL
 from homeassistant.components.geo_json_events.sensor import (
@@ -28,7 +30,6 @@ from tests.components.geo_json_events.conftest import URL
 CONFIG = {geo_json_events.DOMAIN: {CONF_URL: URL, CONF_RADIUS: 200}}
 
 
-# legacy_patchable_time
 async def test_setup(hass):
     """Test the general setup of the integration."""
     # Set up some mock feed entries for this test.
@@ -54,13 +55,12 @@ async def test_setup(hass):
 
     # Patching 'utcnow' to gain more control over the timed update.
     utcnow = dt_util.utcnow()
-    with patch("homeassistant.util.dt.utcnow", return_value=utcnow), patch(
+    with freeze_time(utcnow), patch(
         "aio_geojson_client.feed.GeoJsonFeed.update"
     ) as mock_feed_update:
         mock_feed_update.return_value = "OK", [mock_entry_1, mock_entry_2, mock_entry_3]
         assert await async_setup_component(hass, geo_json_events.DOMAIN, CONFIG)
         # Artificially trigger update and collect events.
-        # hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
         await hass.async_block_till_done()
 
         # 3 geolocation and 1 sensor entities
@@ -90,9 +90,7 @@ async def test_setup(hass):
 
         # Simulate an update - two existing, one new entry, one outdated entry
         mock_feed_update.return_value = "OK", [mock_entry_1, mock_entry_4, mock_entry_3]
-        async_fire_time_changed(
-            hass, utcnow + DEFAULT_SCAN_INTERVAL + timedelta(seconds=5)
-        )
+        async_fire_time_changed(hass, utcnow + timedelta(seconds=DEFAULT_SCAN_INTERVAL))
         await hass.async_block_till_done()
 
         assert (
@@ -112,7 +110,9 @@ async def test_setup(hass):
         # Simulate an update - empty data, but successful update,
         # so no changes to entities.
         mock_feed_update.return_value = "OK_NO_DATA", None
-        async_fire_time_changed(hass, utcnow + 2 * DEFAULT_SCAN_INTERVAL)
+        async_fire_time_changed(
+            hass, utcnow + 2 * timedelta(seconds=DEFAULT_SCAN_INTERVAL)
+        )
         await hass.async_block_till_done()
 
         assert (
@@ -123,7 +123,9 @@ async def test_setup(hass):
 
         # Simulate an update - empty data, removes all entities
         mock_feed_update.return_value = "ERROR", None
-        async_fire_time_changed(hass, utcnow + 3 * DEFAULT_SCAN_INTERVAL)
+        async_fire_time_changed(
+            hass, utcnow + 3 * timedelta(seconds=DEFAULT_SCAN_INTERVAL)
+        )
         await hass.async_block_till_done()
 
         assert (

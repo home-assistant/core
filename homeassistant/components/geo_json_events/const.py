@@ -1,5 +1,4 @@
 """Define constants for the GeoJSON events integration."""
-from datetime import timedelta
 from typing import Final
 
 from homeassistant.const import Platform
@@ -17,8 +16,7 @@ ATTR_UPDATED = "updated"
 
 DEFAULT_FORCE_UPDATE: Final = True
 DEFAULT_RADIUS_IN_KM = 20.0
-DEFAULT_SCAN_INTERVAL = timedelta(minutes=5)
-DEFAULT_SCAN_INTERVAL_SECONDS = 300
+DEFAULT_SCAN_INTERVAL = 300
 DEFAULT_UNIT_OF_MEASUREMENT = "events"
 
 FEED = "feed"

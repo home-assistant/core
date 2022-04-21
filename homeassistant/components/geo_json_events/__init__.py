@@ -26,7 +26,7 @@ from ...helpers.entity_registry import (
 )
 from ...helpers.update_coordinator import DataUpdateCoordinator
 from ...util.unit_system import METRIC_SYSTEM
-from .const import DEFAULT_SCAN_INTERVAL_SECONDS, DOMAIN, FEED, PLATFORMS
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, FEED, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,7 +39,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     conf = config[DOMAIN]
     latitude = conf.get(CONF_LATITUDE, hass.config.latitude)
     longitude = conf.get(CONF_LONGITUDE, hass.config.longitude)
-    scan_interval = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL_SECONDS)
+    scan_interval = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
 
     hass.async_create_task(
         hass.config_entries.flow.async_init(
