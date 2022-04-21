@@ -319,6 +319,10 @@ class ScriptEntity(ToggleEntity, RestoreEntity):
         self.description = cfg[CONF_DESCRIPTION]
         self.fields = cfg[CONF_FIELDS]
 
+        # The object ID of scripts need / are unique already
+        # they cannot be changed from the UI after creating
+        self._attr_unique_id = object_id
+
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
         self.script = Script(
             hass,
