@@ -773,7 +773,7 @@ async def async_setup_recorder_instance(
                 await async_recorder_block_till_done(hass, instance)
             return instance
 
-    yield async_setup_recorder
+    return async_setup_recorder
 
 
 @pytest.fixture
