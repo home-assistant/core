@@ -25,7 +25,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import DOMAIN, PLATFORMS
 from .coordinator import HistoryStatsUpdateCoordinator
-from .helpers import HistoryStats, HistoryStatsHelper
+from .data import HistoryStats
+from .helpers import pretty_duration, pretty_ratio
 
 CONF_START = "start"
 CONF_END = "end"
@@ -119,7 +120,7 @@ class HistoryStatsSensorBase(
     async def async_added_to_hass(self) -> None:
         """Entity has been added to hass."""
         await super().async_added_to_hass()
-        self.async_on_remove(self.coordinator.async_setup_listener())
+        self.async_on_remove(self.coordinator.async_setup_state_listener())
 
     def _handle_coordinator_update(self) -> None:
         """Set attrs from value and count."""
@@ -150,7 +151,7 @@ class HistoryStatsSensor(HistoryStatsSensorBase):
     def _process_update(self) -> None:
         """Process an update from the coordinator."""
         state = self.coordinator.data
-        if state.hours_matched is None:
+        if state is None or state.hours_matched is None:
             self._attr_native_value = None
             self._attr_extra_state_attributes = {}
             return
@@ -158,11 +159,9 @@ class HistoryStatsSensor(HistoryStatsSensorBase):
         if self._type == CONF_TYPE_TIME:
             self._attr_native_value = round(state.hours_matched, 2)
         elif self._type == CONF_TYPE_RATIO:
-            self._attr_native_value = HistoryStatsHelper.pretty_ratio(
-                state.hours_matched, state.period
-            )
+            self._attr_native_value = pretty_ratio(state.hours_matched, state.period)
         elif self._type == CONF_TYPE_COUNT:
             self._attr_native_value = state.changes_to_match_state
         self._attr_extra_state_attributes = {
-            ATTR_VALUE: HistoryStatsHelper.pretty_duration(state.hours_matched)
+            ATTR_VALUE: pretty_duration(state.hours_matched)
         }
