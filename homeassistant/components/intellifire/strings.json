@@ -28,7 +28,7 @@
       }
     },
     "error": {
-      "cannot_connect": "Could not connect to a fireplace endpoint at url: http://{host}/poll\nVerify IP address and try again",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "api_error": "Login failed",
       "iftapi_connect": "Error conecting to iftapi.net"
     },
