@@ -260,17 +260,17 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator):
                 self.add_entry_to_location_dict(entry_)
             await super().async_config_entry_first_refresh()
             self._coordinator_ready.set()
-        # If we're loading a new config entry that's not already mapped, we need to do
-        # a refresh. We're going to do a partial refresh though so we can minimize
-        # repeat API calls
-        elif entry.entry_id not in self.entry_id_to_location_dict:
-            await self._coordinator_ready.wait()
-            self.add_entry_to_location_dict(entry)
-            await super().async_refresh()
-        # If we're not getting new data, we don't need to schedule a refresh
         else:
             await self._coordinator_ready.wait()
-            return
+            # If we're loading a new config entry that's not already mapped, we need
+            # to do a refresh. We're going to do a partial refresh though so we can
+            # minimize repeat API calls
+            if entry.entry_id not in self.entry_id_to_location_dict:
+                self.add_entry_to_location_dict(entry)
+                await super().async_refresh()
+            # If we're not getting new data, we don't need to schedule a refresh
+            else:
+                return
 
         if self._api.max_requests_per_day is None:
             # We should never get here since we've loaded the data and the lib
