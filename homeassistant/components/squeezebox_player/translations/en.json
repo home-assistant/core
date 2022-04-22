@@ -5,7 +5,6 @@
       },
       "step": {
           "user": {
-              "description": "Do you want to add Squeezebox Player to Home Assistant?"
           }
       }
   }

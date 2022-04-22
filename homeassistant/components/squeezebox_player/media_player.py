@@ -14,9 +14,12 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
 )
+from homeassistant.components.media_player.browse_media import (
+    async_process_play_media_url,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING
-from homeassistant.core import EventOrigin, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
@@ -55,6 +58,8 @@ async def async_setup_entry(
         """Add MediaPlayerEntity from SlimClient."""
         # we delay adding the player a small bit because the player name may be received
         # just a bit after connect. This way we can create a device reg entry with the correct name
+        # the name will either be available within a few milliseconds after connect or not at all
+        # (its an optional data packet)
         for _ in range(10):
             if player.player_id not in player.name:
                 break
@@ -82,15 +87,27 @@ async def async_setup_entry(
 class SqueezeboxPlayer(MediaPlayerEntity):
     """Representation of MediaPlayerEntity from Squeezebox Player."""
 
-    self._attr_should_poll = False
-    self._attr_supported_features = SUPPORTED_FEATURES
-    self._attr_device_class = MediaPlayerDeviceClass.SPEAKER
+    _attr_should_poll = False
+    _attr_supported_features = SUPPORTED_FEATURES
+    _attr_device_class = MediaPlayerDeviceClass.SPEAKER
 
     def __init__(self, slimserver: SlimServer, player: SlimClient) -> None:
         """Initialize MediaPlayer entity."""
         self.slimserver = slimserver
         self.player = player
         self._attr_unique_id = player.player_id
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self.player.player_id)},
+            manufacturer=DEFAULT_NAME,
+            model=self.player.device_model or self.player.device_type,
+            name=self.player.name,
+            hw_version=self.player.firmware,
+        )
+        # PiCore player has web interface
+        if "-pCP" in self.player.firmware:
+            self._attr_device_info[
+                "configuration_url"
+            ] = f"http://{self.player.device_address}"
         self.update_attributes()
 
     async def async_added_to_hass(self) -> None:
@@ -131,18 +148,6 @@ class SqueezeboxPlayer(MediaPlayerEntity):
         self._attr_media_position_updated_at = utcnow()
         self._attr_media_content_id = self.player.current_url
         self._attr_media_content_type = "music"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.player.player_id)},
-            manufacturer=DEFAULT_NAME,
-            model=self.player.device_model or self.player.device_type,
-            name=self.player.name,
-            hw_version=self.player.firmware,
-        )
-        # PiCore player has web interface
-        if "-pCP" in self.player.firmware:
-            self._attr_device_info[
-                "configuration_url"
-            ] = f"http://{self.player.device_address}"
 
     async def async_media_play(self) -> None:
         """Send play command to device."""
@@ -183,7 +188,7 @@ class SqueezeboxPlayer(MediaPlayerEntity):
 
         if not media_type.startswith("audio/"):
             media_type = None  # type: ignore[assignment]
-        async_process_play_media_url(self.hass, media_id)
+        media_id = async_process_play_media_url(self.hass, media_id)
 
         await self.player.play_url(media_id, mime_type=media_type)
 
@@ -208,7 +213,9 @@ class SqueezeboxPlayer(MediaPlayerEntity):
             evt_data = {
                 **event.data,
                 "entity_id": self.entity_id,
-                "device_id": self.registry_entry.device_id,
+                "device_id": self.registry_entry.device_id
+                if self.registry_entry
+                else None,
             }
             self.hass.bus.async_fire(PLAYER_EVENT, evt_data)
             return

@@ -1,9 +1,7 @@
 {
   "config": {
     "step": {
-      "user": {
-        "description": "Do you want to add Squeezebox Player to Home Assistant?"
-      }
+      "user": {}
     },
     "abort": {
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
