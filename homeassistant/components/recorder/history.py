@@ -426,10 +426,10 @@ def get_states(
     no_attributes: bool = False,
 ) -> list[State]:
     """Return the states at a specific point in time."""
-    if (
-        run is None
-        and recorder.get_instance(hass).run_history.recording_start > utc_point_in_time
-    ):
+    if run is None:
+        run = recorder.get_instance(hass).run_history.get(utc_point_in_time)
+
+    if run is None or process_timestamp(run.start) > utc_point_in_time:
         # History did not run before utc_point_in_time
         return []
 
@@ -595,13 +595,11 @@ def _sorted_states_to_dict(
     # Get the states at the start time
     timer_start = time.perf_counter()
     if include_start_time_state:
-        run = recorder.get_instance(hass).run_history.current_run
         for state in _get_states_with_session(
             hass,
             session,
             start_time,
             entity_ids,
-            run=run,
             filters=filters,
             no_attributes=no_attributes,
         ):

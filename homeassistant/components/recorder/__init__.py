@@ -400,7 +400,7 @@ class PurgeTask(RecorderTask):
             instance, self.purge_before, self.repack, self.apply_filter
         ):
             with instance.get_session() as session:
-                instance.run_history.update(session)
+                instance.run_history.update_from_db(session)
             # We always need to do the db cleanups after a purge
             # is finished to ensure the WAL checkpoint and other
             # tasks happen after a vacuum.
@@ -601,23 +601,32 @@ class RunHistory:
         self._run_history = _RecorderRunsHistory([0], {})
 
     def start(self, session: Session) -> None:
-        """Start a new run."""
+        """Start a new run.
+
+        Must run in the recorder thread.
+        """
         self._current_run_info = RecorderRuns(
             start=self.recording_start, created=dt_util.utcnow()
         )
         session.add(self._current_run_info)
         session.flush()
         session.expunge(self._current_run_info)
-        self.update(session)
+        self.update_from_db(session)
 
     def end(self, session: Session) -> None:
-        """End the current run."""
+        """End the current run.
+
+        Must run in the recorder thread.
+        """
         assert self._current_run_info is not None
         self._current_run_info.end = dt_util.utcnow()
         session.add(self._current_run_info)
 
-    def update(self, session: Session) -> None:
-        """Update the run cache."""
+    def update_from_db(self, session: Session) -> None:
+        """Update the run cache.
+
+        Must run in the recorder thread.
+        """
         run_timestamps: list[int] = [0]
         runs_by_timestamp: dict[int, RecorderRuns] = {}
 
@@ -628,19 +637,33 @@ class RunHistory:
                 run_timestamps.append(timestamp)
                 runs_by_timestamp[timestamp] = run
 
+        #
+        # self._run_history is accessed in get()
+        # which is allowed to be called from any thread
+        #
+        # We use a dataclass to ensure that when we update
+        # self._run_history it is done so atomiclly to avoid
+        # run_timestamps and runs_by_timestamp ever being out of
+        # sync with each other due to races between threads.
+        #
         self._run_history = _RecorderRunsHistory(run_timestamps, runs_by_timestamp)
 
     def clear(self) -> None:
-        """Clear the current run after ending it."""
+        """Clear the current run after ending it.
+
+        Must run in the recorder thread.
+        """
         assert self._current_run_info is not None
         assert self._current_run_info.end is not None
         self._current_run_info = None
 
     def get(self, start: datetime) -> RecorderRuns | None:
-        """Return the recorder run that started before start.
+        """Return the recorder run that started before or at start.
 
         If the first run started after the start, return None
         """
+        if start >= self.recording_start:
+            return self.current
         run_timestamps = self._run_history.run_timestamps
         runs_by_timestamp = self._run_history.runs_by_timestamp
         if (idx := bisect.bisect_left(run_timestamps, start.timestamp())) <= 1:
@@ -648,7 +671,7 @@ class RunHistory:
         return runs_by_timestamp[run_timestamps[idx - 1]]
 
     @property
-    def current_run(self) -> RecorderRuns:
+    def current(self) -> RecorderRuns:
         """Get the current run."""
         assert self._current_run_info is not None
         return self._current_run_info
