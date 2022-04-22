@@ -17,7 +17,7 @@ from pytomorrowio.exceptions import (
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_LATITUDE,
@@ -220,6 +220,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 
     api_key = config_entry.data[CONF_API_KEY]
     coordinator: TomorrowioDataUpdateCoordinator = hass.data[DOMAIN][api_key]
+    # If this is true, we can remove the coordinator
     if await coordinator.async_unload_entry(config_entry):
         hass.data[DOMAIN].pop(api_key)
         if not hass.data[DOMAIN]:
@@ -246,18 +247,14 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator):
         self.entry_id_to_location_dict[entry.entry_id] = f"{latitude},{longitude}"
 
         # If we haven't gotten data yet, and either the core is running (so no other
-        # entries are being loaded in parallel) or its not and this is the only entry
-        # for this API key that is not loaded, we can safely do a first refresh. We do
-        # this to avoid making the same request over and over in succession.
-        other_entries = async_get_entries_by_api_key(
-            self.hass, self._api.api_key, entry
-        )
+        # entries are being loaded in parallel) or its not and every entry for this
+        # API key has been registered, we can safely do a first refresh. We do this to
+        # avoid making the same request over and over in succession.
         if not self.data and (
             self.hass.state == CoreState.running
-            or not any(
-                entry
-                for entry in other_entries
-                if entry.state == ConfigEntryState.NOT_LOADED
+            or all(
+                entry.entry_id in self.entry_id_to_location_dict
+                for entry in async_get_entries_by_api_key(self.hass, self._api.api_key)
             )
         ):
             await super().async_config_entry_first_refresh()
