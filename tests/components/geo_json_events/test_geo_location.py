@@ -9,6 +9,8 @@ from homeassistant.components import geo_json_events
 from homeassistant.components.geo_json_events.const import (
     ATTR_EXTERNAL_ID,
     DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    FEED,
 )
 from homeassistant.components.geo_location import ATTR_SOURCE
 from homeassistant.const import (
@@ -27,6 +29,7 @@ from homeassistant.const import (
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
 from tests.common import async_fire_time_changed
 from tests.components.geo_json_events import _generate_mock_feed_entry
@@ -197,3 +200,42 @@ async def test_setup_with_custom_location(hass):
         )
 
         assert mock_feed.call_args == call(ANY, (15.1, 25.2), URL, filter_radius=200.0)
+
+
+async def test_setup_imperial(hass):
+    """Test the setup of the integration using imperial unit system."""
+    hass.config.units = IMPERIAL_SYSTEM
+    # Set up some mock feed entries for this test.
+    mock_entry_1 = _generate_mock_feed_entry("1234", "Title 1", 15.5, (-31.1, 150.1))
+
+    with patch("aio_geojson_client.feed.GeoJsonFeed.update") as mock_feed_update:
+        mock_feed_update.return_value = "OK", [mock_entry_1]
+        assert await async_setup_component(
+            hass, geo_json_events.DOMAIN, CONFIG_WITH_CUSTOM_LOCATION
+        )
+        await hass.async_block_till_done()
+
+        # Artificially trigger update and collect events.
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        await hass.async_block_till_done()
+
+        assert (
+            len(hass.states.async_entity_ids("geo_location"))
+            + len(hass.states.async_entity_ids("sensor"))
+            == 2
+        )
+
+        # Test conversion of 200 miles to kilometers.
+        feeds = hass.data[DOMAIN][FEED]
+        assert feeds is not None
+        assert len(feeds) == 1
+        coordinator = list(feeds.values())[0]
+        # Ensure that the filter value in km is correctly set.
+        assert coordinator._feed_manager._feed._filter_radius == 321.8688
+
+        state = hass.states.get(
+            "geo_location.geo_json_events_http_geo_json_local_geo_json_events_json_15_1_25_2_1234"
+        )
+        assert state is not None
+        # 15.5km (as defined in mock entry) has been converted to 9.6mi.
+        assert float(state.state) == 9.6

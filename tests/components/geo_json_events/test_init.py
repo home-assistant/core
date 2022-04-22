@@ -1,11 +1,12 @@
 """Define tests for the GeoJSON Events general setup."""
-from unittest.mock import patch
+from unittest.mock import ANY, patch
 
 from homeassistant.components.geo_json_events.const import DOMAIN, FEED
 from homeassistant.helpers.entity_registry import (
     async_entries_for_config_entry,
     async_get_registry,
 )
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
 from tests.components.geo_json_events import _generate_mock_feed_entry
 
@@ -69,3 +70,17 @@ async def test_remove_orphaned_entities(hass, config_entry):
             + len(hass.states.async_entity_ids("sensor"))
             == 2
         )
+
+
+async def test_radius_imperial(hass, config_entry):
+    """Test conversion of radius from imperial to metric."""
+    hass.config.units = IMPERIAL_SYSTEM
+
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.geo_json_events.GeoJsonEventsFeedEntityCoordinator"
+    ) as mock_coordinator:
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        mock_coordinator.assert_called_once_with(ANY, ANY, 40.2336)

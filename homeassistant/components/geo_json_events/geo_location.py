@@ -12,8 +12,10 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_RADIUS,
+    CONF_UNIT_SYSTEM_IMPERIAL,
     CONF_URL,
     LENGTH_KILOMETERS,
+    LENGTH_MILES,
 )
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
@@ -26,6 +28,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import GeoJsonEventsFeedEntityCoordinator
 from ...helpers.entity_registry import async_get_registry
+from ...util.unit_system import IMPERIAL_SYSTEM
 from .const import (
     ATTR_EXTERNAL_ID,
     DEFAULT_FORCE_UPDATE,
@@ -97,7 +100,6 @@ class GeoJsonLocationEvent(CoordinatorEntity, GeolocationEvent):
 
     coordinator: GeoJsonEventsFeedEntityCoordinator
     _attr_force_update = DEFAULT_FORCE_UPDATE
-    _attr_unit_of_measurement = LENGTH_KILOMETERS
     _attr_icon = "mdi:pin"
 
     def __init__(
@@ -156,6 +158,13 @@ class GeoJsonLocationEvent(CoordinatorEntity, GeolocationEvent):
         if entry:
             self._attr_name = entry.title
             self._distance = entry.distance_to_home
+            # Convert distance if not metric system.
+            if self.hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL:
+                self._distance = IMPERIAL_SYSTEM.length(
+                    entry.distance_to_home, LENGTH_KILOMETERS
+                )
+            else:
+                self._distance = entry.distance_to_home
             self._latitude = entry.coordinates[0]
             self._longitude = entry.coordinates[1]
             self._attr_extra_state_attributes = {ATTR_EXTERNAL_ID: self._external_id}
@@ -179,6 +188,13 @@ class GeoJsonLocationEvent(CoordinatorEntity, GeolocationEvent):
     def longitude(self) -> float | None:
         """Return longitude value of this external event."""
         return self._longitude
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement."""
+        if self.hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL:
+            return LENGTH_MILES
+        return LENGTH_KILOMETERS
 
     @property
     def source(self) -> str:
