@@ -130,57 +130,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # entities, we need to remove each old entity, creating a new entity in its place
     # but attached to this entry.
     if entry.source == SOURCE_IMPORT and "old_config_entry_id" in entry.data:
-        # Remove the old config entry ID from the entry data so we don't try this again
-        # on the next setup
-        data = entry.data.copy()
-        old_config_entry_id = data.pop("old_config_entry_id")
-        hass.config_entries.async_update_entry(entry, data=data)
-        _LOGGER.debug(
-            (
-                "Setting up imported climacell entry %s for the first time as "
-                "tomorrowio entry %s"
-            ),
-            old_config_entry_id,
-            entry.entry_id,
-        )
-
-        ent_reg = er.async_get(hass)
-        for entity_entry in er.async_entries_for_config_entry(
-            ent_reg, old_config_entry_id
-        ):
-            old_platform = entity_entry.platform
-            # In case the API key has changed due to a V3 -> V4 change, we need to
-            # generate the new entity's unique ID
-            new_unique_id = (
-                f"{entry.data[CONF_API_KEY]}_"
-                f"{'_'.join(entity_entry.unique_id.split('_')[1:])}"
-            )
-            ent_reg.async_update_entity_platform(
-                entity_entry.entity_id,
-                DOMAIN,
-                new_unique_id=new_unique_id,
-                new_config_entry_id=entry.entry_id,
-                new_device_id=device.id,
-            )
-            assert entity_entry
-            _LOGGER.debug(
-                "Migrated %s from %s to %s",
-                entity_entry.entity_id,
-                old_platform,
-                DOMAIN,
-            )
-
-        # We only have one device in the registry but we will do a loop just in case
-        for old_device in dr.async_entries_for_config_entry(
-            dev_reg, old_config_entry_id
-        ):
-            if old_device.name_by_user:
-                dev_reg.async_update_device(
-                    device.id, name_by_user=old_device.name_by_user
-                )
-
-        # Remove the old config entry and now the entry is fully migrated
-        hass.async_create_task(hass.config_entries.async_remove(old_config_entry_id))
+        async_migrate_entry_from_climacell(hass, dev_reg, entry, device)
 
     api_key = entry.data[CONF_API_KEY]
 
@@ -204,6 +154,61 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
+
+
+@callback
+def async_migrate_entry_from_climacell(
+    hass: HomeAssistant,
+    dev_reg: dr.DeviceRegistry,
+    entry: ConfigEntry,
+    device: dr.DeviceEntry,
+) -> None:
+    """Migrate a config entry from a Climacell entry."""
+    # Remove the old config entry ID from the entry data so we don't try this again
+    # on the next setup
+    data = entry.data.copy()
+    old_config_entry_id = data.pop("old_config_entry_id")
+    hass.config_entries.async_update_entry(entry, data=data)
+    _LOGGER.debug(
+        (
+            "Setting up imported climacell entry %s for the first time as "
+            "tomorrowio entry %s"
+        ),
+        old_config_entry_id,
+        entry.entry_id,
+    )
+
+    ent_reg = er.async_get(hass)
+    for entity_entry in er.async_entries_for_config_entry(ent_reg, old_config_entry_id):
+        old_platform = entity_entry.platform
+        # In case the API key has changed due to a V3 -> V4 change, we need to
+        # generate the new entity's unique ID
+        new_unique_id = (
+            f"{entry.data[CONF_API_KEY]}_"
+            f"{'_'.join(entity_entry.unique_id.split('_')[1:])}"
+        )
+        ent_reg.async_update_entity_platform(
+            entity_entry.entity_id,
+            DOMAIN,
+            new_unique_id=new_unique_id,
+            new_config_entry_id=entry.entry_id,
+            new_device_id=device.id,
+        )
+        assert entity_entry
+        _LOGGER.debug(
+            "Migrated %s from %s to %s",
+            entity_entry.entity_id,
+            old_platform,
+            DOMAIN,
+        )
+
+    # We only have one device in the registry but we will do a loop just in case
+    for old_device in dr.async_entries_for_config_entry(dev_reg, old_config_entry_id):
+        if old_device.name_by_user:
+            dev_reg.async_update_device(device.id, name_by_user=old_device.name_by_user)
+
+    # Remove the old config entry and now the entry is fully migrated
+    hass.async_create_task(hass.config_entries.async_remove(old_config_entry_id))
 
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
@@ -234,7 +239,7 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator):
         super().__init__(hass, _LOGGER, name=f"{DOMAIN}_{self._api.api_key}")
 
     async def async_setup_entry(self, entry: ConfigEntry, first_refresh: bool) -> None:
-        """Load data when config entry is setup."""
+        """Load config entry into coordinator."""
         latitude = entry.data[CONF_LOCATION][CONF_LATITUDE]
         longitude = entry.data[CONF_LOCATION][CONF_LONGITUDE]
         self.entry_id_to_location_dict[entry.entry_id] = f"{latitude},{longitude}"
