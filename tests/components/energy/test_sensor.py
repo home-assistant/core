@@ -191,8 +191,9 @@ async def test_cost_sensor_price_entity_total_increasing(
     entity_registry = er.async_get(hass)
     entry = entity_registry.async_get(cost_sensor_entity_id)
     assert entry
-    postfix = "cost" if flow_type == "flow_to" else "compensation"
-    assert entry.unique_id == f"{usage_sensor_entity_id}_grid_entity_energy_{postfix}"
+    postfix = "cost" if flow_type == "flow_from" else "compensation"
+    assert entry.unique_id == f"{usage_sensor_entity_id}_grid_{postfix}"
+    assert entry.hidden_by is er.RegistryEntryHider.INTEGRATION
 
     # Energy use bumped to 10 kWh
     hass.states.async_set(
@@ -399,6 +400,7 @@ async def test_cost_sensor_price_entity_total(
     assert entry
     postfix = "cost" if flow_type == "flow_from" else "compensation"
     assert entry.unique_id == f"{usage_sensor_entity_id}_grid_{postfix}"
+    assert entry.hidden_by is er.RegistryEntryHider.INTEGRATION
 
     # Energy use bumped to 10 kWh
     hass.states.async_set(
@@ -605,6 +607,7 @@ async def test_cost_sensor_price_entity_total_no_reset(
     assert entry
     postfix = "cost" if flow_type == "flow_from" else "compensation"
     assert entry.unique_id == f"{usage_sensor_entity_id}_grid_{postfix}"
+    assert entry.hidden_by is er.RegistryEntryHider.INTEGRATION
 
     # Energy use bumped to 10 kWh
     hass.states.async_set(
@@ -1068,3 +1071,4 @@ async def test_inherit_source_unique_id(hass, hass_storage, setup_integration):
     entry = entity_registry.async_get("sensor.gas_consumption_cost")
     assert entry
     assert entry.unique_id == "123456_gas_cost"
+    assert entry.hidden_by is er.RegistryEntryHider.INTEGRATION
