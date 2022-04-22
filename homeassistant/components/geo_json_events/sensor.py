@@ -75,7 +75,7 @@ class GeoJsonEventsSensor(CoordinatorEntity, SensorEntity):
         await super().async_added_to_hass()
         self._update_internal_state()
 
-    def _update_internal_state(self):
+    def _update_internal_state(self) -> None:
         """Update state and attributes from coordinator data."""
         status_info = self.coordinator.status_info()
         if status_info:

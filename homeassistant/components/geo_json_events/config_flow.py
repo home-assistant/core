@@ -1,5 +1,8 @@
 """Config flow to configure the GeoJSON events integration."""
+from __future__ import annotations
+
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -13,6 +16,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import config_validation as cv
 
+from ...data_entry_flow import FlowResult
 from .const import DEFAULT_RADIUS_IN_KM, DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -21,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 class GeoJsonEventsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a GeoJSON events config flow."""
 
-    async def _show_form(self, errors=None):
+    async def _show_form(self, errors: dict[str, Any] | None = None) -> FlowResult:
         """Show the form to the user."""
         return self.async_show_form(
             step_id="user",
@@ -45,11 +49,13 @@ class GeoJsonEventsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors or {},
         )
 
-    async def async_step_import(self, import_config):
+    async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
         """Import a config entry from configuration.yaml."""
         return await self.async_step_user(import_config)
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the start of the config flow."""
         _LOGGER.debug("User input: %s", user_input)
         if not user_input:
