@@ -106,7 +106,7 @@ async def test_cost_sensor_price_entity_total_increasing(
     """Test energy cost price from total_increasing type sensor entity."""
 
     def _compile_statistics(_):
-        return compile_statistics(hass, now, now + timedelta(seconds=1))[0]
+        return compile_statistics(hass, now, now + timedelta(seconds=1)).platform_stat
 
     energy_attributes = {
         ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
@@ -311,7 +311,7 @@ async def test_cost_sensor_price_entity_total(
     """Test energy cost price from total type sensor entity."""
 
     def _compile_statistics(_):
-        return compile_statistics(hass, now, now + timedelta(seconds=1))[0]
+        return compile_statistics(hass, now, now + timedelta(seconds=1)).platform_stat
 
     energy_attributes = {
         ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
@@ -518,7 +518,7 @@ async def test_cost_sensor_price_entity_total_no_reset(
     """Test energy cost price from total type sensor entity with no last_reset."""
 
     def _compile_statistics(_):
-        return compile_statistics(hass, now, now + timedelta(seconds=1))[0]
+        return compile_statistics(hass, now, now + timedelta(seconds=1)).platform_stat
 
     energy_attributes = {
         ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,

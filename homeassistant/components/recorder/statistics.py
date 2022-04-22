@@ -12,7 +12,7 @@ import logging
 import os
 import re
 from statistics import mean
-from typing import TYPE_CHECKING, Any, Literal, cast, overload
+from typing import TYPE_CHECKING, Any, Literal, overload
 
 from sqlalchemy import bindparam, func
 from sqlalchemy.exc import SQLAlchemyError, StatementError
@@ -155,6 +155,14 @@ DISPLAY_UNIT_TO_STATISTIC_UNIT_CONVERSIONS: dict[
 }
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclasses.dataclass
+class PlatformCompiledStatistics:
+    """Compiled Statistics from a platform."""
+
+    platform_stat: list[StatisticResult]
+    metadata_dict: dict[str, tuple[int, StatisticMetaData]]
 
 
 def split_statistic_id(entity_id: str) -> list[str]:
@@ -550,20 +558,23 @@ def compile_statistics(instance: Recorder, start: datetime) -> bool:
 
     _LOGGER.debug("Compiling statistics for %s-%s", start, end)
     platform_stats: list[StatisticResult] = []
-    old_metadata_dict: dict[str, tuple[int, StatisticMetaData]] = {}
+    current_metadata: dict[str, tuple[int, StatisticMetaData]] = {}
     # Collect statistics from all platforms implementing support
     for domain, platform in instance.hass.data[DOMAIN].items():
         if not hasattr(platform, "compile_statistics"):
             continue
-        platform_stat, metadata_dict = cast(
-            tuple[list[StatisticResult], dict[str, tuple[int, StatisticMetaData]]],
-            platform.compile_statistics(instance.hass, start, end),
+        compiled: PlatformCompiledStatistics = platform.compile_statistics(
+            instance.hass, start, end
         )
         _LOGGER.debug(
-            "Statistics for %s during %s-%s: %s", domain, start, end, platform_stat
+            "Statistics for %s during %s-%s: %s",
+            domain,
+            start,
+            end,
+            compiled.platform_stat,
         )
-        platform_stats.extend(platform_stat)
-        old_metadata_dict.update(metadata_dict)
+        platform_stats.extend(compiled.platform_stat)
+        current_metadata.update(compiled.metadata_dict)
 
     # Insert collected statistics in the database
     with session_scope(
@@ -572,7 +583,7 @@ def compile_statistics(instance: Recorder, start: datetime) -> bool:
     ) as session:
         for stats in platform_stats:
             metadata_id = _update_or_add_metadata(
-                session, stats["meta"], old_metadata_dict
+                session, stats["meta"], current_metadata
             )
             _insert_statistics(
                 session,

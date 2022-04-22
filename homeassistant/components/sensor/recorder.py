@@ -387,14 +387,14 @@ def _last_reset_as_utc_isoformat(last_reset_s: Any, entity_id: str) -> str | Non
 
 def compile_statistics(
     hass: HomeAssistant, start: datetime.datetime, end: datetime.datetime
-) -> tuple[list[StatisticResult], dict[str, tuple[int, StatisticMetaData]]]:
+) -> statistics.PlatformCompiledStatistics:
     """Compile statistics for all entities during start-end.
 
     Note: This will query the database and must not be run in the event loop
     """
     with recorder_util.session_scope(hass=hass) as session:
-        result, metadata_dict = _compile_statistics(hass, session, start, end)
-    return result, metadata_dict
+        compiled = _compile_statistics(hass, session, start, end)
+    return compiled
 
 
 def _compile_statistics(  # noqa: C901
@@ -402,7 +402,7 @@ def _compile_statistics(  # noqa: C901
     session: Session,
     start: datetime.datetime,
     end: datetime.datetime,
-) -> tuple[list[StatisticResult], dict[str, tuple[int, StatisticMetaData]]]:
+) -> statistics.PlatformCompiledStatistics:
     """Compile statistics for all entities during start-end."""
     result: list[StatisticResult] = []
 
@@ -611,7 +611,7 @@ def _compile_statistics(  # noqa: C901
 
         result.append({"meta": meta, "stat": stat})
 
-    return result, old_metadatas
+    return statistics.PlatformCompiledStatistics(result, old_metadatas)
 
 
 def list_statistic_ids(
