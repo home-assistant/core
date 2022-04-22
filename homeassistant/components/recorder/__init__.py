@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import abc
 import asyncio
+import bisect
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -582,20 +583,29 @@ COMMIT_TASK = CommitTask()
 KEEP_ALIVE_TASK = KeepAliveTask()
 
 
+@dataclass
+class _RecorderRunsHistory:
+    """Searchable history of RecorderRuns."""
+
+    run_timestamps: list[int]
+    runs_by_timestamp: dict[int, RecorderRuns]
+
+
 class RunHistory:
     """Track recorder run history."""
 
     def __init__(self, recorder: Recorder) -> None:
         """Track recorder run history."""
         self.recorder = recorder
-        self.recorder_start: datetime = dt_util.utcnow()
+        self.recording_start: datetime = dt_util.utcnow()
         self._current_run_info: RecorderRuns | None = None
         self._first_run_info: RecorderRuns | None = None
+        self._run_history = _RecorderRunsHistory([0], {})
 
     def start(self, session: Session) -> None:
         """Start a new run."""
         self._current_run_info = RecorderRuns(
-            start=self.recorder_start, created=dt_util.utcnow()
+            start=self.recording_start, created=dt_util.utcnow()
         )
         session.add(self._current_run_info)
         session.flush()
@@ -610,13 +620,17 @@ class RunHistory:
 
     def update(self, session: Session) -> None:
         """Update the run cache."""
-        if (
-            first_run_info := session.query(RecorderRuns)
-            .order_by(RecorderRuns.start.asc())
-            .first()
-        ):
-            session.expunge(first_run_info)
-            self._first_run_info = first_run_info
+        run_timestamps: list[int] = [0]
+        runs_by_timestamp: dict[int, RecorderRuns] = {}
+
+        for run in session.query(RecorderRuns).order_by(RecorderRuns.start.asc()).all():
+            session.expunge(run)
+            if run_dt := process_timestamp(run.start):
+                timestamp = run_dt.timestamp()
+                run_timestamps.append(timestamp)
+                runs_by_timestamp[timestamp] = run
+
+        self._run_history = _RecorderRunsHistory(run_timestamps, runs_by_timestamp)
 
     def clear(self) -> None:
         """Clear the current run after ending it."""
@@ -625,6 +639,17 @@ class RunHistory:
             self._current_run_info.end is not None
         ), "Cannot clear the run without ending it"
         self._current_run_info = None
+
+    def get(self, start: datetime) -> RecorderRuns | None:
+        """Return the recorder run that started before start.
+
+        If the first run started after the start, return None
+        """
+        run_timestamps = self._run_history.run_timestamps
+        runs_by_timestamp = self._run_history.runs_by_timestamp
+        if (idx := bisect.bisect_left(run_timestamps, start.timestamp())) <= 1:
+            return None
+        return runs_by_timestamp[run_timestamps[idx - 1]]
 
     @property
     def first_run(self) -> RecorderRuns:
@@ -1479,7 +1504,7 @@ class Recorder(threading.Thread):
         """Log the start of the current run and schedule any needed jobs."""
         assert self.get_session is not None
         with session_scope(session=self.get_session()) as session:
-            end_incomplete_runs(session, self.run_history.recorder_start)
+            end_incomplete_runs(session, self.run_history.recording_start)
             self.run_history.start(session)
             self._schedule_compile_missing_statistics(session)
 

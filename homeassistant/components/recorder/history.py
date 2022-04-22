@@ -23,6 +23,7 @@ from .models import (
     RecorderRuns,
     StateAttributes,
     States,
+    process_timestamp,
     process_timestamp_to_utc_isoformat,
 )
 from .util import execute, session_scope
@@ -427,7 +428,7 @@ def get_states(
     """Return the states at a specific point in time."""
     if (
         run is None
-        and recorder.get_instance(hass).run_history.current_run > utc_point_in_time
+        and recorder.get_instance(hass).run_history.recording_start > utc_point_in_time
     ):
         # History did not run before utc_point_in_time
         return []
@@ -454,9 +455,9 @@ def _get_states_with_session(
         )
 
     if run is None:
-        run = recorder.get_instance(hass).run_history.current_run
+        run = recorder.get_instance(hass).run_history.get(utc_point_in_time)
 
-    if utc_point_in_time < run:
+    if run is None or process_timestamp(run.start) > utc_point_in_time:
         # History did not run before utc_point_in_time
         return []
 
