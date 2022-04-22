@@ -87,9 +87,6 @@ zone:
 logger:
   default: info
 
-# set up Zeroconf and make AIS dom discoverable
-ais_mdns:
-
 # serve local files
 media_source:
 
