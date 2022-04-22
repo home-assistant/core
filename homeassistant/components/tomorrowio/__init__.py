@@ -186,13 +186,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     coordinator: TomorrowioDataUpdateCoordinator
     if api_key not in hass.data[DOMAIN]:
-        api = TomorrowioV4(
-            api_key,
-            361.0,  # we will not use the class's lat and long so we can pass garbage in
-            361.0,
-            unit_system="metric",
-            session=async_get_clientsession(hass),
-        )
+        session = async_get_clientsession(hass)
+        # we will not use the class's lat and long so we can pass in garbage
+        # lats and longs
+        api = TomorrowioV4(api_key, 361.0, 361.0, unit_system="metric", session=session)
 
         coordinator = TomorrowioDataUpdateCoordinator(hass, api)
         hass.data[DOMAIN][api_key] = coordinator
