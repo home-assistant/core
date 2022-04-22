@@ -375,7 +375,7 @@ class StatisticsSensor(SensorEntity):
         return unit
 
     @property
-    def device_class(self) -> Literal[SensorDeviceClass.TIMESTAMP] | None:
+    def device_class(self) -> SensorDeviceClass | None:
         """Return the class of this device."""
         if self._state_characteristic in (
             # Group of characteristics which have
