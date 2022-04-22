@@ -140,8 +140,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         async_migrate_entry_from_climacell(hass, dev_reg, entry, device)
 
     api_key = entry.data[CONF_API_KEY]
-
-    coordinator: TomorrowioDataUpdateCoordinator
     # If coordinator already exists for this API key, we'll use that, otherwise
     # we have to create a new one
     if not (coordinator := hass.data[DOMAIN].get(api_key)):
