@@ -142,7 +142,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     api_key = entry.data[CONF_API_KEY]
 
     coordinator: TomorrowioDataUpdateCoordinator
-    if api_key not in hass.data[DOMAIN]:
+    # If coordinator already exists for this API key, we'll use that, otherwise
+    # we have to create a new one
+    if not (coordinator := hass.data[DOMAIN].get(api_key)):
         session = async_get_clientsession(hass)
         # we will not use the class's lat and long so we can pass in garbage
         # lats and longs
@@ -150,8 +152,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         coordinator = TomorrowioDataUpdateCoordinator(hass, api)
         hass.data[DOMAIN][api_key] = coordinator
-    else:
-        coordinator = hass.data[DOMAIN][api_key]
 
     await coordinator.async_setup_entry(entry)
 
