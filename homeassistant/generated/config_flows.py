@@ -97,6 +97,7 @@ FLOWS = {
         "elgato",
         "elkm1",
         "elmax",
+        "elro_connects",
         "emonitor",
         "emulated_roku",
         "enocean",

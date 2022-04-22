@@ -292,6 +292,8 @@ build.json @home-assistant/supervisor
 /tests/components/elkm1/ @gwww @bdraco
 /homeassistant/components/elmax/ @albertogeniola
 /tests/components/elmax/ @albertogeniola
+/homeassistant/components/elro_connects/ @jbouwh
+/tests/components/elro_connects/ @jbouwh
 /homeassistant/components/elv/ @majuss
 /homeassistant/components/emby/ @mezz64
 /homeassistant/components/emoncms/ @borpin
