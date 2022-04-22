@@ -161,7 +161,7 @@ def mock_sensor_statistics():
         }
 
     def get_fake_stats(_hass, start, _end):
-        return (
+        return statistics.PlatformCompiledStatistics(
             [
                 sensor_stats("sensor.test1", start),
                 sensor_stats("sensor.test2", start),
@@ -338,7 +338,7 @@ def test_statistics_duplicated(hass_recorder, caplog):
 
     with patch(
         "homeassistant.components.sensor.recorder.compile_statistics",
-        return_value=([], {}),
+        return_value=statistics.PlatformCompiledStatistics([], {}),
     ) as compile_statistics:
         recorder.do_adhoc_statistics(start=zero)
         wait_recording_done(hass)
