@@ -24,7 +24,7 @@ from homeassistant.const import (
     CONF_LOCATION,
     CONF_LONGITUDE,
 )
-from homeassistant.core import CoreState, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -237,38 +237,41 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator):
         self._api = api
         self.data = {CURRENT: {}, FORECASTS: {}}
         self.entry_id_to_location_dict: dict[str, str] = {}
+        self._first_setup: bool = True
 
         super().__init__(hass, _LOGGER, name=f"{DOMAIN}_{self._api.api_key}")
 
-    async def async_setup_entry(self, entry: ConfigEntry) -> None:
-        """Load config entry into coordinator."""
+    def add_entry_to_location_dict(self, entry: ConfigEntry) -> None:
+        """Add an entry to the location dict."""
         latitude = entry.data[CONF_LOCATION][CONF_LATITUDE]
         longitude = entry.data[CONF_LOCATION][CONF_LONGITUDE]
         self.entry_id_to_location_dict[entry.entry_id] = f"{latitude},{longitude}"
 
-        # If we haven't gotten data yet, and either the core is running (so no other
-        # entries are being loaded in parallel) or its not and every entry for this
-        # API key has been registered, we can safely do a first refresh. We do this to
-        # avoid making the same request over and over in succession.
-        if not self.data and (
-            self.hass.state == CoreState.running
-            or all(
-                entry.entry_id in self.entry_id_to_location_dict
-                for entry in async_get_entries_by_api_key(self.hass, self._api.api_key)
-            )
-        ):
+    async def async_setup_entry(self, entry: ConfigEntry) -> None:
+        """Load config entry into coordinator."""
+        # If we haven't gotten data yet, load all entries with this API key and get
+        # the initial data.
+        if self._first_setup:
+            self._first_setup = False
+            for entry_ in async_get_entries_by_api_key(self.hass, self._api.api_key):
+                self.add_entry_to_location_dict(entry_)
             await super().async_config_entry_first_refresh()
-        elif self.data:
+        # If we're loading a new config entry that's not already mapped, we need to do
+        # a refresh. We're going to do a partial refresh though so we can minimize
+        # repeat API calls
+        elif entry.entry_id not in self.entry_id_to_location_dict:
+            self.add_entry_to_location_dict(entry)
             await super().async_refresh()
-        # We can schedule the next refresh after the coordinator has gotten a first
-        # refresh or we added a new entry and need to adjust the update interval
-        if self.data:
-            if self._api.max_requests_per_day is None:
-                # We should never get here since we've loaded the data and the lib
-                # should have set this value
-                raise ConfigEntryNotReady("Max requests per day should not be None")
-            self.update_interval = async_set_update_interval(self.hass, self._api)
-            self._schedule_refresh()
+        # If we're not getting new data, we don't need to schedule a refresh
+        else:
+            return
+
+        if self._api.max_requests_per_day is None:
+            # We should never get here since we've loaded the data and the lib
+            # should have set this value
+            raise ConfigEntryNotReady("Max requests per day should not be None")
+        self.update_interval = async_set_update_interval(self.hass, self._api)
+        self._schedule_refresh()
 
     async def async_unload_entry(self, entry: ConfigEntry) -> bool | None:
         """
@@ -284,10 +287,19 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
         data = {}
+        # If we are refreshing because of a new config entry that's not already in our
+        # data, we do a partial refresh to avoid wasted API calls.
+        if self.data and any(
+            entry_id not in self.data for entry_id in self.entry_id_to_location_dict
+        ):
+            data = self.data
+
         try:
             for entry_id, location in self.entry_id_to_location_dict.items():
                 entry = self.hass.config_entries.async_get_entry(entry_id)
                 assert entry
+                if entry_id in data:
+                    continue
                 data[entry_id] = await self._api.realtime_and_all_forecasts(
                     [
                         # Weather
@@ -380,7 +392,8 @@ class TomorrowioEntity(CoordinatorEntity[TomorrowioDataUpdateCoordinator]):
         Used for V4 API.
         """
         entry_id = self._config_entry.entry_id
-        return self.coordinator.data[entry_id].get(CURRENT, {}).get(property_name)
+        data = self.coordinator.data or {entry_id: {}}
+        return data[entry_id].get(CURRENT, {}).get(property_name)
 
     @property
     def attribution(self):
