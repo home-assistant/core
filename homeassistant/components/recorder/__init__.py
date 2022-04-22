@@ -918,7 +918,10 @@ class Recorder(threading.Thread):
 
     @callback
     def async_periodic_statistics(self, now: datetime) -> None:
-        """Trigger the hourly statistics run."""
+        """Trigger the statistics run.
+
+        Short term statistics run every 5 minutes
+        """
         start = statistics.get_start_time()
         self.queue.put(StatisticsTask(start))
 

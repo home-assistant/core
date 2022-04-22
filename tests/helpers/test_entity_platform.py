@@ -1148,6 +1148,25 @@ async def test_entity_disabled_by_device(hass: HomeAssistant):
     assert entry_disabled.disabled_by is er.RegistryEntryDisabler.DEVICE
 
 
+async def test_entity_hidden_by_integration(hass):
+    """Test entity hidden by integration."""
+    component = EntityComponent(_LOGGER, DOMAIN, hass, timedelta(seconds=20))
+
+    entity_default = MockEntity(unique_id="default")
+    entity_hidden = MockEntity(
+        unique_id="hidden", entity_registry_visible_default=False
+    )
+
+    await component.async_add_entities([entity_default, entity_hidden])
+
+    registry = er.async_get(hass)
+
+    entry_default = registry.async_get_or_create(DOMAIN, DOMAIN, "default")
+    assert entry_default.hidden_by is None
+    entry_hidden = registry.async_get_or_create(DOMAIN, DOMAIN, "hidden")
+    assert entry_hidden.hidden_by is er.RegistryEntryHider.INTEGRATION
+
+
 async def test_entity_info_added_to_entity_registry(hass):
     """Test entity info is written to entity registry."""
     component = EntityComponent(_LOGGER, DOMAIN, hass, timedelta(seconds=20))
