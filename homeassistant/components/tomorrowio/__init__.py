@@ -260,13 +260,14 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator):
             await super().async_config_entry_first_refresh()
         elif self.data:
             await super().async_refresh()
-        if self._api.max_requests_per_day is None:
-            # We should never get here
-            raise ConfigEntryNotReady("Max requests per day should not be None")
-        self.update_interval = async_set_update_interval(self.hass, self._api)
         # We can schedule the next refresh after the coordinator has gotten a first
         # refresh or we added a new entry and need to adjust the update interval
         if self.data:
+            if self._api.max_requests_per_day is None:
+                # We should never get here since we've loaded the data and the lib
+                # should have set this value
+                raise ConfigEntryNotReady("Max requests per day should not be None")
+            self.update_interval = async_set_update_interval(self.hass, self._api)
             self._schedule_refresh()
 
     async def async_unload_entry(self, entry: ConfigEntry) -> bool | None:
