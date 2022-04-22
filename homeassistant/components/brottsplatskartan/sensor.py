@@ -15,19 +15,22 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import AREAS, CONF_APP_ID, CONF_AREA, DEFAULT_NAME, DOMAIN, LOGGER
 
 SCAN_INTERVAL = timedelta(minutes=30)
+ICON = "mdi:account-alert"
 
 PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
         vol.Inclusive(CONF_LATITUDE, "coordinates"): cv.latitude,
         vol.Inclusive(CONF_LONGITUDE, "coordinates"): cv.longitude,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_AREA, default=[]): vol.All(cv.ensure_list, [vol.In(AREAS)]),
+        vol.Optional(CONF_AREA, default="N/A"): vol.All(cv.string, vol.In(AREAS)),
     }
 )
 
@@ -43,7 +46,7 @@ async def async_setup_platform(
     LOGGER.warning(
         # Config flow added in Home Assistant Core 2022.5, remove import flow in 2022.7
         "Loading Brottsplatskartan via platform setup is deprecated and will be removed in 2022.7"
-        " Please remove it from your configuration"
+        "Please remove it from your configuration"
     )
 
     hass.async_create_task(
@@ -60,26 +63,35 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Brottsplatskartan sensor entry."""
 
-    area = entry.data.get(CONF_AREA) if entry.data.get(CONF_AREA) != "N/A" else None
+    area = entry.data[CONF_AREA] if entry.data[CONF_AREA] != "N/A" else None
     latitude = entry.data.get(CONF_LATITUDE, hass.config.latitude)
     longitude = entry.data.get(CONF_LONGITUDE, hass.config.longitude)
     app = entry.data[CONF_APP_ID]
     name = entry.title
+    unique_id = f"bpk-{latitude}-{longitude}-{area}"
 
     bpk = BrottsplatsKartan(app=app, area=area, latitude=latitude, longitude=longitude)
 
-    async_add_entities([BrottsplatskartanSensor(bpk, name)], True)
+    async_add_entities([BrottsplatskartanSensor(bpk, name, unique_id)], True)
 
 
 class BrottsplatskartanSensor(SensorEntity):
     """Representation of a Brottsplatskartan Sensor."""
 
     _attr_attribution = ATTRIBUTION
+    _attr_icon = ICON
 
-    def __init__(self, bpk: BrottsplatsKartan, name: str) -> None:
+    def __init__(self, bpk: BrottsplatsKartan, name: str, unique_id: str) -> None:
         """Initialize the Brottsplatskartan sensor."""
         self._bpk = bpk
         self._attr_name = name
+        self._attr_unique_id = unique_id
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, unique_id)},
+            manufacturer="Brottsplatskartan",
+            name=name,
+        )
 
     def update(self) -> None:
         """Update device state."""
