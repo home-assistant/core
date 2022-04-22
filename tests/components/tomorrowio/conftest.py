@@ -26,8 +26,12 @@ def tomorrowio_config_entry_update_fixture():
     ), patch(
         "homeassistant.components.tomorrowio.TomorrowioV4.max_requests_per_day",
         new_callable=PropertyMock,
-    ) as mock_max_requests_per_day:
+    ) as mock_max_requests_per_day, patch(
+        "homeassistant.components.tomorrowio.TomorrowioV4.num_api_requests",
+        new_callable=PropertyMock,
+    ) as mock_num_api_requests:
         mock_max_requests_per_day.return_value = 100
+        mock_num_api_requests.return_value = 2
         yield
 
 

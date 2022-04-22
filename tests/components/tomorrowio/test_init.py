@@ -63,9 +63,9 @@ async def test_update_intervals(hass: HomeAssistant) -> None:
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-    assert hass.data[DOMAIN][config_entry.entry_id].update_interval == timedelta(
-        minutes=32
-    )
+    assert hass.data[DOMAIN][
+        config_entry.data[CONF_API_KEY]
+    ].update_interval == timedelta(minutes=32)
 
     # Adding a second config entry should cause the update interval to double
     config_entry_2 = MockConfigEntry(
@@ -78,12 +78,10 @@ async def test_update_intervals(hass: HomeAssistant) -> None:
     config_entry_2.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry_2.entry_id)
     await hass.async_block_till_done()
-    assert hass.data[DOMAIN][config_entry.entry_id].update_interval == timedelta(
-        minutes=64
-    )
-    assert hass.data[DOMAIN][config_entry_2.entry_id].update_interval == timedelta(
-        minutes=64
-    )
+    assert config_entry.data[CONF_API_KEY] == config_entry_2.data[CONF_API_KEY]
+    assert hass.data[DOMAIN][
+        config_entry.data[CONF_API_KEY]
+    ].update_interval == timedelta(minutes=64)
 
 
 async def test_climacell_migration_logic(

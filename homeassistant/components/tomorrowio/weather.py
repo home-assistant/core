@@ -191,7 +191,11 @@ class TomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
     def forecast(self):
         """Return the forecast."""
         # Check if forecasts are available
-        raw_forecasts = self.coordinator.data.get(FORECASTS, {}).get(self.forecast_type)
+        raw_forecasts = (
+            self.coordinator.data[self._config_entry.entry_id]
+            .get(FORECASTS, {})
+            .get(self.forecast_type)
+        )
         if not raw_forecasts:
             return None
 

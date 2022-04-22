@@ -195,7 +195,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
         coordinator = TomorrowioDataUpdateCoordinator(hass, api)
-        hass.data[DOMAIN][entry.entry_id] = coordinator
+        hass.data[DOMAIN][api_key] = coordinator
         first_refresh = True
 
     else:
