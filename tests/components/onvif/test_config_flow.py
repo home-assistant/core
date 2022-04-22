@@ -103,8 +103,6 @@ async def test_flow_discovered_devices(hass):
         assert result["step_id"] == "configure"
 
         with patch(
-            "homeassistant.components.onvif.async_setup", return_value=True
-        ) as mock_setup, patch(
             "homeassistant.components.onvif.async_setup_entry", return_value=True
         ) as mock_setup_entry:
             result = await hass.config_entries.flow.async_configure(
@@ -116,7 +114,6 @@ async def test_flow_discovered_devices(hass):
             )
 
             await hass.async_block_till_done()
-            assert len(mock_setup.mock_calls) == 1
             assert len(mock_setup_entry.mock_calls) == 1
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -286,8 +283,6 @@ async def test_flow_manual_entry(hass):
         assert result["step_id"] == "configure"
 
         with patch(
-            "homeassistant.components.onvif.async_setup", return_value=True
-        ) as mock_setup, patch(
             "homeassistant.components.onvif.async_setup_entry", return_value=True
         ) as mock_setup_entry:
             result = await hass.config_entries.flow.async_configure(
@@ -302,7 +297,6 @@ async def test_flow_manual_entry(hass):
             )
 
             await hass.async_block_till_done()
-            assert len(mock_setup.mock_calls) == 1
             assert len(mock_setup_entry.mock_calls) == 1
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY

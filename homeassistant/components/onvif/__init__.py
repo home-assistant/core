@@ -11,7 +11,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_RTSP_TRANSPORT,
@@ -21,11 +20,6 @@ from .const import (
     RTSP_TRANS_PROTOCOLS,
 )
 from .device import ONVIFDevice
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the ONVIF component."""
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
