@@ -1048,7 +1048,7 @@ async def test_inherit_source_unique_id(hass, hass_storage, setup_integration):
 
     now = dt_util.utcnow()
     entity_registry = er.async_get(hass)
-    entity_registry.async_get_or_create(
+    source_entry = entity_registry.async_get_or_create(
         "sensor", "test", "123456", suggested_object_id="gas_consumption"
     )
 
@@ -1070,5 +1070,5 @@ async def test_inherit_source_unique_id(hass, hass_storage, setup_integration):
 
     entry = entity_registry.async_get("sensor.gas_consumption_cost")
     assert entry
-    assert entry.unique_id == "123456_gas_cost"
+    assert entry.unique_id == f"{source_entry.id}_gas_cost"
     assert entry.hidden_by is er.RegistryEntryHider.INTEGRATION

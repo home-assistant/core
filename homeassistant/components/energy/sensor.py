@@ -421,12 +421,10 @@ class EnergyCostSensor(SensorEntity):
     def unique_id(self) -> str | None:
         """Return the unique ID of the sensor."""
         entity_registry = er.async_get(self.hass)
-        if (
-            registry_entry := entity_registry.async_get(
-                self._config[self._adapter.entity_energy_key]
-            )
-        ) and registry_entry.unique_id:
-            prefix = registry_entry.unique_id
+        if registry_entry := entity_registry.async_get(
+            self._config[self._adapter.entity_energy_key]
+        ):
+            prefix = registry_entry.id
         else:
             prefix = self._config[self._adapter.entity_energy_key]
 
