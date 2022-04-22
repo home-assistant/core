@@ -291,11 +291,10 @@ def _purge_old_recorder_runs(
 ) -> None:
     """Purge all old recorder runs."""
     # Recorder runs is small, no need to batch run it
-    assert instance.run_info is not None
     deleted_rows = (
         session.query(RecorderRuns)
         .filter(RecorderRuns.start < purge_before)
-        .filter(RecorderRuns.run_id != instance.run_info.run_id)
+        .filter(RecorderRuns.run_id != instance.run_history.current.run_id)
         .delete(synchronize_session=False)
     )
     _LOGGER.debug("Deleted %s recorder_runs", deleted_rows)

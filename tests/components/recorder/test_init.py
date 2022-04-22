@@ -1,4 +1,6 @@
 """The tests for the Recorder component."""
+from __future__ import annotations
+
 # pylint: disable=protected-access
 import asyncio
 from datetime import datetime, timedelta
@@ -25,9 +27,6 @@ from homeassistant.components.recorder import (
     SQLITE_URL_PREFIX,
     Recorder,
     get_instance,
-    run_information,
-    run_information_from_instance,
-    run_information_with_session,
 )
 from homeassistant.components.recorder.const import DATA_INSTANCE
 from homeassistant.components.recorder.models import (
@@ -55,6 +54,7 @@ from .common import (
     async_wait_recording_done,
     async_wait_recording_done_without_instance,
     corrupt_db_file,
+    run_information_with_session,
     wait_recording_done,
 )
 from .conftest import SetupRecorderInstanceT
@@ -1019,37 +1019,6 @@ def test_saving_state_with_serializable_data(hass_recorder, caplog):
         assert states[1].old_state_id == states[0].state_id
 
     assert "State is not JSON serializable" in caplog.text
-
-
-def test_run_information(hass_recorder):
-    """Ensure run_information returns expected data."""
-    before_start_recording = dt_util.utcnow()
-    hass = hass_recorder()
-    run_info = run_information_from_instance(hass)
-    assert isinstance(run_info, RecorderRuns)
-    assert run_info.closed_incorrect is False
-
-    with session_scope(hass=hass) as session:
-        run_info = run_information_with_session(session)
-        assert isinstance(run_info, RecorderRuns)
-        assert run_info.closed_incorrect is False
-
-    run_info = run_information(hass)
-    assert isinstance(run_info, RecorderRuns)
-    assert run_info.closed_incorrect is False
-
-    hass.states.set("test.two", "on", {})
-    wait_recording_done(hass)
-    run_info = run_information(hass)
-    assert isinstance(run_info, RecorderRuns)
-    assert run_info.closed_incorrect is False
-
-    run_info = run_information(hass, before_start_recording)
-    assert run_info is None
-
-    run_info = run_information(hass, dt_util.utcnow())
-    assert isinstance(run_info, RecorderRuns)
-    assert run_info.closed_incorrect is False
 
 
 def test_has_services(hass_recorder):
