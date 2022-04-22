@@ -81,7 +81,6 @@ build.json @home-assistant/supervisor
 /tests/components/aprs/ @PhilRW
 /homeassistant/components/arcam_fmj/ @elupus
 /tests/components/arcam_fmj/ @elupus
-/homeassistant/components/arest/ @fabaff
 /homeassistant/components/arris_tg2492lg/ @vanbalken
 /homeassistant/components/aseko_pool_live/ @milanmeu
 /tests/components/aseko_pool_live/ @milanmeu
@@ -120,7 +119,6 @@ build.json @home-assistant/supervisor
 /homeassistant/components/beewi_smartclim/ @alemuro
 /homeassistant/components/binary_sensor/ @home-assistant/core
 /tests/components/binary_sensor/ @home-assistant/core
-/homeassistant/components/bitcoin/ @fabaff
 /homeassistant/components/bizkaibus/ @UgaitzEtxebarria
 /homeassistant/components/blebox/ @bbx-a @bbx-jp
 /tests/components/blebox/ @bbx-a @bbx-jp
