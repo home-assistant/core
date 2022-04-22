@@ -6,11 +6,7 @@ from typing import Any, Final
 
 from phipsair.purifier import FanSpeed, Mode, PersistentClient, Status
 
-from homeassistant.components.fan import (
-    SUPPORT_PRESET_MODE,
-    SUPPORT_SET_SPEED,
-    FanEntity,
-)
+from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
@@ -47,7 +43,9 @@ class PurifierEntity(FanEntity):
 
     _attr_should_poll: bool = False
 
-    _attr_supported_features: int = SUPPORT_PRESET_MODE | SUPPORT_SET_SPEED
+    _attr_supported_features: int = (
+        FanEntityFeature.PRESET_MODE | FanEntityFeature.SET_SPEED
+    )
     _attr_preset_modes: list[str] = [m.name for m in list(Mode) if m != Mode.Manual]
     speeds = [FanSpeed.Speed1, FanSpeed.Speed2, FanSpeed.Speed3, FanSpeed.Turbo]
     _attr_speed_count: int = len(speeds)
