@@ -558,7 +558,7 @@ def compile_statistics(instance: Recorder, start: datetime) -> bool:
 
     _LOGGER.debug("Compiling statistics for %s-%s", start, end)
     platform_stats: list[StatisticResult] = []
-    metadata_dict: dict[str, tuple[int, StatisticMetaData]] = {}
+    current_metadata: dict[str, tuple[int, StatisticMetaData]] = {}
     # Collect statistics from all platforms implementing support
     for domain, platform in instance.hass.data[DOMAIN].items():
         if not hasattr(platform, "compile_statistics"):
@@ -574,7 +574,7 @@ def compile_statistics(instance: Recorder, start: datetime) -> bool:
             compiled.platform_stat,
         )
         platform_stats.extend(compiled.platform_stat)
-        metadata_dict.update(compiled.metadata_dict)
+        current_metadata.update(compiled.metadata_dict)
 
     # Insert collected statistics in the database
     with session_scope(
@@ -582,7 +582,9 @@ def compile_statistics(instance: Recorder, start: datetime) -> bool:
         exception_filter=_filter_unique_constraint_integrity_error(instance),
     ) as session:
         for stats in platform_stats:
-            metadata_id = _update_or_add_metadata(session, stats["meta"], metadata_dict)
+            metadata_id = _update_or_add_metadata(
+                session, stats["meta"], current_metadata
+            )
             _insert_statistics(
                 session,
                 StatisticsShortTerm,
