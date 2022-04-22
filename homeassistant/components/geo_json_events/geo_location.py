@@ -106,8 +106,8 @@ class GeoJsonLocationEvent(CoordinatorEntity, GeolocationEvent):
         self._external_id = external_id
         self._attr_unique_id = f"{config_entry_unique_id}_{external_id}"
         self._distance: float | None = None
-        self._latitude = None
-        self._longitude = None
+        self._latitude: float | None = None
+        self._longitude: float | None = None
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.coordinator.config_entry.entry_id)},
             entry_type=DeviceEntryType.SERVICE,

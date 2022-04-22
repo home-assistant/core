@@ -78,7 +78,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     if orphaned_entries is not None:
         for entry in orphaned_entries:
             if entry.domain == Platform.GEO_LOCATION:
-                _LOGGER.debug("Removing entry %s", entry.entity_id)
+                _LOGGER.debug("Removing orphaned entry %s", entry.entity_id)
                 entity_registry.async_remove(entry.entity_id)
     hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
     return True
