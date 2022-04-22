@@ -87,7 +87,7 @@ class PurifierEntity(FanEntity):
         self.schedule_update_ha_state()
 
     @property
-    def name(self):
+    def name(self) -> str:
         """
         Return the purifier's name.
 
@@ -99,13 +99,15 @@ class PurifierEntity(FanEntity):
         return self._status.name
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return whether the purifier is available."""
         return self._status is not None
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return whether the purifier is turned on, i.e. the fan is turning."""
+        assert self._status is not None
+
         return self._status.is_on
 
     async def async_turn_on(

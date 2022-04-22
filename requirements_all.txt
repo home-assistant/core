@@ -1255,7 +1255,7 @@ pescea==1.0.12
 pexpect==4.6.0
 
 # homeassistant.components.philips_air_purifier
-phipsair==0.4.0
+phipsair==0.4.1
 
 # homeassistant.components.modem_callerid
 phone_modem==0.1.1

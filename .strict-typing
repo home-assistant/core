@@ -199,6 +199,7 @@ homeassistant.components.peco.*
 homeassistant.components.overkiz.*
 homeassistant.components.persistent_notification.*
 homeassistant.components.pi_hole.*
+homeassistant.components.philips_air_purifier.*
 homeassistant.components.powerwall.*
 homeassistant.components.proximity.*
 homeassistant.components.prusalink.*
