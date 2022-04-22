@@ -302,10 +302,10 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator):
 
         try:
             for entry_id, location in self.entry_id_to_location_dict.items():
-                entry = self.hass.config_entries.async_get_entry(entry_id)
-                assert entry
                 if entry_id in data:
                     continue
+                entry = self.hass.config_entries.async_get_entry(entry_id)
+                assert entry
                 data[entry_id] = await self._api.realtime_and_all_forecasts(
                     [
                         # Weather
