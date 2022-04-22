@@ -116,6 +116,11 @@ class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEnt
             self.coordinator.data["locks"][self.serial_number]["lockedState"]
             == "LOCKED"
         )
+    
+    @property
+    def extra_state_attributes(self):
+        """Return the state attributes."""
+        return {"method": self.changed_method}
 
     async def async_unlock(self, **kwargs) -> None:
         """Send unlock command."""
