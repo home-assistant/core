@@ -20,6 +20,7 @@ import voluptuous as vol
 import yarl
 
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.media_player import MEDIA_PLAYER_PLAY_MEDIA_SCHEMA
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
@@ -125,7 +126,9 @@ SCHEMA_SERVICE_SAY = vol.Schema(
         vol.Optional(ATTR_CACHE): cv.boolean,
         vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids,
         vol.Optional(ATTR_LANGUAGE): cv.string,
-        vol.Optional(ATTR_MEDIA_EXTRA): MEDIA_PLAYER_PLAY_MEDIA_SCHEMA[ATTR_MEDIA_EXTRA],
+        vol.Optional(ATTR_MEDIA_EXTRA): MEDIA_PLAYER_PLAY_MEDIA_SCHEMA[
+            ATTR_MEDIA_EXTRA
+        ],
         vol.Optional(ATTR_OPTIONS): dict,
     }
 )
