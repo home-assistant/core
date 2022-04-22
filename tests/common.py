@@ -1032,6 +1032,11 @@ class MockEntity(entity.Entity):
         return self._handle("entity_registry_enabled_default")
 
     @property
+    def entity_registry_visible_default(self):
+        """Return if the entity should be visible when first added to the entity registry."""
+        return self._handle("entity_registry_visible_default")
+
+    @property
     def icon(self):
         """Return the suggested icon."""
         return self._handle("icon")

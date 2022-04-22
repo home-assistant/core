@@ -90,11 +90,13 @@ class TestHistoryStatsSensor(unittest.TestCase):
             duration = timedelta(hours=2, minutes=1)
 
             sensor1 = HistoryStatsSensor(
-                self.hass, "test", "on", today, None, duration, "time", "test"
+                "test", "on", today, None, duration, "time", "test"
             )
+            sensor1.hass = self.hass
             sensor2 = HistoryStatsSensor(
-                self.hass, "test", "on", None, today, duration, "time", "test"
+                "test", "on", None, today, duration, "time", "test"
             )
+            sensor2.hass = self.hass
 
             sensor1.update_period()
             sensor1_start, sensor1_end = sensor1._period
@@ -126,12 +128,10 @@ class TestHistoryStatsSensor(unittest.TestCase):
         good = Template("{{ now() }}", self.hass)
         bad = Template("{{ TEST }}", self.hass)
 
-        sensor1 = HistoryStatsSensor(
-            self.hass, "test", "on", good, bad, None, "time", "Test"
-        )
-        sensor2 = HistoryStatsSensor(
-            self.hass, "test", "on", bad, good, None, "time", "Test"
-        )
+        sensor1 = HistoryStatsSensor("test", "on", good, bad, None, "time", "Test")
+        sensor1.hass = self.hass
+        sensor2 = HistoryStatsSensor("test", "on", bad, good, None, "time", "Test")
+        sensor2.hass = self.hass
 
         before_update1 = sensor1._period
         before_update2 = sensor2._period
@@ -166,12 +166,10 @@ class TestHistoryStatsSensor(unittest.TestCase):
         bad = Template("{{ x - 12 }}", self.hass)  # x is undefined
         duration = "01:00"
 
-        sensor1 = HistoryStatsSensor(
-            self.hass, "test", "on", bad, None, duration, "time", "Test"
-        )
-        sensor2 = HistoryStatsSensor(
-            self.hass, "test", "on", None, bad, duration, "time", "Test"
-        )
+        sensor1 = HistoryStatsSensor("test", "on", bad, None, duration, "time", "Test")
+        sensor1.hass = self.hass
+        sensor2 = HistoryStatsSensor("test", "on", None, bad, duration, "time", "Test")
+        sensor2.hass = self.hass
 
         before_update1 = sensor1._period
         before_update2 = sensor2._period
@@ -908,10 +906,7 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_mul
     assert hass.states.get("sensor.sensor4").state == "87.5"
 
 
-async def test_does_not_work_into_the_future(
-    hass,
-    recorder_mock,
-):
+async def test_does_not_work_into_the_future(hass, recorder_mock):
     """Test history cannot tell the future.
 
     Verifies we do not regress https://github.com/home-assistant/core/pull/20589
