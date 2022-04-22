@@ -246,7 +246,7 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator):
         self.entry_id_to_location_dict[entry.entry_id] = f"{latitude},{longitude}"
 
         # If we haven't gotten data yet, and either the core is running (so no other
-        # entries are being loaded in paralllel) or its not and this is the only entry
+        # entries are being loaded in parallel) or its not and this is the only entry
         # for this API key that is not loaded, we can safely do a first refresh. We do
         # this to avoid making the same request over and over in succession.
         other_entries = async_get_entries_by_api_key(
