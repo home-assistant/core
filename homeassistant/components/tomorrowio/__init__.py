@@ -261,6 +261,7 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator):
             await super().async_config_entry_first_refresh()
             self._coordinator_ready.set()
         else:
+            # If we have an event, we need to wait for it to be set before we proceed
             await self._coordinator_ready.wait()
             # If we're loading a new config entry that's not already mapped, we need
             # to do a refresh. We're going to do a partial refresh though so we can
