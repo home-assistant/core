@@ -72,13 +72,13 @@ from .executor import DBInterruptibleThreadPoolExecutor
 from .models import (
     Base,
     Events,
-    RecorderRuns,
     StateAttributes,
     States,
     StatisticsRuns,
     process_timestamp,
 )
 from .pool import POOL_SIZE, MutexPool, RecorderPool
+from .run_history import RunHistory
 from .util import (
     dburl_to_path,
     end_incomplete_runs,
@@ -244,51 +244,6 @@ def is_entity_recorded(hass: HomeAssistant, entity_id: str) -> bool:
     return instance.entity_filter(entity_id)
 
 
-def run_information(
-    hass: HomeAssistant, point_in_time: datetime | None = None
-) -> RecorderRuns | None:
-    """Return information about current run.
-
-    There is also the run that covers point_in_time.
-    """
-    if run_info := run_information_from_instance(hass, point_in_time):
-        return run_info
-
-    with session_scope(hass=hass) as session:
-        return run_information_with_session(session, point_in_time)
-
-
-def run_information_from_instance(
-    hass: HomeAssistant, point_in_time: datetime | None = None
-) -> RecorderRuns | None:
-    """Return information about current run from the existing instance.
-
-    Does not query the database for older runs.
-    """
-    ins = get_instance(hass)
-    if point_in_time is None or point_in_time > ins.recording_start:
-        return ins.run_info
-    return None
-
-
-def run_information_with_session(
-    session: Session, point_in_time: datetime | None = None
-) -> RecorderRuns | None:
-    """Return information about current run from the database."""
-    recorder_runs = RecorderRuns
-
-    query = session.query(recorder_runs)
-    if point_in_time:
-        query = query.filter(
-            (recorder_runs.start < point_in_time) & (recorder_runs.end > point_in_time)
-        )
-
-    if (res := query.first()) is not None:
-        session.expunge(res)
-        return cast(RecorderRuns, res)
-    return res
-
-
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the recorder."""
     hass.data[DOMAIN] = {}
@@ -438,9 +393,13 @@ class PurgeTask(RecorderTask):
 
     def run(self, instance: Recorder) -> None:
         """Purge the database."""
+        assert instance.get_session is not None
+
         if purge.purge_old_data(
             instance, self.purge_before, self.repack, self.apply_filter
         ):
+            with instance.get_session() as session:
+                instance.run_history.load_from_db(session)
             # We always need to do the db cleanups after a purge
             # is finished to ensure the WAL checkpoint and other
             # tasks happen after a vacuum.
@@ -652,7 +611,6 @@ class Recorder(threading.Thread):
         self._hass_started: asyncio.Future[object] = asyncio.Future()
         self.commit_interval = commit_interval
         self.queue: queue.SimpleQueue[RecorderTask] = queue.SimpleQueue()
-        self.recording_start = dt_util.utcnow()
         self.db_url = uri
         self.db_max_retries = db_max_retries
         self.db_retry_wait = db_retry_wait
@@ -660,7 +618,7 @@ class Recorder(threading.Thread):
         self.async_recorder_ready = asyncio.Event()
         self._queue_watch = threading.Event()
         self.engine: Engine | None = None
-        self.run_info: RecorderRuns | None = None
+        self.run_history = RunHistory()
 
         self.entity_filter = entity_filter
         self.exclude_t = exclude_t
@@ -1302,6 +1260,7 @@ class Recorder(threading.Thread):
         self._close_event_session()
         self._close_connection()
         move_away_broken_database(dburl_to_path(self.db_url))
+        self.run_history.reset()
         self._setup_recorder()
         self._setup_run()
 
@@ -1465,12 +1424,8 @@ class Recorder(threading.Thread):
         """Log the start of the current run and schedule any needed jobs."""
         assert self.get_session is not None
         with session_scope(session=self.get_session()) as session:
-            start = self.recording_start
-            end_incomplete_runs(session, start)
-            self.run_info = RecorderRuns(start=start, created=dt_util.utcnow())
-            session.add(self.run_info)
-            session.flush()
-            session.expunge(self.run_info)
+            end_incomplete_runs(session, self.run_history.recording_start)
+            self.run_history.start(session)
             self._schedule_compile_missing_statistics(session)
 
         self._open_event_session()
@@ -1498,16 +1453,14 @@ class Recorder(threading.Thread):
         """End the recorder session."""
         if self.event_session is None:
             return
-        assert self.run_info is not None
         try:
-            self.run_info.end = dt_util.utcnow()
-            self.event_session.add(self.run_info)
+            self.run_history.end(self.event_session)
             self._commit_event_session_or_retry()
             self.event_session.close()
         except Exception as err:  # pylint: disable=broad-except
             _LOGGER.exception("Error saving the event session during shutdown: %s", err)
 
-        self.run_info = None
+        self.run_history.clear()
 
     def _shutdown(self) -> None:
         """Save end time for current run."""
