@@ -49,6 +49,6 @@ async def async_remove_config_entry_device(
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_success = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if slimserver := hass.data.pop(DOMAIN, None):
-        await slimserver.stop()
+    if not unload_success::
+        await hass.data.pop(DOMAIN).stop()
     return unload_success
