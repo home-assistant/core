@@ -3,7 +3,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import DOMAIN, SIGNAL_SABNZBD_UPDATED, SabnzbdApiData
@@ -35,50 +39,63 @@ SENSOR_TYPES: tuple[SabnzbdSensorEntityDescription, ...] = (
         key="kbpersec",
         name="Speed",
         native_unit_of_measurement=DATA_RATE_MEGABYTES_PER_SECOND,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SabnzbdSensorEntityDescription(
         key="mb",
         name="Queue",
         native_unit_of_measurement=DATA_MEGABYTES,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SabnzbdSensorEntityDescription(
         key="mbleft",
         name="Left",
         native_unit_of_measurement=DATA_MEGABYTES,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SabnzbdSensorEntityDescription(
         key="diskspacetotal1",
         name="Disk",
         native_unit_of_measurement=DATA_GIGABYTES,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SabnzbdSensorEntityDescription(
         key="diskspace1",
         name="Disk Free",
         native_unit_of_measurement=DATA_GIGABYTES,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SabnzbdSensorEntityDescription(
         key="noofslots_total",
         name="Queue Count",
+        state_class=SensorStateClass.TOTAL,
     ),
     SabnzbdSensorEntityDescription(
         key="day_size",
         name="Daily Total",
         native_unit_of_measurement=DATA_GIGABYTES,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SabnzbdSensorEntityDescription(
         key="week_size",
         name="Weekly Total",
         native_unit_of_measurement=DATA_GIGABYTES,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SabnzbdSensorEntityDescription(
         key="month_size",
         name="Monthly Total",
         native_unit_of_measurement=DATA_GIGABYTES,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SabnzbdSensorEntityDescription(
         key="total_size",
         name="Total",
         native_unit_of_measurement=DATA_GIGABYTES,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
 )
 

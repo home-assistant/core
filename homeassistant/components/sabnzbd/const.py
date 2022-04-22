@@ -7,7 +7,6 @@ DATA_SABNZBD = "sabnzbd"
 ATTR_SPEED = "speed"
 BASE_URL_FORMAT = "{}://{}:{}/"
 CONFIG_FILE = "sabnzbd.conf"
-DEFAULT_URL = "localhost:8080"
 DEFAULT_HOST = "localhost"
 DEFAULT_NAME = "SABnzbd"
 DEFAULT_PORT = 8080
