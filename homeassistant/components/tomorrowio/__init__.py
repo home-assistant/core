@@ -250,11 +250,11 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def async_setup_entry(self, entry: ConfigEntry) -> None:
         """Load config entry into coordinator."""
-        # If we haven't registered any config entries yet, register all entries with
-        # this API key and get the initial data for all of them. We do this because
-        # another config entry may start setup before we finish setting the initial
-        # data and we don't want to do multiple refreshes on startup.
-        if not self.entry_id_to_location_dict:
+        # If we haven't loaded any data yet, register all entries with this API key and
+        # get the initial data for all of them. We do this because another config entry
+        # may start setup before we finish setting the initial data and we don't want
+        # to do multiple refreshes on startup.
+        if not self._coordinator_ready.is_set():
             for entry_ in async_get_entries_by_api_key(self.hass, self._api.api_key):
                 self.add_entry_to_location_dict(entry_)
             await super().async_config_entry_first_refresh()
