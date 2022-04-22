@@ -21,15 +21,11 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
     ATTR_XY_COLOR,
-    COLOR_MODE_BRIGHTNESS,
-    COLOR_MODE_COLOR_TEMP,
-    COLOR_MODE_HS,
-    COLOR_MODE_ONOFF,
-    COLOR_MODE_XY,
     DOMAIN,
     EFFECT_COLORLOOP,
     FLASH_LONG,
     FLASH_SHORT,
+    ColorMode,
     LightEntity,
     LightEntityFeature,
 )
@@ -150,19 +146,19 @@ class DeconzBaseLight(Generic[_L], DeconzDevice, LightEntity):
         self._attr_supported_color_modes: set[str] = set()
 
         if device.color_temp is not None:
-            self._attr_supported_color_modes.add(COLOR_MODE_COLOR_TEMP)
+            self._attr_supported_color_modes.add(ColorMode.COLOR_TEMP)
 
         if device.hue is not None and device.saturation is not None:
-            self._attr_supported_color_modes.add(COLOR_MODE_HS)
+            self._attr_supported_color_modes.add(ColorMode.HS)
 
         if device.xy is not None:
-            self._attr_supported_color_modes.add(COLOR_MODE_XY)
+            self._attr_supported_color_modes.add(ColorMode.XY)
 
         if not self._attr_supported_color_modes and device.brightness is not None:
-            self._attr_supported_color_modes.add(COLOR_MODE_BRIGHTNESS)
+            self._attr_supported_color_modes.add(ColorMode.BRIGHTNESS)
 
         if not self._attr_supported_color_modes:
-            self._attr_supported_color_modes.add(COLOR_MODE_ONOFF)
+            self._attr_supported_color_modes.add(ColorMode.ONOFF)
 
         if device.brightness is not None:
             self._attr_supported_features |= LightEntityFeature.FLASH
@@ -176,15 +172,15 @@ class DeconzBaseLight(Generic[_L], DeconzDevice, LightEntity):
     def color_mode(self) -> str | None:
         """Return the color mode of the light."""
         if self._device.color_mode == "ct":
-            color_mode = COLOR_MODE_COLOR_TEMP
+            color_mode = ColorMode.COLOR_TEMP
         elif self._device.color_mode == "hs":
-            color_mode = COLOR_MODE_HS
+            color_mode = ColorMode.HS
         elif self._device.color_mode == "xy":
-            color_mode = COLOR_MODE_XY
+            color_mode = ColorMode.XY
         elif self._device.brightness is not None:
-            color_mode = COLOR_MODE_BRIGHTNESS
+            color_mode = ColorMode.BRIGHTNESS
         else:
-            color_mode = COLOR_MODE_ONOFF
+            color_mode = ColorMode.ONOFF
         return color_mode
 
     @property
@@ -225,7 +221,7 @@ class DeconzBaseLight(Generic[_L], DeconzDevice, LightEntity):
             data["color_temperature"] = kwargs[ATTR_COLOR_TEMP]
 
         if ATTR_HS_COLOR in kwargs:
-            if COLOR_MODE_XY in self._attr_supported_color_modes:
+            if ColorMode.XY in self._attr_supported_color_modes:
                 data["xy"] = color_hs_to_xy(*kwargs[ATTR_HS_COLOR])
             else:
                 data["hue"] = int(kwargs[ATTR_HS_COLOR][0] / 360 * 65535)
