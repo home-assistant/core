@@ -115,49 +115,6 @@ def async_set_update_interval(
     )
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Tomorrow.io API from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
-
-    # Let's precreate the device so that if this is a first time setup for a config
-    # entry imported from a ClimaCell entry, we can apply customizations from the old
-    # device.
-    dev_reg = dr.async_get(hass)
-    device = dev_reg.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, entry.data[CONF_API_KEY])},
-        name=INTEGRATION_NAME,
-        manufacturer=INTEGRATION_NAME,
-        sw_version="v4",
-        entry_type=dr.DeviceEntryType.SERVICE,
-    )
-
-    # If this is an import and we still have the old config entry ID in the entry data,
-    # it means we are setting this entry up for the first time after a migration from
-    # ClimaCell to Tomorrow.io. In order to preserve any customizations on the ClimaCell
-    # entities, we need to remove each old entity, creating a new entity in its place
-    # but attached to this entry.
-    if entry.source == SOURCE_IMPORT and "old_config_entry_id" in entry.data:
-        async_migrate_entry_from_climacell(hass, dev_reg, entry, device)
-
-    api_key = entry.data[CONF_API_KEY]
-    # If coordinator already exists for this API key, we'll use that, otherwise
-    # we have to create a new one
-    if not (coordinator := hass.data[DOMAIN].get(api_key)):
-        session = async_get_clientsession(hass)
-        # we will not use the class's lat and long so we can pass in garbage
-        # lats and longs
-        api = TomorrowioV4(api_key, 361.0, 361.0, unit_system="metric", session=session)
-        coordinator = TomorrowioDataUpdateCoordinator(hass, api)
-        hass.data[DOMAIN][api_key] = coordinator
-
-    await coordinator.async_setup_entry(entry)
-
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
-
-    return True
-
-
 @callback
 def async_migrate_entry_from_climacell(
     hass: HomeAssistant,
@@ -211,6 +168,49 @@ def async_migrate_entry_from_climacell(
 
     # Remove the old config entry and now the entry is fully migrated
     hass.async_create_task(hass.config_entries.async_remove(old_config_entry_id))
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up Tomorrow.io API from a config entry."""
+    hass.data.setdefault(DOMAIN, {})
+
+    # Let's precreate the device so that if this is a first time setup for a config
+    # entry imported from a ClimaCell entry, we can apply customizations from the old
+    # device.
+    dev_reg = dr.async_get(hass)
+    device = dev_reg.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, entry.data[CONF_API_KEY])},
+        name=INTEGRATION_NAME,
+        manufacturer=INTEGRATION_NAME,
+        sw_version="v4",
+        entry_type=dr.DeviceEntryType.SERVICE,
+    )
+
+    # If this is an import and we still have the old config entry ID in the entry data,
+    # it means we are setting this entry up for the first time after a migration from
+    # ClimaCell to Tomorrow.io. In order to preserve any customizations on the ClimaCell
+    # entities, we need to remove each old entity, creating a new entity in its place
+    # but attached to this entry.
+    if entry.source == SOURCE_IMPORT and "old_config_entry_id" in entry.data:
+        async_migrate_entry_from_climacell(hass, dev_reg, entry, device)
+
+    api_key = entry.data[CONF_API_KEY]
+    # If coordinator already exists for this API key, we'll use that, otherwise
+    # we have to create a new one
+    if not (coordinator := hass.data[DOMAIN].get(api_key)):
+        session = async_get_clientsession(hass)
+        # we will not use the class's lat and long so we can pass in garbage
+        # lats and longs
+        api = TomorrowioV4(api_key, 361.0, 361.0, unit_system="metric", session=session)
+        coordinator = TomorrowioDataUpdateCoordinator(hass, api)
+        hass.data[DOMAIN][api_key] = coordinator
+
+    await coordinator.async_setup_entry(entry)
+
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+
+    return True
 
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
