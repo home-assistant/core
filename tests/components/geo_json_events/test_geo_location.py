@@ -50,7 +50,9 @@ CONFIG_WITH_CUSTOM_LOCATION = {
 async def test_setup(hass):
     """Test the general setup of the platform."""
     # Set up some mock feed entries for this test.
-    mock_entry_1 = _generate_mock_feed_entry("1234", "Title 1", 15.5, (-31.0, 150.0))
+    mock_entry_1 = _generate_mock_feed_entry(
+        "1234", "Title 1", 15.5, (-31.0, 150.0), properties={"property1": "value1"}
+    )
     mock_entry_2 = _generate_mock_feed_entry("2345", "Title 2", 20.5, (-31.1, 150.1))
     mock_entry_3 = _generate_mock_feed_entry("3456", "Title 3", 25.5, (-31.2, 150.2))
     mock_entry_4 = _generate_mock_feed_entry("4567", "Title 4", 12.5, (-31.3, 150.3))
@@ -92,6 +94,7 @@ async def test_setup(hass):
             ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
             ATTR_SOURCE: "geo_json_events",
             ATTR_ICON: "mdi:pin",
+            "Feature property1": "value1",
         }
         assert round(abs(float(state.state) - 15.5), 7) == 0
 
