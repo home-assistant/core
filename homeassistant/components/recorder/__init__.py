@@ -598,7 +598,7 @@ class RunHistory:
         """Track recorder run history."""
         self.recording_start: datetime = dt_util.utcnow()
         self._current_run_info: RecorderRuns | None = None
-        self._run_history = _RecorderRunsHistory([0], {})
+        self._run_history = _RecorderRunsHistory([], {})
 
     def start(self, session: Session) -> None:
         """Start a new run.
@@ -627,7 +627,7 @@ class RunHistory:
 
         Must run in the recorder thread.
         """
-        run_timestamps: list[int] = [0]
+        run_timestamps: list[int] = []
         runs_by_timestamp: dict[int, RecorderRuns] = {}
 
         for run in session.query(RecorderRuns).order_by(RecorderRuns.start.asc()).all():
@@ -661,18 +661,40 @@ class RunHistory:
         """Return the recorder run that started before or at start.
 
         If the first run started after the start, return None
+
+        This function is thread safe.
         """
         if start >= self.recording_start:
             return self.current
-        run_timestamps = self._run_history.run_timestamps
-        runs_by_timestamp = self._run_history.runs_by_timestamp
-        if (idx := bisect.bisect_left(run_timestamps, start.timestamp())) <= 1:
-            return None
-        return runs_by_timestamp[run_timestamps[idx - 1]]
+
+        # Hold a reference here to self._run_history
+        # to ensure it does not get changed out from
+        # under us in the recorder thread.
+        run_history = self._run_history
+
+        # Ensure we do not access self._run_history
+        # after this point as the other thread
+        # could change it out on us
+        run_timestamps = run_history.run_timestamps
+        runs_by_timestamp = run_history.runs_by_timestamp
+
+        # bisect_left tells us were we would insert
+        # a value in the list of runs after the start timestamp.
+        #
+        # The run before that (idx-1) is when the run started
+        #
+        # If idx is 0, history never ran before the start timestamp
+        #
+        if idx := bisect.bisect_left(run_timestamps, start.timestamp()):
+            return runs_by_timestamp[run_timestamps[idx - 1]]
+        return None
 
     @property
     def current(self) -> RecorderRuns:
-        """Get the current run."""
+        """Get the current run.
+
+        This function is thread safe.
+        """
         assert self._current_run_info is not None
         return self._current_run_info
 
