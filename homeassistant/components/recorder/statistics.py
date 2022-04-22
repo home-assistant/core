@@ -161,7 +161,7 @@ _LOGGER = logging.getLogger(__name__)
 class PlatformCompiledStatistics:
     """Compiled Statistics from a platform."""
 
-    platform_stat: list[StatisticResult]
+    platform_stats: list[StatisticResult]
     current_metadata: dict[str, tuple[int, StatisticMetaData]]
 
 
@@ -571,9 +571,9 @@ def compile_statistics(instance: Recorder, start: datetime) -> bool:
             domain,
             start,
             end,
-            compiled.platform_stat,
+            compiled.platform_stats,
         )
-        platform_stats.extend(compiled.platform_stat)
+        platform_stats.extend(compiled.platform_stats)
         current_metadata.update(compiled.current_metadata)
 
     # Insert collected statistics in the database
