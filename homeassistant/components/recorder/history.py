@@ -427,7 +427,8 @@ def get_states(
     """Return the states at a specific point in time."""
     if (
         run is None
-        and recorder.get_instance(hass).run_history.current_run > utc_point_in_time
+        and recorder.get_instance(hass).run_history.current_run.start
+        > utc_point_in_time
     ):
         # History did not run before utc_point_in_time
         return []
@@ -456,7 +457,7 @@ def _get_states_with_session(
     if run is None:
         run = recorder.get_instance(hass).run_history.current_run
 
-    if utc_point_in_time < run:
+    if run.start > utc_point_in_time:
         # History did not run before utc_point_in_time
         return []
 
