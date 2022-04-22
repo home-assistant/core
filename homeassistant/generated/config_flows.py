@@ -323,6 +323,7 @@ FLOWS = {
         "spider",
         "spotify",
         "squeezebox",
+        "squeezebox_player",
         "srp_energy",
         "starline",
         "steamist",

@@ -240,6 +240,9 @@ aiosenz==1.0.0
 # homeassistant.components.shelly
 aioshelly==2.0.0
 
+# homeassistant.components.squeezebox_player
+aioslimproto==1.0.0
+
 # homeassistant.components.steamist
 aiosteamist==0.3.1
 
