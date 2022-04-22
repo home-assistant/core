@@ -79,10 +79,9 @@ class CalendarEventListener:
             self._unsub_refresh()
         self._unsub_refresh = None
 
-    async def _fetch_events(self, now: datetime.datetime) -> None:
+    async def _fetch_events(self, last_endtime: datetime.datetime) -> None:
         """Update the set of eligible events."""
-        last_endtime = now
-        end_time = now + UPDATE_INTERVAL
+        end_time = last_endtime + UPDATE_INTERVAL
         _LOGGER.debug("Fetching events between %s, %s", last_endtime, end_time)
         events = await self._entity.async_get_events(self._hass, last_endtime, end_time)
 
