@@ -6,7 +6,7 @@ import logging
 from typing import Any
 
 from pytrafikverket import TrafikverketTrain
-from pytrafikverket.trafikverket_train import TrainStop
+from pytrafikverket.trafikverket_train import StationInfo, TrainStop
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -166,8 +166,8 @@ class TrainSensor(SensorEntity):
         self,
         train_api: TrafikverketTrain,
         name: str,
-        from_station: str,
-        to_station: str,
+        from_station: StationInfo,
+        to_station: StationInfo,
         weekday: list,
         departuretime: time | None,
         entry_id: str,
@@ -188,7 +188,7 @@ class TrainSensor(SensorEntity):
             configuration_url="https://api.trafikinfo.trafikverket.se/",
         )
         self._attr_unique_id = create_unique_id(
-            from_station, to_station, departuretime, weekday
+            from_station.name, to_station.name, departuretime, weekday
         )
 
     async def async_update(self) -> None:
