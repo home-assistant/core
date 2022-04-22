@@ -329,7 +329,7 @@ async def async_parse_relay(uid: str, msg) -> Event:
         source = msg.Message._value_1.Source.SimpleItem[0].Value
         return Event(
             f"{uid}_{msg.Topic._value_1}_{source}",
-            "Digital Input",
+            "Relay Triggered",
             "binary_sensor",
             None,
             None,
@@ -483,7 +483,7 @@ async def async_parse_last_clock_sync(uid: str, msg) -> Event:
 async def async_parse_jobstate(uid: str, msg) -> Event:
     """Handle parsing event message.
 
-    Topic: tns1:RecordingConfig/JobState*
+    Topic: tns1:RecordingConfig/JobState
     """
 
     try:
