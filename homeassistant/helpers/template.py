@@ -828,7 +828,6 @@ class TemplateState(TemplateStateBase):
     __slots__ = ("_state",)
 
     # Inheritance is done so functions that check against State keep working
-    # pylint: disable=super-init-not-called
     def __init__(self, hass: HomeAssistant, state: State, collect: bool = True) -> None:
         """Initialize template state."""
         super().__init__(hass, collect, state.entity_id)
