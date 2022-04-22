@@ -666,7 +666,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
                         "metadata": {"title": title},
                     }
             except PlaylistSupported as err:
-                _LOGGER.info(
+                _LOGGER.debug(
                     "[%s %s] Playlist %s is supported: %s",
                     self.entity_id,
                     self._cast_info.friendly_name,
