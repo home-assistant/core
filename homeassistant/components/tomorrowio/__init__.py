@@ -238,7 +238,7 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator):
         self._api = api
         self.data = {CURRENT: {}, FORECASTS: {}}
         self.entry_id_to_location_dict: dict[str, str] = {}
-        self._coordinator_ready = asyncio.Event()
+        self._coordinator_ready: asyncio.Event | None = None
 
         super().__init__(hass, _LOGGER, name=f"{DOMAIN}_{self._api.api_key}")
 
@@ -254,7 +254,8 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator):
         # get the initial data for all of them. We do this because another config entry
         # may start setup before we finish setting the initial data and we don't want
         # to do multiple refreshes on startup.
-        if not self._coordinator_ready.is_set():
+        if self._coordinator_ready is None:
+            self._coordinator_ready = asyncio.Event()
             for entry_ in async_get_entries_by_api_key(self.hass, self._api.api_key):
                 self.add_entry_to_location_dict(entry_)
             await super().async_config_entry_first_refresh()
