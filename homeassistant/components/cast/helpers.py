@@ -197,11 +197,15 @@ async def _fetch_playlist(hass, url):
     try:
         session = aiohttp_client.async_get_clientsession(hass, verify_ssl=False)
         async with session.get(url, timeout=5) as resp:
-            playlist_data = (await resp.content.read(64 * 1024)).decode()
+            charset = resp.charset or "utf-8"
+            try:
+                playlist_data = (await resp.content.read(64 * 1024)).decode(charset)
+            except ValueError as err:
+                raise PlaylistError(f"Could not decode playlist {url}") from err
     except asyncio.TimeoutError as err:
-        raise PlaylistError(f"Timeout while fetching pls {url}") from err
+        raise PlaylistError(f"Timeout while fetching playlist {url}") from err
     except aiohttp.client_exceptions.ClientError as err:
-        raise PlaylistError(f"Error while fetching pls {url}") from err
+        raise PlaylistError(f"Error while fetching playlist {url}") from err
 
     return playlist_data
 
