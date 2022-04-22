@@ -81,10 +81,10 @@ class CalendarEventListener:
 
     async def _fetch_events(self, now: datetime.datetime) -> None:
         """Update the set of eligible events."""
-        start_date = now
-        end_date = now + UPDATE_INTERVAL
-        _LOGGER.debug("Fetching events between %s, %s", start_date, end_date)
-        events = await self._entity.async_get_events(self._hass, start_date, end_date)
+        last_endtime = now
+        end_time = now + UPDATE_INTERVAL
+        _LOGGER.debug("Fetching events between %s, %s", last_endtime, end_time)
+        events = await self._entity.async_get_events(self._hass, last_endtime, end_time)
 
         # Build list of events and the appropriate time to trigger an alarm. The
         # returned events may have already started but matched the start/end time
@@ -97,7 +97,7 @@ class CalendarEventListener:
                 if self._event_type == EVENT_START
                 else event.end_datetime_local
             )
-            if event_time > now:
+            if event_time > last_endtime:
                 event_list.append((event_time, event))
         event_list.sort(key=lambda x: x[0])
         self._events = event_list
