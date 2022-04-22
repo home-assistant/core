@@ -1436,12 +1436,12 @@ class Recorder(threading.Thread):
         if self._using_file_sqlite:
             validate_or_move_away_sqlite_database(self.db_url)
 
-        self.engine = create_engine(self.db_url, **kwargs)
+        self.engine = create_engine(self.db_url, **kwargs, future=True)
 
         sqlalchemy_event.listen(self.engine, "connect", setup_recorder_connection)
 
         Base.metadata.create_all(self.engine)
-        self.get_session = scoped_session(sessionmaker(bind=self.engine))
+        self.get_session = scoped_session(sessionmaker(bind=self.engine, future=True))
         _LOGGER.debug("Connected to recorder database")
 
     @property
