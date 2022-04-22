@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+
 from zwave_me_ws import ZWaveMeData
 
 from homeassistant.components.sensor import (
