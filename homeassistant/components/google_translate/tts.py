@@ -1,5 +1,6 @@
 """Support for the Google speech service."""
 from io import BytesIO
+from pydub import AudioSegment
 import logging
 
 from gtts import gTTS, gTTSError
@@ -94,25 +95,32 @@ SUPPORT_LANGUAGES = [
     "es-us",
 ]
 
+CONF_DELAY = "delay"
+
 DEFAULT_LANG = "en"
+DEFAULT_DELAY = 0
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES)}
+    {
+        vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES),
+        vol.Optional(CONF_DELAY, default=DEFAULT_DELAY): vol.All(int, vol.Range(min=0, max=15000)),
+    }
 )
 
 
 async def async_get_engine(hass, config, discovery_info=None):
     """Set up Google speech component."""
-    return GoogleProvider(hass, config[CONF_LANG])
+    return GoogleProvider(hass, config)
 
 
 class GoogleProvider(Provider):
     """The Google speech API provider."""
 
-    def __init__(self, hass, lang):
+    def __init__(self, hass, conf):
         """Init Google TTS service."""
         self.hass = hass
-        self._lang = lang
+        self._lang = conf[CONF_LANG]
+        self._delay = conf[CONF_DELAY]
         self.name = "Google"
 
     @property
@@ -136,4 +144,13 @@ class GoogleProvider(Provider):
             _LOGGER.exception("Error during processing of TTS request %s", exc)
             return None, None
 
-        return "mp3", mp3_data.getvalue()
+        if self._delay != 0:
+            as_tts = AudioSegment.from_file(BytesIO(mp3_data.getvalue()), "mp3")
+            as_sil = AudioSegment.silent(duration=self._delay, frame_rate=as_tts.frame_rate)
+            as_out = as_sil + as_tts
+            output=BytesIO()
+            as_out.export(output, format="mp3")
+            return ("mp3", output.getvalue())
+        else:
+            return "mp3", mp3_data.getvalue()
+
