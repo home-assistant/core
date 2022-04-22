@@ -1,0 +1,9 @@
+{
+  "domain": "melnor",
+  "name": "Melnor Bluetooth",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/melnor",
+  "requirements": ["melnor-bluetooth==0.0.9"],
+  "codeowners": ["@vanstinator"],
+  "iot_class": "local_polling"
+}

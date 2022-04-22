@@ -1,0 +1,12 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "No devices found on the network"
+        },
+        "step": {
+            "confirm": {
+                "description": "Do you want to start set up?"
+            }
+        }
+    }
+}
