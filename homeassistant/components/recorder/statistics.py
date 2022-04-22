@@ -162,7 +162,7 @@ class PlatformCompiledStatistics:
     """Compiled Statistics from a platform."""
 
     platform_stat: list[StatisticResult]
-    metadata_dict: dict[str, tuple[int, StatisticMetaData]]
+    current_metadata: dict[str, tuple[int, StatisticMetaData]]
 
 
 def split_statistic_id(entity_id: str) -> list[str]:
@@ -574,7 +574,7 @@ def compile_statistics(instance: Recorder, start: datetime) -> bool:
             compiled.platform_stat,
         )
         platform_stats.extend(compiled.platform_stat)
-        current_metadata.update(compiled.metadata_dict)
+        current_metadata.update(compiled.current_metadata)
 
     # Insert collected statistics in the database
     with session_scope(
