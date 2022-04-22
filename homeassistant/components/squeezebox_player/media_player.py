@@ -53,19 +53,19 @@ async def async_setup_entry(
 
     async def async_add_player(player: SlimClient) -> None:
         """Add MediaPlayerEntity from SlimClient."""
-        if player.player_id in added_ids:
-            return
         # we delay adding the player a small bit because the player name may be received
         # just a bit after connect. This way we can create a device reg entry with the correct name
         for _ in range(10):
             if player.player_id not in player.name:
                 break
             await asyncio.sleep(0.1)
-        added_ids.add(player.player_id)
         async_add_entities([SqueezeboxPlayer(slimserver, player)])
 
     async def on_slim_event(event: SlimEvent):
         """Handle player added/connected event."""
+        if event.player_id in added_ids:
+            return
+        added_ids.add(event.player_id)
         player = slimserver.get_player(event.player_id)
         await async_add_player(player)
 
@@ -76,20 +76,21 @@ async def async_setup_entry(
 
     # add all current items in controller
     for player in slimserver.players:
-        await async_add_player(player)
+        hass.async_create_task(async_add_player(player))
 
 
 class SqueezeboxPlayer(MediaPlayerEntity):
     """Representation of MediaPlayerEntity from Squeezebox Player."""
 
+    self._attr_should_poll = False
+    self._attr_supported_features = SUPPORTED_FEATURES
+    self._attr_device_class = MediaPlayerDeviceClass.SPEAKER
+
     def __init__(self, slimserver: SlimServer, player: SlimClient) -> None:
         """Initialize MediaPlayer entity."""
         self.slimserver = slimserver
         self.player = player
-        self._attr_should_poll = False
-        self._attr_supported_features = SUPPORTED_FEATURES
-        self._attr_device_class = MediaPlayerDeviceClass.SPEAKER
-
+        self._attr_unique_id = player.player_id
         self.update_attributes()
 
     async def async_added_to_hass(self) -> None:
@@ -108,11 +109,6 @@ class SqueezeboxPlayer(MediaPlayerEntity):
                 player_filter=self.player.player_id,
             )
         )
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return unique id for entity."""
-        return self.player.player_id
 
     @property
     def available(self) -> bool:
@@ -187,6 +183,8 @@ class SqueezeboxPlayer(MediaPlayerEntity):
 
         if not media_type.startswith("audio/"):
             media_type = None  # type: ignore[assignment]
+        async_process_play_media_url(self.hass, media_id)
+
         await self.player.play_url(media_id, mime_type=media_type)
 
     async def async_browse_media(
@@ -210,9 +208,9 @@ class SqueezeboxPlayer(MediaPlayerEntity):
             evt_data = {
                 **event.data,
                 "entity_id": self.entity_id,
-                "player_id": event.player_id,
+                "device_id": self.registry_entry.device_id,
             }
-            self.hass.bus.async_fire(PLAYER_EVENT, evt_data, EventOrigin.remote)
+            self.hass.bus.async_fire(PLAYER_EVENT, evt_data)
             return
         self.update_attributes()
         self.async_write_ha_state()
