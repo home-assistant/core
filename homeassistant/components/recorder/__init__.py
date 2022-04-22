@@ -585,7 +585,7 @@ KEEP_ALIVE_TASK = KeepAliveTask()
 
 @dataclass
 class _RecorderRunsHistory:
-    """Searchable history of RecorderRuns."""
+    """Bisectable history of RecorderRuns."""
 
     run_timestamps: list[int]
     runs_by_timestamp: dict[int, RecorderRuns]
@@ -594,12 +594,10 @@ class _RecorderRunsHistory:
 class RunHistory:
     """Track recorder run history."""
 
-    def __init__(self, recorder: Recorder) -> None:
+    def __init__(self) -> None:
         """Track recorder run history."""
-        self.recorder = recorder
         self.recording_start: datetime = dt_util.utcnow()
         self._current_run_info: RecorderRuns | None = None
-        self._first_run_info: RecorderRuns | None = None
         self._run_history = _RecorderRunsHistory([0], {})
 
     def start(self, session: Session) -> None:
@@ -635,9 +633,7 @@ class RunHistory:
     def clear(self) -> None:
         """Clear the current run after ending it."""
         assert self._current_run_info is not None
-        assert (
-            self._current_run_info.end is not None
-        ), "Cannot clear the run without ending it"
+        assert self._current_run_info.end is not None
         self._current_run_info = None
 
     def get(self, start: datetime) -> RecorderRuns | None:
@@ -650,11 +646,6 @@ class RunHistory:
         if (idx := bisect.bisect_left(run_timestamps, start.timestamp())) <= 1:
             return None
         return runs_by_timestamp[run_timestamps[idx - 1]]
-
-    @property
-    def first_run(self) -> RecorderRuns:
-        """Get the first run."""
-        return self._first_run_info or self.current_run
 
     @property
     def current_run(self) -> RecorderRuns:
@@ -699,7 +690,7 @@ class Recorder(threading.Thread):
         self.async_recorder_ready = asyncio.Event()
         self._queue_watch = threading.Event()
         self.engine: Engine | None = None
-        self.run_history = RunHistory(self)
+        self.run_history = RunHistory()
 
         self.entity_filter = entity_filter
         self.exclude_t = exclude_t
