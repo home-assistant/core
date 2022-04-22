@@ -17,14 +17,14 @@ from pytomorrowio.exceptions import (
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry, ConfigEntryState
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_LATITUDE,
     CONF_LOCATION,
     CONF_LONGITUDE,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -84,24 +84,31 @@ PLATFORMS = [SENSOR_DOMAIN, WEATHER_DOMAIN]
 
 
 @callback
-def _set_update_interval(
-    hass: HomeAssistant, api: TomorrowioV4, current_entry: ConfigEntry | None = None
+def async_get_entries_by_api_key(
+    hass: HomeAssistant, api_key: str, exclude_entry: ConfigEntry | None = None
+) -> list[ConfigEntry]:
+    """Get all entries for a given API key."""
+    return [
+        entry
+        for entry in hass.config_entries.async_entries(DOMAIN)
+        if entry.data[CONF_API_KEY] == api_key
+        and (exclude_entry is None or exclude_entry != entry)
+    ]
+
+
+@callback
+def async_set_update_interval(
+    hass: HomeAssistant, api: TomorrowioV4, exclude_entry: ConfigEntry | None = None
 ) -> timedelta:
     """Calculate update_interval."""
     # We check how many Tomorrow.io configured instances are using the same API key and
     # calculate interval to not exceed allowed numbers of requests. Divide 90% of
     # max_requests by the number of API calls because we want a buffer in the
     # number of API calls left at the end of the day.
-    config_entries = [
-        entry
-        for entry in hass.config_entries.async_entries(DOMAIN)
-        if entry.data[CONF_API_KEY] == api.api_key
-        and (current_entry is None or current_entry != entry)
-    ]
-
+    entries = async_get_entries_by_api_key(hass, api.api_key, exclude_entry)
     return timedelta(
         minutes=ceil(
-            (24 * 60 * len(config_entries) * api.num_api_requests)
+            (24 * 60 * len(entries) * api.num_api_requests)
             / (api.max_requests_per_day * 0.9)
         )
     )
@@ -143,13 +150,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         coordinator = TomorrowioDataUpdateCoordinator(hass, api)
         hass.data[DOMAIN][api_key] = coordinator
-        first_refresh = True
-
     else:
         coordinator = hass.data[DOMAIN][api_key]
-        first_refresh = False
 
-    await coordinator.async_setup_entry(entry, first_refresh)
+    await coordinator.async_setup_entry(entry)
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
@@ -238,20 +242,38 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator):
 
         super().__init__(hass, _LOGGER, name=f"{DOMAIN}_{self._api.api_key}")
 
-    async def async_setup_entry(self, entry: ConfigEntry, first_refresh: bool) -> None:
+    async def async_setup_entry(self, entry: ConfigEntry) -> None:
         """Load config entry into coordinator."""
         latitude = entry.data[CONF_LOCATION][CONF_LATITUDE]
         longitude = entry.data[CONF_LOCATION][CONF_LONGITUDE]
         self.entry_id_to_location_dict[entry.entry_id] = f"{latitude},{longitude}"
-        if first_refresh:
+
+        # If we haven't gotten data yet, and either the core is running (so no other
+        # entries are being loaded in paralllel) or its not and this is the only entry
+        # for this API key that is not loaded, we can safely do a first refresh. We do
+        # this to avoid making the same request over and over in succession.
+        other_entries = async_get_entries_by_api_key(
+            self.hass, self._api.api_key, entry
+        )
+        if not self.data and (
+            self.hass.state == CoreState.running
+            or not any(
+                entry
+                for entry in other_entries
+                if entry.state == ConfigEntryState.NOT_LOADED
+            )
+        ):
             await super().async_config_entry_first_refresh()
-        else:
+        elif self.data:
             await super().async_refresh()
         if self._api.max_requests_per_day is None:
             # We should never get here
             raise ConfigEntryNotReady("Max requests per day should not be None")
-        self.update_interval = _set_update_interval(self.hass, self._api)
-        self._schedule_refresh()
+        self.update_interval = async_set_update_interval(self.hass, self._api)
+        # We can schedule the next refresh after the coordinator has gotten a first
+        # refresh or we added a new entry and need to adjust the update interval
+        if self.data:
+            self._schedule_refresh()
 
     async def async_unload_entry(self, entry: ConfigEntry) -> bool | None:
         """
@@ -261,7 +283,7 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator):
         config entries tied to it anymore.
         """
         self.entry_id_to_location_dict.pop(entry.entry_id)
-        self.update_interval = _set_update_interval(self.hass, self._api, entry)
+        self.update_interval = async_set_update_interval(self.hass, self._api, entry)
         return not self.entry_id_to_location_dict
 
     async def _async_update_data(self) -> dict[str, Any]:
