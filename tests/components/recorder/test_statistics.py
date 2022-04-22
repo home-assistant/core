@@ -124,6 +124,11 @@ def test_compile_hourly_statistics(hass_recorder):
     stats = get_latest_short_term_statistics(hass, ["sensor.test1"])
     assert stats == {"sensor.test1": [{**expected_2, "statistic_id": "sensor.test1"}]}
 
+    metadata = get_metadata(hass, statistic_ids=['sensor.test1"'])
+
+    stats = get_latest_short_term_statistics(hass, ["sensor.test1"], metadata=metadata)
+    assert stats == {"sensor.test1": [{**expected_2, "statistic_id": "sensor.test1"}]}
+
     stats = get_last_short_term_statistics(hass, 2, "sensor.test1", True)
     assert stats == {"sensor.test1": expected_stats1[::-1]}
 
@@ -156,11 +161,16 @@ def mock_sensor_statistics():
         }
 
     def get_fake_stats(_hass, start, _end):
-        return [
-            sensor_stats("sensor.test1", start),
-            sensor_stats("sensor.test2", start),
-            sensor_stats("sensor.test3", start),
-        ]
+        return statistics.PlatformCompiledStatistics(
+            [
+                sensor_stats("sensor.test1", start),
+                sensor_stats("sensor.test2", start),
+                sensor_stats("sensor.test3", start),
+            ],
+            get_metadata(
+                _hass, statistic_ids=["sensor.test1", "sensor.test2", "sensor.test3"]
+            ),
+        )
 
     with patch(
         "homeassistant.components.sensor.recorder.compile_statistics",
@@ -327,7 +337,8 @@ def test_statistics_duplicated(hass_recorder, caplog):
     assert "Statistics already compiled" not in caplog.text
 
     with patch(
-        "homeassistant.components.sensor.recorder.compile_statistics"
+        "homeassistant.components.sensor.recorder.compile_statistics",
+        return_value=statistics.PlatformCompiledStatistics([], {}),
     ) as compile_statistics:
         recorder.do_adhoc_statistics(start=zero)
         wait_recording_done(hass)
