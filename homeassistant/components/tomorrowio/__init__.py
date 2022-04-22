@@ -397,7 +397,6 @@ class TomorrowioEntity(CoordinatorEntity[TomorrowioDataUpdateCoordinator]):
         Used for V4 API.
         """
         entry_id = self._config_entry.entry_id
-        # data = self.coordinator.data or {entry_id: {}}
         return self.coordinator.data[entry_id].get(CURRENT, {}).get(property_name)
 
     @property
