@@ -1,6 +1,7 @@
 """The Tomorrow.io integration."""
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 import logging
 from math import ceil
@@ -237,7 +238,7 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator):
         self._api = api
         self.data = {CURRENT: {}, FORECASTS: {}}
         self.entry_id_to_location_dict: dict[str, str] = {}
-        self._first_setup: bool = True
+        self._coordinator_ready = asyncio.Event()
 
         super().__init__(hass, _LOGGER, name=f"{DOMAIN}_{self._api.api_key}")
 
@@ -249,21 +250,25 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def async_setup_entry(self, entry: ConfigEntry) -> None:
         """Load config entry into coordinator."""
-        # If we haven't gotten data yet, load all entries with this API key and get
-        # the initial data.
-        if self._first_setup:
-            self._first_setup = False
+        # If we haven't registered any config entries yet, register all entries with
+        # this API key and get the initial data for all of them. We do this because
+        # another config entry may start setup before we finish setting the initial
+        # data and we don't want to do multiple refreshes on startup.
+        if not self.entry_id_to_location_dict:
             for entry_ in async_get_entries_by_api_key(self.hass, self._api.api_key):
                 self.add_entry_to_location_dict(entry_)
             await super().async_config_entry_first_refresh()
+            self._coordinator_ready.set()
         # If we're loading a new config entry that's not already mapped, we need to do
         # a refresh. We're going to do a partial refresh though so we can minimize
         # repeat API calls
         elif entry.entry_id not in self.entry_id_to_location_dict:
+            await self._coordinator_ready.wait()
             self.add_entry_to_location_dict(entry)
             await super().async_refresh()
         # If we're not getting new data, we don't need to schedule a refresh
         else:
+            await self._coordinator_ready.wait()
             return
 
         if self._api.max_requests_per_day is None:
@@ -392,8 +397,8 @@ class TomorrowioEntity(CoordinatorEntity[TomorrowioDataUpdateCoordinator]):
         Used for V4 API.
         """
         entry_id = self._config_entry.entry_id
-        data = self.coordinator.data or {entry_id: {}}
-        return data[entry_id].get(CURRENT, {}).get(property_name)
+        # data = self.coordinator.data or {entry_id: {}}
+        return self.coordinator.data[entry_id].get(CURRENT, {}).get(property_name)
 
     @property
     def attribution(self):
