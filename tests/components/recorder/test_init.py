@@ -1,13 +1,17 @@
 """The tests for the Recorder component."""
+from __future__ import annotations
+
 # pylint: disable=protected-access
 import asyncio
 from datetime import datetime, timedelta
 import sqlite3
 import threading
+from typing import cast
 from unittest.mock import Mock, patch
 
 import pytest
 from sqlalchemy.exc import DatabaseError, OperationalError, SQLAlchemyError
+from sqlalchemy.orm.session import Session
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder import (
@@ -25,9 +29,6 @@ from homeassistant.components.recorder import (
     SQLITE_URL_PREFIX,
     Recorder,
     get_instance,
-    run_information,
-    run_information_from_instance,
-    run_information_with_session,
 )
 from homeassistant.components.recorder.const import DATA_INSTANCE
 from homeassistant.components.recorder.models import (
@@ -65,6 +66,51 @@ from tests.common import (
     fire_time_changed,
     get_test_home_assistant,
 )
+
+
+def run_information(
+    hass: HomeAssistant, point_in_time: datetime | None = None
+) -> RecorderRuns | None:
+    """Return information about current run.
+
+    There is also the run that covers point_in_time.
+    """
+    if run_info := run_information_from_instance(hass, point_in_time):
+        return run_info
+
+    with session_scope(hass=hass) as session:
+        return run_information_with_session(session, point_in_time)
+
+
+def run_information_from_instance(
+    hass: HomeAssistant, point_in_time: datetime | None = None
+) -> RecorderRuns | None:
+    """Return information about current run from the existing instance.
+
+    Does not query the database for older runs.
+    """
+    ins = get_instance(hass)
+    if point_in_time is None or point_in_time > ins.recording_start:
+        return ins.run_info
+    return None
+
+
+def run_information_with_session(
+    session: Session, point_in_time: datetime | None = None
+) -> RecorderRuns | None:
+    """Return information about current run from the database."""
+    recorder_runs = RecorderRuns
+
+    query = session.query(recorder_runs)
+    if point_in_time:
+        query = query.filter(
+            (recorder_runs.start < point_in_time) & (recorder_runs.end > point_in_time)
+        )
+
+    if (res := query.first()) is not None:
+        session.expunge(res)
+        return cast(RecorderRuns, res)
+    return res
 
 
 def _default_recorder(hass):
@@ -1019,37 +1065,6 @@ def test_saving_state_with_serializable_data(hass_recorder, caplog):
         assert states[1].old_state_id == states[0].state_id
 
     assert "State is not JSON serializable" in caplog.text
-
-
-def test_run_information(hass_recorder):
-    """Ensure run_information returns expected data."""
-    before_start_recording = dt_util.utcnow()
-    hass = hass_recorder()
-    run_info = run_information_from_instance(hass)
-    assert isinstance(run_info, RecorderRuns)
-    assert run_info.closed_incorrect is False
-
-    with session_scope(hass=hass) as session:
-        run_info = run_information_with_session(session)
-        assert isinstance(run_info, RecorderRuns)
-        assert run_info.closed_incorrect is False
-
-    run_info = run_information(hass)
-    assert isinstance(run_info, RecorderRuns)
-    assert run_info.closed_incorrect is False
-
-    hass.states.set("test.two", "on", {})
-    wait_recording_done(hass)
-    run_info = run_information(hass)
-    assert isinstance(run_info, RecorderRuns)
-    assert run_info.closed_incorrect is False
-
-    run_info = run_information(hass, before_start_recording)
-    assert run_info is None
-
-    run_info = run_information(hass, dt_util.utcnow())
-    assert isinstance(run_info, RecorderRuns)
-    assert run_info.closed_incorrect is False
 
 
 def test_has_services(hass_recorder):
