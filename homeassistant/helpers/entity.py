@@ -230,6 +230,7 @@ class EntityDescription:
     device_class: str | None = None
     entity_category: EntityCategory | None = None
     entity_registry_enabled_default: bool = True
+    entity_registry_visible_default: bool = False
     force_update: bool = False
     icon: str | None = None
     name: str | None = None
@@ -293,6 +294,7 @@ class Entity(ABC):
     _attr_entity_category: EntityCategory | None
     _attr_entity_picture: str | None = None
     _attr_entity_registry_enabled_default: bool
+    _attr_entity_registry_visible_default: bool
     _attr_extra_state_attributes: MutableMapping[str, Any]
     _attr_force_update: bool
     _attr_icon: str | None
@@ -450,6 +452,15 @@ class Entity(ABC):
             return self._attr_entity_registry_enabled_default
         if hasattr(self, "entity_description"):
             return self.entity_description.entity_registry_enabled_default
+        return True
+
+    @property
+    def entity_registry_visible_default(self) -> bool:
+        """Return if the entity should be visible when first added to the entity registry."""
+        if hasattr(self, "_attr_entity_registry_visible_default"):
+            return self._attr_entity_registry_visible_default
+        if hasattr(self, "entity_description"):
+            return self.entity_description.entity_registry_visible_default
         return True
 
     @property

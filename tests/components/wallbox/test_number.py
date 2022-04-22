@@ -5,28 +5,28 @@ import pytest
 import requests_mock
 
 from homeassistant.components.input_number import ATTR_VALUE, SERVICE_SET_VALUE
-from homeassistant.components.wallbox import CONF_MAX_CHARGING_CURRENT_KEY
+from homeassistant.components.wallbox import CHARGER_MAX_CHARGING_CURRENT_KEY
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
 from tests.components.wallbox import entry, setup_integration
 from tests.components.wallbox.const import (
-    CONF_ERROR,
-    CONF_JWT,
-    CONF_MOCK_NUMBER_ENTITY_ID,
-    CONF_STATUS,
-    CONF_TTL,
-    CONF_USER_ID,
+    ERROR,
+    JWT,
+    MOCK_NUMBER_ENTITY_ID,
+    STATUS,
+    TTL,
+    USER_ID,
 )
 
 authorisation_response = json.loads(
     json.dumps(
         {
-            CONF_JWT: "fakekeyhere",
-            CONF_USER_ID: 12345,
-            CONF_TTL: 145656758,
-            CONF_ERROR: "false",
-            CONF_STATUS: 200,
+            JWT: "fakekeyhere",
+            USER_ID: 12345,
+            TTL: 145656758,
+            ERROR: "false",
+            STATUS: 200,
         }
     )
 )
@@ -45,7 +45,7 @@ async def test_wallbox_number_class(hass: HomeAssistant) -> None:
         )
         mock_request.put(
             "https://api.wall-box.com/v2/charger/12345",
-            json=json.loads(json.dumps({CONF_MAX_CHARGING_CURRENT_KEY: 20})),
+            json=json.loads(json.dumps({CHARGER_MAX_CHARGING_CURRENT_KEY: 20})),
             status_code=200,
         )
 
@@ -53,7 +53,7 @@ async def test_wallbox_number_class(hass: HomeAssistant) -> None:
             "number",
             SERVICE_SET_VALUE,
             {
-                ATTR_ENTITY_ID: CONF_MOCK_NUMBER_ENTITY_ID,
+                ATTR_ENTITY_ID: MOCK_NUMBER_ENTITY_ID,
                 ATTR_VALUE: 20,
             },
             blocking=True,
@@ -74,7 +74,7 @@ async def test_wallbox_number_class_connection_error(hass: HomeAssistant) -> Non
         )
         mock_request.put(
             "https://api.wall-box.com/v2/charger/12345",
-            json=json.loads(json.dumps({CONF_MAX_CHARGING_CURRENT_KEY: 20})),
+            json=json.loads(json.dumps({CHARGER_MAX_CHARGING_CURRENT_KEY: 20})),
             status_code=404,
         )
 
@@ -84,7 +84,7 @@ async def test_wallbox_number_class_connection_error(hass: HomeAssistant) -> Non
                 "number",
                 SERVICE_SET_VALUE,
                 {
-                    ATTR_ENTITY_ID: CONF_MOCK_NUMBER_ENTITY_ID,
+                    ATTR_ENTITY_ID: MOCK_NUMBER_ENTITY_ID,
                     ATTR_VALUE: 20,
                 },
                 blocking=True,
