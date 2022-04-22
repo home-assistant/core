@@ -360,11 +360,8 @@ class TomorrowioEntity(CoordinatorEntity[TomorrowioDataUpdateCoordinator]):
 
         Used for V4 API.
         """
-        return (
-            self.coordinator.data[self._config_entry.entry_id]
-            .get(CURRENT, {})
-            .get(property_name)
-        )
+        entry_id = self._config_entry.entry_id
+        return self.coordinator.data[entry_id].get(CURRENT, {}).get(property_name)
 
     @property
     def attribution(self):
