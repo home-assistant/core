@@ -83,13 +83,16 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
         schema = {
             vol.Required(CONF_HOST, default=user_input.get(CONF_HOST, "")): str,
             vol.Required(CONF_USERNAME, default=user_input.get(CONF_USERNAME, "")): str,
-            vol.Optional(CONF_PASSWORD)
-            if self.show_advanced_options
-            else vol.Required(CONF_PASSWORD): str,
-            vol.Required(CONF_PROTOCOL, default=PROTOCOL_SSH): vol.In(
-                {PROTOCOL_SSH: "SSH", PROTOCOL_TELNET: "Telnet"}
-            ),
         }
+
+        if self.show_advanced_options:
+            schema[vol.Optional(CONF_PASSWORD)] = str
+        else:
+            schema[vol.Required(CONF_PASSWORD)] = str
+
+        schema[vol.Required(CONF_PROTOCOL, default=PROTOCOL_SSH)] = vol.In(
+            {PROTOCOL_SSH: "SSH", PROTOCOL_TELNET: "Telnet"}
+        )
 
         if self.show_advanced_options:
             schema[vol.Optional(CONF_PORT)] = cv.port
