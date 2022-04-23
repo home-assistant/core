@@ -76,7 +76,7 @@ def return_config(
         config["device_class"] = device_class
     if state_class:
         config["state_class"] = state_class
-    if authentication:
+    if username:
         config["authentication"] = authentication
         config["username"] = username
         config["password"] = password
