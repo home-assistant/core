@@ -18,7 +18,7 @@ async def init_integration(
     entry_id: str = "1",
     source: str = SOURCE_USER,
 ) -> MockConfigEntry:
-    """Set up the SQL integration in Home Assistant."""
+    """Set up the Scrape integration in Home Assistant."""
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,
