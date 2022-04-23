@@ -1,4 +1,4 @@
-"""Test Brottsplatskartan component setup process."""
+"""Test Scrape component setup process."""
 from __future__ import annotations
 
 from unittest.mock import patch

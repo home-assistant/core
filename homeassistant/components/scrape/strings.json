@@ -30,7 +30,7 @@
           "device_class": "The type/class of the sensor to set the icon in the frontend",
           "state_class": "The state_class of the sensor",
           "authentication": "Type of the HTTP authentication. Either basic or digest",
-          "verify_ssl": "Enables/disables verification of SSL-certificate, for example if it is self-signed",
+          "verify_ssl": "Enables/disables verification of SSL/TLS certificate, for example if it is self-signed",
           "headers": "Headers to use for the web request"
         }
       }
