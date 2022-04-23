@@ -23,9 +23,7 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     coordinator: AirzoneUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    diagnostics_data = {
+    return {
         "info": async_redact_data(config_entry.data, TO_REDACT),
         "data": async_redact_data(coordinator.data, TO_REDACT),
     }
-
-    return diagnostics_data
