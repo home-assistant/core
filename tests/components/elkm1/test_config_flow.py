@@ -650,7 +650,7 @@ async def test_form_invalid_auth(hass):
     mocked_elk = mock_elk(invalid_auth=True, sync_complete=True)
 
     with patch(
-        "homeassistant.components.elkm1.config_flow.elkm1.Elk",
+        "homeassistant.components.elkm1.config_flow.Elk",
         return_value=mocked_elk,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -677,7 +677,7 @@ async def test_form_invalid_auth_no_password(hass):
     mocked_elk = mock_elk(invalid_auth=True, sync_complete=True)
 
     with patch(
-        "homeassistant.components.elkm1.config_flow.elkm1.Elk",
+        "homeassistant.components.elkm1.config_flow.Elk",
         return_value=mocked_elk,
     ):
         result2 = await hass.config_entries.flow.async_configure(

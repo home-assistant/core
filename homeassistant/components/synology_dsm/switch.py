@@ -83,6 +83,10 @@ class SynoDSMSurveillanceHomeModeToggle(SynologyDSMBaseEntity, SwitchEntity):
         super().__init__(api, coordinator, description)
         self._version = version
 
+        self._attr_name = (
+            f"{self._api.network.hostname} Surveillance Station {description.name}"
+        )
+
     @property
     def is_on(self) -> bool:
         """Return the state."""
@@ -125,7 +129,7 @@ class SynoDSMSurveillanceHomeModeToggle(SynologyDSMBaseEntity, SwitchEntity):
                     f"{self._api.information.serial}_{SynoSurveillanceStation.INFO_API_KEY}",
                 )
             },
-            name="Surveillance Station",
+            name=f"{self._api.network.hostname} Surveillance Station",
             manufacturer="Synology",
             model=self._api.information.model,
             sw_version=self._version,

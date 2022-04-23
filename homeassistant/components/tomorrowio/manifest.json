@@ -3,7 +3,7 @@
   "name": "Tomorrow.io",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/tomorrowio",
-  "requirements": ["pytomorrowio==0.1.0"],
+  "requirements": ["pytomorrowio==0.3.3"],
   "codeowners": ["@raman325"],
   "iot_class": "cloud_polling"
 }
