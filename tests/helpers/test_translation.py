@@ -15,7 +15,7 @@ from homeassistant.setup import async_setup_component
 @pytest.fixture
 def mock_config_flows():
     """Mock the config flows."""
-    flows = []
+    flows = {"integration": [], "helper": {}}
     with patch.object(config_flows, "FLOWS", flows):
         yield flows
 
@@ -124,7 +124,7 @@ async def test_get_translations(hass, mock_config_flows, enable_custom_integrati
 
 async def test_get_translations_loads_config_flows(hass, mock_config_flows):
     """Test the get translations helper loads config flow translations."""
-    mock_config_flows.append("component1")
+    mock_config_flows["integration"].append("component1")
     integration = Mock(file_path=pathlib.Path(__file__))
     integration.name = "Component 1"
 
@@ -153,7 +153,7 @@ async def test_get_translations_loads_config_flows(hass, mock_config_flows):
 
     assert "component1" not in hass.config.components
 
-    mock_config_flows.append("component2")
+    mock_config_flows["integration"].append("component2")
     integration = Mock(file_path=pathlib.Path(__file__))
     integration.name = "Component 2"
 

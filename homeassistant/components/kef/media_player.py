@@ -13,17 +13,8 @@ import voluptuous as vol
 
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
     MediaPlayerEntity,
+    MediaPlayerEntityFeature,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -238,6 +229,20 @@ class KefMediaPlayer(MediaPlayerEntity):
         self._dsp = None
         self._update_dsp_task_remover = None
 
+        self._attr_supported_features = (
+            MediaPlayerEntityFeature.VOLUME_SET
+            | MediaPlayerEntityFeature.VOLUME_STEP
+            | MediaPlayerEntityFeature.VOLUME_MUTE
+            | MediaPlayerEntityFeature.SELECT_SOURCE
+            | MediaPlayerEntityFeature.TURN_OFF
+            | MediaPlayerEntityFeature.NEXT_TRACK  # only in Bluetooth and Wifi
+            | MediaPlayerEntityFeature.PAUSE  # only in Bluetooth and Wifi
+            | MediaPlayerEntityFeature.PLAY  # only in Bluetooth and Wifi
+            | MediaPlayerEntityFeature.PREVIOUS_TRACK  # only in Bluetooth and Wifi
+        )
+        if supports_on:
+            self._attr_supported_features |= MediaPlayerEntityFeature.TURN_ON
+
     @property
     def name(self):
         """Return the name of the device."""
@@ -282,25 +287,6 @@ class KefMediaPlayer(MediaPlayerEntity):
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
         return self._muted
-
-    @property
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        support_kef = (
-            SUPPORT_VOLUME_SET
-            | SUPPORT_VOLUME_STEP
-            | SUPPORT_VOLUME_MUTE
-            | SUPPORT_SELECT_SOURCE
-            | SUPPORT_TURN_OFF
-            | SUPPORT_NEXT_TRACK  # only in Bluetooth and Wifi
-            | SUPPORT_PAUSE  # only in Bluetooth and Wifi
-            | SUPPORT_PLAY  # only in Bluetooth and Wifi
-            | SUPPORT_PREVIOUS_TRACK  # only in Bluetooth and Wifi
-        )
-        if self._supports_on:
-            support_kef |= SUPPORT_TURN_ON
-
-        return support_kef
 
     @property
     def source(self):

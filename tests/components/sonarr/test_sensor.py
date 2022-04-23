@@ -1,12 +1,11 @@
 """Tests for the Sonarr sensor platform."""
 from datetime import timedelta
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiopyarr import ArrException
 import pytest
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.sonarr.const import DOMAIN
 from homeassistant.const import (
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -26,12 +25,11 @@ async def test_sensors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_sonarr: MagicMock,
+    entity_registry_enabled_by_default: AsyncMock,
 ) -> None:
     """Test the creation and values of the sensors."""
-    entry = mock_config_entry
     registry = er.async_get(hass)
 
-    # Pre-create registry entries for disabled by default sensors
     sensors = {
         "commands": "sonarr_commands",
         "diskspace": "sonarr_disk_space",
@@ -40,23 +38,14 @@ async def test_sensors(
         "wanted": "sonarr_wanted",
     }
 
-    for (unique, oid) in sensors.items():
-        registry.async_get_or_create(
-            SENSOR_DOMAIN,
-            DOMAIN,
-            f"{entry.entry_id}_{unique}",
-            suggested_object_id=oid,
-            disabled_by=None,
-        )
-
     mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     for (unique, oid) in sensors.items():
         entity = registry.async_get(f"sensor.{oid}")
         assert entity
-        assert entity.unique_id == f"{entry.entry_id}_{unique}"
+        assert entity.unique_id == f"{mock_config_entry.entry_id}_{unique}"
 
     state = hass.states.get("sensor.sonarr_commands")
     assert state
@@ -96,10 +85,10 @@ async def test_sensors(
     assert state
     assert state.attributes.get(ATTR_ICON) == "mdi:television"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "Episodes"
-    assert state.attributes.get("Bob's Burgers S04E11") == "2014-01-27T01:30:00+00:00"
+    assert state.attributes.get("Bob's Burgers S04E11") == "2014-01-26T17:30:00-08:00"
     assert (
         state.attributes.get("The Andy Griffith Show S01E01")
-        == "1960-10-03T01:00:00+00:00"
+        == "1960-10-02T17:00:00-08:00"
     )
     assert state.state == "2"
 

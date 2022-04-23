@@ -1,4 +1,6 @@
 """Support for MQTT discovery."""
+from __future__ import annotations
+
 import asyncio
 from collections import deque
 import functools
@@ -15,7 +17,6 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.loader import async_get_mqtt
 
 from .. import mqtt
@@ -49,7 +50,6 @@ SUPPORTED_COMPONENTS = [
     "humidifier",
     "light",
     "lock",
-    "notify",
     "number",
     "scene",
     "siren",
@@ -75,18 +75,20 @@ LAST_DISCOVERY = "mqtt_last_discovery"
 TOPIC_BASE = "~"
 
 
-def clear_discovery_hash(hass, discovery_hash):
+class MQTTConfig(dict):
+    """Dummy class to allow adding attributes."""
+
+    discovery_data: dict
+
+
+def clear_discovery_hash(hass: HomeAssistant, discovery_hash: tuple) -> None:
     """Clear entry in ALREADY_DISCOVERED list."""
     del hass.data[ALREADY_DISCOVERED][discovery_hash]
 
 
-def set_discovery_hash(hass, discovery_hash):
+def set_discovery_hash(hass: HomeAssistant, discovery_hash: tuple):
     """Clear entry in ALREADY_DISCOVERED list."""
     hass.data[ALREADY_DISCOVERED][discovery_hash] = {}
-
-
-class MQTTConfig(dict):
-    """Dummy class to allow adding attributes."""
 
 
 async def async_start(  # noqa: C901
@@ -183,6 +185,7 @@ async def async_start(  # noqa: C901
         await async_process_discovery_payload(component, discovery_id, payload)
 
     async def async_process_discovery_payload(component, discovery_id, payload):
+        """Process the payload of a new discovery."""
 
         _LOGGER.debug("Process discovery payload %s", payload)
         discovery_hash = (component, discovery_id)
@@ -234,15 +237,7 @@ async def async_start(  # noqa: C901
                         from . import device_automation
 
                         await device_automation.async_setup_entry(hass, config_entry)
-                    elif component in "notify":
-                        # Local import to avoid circular dependencies
-                        # pylint: disable=import-outside-toplevel
-                        from . import notify
-
-                        await notify.async_setup_entry(
-                            hass, config_entry, AddEntitiesCallback
-                        )
-                    elif component in "tag":
+                    elif component == "tag":
                         # Local import to avoid circular dependencies
                         # pylint: disable-next=import-outside-toplevel
                         from . import tag

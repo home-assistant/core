@@ -174,7 +174,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     return unload_ok
 
 
-class UpCloudServerEntity(CoordinatorEntity):
+class UpCloudServerEntity(CoordinatorEntity[UpCloudDataUpdateCoordinator]):
     """Entity class for UpCloud servers."""
 
     def __init__(

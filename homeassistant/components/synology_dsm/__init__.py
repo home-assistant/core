@@ -98,14 +98,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         SynologyDSMLoginPermissionDeniedException,
     ) as err:
         if err.args[0] and isinstance(err.args[0], dict):
-            # pylint: disable=no-member
             details = err.args[0].get(EXCEPTION_DETAILS, EXCEPTION_UNKNOWN)
         else:
             details = EXCEPTION_UNKNOWN
         raise ConfigEntryAuthFailed(f"reason: {details}") from err
     except (SynologyDSMLoginFailedException, SynologyDSMRequestException) as err:
         if err.args[0] and isinstance(err.args[0], dict):
-            # pylint: disable=no-member
             details = err.args[0].get(EXCEPTION_DETAILS, EXCEPTION_UNKNOWN)
         else:
             details = EXCEPTION_UNKNOWN
@@ -227,7 +225,9 @@ async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> Non
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-class SynologyDSMBaseEntity(CoordinatorEntity):
+class SynologyDSMBaseEntity(
+    CoordinatorEntity[DataUpdateCoordinator[dict[str, dict[str, Any]]]]
+):
     """Representation of a Synology NAS entry."""
 
     entity_description: SynologyDSMEntityDescription
@@ -249,13 +249,9 @@ class SynologyDSMBaseEntity(CoordinatorEntity):
         self._attr_unique_id: str = (
             f"{api.information.serial}_{description.api_key}:{description.key}"
         )
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device information."""
-        return DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._api.information.serial)},
-            name="Synology NAS",
+            name=self._api.network.hostname,
             manufacturer="Synology",
             model=self._api.information.model,
             sw_version=self._api.information.version_string,
@@ -309,25 +305,22 @@ class SynologyDSMDeviceEntity(SynologyDSMBaseEntity):
             self._device_model = disk["model"].strip()
             self._device_firmware = disk["firm"]
             self._device_type = disk["diskType"]
-        self._name = (
-            f"{self._api.network.hostname} {self._device_name} {description.name}"
+
+        self._attr_name = (
+            f"{self._api.network.hostname} ({self._device_name}) {description.name}"
         )
         self._attr_unique_id += f"_{self._device_id}"
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._api.storage  # type: ignore [no-any-return]
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device information."""
-        return DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{self._api.information.serial}_{self._device_id}")},
-            name=f"Synology NAS ({self._device_name} - {self._device_type})",
+            name=f"{self._api.network.hostname} ({self._device_name})",
             manufacturer=self._device_manufacturer,
             model=self._device_model,
             sw_version=self._device_firmware,
             via_device=(DOMAIN, self._api.information.serial),
             configuration_url=self._api.config_url,
         )
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self._api.storage  # type: ignore [no-any-return]

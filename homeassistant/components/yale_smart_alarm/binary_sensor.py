@@ -69,7 +69,7 @@ class YaleDoorSensor(YaleEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
-        return self.coordinator.data["sensor_map"][self._attr_unique_id] == "open"
+        return bool(self.coordinator.data["sensor_map"][self._attr_unique_id] == "open")
 
 
 class YaleProblemSensor(YaleAlarmEntity, BinarySensorEntity):
@@ -93,7 +93,7 @@ class YaleProblemSensor(YaleAlarmEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
-        return (
+        return bool(
             self.coordinator.data["status"][self.entity_description.key]
             != "main.normal"
         )

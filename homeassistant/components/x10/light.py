@@ -9,7 +9,7 @@ import voluptuous as vol
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     PLATFORM_SCHEMA,
-    SUPPORT_BRIGHTNESS,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.const import CONF_DEVICES, CONF_ID, CONF_NAME
@@ -19,8 +19,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
-
-SUPPORT_X10 = SUPPORT_BRIGHTNESS
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -63,6 +61,9 @@ def setup_platform(
 class X10Light(LightEntity):
     """Representation of an X10 Light."""
 
+    _attr_color_mode = ColorMode.BRIGHTNESS
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+
     def __init__(self, light, is_cm11a):
         """Initialize an X10 Light."""
         self._name = light["name"]
@@ -85,11 +86,6 @@ class X10Light(LightEntity):
     def is_on(self):
         """Return true if light is on."""
         return self._state
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_X10
 
     def turn_on(self, **kwargs):
         """Instruct the light to turn on."""

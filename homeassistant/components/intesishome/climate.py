@@ -8,7 +8,11 @@ from typing import NamedTuple
 from pyintesishome import IHAuthenticationError, IHConnectionError, IntesisHome
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
+from homeassistant.components.climate import (
+    PLATFORM_SCHEMA,
+    ClimateEntity,
+    ClimateEntityFeature,
+)
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
     HVAC_MODE_COOL,
@@ -20,10 +24,6 @@ from homeassistant.components.climate.const import (
     PRESET_BOOST,
     PRESET_COMFORT,
     PRESET_ECO,
-    SUPPORT_FAN_MODE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_SWING_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
     SWING_BOTH,
     SWING_HORIZONTAL,
     SWING_OFF,
@@ -175,13 +175,13 @@ class IntesisAC(ClimateEntity):
         self._hvane = None
         self._power = False
         self._fan_speed = None
-        self._support = 0
+        self._attr_supported_features = 0
         self._power_consumption_heat = None
         self._power_consumption_cool = None
 
         # Setpoint support
         if controller.has_setpoint_control(ih_device_id):
-            self._support |= SUPPORT_TARGET_TEMPERATURE
+            self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
 
         # Setup swing list
         if controller.has_vertical_swing(ih_device_id):
@@ -191,16 +191,16 @@ class IntesisAC(ClimateEntity):
         if SWING_HORIZONTAL in self._swing_list and SWING_VERTICAL in self._swing_list:
             self._swing_list.append(SWING_BOTH)
         if len(self._swing_list) > 1:
-            self._support |= SUPPORT_SWING_MODE
+            self._attr_supported_features |= ClimateEntityFeature.SWING_MODE
 
         # Setup fan speeds
         self._fan_modes = controller.get_fan_speed_list(ih_device_id)
         if self._fan_modes:
-            self._support |= SUPPORT_FAN_MODE
+            self._attr_supported_features |= ClimateEntityFeature.FAN_MODE
 
         # Preset support
         if ih_device.get("climate_working_mode"):
-            self._support |= SUPPORT_PRESET_MODE
+            self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
 
         # Setup HVAC modes
         if modes := controller.get_mode_list(ih_device_id):
@@ -476,8 +476,3 @@ class IntesisAC(ClimateEntity):
     def target_temperature(self):
         """Return the current setpoint temperature if unit is on."""
         return self._target_temp
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return self._support

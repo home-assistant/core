@@ -65,6 +65,9 @@ class TailscaleFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
+            description_placeholders={
+                "authkeys_url": "https://login.tailscale.com/admin/settings/authkeys"
+            },
             data_schema=vol.Schema(
                 {
                     vol.Required(

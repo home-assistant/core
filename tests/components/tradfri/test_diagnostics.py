@@ -7,7 +7,6 @@ from homeassistant.core import HomeAssistant
 
 from .common import setup_integration
 from .test_fan import mock_fan
-from .test_light import mock_group
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 
@@ -30,11 +29,6 @@ async def test_diagnostics(
         )
     )
 
-    mock_gateway.mock_groups.append(
-        # Add a group
-        mock_group(test_state={"state": True, "dimmer": 100})
-    )
-
     init_integration = await setup_integration(hass)
 
     result = await get_diagnostics_for_config_entry(hass, hass_client, init_integration)
@@ -42,4 +36,3 @@ async def test_diagnostics(
     assert isinstance(result, dict)
     assert result["gateway_version"] == "1.2.1234"
     assert len(result["device_data"]) == 1
-    assert result["no_of_groups"] == 1

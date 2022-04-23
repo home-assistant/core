@@ -7,6 +7,12 @@ from homeassistant.const import (
     UNIT_NOT_RECOGNIZED_TEMPLATE,
 )
 
+VALID_UNITS: tuple[str, ...] = (
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+    TEMP_KELVIN,
+)
+
 
 def fahrenheit_to_celsius(fahrenheit: float, interval: bool = False) -> float:
     """Convert a temperature in Fahrenheit to Celsius."""

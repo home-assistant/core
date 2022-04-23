@@ -6,11 +6,7 @@ import logging
 from nessclient import ArmingState
 
 import homeassistant.components.alarm_control_panel as alarm
-from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_HOME,
-    SUPPORT_ALARM_TRIGGER,
-)
+from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMING,
@@ -45,6 +41,12 @@ async def async_setup_platform(
 class NessAlarmPanel(alarm.AlarmControlPanelEntity):
     """Representation of a Ness alarm panel."""
 
+    _attr_supported_features = (
+        AlarmControlPanelEntityFeature.ARM_HOME
+        | AlarmControlPanelEntityFeature.ARM_AWAY
+        | AlarmControlPanelEntityFeature.TRIGGER
+    )
+
     def __init__(self, client, name):
         """Initialize the alarm panel."""
         self._client = client
@@ -72,17 +74,12 @@ class NessAlarmPanel(alarm.AlarmControlPanelEntity):
     @property
     def code_format(self):
         """Return the regex for code format or None if no code is required."""
-        return alarm.FORMAT_NUMBER
+        return alarm.CodeFormat.NUMBER
 
     @property
     def state(self):
         """Return the state of the device."""
         return self._state
-
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_TRIGGER
 
     async def async_alarm_disarm(self, code=None):
         """Send disarm command."""

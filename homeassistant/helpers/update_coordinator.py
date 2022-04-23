@@ -6,7 +6,7 @@ from collections.abc import Awaitable, Callable
 from datetime import datetime, timedelta
 import logging
 from time import monotonic
-from typing import Generic, TypeVar
+from typing import Any, Generic, TypeVar  # pylint: disable=unused-import
 import urllib.error
 
 import aiohttp
@@ -24,6 +24,9 @@ REQUEST_REFRESH_DEFAULT_COOLDOWN = 10
 REQUEST_REFRESH_DEFAULT_IMMEDIATE = True
 
 _T = TypeVar("_T")
+_DataUpdateCoordinatorT = TypeVar(
+    "_DataUpdateCoordinatorT", bound="DataUpdateCoordinator[Any]"
+)
 
 
 class UpdateFailed(Exception):
@@ -180,7 +183,8 @@ class DataUpdateCoordinator(Generic[_T]):
         if scheduled and self.hass.is_stopping:
             return
 
-        start = monotonic()
+        if log_timing := self.logger.isEnabledFor(logging.DEBUG):
+            start = monotonic()
         auth_failed = False
 
         try:
@@ -252,12 +256,13 @@ class DataUpdateCoordinator(Generic[_T]):
                 self.logger.info("Fetching %s data recovered", self.name)
 
         finally:
-            self.logger.debug(
-                "Finished fetching %s data in %.3f seconds (success: %s)",
-                self.name,
-                monotonic() - start,
-                self.last_update_success,
-            )
+            if log_timing:
+                self.logger.debug(
+                    "Finished fetching %s data in %.3f seconds (success: %s)",
+                    self.name,
+                    monotonic() - start,
+                    self.last_update_success,
+                )
             if not auth_failed and self._listeners and not self.hass.is_stopping:
                 self._schedule_refresh()
 
@@ -295,10 +300,10 @@ class DataUpdateCoordinator(Generic[_T]):
             self._unsub_refresh = None
 
 
-class CoordinatorEntity(Generic[_T], entity.Entity):
+class CoordinatorEntity(entity.Entity, Generic[_DataUpdateCoordinatorT]):
     """A class for entities using DataUpdateCoordinator."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator[_T]) -> None:
+    def __init__(self, coordinator: _DataUpdateCoordinatorT) -> None:
         """Create the entity with a DataUpdateCoordinator."""
         self.coordinator = coordinator
 

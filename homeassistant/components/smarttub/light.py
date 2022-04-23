@@ -5,8 +5,8 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_EFFECT,
     EFFECT_COLORLOOP,
-    SUPPORT_BRIGHTNESS,
     SUPPORT_EFFECT,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -42,6 +42,9 @@ async def async_setup_entry(
 
 class SmartTubLight(SmartTubEntity, LightEntity):
     """A light on a spa."""
+
+    _attr_color_mode = ColorMode.BRIGHTNESS
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
     def __init__(self, coordinator, light):
         """Initialize the entity."""
@@ -89,7 +92,7 @@ class SmartTubLight(SmartTubEntity, LightEntity):
     @property
     def supported_features(self):
         """Flag supported features."""
-        return SUPPORT_BRIGHTNESS | SUPPORT_EFFECT
+        return SUPPORT_EFFECT
 
     @property
     def effect(self):
