@@ -8,7 +8,7 @@ from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationSer
 from homeassistant.const import CONF_NAME, CONF_RECIPIENT
 import homeassistant.helpers.config_validation as cv
 
-from .const import DOMAIN, SMS_GATEWAY
+from .const import DOMAIN, GATEWAY, SMS_GATEWAY
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,7 +24,7 @@ def get_service(hass, config, discovery_info=None):
         _LOGGER.error("SMS gateway not found, cannot initialize service")
         return
 
-    gateway = hass.data[DOMAIN][SMS_GATEWAY]
+    gateway = hass.data[DOMAIN][SMS_GATEWAY][GATEWAY]
 
     if discovery_info is None:
         number = config[CONF_RECIPIENT]
