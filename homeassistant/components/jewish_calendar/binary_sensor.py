@@ -5,7 +5,6 @@ from collections.abc import Callable
 from dataclasses import dataclass
 import datetime as dt
 from datetime import datetime
-from typing import cast
 
 import hdate
 from hdate.zmanim import Zmanim
@@ -42,17 +41,17 @@ BINARY_SENSORS: tuple[JewishCalendarBinarySensorEntityDescription, ...] = (
         key="issur_melacha_in_effect",
         name="Issur Melacha in Effect",
         icon="mdi:power-plug-off",
-        is_on=lambda state: state.issur_melacha_in_effect,
+        is_on=lambda state: bool(state.issur_melacha_in_effect),
     ),
     JewishCalendarBinarySensorEntityDescription(
         key="erev_shabbat_hag",
         name="Erev Shabbat/Hag",
-        is_on=lambda state: state.erev_shabbat_hag,
+        is_on=lambda state: bool(state.erev_shabbat_hag),
     ),
     JewishCalendarBinarySensorEntityDescription(
         key="motzei_shabbat_hag",
         name="Motzei Shabbat/Hag",
-        is_on=lambda state: state.motzei_shabbat_hag,
+        is_on=lambda state: bool(state.motzei_shabbat_hag),
     ),
 )
 
@@ -100,7 +99,7 @@ class JewishCalendarBinarySensor(BinarySensorEntity):
     def is_on(self) -> bool:
         """Return true if sensor is on."""
         zmanim = self._get_zmanim()
-        return cast(bool, self.entity_description.is_on(zmanim))
+        return self.entity_description.is_on(zmanim)
 
     def _get_zmanim(self) -> Zmanim:
         """Return the Zmanim object for now()."""
