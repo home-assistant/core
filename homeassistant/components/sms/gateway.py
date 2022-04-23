@@ -154,6 +154,10 @@ class Gateway:
         """Get the current signal level of the modem."""
         return await self._worker.get_signal_quality_async()
 
+    async def get_network_info_async(self):
+        """Get the current network info of the modem."""
+        return await self._worker.get_network_info_async()
+
     async def terminate_async(self):
         """Terminate modem connection."""
         return await self._worker.terminate_async()
