@@ -1190,6 +1190,8 @@ async def test_database_corruption_while_running(hass, tmpdir, caplog):
     await hass.async_block_till_done()
     caplog.clear()
 
+    original_start_time = get_instance(hass).run_history.recording_start
+
     hass.states.async_set("test.lost", "on", {})
 
     sqlite3_exception = DatabaseError("statement", {}, [])
@@ -1233,6 +1235,9 @@ async def test_database_corruption_while_running(hass, tmpdir, caplog):
     state = await hass.async_add_executor_job(_get_last_state)
     assert state.entity_id == "test.two"
     assert state.state == "on"
+
+    new_start_time = get_instance(hass).run_history.recording_start
+    assert original_start_time < new_start_time
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
