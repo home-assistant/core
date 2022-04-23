@@ -1,4 +1,4 @@
-"""Models for Synology DSM."""
+"""Entities for Synology DSM."""
 from __future__ import annotations
 
 from dataclasses import dataclass

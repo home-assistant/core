@@ -23,7 +23,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import SynoApi
 from .const import COORDINATOR_CENTRAL, DOMAIN, SYNO_API
-from .models import (
+from .entity import (
     SynologyDSMBaseEntity,
     SynologyDSMDeviceEntity,
     SynologyDSMEntityDescription,

@@ -32,7 +32,7 @@ from homeassistant.util.dt import utcnow
 
 from . import SynoApi
 from .const import CONF_VOLUMES, COORDINATOR_CENTRAL, DOMAIN, ENTITY_UNIT_LOAD, SYNO_API
-from .models import (
+from .entity import (
     SynologyDSMBaseEntity,
     SynologyDSMDeviceEntity,
     SynologyDSMEntityDescription,

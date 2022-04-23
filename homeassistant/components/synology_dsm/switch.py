@@ -16,7 +16,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import SynoApi
 from .const import COORDINATOR_SWITCHES, DOMAIN, SYNO_API
-from .models import SynologyDSMBaseEntity, SynologyDSMEntityDescription
+from .entity import SynologyDSMBaseEntity, SynologyDSMEntityDescription
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -29,7 +29,7 @@ from .const import (
     DOMAIN,
     SYNO_API,
 )
-from .models import SynologyDSMBaseEntity, SynologyDSMEntityDescription
+from .entity import SynologyDSMBaseEntity, SynologyDSMEntityDescription
 
 _LOGGER = logging.getLogger(__name__)
 
