@@ -31,7 +31,8 @@ from .common import (
     async_wait_recording_done,
     async_wait_recording_done_without_instance,
 )
-from .conftest import SetupRecorderInstanceT
+
+from tests.common import SetupRecorderInstanceT
 
 
 async def test_purge_old_states(
@@ -49,7 +50,7 @@ async def test_purge_old_states(
 
         assert states.count() == 6
         assert states[0].old_state_id is None
-        assert states[-1].old_state_id == states[-2].state_id
+        assert states[5].old_state_id == states[4].state_id
         assert state_attributes.count() == 3
 
         events = session.query(Events).filter(Events.event_type == "state_changed")
@@ -94,7 +95,7 @@ async def test_purge_old_states(
         states = session.query(States)
         assert states.count() == 6
         assert states[0].old_state_id is None
-        assert states[-1].old_state_id == states[-2].state_id
+        assert states[5].old_state_id == states[4].state_id
 
         events = session.query(Events).filter(Events.event_type == "state_changed")
         assert events.count() == 6
