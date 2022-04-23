@@ -11,13 +11,12 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from tests.common import async_fire_time_changed, async_init_recorder_component
+from tests.common import async_fire_time_changed
 from tests.components.recorder.common import async_wait_recording_done_without_instance
 
 
-async def test_exclude_attributes(hass: HomeAssistant) -> None:
+async def test_exclude_attributes(hass: HomeAssistant, recorder_mock) -> None:
     """Test weather attributes to be excluded."""
-    await async_init_recorder_component(hass)
     await async_setup_component(hass, DOMAIN, {DOMAIN: {"platform": "demo"}})
     hass.config.units = METRIC_SYSTEM
     await hass.async_block_till_done()

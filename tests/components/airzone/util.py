@@ -22,9 +22,13 @@ from aioairzone.const import (
     API_SET_POINT,
     API_SYSTEM_ID,
     API_SYSTEMS,
+    API_THERMOS_FIRMWARE,
+    API_THERMOS_RADIO,
+    API_THERMOS_TYPE,
     API_UNITS,
     API_ZONE_ID,
 )
+from aioairzone.exceptions import InvalidMethod, SystemOutOfRange
 
 from homeassistant.components.airzone import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_ID, CONF_PORT
@@ -57,6 +61,9 @@ HVAC_MOCK = {
                     API_SYSTEM_ID: 1,
                     API_ZONE_ID: 1,
                     API_NAME: "Salon",
+                    API_THERMOS_TYPE: 2,
+                    API_THERMOS_FIRMWARE: "3.51",
+                    API_THERMOS_RADIO: 0,
                     API_ON: 0,
                     API_MAX_TEMP: 30,
                     API_MIN_TEMP: 15,
@@ -78,6 +85,9 @@ HVAC_MOCK = {
                     API_SYSTEM_ID: 1,
                     API_ZONE_ID: 2,
                     API_NAME: "Dorm Ppal",
+                    API_THERMOS_TYPE: 4,
+                    API_THERMOS_FIRMWARE: "3.33",
+                    API_THERMOS_RADIO: 1,
                     API_ON: 1,
                     API_MAX_TEMP: 30,
                     API_MIN_TEMP: 15,
@@ -86,18 +96,21 @@ HVAC_MOCK = {
                     API_MODE: 3,
                     API_COLD_STAGES: 1,
                     API_COLD_STAGE: 1,
-                    API_HEAT_STAGES: 1,
-                    API_HEAT_STAGE: 1,
+                    API_HEAT_STAGES: 3,
+                    API_HEAT_STAGE: 3,
                     API_HUMIDITY: 39,
                     API_UNITS: 0,
                     API_ERRORS: [],
                     API_AIR_DEMAND: 1,
-                    API_FLOOR_DEMAND: 0,
+                    API_FLOOR_DEMAND: 1,
                 },
                 {
                     API_SYSTEM_ID: 1,
                     API_ZONE_ID: 3,
                     API_NAME: "Dorm #1",
+                    API_THERMOS_TYPE: 4,
+                    API_THERMOS_FIRMWARE: "3.33",
+                    API_THERMOS_RADIO: 1,
                     API_ON: 1,
                     API_MAX_TEMP: 30,
                     API_MIN_TEMP: 15,
@@ -106,8 +119,8 @@ HVAC_MOCK = {
                     API_MODE: 3,
                     API_COLD_STAGES: 1,
                     API_COLD_STAGE: 1,
-                    API_HEAT_STAGES: 1,
-                    API_HEAT_STAGE: 1,
+                    API_HEAT_STAGES: 2,
+                    API_HEAT_STAGE: 2,
                     API_HUMIDITY: 35,
                     API_UNITS: 0,
                     API_ERRORS: [],
@@ -118,6 +131,9 @@ HVAC_MOCK = {
                     API_SYSTEM_ID: 1,
                     API_ZONE_ID: 4,
                     API_NAME: "Despacho",
+                    API_THERMOS_TYPE: 4,
+                    API_THERMOS_FIRMWARE: "3.33",
+                    API_THERMOS_RADIO: 1,
                     API_ON: 0,
                     API_MAX_TEMP: 86,
                     API_MIN_TEMP: 59,
@@ -130,7 +146,11 @@ HVAC_MOCK = {
                     API_HEAT_STAGE: 1,
                     API_HUMIDITY: 36,
                     API_UNITS: 1,
-                    API_ERRORS: [],
+                    API_ERRORS: [
+                        {
+                            "Zone": "Low battery",
+                        },
+                    ],
                     API_AIR_DEMAND: 0,
                     API_FLOOR_DEMAND: 0,
                 },
@@ -138,6 +158,9 @@ HVAC_MOCK = {
                     API_SYSTEM_ID: 1,
                     API_ZONE_ID: 5,
                     API_NAME: "Dorm #2",
+                    API_THERMOS_TYPE: 4,
+                    API_THERMOS_FIRMWARE: "3.33",
+                    API_THERMOS_RADIO: 1,
                     API_ON: 0,
                     API_MAX_TEMP: 30,
                     API_MIN_TEMP: 15,
@@ -171,6 +194,12 @@ async def async_init_integration(
     with patch(
         "homeassistant.components.airzone.AirzoneLocalApi.get_hvac",
         return_value=HVAC_MOCK,
+    ), patch(
+        "homeassistant.components.airzone.AirzoneLocalApi.get_hvac_systems",
+        side_effect=SystemOutOfRange,
+    ), patch(
+        "homeassistant.components.airzone.AirzoneLocalApi.get_webserver",
+        side_effect=InvalidMethod,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
