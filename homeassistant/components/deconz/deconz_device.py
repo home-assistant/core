@@ -31,7 +31,7 @@ class DeconzBase:
     def unique_id(self) -> str:
         """Return a unique identifier for this device."""
         assert not isinstance(self._device, PydeconzScene)
-        return self._device.unique_id  # type: ignore[no-any-return]
+        return self._device.unique_id
 
     @property
     def serial(self) -> str | None:
@@ -39,7 +39,7 @@ class DeconzBase:
         assert not isinstance(self._device, PydeconzScene)
         if not self._device.unique_id or self._device.unique_id.count(":") != 7:
             return None
-        return self._device.unique_id.split("-", 1)[0]  # type: ignore[no-any-return]
+        return self._device.unique_id.split("-", 1)[0]
 
     @property
     def device_info(self) -> DeviceInfo | None:
