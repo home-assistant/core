@@ -9,12 +9,15 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
-from typing import Protocol
+from typing import Any, Protocol
 
 import voluptuous as vol
 
+from homeassistant.components import websocket_api
+from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_DOMAIN, CONF_ID
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.generated.application_credentials import APPLICATION_CREDENTIALS
 from homeassistant.helpers import collection, config_entry_oauth2_flow
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.storage import Store
@@ -130,6 +133,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
     ).async_setup(hass)
 
+    websocket_api.async_register_command(hass, handle_integration_list)
+
     config_entry_oauth2_flow.async_add_implementation_provider(
         hass, DOMAIN, _async_provide_implementation
     )
@@ -218,3 +223,14 @@ async def _get_platform(
             f"Integration '{integration_domain}' platform application_credentials did not implement 'async_get_authorization_server'"
         )
     return platform
+
+
+@websocket_api.websocket_command(
+    {vol.Required("type"): "application_credentials/integrations/list"}
+)
+@websocket_api.async_response
+async def handle_integration_list(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle integrations command."""
+    connection.send_result(msg["id"], APPLICATION_CREDENTIALS)

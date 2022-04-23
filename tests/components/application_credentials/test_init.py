@@ -148,7 +148,7 @@ class OAuthFixture:
 
         result = await self.hass.config_entries.flow.async_configure(result["flow_id"])
         assert result.get("type") == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result.get("title") == "Configuration.yaml"
+        assert result.get("title") == self.client_id
         assert "data" in result
         assert "token" in result["data"]
         return result
@@ -605,3 +605,13 @@ async def test_websocket_without_authorization_server(
         await hass.config_entries.flow.async_init(
             TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
+
+
+async def test_websocket_integration_list(ws_client: ClientFixture):
+    """Test websocket integration list command."""
+    client = await ws_client()
+    with patch(
+        "homeassistant.components.application_credentials.APPLICATION_CREDENTIALS",
+        ["example1", "example2"],
+    ):
+        assert await client.cmd_result("integrations/list") == ["example1", "example2"]
