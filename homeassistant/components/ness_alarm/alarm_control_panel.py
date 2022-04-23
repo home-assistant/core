@@ -74,7 +74,7 @@ class NessAlarmPanel(alarm.AlarmControlPanelEntity):
     @property
     def code_format(self):
         """Return the regex for code format or None if no code is required."""
-        return alarm.FORMAT_NUMBER
+        return alarm.CodeFormat.NUMBER
 
     @property
     def state(self):

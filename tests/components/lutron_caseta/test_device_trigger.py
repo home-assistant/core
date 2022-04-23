@@ -99,72 +99,22 @@ async def test_get_triggers(hass, device_reg):
             CONF_DEVICE_ID: device_id,
             CONF_DOMAIN: DOMAIN,
             CONF_PLATFORM: "device",
-            CONF_SUBTYPE: "on",
+            CONF_SUBTYPE: subtype,
             CONF_TYPE: "press",
-        },
+            "metadata": {},
+        }
+        for subtype in ["on", "stop", "off", "raise", "lower"]
+    ]
+    expected_triggers += [
         {
             CONF_DEVICE_ID: device_id,
             CONF_DOMAIN: DOMAIN,
             CONF_PLATFORM: "device",
-            CONF_SUBTYPE: "stop",
-            CONF_TYPE: "press",
-        },
-        {
-            CONF_DEVICE_ID: device_id,
-            CONF_DOMAIN: DOMAIN,
-            CONF_PLATFORM: "device",
-            CONF_SUBTYPE: "off",
-            CONF_TYPE: "press",
-        },
-        {
-            CONF_DEVICE_ID: device_id,
-            CONF_DOMAIN: DOMAIN,
-            CONF_PLATFORM: "device",
-            CONF_SUBTYPE: "raise",
-            CONF_TYPE: "press",
-        },
-        {
-            CONF_DEVICE_ID: device_id,
-            CONF_DOMAIN: DOMAIN,
-            CONF_PLATFORM: "device",
-            CONF_SUBTYPE: "lower",
-            CONF_TYPE: "press",
-        },
-        {
-            CONF_DEVICE_ID: device_id,
-            CONF_DOMAIN: DOMAIN,
-            CONF_PLATFORM: "device",
-            CONF_SUBTYPE: "on",
+            CONF_SUBTYPE: subtype,
             CONF_TYPE: "release",
-        },
-        {
-            CONF_DEVICE_ID: device_id,
-            CONF_DOMAIN: DOMAIN,
-            CONF_PLATFORM: "device",
-            CONF_SUBTYPE: "stop",
-            CONF_TYPE: "release",
-        },
-        {
-            CONF_DEVICE_ID: device_id,
-            CONF_DOMAIN: DOMAIN,
-            CONF_PLATFORM: "device",
-            CONF_SUBTYPE: "off",
-            CONF_TYPE: "release",
-        },
-        {
-            CONF_DEVICE_ID: device_id,
-            CONF_DOMAIN: DOMAIN,
-            CONF_PLATFORM: "device",
-            CONF_SUBTYPE: "raise",
-            CONF_TYPE: "release",
-        },
-        {
-            CONF_DEVICE_ID: device_id,
-            CONF_DOMAIN: DOMAIN,
-            CONF_PLATFORM: "device",
-            CONF_SUBTYPE: "lower",
-            CONF_TYPE: "release",
-        },
+            "metadata": {},
+        }
+        for subtype in ["on", "stop", "off", "raise", "lower"]
     ]
 
     triggers = await async_get_device_automations(
