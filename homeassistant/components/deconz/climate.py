@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from pydeconz.sensor import (
+from pydeconz.models.sensor.thermostat import (
     THERMOSTAT_FAN_MODE_AUTO,
     THERMOSTAT_FAN_MODE_HIGH,
     THERMOSTAT_FAN_MODE_LOW,
