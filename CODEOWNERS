@@ -886,8 +886,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/scene/ @home-assistant/core
 /tests/components/scene/ @home-assistant/core
 /homeassistant/components/schluter/ @prairieapps
-/homeassistant/components/scrape/ @fabaff
-/tests/components/scrape/ @fabaff
+/homeassistant/components/scrape/ @fabaff @gjohansson-ST
+/tests/components/scrape/ @fabaff @gjohansson-ST
 /homeassistant/components/screenlogic/ @dieselrabbit @bdraco
 /tests/components/screenlogic/ @dieselrabbit @bdraco
 /homeassistant/components/script/ @home-assistant/core
