@@ -123,7 +123,7 @@ async def async_setup_entry(
 
     auth: httpx.DigestAuth | tuple[str, str] | None = None
     if username and password:
-        if entry.data.get(CONF_AUTHENTICATION) == HTTP_DIGEST_AUTHENTICATION:
+        if entry.options.get(CONF_AUTHENTICATION) == HTTP_DIGEST_AUTHENTICATION:
             auth = httpx.DigestAuth(username, password)
         else:
             auth = (username, password)
