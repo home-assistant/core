@@ -5,20 +5,18 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 
-from pydeconz.sensor import (
-    AirQuality,
-    Consumption,
-    Daylight,
-    GenericStatus,
-    Humidity,
-    LightLevel,
-    Power,
-    Pressure,
-    SensorResources,
-    Switch,
-    Temperature,
-    Time,
-)
+from pydeconz.interfaces.sensors import SensorResources
+from pydeconz.models.sensor.air_quality import AirQuality
+from pydeconz.models.sensor.consumption import Consumption
+from pydeconz.models.sensor.daylight import Daylight
+from pydeconz.models.sensor.generic_status import GenericStatus
+from pydeconz.models.sensor.humidity import Humidity
+from pydeconz.models.sensor.light_level import LightLevel
+from pydeconz.models.sensor.power import Power
+from pydeconz.models.sensor.pressure import Pressure
+from pydeconz.models.sensor.switch import Switch
+from pydeconz.models.sensor.temperature import Temperature
+from pydeconz.models.sensor.time import Time
 
 from homeassistant.components.sensor import (
     DOMAIN,
