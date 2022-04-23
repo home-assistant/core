@@ -175,6 +175,7 @@ class AiohttpClientMockResponse:
         if response is None:
             response = b""
 
+        self.charset = "utf-8"
         self.method = method
         self._url = url
         self.status = status
