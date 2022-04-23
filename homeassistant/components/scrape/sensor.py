@@ -45,6 +45,7 @@ from .const import CONF_INDEX, CONF_SELECT, DEFAULT_NAME, DEFAULT_VERIFY_SSL, DO
 
 _LOGGER = logging.getLogger(__name__)
 
+ICON = "mdi:web"
 
 PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
@@ -155,6 +156,8 @@ async def async_setup_entry(
 
 class ScrapeSensor(SensorEntity):
     """Representation of a web scrape sensor."""
+
+    _attr_icon = ICON
 
     def __init__(
         self,
