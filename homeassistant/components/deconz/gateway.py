@@ -11,6 +11,7 @@ from pydeconz import DeconzSession, errors, group, light
 from pydeconz.alarm_system import AlarmSystem as DeconzAlarmSystem
 from pydeconz.group import Group as DeconzGroup
 from pydeconz.light import LightBase as DeconzLight
+from pydeconz.models import scene
 from pydeconz.models import sensor
 from pydeconz.models.sensor import SensorBase as DeconzSensor
 
@@ -71,7 +72,7 @@ class DeconzGateway:
         self.deconz_resource_type_to_signal_new_device = {
             group.RESOURCE_TYPE: self.signal_new_group,
             light.RESOURCE_TYPE: self.signal_new_light,
-            group.RESOURCE_TYPE_SCENE: self.signal_new_scene,
+            scene.RESOURCE_TYPE: self.signal_new_scene,
             sensor.RESOURCE_TYPE: self.signal_new_sensor,
         }
 
