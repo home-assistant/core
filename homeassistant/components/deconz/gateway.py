@@ -7,10 +7,10 @@ from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, cast
 
 import async_timeout
-from pydeconz import DeconzSession, errors, light
+from pydeconz import DeconzSession, errors
 from pydeconz.alarm_system import AlarmSystem as DeconzAlarmSystem
 from pydeconz.light import LightBase as DeconzLight
-from pydeconz.models import group, scene, sensor
+from pydeconz.models import ResourceGroup
 from pydeconz.models.group import Group as DeconzGroup
 from pydeconz.models.sensor import SensorBase as DeconzSensor
 
@@ -69,10 +69,10 @@ class DeconzGateway:
         self.signal_new_sensor = f"deconz_new_sensor_{config_entry.entry_id}"
 
         self.deconz_resource_type_to_signal_new_device = {
-            group.RESOURCE_TYPE: self.signal_new_group,
-            light.RESOURCE_TYPE: self.signal_new_light,
-            scene.RESOURCE_TYPE: self.signal_new_scene,
-            sensor.RESOURCE_TYPE: self.signal_new_sensor,
+            ResourceGroup.GROUP.value: self.signal_new_group,
+            ResourceGroup.LIGHT.value: self.signal_new_light,
+            ResourceGroup.SCENE.value: self.signal_new_scene,
+            ResourceGroup.SENSOR.value: self.signal_new_sensor,
         }
 
         self.deconz_ids: dict[str, str] = {}
@@ -210,7 +210,7 @@ class DeconzGateway:
         deconz_ids = []
 
         if self.option_allow_clip_sensor:
-            self.async_add_device_callback(sensor.RESOURCE_TYPE)
+            self.async_add_device_callback(ResourceGroup.SENSOR.value)
 
         else:
             deconz_ids += [
@@ -220,7 +220,7 @@ class DeconzGateway:
             ]
 
         if self.option_allow_deconz_groups:
-            self.async_add_device_callback(group.RESOURCE_TYPE)
+            self.async_add_device_callback(ResourceGroup.GROUP.value)
 
         else:
             deconz_ids += [group.deconz_id for group in self.api.groups.values()]
