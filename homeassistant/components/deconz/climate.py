@@ -228,16 +228,16 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
     @property
     def current_temperature(self) -> float:
         """Return the current temperature."""
-        return self._device.scaled_temperature  # type: ignore[no-any-return]
+        return self._device.scaled_temperature
 
     @property
     def target_temperature(self) -> float | None:
         """Return the target temperature."""
         if self._device.mode == THERMOSTAT_MODE_COOL and self._device.cooling_setpoint:
-            return self._device.cooling_setpoint  # type: ignore[no-any-return]
+            return self._device.cooling_setpoint
 
         if self._device.heating_setpoint:
-            return self._device.heating_setpoint  # type: ignore[no-any-return]
+            return self._device.heating_setpoint
 
         return None
 
