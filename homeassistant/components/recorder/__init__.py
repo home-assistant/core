@@ -341,10 +341,8 @@ async def _process_recorder_platform(
     hass: HomeAssistant, domain: str, platform: Any
 ) -> None:
     """Process a recorder platform."""
-    platforms: dict[str, Any] = hass.data[DOMAIN]
-    platforms[domain] = platform
-    if hasattr(platform, "exclude_attributes"):
-        hass.data[EXCLUDE_ATTRIBUTES][domain] = platform.exclude_attributes(hass)
+    instance: Recorder = hass.data[DATA_INSTANCE]
+    instance.queue.put(AddRecorderPlatformTask(domain, platform))
 
 
 @callback
@@ -599,6 +597,26 @@ class CommitTask(RecorderTask):
         """Handle the task."""
         # pylint: disable-next=[protected-access]
         instance._commit_event_session_or_retry()
+
+
+@dataclass
+class AddRecorderPlatformTask(RecorderTask):
+    """Add a recorder platform."""
+
+    domain: str
+    platform: Any
+    commit_before = False
+
+    def run(self, instance: Recorder) -> None:
+        """Handle the task."""
+        hass = instance.hass
+        domain = self.domain
+        platform = self.platform
+
+        platforms: dict[str, Any] = hass.data[DOMAIN]
+        platforms[domain] = platform
+        if hasattr(self.platform, "exclude_attributes"):
+            hass.data[EXCLUDE_ATTRIBUTES][domain] = platform.exclude_attributes(hass)
 
 
 COMMIT_TASK = CommitTask()
@@ -900,7 +918,10 @@ class Recorder(threading.Thread):
 
     @callback
     def async_periodic_statistics(self, now: datetime) -> None:
-        """Trigger the hourly statistics run."""
+        """Trigger the statistics run.
+
+        Short term statistics run every 5 minutes
+        """
         start = statistics.get_start_time()
         self.queue.put(StatisticsTask(start))
 
@@ -1418,12 +1439,12 @@ class Recorder(threading.Thread):
         if self._using_file_sqlite:
             validate_or_move_away_sqlite_database(self.db_url)
 
-        self.engine = create_engine(self.db_url, **kwargs)
+        self.engine = create_engine(self.db_url, **kwargs, future=True)
 
         sqlalchemy_event.listen(self.engine, "connect", setup_recorder_connection)
 
         Base.metadata.create_all(self.engine)
-        self.get_session = scoped_session(sessionmaker(bind=self.engine))
+        self.get_session = scoped_session(sessionmaker(bind=self.engine, future=True))
         _LOGGER.debug("Connected to recorder database")
 
     @property

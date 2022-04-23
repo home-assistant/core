@@ -49,7 +49,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AirzoneEntity
+from . import AirzoneZoneEntity
 from .const import API_TEMPERATURE_STEP, DOMAIN, TEMP_UNIT_LIB_TO_HASS
 from .coordinator import AirzoneUpdateCoordinator
 
@@ -97,7 +97,7 @@ async def async_setup_entry(
     )
 
 
-class AirzoneClimate(AirzoneEntity, ClimateEntity):
+class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
     """Define an Airzone sensor."""
 
     def __init__(
@@ -114,13 +114,13 @@ class AirzoneClimate(AirzoneEntity, ClimateEntity):
         self._attr_unique_id = f"{self._attr_unique_id}_{system_zone_id}"
         self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
         self._attr_target_temperature_step = API_TEMPERATURE_STEP
-        self._attr_max_temp = self.get_zone_value(AZD_TEMP_MAX)
-        self._attr_min_temp = self.get_zone_value(AZD_TEMP_MIN)
+        self._attr_max_temp = self.get_airzone_value(AZD_TEMP_MAX)
+        self._attr_min_temp = self.get_airzone_value(AZD_TEMP_MIN)
         self._attr_temperature_unit = TEMP_UNIT_LIB_TO_HASS[
-            self.get_zone_value(AZD_TEMP_UNIT)
+            self.get_airzone_value(AZD_TEMP_UNIT)
         ]
         self._attr_hvac_modes = [
-            HVAC_MODE_LIB_TO_HASS[mode] for mode in self.get_zone_value(AZD_MODES)
+            HVAC_MODE_LIB_TO_HASS[mode] for mode in self.get_airzone_value(AZD_MODES)
         ]
         self._async_update_attrs()
 
@@ -162,8 +162,8 @@ class AirzoneClimate(AirzoneEntity, ClimateEntity):
             params[API_ON] = 0
         else:
             mode = HVAC_MODE_HASS_TO_LIB[hvac_mode]
-            if mode != self.get_zone_value(AZD_MODE):
-                if self.get_zone_value(AZD_MASTER):
+            if mode != self.get_airzone_value(AZD_MODE):
+                if self.get_airzone_value(AZD_MASTER):
                     params[API_MODE] = mode
                 else:
                     raise HomeAssistantError(
@@ -188,16 +188,16 @@ class AirzoneClimate(AirzoneEntity, ClimateEntity):
     @callback
     def _async_update_attrs(self) -> None:
         """Update climate attributes."""
-        self._attr_current_temperature = self.get_zone_value(AZD_TEMP)
-        self._attr_current_humidity = self.get_zone_value(AZD_HUMIDITY)
-        if self.get_zone_value(AZD_ON):
-            mode = self.get_zone_value(AZD_MODE)
+        self._attr_current_temperature = self.get_airzone_value(AZD_TEMP)
+        self._attr_current_humidity = self.get_airzone_value(AZD_HUMIDITY)
+        if self.get_airzone_value(AZD_ON):
+            mode = self.get_airzone_value(AZD_MODE)
             self._attr_hvac_mode = HVAC_MODE_LIB_TO_HASS[mode]
-            if self.get_zone_value(AZD_DEMAND):
+            if self.get_airzone_value(AZD_DEMAND):
                 self._attr_hvac_action = HVAC_ACTION_LIB_TO_HASS[mode]
             else:
                 self._attr_hvac_action = CURRENT_HVAC_IDLE
         else:
             self._attr_hvac_action = CURRENT_HVAC_OFF
             self._attr_hvac_mode = HVAC_MODE_OFF
-        self._attr_target_temperature = self.get_zone_value(AZD_TEMP_SET)
+        self._attr_target_temperature = self.get_airzone_value(AZD_TEMP_SET)

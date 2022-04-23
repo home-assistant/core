@@ -33,14 +33,13 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
 )
 import homeassistant.core as ha
 from homeassistant.core import DOMAIN as HASS_DOMAIN, CoreState, State, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-from homeassistant.util.unit_system import METRIC_SYSTEM
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
 
 from tests.common import (
     assert_setup_component,
@@ -1181,7 +1180,6 @@ async def test_temp_change_heater_trigger_off_long_enough_2(hass, setup_comp_8):
 @pytest.fixture
 async def setup_comp_9(hass):
     """Initialize components."""
-    hass.config.units.temperature_unit = TEMP_FAHRENHEIT
     assert await async_setup_component(
         hass,
         DOMAIN,
@@ -1205,6 +1203,7 @@ async def setup_comp_9(hass):
 
 async def test_precision(hass, setup_comp_9):
     """Test that setting precision to tenths works as intended."""
+    hass.config.units = IMPERIAL_SYSTEM
     await common.async_set_temperature(hass, 23.27)
     state = hass.states.get(ENTITY)
     assert state.attributes.get("temperature") == 23.3
