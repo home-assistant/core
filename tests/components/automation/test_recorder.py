@@ -17,7 +17,7 @@ from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME
 from homeassistant.core import State
 from homeassistant.setup import async_setup_component
 
-from tests.common import async_init_recorder_component, async_mock_service
+from tests.common import async_mock_service
 from tests.components.recorder.common import async_wait_recording_done_without_instance
 
 
@@ -27,10 +27,8 @@ def calls(hass):
     return async_mock_service(hass, "test", "automation")
 
 
-async def test_exclude_attributes(hass, calls):
+async def test_exclude_attributes(hass, recorder_mock, calls):
     """Test automation registered attributes to be excluded."""
-    await async_init_recorder_component(hass)
-    await hass.async_block_till_done()
     assert await async_setup_component(
         hass,
         automation.DOMAIN,

@@ -44,7 +44,6 @@ class HistoryStats:
         self._duration = duration
         self._start = start
         self._end = end
-        self._template_error = False
 
     async def async_update(self, event: Event | None) -> HistoryStatsState:
         """Update the stats at a given time."""

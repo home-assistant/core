@@ -92,7 +92,7 @@ class DeconzFan(DeconzDevice, FanEntity):
     @property
     def is_on(self) -> bool:
         """Return true if fan is on."""
-        return self._device.speed != FAN_SPEED_OFF  # type: ignore[no-any-return]
+        return self._device.speed != FAN_SPEED_OFF
 
     @property
     def percentage(self) -> int | None:
