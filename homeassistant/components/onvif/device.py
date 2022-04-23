@@ -171,7 +171,7 @@ class ONVIFDevice:
             else:
                 tzone = (
                     dt_util.get_time_zone(
-                        device_time.TimeZone or str(dt_util.DEFAULT_TIME_ZONE)
+                        device_time.TimeZone.TZ or str(dt_util.DEFAULT_TIME_ZONE)
                     )
                     or dt_util.DEFAULT_TIME_ZONE
                 )
