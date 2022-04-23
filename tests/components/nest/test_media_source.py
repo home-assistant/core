@@ -875,7 +875,7 @@ async def test_event_media_render_invalid_event_id(hass, auth, hass_client):
     assert device.name == DEVICE_NAME
 
     client = await hass_client()
-    response = await client.get("/api/nest/event_media/{device.id}/invalid-event-id")
+    response = await client.get(f"/api/nest/event_media/{device.id}/invalid-event-id")
     assert response.status == HTTPStatus.NOT_FOUND, (
         "Response not matched: %s" % response
     )
