@@ -408,8 +408,8 @@ def _async_setup_services(hass: HomeAssistant):
 class YeelightGenericLight(YeelightEntity, LightEntity):
     """Representation of a Yeelight generic light."""
 
-    _attr_color_mode: ColorMode | str | None = ColorMode.BRIGHTNESS
-    _attr_supported_color_modes: set[ColorMode | str] | None = {ColorMode.BRIGHTNESS}
+    _attr_color_mode = ColorMode.BRIGHTNESS
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
     _attr_should_poll = False
 
     def __init__(self, device, entry, custom_effects=None):
@@ -897,11 +897,11 @@ class YeelightColorLightSupport(YeelightGenericLight):
         return YEELIGHT_COLOR_EFFECT_LIST
 
 
-class YeelightWhiteTempLightSupport:
+class YeelightWhiteTempLightSupport(YeelightGenericLight):
     """Representation of a White temp Yeelight light."""
 
-    _attr_color_mode: ColorMode | str | None = ColorMode.COLOR_TEMP
-    _attr_supported_color_modes: set[ColorMode | str] | None = {ColorMode.COLOR_TEMP}
+    _attr_color_mode = ColorMode.COLOR_TEMP
+    _attr_supported_color_modes = {ColorMode.COLOR_TEMP}
 
     @property
     def _predefined_effects(self):
