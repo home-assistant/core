@@ -386,7 +386,7 @@ async def websocket_network_status(
             "was_real_primary": controller.was_real_primary,
             "is_static_update_controller": controller.is_static_update_controller,
             "is_slave": controller.is_slave,
-            "serial_api_version": controller.serial_api_version,
+            "firmware_version": controller.firmware_version,
             "manufacturer_id": controller.manufacturer_id,
             "product_id": controller.product_id,
             "product_type": controller.product_type,
