@@ -8,19 +8,28 @@ from elro.api import K1
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
+import homeassistant.helpers.config_validation as cv
 
-from .const import DOMAIN
+from .const import (
+    CONF_CONNECTOR_ID,
+    CONF_UPDATE_INTERVAL,
+    DEFAULT_INTERVAL,
+    DEFAULT_PORT,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 ELRO_CONNECTS_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required("host"): str,
-        vol.Required("connector_id"): str,
-        vol.Optional("port", default=1025): int,
+        vol.Required(CONF_HOST): str,
+        vol.Required(CONF_CONNECTOR_ID): str,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
+        vol.Optional(CONF_UPDATE_INTERVAL, default=DEFAULT_INTERVAL): cv.positive_int,
     }
 )
 

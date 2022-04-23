@@ -5,7 +5,8 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "connector_id": "Connector ID",
-          "port": "[%key:common::config_flow::data::port%]"
+          "port": "[%key:common::config_flow::data::port%]",
+          "poll_interval": "Update interval (sec)"
         }
       }
     },
