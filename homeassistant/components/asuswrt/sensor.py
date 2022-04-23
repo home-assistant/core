@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from numbers import Real
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -197,10 +196,10 @@ class AsusWrtSensor(CoordinatorEntity, SensorEntity):
         self._attr_extra_state_attributes = {"hostname": router.host}
 
     @property
-    def native_value(self) -> float | str | None:
+    def native_value(self) -> float | int | str | None:
         """Return current state."""
         descr = self.entity_description
-        state = self.coordinator.data.get(descr.key)
-        if state is not None and descr.factor and isinstance(state, Real):
+        state: float | int | str | None = self.coordinator.data.get(descr.key)
+        if state is not None and descr.factor and isinstance(state, (float, int)):
             return round(state / descr.factor, descr.precision)
         return state

@@ -73,7 +73,7 @@ class DeconzSiren(DeconzDevice, SirenEntity):
     @property
     def is_on(self) -> bool:
         """Return true if siren is on."""
-        return self._device.is_on  # type: ignore[no-any-return]
+        return self._device.is_on
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on siren."""

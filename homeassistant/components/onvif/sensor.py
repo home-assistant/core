@@ -43,49 +43,20 @@ async def async_setup_entry(
 class ONVIFSensor(ONVIFBaseEntity, SensorEntity):
     """Representation of a ONVIF sensor event."""
 
+    _attr_should_poll = False
+
     def __init__(self, uid, device):
         """Initialize the ONVIF binary sensor."""
-        self.uid = uid
+        event = device.events.get_uid(uid)
+        self._attr_device_class = event.device_class
+        self._attr_entity_category = event.entity_category
+        self._attr_entity_registry_enabled_default = event.entity_enabled
+        self._attr_name = event.name
+        self._attr_native_unit_of_measurement = event.unit_of_measurement
+        self._attr_native_value = event.value
+        self._attr_unique_id = uid
 
         super().__init__(device)
-
-    @property
-    def native_value(self) -> None | str | int | float:
-        """Return the state of the entity."""
-        return self.device.events.get_uid(self.uid).value
-
-    @property
-    def name(self):
-        """Return the name of the event."""
-        return self.device.events.get_uid(self.uid).name
-
-    @property
-    def device_class(self) -> str | None:
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return self.device.events.get_uid(self.uid).device_class
-
-    @property
-    def native_unit_of_measurement(self) -> str | None:
-        """Return the unit of measurement of this entity, if any."""
-        return self.device.events.get_uid(self.uid).unit_of_measurement
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return self.uid
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return self.device.events.get_uid(self.uid).entity_enabled
-
-    @property
-    def should_poll(self) -> bool:
-        """Return True if entity has to be polled for state.
-
-        False if entity pushes its state to HA.
-        """
-        return False
 
     async def async_added_to_hass(self):
         """Connect to dispatcher listening for entity data notifications."""

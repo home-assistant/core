@@ -23,6 +23,7 @@ from homeassistant.components.recorder.statistics import (
     delete_duplicates,
     get_last_short_term_statistics,
     get_last_statistics,
+    get_latest_short_term_statistics,
     get_metadata,
     list_statistic_ids,
     statistics_during_period,
@@ -36,11 +37,7 @@ import homeassistant.util.dt as dt_util
 
 from .common import async_wait_recording_done_without_instance
 
-from tests.common import (
-    async_init_recorder_component,
-    get_test_home_assistant,
-    mock_registry,
-)
+from tests.common import get_test_home_assistant, mock_registry
 from tests.components.recorder.common import wait_recording_done
 
 ORIG_TZ = dt_util.DEFAULT_TIME_ZONE
@@ -54,6 +51,10 @@ def test_compile_hourly_statistics(hass_recorder):
     zero, four, states = record_states(hass)
     hist = history.get_significant_states(hass, zero, four)
     assert dict(states) == dict(hist)
+
+    # Should not fail if there is nothing there yet
+    stats = get_latest_short_term_statistics(hass, ["sensor.test1"])
+    assert stats == {}
 
     for kwargs in ({}, {"statistic_ids": ["sensor.test1"]}):
         stats = statistics_during_period(hass, zero, period="5minute", **kwargs)
@@ -109,11 +110,19 @@ def test_compile_hourly_statistics(hass_recorder):
     )
     assert stats == {}
 
-    # Test get_last_short_term_statistics
+    # Test get_last_short_term_statistics and get_latest_short_term_statistics
     stats = get_last_short_term_statistics(hass, 0, "sensor.test1", True)
     assert stats == {}
 
     stats = get_last_short_term_statistics(hass, 1, "sensor.test1", True)
+    assert stats == {"sensor.test1": [{**expected_2, "statistic_id": "sensor.test1"}]}
+
+    stats = get_latest_short_term_statistics(hass, ["sensor.test1"])
+    assert stats == {"sensor.test1": [{**expected_2, "statistic_id": "sensor.test1"}]}
+
+    metadata = get_metadata(hass, statistic_ids=['sensor.test1"'])
+
+    stats = get_latest_short_term_statistics(hass, ["sensor.test1"], metadata=metadata)
     assert stats == {"sensor.test1": [{**expected_2, "statistic_id": "sensor.test1"}]}
 
     stats = get_last_short_term_statistics(hass, 2, "sensor.test1", True)
@@ -123,6 +132,11 @@ def test_compile_hourly_statistics(hass_recorder):
     assert stats == {"sensor.test1": expected_stats1[::-1]}
 
     stats = get_last_short_term_statistics(hass, 1, "sensor.test3", True)
+    assert stats == {}
+
+    recorder.get_session().query(StatisticsShortTerm).delete()
+    # Should not fail there is nothing in the table
+    stats = get_latest_short_term_statistics(hass, ["sensor.test1"])
     assert stats == {}
 
 
@@ -143,11 +157,16 @@ def mock_sensor_statistics():
         }
 
     def get_fake_stats(_hass, start, _end):
-        return [
-            sensor_stats("sensor.test1", start),
-            sensor_stats("sensor.test2", start),
-            sensor_stats("sensor.test3", start),
-        ]
+        return statistics.PlatformCompiledStatistics(
+            [
+                sensor_stats("sensor.test1", start),
+                sensor_stats("sensor.test2", start),
+                sensor_stats("sensor.test3", start),
+            ],
+            get_metadata(
+                _hass, statistic_ids=["sensor.test1", "sensor.test2", "sensor.test3"]
+            ),
+        )
 
     with patch(
         "homeassistant.components.sensor.recorder.compile_statistics",
@@ -314,7 +333,8 @@ def test_statistics_duplicated(hass_recorder, caplog):
     assert "Statistics already compiled" not in caplog.text
 
     with patch(
-        "homeassistant.components.sensor.recorder.compile_statistics"
+        "homeassistant.components.sensor.recorder.compile_statistics",
+        return_value=statistics.PlatformCompiledStatistics([], {}),
     ) as compile_statistics:
         recorder.do_adhoc_statistics(start=zero)
         wait_recording_done(hass)
@@ -333,10 +353,9 @@ def test_statistics_duplicated(hass_recorder, caplog):
         caplog.clear()
 
 
-async def test_external_statistics(hass, hass_ws_client, caplog):
+async def test_external_statistics(hass, hass_ws_client, recorder_mock, caplog):
     """Test inserting external statistics."""
     client = await hass_ws_client()
-    await async_init_recorder_component(hass)
 
     assert "Compiling statistics for" not in caplog.text
     assert "Statistics already compiled" not in caplog.text

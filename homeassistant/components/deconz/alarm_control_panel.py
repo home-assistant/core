@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from pydeconz.alarm_system import AlarmSystem
-from pydeconz.sensor import (
+from pydeconz.models.sensor.ancillary_control import (
     ANCILLARY_CONTROL_ARMED_AWAY,
     ANCILLARY_CONTROL_ARMED_NIGHT,
     ANCILLARY_CONTROL_ARMED_STAY,
@@ -18,9 +18,9 @@ from pydeconz.sensor import (
 
 from homeassistant.components.alarm_control_panel import (
     DOMAIN,
-    FORMAT_NUMBER,
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
+    CodeFormat,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -120,7 +120,7 @@ class DeconzAlarmControlPanel(DeconzDevice, AlarmControlPanelEntity):
     TYPE = DOMAIN
     _device: AncillaryControl
 
-    _attr_code_format = FORMAT_NUMBER
+    _attr_code_format = CodeFormat.NUMBER
     _attr_supported_features = (
         AlarmControlPanelEntityFeature.ARM_AWAY
         | AlarmControlPanelEntityFeature.ARM_HOME

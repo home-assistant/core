@@ -7,6 +7,7 @@ from typing import Any, Final
 
 from aioairzone.const import (
     AZD_AIR_DEMAND,
+    AZD_BATTERY_LOW,
     AZD_ERRORS,
     AZD_FLOOR_DEMAND,
     AZD_NAME,
@@ -24,7 +25,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AirzoneEntity
+from . import AirzoneEntity, AirzoneZoneEntity
 from .const import DOMAIN
 from .coordinator import AirzoneUpdateCoordinator
 
@@ -36,11 +37,16 @@ class AirzoneBinarySensorEntityDescription(BinarySensorEntityDescription):
     attributes: dict[str, str] | None = None
 
 
-BINARY_SENSOR_TYPES: Final[tuple[AirzoneBinarySensorEntityDescription, ...]] = (
+ZONE_BINARY_SENSOR_TYPES: Final[tuple[AirzoneBinarySensorEntityDescription, ...]] = (
     AirzoneBinarySensorEntityDescription(
         device_class=BinarySensorDeviceClass.RUNNING,
         key=AZD_AIR_DEMAND,
         name="Air Demand",
+    ),
+    AirzoneBinarySensorEntityDescription(
+        device_class=BinarySensorDeviceClass.BATTERY,
+        key=AZD_BATTERY_LOW,
+        name="Battery Low",
     ),
     AirzoneBinarySensorEntityDescription(
         device_class=BinarySensorDeviceClass.RUNNING,
@@ -65,12 +71,12 @@ async def async_setup_entry(
     """Add Airzone binary sensors from a config_entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
-    binary_sensors = []
+    binary_sensors: list[AirzoneBinarySensor] = []
     for system_zone_id, zone_data in coordinator.data[AZD_ZONES].items():
-        for description in BINARY_SENSOR_TYPES:
+        for description in ZONE_BINARY_SENSOR_TYPES:
             if description.key in zone_data:
                 binary_sensors.append(
-                    AirzoneBinarySensor(
+                    AirzoneZoneBinarySensor(
                         coordinator,
                         description,
                         entry,
@@ -83,7 +89,28 @@ async def async_setup_entry(
 
 
 class AirzoneBinarySensor(AirzoneEntity, BinarySensorEntity):
-    """Define an Airzone sensor."""
+    """Define an Airzone binary sensor."""
+
+    entity_description: AirzoneBinarySensorEntityDescription
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """Return state attributes."""
+        if not self.entity_description.attributes:
+            return None
+        return {
+            key: self.get_airzone_value(val)
+            for key, val in self.entity_description.attributes.items()
+        }
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return true if the binary sensor is on."""
+        return self.get_airzone_value(self.entity_description.key)
+
+
+class AirzoneZoneBinarySensor(AirzoneZoneEntity, AirzoneBinarySensor):
+    """Define an Airzone Zone binary sensor."""
 
     def __init__(
         self,
@@ -97,17 +124,4 @@ class AirzoneBinarySensor(AirzoneEntity, BinarySensorEntity):
         super().__init__(coordinator, entry, system_zone_id, zone_data)
         self._attr_name = f"{zone_data[AZD_NAME]} {description.name}"
         self._attr_unique_id = f"{entry.entry_id}_{system_zone_id}_{description.key}"
-        self.attributes = description.attributes
         self.entity_description = description
-
-    @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
-        """Return state attributes."""
-        if not self.attributes:
-            return None
-        return {key: self.get_zone_value(val) for key, val in self.attributes.items()}
-
-    @property
-    def is_on(self) -> bool | None:
-        """Return true if the binary sensor is on."""
-        return self.get_zone_value(self.entity_description.key)

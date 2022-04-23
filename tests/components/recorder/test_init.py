@@ -57,9 +57,9 @@ from .common import (
     corrupt_db_file,
     wait_recording_done,
 )
-from .conftest import SetupRecorderInstanceT
 
 from tests.common import (
+    SetupRecorderInstanceT,
     async_fire_time_changed,
     async_init_recorder_component,
     fire_time_changed,
@@ -84,12 +84,18 @@ def _default_recorder(hass):
     )
 
 
-async def test_shutdown_before_startup_finishes(hass):
+async def test_shutdown_before_startup_finishes(hass, tmp_path):
     """Test shutdown before recorder starts is clean."""
 
+    # On-disk database because this test does not play nice with the
+    # MutexPool
+    config = {
+        recorder.CONF_DB_URL: "sqlite:///" + str(tmp_path / "pytest.db"),
+        recorder.CONF_COMMIT_INTERVAL: 1,
+    }
     hass.state = CoreState.not_running
 
-    await async_init_recorder_component(hass)
+    await async_init_recorder_component(hass, config)
     await hass.data[DATA_INSTANCE].async_db_ready
     await hass.async_block_till_done()
 
@@ -107,12 +113,11 @@ async def test_shutdown_before_startup_finishes(hass):
     assert run_info.end is not None
 
 
-async def test_shutdown_closes_connections(hass):
+async def test_shutdown_closes_connections(hass, recorder_mock):
     """Test shutdown closes connections."""
 
     hass.state = CoreState.not_running
 
-    await async_init_recorder_component(hass)
     instance = get_instance(hass)
     await instance.async_db_ready
     await hass.async_block_till_done()
