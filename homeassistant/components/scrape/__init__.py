@@ -8,7 +8,7 @@ from .const import PLATFORMS
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Trafikverket Train from a config entry."""
+    """Set up Scrape from a config entry."""
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
@@ -16,6 +16,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload Trafikverket Weatherstation config entry."""
+    """Unload Scrape config entry."""
 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

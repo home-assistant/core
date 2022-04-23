@@ -31,7 +31,7 @@
                     "select": "Defines the HTML tag to search for",
                     "state_class": "The state_class of the sensor",
                     "value_template": "Defines a template to get the state of the sensor",
-                    "verify_ssl": "Enables/disables verification of SSL-certificate, for example if it is self-signed"
+                    "verify_ssl": "Enables/disables verification of SSL/TLS certificate, for example if it is self-signed"
                 }
             }
         }
@@ -65,7 +65,7 @@
                     "select": "Defines the HTML tag to search for",
                     "state_class": "The state_class of the sensor",
                     "value_template": "Defines a template to get the state of the sensor",
-                    "verify_ssl": "Enables/disables verification of SSL-certificate, for example if it is self-signed"
+                    "verify_ssl": "Enables/disables verification of SSL/TLS certificate, for example if it is self-signed"
                 }
             }
         }
