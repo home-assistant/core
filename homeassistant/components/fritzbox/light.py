@@ -7,8 +7,7 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
-    COLOR_MODE_COLOR_TEMP,
-    COLOR_MODE_HS,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -25,7 +24,7 @@ from .const import (
 )
 from .coordinator import FritzboxDataUpdateCoordinator
 
-SUPPORTED_COLOR_MODES = {COLOR_MODE_COLOR_TEMP, COLOR_MODE_HS}
+SUPPORTED_COLOR_MODES = {ColorMode.COLOR_TEMP, ColorMode.HS}
 
 
 async def async_setup_entry(
