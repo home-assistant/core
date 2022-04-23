@@ -26,7 +26,6 @@ from homeassistant.const import (
     CONF_LONGITUDE,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
@@ -273,10 +272,6 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator):
             else:
                 return
 
-        if self._api.max_requests_per_day is None:
-            # We should never get here since we've loaded the data and the lib
-            # should have set this value
-            raise ConfigEntryNotReady("Max requests per day should not be None")
         self.update_interval = async_set_update_interval(self.hass, self._api)
         self._schedule_refresh()
 
