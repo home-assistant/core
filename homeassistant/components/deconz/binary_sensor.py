@@ -163,7 +163,7 @@ ENTITY_DESCRIPTIONS = {
 BINARY_SENSOR_DESCRIPTIONS = [
     DeconzBinarySensorDescription(
         key="tampered",
-        value_fn=lambda device: device.tampered,  # type: ignore[no-any-return]
+        value_fn=lambda device: device.tampered,
         suffix="Tampered",
         update_key="tampered",
         device_class=BinarySensorDeviceClass.TAMPER,
@@ -171,7 +171,7 @@ BINARY_SENSOR_DESCRIPTIONS = [
     ),
     DeconzBinarySensorDescription(
         key="low_battery",
-        value_fn=lambda device: device.low_battery,  # type: ignore[no-any-return]
+        value_fn=lambda device: device.low_battery,
         suffix="Low Battery",
         update_key="lowbattery",
         device_class=BinarySensorDeviceClass.BATTERY,
