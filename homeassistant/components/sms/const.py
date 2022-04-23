@@ -1,5 +1,4 @@
 """Constants for sms Component."""
-
 from typing import Final
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescription
@@ -9,12 +8,11 @@ from homeassistant.helpers.entity import EntityCategory
 DOMAIN = "sms"
 SMS_GATEWAY = "SMS_GATEWAY"
 SMS_STATE_UNREAD = "UnRead"
-SIGNAL_COORDINATOR = "signal_gateway"
-NETWORK_COORDINATOR = "network_gateway"
-GAMMU_DATA = "data"
+SIGNAL_COORDINATOR = "signal_coordinator"
+NETWORK_COORDINATOR = "network_coordinator"
 GATEWAY = "gateway"
 
-DEFAULT_SCAN_INTERVAL = 60
+DEFAULT_SCAN_INTERVAL = 30
 
 SIGNAL_SENSORS: Final[dict[str, SensorEntityDescription]] = {
     "SignalStrength": SensorEntityDescription(

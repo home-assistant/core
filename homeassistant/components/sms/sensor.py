@@ -1,6 +1,4 @@
 """Support for SMS dongle sensor."""
-import logging
-
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -18,45 +16,43 @@ from .const import (
     SMS_GATEWAY,
 )
 
-_LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up all GSM sensors."""
+    """Set up all device sensors."""
     sms_data = hass.data[DOMAIN][SMS_GATEWAY]
     signal_coordinator = sms_data[SIGNAL_COORDINATOR]
     network_coordinator = sms_data[NETWORK_COORDINATOR]
     gateway = sms_data[GATEWAY]
-    imei = await gateway.get_imei_async()
+    unique_id = str(await gateway.get_imei_async())
     entities = []
     for _, description in SIGNAL_SENSORS.items():
         entities.append(
-            GSMSensor(
+            DeviceSensor(
                 signal_coordinator,
                 description,
-                str(imei),
+                unique_id,
             )
         )
     for _, description in NETWORK_SENSORS.items():
         entities.append(
-            GSMSensor(
+            DeviceSensor(
                 network_coordinator,
                 description,
-                str(imei),
+                unique_id,
             )
         )
     async_add_entities(entities, True)
 
 
-class GSMSensor(CoordinatorEntity, SensorEntity):
-    """Implementation of a GSM sensor."""
+class DeviceSensor(CoordinatorEntity, SensorEntity):
+    """Implementation of a device sensor."""
 
     def __init__(self, coordinator, description, unique_id):
-        """Initialize the GSM sensor."""
+        """Initialize the device sensor."""
         super().__init__(coordinator)
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)},

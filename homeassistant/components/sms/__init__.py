@@ -3,14 +3,15 @@ from datetime import timedelta
 import logging
 
 import async_timeout
+import gammu
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_DEVICE, CONF_SCAN_INTERVAL, Platform
+from homeassistant.const import CONF_DEVICE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     DEFAULT_SCAN_INTERVAL,
@@ -58,10 +59,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not gateway:
         return False
 
-    scan_interval = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-
-    signal_coordinator = GammuSignalCoordinator(hass, gateway, scan_interval)
-    network_coordinator = GammuNetworkCoordinator(hass, gateway, scan_interval)
+    signal_coordinator = SignalCoordinator(hass, gateway)
+    network_coordinator = NetworkCoordinator(hass, gateway)
 
     # Fetch initial data so we have data when entities subscribe
     await signal_coordinator.async_config_entry_first_refresh()
@@ -89,37 +88,45 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class GammuSignalCoordinator(DataUpdateCoordinator):
+class SignalCoordinator(DataUpdateCoordinator):
     """Signal strength coordinator."""
 
-    def __init__(self, hass, gateway, scan_interval):
+    def __init__(self, hass, gateway):
         """Initialize signal strength coordinator."""
         super().__init__(
             hass,
             _LOGGER,
-            name="Gammu signal state",
-            update_interval=timedelta(seconds=scan_interval),
+            name="Device signal state",
+            update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
         )
         self._gateway = gateway
 
     async def _async_update_data(self):
-        async with async_timeout.timeout(10):
-            return await self._gateway.get_signal_quality_async()
+        """Fetch device signal quality."""
+        try:
+            async with async_timeout.timeout(10):
+                return await self._gateway.get_signal_quality_async()
+        except gammu.GSMError as exc:
+            raise UpdateFailed(f"Error communicating with device: {exc}") from exc
 
 
-class GammuNetworkCoordinator(DataUpdateCoordinator):
+class NetworkCoordinator(DataUpdateCoordinator):
     """Network info coordinator."""
 
-    def __init__(self, hass, gateway, scan_interval):
+    def __init__(self, hass, gateway):
         """Initialize network info coordinator."""
         super().__init__(
             hass,
             _LOGGER,
-            name="Gammu network state",
-            update_interval=timedelta(seconds=scan_interval),
+            name="Device network state",
+            update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
         )
         self._gateway = gateway
 
     async def _async_update_data(self):
-        async with async_timeout.timeout(10):
-            return await self._gateway.get_network_info_async()
+        """Fetch device network info."""
+        try:
+            async with async_timeout.timeout(10):
+                return await self._gateway.get_network_info_async()
+        except gammu.GSMError as exc:
+            raise UpdateFailed(f"Error communicating with device: {exc}") from exc
