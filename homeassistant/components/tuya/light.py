@@ -398,7 +398,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         super().__init__(device, device_manager)
         self.entity_description = description
         self._attr_unique_id = f"{super().unique_id}{description.key}"
-        self._attr_supported_color_modes = {ColorMode.ONOFF}
+        self._attr_supported_color_modes = set()
 
         # Determine DPCodes
         self._color_mode_dpcode = self.find_dpcode(
@@ -447,6 +447,9 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
                     self._brightness and self._brightness.max > 255
                 ):
                     self._color_data_type = DEFAULT_COLOR_TYPE_DATA_V2
+
+        if not self._attr_supported_color_modes:
+            self._attr_supported_color_modes = {ColorMode.ONOFF}
 
     @property
     def is_on(self) -> bool:
