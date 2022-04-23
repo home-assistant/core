@@ -203,6 +203,5 @@ async def test_invalid_url_on_update(
     ):
         await async_update_entity(hass, "sensor.count_tables")
 
-    print(caplog.text)
     assert "sqlite://homeassistant:hunter2@homeassistant.local" not in caplog.text
     assert "sqlite://****:****@homeassistant.local" in caplog.text
