@@ -4,7 +4,6 @@ from __future__ import annotations
 import bisect
 from dataclasses import dataclass
 from datetime import datetime
-import time
 
 from sqlalchemy.orm.session import Session
 
@@ -26,9 +25,7 @@ class RunHistory:
 
     def __init__(self) -> None:
         """Track recorder run history."""
-        self._recording_start = dt_util.as_utc(
-            datetime.fromtimestamp(time.time() - time.monotonic())
-        )
+        self._recording_start = dt_util.utcnow()
         self._current_run_info: RecorderRuns | None = None
         self._run_history = _RecorderRunsHistory([], {})
 
