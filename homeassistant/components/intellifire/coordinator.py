@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+import random
 
 from aiohttp import ClientConnectionError
 from async_timeout import timeout
@@ -38,12 +39,15 @@ class IntellifireDataUpdateCoordinator(DataUpdateCoordinator[IntellifirePollData
         self._control_api = control_api
 
     async def _async_update_data(self) -> IntellifirePollData:
-        LOGGER.debug("Calling update loop on IntelliFire")
+        value = random.random()
+        LOGGER.debug("Calling update loop on IntelliFire [%s]", value)
         async with timeout(100):
             try:
                 await self._read_api.poll()
             except (ConnectionError, ClientConnectionError) as exception:
+                LOGGER.error("Fail on [%s]", value)
                 raise UpdateFailed from exception
+        LOGGER.debug("Update Complete [%s]", value)
         return self._read_api.data
 
     @property
