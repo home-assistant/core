@@ -3,7 +3,7 @@ from datetime import timedelta
 import logging
 
 import async_timeout
-import gammu
+import gammu  # pylint: disable=import-error
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
