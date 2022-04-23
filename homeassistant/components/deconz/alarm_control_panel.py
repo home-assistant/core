@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from pydeconz.alarm_system import AlarmSystem
-from pydeconz.sensor import (
+from pydeconz.models.sensor.ancillary_control import (
     ANCILLARY_CONTROL_ARMED_AWAY,
     ANCILLARY_CONTROL_ARMED_NIGHT,
     ANCILLARY_CONTROL_ARMED_STAY,
