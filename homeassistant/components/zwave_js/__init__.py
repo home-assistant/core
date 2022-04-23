@@ -12,9 +12,9 @@ from zwave_js_server.exceptions import BaseZwaveJSServerError, InvalidServerVers
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.notification import (
     EntryControlNotification,
+    MultilevelSwitchNotification,
     NotificationNotification,
     PowerLevelNotification,
-    MultilevelSwitchNotification,
 )
 from zwave_js_server.model.value import Value, ValueNotification
 

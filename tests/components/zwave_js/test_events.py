@@ -198,6 +198,28 @@ async def test_notifications(hass, hank_binary_switch, integration, client):
     assert events[1].data["command_class"] == CommandClass.ENTRY_CONTROL
     assert events[1].data["command_class_name"] == "Entry Control"
 
+    # Publish fake Multilevel Switch CC notification
+    event = Event(
+        type="notification",
+        data={
+            "source": "node",
+            "event": "notification",
+            "nodeId": 32,
+            "ccId": 38,
+            "args": {"type": 5},
+        },
+    )
+
+    node.receive_event(event)
+    # wait for the event
+    await hass.async_block_till_done()
+    assert len(events) == 2
+    assert events[1].data["home_id"] == client.driver.controller.home_id
+    assert events[1].data["node_id"] == 32
+    assert events[1].data["type"] == 5
+    assert events[1].data["command_class"] == CommandClass.MULTILEVEL_SWITCH
+    assert events[1].data["command_class_name"] == "Multilevel Switch"
+
 
 async def test_value_updated(hass, vision_security_zl7432, integration, client):
     """Test value updated events."""
