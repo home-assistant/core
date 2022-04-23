@@ -1,0 +1,37 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Setup SeventeenTrack",
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "api_token": "[%key:common::config_flow::data::api_token%]"
+        }
+      },
+      "reauth_confirm": {
+        "description": "The API token is no longer valid.",
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "data": {
+          "api_token": "[%key:common::config_flow::data::api_token%]"
+        }
+      }
+    },
+    "abort": {
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "scan_interval": "Update frequency (minutes)",
+          "show_archived": "Include archived packages"
+        }
+      }
+    }
+  }
+}
