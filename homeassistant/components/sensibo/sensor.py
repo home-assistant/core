@@ -113,7 +113,7 @@ DEVICE_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
         key="pure_sensitivity",
         name="Pure Sensitivity",
         icon="mdi:air-filter",
-        value_fn=lambda data: data.pure_boost_attr.get("sensitivity"),
+        value_fn=lambda data: data.pure_sensitivity,
     ),
 )
 
@@ -138,7 +138,7 @@ async def async_setup_entry(
         SensiboDeviceSensor(coordinator, device_id, description)
         for device_id, device_data in coordinator.data.parsed.items()
         for description in DEVICE_SENSOR_TYPES
-        if description.value_fn(device_data) is not None
+        if getattr(device_data, description.key) is not None
     )
     async_add_entities(entities)
 
