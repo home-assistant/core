@@ -139,10 +139,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                 except (ConnectionError, ClientConnectionError):
                     errors["base"] = "iftapi_connect"
-                    LOGGER.info("ERROR: iftapi_connect")
+                    LOGGER.error("ERROR: iftapi_connect")
                 except LoginException:
                     errors["base"] = "api_error"
-                    LOGGER.info("ERROR: api_error")
+                    LOGGER.error("ERROR: api_error")
 
         return self.async_show_form(
             step_id="api_config", errors=errors, data_schema=control_schema
