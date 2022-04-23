@@ -84,10 +84,8 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
         conf_password = vol.Required(CONF_PASSWORD)
         if self.show_advanced_options:
             conf_password = vol.Optional(CONF_PASSWORD)
-            adv_schema = {
-                vol.Optional(CONF_PORT): cv.port,
-                vol.Optional(CONF_SSH_KEY): str,
-            }
+            adv_schema[vol.Optional(CONF_PORT)] = cv.port
+            adv_schema[vol.Optional(CONF_SSH_KEY)] = str
 
         schema = {
             vol.Required(CONF_HOST, default=user_input.get(CONF_HOST, "")): str,
