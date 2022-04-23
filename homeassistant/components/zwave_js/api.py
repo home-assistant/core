@@ -377,7 +377,7 @@ async def websocket_network_status(
         },
         "controller": {
             "home_id": controller.home_id,
-            "library_version": controller.library_version,
+            "sdk_version": controller.sdk_version,
             "type": controller.controller_type,
             "own_node_id": controller.own_node_id,
             "is_secondary": controller.is_secondary,
