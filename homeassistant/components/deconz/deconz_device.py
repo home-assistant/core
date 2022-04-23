@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from pydeconz.group import Group as DeconzGroup
 from pydeconz.light import LightBase as DeconzLight
+from pydeconz.models.group import Group as DeconzGroup
 from pydeconz.models.scene import Scene as PydeconzScene
 from pydeconz.models.sensor import SensorBase as DeconzSensor
 
