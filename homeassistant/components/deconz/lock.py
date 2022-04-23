@@ -93,7 +93,7 @@ class DeconzLock(DeconzDevice, LockEntity):
     @property
     def is_locked(self) -> bool:
         """Return true if lock is on."""
-        return self._device.is_locked  # type: ignore[no-any-return]
+        return self._device.is_locked
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""

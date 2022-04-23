@@ -216,7 +216,7 @@ ENTITY_DESCRIPTIONS = {
 SENSOR_DESCRIPTIONS = [
     DeconzSensorDescription(
         key="battery",
-        value_fn=lambda device: device.battery,  # type: ignore[no-any-return]
+        value_fn=lambda device: device.battery,
         suffix="Battery",
         update_key="battery",
         device_class=SensorDeviceClass.BATTERY,
@@ -226,7 +226,7 @@ SENSOR_DESCRIPTIONS = [
     ),
     DeconzSensorDescription(
         key="secondary_temperature",
-        value_fn=lambda device: device.secondary_temperature,  # type: ignore[no-any-return]
+        value_fn=lambda device: device.secondary_temperature,
         suffix="Temperature",
         update_key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -354,9 +354,9 @@ class DeconzSensor(DeconzDevice, SensorEntity):
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         if self.entity_description.device_class is SensorDeviceClass.TIMESTAMP:
-            return dt_util.parse_datetime(
-                self.entity_description.value_fn(self._device)  # type: ignore[arg-type]
-            )
+            value = self.entity_description.value_fn(self._device)
+            assert isinstance(value, str)
+            return dt_util.parse_datetime(value)
         return self.entity_description.value_fn(self._device)
 
     @property
