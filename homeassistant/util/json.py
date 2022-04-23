@@ -3,8 +3,10 @@ from __future__ import annotations
 
 from collections import deque
 from collections.abc import Callable
+import io
 import json
 import logging
+import mmap
 from typing import Any
 
 from homeassistant.core import Event, State
@@ -30,7 +32,13 @@ def load_json(filename: str, default: list | dict | None = None) -> list | dict:
     """
     try:
         with open(filename, encoding="utf-8") as fdesc:
-            return json.loads(fdesc.read())  # type: ignore[no-any-return]
+            try:
+                with mmap.mmap(
+                    fdesc.fileno(), length=0, access=mmap.ACCESS_READ
+                ) as mmap_obj:
+                    return json.loads(mmap_obj.read())  # type: ignore[no-any-return]
+            except io.UnsupportedOperation:
+                return json.loads(fdesc.read())  # type: ignore[no-any-return]
     except FileNotFoundError:
         # This is not a fatal error
         _LOGGER.debug("JSON file not found: %s", filename)
