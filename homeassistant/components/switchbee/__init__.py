@@ -16,11 +16,15 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_EXPOSE_GROUP_SWITCHES, CONF_EXPOSE_SCENARIOS, DOMAIN
+from .const import (
+    CONF_EXPOSE_GROUP_SWITCHES,
+    CONF_EXPOSE_SCENARIOS,
+    DOMAIN,
+    SCAN_INTERVAL_SEC,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,18 +38,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     central_unit = entry.data[CONF_HOST]
     user = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
-    scan_interval = entry.data[CONF_SCAN_INTERVAL]
-    expose_group_switches = entry.data[CONF_EXPOSE_GROUP_SWITCHES]
-    expose_scenarios = entry.data[CONF_EXPOSE_SCENARIOS]
+
+    scan_interval = entry.options.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL_SEC)
+    expose_group_switches = entry.options.get(CONF_EXPOSE_GROUP_SWITCHES)
+    expose_scenarios = entry.options.get(CONF_EXPOSE_SCENARIOS)
 
     websession = async_get_clientsession(hass, verify_ssl=False)
     api = switchbee.SwitchBeeAPI(central_unit, user, password, websession)
     try:
         await api.login()
-    except switchbee.SwitchBeeError as exp:
-        raise PlatformNotReady(
-            f"Failed to login to the central unit {central_unit} with the user {user}: {exp}"
-        ) from switchbee.SwitchBeeError
+    except switchbee.SwitchBeeError:
+        return False
 
     coordinator = SwitchBeeCoordinator(
         hass, api, scan_interval, expose_group_switches, expose_scenarios

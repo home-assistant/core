@@ -17,15 +17,18 @@
                     "password": "Password"
                 },
                 "title": "Setup SwitchBee Central Unit"
-            },
-            "advanced": {
-                "data": {
-                    "scan_interval": "Polling interval in seconds",
-                    "expose_group_switches": "Expose Group Scenarios as Switch entity",
-                    "expose_scenarios": "Expose Scenarios as Button entity "
-                },
-                "title": "SwitchBee Advanced Configuration"
             }
         }
-    }
+    },
+    "options": {
+        "step": {
+          "init": {
+            "data": {
+              "scan_interval": "Polling interval in seconds",
+              "expose_group_switches": "Expose Group Scenarios as Switch entity",
+              "expose_scenarios": "Expose Scenarios as Button entity "
+            }
+          }
+        }
+      }
 }
