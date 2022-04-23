@@ -3,7 +3,7 @@
   "name": "Electra Smart",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/electraac",
-  "requirements": ["pyelectra==0.0.2"],
+  "requirements": ["pyelectra==0.0.3"],
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},

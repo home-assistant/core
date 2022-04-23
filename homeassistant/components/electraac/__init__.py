@@ -7,7 +7,7 @@ import logging
 import electra
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_TOKEN, Platform
+from homeassistant.const import CONF_SCAN_INTERVAL, CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -29,7 +29,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     websession = async_get_clientsession(hass)
     electra_api = electra.ElectraAPI(websession, imei, token)
-    coordinator = ElectraSmartCoordinator(hass, electra_api)
+    scan_interval = entry.options.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL_SEC)
+
+    coordinator = ElectraSmartCoordinator(hass, electra_api, scan_interval)
     await coordinator.async_config_entry_first_refresh()
     entry.async_on_unload(entry.add_update_listener(update_listener))
     hass.data[DOMAIN][entry.entry_id] = coordinator
@@ -55,7 +57,7 @@ async def update_listener(hass: HomeAssistant, config_entry: ConfigEntry) -> Non
 class ElectraSmartCoordinator(DataUpdateCoordinator):
     """Class to manage fetching Electra AC data API."""
 
-    def __init__(self, hass, electra_api):
+    def __init__(self, hass, electra_api, scan_interval):
         """Initialize."""
         self._hass = hass
         self._api = electra_api
@@ -64,7 +66,7 @@ class ElectraSmartCoordinator(DataUpdateCoordinator):
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(seconds=SCAN_INTERVAL_SEC),
+            update_interval=timedelta(seconds=scan_interval),
         )
 
     @property
@@ -84,15 +86,21 @@ class ElectraSmartCoordinator(DataUpdateCoordinator):
                     f"Error communicating with API: {exp}"
                 ) from electra.ElectraApiError
 
-            _LOGGER.debug("%s Electra AC devices were loaded", len(self._devices))
             for device in resp:
                 self._devices[device.mac] = device
 
+            _LOGGER.debug(
+                "%s Electra AC devices were loaded", len(self._devices.items())
+            )
         for device_mac in self._devices:
             try:
                 await self._api.get_last_telemtry(self._devices[device_mac])
-                _LOGGER.debug("Updating %s", self._devices[device_mac].__dict__)
-
+                _LOGGER.debug(
+                    "%s (%s) state updated: %s",
+                    device_mac,
+                    self._devices[device_mac].name,
+                    self._devices[device_mac].__dict__,
+                )
             except electra.ElectraApiError as exp:
                 raise UpdateFailed(
                     f"Failed to get {self._devices[device_mac].name} state: {exp}"

@@ -21,5 +21,14 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Polling interval (Seconds)"
+                }
+            }
+        }
     }
 }
