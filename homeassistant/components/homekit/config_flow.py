@@ -652,7 +652,7 @@ def _exclude_by_entity_registry(
         (entry := ent_reg.async_get(entity_id))
         and (
             entry.hidden_by is not None
-            or (not include_entity_category or entry.entity_category is not None)
+            or (not include_entity_category and entry.entity_category is not None)
         )
     )
 

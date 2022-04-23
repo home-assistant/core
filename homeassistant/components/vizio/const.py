@@ -5,16 +5,9 @@ from pyvizio.const import (
 )
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDeviceClass
-from homeassistant.components.media_player.const import (
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
+from homeassistant.components.media_player import (
+    MediaPlayerDeviceClass,
+    MediaPlayerEntityFeature,
 )
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
@@ -62,18 +55,20 @@ ICON = {
 }
 
 COMMON_SUPPORTED_COMMANDS = (
-    SUPPORT_SELECT_SOURCE
-    | SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_VOLUME_SET
-    | SUPPORT_VOLUME_STEP
+    MediaPlayerEntityFeature.SELECT_SOURCE
+    | MediaPlayerEntityFeature.TURN_ON
+    | MediaPlayerEntityFeature.TURN_OFF
+    | MediaPlayerEntityFeature.VOLUME_MUTE
+    | MediaPlayerEntityFeature.VOLUME_SET
+    | MediaPlayerEntityFeature.VOLUME_STEP
 )
 
 SUPPORTED_COMMANDS = {
     MediaPlayerDeviceClass.SPEAKER: COMMON_SUPPORTED_COMMANDS,
     MediaPlayerDeviceClass.TV: (
-        COMMON_SUPPORTED_COMMANDS | SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK
+        COMMON_SUPPORTED_COMMANDS
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.PREVIOUS_TRACK
     ),
 }
 

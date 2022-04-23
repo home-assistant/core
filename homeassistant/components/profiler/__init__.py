@@ -1,6 +1,5 @@
 """The profiler integration."""
 import asyncio
-import cProfile
 from datetime import timedelta
 import logging
 import reprlib
@@ -10,9 +9,6 @@ import time
 import traceback
 from typing import Any
 
-from guppy import hpy
-import objgraph
-from pyprof2calltree import convert
 import voluptuous as vol
 
 from homeassistant.components import persistent_notification
@@ -100,6 +96,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             return f"Failed to serialize {type(obj)}"
 
     def _dump_log_objects(call: ServiceCall) -> None:
+        # Imports deferred to avoid loading modules
+        # in memory since usually only one part of this
+        # integration is used at a time
+        import objgraph  # pylint: disable=import-outside-toplevel
+
         obj_type = call.data[CONF_TYPE]
 
         _LOGGER.critical(
@@ -220,6 +221,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def _async_generate_profile(hass: HomeAssistant, call: ServiceCall):
+    # Imports deferred to avoid loading modules
+    # in memory since usually only one part of this
+    # integration is used at a time
+    import cProfile  # pylint: disable=import-outside-toplevel
+
     start_time = int(time.time() * 1000000)
     persistent_notification.async_create(
         hass,
@@ -246,6 +252,11 @@ async def _async_generate_profile(hass: HomeAssistant, call: ServiceCall):
 
 
 async def _async_generate_memory_profile(hass: HomeAssistant, call: ServiceCall):
+    # Imports deferred to avoid loading modules
+    # in memory since usually only one part of this
+    # integration is used at a time
+    from guppy import hpy  # pylint: disable=import-outside-toplevel
+
     start_time = int(time.time() * 1000000)
     persistent_notification.async_create(
         hass,
@@ -269,6 +280,11 @@ async def _async_generate_memory_profile(hass: HomeAssistant, call: ServiceCall)
 
 
 def _write_profile(profiler, cprofile_path, callgrind_path):
+    # Imports deferred to avoid loading modules
+    # in memory since usually only one part of this
+    # integration is used at a time
+    from pyprof2calltree import convert  # pylint: disable=import-outside-toplevel
+
     profiler.create_stats()
     profiler.dump_stats(cprofile_path)
     convert(profiler.getstats(), callgrind_path)
@@ -279,4 +295,9 @@ def _write_memory_profile(heap, heap_path):
 
 
 def _log_objects(*_):
+    # Imports deferred to avoid loading modules
+    # in memory since usually only one part of this
+    # integration is used at a time
+    import objgraph  # pylint: disable=import-outside-toplevel
+
     _LOGGER.critical("Memory Growth: %s", objgraph.growth(limit=100))

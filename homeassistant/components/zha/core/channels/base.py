@@ -8,7 +8,12 @@ import logging
 from typing import Any
 
 import zigpy.exceptions
-from zigpy.zcl.foundation import ConfigureReportingResponseRecord, Status
+from zigpy.zcl.foundation import (
+    CommandSchema,
+    ConfigureReportingResponseRecord,
+    Status,
+    ZCLAttributeDef,
+)
 
 from homeassistant.const import ATTR_COMMAND
 from homeassistant.core import callback
@@ -20,6 +25,7 @@ from ..const import (
     ATTR_ATTRIBUTE_ID,
     ATTR_ATTRIBUTE_NAME,
     ATTR_CLUSTER_ID,
+    ATTR_PARAMS,
     ATTR_TYPE,
     ATTR_UNIQUE_ID,
     ATTR_VALUE,
@@ -111,7 +117,11 @@ class ZigbeeChannel(LogMixin):
         if not hasattr(self, "_value_attribute") and self.REPORT_CONFIG:
             attr = self.REPORT_CONFIG[0].get("attr")
             if isinstance(attr, str):
-                self.value_attribute = self.cluster.attributes_by_name.get(attr)
+                attribute: ZCLAttributeDef = self.cluster.attributes_by_name.get(attr)
+                if attribute is not None:
+                    self.value_attribute = attribute.id
+                else:
+                    self.value_attribute = None
             else:
                 self.value_attribute = attr
         self._status = ChannelStatus.CREATED
@@ -354,14 +364,27 @@ class ZigbeeChannel(LogMixin):
         """Handle ZDO commands on this cluster."""
 
     @callback
-    def zha_send_event(self, command: str, args: int | dict) -> None:
+    def zha_send_event(self, command: str, arg: list | dict | CommandSchema) -> None:
         """Relay events to hass."""
+
+        if isinstance(arg, CommandSchema):
+            args = [a for a in arg if a is not None]
+            params = arg.as_dict()
+        elif isinstance(arg, (list, dict)):
+            # Quirks can directly send lists and dicts to ZHA this way
+            args = arg
+            params = {}
+        else:
+            raise TypeError(f"Unexpected zha_send_event {command!r} argument: {arg!r}")
+
         self._ch_pool.zha_send_event(
             {
                 ATTR_UNIQUE_ID: self.unique_id,
                 ATTR_CLUSTER_ID: self.cluster.cluster_id,
                 ATTR_COMMAND: command,
+                # Maintain backwards compatibility with the old zigpy response format
                 ATTR_ARGS: args,
+                ATTR_PARAMS: params,
             }
         )
 

@@ -13,6 +13,7 @@ from homeassistant.components import recorder
 from homeassistant.components.recorder import (
     CONF_AUTO_PURGE,
     CONF_AUTO_REPACK,
+    CONF_COMMIT_INTERVAL,
     CONF_DB_URL,
     CONFIG_SCHEMA,
     DOMAIN,
@@ -56,9 +57,9 @@ from .common import (
     corrupt_db_file,
     wait_recording_done,
 )
-from .conftest import SetupRecorderInstanceT
 
 from tests.common import (
+    SetupRecorderInstanceT,
     async_fire_time_changed,
     async_init_recorder_component,
     fire_time_changed,
@@ -83,12 +84,18 @@ def _default_recorder(hass):
     )
 
 
-async def test_shutdown_before_startup_finishes(hass):
+async def test_shutdown_before_startup_finishes(hass, tmp_path):
     """Test shutdown before recorder starts is clean."""
 
+    # On-disk database because this test does not play nice with the
+    # MutexPool
+    config = {
+        recorder.CONF_DB_URL: "sqlite:///" + str(tmp_path / "pytest.db"),
+        recorder.CONF_COMMIT_INTERVAL: 1,
+    }
     hass.state = CoreState.not_running
 
-    await async_init_recorder_component(hass)
+    await async_init_recorder_component(hass, config)
     await hass.data[DATA_INSTANCE].async_db_ready
     await hass.async_block_till_done()
 
@@ -106,12 +113,11 @@ async def test_shutdown_before_startup_finishes(hass):
     assert run_info.end is not None
 
 
-async def test_shutdown_closes_connections(hass):
+async def test_shutdown_closes_connections(hass, recorder_mock):
     """Test shutdown closes connections."""
 
     hass.state = CoreState.not_running
 
-    await async_init_recorder_component(hass)
     instance = get_instance(hass)
     await instance.async_db_ready
     await hass.async_block_till_done()
@@ -186,7 +192,7 @@ async def test_saving_many_states(
 ):
     """Test we expire after many commits."""
     instance = await async_setup_recorder_instance(
-        hass, {recorder.CONF_COMMIT_INTERVAL: 1}
+        hass, {recorder.CONF_COMMIT_INTERVAL: 0}
     )
 
     entity_id = "test.recorder"
@@ -665,37 +671,37 @@ def test_auto_purge(hass_recorder):
     with patch(
         "homeassistant.components.recorder.purge.purge_old_data", return_value=True
     ) as purge_old_data, patch(
-        "homeassistant.components.recorder.perodic_db_cleanups"
-    ) as perodic_db_cleanups:
+        "homeassistant.components.recorder.periodic_db_cleanups"
+    ) as periodic_db_cleanups:
         # Advance one day, and the purge task should run
         test_time = test_time + timedelta(days=1)
         run_tasks_at_time(hass, test_time)
         assert len(purge_old_data.mock_calls) == 1
-        assert len(perodic_db_cleanups.mock_calls) == 1
+        assert len(periodic_db_cleanups.mock_calls) == 1
 
         purge_old_data.reset_mock()
-        perodic_db_cleanups.reset_mock()
+        periodic_db_cleanups.reset_mock()
 
         # Advance one day, and the purge task should run again
         test_time = test_time + timedelta(days=1)
         run_tasks_at_time(hass, test_time)
         assert len(purge_old_data.mock_calls) == 1
-        assert len(perodic_db_cleanups.mock_calls) == 1
+        assert len(periodic_db_cleanups.mock_calls) == 1
 
         purge_old_data.reset_mock()
-        perodic_db_cleanups.reset_mock()
+        periodic_db_cleanups.reset_mock()
 
         # Advance less than one full day.  The alarm should not yet fire.
         test_time = test_time + timedelta(hours=23)
         run_tasks_at_time(hass, test_time)
         assert len(purge_old_data.mock_calls) == 0
-        assert len(perodic_db_cleanups.mock_calls) == 0
+        assert len(periodic_db_cleanups.mock_calls) == 0
 
         # Advance to the next day and fire the alarm again
         test_time = test_time + timedelta(hours=1)
         run_tasks_at_time(hass, test_time)
         assert len(purge_old_data.mock_calls) == 1
-        assert len(perodic_db_cleanups.mock_calls) == 1
+        assert len(periodic_db_cleanups.mock_calls) == 1
 
     dt_util.set_default_time_zone(original_tz)
 
@@ -725,15 +731,15 @@ def test_auto_purge_auto_repack_on_second_sunday(hass_recorder):
     ), patch(
         "homeassistant.components.recorder.purge.purge_old_data", return_value=True
     ) as purge_old_data, patch(
-        "homeassistant.components.recorder.perodic_db_cleanups"
-    ) as perodic_db_cleanups:
+        "homeassistant.components.recorder.periodic_db_cleanups"
+    ) as periodic_db_cleanups:
         # Advance one day, and the purge task should run
         test_time = test_time + timedelta(days=1)
         run_tasks_at_time(hass, test_time)
         assert len(purge_old_data.mock_calls) == 1
         args, _ = purge_old_data.call_args_list[0]
         assert args[2] is True  # repack
-        assert len(perodic_db_cleanups.mock_calls) == 1
+        assert len(periodic_db_cleanups.mock_calls) == 1
 
     dt_util.set_default_time_zone(original_tz)
 
@@ -763,15 +769,15 @@ def test_auto_purge_auto_repack_disabled_on_second_sunday(hass_recorder):
     ), patch(
         "homeassistant.components.recorder.purge.purge_old_data", return_value=True
     ) as purge_old_data, patch(
-        "homeassistant.components.recorder.perodic_db_cleanups"
-    ) as perodic_db_cleanups:
+        "homeassistant.components.recorder.periodic_db_cleanups"
+    ) as periodic_db_cleanups:
         # Advance one day, and the purge task should run
         test_time = test_time + timedelta(days=1)
         run_tasks_at_time(hass, test_time)
         assert len(purge_old_data.mock_calls) == 1
         args, _ = purge_old_data.call_args_list[0]
         assert args[2] is False  # repack
-        assert len(perodic_db_cleanups.mock_calls) == 1
+        assert len(periodic_db_cleanups.mock_calls) == 1
 
     dt_util.set_default_time_zone(original_tz)
 
@@ -801,15 +807,15 @@ def test_auto_purge_no_auto_repack_on_not_second_sunday(hass_recorder):
     ), patch(
         "homeassistant.components.recorder.purge.purge_old_data", return_value=True
     ) as purge_old_data, patch(
-        "homeassistant.components.recorder.perodic_db_cleanups"
-    ) as perodic_db_cleanups:
+        "homeassistant.components.recorder.periodic_db_cleanups"
+    ) as periodic_db_cleanups:
         # Advance one day, and the purge task should run
         test_time = test_time + timedelta(days=1)
         run_tasks_at_time(hass, test_time)
         assert len(purge_old_data.mock_calls) == 1
         args, _ = purge_old_data.call_args_list[0]
         assert args[2] is False  # repack
-        assert len(perodic_db_cleanups.mock_calls) == 1
+        assert len(periodic_db_cleanups.mock_calls) == 1
 
     dt_util.set_default_time_zone(original_tz)
 
@@ -825,7 +831,7 @@ def test_auto_purge_disabled(hass_recorder):
     dt_util.set_default_time_zone(tz)
 
     # Purging is scheduled to happen at 4:12am every day. We want
-    # to verify that when auto purge is disabled perodic db cleanups
+    # to verify that when auto purge is disabled periodic db cleanups
     # are still scheduled
     #
     # The clock is started at 4:15am then advanced forward below
@@ -836,16 +842,16 @@ def test_auto_purge_disabled(hass_recorder):
     with patch(
         "homeassistant.components.recorder.purge.purge_old_data", return_value=True
     ) as purge_old_data, patch(
-        "homeassistant.components.recorder.perodic_db_cleanups"
-    ) as perodic_db_cleanups:
+        "homeassistant.components.recorder.periodic_db_cleanups"
+    ) as periodic_db_cleanups:
         # Advance one day, and the purge task should run
         test_time = test_time + timedelta(days=1)
         run_tasks_at_time(hass, test_time)
         assert len(purge_old_data.mock_calls) == 0
-        assert len(perodic_db_cleanups.mock_calls) == 1
+        assert len(periodic_db_cleanups.mock_calls) == 1
 
         purge_old_data.reset_mock()
-        perodic_db_cleanups.reset_mock()
+        periodic_db_cleanups.reset_mock()
 
     dt_util.set_default_time_zone(original_tz)
 
@@ -1208,7 +1214,9 @@ async def test_database_corruption_while_running(hass, tmpdir, caplog):
     test_db_file = await hass.async_add_executor_job(_create_tmpdir_for_test_db)
     dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
 
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: dburl}})
+    assert await async_setup_component(
+        hass, DOMAIN, {DOMAIN: {CONF_DB_URL: dburl, CONF_COMMIT_INTERVAL: 0}}
+    )
     await hass.async_block_till_done()
     caplog.clear()
 
@@ -1299,7 +1307,10 @@ def test_entity_id_filter(hass_recorder):
 async def test_database_lock_and_unlock(hass: HomeAssistant, tmp_path):
     """Test writing events during lock getting written after unlocking."""
     # Use file DB, in memory DB cannot do write locks.
-    config = {recorder.CONF_DB_URL: "sqlite:///" + str(tmp_path / "pytest.db")}
+    config = {
+        recorder.CONF_COMMIT_INTERVAL: 0,
+        recorder.CONF_DB_URL: "sqlite:///" + str(tmp_path / "pytest.db"),
+    }
     await async_init_recorder_component(hass, config)
     await hass.async_block_till_done()
 
@@ -1311,7 +1322,7 @@ async def test_database_lock_and_unlock(hass: HomeAssistant, tmp_path):
 
     event_type = "EVENT_TEST"
     event_data = {"test_attr": 5, "test_attr_10": "nice"}
-    hass.bus.fire(event_type, event_data)
+    hass.bus.async_fire(event_type, event_data)
     task = asyncio.create_task(async_wait_recording_done(hass, instance))
 
     # Recording can't be finished while lock is held
@@ -1333,7 +1344,10 @@ async def test_database_lock_and_unlock(hass: HomeAssistant, tmp_path):
 async def test_database_lock_and_overflow(hass: HomeAssistant, tmp_path):
     """Test writing events during lock leading to overflow the queue causes the database to unlock."""
     # Use file DB, in memory DB cannot do write locks.
-    config = {recorder.CONF_DB_URL: "sqlite:///" + str(tmp_path / "pytest.db")}
+    config = {
+        recorder.CONF_COMMIT_INTERVAL: 0,
+        recorder.CONF_DB_URL: "sqlite:///" + str(tmp_path / "pytest.db"),
+    }
     await async_init_recorder_component(hass, config)
     await hass.async_block_till_done()
 
@@ -1394,3 +1408,50 @@ async def test_database_lock_without_instance(hass):
             assert await instance.lock_database()
         finally:
             assert instance.unlock_database()
+
+
+async def test_in_memory_database(hass, caplog):
+    """Test connecting to an in-memory recorder is not allowed."""
+    assert not await async_setup_component(
+        hass, recorder.DOMAIN, {recorder.DOMAIN: {recorder.CONF_DB_URL: "sqlite://"}}
+    )
+    assert "In-memory SQLite database is not supported" in caplog.text
+
+
+async def test_database_connection_keep_alive(
+    hass: HomeAssistant,
+    async_setup_recorder_instance: SetupRecorderInstanceT,
+    caplog: pytest.LogCaptureFixture,
+):
+    """Test we keep alive socket based dialects."""
+    with patch(
+        "homeassistant.components.recorder.Recorder._using_sqlite", return_value=False
+    ):
+        instance = await async_setup_recorder_instance(hass)
+        # We have to mock this since we don't have a mock
+        # MySQL server available in tests.
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await instance.async_recorder_ready.wait()
+
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=recorder.KEEPALIVE_TIME)
+    )
+    await async_wait_recording_done(hass, instance)
+    assert "Sending keepalive" in caplog.text
+
+
+async def test_database_connection_keep_alive_disabled_on_sqlite(
+    hass: HomeAssistant,
+    async_setup_recorder_instance: SetupRecorderInstanceT,
+    caplog: pytest.LogCaptureFixture,
+):
+    """Test we do not do keep alive for sqlite."""
+    instance = await async_setup_recorder_instance(hass)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await instance.async_recorder_ready.wait()
+
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=recorder.KEEPALIVE_TIME)
+    )
+    await async_wait_recording_done(hass, instance)
+    assert "Sending keepalive" not in caplog.text
