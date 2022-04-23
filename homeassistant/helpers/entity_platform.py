@@ -42,7 +42,7 @@ from . import (
     service,
 )
 from .device_registry import DeviceRegistry
-from .entity_registry import EntityRegistry, RegistryEntryDisabler
+from .entity_registry import EntityRegistry, RegistryEntryDisabler, RegistryEntryHider
 from .event import async_call_later, async_track_time_interval
 from .typing import ConfigType, DiscoveryInfoType
 
@@ -507,6 +507,10 @@ class EntityPlatform:
             if not entity.entity_registry_enabled_default:
                 disabled_by = RegistryEntryDisabler.INTEGRATION
 
+            hidden_by: RegistryEntryHider | None = None
+            if not entity.entity_registry_visible_default:
+                hidden_by = RegistryEntryHider.INTEGRATION
+
             entry = entity_registry.async_get_or_create(
                 self.domain,
                 self.platform_name,
@@ -515,6 +519,7 @@ class EntityPlatform:
                 config_entry=self.config_entry,
                 device_id=device_id,
                 disabled_by=disabled_by,
+                hidden_by=hidden_by,
                 entity_category=entity.entity_category,
                 known_object_ids=self.entities.keys(),
                 original_device_class=entity.device_class,

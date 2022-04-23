@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import OrderedDict
-from collections.abc import Awaitable, Collection
+from collections.abc import Awaitable, Callable, Collection
 from contextlib import contextmanager
 from datetime import datetime, timedelta
 import functools as ft
@@ -896,6 +896,9 @@ def assert_setup_component(count, domain=None):
     ), f"setup_component failed, expected {count} got {res_len}: {res}"
 
 
+SetupRecorderInstanceT = Callable[..., Awaitable[recorder.Recorder]]
+
+
 def init_recorder_component(hass, add_config=None):
     """Initialize the recorder."""
     config = dict(add_config) if add_config else {}
@@ -1027,6 +1030,11 @@ class MockEntity(entity.Entity):
     def entity_registry_enabled_default(self):
         """Return if the entity should be enabled when first added to the entity registry."""
         return self._handle("entity_registry_enabled_default")
+
+    @property
+    def entity_registry_visible_default(self):
+        """Return if the entity should be visible when first added to the entity registry."""
+        return self._handle("entity_registry_visible_default")
 
     @property
     def icon(self):
