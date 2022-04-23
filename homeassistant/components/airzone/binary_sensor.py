@@ -7,6 +7,7 @@ from typing import Any, Final
 
 from aioairzone.const import (
     AZD_AIR_DEMAND,
+    AZD_BATTERY_LOW,
     AZD_ERRORS,
     AZD_FLOOR_DEMAND,
     AZD_NAME,
@@ -41,6 +42,11 @@ ZONE_BINARY_SENSOR_TYPES: Final[tuple[AirzoneBinarySensorEntityDescription, ...]
         device_class=BinarySensorDeviceClass.RUNNING,
         key=AZD_AIR_DEMAND,
         name="Air Demand",
+    ),
+    AirzoneBinarySensorEntityDescription(
+        device_class=BinarySensorDeviceClass.BATTERY,
+        key=AZD_BATTERY_LOW,
+        name="Battery Low",
     ),
     AirzoneBinarySensorEntityDescription(
         device_class=BinarySensorDeviceClass.RUNNING,
