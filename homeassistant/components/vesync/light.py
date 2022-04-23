@@ -87,7 +87,7 @@ class VeSyncBaseLight(VeSyncDevice, LightEntity):
         """Turn the device on."""
         attribute_adjustment_only = False
         # set white temperature
-        if self.color_mode in (ColorMode.COLOR_TEMP,) and ATTR_COLOR_TEMP in kwargs:
+        if self.color_mode == ColorMode.COLOR_TEMP and ATTR_COLOR_TEMP in kwargs:
             # get white temperature from HA data
             color_temp = int(kwargs[ATTR_COLOR_TEMP])
             # ensure value between min-max supported Mireds
