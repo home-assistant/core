@@ -187,7 +187,9 @@ class OctoPrintEstimatedFinishTimeSensor(OctoPrintSensorBase):
 
         read_time = self.coordinator.data["last_read_time"]
 
-        return read_time + timedelta(seconds=job.progress.print_time_left)
+        return (read_time + timedelta(seconds=job.progress.print_time_left)).replace(
+            second=0
+        )
 
 
 class OctoPrintStartTimeSensor(OctoPrintSensorBase):
@@ -215,7 +217,9 @@ class OctoPrintStartTimeSensor(OctoPrintSensorBase):
 
         read_time = self.coordinator.data["last_read_time"]
 
-        return read_time - timedelta(seconds=job.progress.print_time)
+        return (read_time - timedelta(seconds=job.progress.print_time)).replace(
+            second=0
+        )
 
 
 class OctoPrintTemperatureSensor(OctoPrintSensorBase):

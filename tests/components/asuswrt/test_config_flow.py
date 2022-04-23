@@ -52,11 +52,11 @@ def mock_controller_connect():
 
 async def test_user(hass, connect):
     """Test user config."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
+    flow_result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER, "show_advanced_options": True}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
+    assert flow_result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert flow_result["step_id"] == "user"
 
     # test with all provided
     with patch(
@@ -66,10 +66,8 @@ async def test_user(hass, connect):
         "homeassistant.components.asuswrt.config_flow.socket.gethostbyname",
         return_value=IP_ADDRESS,
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data=CONFIG_DATA,
+        result = await hass.config_entries.flow.async_configure(
+            flow_result["flow_id"], user_input=CONFIG_DATA
         )
         await hass.async_block_till_done()
 
@@ -86,7 +84,7 @@ async def test_error_no_password_ssh(hass):
     config_data.pop(CONF_PASSWORD)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": SOURCE_USER},
+        context={"source": SOURCE_USER, "show_advanced_options": True},
         data=config_data,
     )
 
@@ -100,7 +98,7 @@ async def test_error_both_password_ssh(hass):
     config_data[CONF_SSH_KEY] = SSH_KEY
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": SOURCE_USER},
+        context={"source": SOURCE_USER, "show_advanced_options": True},
         data=config_data,
     )
 
@@ -115,7 +113,7 @@ async def test_error_invalid_ssh(hass):
     config_data[CONF_SSH_KEY] = SSH_KEY
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": SOURCE_USER},
+        context={"source": SOURCE_USER, "show_advanced_options": True},
         data=config_data,
     )
 
@@ -164,7 +162,7 @@ async def test_on_connect_failed(hass):
     """Test when we have errors connecting the router."""
     flow_result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": SOURCE_USER},
+        context={"source": SOURCE_USER, "show_advanced_options": True},
     )
 
     with patch("homeassistant.components.asuswrt.router.AsusWrt") as asus_wrt:

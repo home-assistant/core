@@ -250,7 +250,7 @@ async def test_config_entry(hass: HomeAssistant, hass_client: ClientSession, utc
                             "attributes": {
                                 "supported_color_modes": ["hs"],
                                 "friendly_name": "Koogeek-LS1-20833F",
-                                "supported_features": 17,
+                                "supported_features": 0,
                             },
                             "last_changed": "2023-01-01T00:00:00+00:00",
                             "last_updated": "2023-01-01T00:00:00+00:00",
@@ -520,7 +520,7 @@ async def test_device(hass: HomeAssistant, hass_client: ClientSession, utcnow):
                         "attributes": {
                             "supported_color_modes": ["hs"],
                             "friendly_name": "Koogeek-LS1-20833F",
-                            "supported_features": 17,
+                            "supported_features": 0,
                         },
                         "last_changed": "2023-01-01T00:00:00+00:00",
                         "last_updated": "2023-01-01T00:00:00+00:00",

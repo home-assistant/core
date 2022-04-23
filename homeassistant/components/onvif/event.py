@@ -221,7 +221,7 @@ class EventManager:
             event = await parser(self.unique_id, msg)
 
             if not event:
-                LOGGER.warning("Unable to parse event from %s: %s", self.unique_id, msg)
+                LOGGER.info("Unable to parse event from %s: %s", self.unique_id, msg)
                 return
 
             self._events[event.uid] = event
