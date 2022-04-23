@@ -76,7 +76,7 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
         super().__init__(wiz_data, name)
         bulb_type: BulbType = self._device.bulbtype
         features: Features = bulb_type.features
-        self._attr_supported_color_modes: set = set()
+        self._attr_supported_color_modes: set[ColorMode | str] = set()
         if features.color:
             self._attr_supported_color_modes.add(
                 RGB_WHITE_CHANNELS_COLOR_MODE[bulb_type.white_channels]
