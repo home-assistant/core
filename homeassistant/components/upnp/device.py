@@ -3,16 +3,18 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Mapping
+from functools import partial
+from ipaddress import ip_address
 from typing import Any
 from urllib.parse import urlparse
 
-from async_upnp_client import UpnpDevice, UpnpFactory
 from async_upnp_client.aiohttp import AiohttpSessionRequester
+from async_upnp_client.client import UpnpDevice
+from async_upnp_client.client_factory import UpnpFactory
 from async_upnp_client.exceptions import UpnpError
 from async_upnp_client.profiles.igd import IgdDevice, StatusInfo
+from getmac import get_mac_address
 
-from homeassistant.components import ssdp
-from homeassistant.components.ssdp import SsdpChange, SsdpServiceInfo
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -29,6 +31,20 @@ from .const import (
     TIMESTAMP,
     WAN_STATUS,
 )
+
+
+async def async_get_mac_address_from_host(hass: HomeAssistant, host: str) -> str | None:
+    """Get mac address from host."""
+    ip_addr = ip_address(host)
+    if ip_addr.version == 4:
+        mac_address = await hass.async_add_executor_job(
+            partial(get_mac_address, ip=host)
+        )
+    else:
+        mac_address = await hass.async_add_executor_job(
+            partial(get_mac_address, ip6=host)
+        )
+    return mac_address
 
 
 async def async_create_upnp_device(
@@ -50,6 +66,7 @@ class Device:
         self.hass = hass
         self._igd_device = igd_device
         self.coordinator: DataUpdateCoordinator | None = None
+        self._mac_address: str | None = None
 
     @classmethod
     async def async_create_device(
@@ -62,36 +79,27 @@ class Device:
         igd_device = IgdDevice(upnp_device, None)
         device = cls(hass, igd_device)
 
-        # Register SSDP callback for updates.
-        usn = f"{upnp_device.udn}::{upnp_device.device_type}"
-        await ssdp.async_register_callback(
-            hass, device.async_ssdp_callback, {"usn": usn}
-        )
-
         return device
 
-    async def async_ssdp_callback(
-        self, service_info: SsdpServiceInfo, change: SsdpChange
-    ) -> None:
-        """SSDP callback, update if needed."""
-        _LOGGER.debug(
-            "SSDP Callback, change: %s, headers: %s", change, service_info.ssdp_headers
-        )
-        if service_info.ssdp_location is None:
-            return
+    @property
+    def mac_address(self) -> str | None:
+        """Get the mac address."""
+        return self._mac_address
 
-        if change == SsdpChange.ALIVE:
-            # We care only about updates.
-            return
+    @mac_address.setter
+    def mac_address(self, mac_address: str) -> None:
+        """Set the mac address."""
+        self._mac_address = mac_address
 
-        device = self._igd_device.device
-        if service_info.ssdp_location == device.device_url:
-            return
+    @property
+    def original_udn(self) -> str | None:
+        """Get the mac address."""
+        return self._original_udn
 
-        new_upnp_device = await async_create_upnp_device(
-            self.hass, service_info.ssdp_location
-        )
-        device.reinit(new_upnp_device)
+    @original_udn.setter
+    def original_udn(self, original_udn: str) -> None:
+        """Set the original UDN."""
+        self._original_udn = original_udn
 
     @property
     def udn(self) -> str:
@@ -129,11 +137,21 @@ class Device:
         return self.usn
 
     @property
-    def hostname(self) -> str | None:
+    def host(self) -> str | None:
         """Get the hostname."""
         url = self._igd_device.device.device_url
         parsed = urlparse(url)
         return parsed.hostname
+
+    @property
+    def device_url(self) -> str:
+        """Get the device_url of the device."""
+        return self._igd_device.device.device_url
+
+    @property
+    def serial_number(self) -> str | None:
+        """Get the serial number."""
+        return self._igd_device.device.serial_number
 
     def __str__(self) -> str:
         """Get string representation."""
@@ -178,7 +196,7 @@ class Device:
             return_exceptions=True,
         )
         status_info: StatusInfo | None = None
-        ip_address: str | None = None
+        router_ip: str | None = None
 
         for idx, value in enumerate(values):
             if isinstance(value, UpnpError):
@@ -198,10 +216,10 @@ class Device:
             if isinstance(value, StatusInfo):
                 status_info = value
             elif isinstance(value, str):
-                ip_address = value
+                router_ip = value
 
         return {
             WAN_STATUS: status_info[0] if status_info is not None else None,
             ROUTER_UPTIME: status_info[2] if status_info is not None else None,
-            ROUTER_IP: ip_address,
+            ROUTER_IP: router_ip,
         }

@@ -9,7 +9,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DATA_ASUSWRT, DOMAIN
-from .router import AsusWrtRouter
+from .router import AsusWrtDevInfo, AsusWrtRouter
 
 DEFAULT_DEVICE_NAME = "Unknown device"
 
@@ -22,7 +22,7 @@ async def async_setup_entry(
     tracked: set = set()
 
     @callback
-    def update_router():
+    def update_router() -> None:
         """Update the values of the router."""
         add_entities(router, async_add_entities, tracked)
 
@@ -34,7 +34,9 @@ async def async_setup_entry(
 
 
 @callback
-def add_entities(router, async_add_entities, tracked):
+def add_entities(
+    router: AsusWrtRouter, async_add_entities: AddEntitiesCallback, tracked: set[str]
+) -> None:
     """Add new tracker entities from the router."""
     new_tracked = []
 
@@ -54,7 +56,7 @@ class AsusWrtDevice(ScannerEntity):
 
     _attr_should_poll = False
 
-    def __init__(self, router: AsusWrtRouter, device) -> None:
+    def __init__(self, router: AsusWrtRouter, device: AsusWrtDevInfo) -> None:
         """Initialize a AsusWrt device."""
         self._router = router
         self._device = device
@@ -62,7 +64,7 @@ class AsusWrtDevice(ScannerEntity):
         self._attr_name = device.name or DEFAULT_DEVICE_NAME
 
     @property
-    def is_connected(self):
+    def is_connected(self) -> bool:
         """Return true if the device is connected to the network."""
         return self._device.is_connected
 
@@ -72,7 +74,7 @@ class AsusWrtDevice(ScannerEntity):
         return SOURCE_TYPE_ROUTER
 
     @property
-    def hostname(self) -> str:
+    def hostname(self) -> str | None:
         """Return the hostname of device."""
         return self._device.name
 
@@ -82,7 +84,7 @@ class AsusWrtDevice(ScannerEntity):
         return "mdi:lan-connect" if self._device.is_connected else "mdi:lan-disconnect"
 
     @property
-    def ip_address(self) -> str:
+    def ip_address(self) -> str | None:
         """Return the primary ip address of the device."""
         return self._device.ip_address
 
@@ -92,7 +94,7 @@ class AsusWrtDevice(ScannerEntity):
         return self._device.mac
 
     @callback
-    def async_on_demand_update(self):
+    def async_on_demand_update(self) -> None:
         """Update state."""
         self._device = self._router.devices[self._device.mac]
         self._attr_extra_state_attributes = {}
@@ -102,7 +104,7 @@ class AsusWrtDevice(ScannerEntity):
             ] = self._device.last_activity.isoformat(timespec="seconds")
         self.async_write_ha_state()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register state update callback."""
         self.async_on_remove(
             async_dispatcher_connect(

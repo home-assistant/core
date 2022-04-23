@@ -29,7 +29,7 @@
     },
     "step": {
       "ack_no_options": {
-        "data": { },
+        "data": {},
         "description": "There are no options for the SysBus implementation",
         "title": "OneWire SysBus Options"
       },

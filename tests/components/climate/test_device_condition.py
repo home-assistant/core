@@ -6,6 +6,8 @@ import homeassistant.components.automation as automation
 from homeassistant.components.climate import DOMAIN, const, device_condition
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.helpers import config_validation as cv, device_registry
+from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -41,9 +43,19 @@ def calls(hass):
     "set_state,features_reg,features_state,expected_condition_types",
     [
         (False, 0, 0, ["is_hvac_mode"]),
-        (False, const.SUPPORT_PRESET_MODE, 0, ["is_hvac_mode", "is_preset_mode"]),
+        (
+            False,
+            const.ClimateEntityFeature.PRESET_MODE,
+            0,
+            ["is_hvac_mode", "is_preset_mode"],
+        ),
         (True, 0, 0, ["is_hvac_mode"]),
-        (True, 0, const.SUPPORT_PRESET_MODE, ["is_hvac_mode", "is_preset_mode"]),
+        (
+            True,
+            0,
+            const.ClimateEntityFeature.PRESET_MODE,
+            ["is_hvac_mode", "is_preset_mode"],
+        ),
     ],
 )
 async def test_get_conditions(
@@ -81,6 +93,7 @@ async def test_get_conditions(
             "type": condition,
             "device_id": device_entry.id,
             "entity_id": f"{DOMAIN}.test_5678",
+            "metadata": {"secondary": False},
         }
         for condition in expected_condition_types
     ]
@@ -90,17 +103,56 @@ async def test_get_conditions(
     assert_lists_same(conditions, expected_conditions)
 
 
+@pytest.mark.parametrize(
+    "hidden_by,entity_category",
+    (
+        (RegistryEntryHider.INTEGRATION, None),
+        (RegistryEntryHider.USER, None),
+        (None, EntityCategory.CONFIG),
+        (None, EntityCategory.DIAGNOSTIC),
+    ),
+)
+async def test_get_conditions_hidden_auxiliary(
+    hass,
+    device_reg,
+    entity_reg,
+    hidden_by,
+    entity_category,
+):
+    """Test we get the expected conditions from a hidden or auxiliary entity."""
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_reg.async_get_or_create(
+        DOMAIN,
+        "test",
+        "5678",
+        device_id=device_entry.id,
+        entity_category=entity_category,
+        hidden_by=hidden_by,
+    )
+    expected_conditions = [
+        {
+            "condition": "device",
+            "domain": DOMAIN,
+            "type": condition,
+            "device_id": device_entry.id,
+            "entity_id": f"{DOMAIN}.test_5678",
+            "metadata": {"secondary": True},
+        }
+        for condition in ["is_hvac_mode"]
+    ]
+    conditions = await async_get_device_automations(
+        hass, DeviceAutomationType.CONDITION, device_entry.id
+    )
+    assert_lists_same(conditions, expected_conditions)
+
+
 async def test_if_state(hass, calls):
     """Test for turn_on and turn_off conditions."""
-    hass.states.async_set(
-        "climate.entity",
-        const.HVAC_MODE_COOL,
-        {
-            const.ATTR_HVAC_MODE: const.HVAC_MODE_COOL,
-            const.ATTR_PRESET_MODE: const.PRESET_AWAY,
-        },
-    )
-
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -147,6 +199,20 @@ async def test_if_state(hass, calls):
             ]
         },
     )
+
+    # Should not fire, entity doesn't exist yet
+    hass.bus.async_fire("test_event1")
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    hass.states.async_set(
+        "climate.entity",
+        const.HVAC_MODE_COOL,
+        {
+            const.ATTR_PRESET_MODE: const.PRESET_AWAY,
+        },
+    )
+
     hass.bus.async_fire("test_event1")
     await hass.async_block_till_done()
     assert len(calls) == 1
@@ -156,7 +222,6 @@ async def test_if_state(hass, calls):
         "climate.entity",
         const.HVAC_MODE_AUTO,
         {
-            const.ATTR_HVAC_MODE: const.HVAC_MODE_AUTO,
             const.ATTR_PRESET_MODE: const.PRESET_AWAY,
         },
     )
@@ -176,7 +241,6 @@ async def test_if_state(hass, calls):
         "climate.entity",
         const.HVAC_MODE_AUTO,
         {
-            const.ATTR_HVAC_MODE: const.HVAC_MODE_AUTO,
             const.ATTR_PRESET_MODE: const.PRESET_HOME,
         },
     )

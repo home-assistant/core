@@ -10,11 +10,16 @@ from PyViCare.PyViCareUtils import (
 import requests
 
 from homeassistant.components.water_heater import (
-    SUPPORT_TARGET_TEMPERATURE,
     WaterHeaterEntity,
+    WaterHeaterEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, TEMP_CELSIUS
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    PRECISION_TENTHS,
+    PRECISION_WHOLE,
+    TEMP_CELSIUS,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -39,8 +44,6 @@ VICARE_TEMP_WATER_MAX = 60
 
 OPERATION_MODE_ON = "on"
 OPERATION_MODE_OFF = "off"
-
-SUPPORT_FLAGS_HEATER = SUPPORT_TARGET_TEMPERATURE
 
 VICARE_TO_HA_HVAC_DHW = {
     VICARE_MODE_DHW: OPERATION_MODE_ON,
@@ -95,6 +98,8 @@ async def async_setup_entry(
 
 class ViCareWater(WaterHeaterEntity):
     """Representation of the ViCare domestic hot water device."""
+
+    _attr_supported_features = WaterHeaterEntityFeature.TARGET_TEMPERATURE
 
     def __init__(self, name, api, circuit, device_config, heating_type):
         """Initialize the DHW water_heater device."""
@@ -151,11 +156,6 @@ class ViCareWater(WaterHeaterEntity):
         }
 
     @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_FLAGS_HEATER
-
-    @property
     def name(self):
         """Return the name of the water_heater device."""
         return self._name
@@ -192,9 +192,14 @@ class ViCareWater(WaterHeaterEntity):
         return VICARE_TEMP_WATER_MAX
 
     @property
+    def target_temperature_step(self) -> float:
+        """Set target temperature step to wholes."""
+        return PRECISION_WHOLE
+
+    @property
     def precision(self):
         """Return the precision of the system."""
-        return PRECISION_WHOLE
+        return PRECISION_TENTHS
 
     @property
     def current_operation(self):

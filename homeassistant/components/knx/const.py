@@ -1,6 +1,8 @@
 """Constants for the KNX integration."""
+from __future__ import annotations
+
 from enum import Enum
-from typing import Final
+from typing import Final, TypedDict
 
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_COOL,
@@ -30,18 +32,44 @@ KNX_ADDRESS: Final = "address"
 CONF_INVERT: Final = "invert"
 CONF_KNX_EXPOSE: Final = "expose"
 CONF_KNX_INDIVIDUAL_ADDRESS: Final = "individual_address"
+
+##
+# Connection constants
+##
 CONF_KNX_CONNECTION_TYPE: Final = "connection_type"
 CONF_KNX_AUTOMATIC: Final = "automatic"
 CONF_KNX_ROUTING: Final = "routing"
 CONF_KNX_TUNNELING: Final = "tunneling"
 CONF_KNX_TUNNELING_TCP: Final = "tunneling_tcp"
+CONF_KNX_TUNNELING_TCP_SECURE: Final = "tunneling_tcp_secure"
+CONF_KNX_LOCAL_IP: Final = "local_ip"
+CONF_KNX_MCAST_GRP: Final = "multicast_group"
+CONF_KNX_MCAST_PORT: Final = "multicast_port"
+
+CONF_KNX_RATE_LIMIT: Final = "rate_limit"
+CONF_KNX_ROUTE_BACK: Final = "route_back"
+CONF_KNX_STATE_UPDATER: Final = "state_updater"
+CONF_KNX_DEFAULT_STATE_UPDATER: Final = True
+CONF_KNX_DEFAULT_RATE_LIMIT: Final = 20
+
+##
+# Secure constants
+##
+CONST_KNX_STORAGE_KEY: Final = "knx/"
+CONF_KNX_KNXKEY_FILENAME: Final = "knxkeys_filename"
+CONF_KNX_KNXKEY_PASSWORD: Final = "knxkeys_password"
+
+CONF_KNX_SECURE_USER_ID: Final = "user_id"
+CONF_KNX_SECURE_USER_PASSWORD: Final = "user_password"
+CONF_KNX_SECURE_DEVICE_AUTHENTICATION: Final = "device_authentication"
+
+
 CONF_PAYLOAD: Final = "payload"
 CONF_PAYLOAD_LENGTH: Final = "payload_length"
 CONF_RESET_AFTER: Final = "reset_after"
 CONF_RESPOND_TO_READ: Final = "respond_to_read"
 CONF_STATE_ADDRESS: Final = "state_address"
 CONF_SYNC_STATE: Final = "sync_state"
-CONF_KNX_INITIAL_CONNECTION_TYPES: Final = [CONF_KNX_TUNNELING, CONF_KNX_ROUTING]
 
 # yaml config merged with config entry data
 DATA_KNX_CONFIG: Final = "knx_config"
@@ -50,6 +78,27 @@ DATA_HASS_CONFIG: Final = "knx_hass_config"
 
 ATTR_COUNTER: Final = "counter"
 ATTR_SOURCE: Final = "source"
+
+
+class KNXConfigEntryData(TypedDict, total=False):
+    """Config entry for the KNX integration."""
+
+    connection_type: str
+    individual_address: str
+    local_ip: str | None
+    multicast_group: str
+    multicast_port: int
+    route_back: bool
+    state_updater: bool
+    rate_limit: int
+    host: str
+    port: int
+
+    user_id: int
+    user_password: str
+    device_authentication: str
+    knxkeys_filename: str
+    knxkeys_password: str
 
 
 class ColorTempModes(Enum):

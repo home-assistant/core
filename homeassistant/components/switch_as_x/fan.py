@@ -44,12 +44,11 @@ class FanSwitch(BaseToggleEntity, FanEntity):
         """Return true if the entity is on.
 
         Fan logic uses speed percentage or preset mode to determine
-        its it on or off, however, when using a wrapped switch, we
+        if it's on or off, however, when using a wrapped switch, we
         just use the wrapped switch's state.
         """
         return self._attr_is_on
 
-    # pylint: disable=arguments-differ
     async def async_turn_on(
         self,
         percentage: int | None = None,
