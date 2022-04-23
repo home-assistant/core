@@ -206,19 +206,19 @@ async def test_notifications(hass, hank_binary_switch, integration, client):
             "event": "notification",
             "nodeId": 32,
             "ccId": 38,
-            "args": {"type": 5},
+            "args": {"eventType": 5},
         },
     )
 
     node.receive_event(event)
     # wait for the event
     await hass.async_block_till_done()
-    assert len(events) == 2
-    assert events[1].data["home_id"] == client.driver.controller.home_id
-    assert events[1].data["node_id"] == 32
-    assert events[1].data["type"] == 5
-    assert events[1].data["command_class"] == CommandClass.MULTILEVEL_SWITCH
-    assert events[1].data["command_class_name"] == "Multilevel Switch"
+    assert len(events) == 3
+    assert events[2].data["home_id"] == client.driver.controller.home_id
+    assert events[2].data["node_id"] == 32
+    assert events[2].data["event_type"] == 5
+    assert events[2].data["command_class"] == CommandClass.SWITCH_MULTILEVEL
+    assert events[2].data["command_class_name"] == "Multilevel Switch"
 
 
 async def test_value_updated(hass, vision_security_zl7432, integration, client):
