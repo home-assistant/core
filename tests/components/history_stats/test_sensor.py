@@ -1081,10 +1081,8 @@ async def test_does_not_work_into_the_future(hass, recorder_mock):
     assert hass.states.get("sensor.sensor1").state == "0.0"
 
 
-async def test_reload_before_start_event(hass):
+async def test_reload_before_start_event(hass, recorder_mock):
     """Verify we can reload history_stats sensors before the start event."""
-    await async_init_recorder_component(hass)
-
     hass.state = ha.CoreState.not_running
     hass.states.async_set("binary_sensor.test_id", "on")
 
@@ -1124,10 +1122,8 @@ async def test_reload_before_start_event(hass):
     assert hass.states.get("sensor.second_test")
 
 
-async def test_measure_sliding_window(hass):
+async def test_measure_sliding_window(hass, recorder_mock):
     """Test the history statistics sensor with a moving end and a moving start."""
-    await async_init_recorder_component(hass)
-
     start_time = dt_util.utcnow() - timedelta(minutes=60)
     t0 = start_time + timedelta(minutes=20)
     t1 = t0 + timedelta(minutes=10)
@@ -1219,10 +1215,8 @@ async def test_measure_sliding_window(hass):
     assert hass.states.get("sensor.sensor4").state == "41.7"
 
 
-async def test_measure_from_end_going_backwards(hass):
+async def test_measure_from_end_going_backwards(hass, recorder_mock):
     """Test the history statistics sensor with a moving end and a duration to find the start."""
-    await async_init_recorder_component(hass)
-
     start_time = dt_util.utcnow() - timedelta(minutes=60)
     t0 = start_time + timedelta(minutes=20)
     t1 = t0 + timedelta(minutes=10)
