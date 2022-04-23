@@ -1154,7 +1154,7 @@ pyownet==0.10.0.post1
 pypck==0.7.14
 
 # homeassistant.components.plaato
-pyplaato==0.0.16
+pyplaato==0.0.18
 
 # homeassistant.components.point
 pypoint==2.3.0
