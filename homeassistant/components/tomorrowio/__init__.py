@@ -106,12 +106,11 @@ def async_set_update_interval(
     # max_requests by the number of API calls because we want a buffer in the
     # number of API calls left at the end of the day.
     entries = async_get_entries_by_api_key(hass, api.api_key, exclude_entry)
-    return timedelta(
-        minutes=ceil(
-            (24 * 60 * len(entries) * api.num_api_requests)
-            / (api.max_requests_per_day * 0.9)
-        )
+    minutes = ceil(
+        (24 * 60 * len(entries) * api.num_api_requests)
+        / (api.max_requests_per_day * 0.9)
     )
+    return timedelta(minutes=minutes)
 
 
 @callback
