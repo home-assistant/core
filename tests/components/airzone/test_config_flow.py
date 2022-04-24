@@ -16,7 +16,7 @@ from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_ID, CONF_PORT
 from homeassistant.core import HomeAssistant
 
-from .util import CONFIG, CONFIG_ID1, CONFIG_NO_ID, HVAC_MOCK
+from .util import CONFIG, CONFIG_ID1, HVAC_MOCK
 
 from tests.common import MockConfigEntry
 
@@ -46,7 +46,7 @@ async def test_form(hass: HomeAssistant) -> None:
         assert result["errors"] == {}
 
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], CONFIG_NO_ID
+            result["flow_id"], CONFIG
         )
 
         await hass.async_block_till_done()
@@ -81,7 +81,7 @@ async def test_form_invalid_system_id(hass: HomeAssistant) -> None:
         side_effect=InvalidMethod,
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG_NO_ID
+            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM

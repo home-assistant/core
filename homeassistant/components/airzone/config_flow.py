@@ -39,22 +39,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            system_id = user_input.get(CONF_ID, DEFAULT_SYSTEM_ID)
-            entry_data: dict[str, Any] = {
-                CONF_HOST: user_input[CONF_HOST],
-                CONF_PORT: user_input[CONF_PORT],
-            }
-
-            if system_id != DEFAULT_SYSTEM_ID:
-                entry_data[CONF_ID] = system_id
-            self._async_abort_entries_match(entry_data)
+            self._async_abort_entries_match(user_input)
 
             airzone = AirzoneLocalApi(
                 aiohttp_client.async_get_clientsession(self.hass),
                 ConnectionOptions(
                     user_input[CONF_HOST],
                     user_input[CONF_PORT],
-                    system_id,
+                    user_input.get(CONF_ID, DEFAULT_SYSTEM_ID),
                 ),
             )
 
@@ -67,7 +59,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             else:
                 title = f"Airzone {user_input[CONF_HOST]}:{user_input[CONF_PORT]}"
-                return self.async_create_entry(title=title, data=entry_data)
+                return self.async_create_entry(title=title, data=user_input)
 
         return self.async_show_form(
             step_id="user",
