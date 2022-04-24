@@ -184,11 +184,7 @@ async def async_register_callback(
     Returns a callback that can be used to cancel the registration.
     """
     scanner: Scanner = hass.data[DOMAIN]
-    if match_dict is None:
-        return await scanner.async_register_callback(callback)
-    return await scanner.async_register_callback(
-        callback, {k.lower(): v for k, v in match_dict.items()}
-    )
+    return await scanner.async_register_callback(callback, match_dict)
 
 
 @bind_hass
@@ -342,19 +338,21 @@ class Scanner:
         The match_dict must present the keys in lower case.
         """
         if match_dict is None:
-            match_dict = {}
+            lower_match_dict = {}
+        else:
+            lower_match_dict = {k.lower(): v for k, v in match_dict.items()}
 
         # Make sure any entries that happened
         # before the callback was registered are fired
         for headers in self._all_headers_from_ssdp_devices.values():
-            if _async_headers_match(headers, match_dict):
+            if _async_headers_match(headers, lower_match_dict):
                 await _async_process_callbacks(
                     [callback],
                     await self._async_headers_to_discovery_info(headers),
                     SsdpChange.ALIVE,
                 )
 
-        callback_entry = (callback, match_dict)
+        callback_entry = (callback, lower_match_dict)
         self._callbacks.append(callback_entry)
 
         @core_callback
