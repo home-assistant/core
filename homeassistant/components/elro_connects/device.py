@@ -1,10 +1,16 @@
 """Elro Connects K1 device communication."""
+from __future__ import annotations
+
+from collections.abc import Mapping
+from typing import Any
 
 from elro.api import K1
 from elro.command import GET_ALL_EQUIPMENT_STATUS, GET_DEVICE_NAMES
 from elro.utils import update_state_data
 
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.const import ATTR_NAME
+from homeassistant.core import callback
+from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -38,7 +44,6 @@ class ElroConnectsK1(K1):
         update_state_data(self._data, update_status)
         update_names = await self.async_process_command(GET_DEVICE_NAMES)
         update_state_data(self._data, update_names)
-        await self.async_disconnect()
 
     @property
     def data(self) -> dict[int, dict]:
@@ -52,18 +57,48 @@ class ElroConnectsK1(K1):
 
 
 class ElroConnectsEntity(CoordinatorEntity):
-    """Defines a base Elro Connects entity."""
+    """Defines a base entity for Elro Connects devices."""
 
     def __init__(
-        self, coordinator: DataUpdateCoordinator, connector_id: str, device_id: int
+        self,
+        coordinator: DataUpdateCoordinator,
+        connector_id: str,
+        device_id: int,
+        attributes: list,
+        description: EntityDescription,
     ) -> None:
         """Initialize the Elro connects entity."""
         super().__init__(coordinator)
 
+        self.data: dict = coordinator.data[device_id]
+
+        self._attributes = attributes
         self._connector_id = connector_id
         self._device_id = device_id
-        self._attr_name = DOMAIN.title()
+        self._attr_device_class = description.device_class
+        self._attr_icon = description.icon
         self._attr_unique_id = f"{connector_id}-{device_id}"
+        self._description = description
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """Return state attributes."""
+        if not self.data:
+            return None
+        return {key: val for key, val in self.data.items() if key in self._attributes}
+
+    @property
+    def name(self) -> str:
+        """Return the name of the entity."""
+        return (
+            self.data[ATTR_NAME] if ATTR_NAME in self.data else self._description.name
+        )
+
+    @callback
+    def _handle_coordinator_update(self):
+        """Fetch state from the device."""
+        self.data = self.coordinator.data[self._device_id]
+        self.async_write_ha_state()
 
     @property
     def device_info(self) -> DeviceInfo:
