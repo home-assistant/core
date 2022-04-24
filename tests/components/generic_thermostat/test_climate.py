@@ -1307,7 +1307,7 @@ async def test_no_restore_state(hass):
     )
     await hass.async_block_till_done()
     state = hass.states.get("climate.test_thermostat")
-    assert state.attributes[ATTR_TEMPERATURE] == 22
+    assert state.attributes[ATTR_TEMPERATURE] == 20
     assert state.state == HVAC_MODE_OFF
 
 
@@ -1392,7 +1392,7 @@ async def test_restore_will_turn_off_(hass):
     )
     await hass.async_block_till_done()
     state = hass.states.get("climate.test_thermostat")
-    assert state.attributes[ATTR_TEMPERATURE] == 20
+    assert state.attributes[ATTR_TEMPERATURE] == 18
     assert state.state == HVAC_MODE_HEAT
     assert hass.states.get(heater_switch).state == STATE_ON
 
@@ -1438,7 +1438,7 @@ async def test_restore_will_turn_off_when_loaded_second(hass):
     )
     await hass.async_block_till_done()
     state = hass.states.get("climate.test_thermostat")
-    assert state.attributes[ATTR_TEMPERATURE] == 20
+    assert state.attributes[ATTR_TEMPERATURE] == 18
     assert state.state == HVAC_MODE_OFF
 
     calls_on = async_mock_service(hass, ha.DOMAIN, SERVICE_TURN_ON)
