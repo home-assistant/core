@@ -47,7 +47,7 @@ def purge_old_data(
         # Purge a max of MAX_ROWS_TO_PURGE, based on the oldest states or events record
         event_ids = _select_event_ids_to_purge(session, purge_before)
         state_ids, attributes_ids = _select_state_and_attributes_ids_to_purge(
-            session, purge_before, event_ids
+            session, event_ids
         )
         statistics_runs = _select_statistics_runs_to_purge(session, purge_before)
         short_term_statistics = _select_short_term_statistics_to_purge(
@@ -99,14 +99,13 @@ def _select_event_ids_to_purge(session: Session, purge_before: datetime) -> list
 
 
 def _select_state_and_attributes_ids_to_purge(
-    session: Session, purge_before: datetime, event_ids: list[int]
+    session: Session, event_ids: list[int]
 ) -> tuple[set[int], set[int]]:
     """Return a list of state ids to purge."""
     if not event_ids:
         return set(), set()
     states = (
         session.query(States.state_id, States.attributes_id)
-        .filter(States.last_updated < purge_before)
         .filter(States.event_id.in_(event_ids))
         .all()
     )
