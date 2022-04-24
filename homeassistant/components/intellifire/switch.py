@@ -86,16 +86,15 @@ class IntellifireSwitch(IntellifireEntity, SwitchEntity):
         """Turn on the switch."""
         await self.entity_description.on_fn(self.coordinator.control_api)
         setattr(self.coordinator.read_api.data, self.entity_description.data_field, 1)
-        await self.async_write_ha_state()
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         await self.entity_description.off_fn(self.coordinator.control_api)
         setattr(self.coordinator.read_api.data, self.entity_description.data_field, 0)
-        await self.async_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def is_on(self) -> bool | None:
         """Return the on state."""
         return self.entity_description.value_fn(self.coordinator.read_api.data)
-
