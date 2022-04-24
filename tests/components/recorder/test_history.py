@@ -268,6 +268,63 @@ def test_state_changes_during_period(hass_recorder, attributes, no_attributes, l
     assert states[:limit] == hist[entity_id]
 
 
+@pytest.mark.parametrize(
+    "attributes, no_attributes, descending",
+    [
+        ({"attr": True}, False, True),
+        ({}, True, True),
+        ({"attr": True}, False, False),
+        ({}, True, False),
+    ],
+)
+def test_state_changes_during_period_descending(
+    hass_recorder, attributes, no_attributes, descending
+):
+    """Test state change during period descending."""
+    hass = hass_recorder()
+    entity_id = "media_player.test"
+
+    def set_state(state):
+        """Set the state."""
+        hass.states.set(entity_id, state, attributes)
+        wait_recording_done(hass)
+        return hass.states.get(entity_id)
+
+    start = dt_util.utcnow()
+    point = start + timedelta(seconds=1)
+    end = point + timedelta(seconds=1)
+
+    with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=start):
+        set_state("idle")
+        set_state("YouTube")
+
+    with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=point):
+        states = [
+            set_state("idle"),
+            set_state("Netflix"),
+            set_state("Plex"),
+            set_state("YouTube"),
+        ]
+
+    with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=end):
+        set_state("Netflix")
+        set_state("Plex")
+
+    hist = history.state_changes_during_period(
+        hass, start, end, entity_id, no_attributes, descending=descending
+    )
+    history_states = list(hist[entity_id])
+
+    # Normally we do not want to branch in tests, but
+    # in this case since we are validating that the sqlalchemy
+    # bakery caching is not caching the incorrect descending
+    # value, we have to do it all in one test
+    if descending:
+        history_states = list(reversed(history_states))
+
+    assert states == history_states
+
+
 def test_get_last_state_changes(hass_recorder):
     """Test number of state changes."""
     hass = hass_recorder()
