@@ -1,7 +1,7 @@
 """Support for deCONZ alarm control panel devices."""
 from __future__ import annotations
 
-from pydeconz.alarm_system import AlarmSystem
+from pydeconz.models.alarm_system import AlarmSystem
 from pydeconz.models.sensor.ancillary_control import (
     ANCILLARY_CONTROL_ARMED_AWAY,
     ANCILLARY_CONTROL_ARMED_NIGHT,
