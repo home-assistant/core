@@ -3,15 +3,15 @@ from __future__ import annotations
 
 from typing import Any, Generic, TypedDict, TypeVar
 
-from pydeconz.group import Group
-from pydeconz.light import (
+from pydeconz.interfaces.lights import LightResources
+from pydeconz.models.group import Group
+from pydeconz.models.light import (
     ALERT_LONG,
     ALERT_SHORT,
     EFFECT_COLOR_LOOP,
     EFFECT_NONE,
-    Light,
-    LightResources,
 )
+from pydeconz.models.light.light import Light
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
