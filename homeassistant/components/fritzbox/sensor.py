@@ -90,8 +90,8 @@ SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
         native_value=lambda device: device.power / 1000 if device.power else 0.0,
     ),
     FritzSensorEntityDescription(
-        key="electric_potential",
-        name="Electric Potential",
+        key="voltage",
+        name="Voltage",
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
