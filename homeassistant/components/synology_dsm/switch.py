@@ -14,8 +14,9 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import SynoApi, SynologyDSMBaseEntity
-from .const import COORDINATOR_SWITCHES, DOMAIN, SYNO_API, SynologyDSMEntityDescription
+from . import SynoApi
+from .const import COORDINATOR_SWITCHES, DOMAIN, SYNO_API
+from .entity import SynologyDSMBaseEntity, SynologyDSMEntityDescription
 
 _LOGGER = logging.getLogger(__name__)
 

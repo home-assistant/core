@@ -7,11 +7,7 @@ from pyisy.constants import ISY_VALUE_UNKNOWN
 from pyisy.helpers import NodeProperty
 from pyisy.nodes import Node
 
-from homeassistant.components.light import (
-    COLOR_MODE_BRIGHTNESS,
-    DOMAIN as LIGHT,
-    LightEntity,
-)
+from homeassistant.components.light import DOMAIN as LIGHT, ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -51,8 +47,8 @@ async def async_setup_entry(
 class ISYLightEntity(ISYNodeEntity, LightEntity, RestoreEntity):
     """Representation of an ISY994 light device."""
 
-    _attr_color_mode = COLOR_MODE_BRIGHTNESS
-    _attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
+    _attr_color_mode = ColorMode.BRIGHTNESS
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
     def __init__(self, node: Node, restore_light_state: bool) -> None:
         """Initialize the ISY994 light device."""

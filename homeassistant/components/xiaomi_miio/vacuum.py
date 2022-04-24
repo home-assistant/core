@@ -14,17 +14,8 @@ from homeassistant.components.vacuum import (
     STATE_IDLE,
     STATE_PAUSED,
     STATE_RETURNING,
-    SUPPORT_BATTERY,
-    SUPPORT_CLEAN_SPOT,
-    SUPPORT_FAN_SPEED,
-    SUPPORT_LOCATE,
-    SUPPORT_PAUSE,
-    SUPPORT_RETURN_HOME,
-    SUPPORT_SEND_COMMAND,
-    SUPPORT_START,
-    SUPPORT_STATE,
-    SUPPORT_STOP,
     StateVacuumEntity,
+    VacuumEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -60,20 +51,6 @@ ATTR_STATUS = "status"
 ATTR_ZONE_ARRAY = "zone"
 ATTR_ZONE_REPEATER = "repeats"
 ATTR_TIMERS = "timers"
-
-SUPPORT_XIAOMI = (
-    SUPPORT_STATE
-    | SUPPORT_PAUSE
-    | SUPPORT_STOP
-    | SUPPORT_RETURN_HOME
-    | SUPPORT_FAN_SPEED
-    | SUPPORT_SEND_COMMAND
-    | SUPPORT_LOCATE
-    | SUPPORT_BATTERY
-    | SUPPORT_CLEAN_SPOT
-    | SUPPORT_START
-)
-
 
 STATE_CODE_TO_STATE = {
     1: STATE_IDLE,  # "Starting"
@@ -209,6 +186,19 @@ class MiroboVacuum(
 ):
     """Representation of a Xiaomi Vacuum cleaner robot."""
 
+    _attr_supported_features = (
+        VacuumEntityFeature.STATE
+        | VacuumEntityFeature.PAUSE
+        | VacuumEntityFeature.STOP
+        | VacuumEntityFeature.RETURN_HOME
+        | VacuumEntityFeature.FAN_SPEED
+        | VacuumEntityFeature.SEND_COMMAND
+        | VacuumEntityFeature.LOCATE
+        | VacuumEntityFeature.BATTERY
+        | VacuumEntityFeature.CLEAN_SPOT
+        | VacuumEntityFeature.START
+    )
+
     def __init__(
         self,
         name,
@@ -289,7 +279,7 @@ class MiroboVacuum(
     @property
     def supported_features(self):
         """Flag vacuum cleaner robot features that are supported."""
-        return SUPPORT_XIAOMI
+        return self._attr_supported_features
 
     async def _try_command(self, mask_error, func, *args, **kwargs):
         """Call a vacuum command handling error messages."""
