@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from pydeconz.group import Scene as PydeconzScene
+from pydeconz.models.scene import Scene as PydeconzScene
 
 from homeassistant.components.button import (
     DOMAIN,
