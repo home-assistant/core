@@ -333,8 +333,7 @@ class Scanner:
     async def async_register_callback(
         self, callback: SsdpCallback, match_dict: None | dict[str, str] = None
     ) -> Callable[[], None]:
-        """Register a callback.
-        """
+        """Register a callback."""
         if match_dict is None:
             lower_match_dict = {}
         else:
