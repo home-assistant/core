@@ -99,6 +99,3 @@ class IntellifireSwitch(IntellifireEntity, SwitchEntity):
         """Return the on state."""
         return self.entity_description.value_fn(self.coordinator.read_api.data)
 
-    async def async_update(self) -> None:
-        """Tell coordinator to update."""
-        await self.coordinator.read_api.poll()
