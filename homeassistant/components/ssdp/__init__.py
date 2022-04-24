@@ -11,12 +11,7 @@ import logging
 from typing import Any
 
 from async_upnp_client.aiohttp import AiohttpSessionRequester
-from async_upnp_client.const import (
-    AddressTupleVXType,
-    DeviceOrServiceType,
-    SsdpHeaders,
-    SsdpSource,
-)
+from async_upnp_client.const import AddressTupleVXType, DeviceOrServiceType, SsdpSource
 from async_upnp_client.description_cache import DescriptionCache
 from async_upnp_client.ssdp import SSDP_PORT, determine_source_target, is_ipv4_address
 from async_upnp_client.ssdp_listener import SsdpDevice, SsdpDeviceTracker, SsdpListener
@@ -461,7 +456,7 @@ class Scanner:
     @core_callback
     def _async_get_matching_callbacks(
         self,
-        combined_headers: SsdpHeaders,
+        combined_headers: CaseInsensitiveDict,
     ) -> list[SsdpCallback]:
         """Return a list of callbacks that match."""
         return [
