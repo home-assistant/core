@@ -395,7 +395,7 @@ def _get_states_with_session(
 
     if (
         run is None
-        and (run := (recorder.run_information_from_instance(hass, utc_point_in_time)))
+        and (run := (recorder.run_information_with_session(session, utc_point_in_time)))
         is None
     ):
         # History did not run before utc_point_in_time
