@@ -11,16 +11,8 @@ from homeassistant.components.vacuum import (
     STATE_IDLE,
     STATE_PAUSED,
     STATE_RETURNING,
-    SUPPORT_BATTERY,
-    SUPPORT_FAN_SPEED,
-    SUPPORT_LOCATE,
-    SUPPORT_PAUSE,
-    SUPPORT_RETURN_HOME,
-    SUPPORT_START,
-    SUPPORT_STATE,
-    SUPPORT_STATUS,
-    SUPPORT_STOP,
     StateVacuumEntity,
+    VacuumEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -30,19 +22,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, LOGGER, SHARK
 from .update_coordinator import SharkIqUpdateCoordinator
-
-# Supported features
-SUPPORT_SHARKIQ = (
-    SUPPORT_BATTERY
-    | SUPPORT_FAN_SPEED
-    | SUPPORT_PAUSE
-    | SUPPORT_RETURN_HOME
-    | SUPPORT_START
-    | SUPPORT_STATE
-    | SUPPORT_STATUS
-    | SUPPORT_STOP
-    | SUPPORT_LOCATE
-)
 
 OPERATING_STATE_MAP = {
     OperatingModes.PAUSE: STATE_PAUSED,
@@ -86,6 +65,18 @@ async def async_setup_entry(
 
 class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuumEntity):
     """Shark IQ vacuum entity."""
+
+    _attr_supported_features = (
+        VacuumEntityFeature.BATTERY
+        | VacuumEntityFeature.FAN_SPEED
+        | VacuumEntityFeature.PAUSE
+        | VacuumEntityFeature.RETURN_HOME
+        | VacuumEntityFeature.START
+        | VacuumEntityFeature.STATE
+        | VacuumEntityFeature.STATUS
+        | VacuumEntityFeature.STOP
+        | VacuumEntityFeature.LOCATE
+    )
 
     def __init__(
         self, sharkiq: SharkIqVacuum, coordinator: SharkIqUpdateCoordinator
@@ -140,7 +131,7 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
     @property
     def supported_features(self) -> int:
         """Flag vacuum cleaner robot features that are supported."""
-        return SUPPORT_SHARKIQ
+        return self._attr_supported_features
 
     @property
     def error_code(self) -> int | None:
