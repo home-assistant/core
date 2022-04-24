@@ -6,6 +6,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Final
 
+from pyfritzhome.fritzhomedevice import FritzhomeDevice
+
 from homeassistant.components.climate.const import PRESET_COMFORT, PRESET_ECO
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -27,11 +29,9 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utc_from_timestamp
-from pyfritzhome.fritzhomedevice import FritzhomeDevice
 
 from . import FritzBoxEntity
-from .const import CONF_COORDINATOR
-from .const import DOMAIN as FRITZBOX_DOMAIN
+from .const import CONF_COORDINATOR, DOMAIN as FRITZBOX_DOMAIN
 from .model import FritzEntityDescriptionMixinBase
 
 
