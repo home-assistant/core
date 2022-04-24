@@ -184,7 +184,11 @@ async def async_register_callback(
     Returns a callback that can be used to cancel the registration.
     """
     scanner: Scanner = hass.data[DOMAIN]
-    return await scanner.async_register_callback(callback, match_dict)
+    if match_dict is None:
+        return await scanner.async_register_callback(callback)
+    return await scanner.async_register_callback(
+        callback, {k.lower(): v for k, v in match_dict.items()}
+    )
 
 
 @bind_hass
@@ -241,13 +245,13 @@ async def _async_process_callbacks(
 
 @core_callback
 def _async_headers_match(
-    headers: Mapping[str, Any], match_dict: dict[str, str]
+    headers: CaseInsensitiveDict, match_dict: dict[str, str]
 ) -> bool:
     for header, val in match_dict.items():
         if val == MATCH_ALL:
             if header not in headers:
                 return False
-        elif headers.get(header) != val:
+        elif headers.get_lower(header) != val:
             return False
     return True
 
@@ -323,7 +327,7 @@ class Scanner:
     @property
     def _all_headers_from_ssdp_devices(
         self,
-    ) -> dict[tuple[str, str], Mapping[str, Any]]:
+    ) -> dict[tuple[str, str], CaseInsensitiveDict]:
         return {
             (ssdp_device.udn, dst): headers
             for ssdp_device in self._ssdp_devices
@@ -333,7 +337,10 @@ class Scanner:
     async def async_register_callback(
         self, callback: SsdpCallback, match_dict: None | dict[str, str] = None
     ) -> Callable[[], None]:
-        """Register a callback."""
+        """Register a callback.
+
+        The match_dict must present the keys in lower case.
+        """
         if match_dict is None:
             match_dict = {}
 
