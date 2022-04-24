@@ -532,7 +532,7 @@ class Scanner:
         return await self._description_cache.async_get_description_dict(location) or {}
 
     async def _async_headers_to_discovery_info(
-        self, headers: Mapping[str, Any]
+        self, headers: CaseInsensitiveDict
     ) -> SsdpServiceInfo:
         """Combine the headers and description into discovery_info.
 
@@ -573,7 +573,7 @@ class Scanner:
 
 
 def discovery_info_from_headers_and_description(
-    combined_headers: Mapping[str, Any],
+    combined_headers: CaseInsensitiveDict,
     info_desc: Mapping[str, Any],
 ) -> SsdpServiceInfo:
     """Convert headers and description to discovery_info."""
