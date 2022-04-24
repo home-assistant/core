@@ -570,7 +570,7 @@ class SinopeTechnologiesThermostat(Thermostat):
 @MULTI_MATCH(
     channel_names=CHANNEL_THERMOSTAT,
     aux_channels=CHANNEL_FAN,
-    manufacturers="Zen Within",
+    manufacturers={"Zen Within", "LUX"},
     stop_on_match_group=CHANNEL_THERMOSTAT,
 )
 class ZenWithinThermostat(Thermostat):
