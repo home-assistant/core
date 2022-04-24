@@ -18,10 +18,8 @@ from homeassistant.components.light import (
     ATTR_RGBWW_COLOR,
     ATTR_SUPPORTED_COLOR_MODES,
     ATTR_WHITE,
-    COLOR_MODE_RGBW,
-    COLOR_MODE_RGBWW,
-    COLOR_MODE_WHITE,
     DOMAIN,
+    ColorMode,
     brightness_supported,
     color_supported,
     color_temp_supported,
@@ -60,7 +58,7 @@ CHANGE_COALESCE_TIME_WINDOW = 0.01
 DEFAULT_MIN_MIREDS = 153
 DEFAULT_MAX_MIREDS = 500
 
-COLOR_MODES_WITH_WHITES = {COLOR_MODE_RGBW, COLOR_MODE_RGBWW, COLOR_MODE_WHITE}
+COLOR_MODES_WITH_WHITES = {ColorMode.RGBW, ColorMode.RGBWW, ColorMode.WHITE}
 
 
 @TYPES.register("Light")
@@ -86,9 +84,9 @@ class Light(HomeAccessory):
         self._previous_color_mode = attributes.get(ATTR_COLOR_MODE)
         self.color_supported = color_supported(color_modes)
         self.color_temp_supported = color_temp_supported(color_modes)
-        self.rgbw_supported = COLOR_MODE_RGBW in color_modes
-        self.rgbww_supported = COLOR_MODE_RGBWW in color_modes
-        self.white_supported = COLOR_MODE_WHITE in color_modes
+        self.rgbw_supported = ColorMode.RGBW in color_modes
+        self.rgbww_supported = ColorMode.RGBWW in color_modes
+        self.white_supported = ColorMode.WHITE in color_modes
         self.brightness_supported = brightness_supported(color_modes)
 
         if self.brightness_supported:
@@ -264,7 +262,7 @@ class Light(HomeAccessory):
                 hue, saturation = color_temperature_to_hs(
                     color_temperature_mired_to_kelvin(color_temp)
                 )
-            elif color_mode == COLOR_MODE_WHITE:
+            elif color_mode == ColorMode.WHITE:
                 hue, saturation = 0, 0
             else:
                 hue, saturation = attributes.get(ATTR_HS_COLOR, (None, None))
@@ -281,7 +279,7 @@ class Light(HomeAccessory):
             color_temp = None
             if self.color_temp_supported:
                 color_temp = attributes.get(ATTR_COLOR_TEMP)
-            elif color_mode == COLOR_MODE_WHITE:
+            elif color_mode == ColorMode.WHITE:
                 color_temp = self.min_mireds
             if isinstance(color_temp, (int, float)):
                 self.char_color_temp.set_value(round(color_temp, 0))
