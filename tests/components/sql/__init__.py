@@ -1,7 +1,6 @@
 """Tests for the sql component."""
 from __future__ import annotations
 
-import os
 from typing import Any
 
 from homeassistant.components.recorder import CONF_DB_URL
@@ -10,9 +9,7 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, get_test_config_dir
-
-DB_URL = "sqlite://" + os.path.join(get_test_config_dir(), "home-assistant_v2.db")
+from tests.common import MockConfigEntry
 
 ENTRY_CONFIG = {
     CONF_DB_URL: "sqlite://",
