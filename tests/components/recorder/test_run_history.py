@@ -2,19 +2,14 @@
 
 from datetime import timedelta
 
+from homeassistant.components import recorder
 from homeassistant.components.recorder.models import RecorderRuns, process_timestamp
-from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from .conftest import SetupRecorderInstanceT
 
-
-async def test_run_history(
-    hass: HomeAssistant,
-    async_setup_recorder_instance: SetupRecorderInstanceT,
-):
+async def test_run_history(hass, recorder_mock):
     """Test the run history gives the correct run."""
-    instance = await async_setup_recorder_instance(hass)
+    instance = recorder.get_instance(hass)
     now = dt_util.utcnow()
     three_days_ago = now - timedelta(days=3)
     two_days_ago = now - timedelta(days=2)
