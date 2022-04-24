@@ -3,7 +3,7 @@
   "name": "Elro Connects",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/elro_connects",
-  "requirements": ["lib-elro-connects==0.1.1.post4"],
+  "requirements": ["lib-elro-connects==0.1.2"],
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},

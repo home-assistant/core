@@ -4,6 +4,21 @@ from __future__ import annotations
 import logging
 
 from elro.command import SILENCE_ALARM, TEST_ALARM
+from elro.device import (
+    ALARM_CO,
+    ALARM_FIRE,
+    ALARM_HEAT,
+    ALARM_SMOKE,
+    ALARM_WATER,
+    ATTR_BATTERY_LEVEL,
+    ATTR_DEVICE_STATE,
+    ATTR_DEVICE_TYPE,
+    ATTR_SIGNAL,
+    STATE_SILENCE,
+    STATE_TEST_ALARM,
+    STATES_OFFLINE,
+    STATES_ON,
+)
 
 from homeassistant.components.siren import SirenEntity, SirenEntityDescription
 from homeassistant.components.siren.const import SirenEntityFeature
@@ -11,23 +26,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    ALARM_CO,
-    ALARM_FIRE,
-    ALARM_HEAT,
-    ALARM_SMOKE,
-    ALARM_WATER,
-    ATTR_BATTERY_LEVEL,
-    ATTR_DEVICE_TYPE,
-    ATTR_SIGNAL,
-    CONF_CONNECTOR_ID,
-    DEVICE_STATE,
-    DOMAIN,
-    STATE_SILENCE,
-    STATE_TEST_ALARM,
-    STATES_OFFLINE,
-    STATES_ON,
-)
+from .const import CONF_CONNECTOR_ID, DOMAIN
 from .device import ElroConnectsEntity, ElroConnectsK1
 
 _LOGGER = logging.getLogger(__name__)
@@ -119,9 +118,9 @@ class ElroConnectsFireAlarm(ElroConnectsEntity, SirenEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if device is on or none if the device is offline."""
-        if not self.data or self.data[DEVICE_STATE] in STATES_OFFLINE:
+        if not self.data or self.data[ATTR_DEVICE_STATE] in STATES_OFFLINE:
             return None
-        return self.data[DEVICE_STATE] in STATES_ON
+        return self.data[ATTR_DEVICE_STATE] in STATES_ON
 
     async def async_turn_on(self, **kwargs) -> None:
         """Send a test alarm request."""
@@ -131,7 +130,7 @@ class ElroConnectsFireAlarm(ElroConnectsEntity, SirenEntity):
             TEST_ALARM, device_ID=self._device_id
         )
 
-        self.data[DEVICE_STATE] = STATE_TEST_ALARM
+        self.data[ATTR_DEVICE_STATE] = STATE_TEST_ALARM
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs) -> None:
@@ -142,5 +141,5 @@ class ElroConnectsFireAlarm(ElroConnectsEntity, SirenEntity):
             SILENCE_ALARM, device_ID=self._device_id
         )
 
-        self.data[DEVICE_STATE] = STATE_SILENCE
+        self.data[ATTR_DEVICE_STATE] = STATE_SILENCE
         self.async_write_ha_state()
