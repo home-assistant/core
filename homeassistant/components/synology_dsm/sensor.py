@@ -30,13 +30,11 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.dt import utcnow
 
-from . import SynoApi, SynologyDSMBaseEntity, SynologyDSMDeviceEntity
-from .const import (
-    CONF_VOLUMES,
-    COORDINATOR_CENTRAL,
-    DOMAIN,
-    ENTITY_UNIT_LOAD,
-    SYNO_API,
+from . import SynoApi
+from .const import CONF_VOLUMES, COORDINATOR_CENTRAL, DOMAIN, ENTITY_UNIT_LOAD, SYNO_API
+from .entity import (
+    SynologyDSMBaseEntity,
+    SynologyDSMDeviceEntity,
     SynologyDSMEntityDescription,
 )
 

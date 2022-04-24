@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any, cast
 
-from pydeconz.light import Cover
+from pydeconz.models.light.cover import Cover
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
