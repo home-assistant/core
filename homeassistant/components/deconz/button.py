@@ -60,8 +60,10 @@ async def async_setup_entry(
     def async_add_scene(_: EventType, scene_id: str) -> None:
         """Add scene button from deCONZ."""
         scene = gateway.api.scenes[scene_id]
-        for description in ENTITY_DESCRIPTIONS.get(PydeconzScene, []):
-            async_add_entities([DeconzButton(scene, gateway, description)])
+        async_add_entities(
+            DeconzButton(scene, gateway, description)
+            for description in ENTITY_DESCRIPTIONS.get(PydeconzScene, [])
+        )
 
     config_entry.async_on_unload(
         gateway.api.scenes.subscribe(
