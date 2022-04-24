@@ -8,9 +8,9 @@ from typing import TYPE_CHECKING, Any, cast
 
 import async_timeout
 from pydeconz import DeconzSession, errors
-from pydeconz.alarm_system import AlarmSystem as DeconzAlarmSystem
 from pydeconz.light import LightBase as DeconzLight
 from pydeconz.models import ResourceGroup
+from pydeconz.models.alarm_system import AlarmSystem as DeconzAlarmSystem
 from pydeconz.models.group import Group as DeconzGroup
 from pydeconz.models.sensor import SensorBase as DeconzSensor
 
