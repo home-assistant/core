@@ -6,28 +6,28 @@ import requests_mock
 
 from homeassistant.components.switch import SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.components.wallbox import InvalidAuth
-from homeassistant.components.wallbox.const import CONF_STATUS_ID_KEY
+from homeassistant.components.wallbox.const import CHARGER_STATUS_ID_KEY
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
 from tests.components.wallbox import entry, setup_integration
 from tests.components.wallbox.const import (
-    CONF_ERROR,
-    CONF_JWT,
-    CONF_MOCK_SWITCH_ENTITY_ID,
-    CONF_STATUS,
-    CONF_TTL,
-    CONF_USER_ID,
+    ERROR,
+    JWT,
+    MOCK_SWITCH_ENTITY_ID,
+    STATUS,
+    TTL,
+    USER_ID,
 )
 
 authorisation_response = json.loads(
     json.dumps(
         {
-            CONF_JWT: "fakekeyhere",
-            CONF_USER_ID: 12345,
-            CONF_TTL: 145656758,
-            CONF_ERROR: "false",
-            CONF_STATUS: 200,
+            JWT: "fakekeyhere",
+            USER_ID: 12345,
+            TTL: 145656758,
+            ERROR: "false",
+            STATUS: 200,
         }
     )
 )
@@ -38,7 +38,7 @@ async def test_wallbox_switch_class(hass: HomeAssistant) -> None:
 
     await setup_integration(hass)
 
-    state = hass.states.get(CONF_MOCK_SWITCH_ENTITY_ID)
+    state = hass.states.get(MOCK_SWITCH_ENTITY_ID)
     assert state
     assert state.state == "off"
 
@@ -50,7 +50,7 @@ async def test_wallbox_switch_class(hass: HomeAssistant) -> None:
         )
         mock_request.post(
             "https://api.wall-box.com/v3/chargers/12345/remote-action",
-            json=json.loads(json.dumps({CONF_STATUS_ID_KEY: 193})),
+            json=json.loads(json.dumps({CHARGER_STATUS_ID_KEY: 193})),
             status_code=200,
         )
 
@@ -58,7 +58,7 @@ async def test_wallbox_switch_class(hass: HomeAssistant) -> None:
             "switch",
             SERVICE_TURN_ON,
             {
-                ATTR_ENTITY_ID: CONF_MOCK_SWITCH_ENTITY_ID,
+                ATTR_ENTITY_ID: MOCK_SWITCH_ENTITY_ID,
             },
             blocking=True,
         )
@@ -67,7 +67,7 @@ async def test_wallbox_switch_class(hass: HomeAssistant) -> None:
             "switch",
             SERVICE_TURN_OFF,
             {
-                ATTR_ENTITY_ID: CONF_MOCK_SWITCH_ENTITY_ID,
+                ATTR_ENTITY_ID: MOCK_SWITCH_ENTITY_ID,
             },
             blocking=True,
         )
@@ -88,7 +88,7 @@ async def test_wallbox_switch_class_connection_error(hass: HomeAssistant) -> Non
         )
         mock_request.post(
             "https://api.wall-box.com/v3/chargers/12345/remote-action",
-            json=json.loads(json.dumps({CONF_STATUS_ID_KEY: 193})),
+            json=json.loads(json.dumps({CHARGER_STATUS_ID_KEY: 193})),
             status_code=404,
         )
 
@@ -97,7 +97,7 @@ async def test_wallbox_switch_class_connection_error(hass: HomeAssistant) -> Non
                 "switch",
                 SERVICE_TURN_ON,
                 {
-                    ATTR_ENTITY_ID: CONF_MOCK_SWITCH_ENTITY_ID,
+                    ATTR_ENTITY_ID: MOCK_SWITCH_ENTITY_ID,
                 },
                 blocking=True,
             )
@@ -106,7 +106,7 @@ async def test_wallbox_switch_class_connection_error(hass: HomeAssistant) -> Non
                 "switch",
                 SERVICE_TURN_OFF,
                 {
-                    ATTR_ENTITY_ID: CONF_MOCK_SWITCH_ENTITY_ID,
+                    ATTR_ENTITY_ID: MOCK_SWITCH_ENTITY_ID,
                 },
                 blocking=True,
             )
@@ -127,7 +127,7 @@ async def test_wallbox_switch_class_authentication_error(hass: HomeAssistant) ->
         )
         mock_request.post(
             "https://api.wall-box.com/v3/chargers/12345/remote-action",
-            json=json.loads(json.dumps({CONF_STATUS_ID_KEY: 193})),
+            json=json.loads(json.dumps({CHARGER_STATUS_ID_KEY: 193})),
             status_code=403,
         )
 
@@ -136,7 +136,7 @@ async def test_wallbox_switch_class_authentication_error(hass: HomeAssistant) ->
                 "switch",
                 SERVICE_TURN_ON,
                 {
-                    ATTR_ENTITY_ID: CONF_MOCK_SWITCH_ENTITY_ID,
+                    ATTR_ENTITY_ID: MOCK_SWITCH_ENTITY_ID,
                 },
                 blocking=True,
             )
@@ -145,7 +145,7 @@ async def test_wallbox_switch_class_authentication_error(hass: HomeAssistant) ->
                 "switch",
                 SERVICE_TURN_OFF,
                 {
-                    ATTR_ENTITY_ID: CONF_MOCK_SWITCH_ENTITY_ID,
+                    ATTR_ENTITY_ID: MOCK_SWITCH_ENTITY_ID,
                 },
                 blocking=True,
             )

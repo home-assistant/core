@@ -11,10 +11,10 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import WallboxCoordinator, WallboxEntity
 from .const import (
-    CONF_DATA_KEY,
-    CONF_PAUSE_RESUME_KEY,
-    CONF_SERIAL_NUMBER_KEY,
-    CONF_STATUS_DESCRIPTION_KEY,
+    CHARGER_DATA_KEY,
+    CHARGER_PAUSE_RESUME_KEY,
+    CHARGER_SERIAL_NUMBER_KEY,
+    CHARGER_STATUS_DESCRIPTION_KEY,
     DOMAIN,
 )
 
@@ -25,8 +25,8 @@ class WallboxSwitchEntityDescription(SwitchEntityDescription):
 
 
 SWITCH_TYPES: dict[str, WallboxSwitchEntityDescription] = {
-    CONF_PAUSE_RESUME_KEY: WallboxSwitchEntityDescription(
-        key=CONF_PAUSE_RESUME_KEY, name="Pause/Resume"
+    CHARGER_PAUSE_RESUME_KEY: WallboxSwitchEntityDescription(
+        key=CHARGER_PAUSE_RESUME_KEY, name="Pause/Resume"
     ),
 }
 
@@ -37,7 +37,7 @@ async def async_setup_entry(
     """Create wallbox sensor entities in HASS."""
     coordinator: WallboxCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        [WallboxSwitch(coordinator, entry, SWITCH_TYPES[CONF_PAUSE_RESUME_KEY])]
+        [WallboxSwitch(coordinator, entry, SWITCH_TYPES[CHARGER_PAUSE_RESUME_KEY])]
     )
 
 
@@ -59,20 +59,25 @@ class WallboxSwitch(WallboxEntity, SwitchEntity):
         self.entity_description = description
         self._coordinator = coordinator
         self._attr_name = f"{entry.title} {description.name}"
-        self._attr_unique_id = f"{description.key}-{coordinator.data[CONF_DATA_KEY][CONF_SERIAL_NUMBER_KEY]}"
+        self._attr_unique_id = f"{description.key}-{coordinator.data[CHARGER_DATA_KEY][CHARGER_SERIAL_NUMBER_KEY]}"
 
     @property
     def available(self) -> bool:
         """Return the availability of the switch."""
-        return self.coordinator.data[CONF_STATUS_DESCRIPTION_KEY].lower() in [
+        return self.coordinator.data[CHARGER_STATUS_DESCRIPTION_KEY].lower() in [
             "charging",
             "paused",
+            "scheduled",
         ]
 
     @property
     def is_on(self) -> bool:
         """Return the status of pause/resume."""
-        return self._coordinator.data[CONF_STATUS_DESCRIPTION_KEY].lower == "charging"  # type: ignore[no-any-return]
+        return self._coordinator.data[CHARGER_STATUS_DESCRIPTION_KEY].lower in [
+            "charging",
+            "waiting for car demand",
+            "waiting",
+        ]
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Pause charger."""
