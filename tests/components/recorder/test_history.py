@@ -268,25 +268,14 @@ def test_state_changes_during_period(hass_recorder, attributes, no_attributes, l
     assert states[:limit] == hist[entity_id]
 
 
-@pytest.mark.parametrize(
-    "attributes, no_attributes, descending",
-    [
-        ({"attr": True}, False, True),
-        ({}, True, True),
-        ({"attr": True}, False, False),
-        ({}, True, False),
-    ],
-)
-def test_state_changes_during_period_descending(
-    hass_recorder, attributes, no_attributes, descending
-):
+def test_state_changes_during_period_descending(hass_recorder):
     """Test state change during period descending."""
     hass = hass_recorder()
     entity_id = "media_player.test"
 
     def set_state(state):
         """Set the state."""
-        hass.states.set(entity_id, state, attributes)
+        hass.states.set(entity_id, state, {"any": 1})
         wait_recording_done(hass)
         return hass.states.get(entity_id)
 
@@ -311,18 +300,14 @@ def test_state_changes_during_period_descending(
         set_state("Plex")
 
     hist = history.state_changes_during_period(
-        hass, start, end, entity_id, no_attributes, descending=descending
+        hass, start, end, entity_id, no_attributes=False, descending=False
     )
-    history_states = list(hist[entity_id])
+    assert states == hist[entity_id]
 
-    # Normally we do not want to branch in tests, but
-    # in this case since we are validating that the sqlalchemy
-    # bakery caching is not caching the incorrect descending
-    # value, we have to do it all in one test
-    if descending:
-        history_states = list(reversed(history_states))
-
-    assert states == history_states
+    hist = history.state_changes_during_period(
+        hass, start, end, entity_id, no_attributes=False, descending=True
+    )
+    assert states == list(reversed(list(hist[entity_id])))
 
 
 def test_get_last_state_changes(hass_recorder):
