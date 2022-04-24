@@ -218,6 +218,7 @@ async def test_homekit_setup(hass, hk_driver, mock_async_zeroconf):
         advertised_address=None,
         async_zeroconf_instance=zeroconf_mock,
         zeroconf_server=f"{uuid}-hap.local.",
+        loader=ANY,
     )
     assert homekit.driver.safe_mode is False
 
@@ -259,6 +260,7 @@ async def test_homekit_setup_ip_address(hass, hk_driver, mock_async_zeroconf):
         advertised_address=None,
         async_zeroconf_instance=mock_async_zeroconf,
         zeroconf_server=f"{uuid}-hap.local.",
+        loader=ANY,
     )
 
 
@@ -300,6 +302,7 @@ async def test_homekit_setup_advertise_ip(hass, hk_driver, mock_async_zeroconf):
         advertised_address="192.168.1.100",
         async_zeroconf_instance=async_zeroconf_instance,
         zeroconf_server=f"{uuid}-hap.local.",
+        loader=ANY,
     )
 
 

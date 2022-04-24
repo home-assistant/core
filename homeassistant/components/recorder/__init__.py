@@ -19,7 +19,6 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.orm.session import Session
-from sqlalchemy.pool import StaticPool
 import voluptuous as vol
 
 from homeassistant.components import persistent_notification
@@ -30,7 +29,6 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
     EVENT_STATE_CHANGED,
-    EVENT_TIME_CHANGED,
     MATCH_ALL,
 )
 from homeassistant.core import (
@@ -80,7 +78,7 @@ from .models import (
     StatisticsRuns,
     process_timestamp,
 )
-from .pool import POOL_SIZE, RecorderPool
+from .pool import POOL_SIZE, MutexPool, RecorderPool
 from .util import (
     dburl_to_path,
     end_incomplete_runs,
@@ -343,10 +341,8 @@ async def _process_recorder_platform(
     hass: HomeAssistant, domain: str, platform: Any
 ) -> None:
     """Process a recorder platform."""
-    platforms: dict[str, Any] = hass.data[DOMAIN]
-    platforms[domain] = platform
-    if hasattr(platform, "exclude_attributes"):
-        hass.data[EXCLUDE_ATTRIBUTES][domain] = platform.exclude_attributes(hass)
+    instance: Recorder = hass.data[DATA_INSTANCE]
+    instance.queue.put(AddRecorderPlatformTask(domain, platform))
 
 
 @callback
@@ -603,6 +599,26 @@ class CommitTask(RecorderTask):
         instance._commit_event_session_or_retry()
 
 
+@dataclass
+class AddRecorderPlatformTask(RecorderTask):
+    """Add a recorder platform."""
+
+    domain: str
+    platform: Any
+    commit_before = False
+
+    def run(self, instance: Recorder) -> None:
+        """Handle the task."""
+        hass = instance.hass
+        domain = self.domain
+        platform = self.platform
+
+        platforms: dict[str, Any] = hass.data[DOMAIN]
+        platforms[domain] = platform
+        if hasattr(self.platform, "exclude_attributes"):
+            hass.data[EXCLUDE_ATTRIBUTES][domain] = platform.exclude_attributes(hass)
+
+
 COMMIT_TASK = CommitTask()
 KEEP_ALIVE_TASK = KeepAliveTask()
 
@@ -737,10 +753,13 @@ class Recorder(threading.Thread):
         """
         size = self.queue.qsize()
         _LOGGER.debug("Recorder queue size is: %s", size)
-        if self.queue.qsize() <= MAX_QUEUE_BACKLOG:
+        if size <= MAX_QUEUE_BACKLOG:
             return
         _LOGGER.error(
-            "The recorder queue reached the maximum size of %s; Events are no longer being recorded",
+            "The recorder backlog queue reached the maximum size of %s events; "
+            "usually, the system is CPU bound, I/O bound, or the database "
+            "is corrupt due to a disk problem; The recorder will stop "
+            "recording events to avoid running out of memory",
             MAX_QUEUE_BACKLOG,
         )
         self._async_stop_queue_watcher_and_event_listener()
@@ -775,9 +794,6 @@ class Recorder(threading.Thread):
     @callback
     def _async_event_filter(self, event: Event) -> bool:
         """Filter events."""
-        if event.event_type == EVENT_TIME_CHANGED:
-            return False
-
         if event.event_type in self.exclude_t:
             return False
 
@@ -902,7 +918,10 @@ class Recorder(threading.Thread):
 
     @callback
     def async_periodic_statistics(self, now: datetime) -> None:
-        """Trigger the hourly statistics run."""
+        """Trigger the statistics run.
+
+        Short term statistics run every 5 minutes
+        """
         start = statistics.get_start_time()
         self.queue.put(StatisticsTask(start))
 
@@ -1409,7 +1428,8 @@ class Recorder(threading.Thread):
 
         if self.db_url == SQLITE_URL_PREFIX or ":memory:" in self.db_url:
             kwargs["connect_args"] = {"check_same_thread": False}
-            kwargs["poolclass"] = StaticPool
+            kwargs["poolclass"] = MutexPool
+            MutexPool.pool_lock = threading.RLock()
             kwargs["pool_reset_on_return"] = None
         elif self.db_url.startswith(SQLITE_URL_PREFIX):
             kwargs["poolclass"] = RecorderPool
@@ -1419,12 +1439,12 @@ class Recorder(threading.Thread):
         if self._using_file_sqlite:
             validate_or_move_away_sqlite_database(self.db_url)
 
-        self.engine = create_engine(self.db_url, **kwargs)
+        self.engine = create_engine(self.db_url, **kwargs, future=True)
 
         sqlalchemy_event.listen(self.engine, "connect", setup_recorder_connection)
 
         Base.metadata.create_all(self.engine)
-        self.get_session = scoped_session(sessionmaker(bind=self.engine))
+        self.get_session = scoped_session(sessionmaker(bind=self.engine, future=True))
         _LOGGER.debug("Connected to recorder database")
 
     @property

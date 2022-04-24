@@ -6,5 +6,11 @@
   "codeowners": ["@teharris1"],
   "config_flow": true,
   "iot_class": "local_push",
-  "loggers": ["pyinsteon", "pypubsub"]
+  "loggers": ["pyinsteon", "pypubsub"],
+  "after_dependencies": ["usb"],
+  "usb": [
+    {
+      "vid": "10BF"
+    }
+  ]
 }

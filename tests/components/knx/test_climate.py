@@ -158,9 +158,8 @@ async def test_climate_preset_mode(hass: HomeAssistant, knx: KNXTestKit):
     er.async_remove("climate.test")
     await hass.async_block_till_done()
 
-    assert len(knx.xknx.devices) == 2
-    assert len(knx.xknx.devices[0].device_updated_cbs) == 1
-    assert len(knx.xknx.devices[1].device_updated_cbs) == 1
+    # If we remove the entity the underlying devices should disappear too
+    assert len(knx.xknx.devices) == 0
 
 
 async def test_update_entity(hass: HomeAssistant, knx: KNXTestKit):
