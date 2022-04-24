@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-from pydeconz.light import (
+from pydeconz.models.light.fan import (
     FAN_SPEED_25_PERCENT,
     FAN_SPEED_50_PERCENT,
     FAN_SPEED_75_PERCENT,
