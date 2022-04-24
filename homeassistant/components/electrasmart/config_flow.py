@@ -4,7 +4,16 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-import electra
+from electra import (
+    ATTR_DATA,
+    ATTR_RES,
+    ATTR_STATUS,
+    ATTR_TOKEN,
+    STATUS_SUCCESS,
+    ElectraAPI,
+    ElectraApiError,
+    generate_imei,
+)
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -38,7 +47,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the initial step."""
 
-        self._api = electra.ElectraAPI(async_get_clientsession(self.hass))
+        self._api = ElectraAPI(async_get_clientsession(self.hass))
         errors: dict[str, Any] = {}
 
         if user_input is None:
@@ -71,7 +80,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Check if config is valid and create entry if so."""
 
         self._phone_number = user_input[CONF_PHONE_NUMBER]
-        self._imei = electra.generate_imei()
+        self._imei = generate_imei()
 
         # Check if already configured
         if self.unique_id is None:
@@ -80,12 +89,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             resp = await self._api.generate_new_token(self._phone_number, self._imei)
-        except electra.ElectraApiError as exp:
+        except ElectraApiError as exp:
             _LOGGER.error("Failed to connect to API: %s", exp)
             return self._show_setup_form(user_input, {"base": "cannot_connect"}, "user")
 
-        if resp[electra.ATTR_STATUS] == electra.STATUS_SUCCESS:
-            if resp[electra.ATTR_DATA][electra.ATTR_RES] != electra.STATUS_SUCCESS:
+        if resp[ATTR_STATUS] == STATUS_SUCCESS:
+            if resp[ATTR_DATA][ATTR_RES] != STATUS_SUCCESS:
                 return self._show_setup_form(
                     user_input, {CONF_PHONE_NUMBER: "invalid_phone_number"}, "user"
                 )
@@ -99,14 +108,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             resp = await self._api.validate_one_time_password(
                 self._otp, self._imei, self._phone_number
             )
-        except electra.ElectraApiError as exp:
+        except ElectraApiError as exp:
             _LOGGER.error("Failed to connect to API: %s", exp)
             return self._show_setup_form(
                 user_input, {"base": "cannot_connect"}, CONF_OTP
             )
 
-        if resp[electra.ATTR_DATA][electra.ATTR_RES] == electra.STATUS_SUCCESS:
-            self._token = resp[electra.ATTR_DATA][electra.ATTR_TOKEN]
+        if resp[ATTR_DATA][ATTR_RES] == STATUS_SUCCESS:
+            self._token = resp[ATTR_DATA][ATTR_TOKEN]
 
             data = {
                 CONF_TOKEN: self._token,
@@ -114,7 +123,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_PHONE_NUMBER: self._phone_number,
             }
             return self.async_create_entry(title=self._phone_number, data=data)
-
         return self._show_setup_form(user_input, {CONF_OTP: "invalid_auth"}, CONF_OTP)
 
     async def async_step_one_time_password(self, user_input=None, errors=None):

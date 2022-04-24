@@ -1,8 +1,8 @@
 {
-  "domain": "electraac",
+  "domain": "electrasmart",
   "name": "Electra Smart",
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/electraac",
+  "documentation": "https://www.home-assistant.io/integrations/electrasmart",
   "requirements": ["pyelectra==0.0.3"],
   "ssdp": [],
   "zeroconf": [],

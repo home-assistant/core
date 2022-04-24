@@ -94,7 +94,7 @@ FLOWS = {
         "ecowitt",
         "efergy",
         "eight_sleep",
-        "electraac",
+        "electrasmart",
         "elgato",
         "elkm1",
         "elmax",
