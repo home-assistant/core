@@ -481,3 +481,27 @@ async def test_event_payload(hass, calls, fake_schedule):
             "calendar_event": event_data,
         }
     ]
+
+
+async def test_trigger_timestamp_window_edge(hass, calls, fake_schedule, freezer):
+    """Test that events in the edge of a scan are included."""
+    freezer.move_to("2022-04-19 11:00:00+00:00")
+    # Exactly at a TEST_UPDATE_INTERVAL boundary the start time,
+    # making this excluded from the first window.
+    event_data = fake_schedule.create_event(
+        start=datetime.datetime.fromisoformat("2022-04-19 11:14:00+00:00"),
+        end=datetime.datetime.fromisoformat("2022-04-19 11:30:00+00:00"),
+    )
+    await create_automation(hass, EVENT_START)
+    assert len(calls()) == 0
+
+    await fake_schedule.fire_until(
+        datetime.datetime.fromisoformat("2022-04-19 11:20:00+00:00")
+    )
+    assert calls() == [
+        {
+            "platform": "calendar",
+            "event": EVENT_START,
+            "calendar_event": event_data,
+        }
+    ]

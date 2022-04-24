@@ -81,7 +81,8 @@ class CalendarEventListener:
 
     async def _fetch_events(self, last_endtime: datetime.datetime) -> None:
         """Update the set of eligible events."""
-        end_time = last_endtime + UPDATE_INTERVAL
+        # Event time ranges are exclusive so the end time is expanded by 1sec
+        end_time = last_endtime + UPDATE_INTERVAL + datetime.timedelta(seconds=1)
         _LOGGER.debug("Fetching events between %s, %s", last_endtime, end_time)
         events = await self._entity.async_get_events(self._hass, last_endtime, end_time)
 
@@ -125,8 +126,12 @@ class CalendarEventListener:
     async def _handle_calendar_event(self, now: datetime.datetime) -> None:
         """Handle calendar event."""
         _LOGGER.debug("Calendar event @ %s", now)
+        self._dispatch_events(now)
+        self._clear_event_listener()
+        self._listen_next_calendar_event()
 
-        # Consume all events that are eligible to fire
+    def _dispatch_events(self, now: datetime.datetime) -> None:
+        """Dispatch all events that are eligible to fire."""
         while self._events and self._events[0][0] <= now:
             (_fire_time, event) = self._events.pop(0)
             _LOGGER.debug("Event: %s", event)
@@ -134,12 +139,13 @@ class CalendarEventListener:
                 self._job,
                 {"trigger": {**self._trigger_data, "calendar_event": event.as_dict()}},
             )
-        self._clear_event_listener()
-        self._listen_next_calendar_event()
 
     async def _handle_refresh(self, now: datetime.datetime) -> None:
         """Handle core config update."""
         _LOGGER.debug("Refresh events @ %s", now)
+        # Dispatch any eligible events in the boundary case where refresh
+        # fires before the calendar event.
+        self._dispatch_events(now)
         self._clear_event_listener()
         await self._fetch_events(now)
         self._listen_next_calendar_event()

@@ -11,12 +11,7 @@ import logging
 from typing import Any
 
 from async_upnp_client.aiohttp import AiohttpSessionRequester
-from async_upnp_client.const import (
-    AddressTupleVXType,
-    DeviceOrServiceType,
-    SsdpHeaders,
-    SsdpSource,
-)
+from async_upnp_client.const import AddressTupleVXType, DeviceOrServiceType, SsdpSource
 from async_upnp_client.description_cache import DescriptionCache
 from async_upnp_client.ssdp import SSDP_PORT, determine_source_target, is_ipv4_address
 from async_upnp_client.ssdp_listener import SsdpDevice, SsdpDeviceTracker, SsdpListener
@@ -189,7 +184,11 @@ async def async_register_callback(
     Returns a callback that can be used to cancel the registration.
     """
     scanner: Scanner = hass.data[DOMAIN]
-    return await scanner.async_register_callback(callback, match_dict)
+    if match_dict is None:
+        return await scanner.async_register_callback(callback)
+    return await scanner.async_register_callback(
+        callback, {k.lower(): v for k, v in match_dict.items()}
+    )
 
 
 @bind_hass
@@ -246,13 +245,13 @@ async def _async_process_callbacks(
 
 @core_callback
 def _async_headers_match(
-    headers: Mapping[str, Any], match_dict: dict[str, str]
+    headers: CaseInsensitiveDict, match_dict: dict[str, str]
 ) -> bool:
     for header, val in match_dict.items():
         if val == MATCH_ALL:
             if header not in headers:
                 return False
-        elif headers.get(header) != val:
+        elif headers.get_lower(header) != val:
             return False
     return True
 
@@ -328,7 +327,7 @@ class Scanner:
     @property
     def _all_headers_from_ssdp_devices(
         self,
-    ) -> dict[tuple[str, str], Mapping[str, Any]]:
+    ) -> dict[tuple[str, str], CaseInsensitiveDict]:
         return {
             (ssdp_device.udn, dst): headers
             for ssdp_device in self._ssdp_devices
@@ -338,7 +337,10 @@ class Scanner:
     async def async_register_callback(
         self, callback: SsdpCallback, match_dict: None | dict[str, str] = None
     ) -> Callable[[], None]:
-        """Register a callback."""
+        """Register a callback.
+
+        The match_dict must present the keys in lower case.
+        """
         if match_dict is None:
             match_dict = {}
 
@@ -461,7 +463,7 @@ class Scanner:
     @core_callback
     def _async_get_matching_callbacks(
         self,
-        combined_headers: SsdpHeaders,
+        combined_headers: CaseInsensitiveDict,
     ) -> list[SsdpCallback]:
         """Return a list of callbacks that match."""
         return [
@@ -530,7 +532,7 @@ class Scanner:
         return await self._description_cache.async_get_description_dict(location) or {}
 
     async def _async_headers_to_discovery_info(
-        self, headers: Mapping[str, Any]
+        self, headers: CaseInsensitiveDict
     ) -> SsdpServiceInfo:
         """Combine the headers and description into discovery_info.
 
@@ -571,7 +573,7 @@ class Scanner:
 
 
 def discovery_info_from_headers_and_description(
-    combined_headers: Mapping[str, Any],
+    combined_headers: CaseInsensitiveDict,
     info_desc: Mapping[str, Any],
 ) -> SsdpServiceInfo:
     """Convert headers and description to discovery_info."""
