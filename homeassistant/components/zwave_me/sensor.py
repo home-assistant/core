@@ -30,11 +30,13 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import ZWaveMeController, ZWaveMeEntity
 from .const import DOMAIN, ZWaveMePlatform
 
+
 @dataclass
 class ZWaveMeSensorEntityDescription(SensorEntityDescription):
     """Class describing ZWaveMeSensor sensor entities."""
 
     value: Callable = lambda value: value
+
 
 SENSORS_MAP: dict[str, ZWaveMeSensorEntityDescription] = {
     "barometer": ZWaveMeSensorEntityDescription(
@@ -114,6 +116,7 @@ SENSORS_MAP: dict[str, ZWaveMeSensorEntityDescription] = {
 }
 DEVICE_NAME = ZWaveMePlatform.SENSOR
 
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -138,6 +141,7 @@ async def async_setup_entry(
             hass, f"ZWAVE_ME_NEW_{DEVICE_NAME.upper()}", add_new_device
         )
     )
+
 
 class ZWaveMeSensor(ZWaveMeEntity, SensorEntity):
     """Representation of a ZWaveMe sensor."""
