@@ -21,7 +21,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import ATTRIBUTION, DOMAIN
 from .coordinator import TVDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -104,6 +104,7 @@ class FerrySensor(CoordinatorEntity[TVDataUpdateCoordinator], SensorEntity):
     """Contains data about a ferry departure."""
 
     entity_description: TrafikverketSensorEntityDescription
+    _attr_attribution = ATTRIBUTION
 
     def __init__(
         self,
