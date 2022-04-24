@@ -1,4 +1,4 @@
-"""MediaPlayer platform for Squeezebox integration."""
+"""MediaPlayer platform for Squeezebox Player integration."""
 from __future__ import annotations
 
 import asyncio
@@ -25,18 +25,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
 from .const import DEFAULT_NAME, DOMAIN, PLAYER_EVENT
-
-SUPPORTED_FEATURES = (
-    MediaPlayerEntityFeature.PAUSE
-    | MediaPlayerEntityFeature.VOLUME_SET
-    | MediaPlayerEntityFeature.STOP
-    | MediaPlayerEntityFeature.TURN_ON
-    | MediaPlayerEntityFeature.TURN_OFF
-    | MediaPlayerEntityFeature.PLAY
-    | MediaPlayerEntityFeature.PLAY_MEDIA
-    | MediaPlayerEntityFeature.VOLUME_MUTE
-    | MediaPlayerEntityFeature.BROWSE_MEDIA
-)
 
 STATE_MAPPING = {
     PlayerState.IDLE: STATE_IDLE,
@@ -66,7 +54,7 @@ async def async_setup_entry(
             await asyncio.sleep(0.1)
         async_add_entities([SqueezeboxPlayer(slimserver, player)])
 
-    async def on_slim_event(event: SlimEvent):
+    async def on_slim_event(event: SlimEvent) -> None:
         """Handle player added/connected event."""
         if event.player_id in added_ids:
             return
@@ -80,15 +68,24 @@ async def async_setup_entry(
     )
 
     # add all current items in controller
-    for player in slimserver.players:
-        hass.async_create_task(async_add_player(player))
+    await asyncio.gather(*(async_add_player(player) for player in slimserver.players))
 
 
 class SqueezeboxPlayer(MediaPlayerEntity):
     """Representation of MediaPlayerEntity from Squeezebox Player."""
 
     _attr_should_poll = False
-    _attr_supported_features = SUPPORTED_FEATURES
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.STOP
+        | MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.PLAY
+        | MediaPlayerEntityFeature.PLAY_MEDIA
+        | MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.BROWSE_MEDIA
+    )
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
 
     def __init__(self, slimserver: SlimServer, player: SlimClient) -> None:
@@ -163,7 +160,7 @@ class SqueezeboxPlayer(MediaPlayerEntity):
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Send new volume_level to device."""
-        volume = int(volume * 100)
+        volume = round(volume * 100)
         await self.player.volume_set(volume)
 
     async def async_mute_volume(self, mute: bool) -> None:
@@ -178,7 +175,9 @@ class SqueezeboxPlayer(MediaPlayerEntity):
         """Turn off device."""
         await self.player.power(False)
 
-    async def async_play_media(self, media_type: str, media_id: str, **kwargs) -> None:
+    async def async_play_media(
+        self, media_type: str | None, media_id: str, **kwargs
+    ) -> None:
         """Send the play_media command to the media player."""
         # Handle media_source
         if media_source.is_media_source_id(media_id):
@@ -186,8 +185,8 @@ class SqueezeboxPlayer(MediaPlayerEntity):
             media_id = sourced_media.url
             media_type = sourced_media.mime_type
 
-        if not media_type.startswith("audio/"):
-            media_type = None  # type: ignore[assignment]
+        if media_type and not media_type.startswith("audio/"):
+            media_type = None
         media_id = async_process_play_media_url(self.hass, media_id)
 
         await self.player.play_url(media_id, mime_type=media_type)
@@ -202,7 +201,7 @@ class SqueezeboxPlayer(MediaPlayerEntity):
             content_filter=lambda item: item.media_content_type.startswith("audio/"),
         )
 
-    async def _on_slim_event(self, event: SlimEvent):
+    async def _on_slim_event(self, event: SlimEvent) -> None:
         """Call when we receive an event from SlimProto."""
         if event.type == EventType.PLAYER_CONNECTED:
             # player reconnected, update our player object
@@ -210,12 +209,11 @@ class SqueezeboxPlayer(MediaPlayerEntity):
         if event.type == EventType.PLAYER_RPC_EVENT:
             # rpc event from player such as a button press,
             # forward on the eventbus for others to handle
+            dev_id = self.registry_entry.device_id if self.registry_entry else None
             evt_data = {
                 **event.data,
                 "entity_id": self.entity_id,
-                "device_id": self.registry_entry.device_id
-                if self.registry_entry
-                else None,
+                "device_id": dev_id,
             }
             self.hass.bus.async_fire(PLAYER_EVENT, evt_data)
             return
