@@ -1,4 +1,4 @@
-"""Train information for departures and delays, provided by Trafikverket."""
+"""Ferry information for departures, provided by Trafikverket."""
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -116,6 +116,7 @@ class FerrySensor(CoordinatorEntity[TVDataUpdateCoordinator], SensorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator)
         self._attr_name = f"{name} {entity_description.name}"
+        self._attr_unique_id = f"{entry_id}-{entity_description.key}"
         self.entity_description = entity_description
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
@@ -125,17 +126,18 @@ class FerrySensor(CoordinatorEntity[TVDataUpdateCoordinator], SensorEntity):
             name=name,
             configuration_url="https://api.trafikinfo.trafikverket.se/",
         )
-        self._attr_unique_id = f"{entry_id}-{entity_description.key}"
+        self._update_attr()
 
-    @property
-    def native_value(self) -> StateType:
-        """Return value of sensor."""
-        return self.entity_description.value_fn(self.coordinator.data)
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Additional attributes for sensor."""
-        attributes = {
+    def _update_attr(self) -> None:
+        """Update _attr."""
+        self._attr_native_value = self.entity_description.value_fn(
+            self.coordinator.data
+        )
+        self._attr_extra_state_attributes = {
             "other_information": self.entity_description.info_fn(self.coordinator.data),
         }
-        return attributes
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        self._update_attr()
+        return super()._handle_coordinator_update()

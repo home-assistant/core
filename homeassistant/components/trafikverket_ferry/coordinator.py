@@ -1,4 +1,4 @@
-"""DataUpdateCoordinator for the Trafikverket Weather integration."""
+"""DataUpdateCoordinator for the Trafikverket Ferry integration."""
 from __future__ import annotations
 
 from datetime import date, datetime, time, timedelta

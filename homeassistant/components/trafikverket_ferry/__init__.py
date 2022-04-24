@@ -1,4 +1,4 @@
-"""The trafikverket_train component."""
+"""The trafikverket_ferry component."""
 from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
