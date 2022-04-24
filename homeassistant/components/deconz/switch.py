@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from pydeconz.light import Light, Siren
+from pydeconz.models.light.light import Light
+from pydeconz.models.light.siren import Siren
 
 from homeassistant.components.switch import DOMAIN, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
