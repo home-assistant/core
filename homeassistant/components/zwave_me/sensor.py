@@ -80,7 +80,6 @@ SENSORS_MAP: dict[str, ZWaveMeSensorEntityDescription] = {
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
-
     ),
     "meterElectric_power_factor": ZWaveMeSensorEntityDescription(
         key="meterElectric_power_factor",
@@ -94,14 +93,12 @@ SENSORS_MAP: dict[str, ZWaveMeSensorEntityDescription] = {
         device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         state_class=SensorStateClass.MEASUREMENT,
-
     ),
     "meterElectric_watt": ZWaveMeSensorEntityDescription(
         key="meterElectric_watt",
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=POWER_WATT,
         state_class=SensorStateClass.MEASUREMENT,
-
     ),
     "temperature": ZWaveMeSensorEntityDescription(
         key="temperature",
