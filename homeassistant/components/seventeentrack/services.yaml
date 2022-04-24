@@ -16,6 +16,13 @@ add_package:
       example: ABC1234
       selector:
         text:
+    carrier_name:
+      name: Carrier Name
+      description: Name of the carrier handling the package.
+      required: false
+      example: Postal Service
+      selector:
+        text:
     friendly_name:
       name: Package friendly name
       description: Set friendly name for the added package.

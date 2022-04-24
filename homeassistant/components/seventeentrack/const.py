@@ -9,6 +9,7 @@ DEFAULT_SHOW_ARCHIVED: Final = False
 
 CONF_SHOW_ARCHIVED: Final = "show_archived"
 CONF_TRACKING_NUMBER: Final = "tracking_number"
+CONF_CARRIER_NAME: Final = "carrier_name"
 
 SERVICE_ADD_PACKAGE: Final = "add_package"
 

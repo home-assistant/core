@@ -22,6 +22,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .config_flow import get_client
 from .const import (
+    CONF_CARRIER_NAME,
     CONF_SHOW_ARCHIVED,
     CONF_TRACKING_NUMBER,
     DEFAULT_SCAN_INTERVAL,
@@ -39,6 +40,7 @@ SERVICE_ADD_PACKAGE_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_DEVICE_ID): cv.string,
         vol.Required(CONF_TRACKING_NUMBER): cv.string,
+        vol.Optional(CONF_CARRIER_NAME): cv.string,
         vol.Optional(CONF_FRIENDLY_NAME): cv.string,
     }
 )
@@ -155,8 +157,9 @@ class SeventeenTrackDataCoordinator(DataUpdateCoordinator):
                     ].client
                     break
             try:
-                await client.profile.add_package(
+                await client.profile.add_package_with_carrier(
                     service.data[CONF_TRACKING_NUMBER],
+                    service.data.get(CONF_CARRIER_NAME),
                     service.data.get(CONF_FRIENDLY_NAME),
                 )
             except RequestError as err:

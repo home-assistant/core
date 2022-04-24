@@ -9,6 +9,7 @@ from seventeentrack.errors import (
 )
 
 from homeassistant.components.seventeentrack.const import (
+    CONF_CARRIER_NAME,
     CONF_TRACKING_NUMBER,
     DOMAIN,
     SERVICE_ADD_PACKAGE,
@@ -70,7 +71,7 @@ async def test_add_package(hass: HomeAssistant, mock_api: MagicMock) -> None:
         blocking=True,
     )
     await hass.async_block_till_done()
-    assert mock_api.return_value.add_package.call_count == 0
+    assert mock_api.return_value.add_package_with_carrier.call_count == 0
 
     # test with correct device_id
     await hass.services.async_call(
@@ -79,12 +80,13 @@ async def test_add_package(hass: HomeAssistant, mock_api: MagicMock) -> None:
         {
             CONF_DEVICE_ID: device_id,
             CONF_TRACKING_NUMBER: "AB123",
+            CONF_CARRIER_NAME: "Postal Service",
             CONF_FRIENDLY_NAME: "My package",
         },
         blocking=True,
     )
     await hass.async_block_till_done()
-    assert mock_api.return_value.add_package.call_count == 1
+    assert mock_api.return_value.add_package_with_carrier.call_count == 1
 
 
 async def test_add_package_failures(hass: HomeAssistant, mock_api: MagicMock) -> None:
@@ -107,7 +109,9 @@ async def test_add_package_failures(hass: HomeAssistant, mock_api: MagicMock) ->
     with pytest.raises(
         SystemError, match="Package already exists or could not be added"
     ):
-        mock_api.return_value.add_package = AsyncMock(side_effect=RequestError)
+        mock_api.return_value.add_package_with_carrier = AsyncMock(
+            side_effect=RequestError
+        )
 
         # test package already exists
         await hass.services.async_call(
@@ -124,7 +128,7 @@ async def test_add_package_failures(hass: HomeAssistant, mock_api: MagicMock) ->
         await hass.async_block_till_done()
 
     with pytest.raises(SystemError, match="Could not set friendly_name"):
-        mock_api.return_value.add_package = AsyncMock(
+        mock_api.return_value.add_package_with_carrier = AsyncMock(
             side_effect=InvalidTrackingNumberError
         )
 

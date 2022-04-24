@@ -3,7 +3,7 @@
   "name": "17TRACK",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/seventeentrack",
-  "requirements": ["seventeentrack==2022.4.5"],
+  "requirements": ["seventeentrack==2022.4.6"],
   "codeowners": ["@McSwindler"],
   "iot_class": "cloud_polling",
   "loggers": ["seventeentrack"]
