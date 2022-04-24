@@ -105,7 +105,6 @@ SENSORS_MAP: dict[str, ZWaveMeSensorEntityDescription] = {
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
-
     ),
     "generic": ZWaveMeSensorEntityDescription(
         key="generic",
