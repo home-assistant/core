@@ -142,6 +142,8 @@ async def async_setup_entry(
 class ZWaveMeSensor(ZWaveMeEntity, SensorEntity):
     """Representation of a ZWaveMe sensor."""
 
+    entity_description: ZWaveMeSensorEntityDescription
+
     def __init__(
         self,
         controller: ZWaveMeController,
