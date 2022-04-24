@@ -241,9 +241,9 @@ async def _async_process_callbacks(
 
 @core_callback
 def _async_headers_match(
-    headers: CaseInsensitiveDict, match_dict: dict[str, str]
+    headers: CaseInsensitiveDict, lower_match_dict: dict[str, str]
 ) -> bool:
-    for header, val in match_dict.items():
+    for header, val in lower_match_dict.items():
         if val == MATCH_ALL:
             if header not in headers:
                 return False
@@ -466,8 +466,8 @@ class Scanner:
         """Return a list of callbacks that match."""
         return [
             callback
-            for callback, match_dict in self._callbacks
-            if _async_headers_match(combined_headers, match_dict)
+            for callback, lower_match_dict in self._callbacks
+            if _async_headers_match(combined_headers, lower_match_dict)
         ]
 
     async def _ssdp_listener_callback(
