@@ -1,7 +1,6 @@
 """Sensor to monitor incoming/outgoing phone calls on a Fritz!Box router."""
 from __future__ import annotations
 
-from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
 import queue
@@ -134,22 +133,21 @@ class FritzBoxCallSensor(SensorEntity):
         self._host = host
         self._port = port
         self._monitor = None
-        self._remove_listener: Callable[[], None] | None = None
 
     async def async_added_to_hass(self) -> None:
         """Connect to FRITZ!Box to monitor its call state."""
         await super().async_added_to_hass()
         await self.hass.async_add_executor_job(self._start_call_monitor)
-        self._remove_listener = self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, self._stop_call_monitor
+        self.async_on_remove(
+            self.hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_STOP, self._stop_call_monitor
+            )
         )
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect from FRITZ!Box by stopping monitor."""
         await super().async_will_remove_from_hass()
         await self.hass.async_add_executor_job(self._stop_call_monitor)
-        if self._remove_listener:
-            self._remove_listener()
 
     def _start_call_monitor(self) -> None:
         """Check connection and start callmonitor thread."""
