@@ -65,13 +65,11 @@ class DeconzGateway:
 
         self.signal_new_group = f"deconz_new_group_{config_entry.entry_id}"
         self.signal_new_light = f"deconz_new_light_{config_entry.entry_id}"
-        self.signal_new_scene = f"deconz_new_scene_{config_entry.entry_id}"
         self.signal_new_sensor = f"deconz_new_sensor_{config_entry.entry_id}"
 
         self.deconz_resource_type_to_signal_new_device = {
             ResourceGroup.GROUP.value: self.signal_new_group,
             ResourceGroup.LIGHT.value: self.signal_new_light,
-            ResourceGroup.SCENE.value: self.signal_new_scene,
             ResourceGroup.SENSOR.value: self.signal_new_sensor,
         }
 
