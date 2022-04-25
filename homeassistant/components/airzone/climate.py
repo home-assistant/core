@@ -61,7 +61,7 @@ HVAC_MODE_LIB_TO_HASS: Final[dict[OperationMode, HVACMode]] = {
     OperationMode.DRY: HVACMode.DRY,
     OperationMode.AUTO: HVACMode.HEAT_COOL,
 }
-HVAC_MODE_HASS_TO_LIB: Final[dict[HVACMode | str, OperationMode]] = {
+HVAC_MODE_HASS_TO_LIB: Final[dict[HVACMode, OperationMode]] = {
     HVACMode.OFF: OperationMode.STOP,
     HVACMode.COOL: OperationMode.COOLING,
     HVACMode.HEAT: OperationMode.HEATING,
@@ -144,7 +144,9 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
         }
         await self._async_update_hvac_params(params)
 
-    async def async_set_hvac_mode(self, hvac_mode: HVACMode | str) -> None:
+    async def async_set_hvac_mode(  # type:ignore[override]
+        self, hvac_mode: HVACMode
+    ) -> None:
         """Set hvac mode."""
         params = {}
         if hvac_mode == HVACMode.OFF:
