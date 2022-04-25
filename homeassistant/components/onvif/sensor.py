@@ -63,12 +63,12 @@ class ONVIFSensor(ONVIFBaseEntity, RestoreSensor):
 
     def __init__(self, uid, device: ONVIFDevice, entry: RegistryEntry | None = None):
         """Initialize the ONVIF binary sensor."""
+        self._attr_unique_id = uid
         if entry is not None:
             self._attr_device_class = entry.original_device_class
             self._attr_entity_category = entry.entity_category
             self._attr_name = entry.name
             self._attr_native_unit_of_measurement = entry.unit_of_measurement
-            self._attr_unique_id = uid
         else:
             event = device.events.get_uid(uid)
             self._attr_device_class = event.device_class
@@ -77,7 +77,6 @@ class ONVIFSensor(ONVIFBaseEntity, RestoreSensor):
             self._attr_name = f"{device.name} {event.name}"
             self._attr_native_unit_of_measurement = event.unit_of_measurement
             self._attr_native_value = event.value
-            self._attr_unique_id = uid
 
         super().__init__(device)
 
