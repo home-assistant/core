@@ -69,8 +69,8 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=10)
 
 DISCOVERY_INTERVAL = 60
-MESSAGE_TIMEOUT = 1.0
-MESSAGE_RETRIES = 8
+MESSAGE_TIMEOUT = 1
+MESSAGE_RETRIES = 3
 UNAVAILABLE_GRACE = 90
 
 FIX_MAC_FW = AwesomeVersion("3.70")
@@ -259,6 +259,7 @@ class LIFXManager:
     def __init__(self, hass, platform, config_entry, async_add_entities):
         """Initialize the light."""
         self.entities = {}
+        self.discoveries_inflight = {}
         self.hass = hass
         self.platform = platform
         self.config_entry = config_entry
@@ -378,18 +379,21 @@ class LIFXManager:
 
     @callback
     def register(self, bulb):
-        """Handle aiolifx detected bulb."""
-        self.hass.async_create_task(self.register_new_bulb(bulb))
+        """Allow a single in-flight discovery per bulb."""
+        if bulb.mac_addr not in self.discoveries_inflight:
+            self.discoveries_inflight[bulb.mac_addr] = bulb.ip_addr
+            _LOGGER.debug("Discovered %s (%s)", bulb.ip_addr, bulb.mac_addr)
+            self.hass.async_create_task(self.register_bulb(bulb))
 
-    async def register_new_bulb(self, bulb):
-        """Handle newly detected bulb."""
+    async def register_bulb(self, bulb):
+        """Handle LIFX bulb registration lifecycle."""
         if bulb.mac_addr in self.entities:
             entity = self.entities[bulb.mac_addr]
             entity.registered = True
-            _LOGGER.debug("%s register AGAIN", entity.who)
+            _LOGGER.debug("Reconnected to %s", entity.who)
             await entity.update_hass()
         else:
-            _LOGGER.debug("%s register NEW", bulb.ip_addr)
+            _LOGGER.debug("Connecting to %s (%s)", bulb.ip_addr, bulb.mac_addr)
 
             # Read initial state
             ack = AwaitAioLIFX().wait
@@ -398,8 +402,8 @@ class LIFXManager:
             # can be ignored.
             version_resp = await ack(bulb.get_version)
             if version_resp and bulb.product in SWITCH_PRODUCT_IDS:
-                _LOGGER.warning(
-                    "(Switch) action=skip_discovery, reason=unsupported, serial=%s, ip_addr=%s, type='LIFX Switch'",
+                _LOGGER.debug(
+                    "Not connecting to LIFX Switch %s (%s)",
                     str(bulb.mac_addr).replace(":", ""),
                     bulb.ip_addr,
                 )
@@ -408,7 +412,7 @@ class LIFXManager:
             color_resp = await ack(bulb.get_color)
 
             if color_resp is None or version_resp is None:
-                _LOGGER.error("Failed to initialize %s", bulb.ip_addr)
+                _LOGGER.error("Failed to connect to %s", bulb.ip_addr)
                 bulb.registered = False
             else:
                 bulb.timeout = MESSAGE_TIMEOUT
@@ -422,16 +426,17 @@ class LIFXManager:
                 else:
                     entity = LIFXWhite(bulb, self.effects_conductor)
 
-                _LOGGER.debug("%s register READY", entity.who)
+                _LOGGER.debug("Connected to %s", entity.who)
                 self.entities[bulb.mac_addr] = entity
+                self.discoveries_inflight.pop(bulb.mac_addr, None)
                 self.async_add_entities([entity], True)
 
     @callback
     def unregister(self, bulb):
-        """Handle aiolifx disappearing bulbs."""
+        """Disconnect and unregister non-responsive bulbs."""
         if bulb.mac_addr in self.entities:
             entity = self.entities[bulb.mac_addr]
-            _LOGGER.debug("%s unregister", entity.who)
+            _LOGGER.debug("Disconnected from %s", entity.who)
             entity.registered = False
             entity.async_write_ha_state()
 
@@ -551,8 +556,8 @@ class LIFXLight(LightEntity):
 
     @property
     def who(self):
-        """Return a string identifying the bulb."""
-        return f"{self.bulb.ip_addr} ({self.name})"
+        """Return a string identifying the bulb by name and mac."""
+        return f"{self.name} ({self.bulb.mac_addr})"
 
     @property
     def min_mireds(self):
