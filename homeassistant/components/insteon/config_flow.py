@@ -58,7 +58,7 @@ MODEM_TYPE = "modem_type"
 PLM = "PowerLinc Modem (PLM)"
 HUB1 = "Hub version 1 (pre-2014)"
 HUB2 = "Hub version 2"
-INSTEON_MAC = "00:0E:F3"
+INSTEON_MAC = "00:0e:f3"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -225,7 +225,7 @@ class InsteonFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a DHCP discovery."""
         _LOGGER.error("Got to DHCP step")
         mac = format_mac(discovery_info.macaddress)
-        if mac[:8] != INSTEON_MAC:
+        if mac[:8].lower() != INSTEON_MAC:
             _LOGGER.error("MAC: %s is not Insteon", mac)
             return self.async_abort(reason="not_insteon_device")
 
