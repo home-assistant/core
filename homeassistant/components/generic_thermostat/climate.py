@@ -274,7 +274,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
 
         # Check If we have an old state
         if (old_state := await self.async_get_last_state()) is not None:
-            
+
             # If we have a previously saved temperature restore it
             if old_state.attributes.get(ATTR_TEMPERATURE) is not None:
                 self._target_temp = float(old_state.attributes[ATTR_TEMPERATURE])
