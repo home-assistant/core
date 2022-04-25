@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import ipaddress
 import logging
 from typing import Any
 from urllib.parse import urlparse
@@ -230,6 +231,13 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if not url.hostname:
             return self.async_abort(reason="not_hue_bridge")
 
+        # Ignore if host is IPv6
+        try:
+            if ipaddress.ip_address(url.hostname).version == 6:
+                return self.async_abort(reason="invalid_host")
+        except ValueError:
+            pass
+
         # abort if we already have exactly this bridge id/host
         # reload the integration if the host got updated
         bridge_id = normalize_bridge_id(discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL])
@@ -251,6 +259,13 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         This flow is triggered by the Zeroconf component. It will check if the
         host is already configured and delegate to the import step if not.
         """
+        # Ignore if host is IPv6
+        try:
+            if ipaddress.ip_address(discovery_info.host).version == 6:
+                return self.async_abort(reason="invalid_host")
+        except ValueError:
+            pass
+
         # abort if we already have exactly this bridge id/host
         # reload the integration if the host got updated
         bridge_id = normalize_bridge_id(discovery_info.properties["bridgeid"])
