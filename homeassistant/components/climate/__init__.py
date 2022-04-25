@@ -463,11 +463,11 @@ class ClimateEntity(Entity):
         """Set new target fan mode."""
         await self.hass.async_add_executor_job(self.set_fan_mode, fan_mode)
 
-    def set_hvac_mode(self, hvac_mode: HVACMode | str) -> None:
+    def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         raise NotImplementedError()
 
-    async def async_set_hvac_mode(self, hvac_mode: HVACMode | str) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         await self.hass.async_add_executor_job(self.set_hvac_mode, hvac_mode)
 
