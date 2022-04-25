@@ -8,17 +8,14 @@ from elkm1_lib.elements import Element
 from elkm1_lib.elk import Elk
 from elkm1_lib.thermostats import Thermostat
 
-from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     FAN_AUTO,
     FAN_ON,
-    HVAC_MODE_COOL,
-    HVAC_MODE_FAN_ONLY,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_HEAT_COOL,
-    HVAC_MODE_OFF,
+    ClimateEntityFeature,
+    HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PRECISION_WHOLE
@@ -28,26 +25,26 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import ElkEntity, create_elk_entities
 from .const import DOMAIN
 
-SUPPORT_HVAC = [
-    HVAC_MODE_OFF,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_COOL,
-    HVAC_MODE_HEAT_COOL,
-    HVAC_MODE_FAN_ONLY,
+SUPPORT_HVAC: list[HVACMode | str] = [
+    HVACMode.OFF,
+    HVACMode.HEAT,
+    HVACMode.COOL,
+    HVACMode.HEAT_COOL,
+    HVACMode.FAN_ONLY,
 ]
-HASS_TO_ELK_HVAC_MODES = {
-    HVAC_MODE_OFF: (ThermostatMode.OFF.value, ThermostatFan.AUTO.value),
-    HVAC_MODE_HEAT: (ThermostatMode.HEAT.value, None),
-    HVAC_MODE_COOL: (ThermostatMode.COOL.value, None),
-    HVAC_MODE_HEAT_COOL: (ThermostatMode.AUTO.value, None),
-    HVAC_MODE_FAN_ONLY: (ThermostatMode.OFF.value, ThermostatFan.ON.value),
+HASS_TO_ELK_HVAC_MODES: dict[HVACMode | str, tuple[int, int | None]] = {
+    HVACMode.OFF: (ThermostatMode.OFF.value, ThermostatFan.AUTO.value),
+    HVACMode.HEAT: (ThermostatMode.HEAT.value, None),
+    HVACMode.COOL: (ThermostatMode.COOL.value, None),
+    HVACMode.HEAT_COOL: (ThermostatMode.AUTO.value, None),
+    HVACMode.FAN_ONLY: (ThermostatMode.OFF.value, ThermostatFan.ON.value),
 }
 ELK_TO_HASS_HVAC_MODES = {
-    ThermostatMode.OFF.value: HVAC_MODE_OFF,
-    ThermostatMode.COOL.value: HVAC_MODE_COOL,
-    ThermostatMode.HEAT.value: HVAC_MODE_HEAT,
-    ThermostatMode.EMERGENCY_HEAT.value: HVAC_MODE_HEAT,
-    ThermostatMode.AUTO.value: HVAC_MODE_HEAT_COOL,
+    ThermostatMode.OFF.value: HVACMode.OFF,
+    ThermostatMode.COOL.value: HVACMode.COOL,
+    ThermostatMode.HEAT.value: HVACMode.HEAT,
+    ThermostatMode.EMERGENCY_HEAT.value: HVACMode.HEAT,
+    ThermostatMode.AUTO.value: HVACMode.HEAT_COOL,
 }
 HASS_TO_ELK_FAN_MODES = {
     FAN_AUTO: (None, ThermostatFan.AUTO.value),
@@ -87,7 +84,7 @@ class ElkThermostat(ElkEntity, ClimateEntity):
     def __init__(self, element: Element, elk: Elk, elk_data: dict[str, Any]) -> None:
         """Initialize climate entity."""
         super().__init__(element, elk, elk_data)
-        self._state: str = HVAC_MODE_OFF
+        self._state: str = HVACMode.OFF
 
     @property
     def temperature_unit(self) -> str:
@@ -172,7 +169,7 @@ class ElkThermostat(ElkEntity, ClimateEntity):
         if fan is not None:
             self._element.set(ThermostatSetting.FAN.value, fan)
 
-    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode | str) -> None:
         """Set thermostat operation mode."""
         thermostat_mode, fan_mode = HASS_TO_ELK_HVAC_MODES[hvac_mode]
         self._elk_set(thermostat_mode, fan_mode)
@@ -206,5 +203,5 @@ class ElkThermostat(ElkEntity, ClimateEntity):
 
     def _element_changed(self, element: Element, changeset: Any) -> None:
         self._state = ELK_TO_HASS_HVAC_MODES[self._element.mode]
-        if self._state == HVAC_MODE_OFF and self._element.fan == ThermostatFan.ON.value:
-            self._state = HVAC_MODE_FAN_ONLY
+        if self._state == HVACMode.OFF and self._element.fan == ThermostatFan.ON.value:
+            self._state = HVACMode.FAN_ONLY
