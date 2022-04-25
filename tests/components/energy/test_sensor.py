@@ -25,8 +25,7 @@ from homeassistant.const import (
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import async_init_recorder_component
-from tests.components.recorder.common import async_wait_recording_done_without_instance
+from tests.components.recorder.common import async_wait_recording_done
 
 
 @pytest.fixture
@@ -106,14 +105,13 @@ async def test_cost_sensor_price_entity_total_increasing(
     """Test energy cost price from total_increasing type sensor entity."""
 
     def _compile_statistics(_):
-        return compile_statistics(hass, now, now + timedelta(seconds=1))
+        return compile_statistics(hass, now, now + timedelta(seconds=1)).platform_stats
 
     energy_attributes = {
         ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
         ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
     }
 
-    await async_init_recorder_component(hass)
     energy_data = data.EnergyManager.default_preferences()
     energy_data["energy_sources"].append(
         {
@@ -232,7 +230,7 @@ async def test_cost_sensor_price_entity_total_increasing(
     assert state.attributes[ATTR_LAST_RESET] == last_reset_cost_sensor
 
     # Check generated statistics
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
     all_statistics = await hass.loop.run_in_executor(None, _compile_statistics, hass)
     statistics = get_statistics_for_entity(all_statistics, cost_sensor_entity_id)
     assert statistics["stat"]["sum"] == 19.0
@@ -272,7 +270,7 @@ async def test_cost_sensor_price_entity_total_increasing(
     assert state.attributes[ATTR_LAST_RESET] == last_reset_cost_sensor
 
     # Check generated statistics
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
     all_statistics = await hass.loop.run_in_executor(None, _compile_statistics, hass)
     statistics = get_statistics_for_entity(all_statistics, cost_sensor_entity_id)
     assert statistics["stat"]["sum"] == 38.0
@@ -311,14 +309,13 @@ async def test_cost_sensor_price_entity_total(
     """Test energy cost price from total type sensor entity."""
 
     def _compile_statistics(_):
-        return compile_statistics(hass, now, now + timedelta(seconds=1))
+        return compile_statistics(hass, now, now + timedelta(seconds=1)).platform_stats
 
     energy_attributes = {
         ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
         ATTR_STATE_CLASS: energy_state_class,
     }
 
-    await async_init_recorder_component(hass)
     energy_data = data.EnergyManager.default_preferences()
     energy_data["energy_sources"].append(
         {
@@ -438,7 +435,7 @@ async def test_cost_sensor_price_entity_total(
     assert state.attributes[ATTR_LAST_RESET] == last_reset_cost_sensor
 
     # Check generated statistics
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
     all_statistics = await hass.loop.run_in_executor(None, _compile_statistics, hass)
     statistics = get_statistics_for_entity(all_statistics, cost_sensor_entity_id)
     assert statistics["stat"]["sum"] == 19.0
@@ -479,7 +476,7 @@ async def test_cost_sensor_price_entity_total(
     assert state.attributes[ATTR_LAST_RESET] == last_reset_cost_sensor
 
     # Check generated statistics
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
     all_statistics = await hass.loop.run_in_executor(None, _compile_statistics, hass)
     statistics = get_statistics_for_entity(all_statistics, cost_sensor_entity_id)
     assert statistics["stat"]["sum"] == 38.0
@@ -518,14 +515,13 @@ async def test_cost_sensor_price_entity_total_no_reset(
     """Test energy cost price from total type sensor entity with no last_reset."""
 
     def _compile_statistics(_):
-        return compile_statistics(hass, now, now + timedelta(seconds=1))
+        return compile_statistics(hass, now, now + timedelta(seconds=1)).platform_stats
 
     energy_attributes = {
         ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
         ATTR_STATE_CLASS: energy_state_class,
     }
 
-    await async_init_recorder_component(hass)
     energy_data = data.EnergyManager.default_preferences()
     energy_data["energy_sources"].append(
         {
@@ -644,7 +640,7 @@ async def test_cost_sensor_price_entity_total_no_reset(
     assert state.attributes[ATTR_LAST_RESET] == last_reset_cost_sensor
 
     # Check generated statistics
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
     all_statistics = await hass.loop.run_in_executor(None, _compile_statistics, hass)
     statistics = get_statistics_for_entity(all_statistics, cost_sensor_entity_id)
     assert statistics["stat"]["sum"] == 19.0
@@ -661,7 +657,7 @@ async def test_cost_sensor_price_entity_total_no_reset(
     assert state.attributes[ATTR_LAST_RESET] == last_reset_cost_sensor
 
     # Check generated statistics
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
     all_statistics = await hass.loop.run_in_executor(None, _compile_statistics, hass)
     statistics = get_statistics_for_entity(all_statistics, cost_sensor_entity_id)
     assert statistics["stat"]["sum"] == 18.0
