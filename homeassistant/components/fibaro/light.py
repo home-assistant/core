@@ -9,11 +9,8 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
-    COLOR_MODE_BRIGHTNESS,
-    COLOR_MODE_ONOFF,
-    COLOR_MODE_RGB,
-    COLOR_MODE_RGBW,
     ENTITY_ID_FORMAT,
+    ColorMode,
     LightEntity,
     brightness_supported,
     color_supported,
@@ -87,17 +84,17 @@ class FibaroLight(FibaroDevice, LightEntity):
         supports_dimming = "levelChange" in fibaro_device.interfaces
 
         if supports_color and supports_white_v:
-            self._attr_supported_color_modes = {COLOR_MODE_RGBW}
-            self._attr_color_mode = COLOR_MODE_RGBW
+            self._attr_supported_color_modes = {ColorMode.RGBW}
+            self._attr_color_mode = ColorMode.RGBW
         elif supports_color:
-            self._attr_supported_color_modes = {COLOR_MODE_RGB}
-            self._attr_color_mode = COLOR_MODE_RGB
+            self._attr_supported_color_modes = {ColorMode.RGB}
+            self._attr_color_mode = ColorMode.RGB
         elif supports_dimming:
-            self._attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
-            self._attr_color_mode = COLOR_MODE_BRIGHTNESS
+            self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+            self._attr_color_mode = ColorMode.BRIGHTNESS
         else:
-            self._attr_supported_color_modes = {COLOR_MODE_ONOFF}
-            self._attr_color_mode = COLOR_MODE_ONOFF
+            self._attr_supported_color_modes = {ColorMode.ONOFF}
+            self._attr_color_mode = ColorMode.ONOFF
 
         super().__init__(fibaro_device)
         self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
@@ -184,7 +181,7 @@ class FibaroLight(FibaroDevice, LightEntity):
                 rgbw_s = self.fibaro_device.properties.lastColorSet
             rgbw_list = [int(i) for i in rgbw_s.split(",")][:4]
 
-            if self._attr_color_mode == COLOR_MODE_RGB:
+            if self._attr_color_mode == ColorMode.RGB:
                 self._attr_rgb_color = tuple(*rgbw_list[:3])
             else:
                 self._attr_rgbw_color = tuple(rgbw_list)
