@@ -19,7 +19,7 @@ from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
 
 from tests.common import init_recorder_component
 from tests.components.recorder.common import (
-    async_wait_recording_done_without_instance,
+    async_wait_recording_done,
     trigger_db_commit,
     wait_recording_done,
 )
@@ -612,11 +612,11 @@ async def test_fetch_period_api_with_minimal_response(hass, recorder_mock, hass_
     await async_setup_component(hass, "history", {})
 
     hass.states.async_set("sensor.power", 0, {"attr": "any"})
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
     hass.states.async_set("sensor.power", 50, {"attr": "any"})
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
     hass.states.async_set("sensor.power", 23, {"attr": "any"})
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
     client = await hass_client()
     response = await client.get(
         f"/api/history/period/{now.isoformat()}?filter_entity_id=sensor.power&minimal_response&no_attributes"

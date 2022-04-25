@@ -278,10 +278,10 @@ class NestEventViewBase(HomeAssistantView, ABC):
             )
         try:
             media = await self.load_media(nest_device, event_token)
-        except DecodeException as err:
-            raise HomeAssistantError(
-                "Even token was invalid: %s" % event_token
-            ) from err
+        except DecodeException:
+            return self._json_error(
+                f"Event token was invalid '{event_token}'", HTTPStatus.NOT_FOUND
+            )
         except ApiException as err:
             raise HomeAssistantError("Unable to fetch media for event") from err
         if not media:

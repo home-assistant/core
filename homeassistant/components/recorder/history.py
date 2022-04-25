@@ -343,15 +343,22 @@ def state_changes_during_period(
                 StateAttributes, States.attributes_id == StateAttributes.attributes_id
             )
 
-        last_updated = States.last_updated.desc() if descending else States.last_updated
-        baked_query += lambda q: q.order_by(States.entity_id, last_updated)
+        if descending:
+            baked_query += lambda q: q.order_by(
+                States.entity_id, States.last_updated.desc()
+            )
+        else:
+            baked_query += lambda q: q.order_by(States.entity_id, States.last_updated)
 
         if limit:
-            baked_query += lambda q: q.limit(limit)
+            baked_query += lambda q: q.limit(bindparam("limit"))
 
         states = execute(
             baked_query(session).params(
-                start_time=start_time, end_time=end_time, entity_id=entity_id
+                start_time=start_time,
+                end_time=end_time,
+                entity_id=entity_id,
+                limit=limit,
             )
         )
 
@@ -456,7 +463,7 @@ def _get_states_with_session(
 
     if (
         run is None
-        and (run := (recorder.run_information_from_instance(hass, utc_point_in_time)))
+        and (run := (recorder.run_information_with_session(session, utc_point_in_time)))
         is None
     ):
         # History did not run before utc_point_in_time
