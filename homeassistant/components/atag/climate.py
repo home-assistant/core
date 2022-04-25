@@ -38,7 +38,7 @@ async def async_setup_entry(
 class AtagThermostat(AtagEntity, ClimateEntity):
     """Atag climate device."""
 
-    _attr_hvac_modes = HVAC_MODES  # type:ignore[assignment]
+    _attr_hvac_modes = HVAC_MODES
     _attr_preset_modes = list(PRESET_MAP.keys())
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
