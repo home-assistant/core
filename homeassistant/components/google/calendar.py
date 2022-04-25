@@ -158,7 +158,6 @@ class GoogleCalendarEntity(CalendarEntity):
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
         """Get all events in a specific time frame."""
-        event_list: list[dict[str, Any]] = []
 
         request = ListEventsRequest(
             calendar_id=self._calendar_id,
@@ -166,20 +165,18 @@ class GoogleCalendarEntity(CalendarEntity):
             end_time=end_date,
             search=self._search,
         )
-        while True:
-            try:
-                result = await self._calendar_service.async_list_events(request)
-            except ApiException as err:
-                _LOGGER.error("Unable to connect to Google: %s", err)
-                return []
-
-            event_list.extend(filter(self._event_filter, result.items))
-            if not result.page_token:
-                break
-
-            request.page_token = result.page_token
-
-        return [_get_calendar_event(event) for event in event_list]
+        result_items = []
+        try:
+            result = await self._calendar_service.async_list_events(request)
+            async for result_page in result:
+                result_items.extend(result_page.items)
+        except ApiException as err:
+            _LOGGER.error("Unable to connect to Google: %s", err)
+            return []
+        return [
+            _get_calendar_event(event)
+            for event in filter(self._event_filter, result.items)
+        ]
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self) -> None:
