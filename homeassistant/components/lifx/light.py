@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 from functools import partial
+from ipaddress import IPv4Address
 import logging
 import math
 
@@ -13,6 +14,7 @@ from awesomeversion import AwesomeVersion
 import voluptuous as vol
 
 from homeassistant import util
+from homeassistant.components import network
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_BRIGHTNESS_PCT,
@@ -193,12 +195,13 @@ async def async_setup_entry(
     """Set up LIFX from a config entry."""
     # Priority 1: manual config
     if not (interfaces := hass.data[LIFX_DOMAIN].get(DOMAIN)):
-        # Priority 2: scanned interfaces
-        lifx_ip_addresses = await aiolifx().LifxScan(hass.loop).scan()
-        interfaces = [{CONF_SERVER: ip} for ip in lifx_ip_addresses]
-        if not interfaces:
-            # Priority 3: default interface
-            interfaces = [{}]
+        # Priority 2: Home Assistant enabled interfaces
+        ip_addresses = (
+            source_ip
+            for source_ip in await network.async_get_enabled_source_ips(hass)
+            if isinstance(source_ip, IPv4Address) and not source_ip.is_loopback
+        )
+        interfaces = [{CONF_SERVER: str(ip)} for ip in ip_addresses]
 
     platform = entity_platform.async_get_current_platform()
     lifx_manager = LIFXManager(hass, platform, config_entry, async_add_entities)
@@ -384,6 +387,8 @@ class LIFXManager:
             self.discoveries_inflight[bulb.mac_addr] = bulb.ip_addr
             _LOGGER.debug("Discovered %s (%s)", bulb.ip_addr, bulb.mac_addr)
             self.hass.async_create_task(self.register_bulb(bulb))
+        else:
+            _LOGGER.warning("Duplicate LIFX discovery response ignored")
 
     async def register_bulb(self, bulb):
         """Handle LIFX bulb registration lifecycle."""
