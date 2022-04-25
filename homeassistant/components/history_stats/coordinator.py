@@ -86,9 +86,7 @@ class HistoryStatsUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_from_event(self, event: Event) -> None:
         """Process an update from an event."""
-        self.data = await self._history_stats.async_update(event)
-        for update_callback in self._listeners:
-            update_callback()
+        self.async_set_updated_data(await self._history_stats.async_update(event))
 
     async def _async_update_data(self) -> HistoryStatsState:
         """Fetch update the history stats state."""
