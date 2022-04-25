@@ -134,7 +134,7 @@ class ElkThermostat(ElkEntity, ClimateEntity):
         return self._state
 
     @property
-    def hvac_modes(self) -> list[HVACMode]:  # type:ignore[override]
+    def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available operation modes."""
         return SUPPORT_HVAC
 
