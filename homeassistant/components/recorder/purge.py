@@ -149,6 +149,9 @@ def _select_unused_attributes_ids(
             States.attributes_id.in_(attributes_ids)
         )
     else:
+        # We test this path to make sure it will work with
+        # sqlite, however only on tests that have < 500 ids
+        # since otherwise we hit the limit
         id_query = session.query(column("id")).from_statement(
             union(
                 *[

@@ -35,6 +35,16 @@ from .common import (
 from tests.common import SetupRecorderInstanceT
 
 
+@pytest.fixture(name="use_sqlite")
+def mock_use_sqlite(request):
+    """Pytest fixture to switch purge method."""
+    with patch(
+        "homeassistant.components.recorder.Recorder.using_sqlite",
+        return_value=request.param,
+    ):
+        yield
+
+
 async def test_purge_old_states(
     hass: HomeAssistant, async_setup_recorder_instance: SetupRecorderInstanceT
 ):
@@ -271,10 +281,12 @@ async def test_purge_old_statistics_runs(
         assert statistics_runs.count() == 1
 
 
+@pytest.mark.parametrize("use_sqlite", (True, False), indirect=True)
 async def test_purge_method(
     hass: HomeAssistant,
     async_setup_recorder_instance: SetupRecorderInstanceT,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
+    use_sqlite: bool,
 ):
     """Test purge method."""
 
@@ -385,9 +397,11 @@ async def test_purge_method(
     assert "Vacuuming SQL DB to free space" in caplog.text
 
 
+@pytest.mark.parametrize("use_sqlite", (True, False), indirect=True)
 async def test_purge_edge_case(
     hass: HomeAssistant,
     async_setup_recorder_instance: SetupRecorderInstanceT,
+    use_sqlite: bool,
 ):
     """Test states and events are purged even if they occurred shortly before purge_before."""
 
@@ -600,9 +614,11 @@ async def test_purge_cutoff_date(
         assert state_attributes.count() == 0
 
 
+@pytest.mark.parametrize("use_sqlite", (True, False), indirect=True)
 async def test_purge_filtered_states(
     hass: HomeAssistant,
     async_setup_recorder_instance: SetupRecorderInstanceT,
+    use_sqlite: bool,
 ):
     """Test filtered states are purged."""
     config: ConfigType = {"exclude": {"entities": ["sensor.excluded"]}}
@@ -793,127 +809,40 @@ async def test_purge_filtered_states(
         assert session.query(StateAttributes).count() == 1
 
 
-@pytest.mark.parametrize("using_sqlite", [True, False])
+@pytest.mark.parametrize("use_sqlite", (True, False), indirect=True)
 async def test_purge_filtered_states_to_empty(
     hass: HomeAssistant,
     async_setup_recorder_instance: SetupRecorderInstanceT,
-    using_sqlite: bool,
+    use_sqlite: bool,
 ):
     """Test filtered states are purged all the way to an empty db."""
-    with patch(
-        "homeassistant.components.recorder.Recorder.using_sqlite",
-        return_value=using_sqlite,
-    ):
-        config: ConfigType = {"exclude": {"entities": ["sensor.excluded"]}}
-        instance = await async_setup_recorder_instance(hass, config)
-        assert instance.entity_filter("sensor.excluded") is False
+    config: ConfigType = {"exclude": {"entities": ["sensor.excluded"]}}
+    instance = await async_setup_recorder_instance(hass, config)
+    assert instance.entity_filter("sensor.excluded") is False
 
-        def _add_db_entries(hass: HomeAssistant) -> None:
-            with recorder.session_scope(hass=hass) as session:
-                # Add states and state_changed events that should be purged
-                for days in range(1, 4):
-                    timestamp = dt_util.utcnow() - timedelta(days=days)
-                    for event_id in range(1000, 1020):
-                        _add_state_and_state_changed_event(
-                            session,
-                            "sensor.excluded",
-                            "purgeme",
-                            timestamp,
-                            event_id * days,
-                        )
-
-        service_data = {"keep_days": 10}
-        _add_db_entries(hass)
-
-        with session_scope(hass=hass) as session:
-            states = session.query(States)
-            state_attributes = session.query(StateAttributes)
-            assert states.count() == 60
-            assert state_attributes.count() == 60
-
-        # Test with 'apply_filter' = True
-        service_data["apply_filter"] = True
-        await hass.services.async_call(
-            recorder.DOMAIN, recorder.SERVICE_PURGE, service_data
-        )
-        await async_recorder_block_till_done(hass)
-        await async_wait_purge_done(hass)
-
-        with session_scope(hass=hass) as session:
-            states = session.query(States)
-            state_attributes = session.query(StateAttributes)
-            assert states.count() == 0
-            assert state_attributes.count() == 0
-
-        # Do it again to make sure nothing changes
-        # Why do we do this? Should we check the end result?
-        await hass.services.async_call(
-            recorder.DOMAIN, recorder.SERVICE_PURGE, service_data
-        )
-        await async_recorder_block_till_done(hass)
-        await async_wait_purge_done(hass)
-
-
-@pytest.mark.parametrize("using_sqlite", [True, False])
-async def test_purge_without_state_attributes_filtered_states_to_empty(
-    hass: HomeAssistant,
-    async_setup_recorder_instance: SetupRecorderInstanceT,
-    using_sqlite: bool,
-):
-    """Test filtered legacy states without state attributes are purged all the way to an empty db."""
-    with patch(
-        "homeassistant.components.recorder.Recorder.using_sqlite",
-        return_value=using_sqlite,
-    ):
-        config: ConfigType = {"exclude": {"entities": ["sensor.old_format"]}}
-        instance = await async_setup_recorder_instance(hass, config)
-        assert instance.entity_filter("sensor.old_format") is False
-
-        def _add_db_entries(hass: HomeAssistant) -> None:
-            with recorder.session_scope(hass=hass) as session:
-                # Add states and state_changed events that should be purged
-                # in the legacy format
-                timestamp = dt_util.utcnow() - timedelta(days=5)
-                event_id = 1021
-                session.add(
-                    States(
-                        entity_id="sensor.old_format",
-                        state=STATE_ON,
-                        attributes=json.dumps({"old": "not_using_state_attributes"}),
-                        last_changed=timestamp,
-                        last_updated=timestamp,
-                        event_id=event_id,
-                        state_attributes=None,
+    def _add_db_entries(hass: HomeAssistant) -> None:
+        with recorder.session_scope(hass=hass) as session:
+            # Add states and state_changed events that should be purged
+            for days in range(1, 4):
+                timestamp = dt_util.utcnow() - timedelta(days=days)
+                for event_id in range(1000, 1020):
+                    _add_state_and_state_changed_event(
+                        session,
+                        "sensor.excluded",
+                        "purgeme",
+                        timestamp,
+                        event_id * days,
                     )
-                )
-                session.add(
-                    Events(
-                        event_id=event_id,
-                        event_type=EVENT_STATE_CHANGED,
-                        event_data="{}",
-                        origin="LOCAL",
-                        time_fired=timestamp,
-                    )
-                )
 
-        service_data = {"keep_days": 10}
-        _add_db_entries(hass)
+    service_data = {"keep_days": 10}
+    _add_db_entries(hass)
 
-<<<<<<< HEAD
-        with session_scope(hass=hass) as session:
-            states = session.query(States)
-            state_attributes = session.query(StateAttributes)
-            assert states.count() == 1
-            assert state_attributes.count() == 0
+    with session_scope(hass=hass) as session:
+        states = session.query(States)
+        state_attributes = session.query(StateAttributes)
+        assert states.count() == 60
+        assert state_attributes.count() == 60
 
-        # Test with 'apply_filter' = True
-        service_data["apply_filter"] = True
-        await hass.services.async_call(
-            recorder.DOMAIN, recorder.SERVICE_PURGE, service_data
-        )
-        await async_recorder_block_till_done(hass, instance)
-        await async_wait_purge_done(hass, instance)
-=======
     # Test with 'apply_filter' = True
     service_data["apply_filter"] = True
     await hass.services.async_call(
@@ -935,23 +864,78 @@ async def test_purge_without_state_attributes_filtered_states_to_empty(
     )
     await async_recorder_block_till_done(hass)
     await async_wait_purge_done(hass)
->>>>>>> upstream/dev
 
-        with session_scope(hass=hass) as session:
-            states = session.query(States)
-            state_attributes = session.query(StateAttributes)
-            assert states.count() == 0
-            assert state_attributes.count() == 0
 
-<<<<<<< HEAD
-        # Do it again to make sure nothing changes
-        # Why do we do this? Should we check the end result?
-        await hass.services.async_call(
-            recorder.DOMAIN, recorder.SERVICE_PURGE, service_data
-        )
-        await async_recorder_block_till_done(hass, instance)
-        await async_wait_purge_done(hass, instance)
-=======
+@pytest.mark.parametrize("use_sqlite", (True, False), indirect=True)
+async def test_purge_without_state_attributes_filtered_states_to_empty(
+    hass: HomeAssistant,
+    async_setup_recorder_instance: SetupRecorderInstanceT,
+    use_sqlite: bool,
+):
+    """Test filtered legacy states without state attributes are purged all the way to an empty db."""
+    config: ConfigType = {"exclude": {"entities": ["sensor.old_format"]}}
+    instance = await async_setup_recorder_instance(hass, config)
+    assert instance.entity_filter("sensor.old_format") is False
+
+    def _add_db_entries(hass: HomeAssistant) -> None:
+        with recorder.session_scope(hass=hass) as session:
+            # Add states and state_changed events that should be purged
+            # in the legacy format
+            timestamp = dt_util.utcnow() - timedelta(days=5)
+            event_id = 1021
+            session.add(
+                States(
+                    entity_id="sensor.old_format",
+                    state=STATE_ON,
+                    attributes=json.dumps({"old": "not_using_state_attributes"}),
+                    last_changed=timestamp,
+                    last_updated=timestamp,
+                    event_id=event_id,
+                    state_attributes=None,
+                )
+            )
+            session.add(
+                Events(
+                    event_id=event_id,
+                    event_type=EVENT_STATE_CHANGED,
+                    event_data="{}",
+                    origin="LOCAL",
+                    time_fired=timestamp,
+                )
+            )
+
+    service_data = {"keep_days": 10}
+    _add_db_entries(hass)
+
+    with session_scope(hass=hass) as session:
+        states = session.query(States)
+        state_attributes = session.query(StateAttributes)
+        assert states.count() == 1
+        assert state_attributes.count() == 0
+
+    # Test with 'apply_filter' = True
+    service_data["apply_filter"] = True
+    await hass.services.async_call(
+        recorder.DOMAIN, recorder.SERVICE_PURGE, service_data
+    )
+    await async_recorder_block_till_done(hass)
+    await async_wait_purge_done(hass)
+
+    with session_scope(hass=hass) as session:
+        states = session.query(States)
+        state_attributes = session.query(StateAttributes)
+        assert states.count() == 0
+        assert state_attributes.count() == 0
+
+    # Do it again to make sure nothing changes
+    # Why do we do this? Should we check the end result?
+    await hass.services.async_call(
+        recorder.DOMAIN, recorder.SERVICE_PURGE, service_data
+    )
+    await async_recorder_block_till_done(hass)
+    await async_wait_purge_done(hass)
+
+
 async def test_purge_filtered_events(
     hass: HomeAssistant,
     async_setup_recorder_instance: SetupRecorderInstanceT,
@@ -959,117 +943,89 @@ async def test_purge_filtered_events(
     """Test filtered events are purged."""
     config: ConfigType = {"exclude": {"event_types": ["EVENT_PURGE"]}}
     await async_setup_recorder_instance(hass, config)
->>>>>>> upstream/dev
 
-    async def test_purge_filtered_events(
-        hass: HomeAssistant,
-        async_setup_recorder_instance: SetupRecorderInstanceT,
-    ):
-        """Test filtered events are purged."""
-        config: ConfigType = {"exclude": {"event_types": ["EVENT_PURGE"]}}
-        instance = await async_setup_recorder_instance(hass, config)
-
-        def _add_db_entries(hass: HomeAssistant) -> None:
-            with recorder.session_scope(hass=hass) as session:
-                # Add events that should be purged
-                for days in range(1, 4):
-                    timestamp = dt_util.utcnow() - timedelta(days=days)
-                    for event_id in range(1000, 1020):
-                        session.add(
-                            Events(
-                                event_id=event_id * days,
-                                event_type="EVENT_PURGE",
-                                event_data="{}",
-                                origin="LOCAL",
-                                time_fired=timestamp,
-                            )
+    def _add_db_entries(hass: HomeAssistant) -> None:
+        with recorder.session_scope(hass=hass) as session:
+            # Add events that should be purged
+            for days in range(1, 4):
+                timestamp = dt_util.utcnow() - timedelta(days=days)
+                for event_id in range(1000, 1020):
+                    session.add(
+                        Events(
+                            event_id=event_id * days,
+                            event_type="EVENT_PURGE",
+                            event_data="{}",
+                            origin="LOCAL",
+                            time_fired=timestamp,
                         )
-
-                # Add states and state_changed events that should be keeped
-                timestamp = dt_util.utcnow() - timedelta(days=1)
-                for event_id in range(200, 210):
-                    _add_state_and_state_changed_event(
-                        session,
-                        "sensor.keep",
-                        "keep",
-                        timestamp,
-                        event_id,
                     )
 
-        service_data = {"keep_days": 10}
-        _add_db_entries(hass)
+            # Add states and state_changed events that should be keeped
+            timestamp = dt_util.utcnow() - timedelta(days=1)
+            for event_id in range(200, 210):
+                _add_state_and_state_changed_event(
+                    session,
+                    "sensor.keep",
+                    "keep",
+                    timestamp,
+                    event_id,
+                )
 
-        with session_scope(hass=hass) as session:
-            events_purge = session.query(Events).filter(
-                Events.event_type == "EVENT_PURGE"
-            )
-            events_keep = session.query(Events).filter(
-                Events.event_type == EVENT_STATE_CHANGED
-            )
-            states = session.query(States)
+    service_data = {"keep_days": 10}
+    _add_db_entries(hass)
 
-            assert events_purge.count() == 60
-            assert events_keep.count() == 10
-            assert states.count() == 10
-
-        # Normal purge doesn't remove excluded events
-        await hass.services.async_call(
-            recorder.DOMAIN, recorder.SERVICE_PURGE, service_data
+    with session_scope(hass=hass) as session:
+        events_purge = session.query(Events).filter(Events.event_type == "EVENT_PURGE")
+        events_keep = session.query(Events).filter(
+            Events.event_type == EVENT_STATE_CHANGED
         )
-        await hass.async_block_till_done()
+        states = session.query(States)
 
-        await async_recorder_block_till_done(hass, instance)
-        await async_wait_purge_done(hass, instance)
+        assert events_purge.count() == 60
+        assert events_keep.count() == 10
+        assert states.count() == 10
 
-<<<<<<< HEAD
-        with session_scope(hass=hass) as session:
-            events_purge = session.query(Events).filter(
-                Events.event_type == "EVENT_PURGE"
-            )
-            events_keep = session.query(Events).filter(
-                Events.event_type == EVENT_STATE_CHANGED
-            )
-            states = session.query(States)
-            assert events_purge.count() == 60
-            assert events_keep.count() == 10
-            assert states.count() == 10
-=======
+    # Normal purge doesn't remove excluded events
+    await hass.services.async_call(
+        recorder.DOMAIN, recorder.SERVICE_PURGE, service_data
+    )
+    await hass.async_block_till_done()
+
     await async_recorder_block_till_done(hass)
     await async_wait_purge_done(hass)
->>>>>>> upstream/dev
 
-        # Test with 'apply_filter' = True
-        service_data["apply_filter"] = True
-        await hass.services.async_call(
-            recorder.DOMAIN, recorder.SERVICE_PURGE, service_data
+    with session_scope(hass=hass) as session:
+        events_purge = session.query(Events).filter(Events.event_type == "EVENT_PURGE")
+        events_keep = session.query(Events).filter(
+            Events.event_type == EVENT_STATE_CHANGED
         )
-        await hass.async_block_till_done()
+        states = session.query(States)
+        assert events_purge.count() == 60
+        assert events_keep.count() == 10
+        assert states.count() == 10
 
-<<<<<<< HEAD
-        await async_recorder_block_till_done(hass, instance)
-        await async_wait_purge_done(hass, instance)
+    # Test with 'apply_filter' = True
+    service_data["apply_filter"] = True
+    await hass.services.async_call(
+        recorder.DOMAIN, recorder.SERVICE_PURGE, service_data
+    )
+    await hass.async_block_till_done()
 
-        await async_recorder_block_till_done(hass, instance)
-        await async_wait_purge_done(hass, instance)
-=======
     await async_recorder_block_till_done(hass)
     await async_wait_purge_done(hass)
 
     await async_recorder_block_till_done(hass)
     await async_wait_purge_done(hass)
->>>>>>> upstream/dev
 
-        with session_scope(hass=hass) as session:
-            events_purge = session.query(Events).filter(
-                Events.event_type == "EVENT_PURGE"
-            )
-            events_keep = session.query(Events).filter(
-                Events.event_type == EVENT_STATE_CHANGED
-            )
-            states = session.query(States)
-            assert events_purge.count() == 0
-            assert events_keep.count() == 10
-            assert states.count() == 10
+    with session_scope(hass=hass) as session:
+        events_purge = session.query(Events).filter(Events.event_type == "EVENT_PURGE")
+        events_keep = session.query(Events).filter(
+            Events.event_type == EVENT_STATE_CHANGED
+        )
+        states = session.query(States)
+        assert events_purge.count() == 0
+        assert events_keep.count() == 10
+        assert states.count() == 10
 
 
 async def test_purge_filtered_events_state_changed(
