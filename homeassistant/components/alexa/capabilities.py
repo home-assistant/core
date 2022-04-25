@@ -73,8 +73,6 @@ class AlexaCapability:
     https://developer.amazon.com/docs/device-apis/message-guide.html
     """
 
-    # pylint: disable=no-self-use
-
     supported_locales = {"en-US"}
 
     def __init__(self, entity: State, instance: str | None = None) -> None:
