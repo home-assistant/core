@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from pydeconz.group import Scene as PydeconzScene
+from pydeconz.models.scene import Scene as PydeconzScene
 
 from homeassistant.components.scene import DOMAIN, Scene
 from homeassistant.config_entries import ConfigEntry

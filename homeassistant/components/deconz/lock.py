@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from pydeconz.light import Lock
-from pydeconz.sensor import DoorLock
+from pydeconz.models.light.lock import Lock
+from pydeconz.models.sensor.door_lock import DoorLock
 
 from homeassistant.components.lock import DOMAIN, LockEntity
 from homeassistant.config_entries import ConfigEntry
@@ -93,7 +93,7 @@ class DeconzLock(DeconzDevice, LockEntity):
     @property
     def is_locked(self) -> bool:
         """Return true if lock is on."""
-        return self._device.is_locked  # type: ignore[no-any-return]
+        return self._device.is_locked
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""

@@ -3,15 +3,15 @@ from __future__ import annotations
 
 from typing import Any, Generic, TypedDict, TypeVar
 
-from pydeconz.group import Group
-from pydeconz.light import (
+from pydeconz.interfaces.lights import LightResources
+from pydeconz.models.group import Group
+from pydeconz.models.light import (
     ALERT_LONG,
     ALERT_SHORT,
     EFFECT_COLOR_LOOP,
     EFFECT_NONE,
-    Light,
-    LightResources,
 )
+from pydeconz.models.light.light import Light
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -186,12 +186,12 @@ class DeconzBaseLight(Generic[_L], DeconzDevice, LightEntity):
     @property
     def brightness(self) -> int | None:
         """Return the brightness of this light between 0..255."""
-        return self._device.brightness  # type: ignore[no-any-return]
+        return self._device.brightness
 
     @property
     def color_temp(self) -> int | None:
         """Return the CT color value."""
-        return self._device.color_temp  # type: ignore[no-any-return]
+        return self._device.color_temp
 
     @property
     def hs_color(self) -> tuple[float, float] | None:
@@ -203,12 +203,12 @@ class DeconzBaseLight(Generic[_L], DeconzDevice, LightEntity):
     @property
     def xy_color(self) -> tuple[float, float] | None:
         """Return the XY color value."""
-        return self._device.xy  # type: ignore[no-any-return]
+        return self._device.xy
 
     @property
     def is_on(self) -> bool | None:
         """Return true if light is on."""
-        return self._device.state  # type: ignore[no-any-return]
+        return self._device.state
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on light."""

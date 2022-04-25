@@ -37,11 +37,7 @@ import homeassistant.util.dt as dt_util
 
 from .common import async_wait_recording_done_without_instance
 
-from tests.common import (
-    async_init_recorder_component,
-    get_test_home_assistant,
-    mock_registry,
-)
+from tests.common import get_test_home_assistant, mock_registry
 from tests.components.recorder.common import wait_recording_done
 
 ORIG_TZ = dt_util.DEFAULT_TIME_ZONE
@@ -357,10 +353,9 @@ def test_statistics_duplicated(hass_recorder, caplog):
         caplog.clear()
 
 
-async def test_external_statistics(hass, hass_ws_client, caplog):
+async def test_external_statistics(hass, hass_ws_client, recorder_mock, caplog):
     """Test inserting external statistics."""
     client = await hass_ws_client()
-    await async_init_recorder_component(hass)
 
     assert "Compiling statistics for" not in caplog.text
     assert "Statistics already compiled" not in caplog.text
