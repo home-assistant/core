@@ -1034,8 +1034,8 @@ build.json @home-assistant/supervisor
 /tests/components/tomorrowio/ @raman325
 /homeassistant/components/totalconnect/ @austinmroczek
 /tests/components/totalconnect/ @austinmroczek
-/homeassistant/components/tplink/ @rytilahti @thegardenmonkey
-/tests/components/tplink/ @rytilahti @thegardenmonkey
+/homeassistant/components/tplink/ @rytilahti @thegardenmonkey @bdraco
+/tests/components/tplink/ @rytilahti @thegardenmonkey @bdraco
 /homeassistant/components/traccar/ @ludeeus
 /tests/components/traccar/ @ludeeus
 /homeassistant/components/trace/ @home-assistant/core
