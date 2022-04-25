@@ -116,7 +116,7 @@ class InsteonFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     _device_path: str | None = None
     _device_name: str | None = None
-    _host: str | None = None
+    discovered_conf: dict[str, str] = {}
 
     @staticmethod
     @callback
@@ -150,9 +150,6 @@ class InsteonFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if await _async_connect(**user_input):
                 return self.async_create_entry(title="", data=user_input)
             errors["base"] = "cannot_connect"
-        if user_input is None and self._device_path is not None:
-            user_input = {}
-            user_input[CONF_DEVICE] = self._device_path
         schema_defaults = user_input if user_input is not None else {}
         data_schema = build_plm_schema(**schema_defaults)
         return self.async_show_form(
@@ -170,16 +167,13 @@ class InsteonFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def _async_setup_hub(self, hub_version, user_input):
         """Set up the Hub versions 1 and 2."""
         errors = {}
-        if user_input is None and self._host is not None:
-            user_input = {}
-            user_input[CONF_HOST] = self._host
         if user_input is not None and user_input.get(CONF_PORT) is not None:
             user_input[CONF_HUB_VERSION] = hub_version
             if await _async_connect(**user_input):
                 return self.async_create_entry(title="", data=user_input)
             user_input.pop(CONF_HUB_VERSION)
             errors["base"] = "cannot_connect"
-        schema_defaults = user_input if user_input is not None else {}
+        schema_defaults = user_input if user_input is not None else self.discovered_conf
         data_schema = build_hub_schema(hub_version=hub_version, **schema_defaults)
         step_id = STEP_HUB_V2 if hub_version == 2 else STEP_HUB_V1
         return self.async_show_form(
@@ -228,34 +222,10 @@ class InsteonFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Handle a DHCP discovery."""
-        _LOGGER.error("Got to DHCP step")
-        mac = format_mac(discovery_info.macaddress)
-        if mac[:8].lower() != INSTEON_MAC:
-            _LOGGER.error("MAC: %s is not Insteon", mac)
-            return self.async_abort(reason="not_insteon_device")
-
-        _LOGGER.error("Got passed the issue")
-        await self.async_set_unique_id(mac)
-        self._host = discovery_info.ip
-        _LOGGER.error("Found IP address: %s", self._host)
-        return await self.async_step_confirm_dhcp()
-
-    async def async_step_confirm_dhcp(self, user_input=None):
-        """Confirm a DHCP discovery."""
-        _LOGGER.error("In the confirm step")
-        errors = {}
-
-        if user_input is not None:
-            selection = user_input.get(MODEM_TYPE)
-            if selection == HUB1:
-                return await self.async_step_hubv1({CONF_HOST: self._host})
-            return await self.async_step_hubv2({CONF_HOST: self._host})
-        modem_types = [HUB1, HUB2]
-        data_schema = vol.Schema({vol.Required(MODEM_TYPE): vol.In(modem_types)})
-        _LOGGER.error("Showing the user form")
-        return self.async_show_form(
-            step_id="user", data_schema=data_schema, errors=errors
-        )
+        self.discovered_conf = {CONF_HOST: discovery_info.ip}
+        self.context["title_placeholders"] = self.discovered_conf
+        await self.async_set_unique_id(format_mac(discovery_info.macaddress))
+        return await self.async_step_user()
 
 
 class InsteonOptionsFlowHandler(config_entries.OptionsFlow):
