@@ -140,7 +140,6 @@ class AmbiclimateAuthCallbackView(HomeAssistantView):
 
     async def get(self, request: web.Request) -> str:
         """Receive authorization token."""
-        # pylint: disable=no-self-use
         if (code := request.query.get("code")) is None:
             return "No code"
         hass = request.app["hass"]

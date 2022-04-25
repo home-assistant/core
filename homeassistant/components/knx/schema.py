@@ -16,7 +16,7 @@ from xknx.telegram.address import IndividualAddress, parse_device_group_address
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA as BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
 )
-from homeassistant.components.climate.const import HVAC_MODE_HEAT, HVAC_MODES
+from homeassistant.components.climate.const import HVACMode
 from homeassistant.components.cover import (
     DEVICE_CLASSES_SCHEMA as COVER_DEVICE_CLASSES_SCHEMA,
 )
@@ -465,8 +465,8 @@ class ClimateSchema(KNXPlatformSchema):
                     cv.ensure_list, [vol.In(CONTROLLER_MODES)]
                 ),
                 vol.Optional(
-                    CONF_DEFAULT_CONTROLLER_MODE, default=HVAC_MODE_HEAT
-                ): vol.In(HVAC_MODES),
+                    CONF_DEFAULT_CONTROLLER_MODE, default=HVACMode.HEAT
+                ): vol.Coerce(HVACMode),
                 vol.Optional(CONF_MIN_TEMP): vol.Coerce(float),
                 vol.Optional(CONF_MAX_TEMP): vol.Coerce(float),
                 vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,

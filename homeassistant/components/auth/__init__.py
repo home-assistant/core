@@ -271,7 +271,6 @@ class TokenView(HomeAssistantView):
 
     async def _async_handle_revoke_token(self, hass, data):
         """Handle revoke token request."""
-        # pylint: disable=no-self-use
 
         # OAuth 2.0 Token Revocation [RFC7009]
         # 2.2 The authorization server responds with HTTP status code 200
