@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from systembridgeconnector.const import TYPE_DATA_UPDATE
+from systembridgeconnector.const import EVENT_TYPE, TYPE_DATA_UPDATE
 from systembridgeconnector.exceptions import (
     ConnectionClosedException,
     ConnectionErrorException,
@@ -54,7 +54,7 @@ async def validate_input(data: dict[str, Any]) -> dict[str, str]:
     try:
         while True:
             result = await websocket_client.listen_for_message()
-            if result["type"] == TYPE_DATA_UPDATE:
+            if result[EVENT_TYPE] == TYPE_DATA_UPDATE:
                 break
             _LOGGER.info("Message: %s", result)
     except ConnectionClosedException as exception:
