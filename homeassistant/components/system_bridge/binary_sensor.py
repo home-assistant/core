@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-import logging
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -19,8 +18,6 @@ from . import SystemBridgeDeviceEntity
 from .const import DOMAIN
 from .coordinator import SystemBridgeDataUpdateCoordinator
 
-_LOGGER = logging.getLogger(__name__)
-
 
 @dataclass
 class SystemBridgeBinarySensorEntityDescription(BinarySensorEntityDescription):
@@ -29,14 +26,14 @@ class SystemBridgeBinarySensorEntityDescription(BinarySensorEntityDescription):
     value: Callable = round
 
 
-# BASE_BINARY_SENSOR_TYPES: tuple[SystemBridgeBinarySensorEntityDescription, ...] = (
-#     SystemBridgeBinarySensorEntityDescription(
-#         key="version_available",
-#         name="New Version Available",
-#         device_class=BinarySensorDeviceClass.UPDATE,
-#         value=lambda data: data.information.updates.available,
-#     ),
-# )
+BASE_BINARY_SENSOR_TYPES: tuple[SystemBridgeBinarySensorEntityDescription, ...] = (
+    SystemBridgeBinarySensorEntityDescription(
+        key="version_available",
+        name="New Version Available",
+        device_class=BinarySensorDeviceClass.UPDATE,
+        value=lambda data: data["system"]["version_newer_avaliable"],
+    ),
+)
 
 BATTERY_BINARY_SENSOR_TYPES: tuple[SystemBridgeBinarySensorEntityDescription, ...] = (
     SystemBridgeBinarySensorEntityDescription(
@@ -56,8 +53,10 @@ async def async_setup_entry(
     coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     entities = []
-    # for description in BASE_BINARY_SENSOR_TYPES:
-    #     entities.append(SystemBridgeBinarySensor(coordinator, description))
+    for description in BASE_BINARY_SENSOR_TYPES:
+        entities.append(
+            SystemBridgeBinarySensor(coordinator, description, entry.data[CONF_PORT])
+        )
 
     if (
         coordinator.data["battery"]
