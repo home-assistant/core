@@ -7,10 +7,7 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
-    COLOR_MODE_BRIGHTNESS,
-    COLOR_MODE_COLOR_TEMP,
-    COLOR_MODE_HS,
-    COLOR_MODE_ONOFF,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -144,25 +141,25 @@ class HiveDeviceLight(HiveEntity, LightEntity):
     def color_mode(self) -> str:
         """Return the color mode of the light."""
         if self.device["hiveType"] == "warmwhitelight":
-            return COLOR_MODE_BRIGHTNESS
+            return ColorMode.BRIGHTNESS
         if self.device["hiveType"] == "tuneablelight":
-            return COLOR_MODE_COLOR_TEMP
+            return ColorMode.COLOR_TEMP
         if self.device["hiveType"] == "colourtuneablelight":
             if self.device["status"]["mode"] == "COLOUR":
-                return COLOR_MODE_HS
-            return COLOR_MODE_COLOR_TEMP
-        return COLOR_MODE_ONOFF
+                return ColorMode.HS
+            return ColorMode.COLOR_TEMP
+        return ColorMode.ONOFF
 
     @property
     def supported_color_modes(self) -> set[str] | None:
         """Flag supported color modes."""
         if self.device["hiveType"] == "warmwhitelight":
-            return {COLOR_MODE_BRIGHTNESS}
+            return {ColorMode.BRIGHTNESS}
         if self.device["hiveType"] == "tuneablelight":
-            return {COLOR_MODE_COLOR_TEMP}
+            return {ColorMode.COLOR_TEMP}
         if self.device["hiveType"] == "colourtuneablelight":
-            return {COLOR_MODE_COLOR_TEMP, COLOR_MODE_HS}
-        return {COLOR_MODE_ONOFF}
+            return {ColorMode.COLOR_TEMP, ColorMode.HS}
+        return {ColorMode.ONOFF}
 
     async def async_update(self):
         """Update all Node data from Hive."""

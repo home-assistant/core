@@ -30,6 +30,14 @@ PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.CLIMATE, Platform.
 class AirzoneEntity(CoordinatorEntity[AirzoneUpdateCoordinator]):
     """Define an Airzone entity."""
 
+    def get_airzone_value(self, key) -> Any:
+        """Return Airzone entity value by key."""
+        raise NotImplementedError()
+
+
+class AirzoneZoneEntity(AirzoneEntity):
+    """Define an Airzone Zone entity."""
+
     def __init__(
         self,
         coordinator: AirzoneUpdateCoordinator,
@@ -47,12 +55,12 @@ class AirzoneEntity(CoordinatorEntity[AirzoneUpdateCoordinator]):
         self._attr_device_info: DeviceInfo = {
             "identifiers": {(DOMAIN, f"{entry.entry_id}_{system_zone_id}")},
             "manufacturer": MANUFACTURER,
-            "model": self.get_zone_value(AZD_THERMOSTAT_MODEL),
+            "model": self.get_airzone_value(AZD_THERMOSTAT_MODEL),
             "name": f"Airzone [{system_zone_id}] {zone_data[AZD_NAME]}",
-            "sw_version": self.get_zone_value(AZD_THERMOSTAT_FW),
+            "sw_version": self.get_airzone_value(AZD_THERMOSTAT_FW),
         }
 
-    def get_zone_value(self, key):
+    def get_airzone_value(self, key) -> Any:
         """Return zone value by key."""
         value = None
         if self.system_zone_id in self.coordinator.data[AZD_ZONES]:

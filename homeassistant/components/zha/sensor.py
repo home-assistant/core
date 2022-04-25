@@ -25,6 +25,7 @@ from homeassistant.const import (
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
+    FREQUENCY_HERTZ,
     LIGHT_LUX,
     PERCENTAGE,
     POWER_VOLT_AMPERE,
@@ -339,6 +340,35 @@ class ElectricalMeasurementRMSVoltage(ElectricalMeasurement, id_suffix="rms_volt
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.CURRENT
     _unit = ELECTRIC_POTENTIAL_VOLT
     _div_mul_prefix = "ac_voltage"
+
+    @property
+    def should_poll(self) -> bool:
+        """Poll indirectly by ElectricalMeasurementSensor."""
+        return False
+
+
+@MULTI_MATCH(channel_names=CHANNEL_ELECTRICAL_MEASUREMENT)
+class ElectricalMeasurementFrequency(ElectricalMeasurement, id_suffix="ac_frequency"):
+    """Frequency measurement."""
+
+    SENSOR_ATTR = "ac_frequency"
+    _device_class: SensorDeviceClass = SensorDeviceClass.FREQUENCY
+    _unit = FREQUENCY_HERTZ
+    _div_mul_prefix = "ac_frequency"
+
+    @property
+    def should_poll(self) -> bool:
+        """Poll indirectly by ElectricalMeasurementSensor."""
+        return False
+
+
+@MULTI_MATCH(channel_names=CHANNEL_ELECTRICAL_MEASUREMENT)
+class ElectricalMeasurementPowerFactor(ElectricalMeasurement, id_suffix="power_factor"):
+    """Frequency measurement."""
+
+    SENSOR_ATTR = "power_factor"
+    _device_class: SensorDeviceClass = SensorDeviceClass.POWER_FACTOR
+    _unit = PERCENTAGE
 
     @property
     def should_poll(self) -> bool:

@@ -3,12 +3,13 @@ from __future__ import annotations
 
 from abc import ABC
 from collections import OrderedDict
+from collections.abc import Callable
 import ipaddress
 from typing import Any, ClassVar, Final
 
 import voluptuous as vol
 from xknx.devices.climate import SetpointShiftMode
-from xknx.dpt import DPTBase, DPTNumeric
+from xknx.dpt import DPTBase, DPTNumeric, DPTString
 from xknx.exceptions import ConversionError, CouldNotParseAddress
 from xknx.telegram.address import IndividualAddress, parse_device_group_address
 
@@ -52,6 +53,28 @@ from .const import (
 ##################
 # KNX VALIDATORS
 ##################
+
+
+def dpt_subclass_validator(dpt_base_class: type[DPTBase]) -> Callable[[Any], str | int]:
+    """Validate that value is parsable as given sensor type."""
+
+    def dpt_value_validator(value: Any) -> str | int:
+        """Validate that value is parsable as sensor type."""
+        if (
+            isinstance(value, (str, int))
+            and dpt_base_class.parse_transcoder(value) is not None
+        ):
+            return value
+        raise vol.Invalid(
+            f"type '{value}' is not a valid DPT identifier for {dpt_base_class.__name__}."
+        )
+
+    return dpt_value_validator
+
+
+numeric_type_validator = dpt_subclass_validator(DPTNumeric)  # type: ignore[misc]
+sensor_type_validator = dpt_subclass_validator(DPTBase)  # type: ignore[misc]
+string_type_validator = dpt_subclass_validator(DPTString)
 
 
 def ga_validator(value: Any) -> str | int:
@@ -131,13 +154,6 @@ def number_limit_sub_validator(entity_config: OrderedDict) -> OrderedDict:
     return entity_config
 
 
-def numeric_type_validator(value: Any) -> str | int:
-    """Validate that value is parsable as numeric sensor type."""
-    if isinstance(value, (str, int)) and DPTNumeric.parse_transcoder(value) is not None:
-        return value
-    raise vol.Invalid(f"value '{value}' is not a valid numeric sensor type.")
-
-
 def _max_payload_value(payload_length: int) -> int:
     if payload_length == 0:
         return 0x3F
@@ -192,13 +208,6 @@ def select_options_sub_validator(entity_config: OrderedDict) -> OrderedDict:
             raise vol.Invalid(f"duplicate item for 'payload' not allowed: {payload}")
         payloads_seen.add(payload)
     return entity_config
-
-
-def sensor_type_validator(value: Any) -> str | int:
-    """Validate that value is parsable as sensor type."""
-    if isinstance(value, (str, int)) and DPTBase.parse_transcoder(value) is not None:
-        return value
-    raise vol.Invalid(f"value '{value}' is not a valid sensor type.")
 
 
 sync_state_validator = vol.Any(
@@ -733,6 +742,7 @@ class NotifySchema(KNXPlatformSchema):
     ENTITY_SCHEMA = vol.Schema(
         {
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_TYPE, default="latin_1"): string_type_validator,
             vol.Required(KNX_ADDRESS): ga_validator,
         }
     )
