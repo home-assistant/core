@@ -642,8 +642,8 @@ class LazyState(State):
                 self._row.last_changed
             )
             if (
-                self._row.last_changed == self._row.last_updated
-                or self._row.last_updated is None
+                self._row.last_updated is None
+                or self._row.last_changed == self._row.last_updated
             ):
                 last_updated_isoformat = last_changed_isoformat
             else:
