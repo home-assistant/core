@@ -131,12 +131,12 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         icon="mdi:counter",
         value=lambda data: data["system"]["version"],
     ),
-    # SystemBridgeSensorEntityDescription(
-    #     key="version_latest",
-    #     name="Latest Version",
-    #     icon="mdi:counter",
-    #     value=lambda data: data.information.updates.version.new,
-    # ),
+    SystemBridgeSensorEntityDescription(
+        key="version_latest",
+        name="Latest Version",
+        icon="mdi:counter",
+        value=lambda data: data["system"]["version_latest"],
+    ),
 )
 
 BATTERY_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
