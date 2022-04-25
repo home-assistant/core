@@ -152,6 +152,7 @@ class InsteonFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(title="", data=user_input)
             errors["base"] = "cannot_connect"
         if user_input is None and self._device_path is not None:
+            user_input = {}
             user_input[CONF_DEVICE] = self._device_path
         schema_defaults = user_input if user_input is not None else {}
         data_schema = build_plm_schema(**schema_defaults)
@@ -171,6 +172,7 @@ class InsteonFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Set up the Hub versions 1 and 2."""
         errors = {}
         if user_input is None and self._host is not None:
+            user_input = {}
             user_input[CONF_HOST] = self._host
         if user_input is not None and user_input.get(CONF_PORT) is not None:
             user_input[CONF_HUB_VERSION] = hub_version
