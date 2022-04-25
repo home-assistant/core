@@ -5,13 +5,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from . import async_connect
-from .const import (
-    CONNECTED_STATIONS,
-    DISCOVERY_INFO,
-    FIRMWARE_AVAILABLE,
-    NEIGHBOR_ACCESS_POINTS,
-    PLCNET,
-)
+from .const import CONNECTED_STATIONS, DISCOVERY_INFO, NEIGHBOR_ACCESS_POINTS, PLCNET
 
 
 @pytest.fixture()
@@ -19,9 +13,6 @@ def mock_device():
     """Mock connecting to a devolo home network device."""
     with patch("devolo_plc_api.device.Device.async_connect", async_connect), patch(
         "devolo_plc_api.device.Device.async_disconnect"
-    ), patch(
-        "devolo_plc_api.device_api.deviceapi.DeviceApi.async_check_firmware_available",
-        new=AsyncMock(return_value=FIRMWARE_AVAILABLE),
     ), patch(
         "devolo_plc_api.device_api.deviceapi.DeviceApi.async_get_wifi_connected_station",
         new=AsyncMock(return_value=CONNECTED_STATIONS),

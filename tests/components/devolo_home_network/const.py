@@ -47,8 +47,6 @@ DISCOVERY_INFO_WRONG_DEVICE = zeroconf.ZeroconfServiceInfo(
     type="mock_type",
 )
 
-FIRMWARE_AVAILABLE = {"result": "UPDATE_NOT_AVAILABLE", "new_firmware_version": ""}
-
 NEIGHBOR_ACCESS_POINTS = {
     "neighbor_aps": [
         {
