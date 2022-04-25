@@ -24,7 +24,7 @@ PRESET_MAP = {
     PRESET_BOOST: "fireplace",
 }
 PRESET_INVERTED = {v: k for k, v in PRESET_MAP.items()}
-HVAC_MODES: list[HVACMode | str] = [HVACMode.AUTO, HVACMode.HEAT]
+HVAC_MODES = [HVACMode.AUTO, HVACMode.HEAT]
 
 
 async def async_setup_entry(
@@ -38,7 +38,7 @@ async def async_setup_entry(
 class AtagThermostat(AtagEntity, ClimateEntity):
     """Atag climate device."""
 
-    _attr_hvac_modes = HVAC_MODES
+    _attr_hvac_modes = HVAC_MODES  # type:ignore[assignment]
     _attr_preset_modes = list(PRESET_MAP.keys())
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
