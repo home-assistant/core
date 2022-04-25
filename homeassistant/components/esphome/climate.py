@@ -286,9 +286,7 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
             data["target_temperature_high"] = kwargs[ATTR_TARGET_TEMP_HIGH]
         await self._client.climate_command(**data)
 
-    async def async_set_hvac_mode(  # type:ignore[override]
-        self, hvac_mode: HVACMode
-    ) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""
         await self._client.climate_command(
             key=self._static_info.key, mode=_CLIMATE_MODES.from_hass(hvac_mode)
