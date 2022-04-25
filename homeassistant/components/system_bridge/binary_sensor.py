@@ -42,6 +42,7 @@ BATTERY_BINARY_SENSOR_TYPES: tuple[SystemBridgeBinarySensorEntityDescription, ..
     SystemBridgeBinarySensorEntityDescription(
         key="battery_is_charging",
         name="Battery Is Charging",
+        entity_registry_visible_default=True,
         device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
         value=lambda data: data["battery"]["is_charging"],
     ),

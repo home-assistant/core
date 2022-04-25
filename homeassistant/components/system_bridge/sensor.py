@@ -48,6 +48,7 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
     SystemBridgeSensorEntityDescription(
         key="cpu_speed",
         name="CPU Speed",
+        entity_registry_visible_default=True,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=FREQUENCY_GIGAHERTZ,
         icon="mdi:speedometer",
@@ -81,6 +82,7 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
     SystemBridgeSensorEntityDescription(
         key="kernel",
         name="Kernel",
+        entity_registry_visible_default=True,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:devices",
         value=lambda data: data["system"]["platform"],
@@ -88,6 +90,7 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
     SystemBridgeSensorEntityDescription(
         key="memory_free",
         name="Memory Free",
+        entity_registry_visible_default=True,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=DATA_GIGABYTES,
         icon="mdi:memory",
@@ -96,6 +99,7 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
     SystemBridgeSensorEntityDescription(
         key="memory_used_percentage",
         name="Memory Used %",
+        entity_registry_visible_default=True,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:memory",
@@ -105,6 +109,7 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         key="memory_used",
         name="Memory Used",
         entity_registry_enabled_default=False,
+        entity_registry_visible_default=True,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=DATA_GIGABYTES,
         icon="mdi:memory",
@@ -113,6 +118,7 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
     SystemBridgeSensorEntityDescription(
         key="os",
         name="Operating System",
+        entity_registry_visible_default=True,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:devices",
         value=lambda data: f"{data['system']['platform']} {data['system']['platform_version']}",
@@ -120,6 +126,7 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
     SystemBridgeSensorEntityDescription(
         key="processes_load",
         name="Load",
+        entity_registry_visible_default=True,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:percent",
@@ -128,6 +135,7 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
     SystemBridgeSensorEntityDescription(
         key="version",
         name="Version",
+        entity_registry_visible_default=True,
         icon="mdi:counter",
         value=lambda data: data["system"]["version"],
     ),
@@ -143,6 +151,7 @@ BATTERY_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
     SystemBridgeSensorEntityDescription(
         key="battery",
         name="Battery",
+        entity_registry_visible_default=True,
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
@@ -151,6 +160,7 @@ BATTERY_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
     SystemBridgeSensorEntityDescription(
         key="battery_time_remaining",
         name="Battery Time Remaining",
+        entity_registry_visible_default=True,
         device_class=SensorDeviceClass.TIMESTAMP,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: str(
@@ -181,6 +191,7 @@ async def async_setup_entry(
     #             SystemBridgeSensorEntityDescription(
     #                 key=f"filesystem_{uid}",
     #                 name=f"{key} Space Used",
+    #                 entity_registry_visible_default=True,
     #                 state_class=SensorStateClass.MEASUREMENT,
     #                 native_unit_of_measurement=PERCENTAGE,
     #                 icon="mdi:harddisk",
@@ -211,6 +222,7 @@ async def async_setup_entry(
     #             SystemBridgeSensorEntityDescription(
     #                 key=f"display_{name}_resolution_x",
     #                 name=f"Display {name} Resolution X",
+    #                 entity_registry_visible_default=True,
     #                 state_class=SensorStateClass.MEASUREMENT,
     #                 native_unit_of_measurement=PIXELS,
     #                 icon="mdi:monitor",
@@ -225,6 +237,7 @@ async def async_setup_entry(
     #             SystemBridgeSensorEntityDescription(
     #                 key=f"display_{name}_resolution_y",
     #                 name=f"Display {name} Resolution Y",
+    #                 entity_registry_visible_default=True,
     #                 state_class=SensorStateClass.MEASUREMENT,
     #                 native_unit_of_measurement=PIXELS,
     #                 icon="mdi:monitor",
@@ -239,6 +252,7 @@ async def async_setup_entry(
     #             SystemBridgeSensorEntityDescription(
     #                 key=f"display_{name}_refresh_rate",
     #                 name=f"Display {name} Refresh Rate",
+    #                 entity_registry_visible_default=True,
     #                 state_class=SensorStateClass.MEASUREMENT,
     #                 native_unit_of_measurement=FREQUENCY_HERTZ,
     #                 icon="mdi:monitor",
@@ -266,6 +280,7 @@ async def async_setup_entry(
     #                     key=f"gpu_{index}_core_clock_speed",
     #                     name=f"{name} Clock Speed",
     #                     entity_registry_enabled_default=False,
+    #                     entity_registry_visible_default=True,
     #                     state_class=SensorStateClass.MEASUREMENT,
     #                     native_unit_of_measurement=FREQUENCY_MEGAHERTZ,
     #                     icon="mdi:speedometer",
@@ -281,6 +296,7 @@ async def async_setup_entry(
     #                     key=f"gpu_{index}_memory_clock_speed",
     #                     name=f"{name} Memory Clock Speed",
     #                     entity_registry_enabled_default=False,
+    #                     entity_registry_visible_default=True,
     #                     state_class=SensorStateClass.MEASUREMENT,
     #                     native_unit_of_measurement=FREQUENCY_MEGAHERTZ,
     #                     icon="mdi:speedometer",
@@ -295,6 +311,7 @@ async def async_setup_entry(
     #                 SystemBridgeSensorEntityDescription(
     #                     key=f"gpu_{index}_memory_free",
     #                     name=f"{name} Memory Free",
+    #                     entity_registry_visible_default=True,
     #                     state_class=SensorStateClass.MEASUREMENT,
     #                     native_unit_of_measurement=DATA_GIGABYTES,
     #                     icon="mdi:memory",
@@ -309,6 +326,7 @@ async def async_setup_entry(
     #                 SystemBridgeSensorEntityDescription(
     #                     key=f"gpu_{index}_memory_used_percentage",
     #                     name=f"{name} Memory Used %",
+    #                     entity_registry_visible_default=True,
     #                     state_class=SensorStateClass.MEASUREMENT,
     #                     native_unit_of_measurement=PERCENTAGE,
     #                     icon="mdi:memory",
@@ -329,6 +347,7 @@ async def async_setup_entry(
     #                     key=f"gpu_{index}_memory_used",
     #                     name=f"{name} Memory Used",
     #                     entity_registry_enabled_default=False,
+    #                     entity_registry_visible_default=True,
     #                     state_class=SensorStateClass.MEASUREMENT,
     #                     native_unit_of_measurement=DATA_GIGABYTES,
     #                     icon="mdi:memory",
@@ -344,6 +363,7 @@ async def async_setup_entry(
     #                     key=f"gpu_{index}_fan_speed",
     #                     name=f"{name} Fan Speed",
     #                     entity_registry_enabled_default=False,
+    #                     entity_registry_visible_default=True,
     #                     state_class=SensorStateClass.MEASUREMENT,
     #                     native_unit_of_measurement=PERCENTAGE,
     #                     icon="mdi:fan",
@@ -359,6 +379,7 @@ async def async_setup_entry(
     #                     key=f"gpu_{index}_power_usage",
     #                     name=f"{name} Power Usage",
     #                     entity_registry_enabled_default=False,
+    #                     entity_registry_visible_default=True,
     #                     device_class=SensorDeviceClass.POWER,
     #                     state_class=SensorStateClass.MEASUREMENT,
     #                     native_unit_of_measurement=POWER_WATT,
@@ -374,6 +395,7 @@ async def async_setup_entry(
     #                     key=f"gpu_{index}_temperature",
     #                     name=f"{name} Temperature",
     #                     entity_registry_enabled_default=False,
+    #                     entity_registry_visible_default=True,
     #                     device_class=SensorDeviceClass.TEMPERATURE,
     #                     state_class=SensorStateClass.MEASUREMENT,
     #                     native_unit_of_measurement=TEMP_CELSIUS,
@@ -388,6 +410,7 @@ async def async_setup_entry(
     #                 SystemBridgeSensorEntityDescription(
     #                     key=f"gpu_{index}_usage_percentage",
     #                     name=f"{name} Usage %",
+    #                     entity_registry_visible_default=True,
     #                     state_class=SensorStateClass.MEASUREMENT,
     #                     native_unit_of_measurement=PERCENTAGE,
     #                     icon="mdi:percent",
@@ -408,6 +431,7 @@ async def async_setup_entry(
                     key=f"processes_load_cpu_{index}",
                     name=f"Load CPU {index}",
                     entity_registry_enabled_default=False,
+                    entity_registry_visible_default=True,
                     state_class=SensorStateClass.MEASUREMENT,
                     native_unit_of_measurement=PERCENTAGE,
                     icon="mdi:percent",
