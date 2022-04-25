@@ -236,6 +236,7 @@ class InsteonFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         _LOGGER.error("Got passed the issue")
         await self.async_set_unique_id(mac)
         self._host = ip_address(discovery_info.ip)
+        _LOGGER.error("Found IP address: %s", self._host)
         return await self.async_step_confirm_dhcp()
 
     async def async_step_confirm_dhcp(self, user_input=None):
