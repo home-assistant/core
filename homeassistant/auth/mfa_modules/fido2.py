@@ -1,4 +1,4 @@
-"""Time-based One Time Password auth module."""
+"""Fido2 WebAuthn authentication and registration module."""
 from __future__ import annotations
 
 import asyncio
@@ -42,9 +42,16 @@ INPUT_FIELD_LOGIN_ATTESTATION = "fido2_attestation"
 
 
 class Fido2Wrapper:
+    """Wrapper for fido2 server."""
+
     def __init__(
         self, hass: HomeAssistant, origin: str | None, check_origin: bool | None
     ) -> None:
+        """
+        Init method.
+
+        This imports all the required modules and wraps utility methods.
+        """
         self.fido = importlib.import_module("fido2")
         self.webauthn = importlib.import_module("fido2.webauthn")
         self.client = importlib.import_module("fido2.client")
@@ -70,22 +77,54 @@ class Fido2Wrapper:
         This is needed because cbor does not support None.
         """
         keys = list(data.keys())
+        if "_nones" in keys:
+            raise ValueError()
+
+        data["_nones"] = []
+
         for key in keys:
             if data[key] is None:
                 data.pop(key)
+                data["_nones"].append(key)
+        return data
+
+    @staticmethod
+    def _desanitize_object(data: dict) -> dict:
+        """
+        Desanitize data from CBOR encoding.
+
+        This is needed because cbor does not support None.
+        """
+        keys = list(data.keys())
+        if "_nones" not in keys:
+            return data
+
+        for none_key in data["_nones"]:
+            data[none_key] = None
+
+        data.pop("_nones")
         return data
 
     def encode(self, data: dict) -> str:
+        """Encode a dictionary data in a base64(CBOR) format."""
         return base64.b64encode(
             self.fido.cbor.encode(Fido2Wrapper._sanitize_object(data))
         ).decode()
 
     def decode(self, data: str) -> Any:
-        return self.fido.cbor.decode(base64.b64decode(data))
+        """Take a base64(CBOR) encoded object and return the corresponding dict."""
+        return Fido2Wrapper._desanitize_object(
+            self.fido.cbor.decode(base64.b64decode(data))
+        )
 
     def registration_begin(
         self, user_id: bytes, user_name: str | None, display_name: str | None
     ) -> tuple[Any, Any]:
+        """
+        Obtain the registration object and the state object.
+
+        Those objects are used by WebAuthn to get the attestation from the registering user.
+        """
         reg, state = self.fido2server.register_begin(
             {
                 "id": user_id,
@@ -99,6 +138,7 @@ class Fido2Wrapper:
         return reg, state
 
     def registration_finalize(self, state: Any, c_data: Any, a_obj: Any) -> Any:
+        """Take an attestation and return the user credentials object."""
         client_data = self.client.ClientData(c_data)
         attestation_obj = self.ctap2.AttestationObject(a_obj)
         return self.fido2server.register_complete(
@@ -106,9 +146,11 @@ class Fido2Wrapper:
         ).credential_data
 
     def _map_credentials(self, creds: list[Any]) -> list:
+        """Take a list of encoded credentials and return a list of instantiated objects."""
         return list(map(self.ctap2.AttestedCredentialData, creds))
 
     def auth_begin(self, credentials: list[Any]) -> tuple[Any, Any]:
+        """Return the objects needed for authentication to be user with WebAuthn."""
         auth, state = self.fido2server.authenticate_begin(
             self._map_credentials(credentials)
         )
@@ -123,6 +165,7 @@ class Fido2Wrapper:
         a_data: Any,
         signature: Any,
     ) -> bool:
+        """Take the state and the signature, alongside client_data and auth_data and check the auth validity."""
         client_data = self.fido.client.ClientData(c_data)
         auth_data = self.fido.ctap2.AuthenticatorData(a_data)
         try:
@@ -159,6 +202,7 @@ class Fido2AuthModule(MultiFactorAuthModule):
         self._init_lock = asyncio.Lock()
 
     def _get_credentials(self, user_id_filter: str | None = None) -> list:
+        """Get all the user credentials."""
         credentials = []
         users = list(self._users.keys() if self._users is not None else [])
         for usr in users:
@@ -186,6 +230,11 @@ class Fido2AuthModule(MultiFactorAuthModule):
     def _finalize_registration(
         self, user_id: str, state: Any, client_data: Any, attestation_obj: Any
     ) -> str:
+        """
+        Take the user attestation and return the credentials.
+
+        Those credentials are encoded and save in the module data store.
+        """
         auth_data = self._server.registration_finalize(
             state, client_data, attestation_obj
         )
@@ -202,6 +251,7 @@ class Fido2AuthModule(MultiFactorAuthModule):
         authenticator_data: Any,
         signature: Any,
     ) -> bool:
+        """Check user login validity."""
         return self._server.auth_verify(
             self._get_credentials(user_id),
             state,
@@ -267,7 +317,6 @@ class Fido2AuthModule(MultiFactorAuthModule):
     async def async_validate(self, user_id: str, user_input: dict[str, Any]) -> bool:
         """Return True if validation passed."""
         if "state" in user_input.keys() and "auth_response" in user_input.keys():
-            # todo handle errors.
             if self._users is None:
                 await self._async_load()
             decoded = self._server.decode(user_input["auth_response"])
@@ -307,7 +356,6 @@ class Fido2SetupFlow(SetupFlow):
 
         if user_input:
             if "state" in user_input.keys() and "attestation" in user_input.keys():
-                # todo error management
                 await self._auth_module.async_setup_user(
                     self._user.id,
                     {
