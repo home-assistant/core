@@ -52,7 +52,7 @@ AT_TO_HA_FAN_SPEED = {
     "Turbo": "turbo",
 }
 
-AT_GROUP_MODES: list[HVACMode | str] = [HVACMode.OFF, HVACMode.FAN_ONLY]
+AT_GROUP_MODES = [HVACMode.OFF, HVACMode.FAN_ONLY]
 
 HA_FAN_SPEED_TO_AT = {value: key for key, value in AT_TO_HA_FAN_SPEED.items()}
 
@@ -201,7 +201,7 @@ class AirtouchGroup(CoordinatorEntity, ClimateEntity):
 
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
     _attr_temperature_unit = TEMP_CELSIUS
-    _attr_hvac_modes = AT_GROUP_MODES
+    _attr_hvac_modes = AT_GROUP_MODES  # type:ignore[assignment]
 
     def __init__(self, coordinator, group_number, info):
         """Initialize the climate device."""
