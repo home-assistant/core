@@ -1,7 +1,7 @@
 """Purge old data helper."""
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from datetime import datetime
 import logging
 from typing import TYPE_CHECKING
@@ -45,10 +45,11 @@ def purge_old_data(
 
     with session_scope(session=instance.get_session()) as session:  # type: ignore[misc]
         # Purge a max of MAX_ROWS_TO_PURGE, based on the oldest states or events record
-        event_ids = _select_event_ids_to_purge(session, purge_before)
-        state_ids, attributes_ids = _select_state_and_attributes_ids_to_purge(
-            session, event_ids
-        )
+        (
+            event_ids,
+            state_ids,
+            attributes_ids,
+        ) = _select_event_state_and_attributes_ids_to_purge(session, purge_before)
         statistics_runs = _select_statistics_runs_to_purge(session, purge_before)
         short_term_statistics = _select_short_term_statistics_to_purge(
             session, purge_before
@@ -86,37 +87,28 @@ def purge_old_data(
     return True
 
 
-def _select_event_ids_to_purge(session: Session, purge_before: datetime) -> list[int]:
-    """Return a list of event ids to purge."""
+def _select_event_state_and_attributes_ids_to_purge(
+    session: Session, purge_before: datetime
+) -> tuple[set[int], set[int], set[int]]:
+    """Return a list of event, state, and attribute ids to purge."""
     events = (
-        session.query(Events.event_id)
+        session.query(Events.event_id, States.state_id, States.attributes_id)
+        .outerjoin(States, Events.event_id == States.event_id)
         .filter(Events.time_fired < purge_before)
         .limit(MAX_ROWS_TO_PURGE)
         .all()
     )
     _LOGGER.debug("Selected %s event ids to remove", len(events))
-    return [event.event_id for event in events]
-
-
-def _select_state_and_attributes_ids_to_purge(
-    session: Session, event_ids: list[int]
-) -> tuple[set[int], set[int]]:
-    """Return a list of state ids to purge."""
-    if not event_ids:
-        return set(), set()
-    states = (
-        session.query(States.state_id, States.attributes_id)
-        .filter(States.event_id.in_(event_ids))
-        .all()
-    )
-    _LOGGER.debug("Selected %s state ids to remove", len(states))
+    event_ids = set()
     state_ids = set()
     attributes_ids = set()
-    for state in states:
-        state_ids.add(state.state_id)
-        if state.attributes_id:
-            attributes_ids.add(state.attributes_id)
-    return state_ids, attributes_ids
+    for event in events:
+        event_ids.add(event.event_id)
+        if event.state_id:
+            state_ids.add(event.state_id)
+        if event.attributes_id:
+            attributes_ids.add(event.attributes_id)
+    return event_ids, state_ids, attributes_ids
 
 
 def _select_unused_attributes_ids(
@@ -125,12 +117,18 @@ def _select_unused_attributes_ids(
     """Return a set of attributes ids that are not used by any states in the database."""
     if not attributes_ids:
         return set()
-    to_remove = attributes_ids - {
-        state[0]
-        for state in session.query(distinct(States.attributes_id))
-        .filter(States.attributes_id.in_(attributes_ids))
-        .all()
-    }
+
+    queries = [
+        session.query(
+            func.min(States.attributes_id).filter(States.attributes_id == attributes_id)
+        )
+        for attributes_id in attributes_ids
+    ]
+    first_query = queries.pop()
+    if queries:
+        first_query = first_query.union(*queries)
+
+    to_remove = attributes_ids - {state[0] for state in first_query.all()}
     _LOGGER.debug(
         "Selected %s shared attributes to remove",
         len(to_remove),
@@ -275,7 +273,7 @@ def _purge_short_term_statistics(
     _LOGGER.debug("Deleted %s short term statistics", deleted_rows)
 
 
-def _purge_event_ids(session: Session, event_ids: list[int]) -> None:
+def _purge_event_ids(session: Session, event_ids: Iterable[int]) -> None:
     """Delete by event id."""
     deleted_rows = (
         session.query(Events)
@@ -333,7 +331,7 @@ def _purge_filtered_states(
     """Remove filtered states and linked events."""
     state_ids: list[int]
     attributes_ids: list[int]
-    event_ids: list[int | None]
+    event_ids: list[int]
     state_ids, attributes_ids, event_ids = zip(
         *(
             session.query(States.state_id, States.attributes_id, States.event_id)
@@ -347,7 +345,7 @@ def _purge_filtered_states(
         "Selected %s state_ids to remove that should be filtered", len(state_ids)
     )
     _purge_state_ids(instance, session, set(state_ids))
-    _purge_event_ids(session, event_ids)  # type: ignore[arg-type]  # type of event_ids already narrowed to 'list[int]'
+    _purge_event_ids(session, event_ids)
     unused_attribute_ids_set = _select_unused_attributes_ids(
         session, {id_ for id_ in attributes_ids if id_ is not None}
     )
