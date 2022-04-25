@@ -271,7 +271,7 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
         """Return the highbound target temperature we try to reach."""
         return self._state.target_temperature_high
 
-    async def async_set_temperature(self, **kwargs: float | str) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature (and operation mode if set)."""
         data: dict[str, Any] = {"key": self._static_info.key}
         if ATTR_HVAC_MODE in kwargs:
