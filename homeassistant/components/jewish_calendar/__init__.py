@@ -11,6 +11,7 @@ from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "jewish_calendar"
+PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.BINARY_SENSOR]
 
 CONF_DIASPORA = "diaspora"
 CONF_LANGUAGE = "language"
@@ -97,12 +98,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         "prefix": prefix,
     }
 
-    hass.async_create_task(
-        async_load_platform(hass, Platform.SENSOR, DOMAIN, {}, config)
-    )
-
-    hass.async_create_task(
-        async_load_platform(hass, Platform.BINARY_SENSOR, DOMAIN, {}, config)
-    )
+    for platform in PLATFORMS:
+        hass.async_create_task(async_load_platform(hass, platform, DOMAIN, {}, config))
 
     return True

@@ -138,9 +138,6 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Jewish calendar sensor platform."""
-    if discovery_info is None:
-        return
-
     sensors = [
         JewishCalendarSensor(hass.data[DOMAIN], description)
         for description in DATA_SENSORS
