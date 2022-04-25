@@ -20,7 +20,6 @@ from .const import (
     CONNECTED_PLC_DEVICES,
     CONNECTED_WIFI_CLIENTS,
     DOMAIN,
-    FIRMWARE_UPDATE_AVAILABLE,
     LONG_UPDATE_INTERVAL,
     NEIGHBORING_WIFI_NETWORKS,
     PLATFORMS,
@@ -51,14 +50,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         try:
             async with async_timeout.timeout(10):
                 return await device.plcnet.async_get_network_overview()  # type: ignore[no-any-return, union-attr]
-        except DeviceUnavailable as err:
-            raise UpdateFailed(err) from err
-
-    async def async_update_firmware_available() -> dict[str, Any]:
-        """Fetch data from API endpoint."""
-        try:
-            async with async_timeout.timeout(10):
-                return await device.device.async_check_firmware_available()  # type: ignore[no-any-return, union-attr]
         except DeviceUnavailable as err:
             raise UpdateFailed(err) from err
 
@@ -104,14 +95,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             _LOGGER,
             name=NEIGHBORING_WIFI_NETWORKS,
             update_method=async_update_wifi_neighbor_access_points,
-            update_interval=LONG_UPDATE_INTERVAL,
-        )
-    if device.device and "update" in device.device.features:
-        coordinators[FIRMWARE_UPDATE_AVAILABLE] = DataUpdateCoordinator(
-            hass,
-            _LOGGER,
-            name=FIRMWARE_UPDATE_AVAILABLE,
-            update_method=async_update_firmware_available,
             update_interval=LONG_UPDATE_INTERVAL,
         )
 

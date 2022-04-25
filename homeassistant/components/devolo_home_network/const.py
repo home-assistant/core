@@ -17,5 +17,4 @@ SHORT_UPDATE_INTERVAL = timedelta(seconds=15)
 CONNECTED_PLC_DEVICES = "connected_plc_devices"
 CONNECTED_TO_ROUTER = "connected_to_router"
 CONNECTED_WIFI_CLIENTS = "connected_wifi_clients"
-FIRMWARE_UPDATE_AVAILABLE = "firmware_update_available"
 NEIGHBORING_WIFI_NETWORKS = "neighboring_wifi_networks"
