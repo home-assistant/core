@@ -144,9 +144,7 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
         }
         await self._async_update_hvac_params(params)
 
-    async def async_set_hvac_mode(  # type:ignore[override]
-        self, hvac_mode: HVACMode
-    ) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
         params = {}
         if hvac_mode == HVACMode.OFF:
