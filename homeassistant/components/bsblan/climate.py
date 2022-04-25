@@ -29,7 +29,7 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 1
 SCAN_INTERVAL = timedelta(seconds=20)
 
-HVAC_MODES: list[HVACMode | str] = [
+HVAC_MODES = [
     HVACMode.AUTO,
     HVACMode.HEAT,
     HVACMode.OFF,
@@ -74,7 +74,7 @@ class BSBLanClimate(ClimateEntity):
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
-    _attr_hvac_modes = HVAC_MODES
+    _attr_hvac_modes = HVAC_MODES  # type:ignore[assignment]
     _attr_preset_modes = PRESET_MODES
 
     def __init__(
