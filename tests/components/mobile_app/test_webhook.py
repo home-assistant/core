@@ -298,12 +298,24 @@ async def test_webhook_returns_error_incorrect_json(
     assert "invalid JSON" in caplog.text
 
 
-async def test_webhook_handle_decryption(webhook_client, create_registrations):
+@pytest.mark.parametrize(
+    "msg,generate_response",
+    (
+        (RENDER_TEMPLATE, lambda hass: {"one": "Hello world"}),
+        (
+            {"type": "get_zones", "data": {}},
+            lambda hass: [hass.states.get("zone.home").as_dict()],
+        ),
+    ),
+)
+async def test_webhook_handle_decryption(
+    hass, webhook_client, create_registrations, msg, generate_response
+):
     """Test that we can encrypt/decrypt properly."""
     key = create_registrations[0]["secret"]
-    data = encrypt_payload(key, RENDER_TEMPLATE["data"])
+    data = encrypt_payload(key, msg["data"])
 
-    container = {"type": "render_template", "encrypted": True, "encrypted_data": data}
+    container = {"type": msg["type"], "encrypted": True, "encrypted_data": data}
 
     resp = await webhook_client.post(
         "/api/webhook/{}".format(create_registrations[0]["webhook_id"]), json=container
@@ -316,7 +328,7 @@ async def test_webhook_handle_decryption(webhook_client, create_registrations):
 
     decrypted_data = decrypt_payload(key, webhook_json["encrypted_data"])
 
-    assert decrypted_data == {"one": "Hello world"}
+    assert decrypted_data == generate_response(hass)
 
 
 async def test_webhook_handle_decryption_legacy(webhook_client, create_registrations):
