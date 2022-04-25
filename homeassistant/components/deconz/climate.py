@@ -144,7 +144,7 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
         super().__init__(device, gateway)
 
         self._attr_hvac_modes = [
-            HVACMode.HEAT, 
+            HVACMode.HEAT,
             HVACMode.OFF,
         ]
         if device.mode:
