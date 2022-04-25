@@ -31,6 +31,7 @@ from typing import (
     NamedTuple,
     Optional,
     TypeVar,
+    Union,
     cast,
     overload,
 )
@@ -403,7 +404,7 @@ class HomeAssistant:
         if asyncio.iscoroutine(target):
             return self.async_create_task(target)
 
-        target = cast(Callable[..., Coroutine[Any, Any, _R] | _R], target)
+        target = cast(Callable[..., Union[Coroutine[Any, Any, _R], _R]], target)
         return self.async_add_hass_job(HassJob(target), *args)
 
     @overload
@@ -562,7 +563,7 @@ class HomeAssistant:
         if asyncio.iscoroutine(target):
             return self.async_create_task(target)
 
-        target = cast(Callable[..., Coroutine[Any, Any, _R] | _R], target)
+        target = cast(Callable[..., Union[Coroutine[Any, Any, _R], _R]], target)
         return self.async_run_hass_job(HassJob(target), *args)
 
     def block_till_done(self) -> None:
