@@ -1334,6 +1334,7 @@ DEVICE_CONDITION_BASE_SCHEMA = vol.Schema(
         vol.Required(CONF_CONDITION): "device",
         vol.Required(CONF_DEVICE_ID): str,
         vol.Required(CONF_DOMAIN): str,
+        vol.Remove("metadata"): dict,
     }
 )
 

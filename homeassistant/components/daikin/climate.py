@@ -118,8 +118,8 @@ async def async_setup_entry(
 
 
 def format_target_temperature(target_temperature):
-    """Format target temperature to be sent to the Daikin unit, taking care of keeping at most 1 decimal digit."""
-    return str(round(float(target_temperature), 1)).rstrip("0").rstrip(".")
+    """Format target temperature to be sent to the Daikin unit, rounding to nearest half degree."""
+    return str(round(float(target_temperature) * 2, 0) / 2).rstrip("0").rstrip(".")
 
 
 class DaikinClimate(ClimateEntity):
