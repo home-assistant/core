@@ -36,7 +36,7 @@ ADVANTAGE_AIR_HVAC_MODES = {
 }
 HASS_HVAC_MODES = {v: k for k, v in ADVANTAGE_AIR_HVAC_MODES.items()}
 
-AC_HVAC_MODES: list[HVACMode | str] = [
+AC_HVAC_MODES = [
     HVACMode.OFF,
     HVACMode.COOL,
     HVACMode.HEAT,
@@ -54,7 +54,7 @@ HASS_FAN_MODES = {v: k for k, v in ADVANTAGE_AIR_FAN_MODES.items()}
 FAN_SPEEDS = {FAN_LOW: 30, FAN_MEDIUM: 60, FAN_HIGH: 100}
 
 ADVANTAGE_AIR_SERVICE_SET_MYZONE = "set_myzone"
-ZONE_HVAC_MODES: list[HVACMode | str] = [HVACMode.OFF, HVACMode.HEAT_COOL]
+ZONE_HVAC_MODES = [HVACMode.OFF, HVACMode.HEAT_COOL]
 
 PARALLEL_UPDATES = 0
 
@@ -100,7 +100,7 @@ class AdvantageAirAC(AdvantageAirClimateEntity):
     """AdvantageAir AC unit."""
 
     _attr_fan_modes = [FAN_AUTO, FAN_LOW, FAN_MEDIUM, FAN_HIGH]
-    _attr_hvac_modes = AC_HVAC_MODES
+    _attr_hvac_modes = AC_HVAC_MODES  # type:ignore[assignment]
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
     )
@@ -163,7 +163,7 @@ class AdvantageAirAC(AdvantageAirClimateEntity):
 class AdvantageAirZone(AdvantageAirClimateEntity):
     """AdvantageAir Zone control."""
 
-    _attr_hvac_modes = ZONE_HVAC_MODES
+    _attr_hvac_modes = ZONE_HVAC_MODES  # type:ignore[assignment]
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
 
     def __init__(self, instance, ac_key, zone_key):
