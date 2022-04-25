@@ -794,15 +794,11 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
     def supported_features(self):
         """Flag media player features that are supported."""
         support = (
-            MediaPlayerEntityFeature.PLAY_MEDIA | MediaPlayerEntityFeature.TURN_OFF
+            MediaPlayerEntityFeature.PLAY_MEDIA
+            | MediaPlayerEntityFeature.TURN_OFF
+            | MediaPlayerEntityFeature.TURN_ON
         )
         media_status = self._media_status()[0]
-
-        if self._chromecast and self._chromecast.cast_type in (
-            pychromecast.const.CAST_TYPE_CHROMECAST,
-            pychromecast.const.CAST_TYPE_AUDIO,
-        ):
-            support |= MediaPlayerEntityFeature.TURN_ON
 
         if (
             self.cast_status
