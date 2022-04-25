@@ -191,7 +191,7 @@ class ClimateEntity(Entity):
     _attr_fan_modes: list[str] | None
     _attr_hvac_action: HVACAction | str | None = None
     _attr_hvac_mode: HVACMode | str | None
-    _attr_hvac_modes: list[HVACMode | str]
+    _attr_hvac_modes: list[HVACMode] | list[str]
     _attr_is_aux_heat: bool | None
     _attr_max_humidity: int = DEFAULT_MAX_HUMIDITY
     _attr_max_temp: float
@@ -341,7 +341,7 @@ class ClimateEntity(Entity):
         return self._attr_hvac_mode
 
     @property
-    def hvac_modes(self) -> list[HVACMode | str]:
+    def hvac_modes(self) -> list[HVACMode] | list[str]:
         """Return the list of available hvac operation modes."""
         return self._attr_hvac_modes
 
