@@ -166,7 +166,7 @@ class InsteonFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def _async_setup_hub(self, hub_version, user_input):
         """Set up the Hub versions 1 and 2."""
         errors = {}
-        if user_input is not None and user_input.get(CONF_PORT) is not None:
+        if user_input is not None:
             user_input[CONF_HUB_VERSION] = hub_version
             if await _async_connect(**user_input):
                 return self.async_create_entry(title="", data=user_input)
