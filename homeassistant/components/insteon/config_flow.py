@@ -206,7 +206,9 @@ class InsteonFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             discovery_info.pid,
         )
         self._set_confirm_only()
-        self.context["title_placeholders"] = {CONF_NAME: self._device_name}
+        self.context["title_placeholders"] = {
+            CONF_NAME: f"Instoen PLM {self._device_name}"
+        }
         await self.async_set_unique_id(config_entries.DEFAULT_DISCOVERY_UNIQUE_ID)
         return await self.async_step_confirm_usb()
 
@@ -223,7 +225,9 @@ class InsteonFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Handle a DHCP discovery."""
         self.discovered_conf = {CONF_HOST: discovery_info.ip}
-        self.context["title_placeholders"] = self.discovered_conf
+        self.context["title_placeholders"] = {
+            CONF_NAME: f"Insteon Hub {discovery_info.ip}"
+        }
         await self.async_set_unique_id(format_mac(discovery_info.macaddress))
         return await self.async_step_user()
 
