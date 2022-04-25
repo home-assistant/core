@@ -50,7 +50,7 @@ class BalboaSpaClimate(BalboaEntity, ClimateEntity):
 
     _attr_icon = "mdi:hot-tub"
     _attr_fan_modes = CLIMATE_SUPPORTED_FANSTATES
-    _attr_hvac_modes = CLIMATE_SUPPORTED_MODES
+    _attr_hvac_modes = CLIMATE_SUPPORTED_MODES  # type:ignore[assignment]
 
     def __init__(self, entry, client, devtype, num=None):
         """Initialize the climate entity."""
