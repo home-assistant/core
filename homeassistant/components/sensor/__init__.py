@@ -101,6 +101,9 @@ class SensorDeviceClass(StrEnum):
     # date (ISO8601)
     DATE = "date"
 
+    # fixed duration (TIME_DAYS, TIME_HOURS, TIME_MINUTES, TIME_SECONDS)
+    DURATION = "duration"
+
     # energy (Wh, kWh, MWh)
     ENERGY = "energy"
 
