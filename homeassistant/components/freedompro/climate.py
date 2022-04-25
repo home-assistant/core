@@ -57,7 +57,7 @@ async def async_setup_entry(
 class Device(CoordinatorEntity, ClimateEntity):
     """Representation of an Freedompro climate."""
 
-    _attr_hvac_modes = SUPPORTED_HVAC_MODES  # type:ignore[assignment]
+    _attr_hvac_modes = SUPPORTED_HVAC_MODES
     _attr_temperature_unit = TEMP_CELSIUS
 
     def __init__(self, session, api_key, device, coordinator):
