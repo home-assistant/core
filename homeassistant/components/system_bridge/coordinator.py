@@ -6,39 +6,57 @@ from collections.abc import Callable
 from datetime import timedelta
 import logging
 
-from systembridge import Bridge
-from systembridge.exceptions import (
-    BridgeAuthenticationException,
-    BridgeConnectionClosedException,
-    BridgeException,
+from systembridgeconnector.const import TYPE_DATA_UPDATE
+from systembridgeconnector.exceptions import (
+    BadMessageException,
+    ConnectionClosedException,
+    ConnectionErrorException,
 )
-from systembridge.objects.events import Event
+from systembridgeconnector.websocket_client import WebSocketClient
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_HOST,
+    CONF_PORT,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import BRIDGE_CONNECTION_ERRORS, DOMAIN
+from .const import DOMAIN
+
+MODULES = [
+    "battery",
+    "cpu",
+    "disk",
+    "memory",
+    # "network",
+    "sensors",
+    "system",
+]
 
 
-class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[Bridge]):
+class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[dict]):
     """Class to manage fetching System Bridge data from single endpoint."""
 
     def __init__(
         self,
         hass: HomeAssistant,
-        bridge: Bridge,
         LOGGER: logging.Logger,
         *,
         entry: ConfigEntry,
     ) -> None:
         """Initialize global System Bridge data updater."""
-        self.bridge = bridge
         self.title = entry.title
-        self.host = entry.data[CONF_HOST]
         self.unsub: Callable | None = None
+        self.websocket_client = WebSocketClient(
+            entry.data[CONF_HOST],
+            entry.data[CONF_PORT],
+            entry.data[CONF_API_KEY],
+        )
+        self.systembridge_data: dict = {}
 
         super().__init__(
             hass, LOGGER, name=DOMAIN, update_interval=timedelta(seconds=30)
@@ -49,52 +67,37 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[Bridge]):
         for update_callback in self._listeners:
             update_callback()
 
-    async def async_handle_event(self, event: Event):
-        """Handle System Bridge events from the WebSocket."""
+    async def async_handle_message(self, message: dict):
+        """Handle messages from the WebSocket."""
         # No need to update anything, as everything is updated in the caller
-        self.logger.debug(
-            "New event from %s (%s): %s", self.title, self.host, event.name
-        )
-        self.async_set_updated_data(self.bridge)
+        self.logger.debug("New message from %s: %s", self.title, message["type"])
+        if message["type"] == TYPE_DATA_UPDATE:
+            self.logger.debug("Set new data for: %s", message["module"])
+            self.systembridge_data[message["module"]] = message["data"]
+            self.async_set_updated_data(self.systembridge_data)
 
     async def _listen_for_events(self) -> None:
         """Listen for events from the WebSocket."""
+
         try:
-            await self.bridge.async_send_event(
-                "get-data",
-                [
-                    {"service": "battery", "method": "findAll", "observe": True},
-                    {"service": "cpu", "method": "findAll", "observe": True},
-                    {"service": "display", "method": "findAll", "observe": True},
-                    {"service": "filesystem", "method": "findSizes", "observe": True},
-                    {"service": "graphics", "method": "findAll", "observe": True},
-                    {"service": "memory", "method": "findAll", "observe": True},
-                    {"service": "network", "method": "findAll", "observe": True},
-                    {"service": "os", "method": "findAll", "observe": False},
-                    {
-                        "service": "processes",
-                        "method": "findCurrentLoad",
-                        "observe": True,
-                    },
-                    {"service": "system", "method": "findAll", "observe": False},
-                ],
+            await self.websocket_client.register_data_listener(MODULES)
+            await self.websocket_client.get_data(MODULES)
+            await self.websocket_client.listen_for_messages(
+                callback=self.async_handle_message
             )
-            await self.bridge.listen_for_events(callback=self.async_handle_event)
-        except BridgeConnectionClosedException as exception:
+        except ConnectionClosedException as exception:
             self.last_update_success = False
             self.logger.info(
-                "Websocket Connection Closed for %s (%s). Will retry: %s",
+                "Websocket Connection Closed for %s. Will retry: %s",
                 self.title,
-                self.host,
                 exception,
             )
-        except BridgeException as exception:
+        except BadMessageException as exception:
             self.last_update_success = False
             self.update_listeners()
             self.logger.warning(
-                "Exception occurred for %s (%s). Will retry: %s",
+                "Exception occurred for %s. Will retry: %s",
                 self.title,
-                self.host,
                 exception,
             )
 
@@ -102,44 +105,31 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[Bridge]):
         """Use WebSocket for updates."""
 
         try:
-            self.logger.debug(
-                "Connecting to ws://%s:%s",
-                self.host,
-                self.bridge.information.websocketPort,
-            )
-            await self.bridge.async_connect_websocket(
-                self.host, self.bridge.information.websocketPort
-            )
-        except BridgeAuthenticationException as exception:
+            await self.websocket_client.connect()
+        except ConnectionErrorException as exception:
             if self.unsub:
                 self.unsub()
                 self.unsub = None
             raise ConfigEntryAuthFailed() from exception
-        except (*BRIDGE_CONNECTION_ERRORS, ConnectionRefusedError) as exception:
-            if self.unsub:
-                self.unsub()
-                self.unsub = None
-            raise UpdateFailed(
-                f"Could not connect to {self.title} ({self.host})."
-            ) from exception
+
         asyncio.create_task(self._listen_for_events())
 
         async def close_websocket(_) -> None:
             """Close WebSocket connection."""
-            await self.bridge.async_close_websocket()
+            await self.websocket_client.close()
 
         # Clean disconnect WebSocket on Home Assistant shutdown
         self.unsub = self.hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_STOP, close_websocket
         )
 
-    async def _async_update_data(self) -> Bridge:
+    async def _async_update_data(self) -> dict:
         """Update System Bridge data from WebSocket."""
         self.logger.debug(
             "_async_update_data - WebSocket Connected: %s",
-            self.bridge.websocket_connected,
+            self.websocket_client.connected,
         )
-        if not self.bridge.websocket_connected:
+        if not self.websocket_client.connected:
             await self._setup_websocket()
 
-        return self.bridge
+        return self.systembridge_data if self.systembridge_data is not None else {}
