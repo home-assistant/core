@@ -143,10 +143,7 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
         """Set up thermostat device."""
         super().__init__(device, gateway)
 
-        self._attr_hvac_modes: list[HVACMode] = [  # type:ignore[assignment]
-            HVACMode.HEAT,
-            HVACMode.OFF,
-        ]
+        self._attr_hvac_modes: list[HVACMode] = [HVACMode.HEAT, HVACMode.OFF]
         if device.mode:
             self._attr_hvac_modes.append(HVACMode.AUTO)
 
@@ -186,7 +183,7 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
     # HVAC control
 
     @property
-    def hvac_mode(self) -> str:
+    def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode.
 
         Need to be one of HVAC_MODE_*.
@@ -195,9 +192,7 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
             return self._deconz_to_hvac_mode[self._device.mode]
         return HVACMode.HEAT if self._device.state_on else HVACMode.OFF
 
-    async def async_set_hvac_mode(  # type:ignore[override]
-        self, hvac_mode: HVACMode
-    ) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         if hvac_mode not in self._attr_hvac_modes:
             raise ValueError(f"Unsupported HVAC mode {hvac_mode}")
