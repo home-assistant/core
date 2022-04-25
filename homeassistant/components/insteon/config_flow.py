@@ -222,18 +222,21 @@ class InsteonFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
-        """Prepare configuration for a DHCP discovered Axis device."""
+        """Handle a DHCP discovery."""
         _LOGGER.error("Got to DHCP step")
         mac = format_mac(discovery_info.macaddress)
         if mac[:8] != INSTEON_MAC:
+            _LOGGER.error("MAC: %s is not Insteon", mac)
             return self.async_abort(reason="not_insteon_device")
 
+        _LOGGER.error("Got passed the issue")
         await self.async_set_unique_id(mac)
         self._host = ip_address(discovery_info.ip)
         return await self.async_step_confirm_dhcp()
 
     async def async_step_confirm_dhcp(self, user_input=None):
         """Confirm a DHCP discovery."""
+        _LOGGER.error("In the confirm step")
         errors = {}
 
         if user_input is not None:
