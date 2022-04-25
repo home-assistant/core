@@ -25,7 +25,7 @@ from homeassistant.const import (
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.components.recorder.common import async_wait_recording_done_without_instance
+from tests.components.recorder.common import async_wait_recording_done
 
 
 @pytest.fixture
@@ -230,7 +230,7 @@ async def test_cost_sensor_price_entity_total_increasing(
     assert state.attributes[ATTR_LAST_RESET] == last_reset_cost_sensor
 
     # Check generated statistics
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
     all_statistics = await hass.loop.run_in_executor(None, _compile_statistics, hass)
     statistics = get_statistics_for_entity(all_statistics, cost_sensor_entity_id)
     assert statistics["stat"]["sum"] == 19.0
@@ -270,7 +270,7 @@ async def test_cost_sensor_price_entity_total_increasing(
     assert state.attributes[ATTR_LAST_RESET] == last_reset_cost_sensor
 
     # Check generated statistics
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
     all_statistics = await hass.loop.run_in_executor(None, _compile_statistics, hass)
     statistics = get_statistics_for_entity(all_statistics, cost_sensor_entity_id)
     assert statistics["stat"]["sum"] == 38.0
@@ -435,7 +435,7 @@ async def test_cost_sensor_price_entity_total(
     assert state.attributes[ATTR_LAST_RESET] == last_reset_cost_sensor
 
     # Check generated statistics
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
     all_statistics = await hass.loop.run_in_executor(None, _compile_statistics, hass)
     statistics = get_statistics_for_entity(all_statistics, cost_sensor_entity_id)
     assert statistics["stat"]["sum"] == 19.0
@@ -476,7 +476,7 @@ async def test_cost_sensor_price_entity_total(
     assert state.attributes[ATTR_LAST_RESET] == last_reset_cost_sensor
 
     # Check generated statistics
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
     all_statistics = await hass.loop.run_in_executor(None, _compile_statistics, hass)
     statistics = get_statistics_for_entity(all_statistics, cost_sensor_entity_id)
     assert statistics["stat"]["sum"] == 38.0
@@ -640,7 +640,7 @@ async def test_cost_sensor_price_entity_total_no_reset(
     assert state.attributes[ATTR_LAST_RESET] == last_reset_cost_sensor
 
     # Check generated statistics
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
     all_statistics = await hass.loop.run_in_executor(None, _compile_statistics, hass)
     statistics = get_statistics_for_entity(all_statistics, cost_sensor_entity_id)
     assert statistics["stat"]["sum"] == 19.0
@@ -657,7 +657,7 @@ async def test_cost_sensor_price_entity_total_no_reset(
     assert state.attributes[ATTR_LAST_RESET] == last_reset_cost_sensor
 
     # Check generated statistics
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
     all_statistics = await hass.loop.run_in_executor(None, _compile_statistics, hass)
     statistics = get_statistics_for_entity(all_statistics, cost_sensor_entity_id)
     assert statistics["stat"]["sum"] == 18.0
