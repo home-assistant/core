@@ -622,7 +622,7 @@ class LazyState(State):
             if (last_updated := self._row.last_updated) is not None:
                 self._last_updated = process_timestamp(last_updated)
             else:
-                self._last_updated = process_timestamp(self._row.last_changed)
+                self._last_updated = self.last_changed
         return self._last_updated
 
     @last_updated.setter
@@ -642,8 +642,8 @@ class LazyState(State):
                 self._row.last_changed
             )
             if (
-                self._row.last_changed == self._row.last_updated
-                or self._row.last_updated is None
+                self._row.last_updated is None
+                or self._row.last_changed == self._row.last_updated
             ):
                 last_updated_isoformat = last_changed_isoformat
             else:
