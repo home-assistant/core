@@ -800,10 +800,12 @@ async def test_entity_cast_status(hass: HomeAssistant):
             | SUPPORT_PLAY_MEDIA
             | SUPPORT_STOP
             | SUPPORT_TURN_OFF
+            | SUPPORT_TURN_ON
             | SUPPORT_VOLUME_MUTE
             | SUPPORT_VOLUME_SET,
             SUPPORT_PLAY_MEDIA
             | SUPPORT_TURN_OFF
+            | SUPPORT_TURN_ON
             | SUPPORT_VOLUME_MUTE
             | SUPPORT_VOLUME_SET,
         ),
@@ -1386,7 +1388,11 @@ async def test_entity_media_states_lovelace_app(hass: HomeAssistant):
     state = hass.states.get(entity_id)
     assert state.state == "playing"
     assert state.attributes.get("supported_features") == (
-        SUPPORT_PLAY_MEDIA | SUPPORT_TURN_OFF | SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET
+        SUPPORT_PLAY_MEDIA
+        | SUPPORT_TURN_OFF
+        | SUPPORT_TURN_ON
+        | SUPPORT_VOLUME_MUTE
+        | SUPPORT_VOLUME_SET
     )
 
     media_status = MagicMock(images=None)
