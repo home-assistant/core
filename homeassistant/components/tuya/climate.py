@@ -207,7 +207,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
             self._attr_target_temperature_step = self._set_temperature.step_scaled
 
         # Determine HVAC modes
-        self._attr_hvac_modes = []
+        self._attr_hvac_modes: list[str] = []
         self._hvac_to_tuya = {}
         if enum_type := self.find_dpcode(
             DPCode.MODE, dptype=DPType.ENUM, prefer_function=True
