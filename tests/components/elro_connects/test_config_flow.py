@@ -2,13 +2,14 @@
 from unittest.mock import patch
 
 from homeassistant import config_entries
-from homeassistant.components.elro_connects.config_flow import (
-    CannotConnect,
-    InvalidAuth,
-)
+from homeassistant.components.elro_connects.config_flow import CannotConnect
 from homeassistant.components.elro_connects.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
+from homeassistant.data_entry_flow import (
+    RESULT_TYPE_ABORT,
+    RESULT_TYPE_CREATE_ENTRY,
+    RESULT_TYPE_FORM,
+)
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -20,7 +21,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["errors"] is None
 
     with patch(
-        "homeassistant.components.elro_connects.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.elro_connects.config_flow.K1ConnectionTest.async_try_connection",
         return_value=True,
     ), patch(
         "homeassistant.components.elro_connects.async_setup_entry",
@@ -30,43 +31,22 @@ async def test_form(hass: HomeAssistant) -> None:
             result["flow_id"],
             {
                 "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
+                "connector_id": "ST_deadbeef0000",
+                "port": 1025,
+                "update_interval": 15,
             },
         )
         await hass.async_block_till_done()
 
     assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result2["title"] == "Name of the device"
+    assert result2["title"] == "Elro Connects K1 Connector"
     assert result2["data"] == {
         "host": "1.1.1.1",
-        "username": "test-username",
-        "password": "test-password",
+        "connector_id": "ST_deadbeef0000",
+        "port": 1025,
+        "update_interval": 15,
     }
     assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_form_invalid_auth(hass: HomeAssistant) -> None:
-    """Test we handle invalid auth."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.elro_connects.config_flow.PlaceholderHub.authenticate",
-        side_effect=InvalidAuth,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
-            },
-        )
-
-    assert result2["type"] == RESULT_TYPE_FORM
-    assert result2["errors"] == {"base": "invalid_auth"}
 
 
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
@@ -76,17 +56,50 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.elro_connects.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.elro_connects.config_flow.K1ConnectionTest.async_try_connection",
         side_effect=CannotConnect,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
+                "connector_id": "ST_deadbeef0000",
             },
         )
 
     assert result2["type"] == RESULT_TYPE_FORM
     assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_already_setup(hass: HomeAssistant) -> None:
+    """Test we cannot create a duplicate setup."""
+    # Setup the existing config entry
+    await test_form(hass)
+
+    # Now assert the entry creation is aborted if we try
+    # to create an entry with the same unique device_id
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["errors"] is None
+
+    with patch(
+        "homeassistant.components.elro_connects.config_flow.K1ConnectionTest.async_try_connection",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.elro_connects.async_setup_entry",
+        return_value=True,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.1.1.2",
+                "connector_id": "ST_deadbeef0000",
+                "port": 1024,
+                "update_interval": 10,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == RESULT_TYPE_ABORT

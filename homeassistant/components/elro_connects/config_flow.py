@@ -41,7 +41,7 @@ class K1ConnectionTest:
         """Initialize."""
         self.host = host
 
-    async def authenticate(self, connector_id: str, port: int) -> bool:
+    async def async_try_connection(self, connector_id: str, port: int) -> bool:
         """Test if we can authenticate with the host."""
         connector = K1(self.host, connector_id, port)
         try:
@@ -53,12 +53,14 @@ class K1ConnectionTest:
         return True
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
+async def async_validate_input(
+    hass: HomeAssistant, data: dict[str, Any]
+) -> dict[str, Any]:
     """Validate the user input allows us to connect."""
 
     hub = K1ConnectionTest(data["host"])
 
-    if not await hub.authenticate(data["connector_id"], data["port"]):
+    if not await hub.async_try_connection(data["connector_id"], data["port"]):
         raise CannotConnect
 
     return {"title": "Elro Connects K1 Connector"}
@@ -81,13 +83,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         try:
-            info = await validate_input(self.hass, user_input)
+            info = await async_validate_input(self.hass, user_input)
         except CannotConnect:
             errors["base"] = "cannot_connect"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
+            await self.async_set_unique_id(user_input[CONF_CONNECTOR_ID])
+            self._abort_if_unique_id_configured()
             return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(

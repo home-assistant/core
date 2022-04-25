@@ -4,15 +4,14 @@
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "connector_id": "Connector ID",
+          "connector_id": "[%key:common::config_flow::data::api_key%]",
           "port": "[%key:common::config_flow::data::port%]",
-          "poll_interval": "Update interval (sec)"
+          "poll_interval": "Update interval in seconds"
         }
       }
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
