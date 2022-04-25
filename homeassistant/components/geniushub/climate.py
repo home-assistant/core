@@ -98,9 +98,7 @@ class GeniusClimateZone(GeniusHeatingZone, ClimateEntity):
             return [PRESET_ACTIVITY, PRESET_BOOST]
         return [PRESET_BOOST]
 
-    async def async_set_hvac_mode(  # type:ignore[override]
-        self, hvac_mode: HVACMode
-    ) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set a new hvac mode."""
         await self._zone.set_mode(HA_HVAC_TO_GH.get(hvac_mode))
 
