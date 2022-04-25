@@ -201,7 +201,7 @@ class AirtouchGroup(CoordinatorEntity, ClimateEntity):
 
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
     _attr_temperature_unit = TEMP_CELSIUS
-    _attr_hvac_modes = AT_GROUP_MODES  # type:ignore[assignment]
+    _attr_hvac_modes = AT_GROUP_MODES
 
     def __init__(self, coordinator, group_number, info):
         """Initialize the climate device."""
