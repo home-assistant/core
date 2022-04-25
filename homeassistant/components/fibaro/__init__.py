@@ -158,7 +158,9 @@ class FibaroController:
         self._import_plugins = config[CONF_IMPORT_PLUGINS]
         self._room_map = None  # Mapping roomId to room object
         self._device_map = None  # Mapping deviceId to device object
-        self.fibaro_devices: dict[str, list] = defaultdict()  # List of devices by type
+        self.fibaro_devices: dict[str, list] = defaultdict(
+            list
+        )  # List of devices by type
         self._callbacks: dict[Any, Any] = {}  # Update value callbacks by deviceId
         self._state_handler = None  # Fiblary's StateHandler object
         self.hub_serial = None  # Unique serial number of the hub
@@ -335,7 +337,6 @@ class FibaroController:
         """Read and process the device list."""
         devices = self._client.devices.list()
         self._device_map = {}
-        self.fibaro_devices = defaultdict(list)
         last_climate_parent = None
         last_endpoint = None
         for device in devices:
