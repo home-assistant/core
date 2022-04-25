@@ -1,7 +1,6 @@
 """Test config flow for Insteon."""
 from __future__ import annotations
 
-from ipaddress import IPv4Address, IPv6Address, ip_address
 import logging
 
 from pyinsteon import async_connect
@@ -117,7 +116,7 @@ class InsteonFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     _device_path: str | None = None
     _device_name: str | None = None
-    _host: IPv4Address | IPv6Address | None = None
+    _host: str | None = None
 
     @staticmethod
     @callback
@@ -237,7 +236,7 @@ class InsteonFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         _LOGGER.error("Got passed the issue")
         await self.async_set_unique_id(mac)
-        self._host = ip_address(discovery_info.ip)
+        self._host = discovery_info.ip
         _LOGGER.error("Found IP address: %s", self._host)
         return await self.async_step_confirm_dhcp()
 
