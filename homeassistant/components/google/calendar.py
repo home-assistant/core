@@ -175,7 +175,7 @@ class GoogleCalendarEntity(CalendarEntity):
             return []
         return [
             _get_calendar_event(event)
-            for event in filter(self._event_filter, result.items)
+            for event in filter(self._event_filter, result_items)
         ]
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
