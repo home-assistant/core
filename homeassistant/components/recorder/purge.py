@@ -6,7 +6,7 @@ from datetime import datetime
 import logging
 from typing import TYPE_CHECKING
 
-from sqlalchemy import func
+from sqlalchemy import column, func, select, union
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.expression import distinct
 
@@ -142,17 +142,17 @@ def _select_unused_attributes_ids(
     # |    1 | SIMPLE      | NULL  | NULL | NULL          | NULL | NULL    | NULL | NULL | Select tables optimized away |
     # +------+-------------+-------+------+---------------+------+---------+------+------+------------------------------+
     #
-    queries = [
-        session.query(
-            func.min(States.attributes_id).filter(States.attributes_id == attributes_id)
+    id_query = session.query(column("id")).from_statement(
+        union(
+            *[
+                select(func.min(States.attributes_id).label("id")).where(
+                    States.attributes_id == attributes_id
+                )
+                for attributes_id in attributes_ids
+            ]
         )
-        for attributes_id in attributes_ids
-    ]
-    first_query = queries.pop()
-    if queries:
-        first_query = first_query.union(*queries)
-
-    to_remove = attributes_ids - {state[0] for state in first_query.all()}
+    )
+    to_remove = attributes_ids - {state[0] for state in id_query.all()}
     _LOGGER.debug(
         "Selected %s shared attributes to remove",
         len(to_remove),
