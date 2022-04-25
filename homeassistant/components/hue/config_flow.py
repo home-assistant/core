@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-import ipaddress
 import logging
 from typing import Any
 from urllib.parse import urlparse
@@ -22,6 +21,7 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client, device_registry
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.network import is_ipv6_address
 
 from .const import (
     CONF_ALLOW_HUE_GROUPS,
@@ -232,11 +232,8 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="not_hue_bridge")
 
         # Ignore if host is IPv6
-        try:
-            if ipaddress.ip_address(url.hostname).version == 6:
-                return self.async_abort(reason="invalid_host")
-        except ValueError:
-            pass
+        if is_ipv6_address(url.hostname):
+            return self.async_abort(reason="invalid_host")
 
         # abort if we already have exactly this bridge id/host
         # reload the integration if the host got updated
@@ -260,11 +257,8 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         host is already configured and delegate to the import step if not.
         """
         # Ignore if host is IPv6
-        try:
-            if ipaddress.ip_address(discovery_info.host).version == 6:
-                return self.async_abort(reason="invalid_host")
-        except ValueError:
-            pass
+        if is_ipv6_address(discovery_info.host):
+            return self.async_abort(reason="invalid_host")
 
         # abort if we already have exactly this bridge id/host
         # reload the integration if the host got updated
