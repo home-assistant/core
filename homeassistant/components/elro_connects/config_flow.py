@@ -8,8 +8,9 @@ from elro.api import K1
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
@@ -28,8 +29,10 @@ ELRO_CONNECTS_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
         vol.Required(CONF_CONNECTOR_ID): str,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
-        vol.Optional(CONF_UPDATE_INTERVAL, default=DEFAULT_INTERVAL): cv.positive_int,
+        vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Required(CONF_UPDATE_INTERVAL, default=DEFAULT_INTERVAL): vol.All(
+            vol.Coerce(int), vol.Range(min=10, max=60)
+        ),
     }
 )
 
@@ -71,6 +74,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Handle configuring options."""
+        return OptionsFlowHandler(config_entry)
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -96,6 +105,52 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user", data_schema=ELRO_CONNECTS_DATA_SCHEMA, errors=errors
+        )
+
+
+class OptionsFlowHandler(config_entries.OptionsFlow):
+    """Manage the options."""
+
+    def __init__(self, config_entry: ConfigEntry) -> None:
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Manage configuration options."""
+        errors = {}
+        entry_data = self.config_entry.data
+        if user_input is not None:
+            changed_input = {}
+            changed_input.update(user_input)
+            changed_input[CONF_CONNECTOR_ID] = entry_data.get(CONF_CONNECTOR_ID)
+            try:
+                await async_validate_input(self.hass, changed_input)
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                self.hass.config_entries.async_update_entry(
+                    self.config_entry, data=changed_input
+                )
+                return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            errors=errors,
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_HOST, default=entry_data.get(CONF_HOST)): str,
+                    vol.Required(CONF_PORT, default=entry_data.get(CONF_PORT)): cv.port,
+                    vol.Required(
+                        CONF_UPDATE_INTERVAL,
+                        default=entry_data.get(CONF_UPDATE_INTERVAL),
+                    ): vol.All(vol.Coerce(int), vol.Range(min=10, max=60)),
+                }
+            ),
         )
 
 

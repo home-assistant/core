@@ -33,7 +33,7 @@ async def test_form(hass: HomeAssistant) -> None:
                 "host": "1.1.1.1",
                 "connector_id": "ST_deadbeef0000",
                 "port": 1025,
-                "update_interval": 15,
+                "interval": 15,
             },
         )
         await hass.async_block_till_done()
@@ -44,7 +44,7 @@ async def test_form(hass: HomeAssistant) -> None:
         "host": "1.1.1.1",
         "connector_id": "ST_deadbeef0000",
         "port": 1025,
-        "update_interval": 15,
+        "interval": 15,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -97,9 +97,46 @@ async def test_already_setup(hass: HomeAssistant) -> None:
                 "host": "1.1.1.2",
                 "connector_id": "ST_deadbeef0000",
                 "port": 1024,
-                "update_interval": 10,
+                "interval": 10,
             },
         )
         await hass.async_block_till_done()
 
     assert result2["type"] == RESULT_TYPE_ABORT
+
+
+async def test_update_options(hass: HomeAssistant) -> None:
+    """Test we can update the configuration."""
+    # Setup the existing config entry
+    await test_form(hass)
+
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+
+    # Start config flow
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+
+    # Change interval, IP address and port
+    with patch(
+        "homeassistant.components.elro_connects.config_flow.K1ConnectionTest.async_try_connection",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.elro_connects.async_setup_entry",
+        return_value=True,
+    ):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                "host": "1.1.1.2",
+                "port": 1024,
+                "interval": 10,
+            },
+        )
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+
+    assert config_entry.data.get("host") == "1.1.1.2"
+    assert config_entry.data.get("connector_id") == "ST_deadbeef0000"
+    assert config_entry.data.get("port") == 1024
+    assert config_entry.data.get("interval") == 10

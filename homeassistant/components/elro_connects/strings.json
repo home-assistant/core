@@ -4,9 +4,9 @@
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "connector_id": "[%key:common::config_flow::data::api_key%]",
+          "connector_id": "Connector ID",
           "port": "[%key:common::config_flow::data::port%]",
-          "poll_interval": "Update interval in seconds"
+          "interval": "Update interval in seconds"
         }
       }
     },
@@ -16,6 +16,17 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "interval": "Update interval in seconds"
+        }
+      }
     }
   }
 }

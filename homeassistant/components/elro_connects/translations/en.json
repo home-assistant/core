@@ -5,14 +5,25 @@
         },
         "error": {
             "cannot_connect": "Failed to connect",
-            "invalid_auth": "Invalid authentication",
             "unknown": "Unexpected error"
         },
         "step": {
             "user": {
                 "data": {
-                    "host": "Host",
                     "connector_id": "Connector ID",
+                    "host": "Hostname or IP address",
+                    "interval": "Update interval in seconds",
+                    "port": "Port"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "host": "Host",
+                    "interval": "Update interval in seconds",
                     "port": "Port"
                 }
             }

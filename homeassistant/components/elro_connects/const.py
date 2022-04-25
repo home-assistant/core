@@ -6,4 +6,4 @@ DEFAULT_INTERVAL = 15
 DEFAULT_PORT = 1025
 
 CONF_CONNECTOR_ID = "connector_id"
-CONF_UPDATE_INTERVAL = "update_interval"
+CONF_UPDATE_INTERVAL = "interval"
