@@ -74,7 +74,7 @@ class BSBLanClimate(ClimateEntity):
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
-    _attr_hvac_modes = HVAC_MODES  # type:ignore[assignment]
+    _attr_hvac_modes = HVAC_MODES
     _attr_preset_modes = PRESET_MODES
 
     def __init__(
