@@ -1,13 +1,14 @@
 """Test config flow for Insteon."""
 from __future__ import annotations
 
+from ipaddress import IPv4Address, IPv6Address, ip_address
 import logging
 
 from pyinsteon import async_connect
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components import usb
+from homeassistant.components import dhcp, usb
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_DEVICE,
@@ -19,7 +20,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.util.network import is_link_local
 
 from .const import (
     CONF_HOUSECODE,
@@ -56,6 +59,7 @@ MODEM_TYPE = "modem_type"
 PLM = "PowerLinc Modem (PLM)"
 HUB1 = "Hub version 1 (pre-2014)"
 HUB2 = "Hub version 2"
+INSTEON_MAC = "00:0E:F3"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -114,6 +118,7 @@ class InsteonFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     _device_path: str | None = None
     _device_name: str | None = None
+    _host: IPv4Address | IPv6Address | None = None
 
     @staticmethod
     @callback
@@ -164,7 +169,7 @@ class InsteonFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def _async_setup_hub(self, hub_version, user_input):
         """Set up the Hub versions 1 and 2."""
         errors = {}
-        if user_input is not None:
+        if user_input is not None and user_input.get(CONF_PORT) is not None:
             user_input[CONF_HUB_VERSION] = hub_version
             if await _async_connect(**user_input):
                 return self.async_create_entry(title="", data=user_input)
@@ -208,13 +213,40 @@ class InsteonFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.async_step_confirm_usb()
 
     async def async_step_confirm_usb(self, user_input=None):
-        """Confirm a discovery."""
+        """Confirm a USB discovery."""
         if user_input is not None:
             return await self.async_step_plm({CONF_DEVICE: self._device_path})
 
         return self.async_show_form(
             step_id="confirm_usb",
             description_placeholders={CONF_NAME: self._device_name},
+        )
+
+    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
+        """Prepare configuration for a DHCP discovered Axis device."""
+        mac = format_mac(discovery_info.macaddress)
+        if mac[:8] != INSTEON_MAC:
+            return self.async_abort(reason="not_insteon_device")
+        if is_link_local(ip_address(discovery_info.ip)):
+            return self.async_abort(reason="link_local_address")
+
+        await self.async_set_unique_id(mac)
+        self._host = ip_address(discovery_info.ip)
+        return await self.async_step_confirm_dhcp()
+
+    async def async_step_confirm_dhcp(self, user_input=None):
+        """Confirm a DHCP discovery."""
+        errors = {}
+
+        if user_input is not None:
+            selection = user_input.get(MODEM_TYPE)
+            if selection == HUB1:
+                return await self.async_step_hubv1({CONF_HOST: self._host})
+            return await self.async_step_hubv2({CONF_HOST: self._host})
+        modem_types = [HUB1, HUB2]
+        data_schema = vol.Schema({vol.Required(MODEM_TYPE): vol.In(modem_types)})
+        return self.async_show_form(
+            step_id="user", data_schema=data_schema, errors=errors
         )
 
 
