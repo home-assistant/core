@@ -62,7 +62,7 @@ FAN_MODE_TO_DECONZ = {
 }
 DECONZ_TO_FAN_MODE = {value: key for key, value in FAN_MODE_TO_DECONZ.items()}
 
-HVAC_MODE_TO_DECONZ: dict[HVACMode | str, str] = {
+HVAC_MODE_TO_DECONZ: dict[HVACMode, str] = {
     HVACMode.AUTO: THERMOSTAT_MODE_AUTO,
     HVACMode.COOL: THERMOSTAT_MODE_COOL,
     HVACMode.HEAT: THERMOSTAT_MODE_HEAT,
@@ -143,7 +143,7 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
         """Set up thermostat device."""
         super().__init__(device, gateway)
 
-        self._attr_hvac_modes = [
+        self._attr_hvac_modes: list[HVACMode] = [  # type:ignore[assignment]
             HVACMode.HEAT,
             HVACMode.OFF,
         ]
@@ -195,7 +195,9 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
             return self._deconz_to_hvac_mode[self._device.mode]
         return HVACMode.HEAT if self._device.state_on else HVACMode.OFF
 
-    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
+    async def async_set_hvac_mode(  # type:ignore[override]
+        self, hvac_mode: HVACMode
+    ) -> None:
         """Set new target hvac mode."""
         if hvac_mode not in self._attr_hvac_modes:
             raise ValueError(f"Unsupported HVAC mode {hvac_mode}")
