@@ -84,7 +84,6 @@ class AbstractConfig(ABC):
     @callback
     def should_expose(self, entity_id):
         """If an entity should be exposed."""
-        # pylint: disable=no-self-use
         return False
 
     @callback

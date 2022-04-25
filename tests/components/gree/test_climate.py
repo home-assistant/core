@@ -18,12 +18,6 @@ from homeassistant.components.climate.const import (
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
-    HVAC_MODE_AUTO,
-    HVAC_MODE_COOL,
-    HVAC_MODE_DRY,
-    HVAC_MODE_FAN_ONLY,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
     PRESET_AWAY,
     PRESET_BOOST,
     PRESET_ECO,
@@ -38,6 +32,7 @@ from homeassistant.components.climate.const import (
     SWING_HORIZONTAL,
     SWING_OFF,
     SWING_VERTICAL,
+    HVACMode,
 )
 from homeassistant.components.gree.climate import FAN_MODES_REVERSE, HVAC_MODES_REVERSE
 from homeassistant.components.gree.const import FAN_MEDIUM_HIGH, FAN_MEDIUM_LOW
@@ -343,7 +338,7 @@ async def test_send_power_on(hass, discovery, device, mock_now):
 
     state = hass.states.get(ENTITY_ID)
     assert state is not None
-    assert state.state == HVAC_MODE_OFF
+    assert state.state == HVACMode.OFF
 
 
 async def test_send_power_off_device_timeout(hass, discovery, device, mock_now):
@@ -361,7 +356,7 @@ async def test_send_power_off_device_timeout(hass, discovery, device, mock_now):
 
     state = hass.states.get(ENTITY_ID)
     assert state is not None
-    assert state.state == HVAC_MODE_OFF
+    assert state.state == HVACMode.OFF
 
 
 @pytest.mark.parametrize(
@@ -528,12 +523,12 @@ async def test_update_preset_mode(hass, discovery, device, mock_now, preset):
 @pytest.mark.parametrize(
     "hvac_mode",
     (
-        HVAC_MODE_OFF,
-        HVAC_MODE_AUTO,
-        HVAC_MODE_COOL,
-        HVAC_MODE_DRY,
-        HVAC_MODE_FAN_ONLY,
-        HVAC_MODE_HEAT,
+        HVACMode.OFF,
+        HVACMode.AUTO,
+        HVACMode.COOL,
+        HVACMode.DRY,
+        HVACMode.FAN_ONLY,
+        HVACMode.HEAT,
     ),
 )
 async def test_send_hvac_mode(hass, discovery, device, mock_now, hvac_mode):
@@ -554,7 +549,7 @@ async def test_send_hvac_mode(hass, discovery, device, mock_now, hvac_mode):
 
 @pytest.mark.parametrize(
     "hvac_mode",
-    (HVAC_MODE_AUTO, HVAC_MODE_COOL, HVAC_MODE_DRY, HVAC_MODE_FAN_ONLY, HVAC_MODE_HEAT),
+    (HVACMode.AUTO, HVACMode.COOL, HVACMode.DRY, HVACMode.FAN_ONLY, HVACMode.HEAT),
 )
 async def test_send_hvac_mode_device_timeout(
     hass, discovery, device, mock_now, hvac_mode
@@ -579,17 +574,17 @@ async def test_send_hvac_mode_device_timeout(
 @pytest.mark.parametrize(
     "hvac_mode",
     (
-        HVAC_MODE_OFF,
-        HVAC_MODE_AUTO,
-        HVAC_MODE_COOL,
-        HVAC_MODE_DRY,
-        HVAC_MODE_FAN_ONLY,
-        HVAC_MODE_HEAT,
+        HVACMode.OFF,
+        HVACMode.AUTO,
+        HVACMode.COOL,
+        HVACMode.DRY,
+        HVACMode.FAN_ONLY,
+        HVACMode.HEAT,
     ),
 )
 async def test_update_hvac_mode(hass, discovery, device, mock_now, hvac_mode):
     """Test for updating hvac mode from the device."""
-    device().power = hvac_mode != HVAC_MODE_OFF
+    device().power = hvac_mode != HVACMode.OFF
     device().mode = HVAC_MODES_REVERSE.get(hvac_mode)
 
     await async_setup_gree(hass)

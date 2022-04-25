@@ -167,7 +167,6 @@ class AbstractConfig(ABC):
 
     def should_2fa(self, state):
         """If an entity should have 2FA checked."""
-        # pylint: disable=no-self-use
         return True
 
     async def async_report_state(self, message, agent_user_id: str):
