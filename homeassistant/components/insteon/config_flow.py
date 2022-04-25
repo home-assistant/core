@@ -57,7 +57,6 @@ MODEM_TYPE = "modem_type"
 PLM = "PowerLinc Modem (PLM)"
 HUB1 = "Hub version 1 (pre-2014)"
 HUB2 = "Hub version 2"
-INSTEON_MAC = "00:0e:f3"
 
 _LOGGER = logging.getLogger(__name__)
 
