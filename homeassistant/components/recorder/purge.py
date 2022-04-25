@@ -42,6 +42,7 @@ def purge_old_data(
         "Purging states and events before target %s",
         purge_before.isoformat(sep=" ", timespec="seconds"),
     )
+    using_sqlite = instance.using_sqlite()
 
     with session_scope(session=instance.get_session()) as session:  # type: ignore[misc]
         # Purge a max of MAX_ROWS_TO_PURGE, based on the oldest states or events record
@@ -59,7 +60,7 @@ def purge_old_data(
             _purge_state_ids(instance, session, state_ids)
 
         if unused_attribute_ids_set := _select_unused_attributes_ids(
-            session, attributes_ids
+            session, attributes_ids, using_sqlite
         ):
             _purge_attributes_ids(instance, session, unused_attribute_ids_set)
 
@@ -112,47 +113,54 @@ def _select_event_state_and_attributes_ids_to_purge(
 
 
 def _select_unused_attributes_ids(
-    session: Session, attributes_ids: set[int]
+    session: Session, attributes_ids: set[int], using_sqlite: bool
 ) -> set[int]:
     """Return a set of attributes ids that are not used by any states in the database."""
     if not attributes_ids:
         return set()
 
-    #
-    # We are jumping through hoops a bit here to handle
-    # a case where MySQL cannot optimize this well. Ironiclly
-    # sqlite is faster with either query.
-    #
-    # We used to do a select distinct on attributes_id, unfortunately
-    # MariaDB/MySQL cannot optimize that query well and has to examine
-    # all the rows that match
-    #
-    # > explain select distinct attributes_id from states where attributes_id in (136723);
-    # +------+-------------+--------+------+-------------------------+-------------------------+---------+-------+-------+-------------+
-    # | id   | select_type | table  | type | possible_keys           | key                     | key_len | ref   | rows  | Extra       |
-    # +------+-------------+--------+------+-------------------------+-------------------------+---------+-------+-------+-------------+
-    # |    1 | SIMPLE      | states | ref  | ix_states_attributes_id | ix_states_attributes_id | 5       | const | 22842 | Using index |
-    # +------+-------------+--------+------+-------------------------+-------------------------+---------+-------+-------+-------------+
-    #
-    # With a single query, it can be optimized away
-    #
-    # > explain select min(attributes_id) from states where attributes_id = 136723;
-    # +------+-------------+-------+------+---------------+------+---------+------+------+------------------------------+
-    # | id   | select_type | table | type | possible_keys | key  | key_len | ref  | rows | Extra                        |
-    # +------+-------------+-------+------+---------------+------+---------+------+------+------------------------------+
-    # |    1 | SIMPLE      | NULL  | NULL | NULL          | NULL | NULL    | NULL | NULL | Select tables optimized away |
-    # +------+-------------+-------+------+---------------+------+---------+------+------+------------------------------+
-    #
-    id_query = session.query(column("id")).from_statement(
-        union(
-            *[
-                select(func.min(States.attributes_id).label("id")).where(
-                    States.attributes_id == attributes_id
-                )
-                for attributes_id in attributes_ids
-            ]
+    if using_sqlite:
+        id_query = session.query(distinct(States.attributes_id)).filter(
+            States.attributes_id.in_(attributes_ids)
         )
-    )
+    else:
+        #
+        # We are jumping through hoops a bit here to handle
+        # a case sqlite performance on finding unused attributes_id
+        # far exceeds other DBMS
+        #
+        # MariaDB/MySQL cannot optimize that query well and has to examine
+        # all the rows that match
+        #
+        # > explain select distinct attributes_id from states where attributes_id in (136723);
+        # +------+-------------+--------+------+-------------------------+-------------------------+---------+-------+-------+-------------+
+        # | id   | select_type | table  | type | possible_keys           | key                     | key_len | ref   | rows  | Extra       |
+        # +------+-------------+--------+------+-------------------------+-------------------------+---------+-------+-------+-------------+
+        # |    1 | SIMPLE      | states | ref  | ix_states_attributes_id | ix_states_attributes_id | 5       | const | 22842 | Using index |
+        # +------+-------------+--------+------+-------------------------+-------------------------+---------+-------+-------+-------------+
+        #
+        # With a single query, it can be optimized away
+        #
+        # > explain select min(attributes_id) from states where attributes_id = 136723;
+        # +------+-------------+-------+------+---------------+------+---------+------+------+------------------------------+
+        # | id   | select_type | table | type | possible_keys | key  | key_len | ref  | rows | Extra                        |
+        # +------+-------------+-------+------+---------------+------+---------+------+------+------------------------------+
+        # |    1 | SIMPLE      | NULL  | NULL | NULL          | NULL | NULL    | NULL | NULL | Select tables optimized away |
+        # +------+-------------+-------+------+---------------+------+---------+------+------+------------------------------+
+        #
+        # We test this path to make sure it will work with
+        # sqlite, however only on tests that have < 500 ids
+        # since otherwise we hit the limit
+        id_query = session.query(column("id")).from_statement(
+            union(
+                *[
+                    select(func.min(States.attributes_id).label("id")).where(
+                        States.attributes_id == attributes_id
+                    )
+                    for attributes_id in attributes_ids
+                ]
+            )
+        )
     to_remove = attributes_ids - {state[0] for state in id_query.all()}
     _LOGGER.debug(
         "Selected %s shared attributes to remove",
@@ -325,6 +333,7 @@ def _purge_old_recorder_runs(
 def _purge_filtered_data(instance: Recorder, session: Session) -> bool:
     """Remove filtered states and events that shouldn't be in the database."""
     _LOGGER.debug("Cleanup filtered data")
+    using_sqlite = instance.using_sqlite()
 
     # Check if excluded entity_ids are in database
     excluded_entity_ids: list[str] = [
@@ -333,7 +342,7 @@ def _purge_filtered_data(instance: Recorder, session: Session) -> bool:
         if not instance.entity_filter(entity_id)
     ]
     if len(excluded_entity_ids) > 0:
-        _purge_filtered_states(instance, session, excluded_entity_ids)
+        _purge_filtered_states(instance, session, excluded_entity_ids, using_sqlite)
         return False
 
     # Check if excluded event_types are in database
@@ -350,7 +359,10 @@ def _purge_filtered_data(instance: Recorder, session: Session) -> bool:
 
 
 def _purge_filtered_states(
-    instance: Recorder, session: Session, excluded_entity_ids: list[str]
+    instance: Recorder,
+    session: Session,
+    excluded_entity_ids: list[str],
+    using_sqlite: bool,
 ) -> None:
     """Remove filtered states and linked events."""
     state_ids: list[int]
@@ -371,7 +383,7 @@ def _purge_filtered_states(
     _purge_state_ids(instance, session, set(state_ids))
     _purge_event_ids(session, event_ids)
     unused_attribute_ids_set = _select_unused_attributes_ids(
-        session, {id_ for id_ in attributes_ids if id_ is not None}
+        session, {id_ for id_ in attributes_ids if id_ is not None}, using_sqlite
     )
     _purge_attributes_ids(instance, session, unused_attribute_ids_set)
 
@@ -406,6 +418,7 @@ def _purge_filtered_events(
 @retryable_database_job("purge")
 def purge_entity_data(instance: Recorder, entity_filter: Callable[[str], bool]) -> bool:
     """Purge states and events of specified entities."""
+    using_sqlite = instance.using_sqlite()
     with session_scope(session=instance.get_session()) as session:  # type: ignore[misc]
         selected_entity_ids: list[str] = [
             entity_id
@@ -415,7 +428,7 @@ def purge_entity_data(instance: Recorder, entity_filter: Callable[[str], bool]) 
         _LOGGER.debug("Purging entity data for %s", selected_entity_ids)
         if len(selected_entity_ids) > 0:
             # Purge a max of MAX_ROWS_TO_PURGE, based on the oldest states or events record
-            _purge_filtered_states(instance, session, selected_entity_ids)
+            _purge_filtered_states(instance, session, selected_entity_ids, using_sqlite)
             _LOGGER.debug("Purging entity data hasn't fully completed yet")
             return False
 

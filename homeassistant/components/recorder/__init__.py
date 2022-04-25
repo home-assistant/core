@@ -908,7 +908,8 @@ class Recorder(threading.Thread):
         self.queue.put(ExternalStatisticsTask(metadata, stats))
 
     @callback
-    def _using_sqlite(self) -> bool:
+    def using_sqlite(self) -> bool:
+        """Return if recorder uses sqlite as the engine."""
         return bool(self.engine and self.engine.dialect.name == "sqlite")
 
     @callback
@@ -920,7 +921,7 @@ class Recorder(threading.Thread):
 
         # If the db is using a socket connection, we need to keep alive
         # to prevent errors from unexpected disconnects
-        if not self._using_sqlite():
+        if not self.using_sqlite():
             self._keep_alive_listener = async_track_time_interval(
                 self.hass, self._async_keep_alive, timedelta(seconds=KEEPALIVE_TIME)
             )
@@ -1321,7 +1322,7 @@ class Recorder(threading.Thread):
 
     async def lock_database(self) -> bool:
         """Lock database so it can be backed up safely."""
-        if not self._using_sqlite():
+        if not self.using_sqlite():
             _LOGGER.debug(
                 "Not a SQLite database or not connected, locking not necessary"
             )
@@ -1350,7 +1351,7 @@ class Recorder(threading.Thread):
 
         Returns true if database lock has been held throughout the process.
         """
-        if not self._using_sqlite():
+        if not self.using_sqlite():
             _LOGGER.debug(
                 "Not a SQLite database or not connected, unlocking not necessary"
             )
