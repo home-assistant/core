@@ -220,7 +220,7 @@ async def test_hmip_heating_group_heat(hass, default_mock_hap_factory):
     await async_manipulate_test_data(hass, hmip_device, "valvePosition", 0.1)
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == HVACMode.AUTO
-    assert ha_state.attributes[ATTR_HVAC_ACTION] == HVACAction.HEAT
+    assert ha_state.attributes[ATTR_HVAC_ACTION] == HVACAction.HEATING
     await async_manipulate_test_data(hass, hmip_device, "floorHeatingMode", "RADIATOR")
     await async_manipulate_test_data(hass, hmip_device, "valvePosition", 0.0)
     ha_state = hass.states.get(entity_id)
