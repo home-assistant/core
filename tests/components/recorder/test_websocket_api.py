@@ -14,11 +14,7 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from .common import (
-    async_wait_recording_done_without_instance,
-    create_engine_test,
-    trigger_db_commit,
-)
+from .common import async_wait_recording_done, create_engine_test, trigger_db_commit
 
 from tests.common import async_fire_time_changed, init_recorder_component
 
@@ -265,7 +261,7 @@ async def test_recorder_info(hass, hass_ws_client, recorder_mock):
     client = await hass_ws_client()
 
     # Ensure there are no queued events
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
 
     await client.send_json({"id": 1, "type": "recorder/info"})
     response = await client.receive_json()
@@ -358,7 +354,7 @@ async def test_recorder_info_migration_queue_exhausted(hass, hass_ws_client):
 
     # Let migration finish
     migration_done.set()
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
 
     # Check the status after migration finished
     await client.send_json({"id": 2, "type": "recorder/info"})
@@ -388,7 +384,7 @@ async def test_backup_start_timeout(
     client = await hass_ws_client(hass, hass_supervisor_access_token)
 
     # Ensure there are no queued events
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
 
     with patch.object(recorder, "DB_LOCK_TIMEOUT", 0):
         try:
@@ -407,7 +403,7 @@ async def test_backup_end(
     client = await hass_ws_client(hass, hass_supervisor_access_token)
 
     # Ensure there are no queued events
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
 
     await client.send_json({"id": 1, "type": "backup/start"})
     response = await client.receive_json()
@@ -425,7 +421,7 @@ async def test_backup_end_without_start(
     client = await hass_ws_client(hass, hass_supervisor_access_token)
 
     # Ensure there are no queued events
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
 
     await client.send_json({"id": 1, "type": "backup/end"})
     response = await client.receive_json()

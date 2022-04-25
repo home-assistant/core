@@ -706,8 +706,21 @@ class Profiles:
         if (profile := self.data.get(name)) is None:
             return
 
-        if profile.hs_color is not None:
-            params.setdefault(ATTR_HS_COLOR, profile.hs_color)
+        color_attributes = (
+            ATTR_COLOR_NAME,
+            ATTR_COLOR_TEMP,
+            ATTR_HS_COLOR,
+            ATTR_RGB_COLOR,
+            ATTR_RGBW_COLOR,
+            ATTR_RGBWW_COLOR,
+            ATTR_XY_COLOR,
+            ATTR_WHITE,
+        )
+
+        if profile.hs_color is not None and not any(
+            color_attribute in params for color_attribute in color_attributes
+        ):
+            params[ATTR_HS_COLOR] = profile.hs_color
         if profile.brightness is not None:
             params.setdefault(ATTR_BRIGHTNESS, profile.brightness)
         if profile.transition is not None:

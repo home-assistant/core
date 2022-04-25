@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Any, Generic, TypedDict, TypeVar
 
 from pydeconz.interfaces.lights import LightResources
+from pydeconz.models import ResourceType
 from pydeconz.models.group import Group
 from pydeconz.models.light import (
     ALERT_LONG,
@@ -31,6 +32,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -69,6 +71,17 @@ async def async_setup_entry(
     """Set up the deCONZ lights and groups from a config entry."""
     gateway = get_gateway_from_config_entry(hass, config_entry)
     gateway.entities[DOMAIN] = set()
+
+    entity_registry = er.async_get(hass)
+
+    # On/Off Output should be switch not light 2022.5
+    for light in gateway.api.lights.lights.values():
+        if light.type == ResourceType.ON_OFF_OUTPUT.value and (
+            entity_id := entity_registry.async_get_entity_id(
+                DOMAIN, DECONZ_DOMAIN, light.unique_id
+            )
+        ):
+            entity_registry.async_remove(entity_id)
 
     @callback
     def async_add_light(lights: list[LightResources] | None = None) -> None:
