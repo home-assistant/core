@@ -48,6 +48,12 @@ CONF_FALLBACK = "fallback"
 DATA = "data"
 UPDATE_TRACK = "update_track"
 
+CONFIGURATION_URL_HOME = "https://app.tado.com"
+CONFIGURATION_URL_ZONE = "https://app.tado.com/en/main/home/zoneV2/{}"
+CONFIGURATION_URL_DEVICE = (
+    "https://app.tado.com/en/main/settings/rooms-and-devices/device/{}"
+)
+
 # Weather
 CONDITIONS_MAP = {
     "clear-night": {"NIGHT_CLEAR"},

@@ -1,7 +1,15 @@
 """Base class for Tado entity."""
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
-from .const import DEFAULT_NAME, DOMAIN, TADO_HOME, TADO_ZONE
+from .const import (
+    CONFIGURATION_URL_DEVICE,
+    CONFIGURATION_URL_HOME,
+    CONFIGURATION_URL_ZONE,
+    DEFAULT_NAME,
+    DOMAIN,
+    TADO_HOME,
+    TADO_ZONE,
+)
 
 
 class TadoDeviceEntity(Entity):
@@ -18,6 +26,7 @@ class TadoDeviceEntity(Entity):
     def device_info(self) -> DeviceInfo:
         """Return the device_info of the device."""
         return DeviceInfo(
+            configuration_url=CONFIGURATION_URL_DEVICE.format(self.device_name),
             identifiers={(DOMAIN, self.device_id)},
             name=self.device_name,
             manufacturer=DEFAULT_NAME,
@@ -45,6 +54,7 @@ class TadoHomeEntity(Entity):
     def device_info(self) -> DeviceInfo:
         """Return the device_info of the device."""
         return DeviceInfo(
+            configuration_url=CONFIGURATION_URL_HOME,
             identifiers={(DOMAIN, self.home_id)},
             manufacturer=DEFAULT_NAME,
             model=TADO_HOME,
@@ -66,6 +76,7 @@ class TadoZoneEntity(Entity):
     def device_info(self) -> DeviceInfo:
         """Return the device_info of the device."""
         return DeviceInfo(
+            configuration_url=CONFIGURATION_URL_ZONE.format(self.zone_id),
             identifiers={(DOMAIN, self._device_zone_id)},
             name=self.zone_name,
             manufacturer=DEFAULT_NAME,
