@@ -12,16 +12,23 @@
       "LIFX Candle",
       "LIFX Clean",
       "LIFX Color",
+      "LIFX DLCOL",
       "LIFX Dlight",
+      "LIFX DLWW",
+      "LIFX Downlight",
       "LIFX Filament",
       "LIFX GU10",
+      "LIFX Lightstrip",
       "LIFX Mini",
       "LIFX Nightvision",
+      "LIFX Pls",
+      "LIFX Plus",
+      "LIFX Tile",
       "LIFX White",
       "LIFX Z"
     ]
   },
-  "codeowners": [],
+  "codeowners": ["@Djelibeybi"],
   "iot_class": "local_polling",
   "loggers": ["aiolifx", "aiolifx_effects", "bitstring"]
 }
