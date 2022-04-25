@@ -163,7 +163,7 @@ class AdvantageAirAC(AdvantageAirClimateEntity):
 class AdvantageAirZone(AdvantageAirClimateEntity):
     """AdvantageAir Zone control."""
 
-    _attr_hvac_modes = ZONE_HVAC_MODES  # type:ignore[assignment]
+    _attr_hvac_modes = ZONE_HVAC_MODES
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
 
     def __init__(self, instance, ac_key, zone_key):
