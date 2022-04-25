@@ -428,6 +428,8 @@ class _ScriptRun:
                     self._handle_exception(
                         ex, continue_on_error, self._log_exceptions or log_exceptions
                     )
+                else:
+                    self._variables["last_step_error"] = None
 
     def _finish(self) -> None:
         self._script._runs.remove(self)  # pylint: disable=protected-access
@@ -472,6 +474,11 @@ class _ScriptRun:
         # Only Home Assistant errors can be ignored.
         if not isinstance(exception, exceptions.HomeAssistantError):
             raise exception
+
+        self._variables["last_step_error"] = {
+            "message": str(exception),
+            "type": type(exception).__qualname__,
+        }
 
     def _log_exception(self, exception):
         action_type = cv.determine_script_action(self._action)
