@@ -118,6 +118,30 @@ def _select_unused_attributes_ids(
     if not attributes_ids:
         return set()
 
+    #
+    # We are jumping through hoops a bit here to handle
+    # a case where MySQL cannot optimize this well
+    #
+    # We used to do a select distinct on attributes_id, unfortunately
+    # MariaDB/MySQL cannot optimize that query well and has to examine
+    # all the rows that match
+    #
+    # > explain select distinct attributes_id from states where attributes_id in (136723);
+    # +------+-------------+--------+------+-------------------------+-------------------------+---------+-------+-------+-------------+
+    # | id   | select_type | table  | type | possible_keys           | key                     | key_len | ref   | rows  | Extra       |
+    # +------+-------------+--------+------+-------------------------+-------------------------+---------+-------+-------+-------------+
+    # |    1 | SIMPLE      | states | ref  | ix_states_attributes_id | ix_states_attributes_id | 5       | const | 22842 | Using index |
+    # +------+-------------+--------+------+-------------------------+-------------------------+---------+-------+-------+-------------+
+    #
+    # With a single query, it can be optimized away
+    #
+    # > explain select min(attributes_id) from states where attributes_id = 136723;
+    # +------+-------------+-------+------+---------------+------+---------+------+------+------------------------------+
+    # | id   | select_type | table | type | possible_keys | key  | key_len | ref  | rows | Extra                        |
+    # +------+-------------+-------+------+---------------+------+---------+------+------+------------------------------+
+    # |    1 | SIMPLE      | NULL  | NULL | NULL          | NULL | NULL    | NULL | NULL | Select tables optimized away |
+    # +------+-------------+-------+------+---------------+------+---------+------+------+------------------------------+
+    #
     queries = [
         session.query(
             func.min(States.attributes_id).filter(States.attributes_id == attributes_id)
