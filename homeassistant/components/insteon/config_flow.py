@@ -22,7 +22,6 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.util.network import is_link_local
 
 from .const import (
     CONF_HOUSECODE,
@@ -224,11 +223,10 @@ class InsteonFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Prepare configuration for a DHCP discovered Axis device."""
+        _LOGGER.error("Got to DHCP step")
         mac = format_mac(discovery_info.macaddress)
         if mac[:8] != INSTEON_MAC:
             return self.async_abort(reason="not_insteon_device")
-        if is_link_local(ip_address(discovery_info.ip)):
-            return self.async_abort(reason="link_local_address")
 
         await self.async_set_unique_id(mac)
         self._host = ip_address(discovery_info.ip)
