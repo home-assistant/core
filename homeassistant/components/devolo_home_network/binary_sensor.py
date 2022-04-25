@@ -8,22 +8,16 @@ from devolo_plc_api.device import Device
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_PLUG,
-    DEVICE_CLASS_UPDATE,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import (
-    CONNECTED_PLC_DEVICES,
-    CONNECTED_TO_ROUTER,
-    DOMAIN,
-    FIRMWARE_UPDATE_AVAILABLE,
-)
+from .const import CONNECTED_PLC_DEVICES, CONNECTED_TO_ROUTER, DOMAIN
 from .entity import DevoloEntity
 
 
@@ -54,20 +48,11 @@ SENSOR_TYPES: dict[str, DevoloBinarySensorEntityDescription] = {
     CONNECTED_TO_ROUTER: DevoloBinarySensorEntityDescription(
         key=CONNECTED_TO_ROUTER,
         device_class=DEVICE_CLASS_PLUG,
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         icon="mdi:router-network",
         name="Connected to router",
         value_func=_is_connected_to_router,
-    ),
-    FIRMWARE_UPDATE_AVAILABLE: DevoloBinarySensorEntityDescription(
-        key=FIRMWARE_UPDATE_AVAILABLE,
-        device_class=DEVICE_CLASS_UPDATE,
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-        entity_registry_enabled_default=True,
-        icon="mdi:update",
-        name="Firmware update available",
-        value_func=lambda entity: entity.coordinator.data["result"] == "UPDATE_AVAILABLE",  # type: ignore[no-any-return]
     ),
 }
 
@@ -82,15 +67,6 @@ async def async_setup_entry(
     ]
 
     entities: list[BinarySensorEntity] = []
-    if device.device and "update" in device.device.features:
-        entities.append(
-            DevoloBinarySensorEntity(
-                coordinators[FIRMWARE_UPDATE_AVAILABLE],
-                SENSOR_TYPES[FIRMWARE_UPDATE_AVAILABLE],
-                device,
-                entry.title,
-            )
-        )
     if device.plcnet:
         entities.append(
             DevoloBinarySensorEntity(
