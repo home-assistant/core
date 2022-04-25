@@ -13,17 +13,11 @@ from aioesphomeapi import (
     ClimateSwingMode,
 )
 
-from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
-    CURRENT_HVAC_COOL,
-    CURRENT_HVAC_DRY,
-    CURRENT_HVAC_FAN,
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
-    CURRENT_HVAC_OFF,
     FAN_AUTO,
     FAN_DIFFUSE,
     FAN_FOCUS,
@@ -33,13 +27,6 @@ from homeassistant.components.climate.const import (
     FAN_MIDDLE,
     FAN_OFF,
     FAN_ON,
-    HVAC_MODE_AUTO,
-    HVAC_MODE_COOL,
-    HVAC_MODE_DRY,
-    HVAC_MODE_FAN_ONLY,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_HEAT_COOL,
-    HVAC_MODE_OFF,
     PRESET_ACTIVITY,
     PRESET_AWAY,
     PRESET_BOOST,
@@ -52,6 +39,9 @@ from homeassistant.components.climate.const import (
     SWING_HORIZONTAL,
     SWING_OFF,
     SWING_VERTICAL,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -89,23 +79,23 @@ async def async_setup_entry(
 
 _CLIMATE_MODES: EsphomeEnumMapper[ClimateMode, str] = EsphomeEnumMapper(
     {
-        ClimateMode.OFF: HVAC_MODE_OFF,
-        ClimateMode.HEAT_COOL: HVAC_MODE_HEAT_COOL,
-        ClimateMode.COOL: HVAC_MODE_COOL,
-        ClimateMode.HEAT: HVAC_MODE_HEAT,
-        ClimateMode.FAN_ONLY: HVAC_MODE_FAN_ONLY,
-        ClimateMode.DRY: HVAC_MODE_DRY,
-        ClimateMode.AUTO: HVAC_MODE_AUTO,
+        ClimateMode.OFF: HVACMode.OFF,
+        ClimateMode.HEAT_COOL: HVACMode.HEAT_COOL,
+        ClimateMode.COOL: HVACMode.COOL,
+        ClimateMode.HEAT: HVACMode.HEAT,
+        ClimateMode.FAN_ONLY: HVACMode.FAN_ONLY,
+        ClimateMode.DRY: HVACMode.DRY,
+        ClimateMode.AUTO: HVACMode.AUTO,
     }
 )
 _CLIMATE_ACTIONS: EsphomeEnumMapper[ClimateAction, str] = EsphomeEnumMapper(
     {
-        ClimateAction.OFF: CURRENT_HVAC_OFF,
-        ClimateAction.COOLING: CURRENT_HVAC_COOL,
-        ClimateAction.HEATING: CURRENT_HVAC_HEAT,
-        ClimateAction.IDLE: CURRENT_HVAC_IDLE,
-        ClimateAction.DRYING: CURRENT_HVAC_DRY,
-        ClimateAction.FAN: CURRENT_HVAC_FAN,
+        ClimateAction.OFF: HVACAction.OFF,
+        ClimateAction.COOLING: HVACAction.COOLING,
+        ClimateAction.HEATING: HVACAction.HEATING,
+        ClimateAction.IDLE: HVACAction.IDLE,
+        ClimateAction.DRYING: HVACAction.DRYING,
+        ClimateAction.FAN: HVACAction.FAN,
     }
 )
 _FAN_MODES: EsphomeEnumMapper[ClimateFanMode, str] = EsphomeEnumMapper(
