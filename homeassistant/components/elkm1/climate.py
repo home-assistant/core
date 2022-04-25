@@ -25,14 +25,14 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import ElkEntity, create_elk_entities
 from .const import DOMAIN
 
-SUPPORT_HVAC: list[HVACMode | str] = [
+SUPPORT_HVAC = [
     HVACMode.OFF,
     HVACMode.HEAT,
     HVACMode.COOL,
     HVACMode.HEAT_COOL,
     HVACMode.FAN_ONLY,
 ]
-HASS_TO_ELK_HVAC_MODES: dict[HVACMode | str, tuple[int, int | None]] = {
+HASS_TO_ELK_HVAC_MODES = {
     HVACMode.OFF: (ThermostatMode.OFF.value, ThermostatFan.AUTO.value),
     HVACMode.HEAT: (ThermostatMode.HEAT.value, None),
     HVACMode.COOL: (ThermostatMode.COOL.value, None),
@@ -134,7 +134,7 @@ class ElkThermostat(ElkEntity, ClimateEntity):
         return self._state
 
     @property
-    def hvac_modes(self) -> list[str]:
+    def hvac_modes(self) -> list[HVACMode]:  # type:ignore[override]
         """Return the list of available operation modes."""
         return SUPPORT_HVAC
 
@@ -169,7 +169,9 @@ class ElkThermostat(ElkEntity, ClimateEntity):
         if fan is not None:
             self._element.set(ThermostatSetting.FAN.value, fan)
 
-    async def async_set_hvac_mode(self, hvac_mode: HVACMode | str) -> None:
+    async def async_set_hvac_mode(  # type:ignore[override]
+        self, hvac_mode: HVACMode
+    ) -> None:
         """Set thermostat operation mode."""
         thermostat_mode, fan_mode = HASS_TO_ELK_HVAC_MODES[hvac_mode]
         self._elk_set(thermostat_mode, fan_mode)
@@ -189,7 +191,7 @@ class ElkThermostat(ElkEntity, ClimateEntity):
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
-        thermostat_mode, elk_fan_mode = HASS_TO_ELK_HVAC_MODES[fan_mode]
+        thermostat_mode, elk_fan_mode = HASS_TO_ELK_FAN_MODES[fan_mode]
         self._elk_set(thermostat_mode, elk_fan_mode)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
