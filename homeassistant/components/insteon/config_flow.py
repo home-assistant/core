@@ -151,6 +151,8 @@ class InsteonFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if await _async_connect(**user_input):
                 return self.async_create_entry(title="", data=user_input)
             errors["base"] = "cannot_connect"
+        if user_input is None and self._device_path is not None:
+            user_input[CONF_DEVICE] = self._device_path
         schema_defaults = user_input if user_input is not None else {}
         data_schema = build_plm_schema(**schema_defaults)
         return self.async_show_form(
@@ -168,6 +170,8 @@ class InsteonFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def _async_setup_hub(self, hub_version, user_input):
         """Set up the Hub versions 1 and 2."""
         errors = {}
+        if user_input is None and self._host is not None:
+            user_input[CONF_HOST] = self._host
         if user_input is not None and user_input.get(CONF_PORT) is not None:
             user_input[CONF_HUB_VERSION] = hub_version
             if await _async_connect(**user_input):
@@ -246,6 +250,7 @@ class InsteonFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_hubv2({CONF_HOST: self._host})
         modem_types = [HUB1, HUB2]
         data_schema = vol.Schema({vol.Required(MODEM_TYPE): vol.In(modem_types)})
+        _LOGGER.error("Showing the user form")
         return self.async_show_form(
             step_id="user", data_schema=data_schema, errors=errors
         )
