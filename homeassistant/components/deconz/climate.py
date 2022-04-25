@@ -143,7 +143,7 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
         """Set up thermostat device."""
         super().__init__(device, gateway)
 
-        self._attr_hvac_modes: list[HVACMode] = [
+        self._attr_hvac_modes = [
             HVACMode.HEAT, 
             HVACMode.OFF,
         ]
