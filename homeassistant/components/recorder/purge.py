@@ -145,10 +145,8 @@ def _select_unused_attributes_ids(
     # +------+-------------+-------+------+---------------+------+---------+------+------+------------------------------+
     #
     if using_sqlite:
-        id_query = (
-            session.query(distinct(States.attributes_id))
-            .filter(States.attributes_id.in_(attributes_ids))
-            .all()
+        id_query = session.query(distinct(States.attributes_id)).filter(
+            States.attributes_id.in_(attributes_ids)
         )
     else:
         id_query = session.query(column("id")).from_statement(
