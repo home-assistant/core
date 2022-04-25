@@ -328,7 +328,6 @@ class ZWaveServices:
 
     async def async_set_config_parameter(self, service: ServiceCall) -> None:
         """Set a config value on a node."""
-        # pylint: disable=no-self-use
         nodes = service.data[const.ATTR_NODES]
         property_or_property_name = service.data[const.ATTR_CONFIG_PARAMETER]
         property_key = service.data.get(const.ATTR_CONFIG_PARAMETER_BITMASK)
@@ -356,7 +355,6 @@ class ZWaveServices:
         self, service: ServiceCall
     ) -> None:
         """Bulk set multiple partial config values on a node."""
-        # pylint: disable=no-self-use
         nodes = service.data[const.ATTR_NODES]
         property_ = service.data[const.ATTR_CONFIG_PARAMETER]
         new_value = service.data[const.ATTR_CONFIG_VALUE]
@@ -391,7 +389,6 @@ class ZWaveServices:
 
     async def async_set_value(self, service: ServiceCall) -> None:
         """Set a value on a node."""
-        # pylint: disable=no-self-use
         nodes: set[ZwaveNode] = service.data[const.ATTR_NODES]
         command_class = service.data[const.ATTR_COMMAND_CLASS]
         property_ = service.data[const.ATTR_PROPERTY]
@@ -503,7 +500,6 @@ class ZWaveServices:
 
     async def async_ping(self, service: ServiceCall) -> None:
         """Ping node(s)."""
-        # pylint: disable=no-self-use
         const.LOGGER.warning(
             "This service is deprecated in favor of the ping button entity. Service "
             "calls will still work for now but the service will be removed in a "

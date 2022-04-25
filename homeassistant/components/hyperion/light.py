@@ -485,7 +485,6 @@ class HyperionBaseLight(LightEntity):
         priority: dict[str, Any] | None = self._client.visible_priority
         return priority
 
-    # pylint: disable=no-self-use
     def _allow_priority_update(self, priority: dict[str, Any] | None = None) -> bool:
         """Determine whether to allow a priority to update internal state."""
         return True

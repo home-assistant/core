@@ -232,7 +232,6 @@ def test_process_custom_logbook_entries(hass_):
     assert_entry(entries[0], name=name, message=message, entity_id=entity_id)
 
 
-# pylint: disable=no-self-use
 def assert_entry(
     entry, when=None, name=None, message=None, domain=None, entity_id=None
 ):
@@ -261,7 +260,6 @@ def create_state_changed_event(
     )
 
 
-# pylint: disable=no-self-use
 def create_state_changed_event_from_old_new(
     entity_id, event_time_fired, old_state, new_state
 ):
