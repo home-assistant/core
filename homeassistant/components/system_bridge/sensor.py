@@ -173,24 +173,23 @@ async def async_setup_entry(
             SystemBridgeSensor(coordinator, description, entry.data[CONF_PORT])
         )
 
-    # for key, _ in coordinator.data.filesystem.fsSize.items():
-    #     uid = key.replace(":", "")
-    #     entities.append(
-    #         SystemBridgeSensor(
-    #             coordinator,
-    #             SystemBridgeSensorEntityDescription(
-    #                 key=f"filesystem_{uid}",
-    #                 name=f"{key} Space Used",
-    #                 state_class=SensorStateClass.MEASUREMENT,
-    #                 native_unit_of_measurement=PERCENTAGE,
-    #                 icon="mdi:harddisk",
-    #                 value=lambda data, i=key: round(
-    #                     bridge.filesystem.fsSize[i]["use"], 2
-    #                 ),
-    #             ),
-    #             entry.data[CONF_PORT],
-    #         )
-    #     )
+    for key, _ in coordinator.data["disk"].items():
+        if "_percent" in key.lower():
+            partition = key.replace("usage_", "").replace("_percent", "")
+            entities.append(
+                SystemBridgeSensor(
+                    coordinator,
+                    SystemBridgeSensorEntityDescription(
+                        key=f"filesystem_{partition.replace(':', '')}",
+                        name=f"{partition} Space Used",
+                        state_class=SensorStateClass.MEASUREMENT,
+                        native_unit_of_measurement=PERCENTAGE,
+                        icon="mdi:harddisk",
+                        value=lambda data, i=key: data["disk"][i],
+                    ),
+                    entry.data[CONF_PORT],
+                )
+            )
 
     if (
         coordinator.data["battery"]
