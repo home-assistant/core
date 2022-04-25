@@ -118,7 +118,7 @@ class FritzboxThermostat(FritzBoxEntity, ClimateEntity):
         return HVACMode.HEAT
 
     @property
-    def hvac_modes(self) -> list[HVACMode]:  # type:ignore[override]
+    def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available operation modes."""
         return OPERATION_LIST
 
