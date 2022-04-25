@@ -6,7 +6,16 @@ from collections.abc import Callable
 from datetime import timedelta
 import logging
 
-from systembridgeconnector.const import TYPE_DATA_UPDATE
+from systembridgeconnector.const import (
+    EVENT_DATA,
+    EVENT_MESSAGE,
+    EVENT_MODULE,
+    EVENT_SUBTYPE,
+    EVENT_TYPE,
+    SUBTYPE_BAD_API_KEY,
+    TYPE_DATA_UPDATE,
+    TYPE_ERROR,
+)
 from systembridgeconnector.exceptions import (
     BadMessageException,
     ConnectionClosedException,
@@ -22,7 +31,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
@@ -32,7 +41,6 @@ MODULES = [
     "cpu",
     "disk",
     "memory",
-    # "network",
     "sensors",
     "system",
 ]
@@ -70,11 +78,18 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[dict]):
     async def async_handle_message(self, message: dict):
         """Handle messages from the WebSocket."""
         # No need to update anything, as everything is updated in the caller
-        self.logger.debug("New message from %s: %s", self.title, message["type"])
-        if message["type"] == TYPE_DATA_UPDATE:
-            self.logger.debug("Set new data for: %s", message["module"])
-            self.systembridge_data[message["module"]] = message["data"]
+        self.logger.debug("New message from %s: %s", self.title, message[EVENT_TYPE])
+        if message[EVENT_TYPE] == TYPE_DATA_UPDATE:
+            self.logger.debug("Set new data for: %s", message[EVENT_MODULE])
+            self.systembridge_data[message[EVENT_MODULE]] = message[EVENT_DATA]
             self.async_set_updated_data(self.systembridge_data)
+        elif message[EVENT_TYPE] == TYPE_ERROR:
+            if message[EVENT_SUBTYPE] == SUBTYPE_BAD_API_KEY:
+                self.logger.error(message[EVENT_MESSAGE])
+                raise ConfigEntryAuthFailed(message[EVENT_MESSAGE])
+            self.logger.warning(
+                "Error message from %s: %s", self.title, message[EVENT_DATA]
+            )
 
     async def _listen_for_events(self) -> None:
         """Listen for events from the WebSocket."""
@@ -110,7 +125,7 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[dict]):
             if self.unsub:
                 self.unsub()
                 self.unsub = None
-            raise ConfigEntryAuthFailed() from exception
+            raise ConfigEntryNotReady() from exception
 
         asyncio.create_task(self._listen_for_events())
 
