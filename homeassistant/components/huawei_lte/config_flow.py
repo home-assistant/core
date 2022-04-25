@@ -89,6 +89,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors or {},
         )
 
+    # flake8: noqa: C901
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -110,7 +111,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         def logout() -> None:
             try:
-                conn.user_session.user.logout()  # type: ignore[union-attr]
+                connection.user_session.user.logout()  # type: ignore[union-attr]
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.debug("Could not logout", exc_info=True)
 
@@ -118,17 +119,16 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             """Try connecting with given credentials."""
             username = user_input.get(CONF_USERNAME) or ""
             password = user_input.get(CONF_PASSWORD) or ""
-            conn = Connection(
+            return Connection(
                 user_input[CONF_URL],
                 username=username,
                 password=password,
                 timeout=CONNECTION_TIMEOUT,
             )
-            return conn
 
         def get_device_info() -> tuple[GetResponseType, GetResponseType]:
             """Get router info."""
-            client = Client(conn)
+            client = Client(connection)
             try:
                 device_info = client.device.information()
             except Exception:  # pylint: disable=broad-except
@@ -148,7 +148,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return device_info, wlan_settings
 
         try:
-            conn = await self.hass.async_add_executor_job(try_connect, user_input)
+            connection = await self.hass.async_add_executor_job(try_connect, user_input)
         except LoginErrorUsernameWrongException:
             errors[CONF_USERNAME] = "incorrect_username"
         except LoginErrorPasswordWrongException:
