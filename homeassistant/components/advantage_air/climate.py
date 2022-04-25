@@ -100,7 +100,7 @@ class AdvantageAirAC(AdvantageAirClimateEntity):
     """AdvantageAir AC unit."""
 
     _attr_fan_modes = [FAN_AUTO, FAN_LOW, FAN_MEDIUM, FAN_HIGH]
-    _attr_hvac_modes = AC_HVAC_MODES  # type:ignore[assignment]
+    _attr_hvac_modes = AC_HVAC_MODES
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
     )
