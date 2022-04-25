@@ -19,12 +19,58 @@ from homeassistant.setup import async_setup_component
 from tests.common import MockConfigEntry
 
 YAML_CONFIG = {"username": "test-user", "password": "test-password"}
-DEVICE_CONFIG = {
+DEVICE_CONFIG_OPEN = {
     "device_id": 533255,
     "door_number": 1,
     "name": "home",
     "status": "open",
     "link_status": "Connected",
+}
+
+DEVICE_CONFIG_OPENING = {
+    "device_id": 533255,
+    "door_number": 1,
+    "name": "home",
+    "status": "opening",
+    "link_status": "Connected",
+}
+
+DEVICE_CONFIG_CLOSED = {
+    "device_id": 533255,
+    "door_number": 1,
+    "name": "home",
+    "status": "closed",
+    "link_status": "Connected",
+}
+
+DEVICE_CONFIG_CLOSING = {
+    "device_id": 533255,
+    "door_number": 1,
+    "name": "home",
+    "status": "closing",
+    "link_status": "Connected",
+}
+
+DEVICE_CONFIG_DISCONNECTED = {
+    "device_id": 533255,
+    "door_number": 1,
+    "name": "home",
+    "status": "open",
+    "link_status": "Disconnected",
+}
+
+DEVICE_CONFIG_BAD = {
+    "device_id": 533255,
+    "door_number": 1,
+    "name": "home",
+    "status": "open",
+}
+DEVICE_CONFIG_BAD_NO_DOOR = {
+    "device_id": 533255,
+    "door_number": 2,
+    "name": "home",
+    "status": "open",
+    "link_status": "Disconnected",
 }
 
 
@@ -42,6 +88,7 @@ async def test_setup_component_authfailed(hass: HomeAssistant) -> None:
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
+        assert len(hass.states.async_all()) == 0
 
 
 async def test_setup_component_typeerror(hass: HomeAssistant) -> None:
@@ -58,6 +105,7 @@ async def test_setup_component_typeerror(hass: HomeAssistant) -> None:
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
+        assert len(hass.states.async_all()) == 0
 
 
 async def test_setup_component_keyerror(hass: HomeAssistant) -> None:
@@ -74,6 +122,7 @@ async def test_setup_component_keyerror(hass: HomeAssistant) -> None:
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
+        assert len(hass.states.async_all()) == 0
 
 
 async def test_setup_component_nameerror(hass: HomeAssistant) -> None:
@@ -90,6 +139,7 @@ async def test_setup_component_nameerror(hass: HomeAssistant) -> None:
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
+        assert len(hass.states.async_all()) == 0
 
 
 async def test_setup_component_valueerror(hass: HomeAssistant) -> None:
@@ -106,6 +156,7 @@ async def test_setup_component_valueerror(hass: HomeAssistant) -> None:
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
+        assert len(hass.states.async_all()) == 0
 
 
 async def test_setup_component_noerror(hass: HomeAssistant) -> None:
@@ -169,7 +220,7 @@ async def test_open_cover(hass: HomeAssistant) -> None:
         return_value=True,
     ), patch(
         "homeassistant.components.aladdin_connect.cover.AladdinConnectClient.get_doors",
-        return_value=[DEVICE_CONFIG],
+        return_value=[DEVICE_CONFIG_OPEN],
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -194,8 +245,8 @@ async def test_open_cover(hass: HomeAssistant) -> None:
             "cover", "close_cover", {"entity_id": "cover.home"}, blocking=True
         )
     with patch(
-        "homeassistant.components.aladdin_connect.cover.AladdinConnectClient.get_door_status",
-        return_value=STATE_CLOSED,
+        "homeassistant.components.aladdin_connect.cover.AladdinConnectClient.get_doors",
+        return_value=[DEVICE_CONFIG_CLOSED],
     ):
         await hass.services.async_call(
             "homeassistant", "update_entity", {"entity_id": "cover.home"}, blocking=True
@@ -203,8 +254,8 @@ async def test_open_cover(hass: HomeAssistant) -> None:
     assert hass.states.get("cover.home").state == STATE_CLOSED
 
     with patch(
-        "homeassistant.components.aladdin_connect.cover.AladdinConnectClient.get_door_status",
-        return_value=STATE_OPEN,
+        "homeassistant.components.aladdin_connect.cover.AladdinConnectClient.get_doors",
+        return_value=[DEVICE_CONFIG_OPEN],
     ):
         await hass.services.async_call(
             "homeassistant", "update_entity", {"entity_id": "cover.home"}, blocking=True
@@ -212,8 +263,8 @@ async def test_open_cover(hass: HomeAssistant) -> None:
     assert hass.states.get("cover.home").state == STATE_OPEN
 
     with patch(
-        "homeassistant.components.aladdin_connect.cover.AladdinConnectClient.get_door_status",
-        return_value=STATE_OPENING,
+        "homeassistant.components.aladdin_connect.cover.AladdinConnectClient.get_doors",
+        return_value=[DEVICE_CONFIG_OPENING],
     ):
         await hass.services.async_call(
             "homeassistant", "update_entity", {"entity_id": "cover.home"}, blocking=True
@@ -221,13 +272,29 @@ async def test_open_cover(hass: HomeAssistant) -> None:
     assert hass.states.get("cover.home").state == STATE_OPENING
 
     with patch(
-        "homeassistant.components.aladdin_connect.cover.AladdinConnectClient.get_door_status",
-        return_value=STATE_CLOSING,
+        "homeassistant.components.aladdin_connect.cover.AladdinConnectClient.get_doors",
+        return_value=[DEVICE_CONFIG_CLOSING],
     ):
         await hass.services.async_call(
             "homeassistant", "update_entity", {"entity_id": "cover.home"}, blocking=True
         )
     assert hass.states.get("cover.home").state == STATE_CLOSING
+
+    with patch(
+        "homeassistant.components.aladdin_connect.cover.AladdinConnectClient.get_doors",
+        return_value=[DEVICE_CONFIG_BAD],
+    ):
+        await hass.services.async_call(
+            "homeassistant", "update_entity", {"entity_id": "cover.home"}, blocking=True
+        )
+    # assert hass.states.get("cover.home").is_available is False
+    with patch(
+        "homeassistant.components.aladdin_connect.cover.AladdinConnectClient.get_doors",
+        return_value=[DEVICE_CONFIG_BAD_NO_DOOR],
+    ):
+        await hass.services.async_call(
+            "homeassistant", "update_entity", {"entity_id": "cover.home"}, blocking=True
+        )
 
 
 async def test_yaml_info_cover(hass):
