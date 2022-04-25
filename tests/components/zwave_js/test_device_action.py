@@ -38,28 +38,40 @@ async def test_get_actions(
             "type": "clear_lock_usercode",
             "device_id": device.id,
             "entity_id": "lock.touchscreen_deadbolt",
+            "metadata": {"secondary": False},
         },
         {
             "domain": DOMAIN,
             "type": "set_lock_usercode",
             "device_id": device.id,
             "entity_id": "lock.touchscreen_deadbolt",
+            "metadata": {"secondary": False},
+        },
+        {
+            "domain": DOMAIN,
+            "type": "refresh_value",
+            "device_id": device.id,
+            "entity_id": "binary_sensor.touchscreen_deadbolt_low_battery_level",
+            "metadata": {"secondary": True},
         },
         {
             "domain": DOMAIN,
             "type": "refresh_value",
             "device_id": device.id,
             "entity_id": "lock.touchscreen_deadbolt",
+            "metadata": {"secondary": False},
         },
         {
             "domain": DOMAIN,
             "type": "set_value",
             "device_id": device.id,
+            "metadata": {},
         },
         {
             "domain": DOMAIN,
             "type": "ping",
             "device_id": device.id,
+            "metadata": {},
         },
         {
             "domain": DOMAIN,
@@ -68,6 +80,7 @@ async def test_get_actions(
             "parameter": 3,
             "bitmask": None,
             "subtype": "3 (Beeper)",
+            "metadata": {},
         },
     ]
     actions = await async_get_device_automations(

@@ -6,6 +6,7 @@ import json
 from unittest.mock import patch, sentinel
 
 import pytest
+from sqlalchemy import text
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder import history
@@ -19,9 +20,7 @@ import homeassistant.core as ha
 from homeassistant.helpers.json import JSONEncoder
 import homeassistant.util.dt as dt_util
 
-from .conftest import SetupRecorderInstanceT
-
-from tests.common import mock_state_change_event
+from tests.common import SetupRecorderInstanceT, mock_state_change_event
 from tests.components.recorder.common import wait_recording_done
 
 
@@ -124,6 +123,62 @@ def test_get_states(hass_recorder):
     assert history.get_state(hass, time_before_recorder_ran, "demo.id") is None
 
 
+def test_get_full_significant_states_with_session_entity_no_matches(hass_recorder):
+    """Test getting states at a specific point in time for entities that never have been recorded."""
+    hass = hass_recorder()
+    now = dt_util.utcnow()
+    time_before_recorder_ran = now - timedelta(days=1000)
+    with recorder.session_scope(hass=hass) as session:
+        assert (
+            history.get_full_significant_states_with_session(
+                hass, session, time_before_recorder_ran, now, entity_ids=["demo.id"]
+            )
+            == {}
+        )
+        assert (
+            history.get_full_significant_states_with_session(
+                hass,
+                session,
+                time_before_recorder_ran,
+                now,
+                entity_ids=["demo.id", "demo.id2"],
+            )
+            == {}
+        )
+
+
+def test_significant_states_with_session_entity_minimal_response_no_matches(
+    hass_recorder,
+):
+    """Test getting states at a specific point in time for entities that never have been recorded."""
+    hass = hass_recorder()
+    now = dt_util.utcnow()
+    time_before_recorder_ran = now - timedelta(days=1000)
+    with recorder.session_scope(hass=hass) as session:
+        assert (
+            history.get_significant_states_with_session(
+                hass,
+                session,
+                time_before_recorder_ran,
+                now,
+                entity_ids=["demo.id"],
+                minimal_response=True,
+            )
+            == {}
+        )
+        assert (
+            history.get_significant_states_with_session(
+                hass,
+                session,
+                time_before_recorder_ran,
+                now,
+                entity_ids=["demo.id", "demo.id2"],
+                minimal_response=True,
+            )
+            == {}
+        )
+
+
 def test_get_states_no_attributes(hass_recorder):
     """Test getting states without attributes at a specific point in time."""
     hass = hass_recorder()
@@ -211,6 +266,48 @@ def test_state_changes_during_period(hass_recorder, attributes, no_attributes, l
     )
 
     assert states[:limit] == hist[entity_id]
+
+
+def test_state_changes_during_period_descending(hass_recorder):
+    """Test state change during period descending."""
+    hass = hass_recorder()
+    entity_id = "media_player.test"
+
+    def set_state(state):
+        """Set the state."""
+        hass.states.set(entity_id, state, {"any": 1})
+        wait_recording_done(hass)
+        return hass.states.get(entity_id)
+
+    start = dt_util.utcnow()
+    point = start + timedelta(seconds=1)
+    end = point + timedelta(seconds=1)
+
+    with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=start):
+        set_state("idle")
+        set_state("YouTube")
+
+    with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=point):
+        states = [
+            set_state("idle"),
+            set_state("Netflix"),
+            set_state("Plex"),
+            set_state("YouTube"),
+        ]
+
+    with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=end):
+        set_state("Netflix")
+        set_state("Plex")
+
+    hist = history.state_changes_during_period(
+        hass, start, end, entity_id, no_attributes=False, descending=False
+    )
+    assert states == hist[entity_id]
+
+    hist = history.state_changes_during_period(
+        hass, start, end, entity_id, no_attributes=False, descending=True
+    )
+    assert states == list(reversed(list(hist[entity_id])))
 
 
 def test_get_last_state_changes(hass_recorder):
@@ -572,8 +669,10 @@ async def test_state_changes_during_period_query_during_migration_to_schema_25(
     state = hist[entity_id][0]
     assert state.attributes == {"name": "the shared light"}
 
-    instance.engine.execute("update states set attributes_id=NULL;")
-    instance.engine.execute("drop table state_attributes;")
+    with instance.engine.connect() as conn:
+        conn.execute(text("update states set attributes_id=NULL;"))
+        conn.execute(text("drop table state_attributes;"))
+        conn.commit()
 
     with patch.object(instance, "migration_in_progress", True):
         no_attributes = True
@@ -614,8 +713,10 @@ async def test_get_states_query_during_migration_to_schema_25(
     state = hist[0]
     assert state.attributes == {"name": "the shared light"}
 
-    instance.engine.execute("update states set attributes_id=NULL;")
-    instance.engine.execute("drop table state_attributes;")
+    with instance.engine.connect() as conn:
+        conn.execute(text("update states set attributes_id=NULL;"))
+        conn.execute(text("drop table state_attributes;"))
+        conn.commit()
 
     with patch.object(instance, "migration_in_progress", True):
         no_attributes = True
@@ -655,8 +756,10 @@ async def test_get_states_query_during_migration_to_schema_25_multiple_entities(
     assert hist[0].attributes == {"name": "the shared light"}
     assert hist[1].attributes == {"name": "the shared light"}
 
-    instance.engine.execute("update states set attributes_id=NULL;")
-    instance.engine.execute("drop table state_attributes;")
+    with instance.engine.connect() as conn:
+        conn.execute(text("update states set attributes_id=NULL;"))
+        conn.execute(text("drop table state_attributes;"))
+        conn.commit()
 
     with patch.object(instance, "migration_in_progress", True):
         no_attributes = True

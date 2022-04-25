@@ -240,7 +240,6 @@ class BaseDiscoverySchemaDataTemplate:
         Can optionally be implemented by subclasses if input data needs to be
         transformed once discovered Value is available.
         """
-        # pylint: disable=no-self-use
         return {}
 
     def values_to_watch(self, resolved_data: Any) -> Iterable[ZwaveValue]:
@@ -249,7 +248,6 @@ class BaseDiscoverySchemaDataTemplate:
 
         Should be implemented by subclasses only if there are values to watch.
         """
-        # pylint: disable=no-self-use
         return []
 
     def value_ids_to_watch(self, resolved_data: Any) -> set[str]:

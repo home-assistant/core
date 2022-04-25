@@ -12,10 +12,9 @@ from homeassistant.components.light import (
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     PLATFORM_SCHEMA,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_EFFECT,
+    ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.const import CONF_HOSTS
 from homeassistant.core import HomeAssistant
@@ -27,8 +26,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.color as color_util
 
 _LOGGER = logging.getLogger(__name__)
-
-SUPPORT_EVERLIGHTS = SUPPORT_EFFECT | SUPPORT_BRIGHTNESS | SUPPORT_COLOR
 
 SCAN_INTERVAL = timedelta(minutes=1)
 
@@ -77,6 +74,10 @@ async def async_setup_platform(
 class EverLightsLight(LightEntity):
     """Representation of a Flux light."""
 
+    _attr_color_mode = ColorMode.HS
+    _attr_supported_color_modes = {ColorMode.HS}
+    _attr_supported_features = LightEntityFeature.EFFECT
+
     def __init__(self, api, channel, status, effects):
         """Initialize the light."""
         self._api = api
@@ -124,11 +125,6 @@ class EverLightsLight(LightEntity):
     def effect(self):
         """Return the effect property."""
         return self._effect
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_EVERLIGHTS
 
     @property
     def effect_list(self):

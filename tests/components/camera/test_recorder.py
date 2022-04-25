@@ -6,24 +6,29 @@ from datetime import timedelta
 from homeassistant.components import camera
 from homeassistant.components.recorder.models import StateAttributes, States
 from homeassistant.components.recorder.util import session_scope
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    ATTR_ENTITY_PICTURE,
+    ATTR_FRIENDLY_NAME,
+    ATTR_SUPPORTED_FEATURES,
+)
 from homeassistant.core import State
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import async_fire_time_changed, async_init_recorder_component
-from tests.components.recorder.common import async_wait_recording_done_without_instance
+from tests.common import async_fire_time_changed
+from tests.components.recorder.common import async_wait_recording_done
 
 
-async def test_exclude_attributes(hass):
+async def test_exclude_attributes(hass, recorder_mock):
     """Test camera registered attributes to be excluded."""
-    await async_init_recorder_component(hass)
     await async_setup_component(
         hass, camera.DOMAIN, {camera.DOMAIN: {"platform": "demo"}}
     )
     await hass.async_block_till_done()
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
     await hass.async_block_till_done()
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
 
     def _fetch_camera_states() -> list[State]:
         with session_scope(hass=hass) as session:
@@ -38,5 +43,7 @@ async def test_exclude_attributes(hass):
     assert len(states) > 1
     for state in states:
         assert "access_token" not in state.attributes
-        assert "entity_picture" not in state.attributes
-        assert "friendly_name" in state.attributes
+        assert ATTR_ENTITY_PICTURE not in state.attributes
+        assert ATTR_ATTRIBUTION not in state.attributes
+        assert ATTR_SUPPORTED_FEATURES not in state.attributes
+        assert ATTR_FRIENDLY_NAME in state.attributes

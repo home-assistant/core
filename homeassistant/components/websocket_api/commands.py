@@ -12,7 +12,6 @@ import voluptuous as vol
 from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_READ
 from homeassistant.const import (
     EVENT_STATE_CHANGED,
-    EVENT_TIME_CHANGED,
     MATCH_ALL,
     SIGNAL_BOOTSTRAP_INTEGRATONS,
 )
@@ -113,9 +112,6 @@ def handle_subscribe_events(
         @callback
         def forward_events(event: Event) -> None:
             """Forward events to websocket."""
-            if event.event_type == EVENT_TIME_CHANGED:
-                return
-
             connection.send_message(messages.cached_event_message(msg["id"], event))
 
     connection.subscriptions[msg["id"]] = hass.bus.async_listen(

@@ -32,6 +32,9 @@ def async_process_play_media_url(
     """Update a media URL with authentication if it points at Home Assistant."""
     parsed = yarl.URL(media_content_id)
 
+    if parsed.scheme and parsed.scheme not in ("http", "https"):
+        return media_content_id
+
     if parsed.is_absolute():
         if not is_hass_url(hass, media_content_id):
             return media_content_id

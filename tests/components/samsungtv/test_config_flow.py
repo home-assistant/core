@@ -43,6 +43,7 @@ from homeassistant.components.ssdp import (
     ATTR_UPNP_MANUFACTURER,
     ATTR_UPNP_MODEL_NAME,
     ATTR_UPNP_UDN,
+    SsdpServiceInfo,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -522,6 +523,21 @@ async def test_ssdp(hass: HomeAssistant) -> None:
     assert result["data"][CONF_MANUFACTURER] == "Samsung fake_manufacturer"
     assert result["data"][CONF_MODEL] == "fake_model"
     assert result["result"].unique_id == "0d1cef00-00dc-1000-9c80-4844f7b172de"
+
+
+@pytest.mark.parametrize(
+    "data", [MOCK_SSDP_DATA_MAIN_TV_AGENT_ST, MOCK_SSDP_DATA_RENDERING_CONTROL_ST]
+)
+@pytest.mark.usefixtures("remote", "rest_api_failing")
+async def test_ssdp_legacy_not_remote_control_receiver_udn(
+    hass: HomeAssistant, data: SsdpServiceInfo
+) -> None:
+    """Test we abort if the st is not usable for legacy discovery since it will have a different UDN."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_SSDP}, data=data
+    )
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == RESULT_NOT_SUPPORTED
 
 
 @pytest.mark.usefixtures("remote", "rest_api_failing")
@@ -1433,6 +1449,31 @@ async def test_update_missing_mac_unique_id_ssdp_location_added_from_ssdp(
     # Wrong st
     assert CONF_SSDP_RENDERING_CONTROL_LOCATION not in entry.data
     assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
+
+
+@pytest.mark.usefixtures(
+    "remote", "remotews", "remoteencws_failing", "rest_api_failing"
+)
+async def test_update_zeroconf_discovery_preserved_unique_id(
+    hass: HomeAssistant,
+) -> None:
+    """Test zeroconf discovery preserves unique id."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={**MOCK_OLD_ENTRY, CONF_MAC: "aa:bb:zz:ee:rr:oo"},
+        unique_id="original",
+    )
+    entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=MOCK_ZEROCONF_DATA,
+    )
+    await hass.async_block_till_done()
+    assert result["type"] == "abort"
+    assert result["reason"] == "not_supported"
+    assert entry.data[CONF_MAC] == "aa:bb:zz:ee:rr:oo"
+    assert entry.unique_id == "original"
 
 
 @pytest.mark.usefixtures("remotews", "rest_api", "remoteencws_failing")

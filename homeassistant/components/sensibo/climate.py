@@ -11,9 +11,7 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
-    SUPPORT_FAN_MODE,
-    SUPPORT_SWING_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
+    ClimateEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -36,9 +34,9 @@ from .entity import SensiboDeviceBaseEntity
 SERVICE_ASSUME_STATE = "assume_state"
 
 FIELD_TO_FLAG = {
-    "fanLevel": SUPPORT_FAN_MODE,
-    "swing": SUPPORT_SWING_MODE,
-    "targetTemperature": SUPPORT_TARGET_TEMPERATURE,
+    "fanLevel": ClimateEntityFeature.FAN_MODE,
+    "swing": ClimateEntityFeature.SWING_MODE,
+    "targetTemperature": ClimateEntityFeature.TARGET_TEMPERATURE,
 }
 
 SENSIBO_TO_HA = {

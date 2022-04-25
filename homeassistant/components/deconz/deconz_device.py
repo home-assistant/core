@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from pydeconz.group import Group as DeconzGroup, Scene as PydeconzScene
-from pydeconz.light import DeconzLight
-from pydeconz.sensor import DeconzSensor
+from pydeconz.models.group import Group as DeconzGroup
+from pydeconz.models.light import LightBase as DeconzLight
+from pydeconz.models.scene import Scene as PydeconzScene
+from pydeconz.models.sensor import SensorBase as DeconzSensor
 
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
@@ -20,7 +21,7 @@ class DeconzBase:
 
     def __init__(
         self,
-        device: DeconzGroup | DeconzLight | DeconzSensor,
+        device: DeconzGroup | DeconzLight | DeconzSensor | PydeconzScene,
         gateway: DeconzGateway,
     ) -> None:
         """Set up device and add update callback to get data from websocket."""
@@ -30,19 +31,21 @@ class DeconzBase:
     @property
     def unique_id(self) -> str:
         """Return a unique identifier for this device."""
+        assert not isinstance(self._device, PydeconzScene)
         return self._device.unique_id
 
     @property
     def serial(self) -> str | None:
         """Return a serial number for this device."""
+        assert not isinstance(self._device, PydeconzScene)
         if not self._device.unique_id or self._device.unique_id.count(":") != 7:
             return None
-
         return self._device.unique_id.split("-", 1)[0]
 
     @property
     def device_info(self) -> DeviceInfo | None:
         """Return a device description for device registry."""
+        assert not isinstance(self._device, PydeconzScene)
         if self.serial is None:
             return None
 
@@ -66,7 +69,7 @@ class DeconzDevice(DeconzBase, Entity):
 
     def __init__(
         self,
-        device: DeconzGroup | DeconzLight | DeconzSensor,
+        device: DeconzGroup | DeconzLight | DeconzSensor | PydeconzScene,
         gateway: DeconzGateway,
     ) -> None:
         """Set up device and add update callback to get data from websocket."""
@@ -109,6 +112,8 @@ class DeconzDevice(DeconzBase, Entity):
     @property
     def available(self) -> bool:
         """Return True if device is available."""
+        if isinstance(self._device, PydeconzScene):
+            return self.gateway.available
         return self.gateway.available and self._device.reachable
 
 
@@ -117,7 +122,11 @@ class DeconzSceneMixin(DeconzDevice):
 
     _device: PydeconzScene
 
-    def __init__(self, device: PydeconzScene, gateway: DeconzGateway) -> None:
+    def __init__(
+        self,
+        device: PydeconzScene,
+        gateway: DeconzGateway,
+    ) -> None:
         """Set up a scene."""
         super().__init__(device, gateway)
 
@@ -131,11 +140,6 @@ class DeconzSceneMixin(DeconzDevice):
     def get_parent_identifier(self) -> str:
         """Describe a unique identifier for group this scene belongs to."""
         return f"{self.gateway.bridgeid}-{self._device.group_deconz_id}"
-
-    @property
-    def available(self) -> bool:
-        """Return True if scene is available."""
-        return self.gateway.available
 
     @property
     def unique_id(self) -> str:

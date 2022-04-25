@@ -14,15 +14,13 @@ from tests.common import (
     init_recorder_component,
     mock_platform,
 )
-from tests.components.recorder.common import async_wait_recording_done_without_instance
+from tests.components.recorder.common import async_wait_recording_done
 
 
 @pytest.fixture(autouse=True)
-async def setup_integration(hass):
+async def setup_integration(hass, recorder_mock):
     """Set up the integration."""
-    assert await async_setup_component(
-        hass, "energy", {"recorder": {"db_url": "sqlite://"}}
-    )
+    assert await async_setup_component(hass, "energy", {})
 
 
 @pytest.fixture
@@ -391,7 +389,7 @@ async def test_fossil_energy_consumption_no_co2(hass, hass_ws_client):
     async_add_external_statistics(
         hass, external_energy_metadata_2, external_energy_statistics_2
     )
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
 
     client = await hass_ws_client()
     await client.send_json(
@@ -552,7 +550,7 @@ async def test_fossil_energy_consumption_hole(hass, hass_ws_client):
     async_add_external_statistics(
         hass, external_energy_metadata_2, external_energy_statistics_2
     )
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
 
     client = await hass_ws_client()
     await client.send_json(
@@ -711,7 +709,7 @@ async def test_fossil_energy_consumption_no_data(hass, hass_ws_client):
     async_add_external_statistics(
         hass, external_energy_metadata_2, external_energy_statistics_2
     )
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
 
     client = await hass_ws_client()
     await client.send_json(
@@ -892,7 +890,7 @@ async def test_fossil_energy_consumption(hass, hass_ws_client):
         hass, external_energy_metadata_2, external_energy_statistics_2
     )
     async_add_external_statistics(hass, external_co2_metadata, external_co2_statistics)
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
 
     client = await hass_ws_client()
     await client.send_json(

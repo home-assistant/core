@@ -6,7 +6,7 @@ import voluptuous as vol
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     PLATFORM_SCHEMA,
-    SUPPORT_BRIGHTNESS,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.const import CONF_LIGHTS
@@ -49,6 +49,9 @@ def setup_platform(
 class PilightLight(PilightBaseDevice, LightEntity):
     """Representation of a Pilight switch."""
 
+    _attr_color_mode = ColorMode.BRIGHTNESS
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+
     def __init__(self, hass, name, config):
         """Initialize a switch."""
         super().__init__(hass, name, config)
@@ -59,11 +62,6 @@ class PilightLight(PilightBaseDevice, LightEntity):
     def brightness(self):
         """Return the brightness."""
         return self._brightness
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_BRIGHTNESS
 
     def turn_on(self, **kwargs):
         """Turn the switch on by calling pilight.send service with on code."""
