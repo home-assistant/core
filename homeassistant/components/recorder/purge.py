@@ -120,7 +120,8 @@ def _select_unused_attributes_ids(
 
     #
     # We are jumping through hoops a bit here to handle
-    # a case where MySQL cannot optimize this well
+    # a case where MySQL cannot optimize this well. Ironiclly
+    # sqlite is faster with either query.
     #
     # We used to do a select distinct on attributes_id, unfortunately
     # MariaDB/MySQL cannot optimize that query well and has to examine
