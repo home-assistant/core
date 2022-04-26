@@ -46,7 +46,6 @@ class WallboxSwitch(WallboxEntity, SwitchEntity):
         description: SwitchEntityDescription,
     ) -> None:
         """Initialize a Wallbox switch."""
-
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_name = f"{entry.title} {description.name}"
