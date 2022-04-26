@@ -10,6 +10,7 @@ from time import sleep
 from fritzconnection.core.fritzmonitor import FritzMonitor
 import voluptuous as vol
 
+from homeassistant.backports.enum import StrEnum
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
@@ -20,7 +21,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -44,16 +45,22 @@ from .const import (
     ICON_PHONE,
     MANUFACTURER,
     SERIAL_NUMBER,
-    STATE_DIALING,
-    STATE_IDLE,
-    STATE_RINGING,
-    STATE_TALKING,
     UNKNOWN_NAME,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(hours=3)
+
+
+class CallState(StrEnum):
+    """Fritz sensor call states."""
+
+    RINGING = "ringing"
+    DIALING = "dialing"
+    TALKING = "talking"
+    IDLE = "idle"
+
 
 # Deprecated in Home Assistant 2022.3
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -116,10 +123,6 @@ async def async_setup_entry(
         port=port,
     )
 
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, sensor.async_will_remove_from_hass()
-    )
-
     async_add_entities([sensor])
 
 
@@ -128,7 +131,7 @@ class FritzBoxCallSensor(SensorEntity):
 
     def __init__(self, name, unique_id, fritzbox_phonebook, prefixes, host, port):
         """Initialize the sensor."""
-        self._state = STATE_IDLE
+        self._state: CallState = CallState.IDLE
         self._attributes = {}
         self._name = name.title()
         self._unique_id = unique_id
@@ -138,8 +141,23 @@ class FritzBoxCallSensor(SensorEntity):
         self._port = port
         self._monitor = None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Connect to FRITZ!Box to monitor its call state."""
+        await super().async_added_to_hass()
+        await self.hass.async_add_executor_job(self._start_call_monitor)
+        self.async_on_remove(
+            self.hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_STOP, self._stop_call_monitor
+            )
+        )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Disconnect from FRITZ!Box by stopping monitor."""
+        await super().async_will_remove_from_hass()
+        await self.hass.async_add_executor_job(self._stop_call_monitor)
+
+    def _start_call_monitor(self) -> None:
+        """Check connection and start callmonitor thread."""
         _LOGGER.debug("Starting monitor for: %s", self.entity_id)
         self._monitor = FritzBoxCallMonitor(
             host=self._host,
@@ -148,8 +166,8 @@ class FritzBoxCallSensor(SensorEntity):
         )
         self._monitor.connect()
 
-    async def async_will_remove_from_hass(self):
-        """Disconnect from FRITZ!Box by stopping monitor."""
+    def _stop_call_monitor(self, event: Event | None = None) -> None:
+        """Stop callmonitor thread."""
         if (
             self._monitor
             and self._monitor.stopped
@@ -161,7 +179,7 @@ class FritzBoxCallSensor(SensorEntity):
             self._monitor.connection.stop()
             _LOGGER.debug("Stopped monitor for: %s", self.entity_id)
 
-    def set_state(self, state):
+    def set_state(self, state: CallState) -> None:
         """Set the state."""
         self._state = state
 
@@ -271,7 +289,7 @@ class FritzBoxCallMonitor:
         df_out = "%Y-%m-%dT%H:%M:%S"
         isotime = datetime.strptime(line[0], df_in).strftime(df_out)
         if line[1] == FRITZ_STATE_RING:
-            self._sensor.set_state(STATE_RINGING)
+            self._sensor.set_state(CallState.RINGING)
             att = {
                 "type": "incoming",
                 "from": line[3],
@@ -282,7 +300,7 @@ class FritzBoxCallMonitor:
             }
             self._sensor.set_attributes(att)
         elif line[1] == FRITZ_STATE_CALL:
-            self._sensor.set_state(STATE_DIALING)
+            self._sensor.set_state(CallState.DIALING)
             att = {
                 "type": "outgoing",
                 "from": line[4],
@@ -293,7 +311,7 @@ class FritzBoxCallMonitor:
             }
             self._sensor.set_attributes(att)
         elif line[1] == FRITZ_STATE_CONNECT:
-            self._sensor.set_state(STATE_TALKING)
+            self._sensor.set_state(CallState.TALKING)
             att = {
                 "with": line[4],
                 "device": line[3],
@@ -302,7 +320,7 @@ class FritzBoxCallMonitor:
             }
             self._sensor.set_attributes(att)
         elif line[1] == FRITZ_STATE_DISCONNECT:
-            self._sensor.set_state(STATE_IDLE)
+            self._sensor.set_state(CallState.IDLE)
             att = {"duration": line[3], "closed": isotime}
             self._sensor.set_attributes(att)
         self._sensor.schedule_update_ha_state()

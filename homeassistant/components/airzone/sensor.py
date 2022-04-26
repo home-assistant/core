@@ -16,11 +16,11 @@ from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AirzoneEntity
+from . import AirzoneEntity, AirzoneZoneEntity
 from .const import DOMAIN, TEMP_UNIT_LIB_TO_HASS
 from .coordinator import AirzoneUpdateCoordinator
 
-SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
+ZONE_SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
     SensorEntityDescription(
         device_class=SensorDeviceClass.TEMPERATURE,
         key=AZD_TEMP,
@@ -44,12 +44,12 @@ async def async_setup_entry(
     """Add Airzone sensors from a config_entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
-    sensors = []
+    sensors: list[AirzoneSensor] = []
     for system_zone_id, zone_data in coordinator.data[AZD_ZONES].items():
-        for description in SENSOR_TYPES:
+        for description in ZONE_SENSOR_TYPES:
             if description.key in zone_data:
                 sensors.append(
-                    AirzoneSensor(
+                    AirzoneZoneSensor(
                         coordinator,
                         description,
                         entry,
@@ -64,6 +64,15 @@ async def async_setup_entry(
 class AirzoneSensor(AirzoneEntity, SensorEntity):
     """Define an Airzone sensor."""
 
+    @property
+    def native_value(self):
+        """Return the state."""
+        return self.get_airzone_value(self.entity_description.key)
+
+
+class AirzoneZoneSensor(AirzoneZoneEntity, AirzoneSensor):
+    """Define an Airzone Zone sensor."""
+
     def __init__(
         self,
         coordinator: AirzoneUpdateCoordinator,
@@ -74,16 +83,14 @@ class AirzoneSensor(AirzoneEntity, SensorEntity):
     ) -> None:
         """Initialize."""
         super().__init__(coordinator, entry, system_zone_id, zone_data)
+
         self._attr_name = f"{zone_data[AZD_NAME]} {description.name}"
-        self._attr_unique_id = f"{entry.entry_id}_{system_zone_id}_{description.key}"
+        self._attr_unique_id = (
+            f"{self._attr_unique_id}_{system_zone_id}_{description.key}"
+        )
         self.entity_description = description
 
         if description.key == AZD_TEMP:
             self._attr_native_unit_of_measurement = TEMP_UNIT_LIB_TO_HASS.get(
-                self.get_zone_value(AZD_TEMP_UNIT)
+                self.get_airzone_value(AZD_TEMP_UNIT)
             )
-
-    @property
-    def native_value(self):
-        """Return the state."""
-        return self.get_zone_value(self.entity_description.key)

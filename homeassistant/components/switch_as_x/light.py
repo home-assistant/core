@@ -1,7 +1,7 @@
 """Light support for switch entities."""
 from __future__ import annotations
 
-from homeassistant.components.light import COLOR_MODE_ONOFF, LightEntity
+from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ENTITY_ID
 from homeassistant.core import HomeAssistant
@@ -39,5 +39,5 @@ async def async_setup_entry(
 class LightSwitch(BaseToggleEntity, LightEntity):
     """Represents a Switch as a Light."""
 
-    _attr_color_mode = COLOR_MODE_ONOFF
-    _attr_supported_color_modes = {COLOR_MODE_ONOFF}
+    _attr_color_mode = ColorMode.ONOFF
+    _attr_supported_color_modes = {ColorMode.ONOFF}

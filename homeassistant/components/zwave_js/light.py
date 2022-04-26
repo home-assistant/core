@@ -30,13 +30,10 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     ATTR_RGBW_COLOR,
     ATTR_TRANSITION,
-    COLOR_MODE_BRIGHTNESS,
-    COLOR_MODE_COLOR_TEMP,
-    COLOR_MODE_HS,
-    COLOR_MODE_RGBW,
     DOMAIN as LIGHT_DOMAIN,
-    SUPPORT_TRANSITION,
+    ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -141,13 +138,13 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
 
         self._calculate_color_values()
         if self._supports_rgbw:
-            self._supported_color_modes.add(COLOR_MODE_RGBW)
+            self._supported_color_modes.add(ColorMode.RGBW)
         elif self._supports_color:
-            self._supported_color_modes.add(COLOR_MODE_HS)
+            self._supported_color_modes.add(ColorMode.HS)
         if self._supports_color_temp:
-            self._supported_color_modes.add(COLOR_MODE_COLOR_TEMP)
+            self._supported_color_modes.add(ColorMode.COLOR_TEMP)
         if not self._supported_color_modes:
-            self._supported_color_modes.add(COLOR_MODE_BRIGHTNESS)
+            self._supported_color_modes.add(ColorMode.BRIGHTNESS)
 
         # Entity class attributes
         self._attr_supported_features = 0
@@ -163,7 +160,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         )
 
         if self.supports_brightness_transition or self.supports_color_transition:
-            self._attr_supported_features |= SUPPORT_TRANSITION
+            self._attr_supported_features |= LightEntityFeature.TRANSITION
 
     @callback
     def on_value_update(self) -> None:
@@ -392,7 +389,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             multi_color = {}
 
         # Default: Brightness (no color)
-        self._color_mode = COLOR_MODE_BRIGHTNESS
+        self._color_mode = ColorMode.BRIGHTNESS
 
         # RGB support
         if red_val and green_val and blue_val:
@@ -405,7 +402,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
                 # convert to HS
                 self._hs_color = color_util.color_RGB_to_hs(red, green, blue)
                 # Light supports color, set color mode to hs
-                self._color_mode = COLOR_MODE_HS
+                self._color_mode = ColorMode.HS
 
         # color temperature support
         if ww_val and cw_val:
@@ -419,7 +416,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
                     - ((cold_white / 255) * (self._max_mireds - self._min_mireds))
                 )
                 # White channels turned on, set color mode to color_temp
-                self._color_mode = COLOR_MODE_COLOR_TEMP
+                self._color_mode = ColorMode.COLOR_TEMP
             else:
                 self._color_temp = None
         # only one white channel (warm white) = rgbw support
@@ -428,14 +425,14 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             white = multi_color.get(COLOR_SWITCH_COMBINED_WARM_WHITE, ww_val.value)
             self._rgbw_color = (red, green, blue, white)
             # Light supports rgbw, set color mode to rgbw
-            self._color_mode = COLOR_MODE_RGBW
+            self._color_mode = ColorMode.RGBW
         # only one white channel (cool white) = rgbw support
         elif cw_val:
             self._supports_rgbw = True
             white = multi_color.get(COLOR_SWITCH_COMBINED_COLD_WHITE, cw_val.value)
             self._rgbw_color = (red, green, blue, white)
             # Light supports rgbw, set color mode to rgbw
-            self._color_mode = COLOR_MODE_RGBW
+            self._color_mode = ColorMode.RGBW
 
 
 class ZwaveBlackIsOffLight(ZwaveLight):
@@ -452,7 +449,7 @@ class ZwaveBlackIsOffLight(ZwaveLight):
         super().__init__(config_entry, client, info)
 
         self._last_color: dict[str, int] | None = None
-        self._supported_color_modes.discard(COLOR_MODE_BRIGHTNESS)
+        self._supported_color_modes.discard(ColorMode.BRIGHTNESS)
 
     @property
     def brightness(self) -> int:

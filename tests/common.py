@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import OrderedDict
-from collections.abc import Awaitable, Collection
+from collections.abc import Awaitable, Callable, Collection
 from contextlib import contextmanager
 from datetime import datetime, timedelta
 import functools as ft
@@ -292,8 +292,6 @@ async def async_test_home_assistant(loop, load_registries=True):
             "_": "Not empty or else some bad checks for hass config in discovery.py breaks"
         },
     )
-    hass.config_entries._entries = {}
-    hass.config_entries._store._async_ensure_stop_listener = lambda: None
 
     # Load the registries
     if load_registries:
@@ -894,6 +892,9 @@ def assert_setup_component(count, domain=None):
     assert (
         res_len == count
     ), f"setup_component failed, expected {count} got {res_len}: {res}"
+
+
+SetupRecorderInstanceT = Callable[..., Awaitable[recorder.Recorder]]
 
 
 def init_recorder_component(hass, add_config=None):

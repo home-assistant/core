@@ -14,7 +14,7 @@ from homeassistant.components.light import (
     ATTR_SUPPORTED_COLOR_MODES,
     ATTR_TRANSITION,
     DOMAIN as LIGHT_DOMAIN,
-    SUPPORT_TRANSITION,
+    LightEntityFeature,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -44,7 +44,7 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
     assert state.state == STATE_OFF
     assert state.attributes[ATTR_MIN_MIREDS] == 153
     assert state.attributes[ATTR_MAX_MIREDS] == 370
-    assert state.attributes[ATTR_SUPPORTED_FEATURES] == SUPPORT_TRANSITION
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == LightEntityFeature.TRANSITION
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == ["color_temp", "hs"]
 
     # Test turning on
@@ -478,7 +478,7 @@ async def test_rgbw_light(hass, client, zen_31, integration):
 
     assert state
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_SUPPORTED_FEATURES] == SUPPORT_TRANSITION
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == LightEntityFeature.TRANSITION
 
     # Test turning on
     await hass.services.async_call(
@@ -543,7 +543,7 @@ async def test_light_none_color_value(hass, light_color_null_values, integration
 
     assert state
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_SUPPORTED_FEATURES] == SUPPORT_TRANSITION
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == LightEntityFeature.TRANSITION
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == ["hs"]
 
 
