@@ -9,8 +9,8 @@ from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     DOMAIN as CLIMATE_DOMAIN,
-    HVAC_MODE_AUTO,
-    HVAC_MODE_FAN_ONLY,
+    FAN_AUTO,
+    FAN_ON,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
@@ -46,7 +46,7 @@ HVAC_MODES = {
     2: HVACMode.COOL,
     3: HVACMode.HEAT_COOL,
 }
-FAN_MODES = {4: HVAC_MODE_AUTO, 8: HVAC_MODE_FAN_ONLY}
+FAN_MODES = {4: FAN_AUTO, 8: FAN_ON}
 
 
 async def async_setup_entry(
