@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from meater.MeaterApi import MeaterProbe
 
@@ -30,27 +30,31 @@ from .const import DOMAIN
 class MeaterSensorEntityDescription(SensorEntityDescription):
     """Describes meater sensor entity."""
 
-    available: Callable = lambda x: NotImplementedError
-    value: Callable = lambda x: NotImplementedError
+    available: Callable[
+        [MeaterProbe | None], bool | type[NotImplementedError]
+    ] = lambda x: NotImplementedError
+    value: Callable[
+        [MeaterProbe], datetime | float | str | None | type[NotImplementedError]
+    ] = lambda x: NotImplementedError
 
 
-def _elapsed_time_to_timestamp(probe: MeaterProbe):
+def _elapsed_time_to_timestamp(probe: MeaterProbe) -> datetime | None:
     """Convert elapsed time to timestamp."""
     if not probe.cook:
         return None
     return dt_util.utcnow() - timedelta(seconds=probe.cook.time_elapsed)
 
 
-def _remaining_time_to_timestamp(probe: MeaterProbe):
+def _remaining_time_to_timestamp(probe: MeaterProbe) -> datetime | None:
     """Convert remaining time to timestamp."""
     if not probe.cook or probe.cook.time_remaining < 0:
         return None
     return dt_util.utcnow() + timedelta(probe.cook.time_remaining)
 
 
-SENSOR_TYPES: dict[str, MeaterSensorEntityDescription] = {
+SENSOR_TYPES = (
     # Ambient temperature
-    "ambient": MeaterSensorEntityDescription(
+    MeaterSensorEntityDescription(
         key="ambient",
         device_class=SensorDeviceClass.TEMPERATURE,
         name="Ambient",
@@ -60,7 +64,7 @@ SENSOR_TYPES: dict[str, MeaterSensorEntityDescription] = {
         value=lambda probe: probe.ambient_temperature,
     ),
     # Internal temperature (probe tip)
-    "internal": MeaterSensorEntityDescription(
+    MeaterSensorEntityDescription(
         key="internal",
         device_class=SensorDeviceClass.TEMPERATURE,
         name="Internal",
@@ -70,7 +74,7 @@ SENSOR_TYPES: dict[str, MeaterSensorEntityDescription] = {
         value=lambda probe: probe.internal_temperature,
     ),
     # Name of selected meat in user language or user given custom name
-    "cook_name": MeaterSensorEntityDescription(
+    MeaterSensorEntityDescription(
         key="cook_name",
         name="Cooking",
         available=lambda probe: probe is not None and probe.cook is not None,
@@ -78,14 +82,14 @@ SENSOR_TYPES: dict[str, MeaterSensorEntityDescription] = {
     ),
     # One of Not Started, Configured, Started, Ready For Resting, Resting,
     # Slightly Underdone, Finished, Slightly Overdone, OVERCOOK!. Not translated.
-    "cook_state": MeaterSensorEntityDescription(
+    MeaterSensorEntityDescription(
         key="cook_state",
         name="Cook state",
         available=lambda probe: probe is not None and probe.cook is not None,
         value=lambda probe: probe.cook.state if probe.cook else None,
     ),
     # Target temperature
-    "cook_target_temp": MeaterSensorEntityDescription(
+    MeaterSensorEntityDescription(
         key="cook_target_temp",
         device_class=SensorDeviceClass.TEMPERATURE,
         name="Target",
@@ -95,7 +99,7 @@ SENSOR_TYPES: dict[str, MeaterSensorEntityDescription] = {
         value=lambda probe: probe.cook.target_temperature if probe.cook else None,
     ),
     # Peak temperature
-    "cook_peak_temp": MeaterSensorEntityDescription(
+    MeaterSensorEntityDescription(
         key="cook_peak_temp",
         device_class=SensorDeviceClass.TEMPERATURE,
         name="Peak",
@@ -105,7 +109,7 @@ SENSOR_TYPES: dict[str, MeaterSensorEntityDescription] = {
         value=lambda probe: probe.cook.peak_temperature if probe.cook else None,
     ),
     # Time since the start of cook in seconds. Default: 0.
-    "cook_time_remaining": MeaterSensorEntityDescription(
+    MeaterSensorEntityDescription(
         key="cook_time_remaining",
         device_class=SensorDeviceClass.TIMESTAMP,
         name="Remaining time",
@@ -113,14 +117,14 @@ SENSOR_TYPES: dict[str, MeaterSensorEntityDescription] = {
         value=_remaining_time_to_timestamp,
     ),
     # Remaining time in seconds. When unknown/calculating default is used. Default: -1
-    "cook_time_elapsed": MeaterSensorEntityDescription(
+    MeaterSensorEntityDescription(
         key="cook_time_elapsed",
         device_class=SensorDeviceClass.TIMESTAMP,
         name="Elapsed time",
         available=lambda probe: probe is not None and probe.cook is not None,
         value=_elapsed_time_to_timestamp,
     ),
-}
+)
 
 
 async def async_setup_entry(
@@ -149,7 +153,7 @@ async def async_setup_entry(
             entities.extend(
                 [
                     MeaterProbeTemperature(coordinator, dev, sensor_description)
-                    for sensor_description in SENSOR_TYPES.values()
+                    for sensor_description in SENSOR_TYPES
                 ]
             )
             known_probes.add(dev)
