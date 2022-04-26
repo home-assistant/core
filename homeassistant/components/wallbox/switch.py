@@ -57,7 +57,6 @@ class WallboxSwitch(WallboxEntity, SwitchEntity):
 
         super().__init__(coordinator)
         self.entity_description = description
-        self._coordinator = coordinator
         self._attr_name = f"{entry.title} {description.name}"
         self._attr_unique_id = f"{description.key}-{coordinator.data[CHARGER_DATA_KEY][CHARGER_SERIAL_NUMBER_KEY]}"
 
