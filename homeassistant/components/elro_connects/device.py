@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import timedelta
+import logging
 from typing import Any
 
 from elro.api import K1
@@ -12,6 +13,7 @@ from elro.utils import update_state_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_NAME, CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -19,6 +21,8 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import CONF_UPDATE_INTERVAL, DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class ElroConnectsK1(K1):
@@ -106,7 +110,17 @@ class ElroConnectsEntity(CoordinatorEntity):
     @callback
     def _handle_coordinator_update(self):
         """Fetch state from the device."""
-        self.data = self.coordinator.data[self._device_id]
+        if self._device_id in self.coordinator.data:
+            self.data = self.coordinator.data[self._device_id]
+        else:
+            # device removed, remove entity
+            _LOGGER.info(
+                "Entity %s was removed from the connector, cleaning up", self.entity_id
+            )
+            entity_registry = er.async_get(self.hass)
+            if entity_registry.async_get(self.entity_id):
+                entity_registry.async_remove(self.entity_id)
+
         self.async_write_ha_state()
 
     @property

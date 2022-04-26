@@ -3,7 +3,7 @@
   "name": "Elro Connects",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/elro_connects",
-  "requirements": ["lib-elro-connects==0.4.0"],
+  "requirements": ["lib-elro-connects==0.4.1"],
   "codeowners": ["@jbouwh"],
   "iot_class": "local_polling"
 }
