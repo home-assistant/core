@@ -3,17 +3,15 @@ from __future__ import annotations
 
 import asyncio
 
-from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
     FAN_OFF,
-    HVAC_MODE_AUTO,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -67,9 +65,9 @@ class BalboaSpaClimate(BalboaEntity, ClimateEntity):
             value: key for key, value in self._balboa_to_ha_blower_map.items()
         }
         self._balboa_to_ha_heatmode_map = {
-            self._client.HEATMODE_READY: HVAC_MODE_HEAT,
-            self._client.HEATMODE_RNR: HVAC_MODE_AUTO,
-            self._client.HEATMODE_REST: HVAC_MODE_OFF,
+            self._client.HEATMODE_READY: HVACMode.HEAT,
+            self._client.HEATMODE_RNR: HVACMode.AUTO,
+            self._client.HEATMODE_REST: HVACMode.OFF,
         }
         self._ha_heatmode_to_balboa_map = {
             value: key for key, value in self._balboa_to_ha_heatmode_map.items()
@@ -99,8 +97,8 @@ class BalboaSpaClimate(BalboaEntity, ClimateEntity):
     def hvac_action(self) -> str:
         """Return the current operation mode."""
         if self._client.get_heatstate() >= self._client.ON:
-            return CURRENT_HVAC_HEAT
-        return CURRENT_HVAC_IDLE
+            return HVACAction.HEATING
+        return HVACAction.IDLE
 
     @property
     def fan_mode(self) -> str:
