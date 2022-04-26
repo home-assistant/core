@@ -121,13 +121,19 @@ def socket_enabled(pytestconfig):
         disable_socket(allow_unix_socket=True)
 
 
+# Hold on to the original socket.socket so we do not have
+# a long inheritance chain since disable_socket
+# is called many time
+original_socket_socket = socket.socket
+
+
 def disable_socket(allow_unix_socket=False):
     """Disable socket.socket to disable the Internet. useful in testing.
 
     This incorporates changes from https://github.com/miketheman/pytest-socket/pull/75
     """
 
-    class GuardedSocket(socket.socket):
+    class GuardedSocket(original_socket_socket):
         """socket guard to disable socket creation (from pytest-socket)."""
 
         def __new__(cls, *args, **kwargs):
