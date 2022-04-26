@@ -14,10 +14,19 @@ import time
 from typing import Any, TypeVar, cast
 
 from lru import LRU  # pylint: disable=no-name-in-module
-from sqlalchemy import create_engine, event as sqlalchemy_event, exc, func, select
+from sqlalchemy import (
+    bindparam,
+    create_engine,
+    event as sqlalchemy_event,
+    exc,
+    func,
+    select,
+)
 from sqlalchemy.engine import Engine
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.ext import baked
 from sqlalchemy.orm import scoped_session, sessionmaker
+from sqlalchemy.orm.query import Query
 from sqlalchemy.orm.session import Session
 import voluptuous as vol
 
@@ -279,6 +288,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         entity_filter=entity_filter,
         exclude_t=exclude_t,
         exclude_attributes_by_domain=exclude_attributes_by_domain,
+        bakery=baked.bakery(),
     )
     instance.async_initialize()
     instance.async_register()
@@ -600,6 +610,7 @@ class Recorder(threading.Thread):
         entity_filter: Callable[[str], bool],
         exclude_t: list[str],
         exclude_attributes_by_domain: dict[str, set[str]],
+        bakery: baked.bakery,
     ) -> None:
         """Initialize the recorder."""
         threading.Thread.__init__(self, name="Recorder")
@@ -628,6 +639,8 @@ class Recorder(threading.Thread):
         self._state_attributes_ids: LRU = LRU(STATE_ATTRIBUTES_ID_CACHE_SIZE)
         self._pending_state_attributes: dict[str, StateAttributes] = {}
         self._pending_expunge: list[States] = []
+        self._bakery = bakery
+        self._find_shared_attr_query: Query | None = None
         self.event_session: Session | None = None
         self.get_session: Callable[[], Session] | None = None
         self._completed_first_database_setup: bool | None = None
@@ -1130,11 +1143,21 @@ class Recorder(threading.Thread):
         # need to flush before checking the database.
         #
         assert self.event_session is not None
+        if self._find_shared_attr_query is None:
+            baked_query = self._bakery(
+                lambda session: session.query(StateAttributes.attributes_id)
+            )
+            baked_query += lambda q: q.filter(
+                StateAttributes.hash == bindparam("attr_hash")
+            )
+            baked_query += lambda q: q.filter(
+                StateAttributes.shared_attrs == bindparam("shared_attrs")
+            )
+            self._find_shared_attr_query = baked_query
         with self.event_session.no_autoflush:
             if (
-                attributes := self.event_session.query(StateAttributes.attributes_id)
-                .filter(StateAttributes.hash == attr_hash)
-                .filter(StateAttributes.shared_attrs == shared_attrs)
+                attributes := self._find_shared_attr_query(self.event_session)
+                .params(attr_hash=attr_hash, shared_attrs=shared_attrs)
                 .first()
             ):
                 return cast(int, attributes[0])
