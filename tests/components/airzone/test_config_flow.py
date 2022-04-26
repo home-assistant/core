@@ -16,7 +16,7 @@ from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_ID, CONF_PORT
 from homeassistant.core import HomeAssistant
 
-from .util import CONFIG, CONFIG_ID1, HVAC_MOCK
+from .util import CONFIG, CONFIG_ID1, HVAC_MOCK, HVAC_WEBSERVER_MOCK
 
 from tests.common import MockConfigEntry
 
@@ -35,7 +35,7 @@ async def test_form(hass: HomeAssistant) -> None:
         side_effect=SystemOutOfRange,
     ), patch(
         "homeassistant.components.airzone.AirzoneLocalApi.get_webserver",
-        side_effect=InvalidMethod,
+        return_value=HVAC_WEBSERVER_MOCK,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
@@ -118,8 +118,12 @@ async def test_form_invalid_system_id(hass: HomeAssistant) -> None:
 async def test_form_duplicated_id(hass: HomeAssistant) -> None:
     """Test setting up duplicated entry."""
 
-    entry = MockConfigEntry(domain=DOMAIN, data=CONFIG)
-    entry.add_to_hass(hass)
+    config_entry = MockConfigEntry(
+        data=CONFIG,
+        domain=DOMAIN,
+        unique_id="airzone_unique_id",
+    )
+    config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
