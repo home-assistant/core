@@ -1,4 +1,5 @@
 """Constants for the Wallbox integration."""
+from homeassistant.backports.enum import StrEnum
 
 DOMAIN = "wallbox"
 
@@ -25,3 +26,25 @@ CHARGER_STATE_OF_CHARGE_KEY = "state_of_charge"
 CHARGER_STATUS_ID_KEY = "status_id"
 CHARGER_STATUS_DESCRIPTION_KEY = "status_description"
 CHARGER_CONNECTIONS = "connections"
+
+
+class ChargerStatus(StrEnum):
+    """Charger Status Description."""
+
+    CHARGING = "Charging"
+    DISCHARGING = "Discharging"
+    PAUSED = "Paused"
+    SCHEDULED = "Scheduled"
+    WAITING_FOR_CAR = "Waiting for car demand"
+    WAITING = "Waiting"
+    DISCONNECTED = "Disconnected"
+    ERROR = "Error"
+    READY = "Ready"
+    LOCKED = "Locked"
+    UPDATING = "Updating"
+    WAITING_IN_QUEUE_POWER_SHARING = "Waiting in queue by Power Sharing"
+    WAITING_IN_QUEUE_POWER_BOOST = "Waiting in queue by Power Boost"
+    WAITING_MID_FAILED = "Waiting MID failed"
+    WAITING_MID_SAFETY = "Waiting MID safety margin exceeded"
+    WAITING_IN_QUEUE_ECO_SMART = "Waiting in queue by Eco-Smart"
+    UNKNOWN = "Unknown"

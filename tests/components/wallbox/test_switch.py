@@ -40,7 +40,7 @@ async def test_wallbox_switch_class(hass: HomeAssistant) -> None:
 
     state = hass.states.get(MOCK_SWITCH_ENTITY_ID)
     assert state
-    assert state.state == "off"
+    assert state.state == "on"
 
     with requests_mock.Mocker() as mock_request:
         mock_request.get(
