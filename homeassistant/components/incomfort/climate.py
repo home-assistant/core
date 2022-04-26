@@ -3,12 +3,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.climate import (
-    DOMAIN as CLIMATE_DOMAIN,
-    ClimateEntity,
-    ClimateEntityFeature,
-)
-from homeassistant.components.climate.const import HVAC_MODE_HEAT
+from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN, ClimateEntity
+from homeassistant.components.climate.const import ClimateEntityFeature, HVACMode
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -38,6 +34,8 @@ async def async_setup_platform(
 class InComfortClimate(IncomfortChild, ClimateEntity):
     """Representation of an InComfort/InTouch climate device."""
 
+    _attr_hvac_mode = HVACMode.HEAT
+    _attr_hvac_modes = [HVACMode.HEAT]
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
 
     def __init__(self, client, heater, room) -> None:
@@ -60,16 +58,6 @@ class InComfortClimate(IncomfortChild, ClimateEntity):
     def temperature_unit(self) -> str:
         """Return the unit of measurement."""
         return TEMP_CELSIUS
-
-    @property
-    def hvac_mode(self) -> str:
-        """Return hvac operation ie. heat, cool mode."""
-        return HVAC_MODE_HEAT
-
-    @property
-    def hvac_modes(self) -> list[str]:
-        """Return the list of available hvac operation modes."""
-        return [HVAC_MODE_HEAT]
 
     @property
     def current_temperature(self) -> float | None:
@@ -96,5 +84,5 @@ class InComfortClimate(IncomfortChild, ClimateEntity):
         temperature = kwargs.get(ATTR_TEMPERATURE)
         await self._room.set_override(temperature)
 
-    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""

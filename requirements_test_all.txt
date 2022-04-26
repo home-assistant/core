@@ -94,7 +94,7 @@ aio_geojson_nsw_rfs_incidents==0.4
 aio_georss_gdacs==0.7
 
 # homeassistant.components.airzone
-aioairzone==0.4.0
+aioairzone==0.4.2
 
 # homeassistant.components.ambient_station
 aioambient==2021.11.0
@@ -574,7 +574,7 @@ hole==0.7.0
 holidays==0.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220424.0
+home-assistant-frontend==20220425.0
 
 # homeassistant.components.home_connect
 homeconnect==0.7.0
@@ -691,7 +691,7 @@ minio==5.0.10
 moehlenhoff-alpha2==1.1.2
 
 # homeassistant.components.motion_blinds
-motionblinds==0.6.4
+motionblinds==0.6.5
 
 # homeassistant.components.motioneye
 motioneye-client==0.3.12
