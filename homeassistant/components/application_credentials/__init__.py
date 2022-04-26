@@ -226,11 +226,11 @@ async def _get_platform(
 
 
 @websocket_api.websocket_command(
-    {vol.Required("type"): "application_credentials/integrations/list"}
+    {vol.Required("type"): "application_credentials/config"}
 )
 @websocket_api.async_response
 async def handle_integration_list(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle integrations command."""
-    connection.send_result(msg["id"], APPLICATION_CREDENTIALS)
+    connection.send_result(msg["id"], {"domains": APPLICATION_CREDENTIALS})
