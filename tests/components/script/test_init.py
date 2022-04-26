@@ -917,3 +917,27 @@ async def test_recursive_script_indirect(hass, script_mode, warning_msg, caplog)
     await asyncio.wait_for(service_called.wait(), 1)
 
     assert warning_msg in caplog.text
+
+
+async def test_setup_with_duplicate_scripts(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test setup with duplicate configs."""
+    assert await async_setup_component(
+        hass,
+        "script",
+        {
+            "script one": {
+                "duplicate": {
+                    "sequence": [],
+                },
+            },
+            "script two": {
+                "duplicate": {
+                    "sequence": [],
+                },
+            },
+        },
+    )
+    assert "Duplicate script detected with name: 'duplicate'" in caplog.text
+    assert len(hass.states.async_entity_ids("script")) == 1

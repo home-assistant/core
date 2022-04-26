@@ -193,7 +193,9 @@ async def test_events_during_migration_are_queued(hass):
         await async_wait_recording_done(hass)
 
     assert recorder.util.async_migration_in_progress(hass) is False
-    db_states = await hass.async_add_executor_job(_get_native_states, hass, "my.entity")
+    db_states = await recorder.get_instance(hass).async_add_executor_job(
+        _get_native_states, hass, "my.entity"
+    )
     assert len(db_states) == 2
 
 
@@ -221,11 +223,15 @@ async def test_events_during_migration_queue_exhausted(hass):
         await async_wait_recording_done(hass)
 
     assert recorder.util.async_migration_in_progress(hass) is False
-    db_states = await hass.async_add_executor_job(_get_native_states, hass, "my.entity")
+    db_states = await recorder.get_instance(hass).async_add_executor_job(
+        _get_native_states, hass, "my.entity"
+    )
     assert len(db_states) == 1
     hass.states.async_set("my.entity", "on", {})
     await async_wait_recording_done(hass)
-    db_states = await hass.async_add_executor_job(_get_native_states, hass, "my.entity")
+    db_states = await recorder.get_instance(hass).async_add_executor_job(
+        _get_native_states, hass, "my.entity"
+    )
     assert len(db_states) == 2
 
 

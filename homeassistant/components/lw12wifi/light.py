@@ -12,10 +12,9 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
     PLATFORM_SCHEMA,
-    SUPPORT_EFFECT,
-    SUPPORT_TRANSITION,
     ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
@@ -60,7 +59,7 @@ class LW12WiFi(LightEntity):
 
     _attr_color_mode = ColorMode.HS
     _attr_supported_color_modes = {ColorMode.HS}
-    _attr_supported_features = SUPPORT_EFFECT | SUPPORT_TRANSITION
+    _attr_supported_features = LightEntityFeature.EFFECT | LightEntityFeature.TRANSITION
 
     def __init__(self, name, lw12_light):
         """Initialise LW-12 WiFi LED Controller.

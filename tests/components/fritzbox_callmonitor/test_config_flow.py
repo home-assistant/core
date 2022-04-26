@@ -4,12 +4,7 @@ from unittest.mock import PropertyMock
 from fritzconnection.core.exceptions import FritzConnectionException, FritzSecurityError
 from requests.exceptions import ConnectionError as RequestsConnectionError
 
-from homeassistant.components.fritzbox_callmonitor.config_flow import (
-    RESULT_INSUFFICIENT_PERMISSIONS,
-    RESULT_INVALID_AUTH,
-    RESULT_MALFORMED_PREFIXES,
-    RESULT_NO_DEVIES_FOUND,
-)
+from homeassistant.components.fritzbox_callmonitor.config_flow import ConnectResult
 from homeassistant.components.fritzbox_callmonitor.const import (
     CONF_PHONEBOOK,
     CONF_PREFIXES,
@@ -230,7 +225,7 @@ async def test_setup_cannot_connect(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] == RESULT_TYPE_ABORT
-    assert result["reason"] == RESULT_NO_DEVIES_FOUND
+    assert result["reason"] == ConnectResult.NO_DEVIES_FOUND
 
 
 async def test_setup_insufficient_permissions(hass: HomeAssistant) -> None:
@@ -249,7 +244,7 @@ async def test_setup_insufficient_permissions(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] == RESULT_TYPE_ABORT
-    assert result["reason"] == RESULT_INSUFFICIENT_PERMISSIONS
+    assert result["reason"] == ConnectResult.INSUFFICIENT_PERMISSIONS
 
 
 async def test_setup_invalid_auth(hass: HomeAssistant) -> None:
@@ -268,7 +263,7 @@ async def test_setup_invalid_auth(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] == RESULT_TYPE_FORM
-    assert result["errors"] == {"base": RESULT_INVALID_AUTH}
+    assert result["errors"] == {"base": ConnectResult.INVALID_AUTH}
 
 
 async def test_options_flow_correct_prefixes(hass: HomeAssistant) -> None:
@@ -326,7 +321,7 @@ async def test_options_flow_incorrect_prefixes(hass: HomeAssistant) -> None:
         )
 
         assert result["type"] == RESULT_TYPE_FORM
-        assert result["errors"] == {"base": RESULT_MALFORMED_PREFIXES}
+        assert result["errors"] == {"base": ConnectResult.MALFORMED_PREFIXES}
 
 
 async def test_options_flow_no_prefixes(hass: HomeAssistant) -> None:
