@@ -10,6 +10,7 @@ import logging
 
 import pychromecast
 from pychromecast.controllers.homeassistant import HomeAssistantController
+from pychromecast.controllers.media import MEDIA_PLAYER_ERROR_CODES
 from pychromecast.controllers.multizone import MultizoneManager
 from pychromecast.controllers.receiver import VOLUME_CONTROL_TYPE_FIXED
 from pychromecast.quick_play import quick_play
@@ -389,6 +390,17 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         self.media_status = media_status
         self.media_status_received = dt_util.utcnow()
         self.schedule_update_ha_state()
+
+    def load_media_failed(self, item, error_code):
+        """Handle load media failed."""
+        _LOGGER.debug(
+            "[%s %s] Load media failed with code %s(%s) for item %s",
+            self.entity_id,
+            self._cast_info.friendly_name,
+            error_code,
+            MEDIA_PLAYER_ERROR_CODES.get(error_code, "unknown code"),
+            item,
+        )
 
     def new_connection_status(self, connection_status):
         """Handle updates of connection status."""
