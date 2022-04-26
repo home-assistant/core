@@ -138,9 +138,9 @@ def _select_unused_attributes_ids(
     else:
         #
         # This branch is for DBMS that cannot optimize the distinct query well and has to examine
-        # all the rows that match
+        # all the rows that match.
         #
-        # We use a union of simple queries, as each query is optimized away as the answer
+        # This branch uses a union of simple queries, as each query is optimized away as the answer
         # to the query can be found in the index.
         #
         # The below query works for SQLite as long as there are no more than 500 attributes_id
