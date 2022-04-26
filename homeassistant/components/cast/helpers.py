@@ -10,6 +10,7 @@ from urllib.parse import urlparse
 
 import aiohttp
 import attr
+import pychromecast
 from pychromecast import dial
 from pychromecast.const import CAST_TYPE_GROUP
 from pychromecast.models import CastInfo
@@ -98,7 +99,12 @@ class ChromeCastZeroconf:
         return cls.__zconf
 
 
-class CastStatusListener:
+class CastStatusListener(
+    pychromecast.controllers.media.MediaStatusListener,
+    pychromecast.controllers.multizone.MultiZoneManagerListener,
+    pychromecast.controllers.receiver.CastStatusListener,
+    pychromecast.socket_client.ConnectionStatusListener,
+):
     """Helper class to handle pychromecast status callbacks.
 
     Necessary because a CastDevice entity or dynamic group can create a new
@@ -124,23 +130,27 @@ class CastStatusListener:
         if not cast_device._cast_info.is_audio_group:
             self._mz_mgr.register_listener(chromecast.uuid, self)
 
-    def new_cast_status(self, cast_status):
+    def new_cast_status(self, status):
         """Handle reception of a new CastStatus."""
         if self._valid:
-            self._cast_device.new_cast_status(cast_status)
+            self._cast_device.new_cast_status(status)
 
-    def new_media_status(self, media_status):
+    def new_media_status(self, status):
         """Handle reception of a new MediaStatus."""
         if self._valid:
-            self._cast_device.new_media_status(media_status)
+            self._cast_device.new_media_status(status)
 
-    def new_connection_status(self, connection_status):
+    def load_media_failed(self, item, error_code):
+        """Handle reception of a new MediaStatus."""
+        if self._valid:
+            self._cast_device.load_media_failed(item, error_code)
+
+    def new_connection_status(self, status):
         """Handle reception of a new ConnectionStatus."""
         if self._valid:
-            self._cast_device.new_connection_status(connection_status)
+            self._cast_device.new_connection_status(status)
 
-    @staticmethod
-    def added_to_multizone(group_uuid):
+    def added_to_multizone(self, group_uuid):
         """Handle the cast added to a group."""
 
     def removed_from_multizone(self, group_uuid):
