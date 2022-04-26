@@ -118,7 +118,7 @@ class RunHistory:
         # which is allowed to be called from any thread
         #
         # We use a dataclass to ensure that when we update
-        # self._run_history it is done so atomiclly to avoid
+        # self._run_history it is done atomically to avoid
         # run_timestamps and runs_by_timestamp ever being out of
         # sync with each other due to races between threads.
         #
