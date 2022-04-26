@@ -736,7 +736,11 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
     def media_title(self):
         """Title of current playing media."""
         media_status = self._media_status()[0]
-        return media_status.title if media_status else None
+        if not media_status:
+            return None
+        if media_status.player_state == "BUFFERING":
+            return "Buffering"
+        return media_status.title
 
     @property
     def media_artist(self):
