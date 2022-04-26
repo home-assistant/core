@@ -112,15 +112,14 @@ async def _async_migrate_unique_ids(
         entry.unique_id is None
         and AZD_WEBSERVER in coordinator.data
         and AZD_MAC in coordinator.data[AZD_WEBSERVER]
+        and (mac := coordinator.data[AZD_WEBSERVER][AZD_MAC]) is not None
     ):
-        mac = coordinator.data[AZD_WEBSERVER][AZD_MAC]
-        if mac is not None:
-            updates: dict[str, Any] = {
-                "unique_id": dr.format_mac(mac),
-            }
-            hass.config_entries.async_update_entry(entry, **updates)
+        updates: dict[str, Any] = {
+            "unique_id": dr.format_mac(mac),
+        }
+        hass.config_entries.async_update_entry(entry, **updates)
 
-            await er.async_migrate_entries(hass, entry.entry_id, _async_migrator)
+        await er.async_migrate_entries(hass, entry.entry_id, _async_migrator)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
