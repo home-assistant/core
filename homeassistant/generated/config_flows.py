@@ -342,6 +342,7 @@ FLOWS = {
         "tailscale",
         "tankerkoenig",
         "tasmota",
+        "tautulli",
         "tellduslive",
         "tesla_wall_connector",
         "tibber",

@@ -1013,7 +1013,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/tapsaff/ @bazwilliams
 /homeassistant/components/tasmota/ @emontnemery
 /tests/components/tasmota/ @emontnemery
-/homeassistant/components/tautulli/ @ludeeus
+/homeassistant/components/tautulli/ @ludeeus @tkdrob
+/tests/components/tautulli/ @ludeeus @tkdrob
 /homeassistant/components/tellduslive/ @fredrike
 /tests/components/tellduslive/ @fredrike
 /homeassistant/components/template/ @PhracturedBlue @tetienne @home-assistant/core
