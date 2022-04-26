@@ -24,6 +24,7 @@ async def test_simple_global_timeout_with_executor_job(hass):
     with pytest.raises(asyncio.TimeoutError):
         async with timeout.async_timeout(0.1):
             await hass.async_add_executor_job(lambda: time.sleep(0.2))
+    await asyncio.sleep(0.11)  # ensure the executor thread finishes
 
 
 async def test_simple_global_timeout_freeze():
