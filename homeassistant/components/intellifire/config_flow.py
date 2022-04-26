@@ -139,10 +139,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                 except (ConnectionError, ClientConnectionError):
                     errors["base"] = "iftapi_connect"
-                    LOGGER.error("ERROR: iftapi_connect")
+                    LOGGER.error(
+                        "Could not connect to iftapi.net over https - verify connectivity"
+                    )
                 except LoginException:
                     errors["base"] = "api_error"
-                    LOGGER.error("ERROR: api_error")
+                    LOGGER.error("Invalid credentials for iftapi.net")
 
         return self.async_show_form(
             step_id="api_config", errors=errors, data_schema=control_schema
