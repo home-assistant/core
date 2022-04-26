@@ -10,6 +10,7 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
+    SensorStateClass,
 )
 from homeassistant.const import (
     CONF_ENTITY_ID,
@@ -139,6 +140,7 @@ class HistoryStatsSensor(HistoryStatsSensorBase):
     """A HistoryStats sensor."""
 
     _attr_device_class = SensorDeviceClass.DURATION
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(
         self,
