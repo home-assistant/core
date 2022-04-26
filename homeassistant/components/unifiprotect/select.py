@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from enum import Enum
 import logging
-from typing import Any, Final, Generic
+from typing import Any, Final
 
 from pyunifiprotect.api import ProtectApiClient
 from pyunifiprotect.data import (
@@ -104,7 +104,7 @@ SET_DOORBELL_LCD_MESSAGE_SCHEMA = vol.Schema(
 
 @dataclass
 class ProtectSelectEntityDescription(
-    ProtectSetableKeysMixin, SelectEntityDescription, Generic[T]
+    ProtectSetableKeysMixin[T], SelectEntityDescription
 ):
     """Describes UniFi Protect Select entity."""
 

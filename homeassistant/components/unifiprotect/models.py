@@ -46,7 +46,7 @@ class ProtectRequiredKeysMixin(EntityDescription, Generic[T]):
 
 
 @dataclass
-class ProtectSetableKeysMixin(ProtectRequiredKeysMixin, Generic[T]):
+class ProtectSetableKeysMixin(ProtectRequiredKeysMixin[T]):
     """Mixin for settable values."""
 
     ufp_set_method: str | None = None
