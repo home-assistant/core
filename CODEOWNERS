@@ -527,6 +527,7 @@ build.json @home-assistant/supervisor
 /tests/components/keenetic_ndms2/ @foxel
 /homeassistant/components/kef/ @basnijholt
 /homeassistant/components/keyboard_remote/ @bendavid @lanrat
+/homeassistant/components/kincony_hx/ @kgkolev
 /homeassistant/components/kmtronic/ @dgomes
 /tests/components/kmtronic/ @dgomes
 /homeassistant/components/knx/ @Julius2342 @farmio @marvin-w

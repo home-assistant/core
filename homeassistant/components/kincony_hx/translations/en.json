@@ -1,0 +1,24 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connecting to a KinCony Hx Board",
+        "data": {
+          "name": "Title",
+          "host": "Host",
+          "port": "Port",
+          "so_timeout": "Network Timeout",
+          "refresh_interval": "Refresh Interval"
+        }
+      }
+    },
+    "error": {
+      "connect_refused": "Target endpoint refused connection",
+      "cannot_connect": "Failed to connect to endpoint",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "already_configured": "Device is already configured"
+    }
+  }
+}

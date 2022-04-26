@@ -175,6 +175,7 @@ FLOWS = {
         "juicenet",
         "kaleidescape",
         "keenetic_ndms2",
+        "kincony_hx",
         "kmtronic",
         "knx",
         "kodi",

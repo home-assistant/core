@@ -1,0 +1,13 @@
+{
+  "domain": "kincony_hx",
+  "name": "KinCony Hx",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/kincony_hx",
+  "requirements": [],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": ["@kgkolev"],
+  "iot_class": "local_polling"
+}
