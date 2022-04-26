@@ -253,7 +253,7 @@ aioswitcher==2.0.6
 aiosyncthing==0.5.1
 
 # homeassistant.components.tractive
-aiotractive==0.5.2
+aiotractive==0.5.4
 
 # homeassistant.components.unifi
 aiounifi==31
@@ -1059,7 +1059,7 @@ netdisco==3.0.0
 netmap==0.7.0.2
 
 # homeassistant.components.nam
-nettigo-air-monitor==1.2.1
+nettigo-air-monitor==1.2.2
 
 # homeassistant.components.neurio_energy
 neurio==0.3.1
