@@ -3,12 +3,6 @@ from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import DEFAULT_NAME, DOMAIN, TADO_HOME, TADO_ZONE
 
-CONFIGURATION_URL_HOME = "https://app.tado.com"
-CONFIGURATION_URL_ZONE = "https://app.tado.com/en/main/home/zoneV2/{}"
-CONFIGURATION_URL_DEVICE = (
-    "https://app.tado.com/en/main/settings/rooms-and-devices/device/{}"
-)
-
 
 class TadoDeviceEntity(Entity):
     """Base implementation for Tado device."""
@@ -24,7 +18,9 @@ class TadoDeviceEntity(Entity):
     def device_info(self) -> DeviceInfo:
         """Return the device_info of the device."""
         return DeviceInfo(
-            configuration_url=CONFIGURATION_URL_DEVICE.format(self.device_name),
+            configuration_url="https://app.tado.com/en/main/settings/rooms-and-devices/device/{}".format(
+                self.device_name
+            ),
             identifiers={(DOMAIN, self.device_id)},
             name=self.device_name,
             manufacturer=DEFAULT_NAME,
@@ -52,7 +48,7 @@ class TadoHomeEntity(Entity):
     def device_info(self) -> DeviceInfo:
         """Return the device_info of the device."""
         return DeviceInfo(
-            configuration_url=CONFIGURATION_URL_HOME,
+            configuration_url="https://app.tado.com",
             identifiers={(DOMAIN, self.home_id)},
             manufacturer=DEFAULT_NAME,
             model=TADO_HOME,
@@ -74,7 +70,9 @@ class TadoZoneEntity(Entity):
     def device_info(self) -> DeviceInfo:
         """Return the device_info of the device."""
         return DeviceInfo(
-            configuration_url=CONFIGURATION_URL_ZONE.format(self.zone_id),
+            configuration_url="https://app.tado.com/en/main/home/zoneV2/{}".format(
+                self.zone_id
+            ),
             identifiers={(DOMAIN, self._device_zone_id)},
             name=self.zone_name,
             manufacturer=DEFAULT_NAME,
