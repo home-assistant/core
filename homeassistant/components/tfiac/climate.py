@@ -8,26 +8,18 @@ import logging
 from pytfiac import Tfiac
 import voluptuous as vol
 
-from homeassistant.components.climate import (
-    PLATFORM_SCHEMA,
-    ClimateEntity,
-    ClimateEntityFeature,
-)
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
     FAN_AUTO,
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
-    HVAC_MODE_AUTO,
-    HVAC_MODE_COOL,
-    HVAC_MODE_DRY,
-    HVAC_MODE_FAN_ONLY,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
     SWING_BOTH,
     SWING_HORIZONTAL,
     SWING_OFF,
     SWING_VERTICAL,
+    ClimateEntityFeature,
+    HVACMode,
 )
 from homeassistant.const import ATTR_TEMPERATURE, CONF_HOST, TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant
@@ -45,12 +37,12 @@ MIN_TEMP = 61
 MAX_TEMP = 88
 
 HVAC_MAP = {
-    HVAC_MODE_HEAT: "heat",
-    HVAC_MODE_AUTO: "selfFeel",
-    HVAC_MODE_DRY: "dehumi",
-    HVAC_MODE_FAN_ONLY: "fan",
-    HVAC_MODE_COOL: "cool",
-    HVAC_MODE_OFF: "off",
+    HVACMode.HEAT: "heat",
+    HVACMode.AUTO: "selfFeel",
+    HVACMode.DRY: "dehumi",
+    HVACMode.FAN_ONLY: "fan",
+    HVACMode.COOL: "cool",
+    HVACMode.OFF: "off",
 }
 
 HVAC_MAP_REV = {v: k for k, v in HVAC_MAP.items()}
@@ -140,19 +132,19 @@ class TfiacClimate(ClimateEntity):
         return self._client.status["current_temp"]
 
     @property
-    def hvac_mode(self):
+    def hvac_mode(self) -> HVACMode | None:
         """Return hvac operation ie. heat, cool mode.
 
         Need to be one of HVAC_MODE_*.
         """
         if self._client.status[ON_MODE] != "on":
-            return HVAC_MODE_OFF
+            return HVACMode.OFF
 
         state = self._client.status["operation"]
         return HVAC_MAP_REV.get(state)
 
     @property
-    def hvac_modes(self):
+    def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available hvac operation modes.
 
         Need to be a subset of HVAC_MODES.
@@ -184,9 +176,9 @@ class TfiacClimate(ClimateEntity):
         if (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
             await self._client.set_state(TARGET_TEMP, temp)
 
-    async def async_set_hvac_mode(self, hvac_mode):
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
-        if hvac_mode == HVAC_MODE_OFF:
+        if hvac_mode == HVACMode.OFF:
             await self._client.set_state(ON_MODE, "off")
         else:
             await self._client.set_state(OPERATION_MODE, HVAC_MAP[hvac_mode])

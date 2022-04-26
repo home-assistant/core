@@ -58,6 +58,7 @@ TILT_DEVICE_MAP = {
     BlindType.VenetianBlind: CoverDeviceClass.BLIND,
     BlindType.ShangriLaBlind: CoverDeviceClass.BLIND,
     BlindType.DoubleRoller: CoverDeviceClass.SHADE,
+    BlindType.DualShade: CoverDeviceClass.SHADE,
     BlindType.VerticalBlind: CoverDeviceClass.BLIND,
     BlindType.VerticalBlindLeft: CoverDeviceClass.BLIND,
     BlindType.VerticalBlindRight: CoverDeviceClass.BLIND,
