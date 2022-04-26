@@ -38,6 +38,6 @@ class QSLight(QSToggleEntity, LightEntity):
         return ColorMode.BRIGHTNESS if self.device.is_dimmer else None
 
     @property
-    def supported_color_modes(self) -> set[ColorMode] | None:
+    def supported_color_modes(self) -> set[ColorMode | str] | None:
         """Flag supported color modes."""
         return {ColorMode.BRIGHTNESS} if self.device.is_dimmer else None
