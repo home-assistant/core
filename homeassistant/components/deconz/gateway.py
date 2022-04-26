@@ -62,13 +62,12 @@ class DeconzGateway:
         self.ignore_state_updates = False
 
         self.signal_reachable = f"deconz-reachable-{config_entry.entry_id}"
+        self.signal_reload_groups = f"deconz_reload_group_{config_entry.entry_id}"
 
-        self.signal_new_group = f"deconz_new_group_{config_entry.entry_id}"
         self.signal_new_light = f"deconz_new_light_{config_entry.entry_id}"
         self.signal_new_sensor = f"deconz_new_sensor_{config_entry.entry_id}"
 
         self.deconz_resource_type_to_signal_new_device = {
-            ResourceGroup.GROUP.value: self.signal_new_group,
             ResourceGroup.LIGHT.value: self.signal_new_light,
             ResourceGroup.SENSOR.value: self.signal_new_sensor,
         }
@@ -76,6 +75,10 @@ class DeconzGateway:
         self.deconz_ids: dict[str, str] = {}
         self.entities: dict[str, set[str]] = {}
         self.events: list[DeconzAlarmEvent | DeconzEvent] = []
+
+        self._option_allow_deconz_groups = self.config_entry.options.get(
+            CONF_ALLOW_DECONZ_GROUPS, DEFAULT_ALLOW_DECONZ_GROUPS
+        )
 
     @property
     def bridgeid(self) -> str:
@@ -218,10 +221,12 @@ class DeconzGateway:
             ]
 
         if self.option_allow_deconz_groups:
-            self.async_add_device_callback(ResourceGroup.GROUP.value)
-
+            if not self._option_allow_deconz_groups:
+                async_dispatcher_send(self.hass, self.signal_reload_groups)
         else:
             deconz_ids += [group.deconz_id for group in self.api.groups.values()]
+
+        self._option_allow_deconz_groups = self.option_allow_deconz_groups
 
         entity_registry = er.async_get(self.hass)
 
