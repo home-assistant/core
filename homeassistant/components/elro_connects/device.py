@@ -2,21 +2,23 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from datetime import timedelta
 from typing import Any
 
 from elro.api import K1
 from elro.command import GET_ALL_EQUIPMENT_STATUS, GET_DEVICE_NAMES
 from elro.utils import update_state_data
 
-from homeassistant.const import ATTR_NAME
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_NAME, CONF_HOST, CONF_PORT
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
 
-from .const import DOMAIN
+from .const import CONF_UPDATE_INTERVAL, DOMAIN
 
 
 class ElroConnectsK1(K1):
@@ -38,12 +40,19 @@ class ElroConnectsK1(K1):
         """Synchronize with the K1 connector."""
         await self.async_connect()
         update_status = await self.async_process_command(GET_ALL_EQUIPMENT_STATUS)
-        for key in update_status.keys():
-            if key not in self._data:
-                self._data[key] = {}
         update_state_data(self._data, update_status)
         update_names = await self.async_process_command(GET_DEVICE_NAMES)
         update_state_data(self._data, update_names)
+
+    async def async_update_settings(
+        self, hass: HomeAssistant, entry: ConfigEntry
+    ) -> None:
+        """Process updated settings."""
+
+        self.coordinator.update_interval = timedelta(
+            seconds=entry.data[CONF_UPDATE_INTERVAL]
+        )
+        await self.async_configure(entry.data[CONF_HOST], entry.data[CONF_PORT])
 
     @property
     def data(self) -> dict[int, dict]:

@@ -51,6 +51,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
+    entry.async_on_unload(
+        entry.add_update_listener(elro_connects_api.async_update_settings)
+    )
+
     return True
 
 
