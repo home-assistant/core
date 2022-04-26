@@ -23,11 +23,10 @@ from homeassistant.components.recorder.statistics import (
 )
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import STATE_UNAVAILABLE
-from homeassistant.setup import setup_component
+from homeassistant.setup import async_setup_component, setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
 
-from tests.common import async_setup_component
 from tests.components.recorder.common import (
     async_recorder_block_till_done,
     async_wait_recording_done,
