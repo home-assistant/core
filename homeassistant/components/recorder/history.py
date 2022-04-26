@@ -470,28 +470,6 @@ def get_last_state_changes(
         )
 
 
-def get_states(
-    hass: HomeAssistant,
-    utc_point_in_time: datetime,
-    entity_ids: list[str] | None = None,
-    run: RecorderRuns | None = None,
-    filters: Any = None,
-    no_attributes: bool = False,
-) -> list[State]:
-    """Return the states at a specific point in time."""
-    if run is None:
-        run = recorder.get_instance(hass).run_history.get(utc_point_in_time)
-
-    if run is None or process_timestamp(run.start) > utc_point_in_time:
-        # History did not run before utc_point_in_time
-        return []
-
-    with session_scope(hass=hass) as session:
-        return _get_states_with_session(
-            hass, session, utc_point_in_time, entity_ids, run, filters, no_attributes
-        )
-
-
 def _get_states_with_session(
     hass: HomeAssistant,
     session: Session,
@@ -721,15 +699,3 @@ def _sorted_states_to_dict(
 
     # Filter out the empty lists if some states had 0 results.
     return {key: val for key, val in result.items() if val}
-
-
-def get_state(
-    hass: HomeAssistant,
-    utc_point_in_time: datetime,
-    entity_id: str,
-    run: RecorderRuns | None = None,
-    no_attributes: bool = False,
-) -> State | None:
-    """Return a state at a specific point in time."""
-    states = get_states(hass, utc_point_in_time, [entity_id], run, None, no_attributes)
-    return states[0] if states else None
