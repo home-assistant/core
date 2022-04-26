@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any, cast
 
-from pydeconz.light import Cover
+from pydeconz.models.light.cover import Cover
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -92,7 +92,7 @@ class DeconzCover(DeconzDevice, CoverEntity):
     @property
     def current_cover_position(self) -> int:
         """Return the current position of the cover."""
-        return 100 - self._device.lift  # type: ignore[no-any-return]
+        return 100 - self._device.lift
 
     @property
     def is_closed(self) -> bool:
@@ -120,7 +120,7 @@ class DeconzCover(DeconzDevice, CoverEntity):
     def current_cover_tilt_position(self) -> int | None:
         """Return the current tilt position of the cover."""
         if self._device.tilt is not None:
-            return 100 - self._device.tilt  # type: ignore[no-any-return]
+            return 100 - self._device.tilt
         return None
 
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:

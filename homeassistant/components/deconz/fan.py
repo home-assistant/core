@@ -1,9 +1,9 @@
 """Support for deCONZ fans."""
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Literal
 
-from pydeconz.light import (
+from pydeconz.models.light.fan import (
     FAN_SPEED_25_PERCENT,
     FAN_SPEED_50_PERCENT,
     FAN_SPEED_75_PERCENT,
@@ -25,7 +25,7 @@ from homeassistant.util.percentage import (
 from .deconz_device import DeconzDevice
 from .gateway import DeconzGateway, get_gateway_from_config_entry
 
-ORDERED_NAMED_FAN_SPEEDS = [
+ORDERED_NAMED_FAN_SPEEDS: list[Literal[0, 1, 2, 3, 4, 5, 6]] = [
     FAN_SPEED_25_PERCENT,
     FAN_SPEED_50_PERCENT,
     FAN_SPEED_75_PERCENT,
@@ -77,6 +77,7 @@ class DeconzFan(DeconzDevice, FanEntity):
 
     TYPE = DOMAIN
     _device: Fan
+    _default_on_speed: Literal[0, 1, 2, 3, 4, 5, 6]
 
     _attr_supported_features = FanEntityFeature.SET_SPEED
 
@@ -91,7 +92,7 @@ class DeconzFan(DeconzDevice, FanEntity):
     @property
     def is_on(self) -> bool:
         """Return true if fan is on."""
-        return self._device.speed != FAN_SPEED_OFF  # type: ignore[no-any-return]
+        return self._device.speed != FAN_SPEED_OFF
 
     @property
     def percentage(self) -> int | None:

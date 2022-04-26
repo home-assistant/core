@@ -1,5 +1,6 @@
 {
   "config": {
+    "flow_title": "{name}",
     "step": {
       "user": {
         "description": "Select the Insteon modem type.",
@@ -31,6 +32,9 @@
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
         }
+      },
+      "confirm_usb": {
+        "description": "Do you want to setup {name}?"
       }
     },
     "error": {
@@ -39,7 +43,8 @@
     },
     "abort": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "not_insteon_device": "Discovered device not an Insteon device"
     }
   },
   "options": {

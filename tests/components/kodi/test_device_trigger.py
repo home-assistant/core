@@ -57,17 +57,12 @@ async def test_get_triggers(hass, device_reg, entity_reg):
         {
             "platform": "device",
             "domain": DOMAIN,
-            "type": "turn_off",
+            "type": trigger,
             "device_id": device_entry.id,
             "entity_id": f"{MP_DOMAIN}.kodi_5678",
-        },
-        {
-            "platform": "device",
-            "domain": DOMAIN,
-            "type": "turn_on",
-            "device_id": device_entry.id,
-            "entity_id": f"{MP_DOMAIN}.kodi_5678",
-        },
+            "metadata": {"secondary": False},
+        }
+        for trigger in ["turn_off", "turn_on"]
     ]
 
     # Test triggers are either kodi specific triggers or media_player entity triggers

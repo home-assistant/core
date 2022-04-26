@@ -14,17 +14,9 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from .common import (
-    async_wait_recording_done_without_instance,
-    create_engine_test,
-    trigger_db_commit,
-)
+from .common import async_wait_recording_done, create_engine_test, trigger_db_commit
 
-from tests.common import (
-    async_fire_time_changed,
-    async_init_recorder_component,
-    init_recorder_component,
-)
+from tests.common import async_fire_time_changed, init_recorder_component
 
 POWER_SENSOR_ATTRIBUTES = {
     "device_class": "power",
@@ -48,7 +40,7 @@ GAS_SENSOR_ATTRIBUTES = {
 }
 
 
-async def test_validate_statistics(hass, hass_ws_client):
+async def test_validate_statistics(hass, hass_ws_client, recorder_mock):
     """Test validate_statistics can be called."""
     id = 1
 
@@ -66,12 +58,11 @@ async def test_validate_statistics(hass, hass_ws_client):
         assert response["result"] == expected_result
 
     # No statistics, no state - empty response
-    await hass.async_add_executor_job(init_recorder_component, hass)
     client = await hass_ws_client()
     await assert_validation_result(client, {})
 
 
-async def test_clear_statistics(hass, hass_ws_client):
+async def test_clear_statistics(hass, hass_ws_client, recorder_mock):
     """Test removing statistics."""
     now = dt_util.utcnow()
 
@@ -81,7 +72,6 @@ async def test_clear_statistics(hass, hass_ws_client):
     value = 10000
 
     hass.config.units = units
-    await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(hass, "history", {})
     await async_setup_component(hass, "sensor", {})
     await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
@@ -200,7 +190,9 @@ async def test_clear_statistics(hass, hass_ws_client):
 
 
 @pytest.mark.parametrize("new_unit", ["dogs", None])
-async def test_update_statistics_metadata(hass, hass_ws_client, new_unit):
+async def test_update_statistics_metadata(
+    hass, hass_ws_client, recorder_mock, new_unit
+):
     """Test removing statistics."""
     now = dt_util.utcnow()
 
@@ -209,7 +201,6 @@ async def test_update_statistics_metadata(hass, hass_ws_client, new_unit):
     state = 10
 
     hass.config.units = units
-    await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(hass, "history", {})
     await async_setup_component(hass, "sensor", {})
     await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
@@ -265,13 +256,12 @@ async def test_update_statistics_metadata(hass, hass_ws_client, new_unit):
     ]
 
 
-async def test_recorder_info(hass, hass_ws_client):
+async def test_recorder_info(hass, hass_ws_client, recorder_mock):
     """Test getting recorder status."""
     client = await hass_ws_client()
-    await async_init_recorder_component(hass)
 
     # Ensure there are no queued events
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
 
     await client.send_json({"id": 1, "type": "recorder/info"})
     response = await client.receive_json()
@@ -364,7 +354,7 @@ async def test_recorder_info_migration_queue_exhausted(hass, hass_ws_client):
 
     # Let migration finish
     migration_done.set()
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
 
     # Check the status after migration finished
     await client.send_json({"id": 2, "type": "recorder/info"})
@@ -387,13 +377,14 @@ async def test_backup_start_no_recorder(
     assert response["error"]["code"] == "unknown_command"
 
 
-async def test_backup_start_timeout(hass, hass_ws_client, hass_supervisor_access_token):
+async def test_backup_start_timeout(
+    hass, hass_ws_client, hass_supervisor_access_token, recorder_mock
+):
     """Test getting backup start when recorder is not present."""
     client = await hass_ws_client(hass, hass_supervisor_access_token)
-    await async_init_recorder_component(hass)
 
     # Ensure there are no queued events
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
 
     with patch.object(recorder, "DB_LOCK_TIMEOUT", 0):
         try:
@@ -405,13 +396,14 @@ async def test_backup_start_timeout(hass, hass_ws_client, hass_supervisor_access
             await client.send_json({"id": 2, "type": "backup/end"})
 
 
-async def test_backup_end(hass, hass_ws_client, hass_supervisor_access_token):
+async def test_backup_end(
+    hass, hass_ws_client, hass_supervisor_access_token, recorder_mock
+):
     """Test backup start."""
     client = await hass_ws_client(hass, hass_supervisor_access_token)
-    await async_init_recorder_component(hass)
 
     # Ensure there are no queued events
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
 
     await client.send_json({"id": 1, "type": "backup/start"})
     response = await client.receive_json()
@@ -423,14 +415,13 @@ async def test_backup_end(hass, hass_ws_client, hass_supervisor_access_token):
 
 
 async def test_backup_end_without_start(
-    hass, hass_ws_client, hass_supervisor_access_token
+    hass, hass_ws_client, hass_supervisor_access_token, recorder_mock
 ):
     """Test backup start."""
     client = await hass_ws_client(hass, hass_supervisor_access_token)
-    await async_init_recorder_component(hass)
 
     # Ensure there are no queued events
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
 
     await client.send_json({"id": 1, "type": "backup/end"})
     response = await client.receive_json()
@@ -445,7 +436,9 @@ async def test_backup_end_without_start(
         (METRIC_SYSTEM, ENERGY_SENSOR_ATTRIBUTES, "kWh"),
     ],
 )
-async def test_get_statistics_metadata(hass, hass_ws_client, units, attributes, unit):
+async def test_get_statistics_metadata(
+    hass, hass_ws_client, recorder_mock, units, attributes, unit
+):
     """Test get_statistics_metadata."""
     now = dt_util.utcnow()
 
@@ -453,7 +446,6 @@ async def test_get_statistics_metadata(hass, hass_ws_client, units, attributes, 
     await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(hass, "history", {"history": {}})
     await async_setup_component(hass, "sensor", {})
-    await async_init_recorder_component(hass)
     await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
 
     client = await hass_ws_client()

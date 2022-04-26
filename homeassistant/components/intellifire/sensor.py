@@ -150,4 +150,4 @@ class IntellifireSensor(IntellifireEntity, SensorEntity):
     @property
     def native_value(self) -> int | str | datetime | None:
         """Return the state."""
-        return self.entity_description.value_fn(self.coordinator.api.data)
+        return self.entity_description.value_fn(self.coordinator.read_api.data)

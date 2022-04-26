@@ -73,7 +73,6 @@ omit =
     homeassistant/components/arest/binary_sensor.py
     homeassistant/components/arest/sensor.py
     homeassistant/components/arest/switch.py
-    homeassistant/components/arlo/*
     homeassistant/components/arris_tg2492lg/*
     homeassistant/components/aruba/device_tracker.py
     homeassistant/components/arwn/sensor.py
@@ -118,6 +117,7 @@ omit =
     homeassistant/components/bmw_connected_drive/__init__.py
     homeassistant/components/bmw_connected_drive/binary_sensor.py
     homeassistant/components/bmw_connected_drive/button.py
+    homeassistant/components/bmw_connected_drive/coordinator.py
     homeassistant/components/bmw_connected_drive/device_tracker.py
     homeassistant/components/bmw_connected_drive/lock.py
     homeassistant/components/bmw_connected_drive/notify.py
@@ -1177,6 +1177,7 @@ omit =
     homeassistant/components/synology_dsm/camera.py
     homeassistant/components/synology_dsm/diagnostics.py
     homeassistant/components/synology_dsm/common.py
+    homeassistant/components/synology_dsm/entity.py
     homeassistant/components/synology_dsm/sensor.py
     homeassistant/components/synology_dsm/service.py
     homeassistant/components/synology_dsm/switch.py
@@ -1492,6 +1493,7 @@ omit =
     homeassistant/components/zwave_me/button.py
     homeassistant/components/zwave_me/cover.py
     homeassistant/components/zwave_me/climate.py
+    homeassistant/components/zwave_me/fan.py
     homeassistant/components/zwave_me/helpers.py
     homeassistant/components/zwave_me/light.py
     homeassistant/components/zwave_me/lock.py

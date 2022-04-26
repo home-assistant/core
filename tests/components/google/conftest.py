@@ -4,9 +4,9 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable
 import datetime
 from typing import Any, Generator, TypeVar
-from unittest.mock import Mock, mock_open, patch
+from unittest.mock import mock_open, patch
 
-from googleapiclient import discovery as google_discovery
+from gcal_sync.auth import API_BASE_URL
 from oauth2client.client import Credentials, OAuth2Credentials
 import pytest
 import yaml
@@ -18,6 +18,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 ApiResult = Callable[[dict[str, Any]], None]
 ComponentSetup = Callable[[], Awaitable[bool]]
@@ -198,22 +199,21 @@ def mock_token_read(
     storage.put(creds)
 
 
-@pytest.fixture(autouse=True)
-def calendar_resource() -> YieldFixture[google_discovery.Resource]:
-    """Fixture to mock out the Google discovery API."""
-    with patch("homeassistant.components.google.api.google_discovery.build") as mock:
-        yield mock
-
-
 @pytest.fixture
 def mock_events_list(
-    calendar_resource: google_discovery.Resource,
-) -> Callable[[dict[str, Any]], None]:
+    aioclient_mock: AiohttpClientMocker,
+) -> ApiResult:
     """Fixture to construct a fake event list API response."""
 
-    def _put_result(response: dict[str, Any]) -> None:
-        calendar_resource.return_value.events.return_value.list.return_value.execute.return_value = (
-            response
+    def _put_result(
+        response: dict[str, Any], calendar_id: str = None, exc: Exception = None
+    ) -> None:
+        if calendar_id is None:
+            calendar_id = CALENDAR_ID
+        aioclient_mock.get(
+            f"{API_BASE_URL}/calendars/{calendar_id}/events",
+            json=response,
+            exc=exc,
         )
         return
 
@@ -235,13 +235,15 @@ def mock_events_list_items(
 
 @pytest.fixture
 def mock_calendars_list(
-    calendar_resource: google_discovery.Resource,
+    aioclient_mock: AiohttpClientMocker,
 ) -> ApiResult:
     """Fixture to construct a fake calendar list API response."""
 
-    def _put_result(response: dict[str, Any]) -> None:
-        calendar_resource.return_value.calendarList.return_value.list.return_value.execute.return_value = (
-            response
+    def _put_result(response: dict[str, Any], exc=None) -> None:
+        aioclient_mock.get(
+            f"{API_BASE_URL}/users/me/calendarList",
+            json=response,
+            exc=exc,
         )
         return
 
@@ -250,12 +252,17 @@ def mock_calendars_list(
 
 @pytest.fixture
 def mock_insert_event(
-    calendar_resource: google_discovery.Resource,
-) -> Mock:
-    """Fixture to create a mock to capture new events added to the API."""
-    insert_mock = Mock()
-    calendar_resource.return_value.events.return_value.insert = insert_mock
-    return insert_mock
+    aioclient_mock: AiohttpClientMocker,
+) -> Callable[[..., dict[str, Any]], None]:
+    """Fixture for capturing event creation."""
+
+    def _expect_result(calendar_id: str = CALENDAR_ID) -> None:
+        aioclient_mock.post(
+            f"{API_BASE_URL}/calendars/{calendar_id}/events",
+        )
+        return
+
+    return _expect_result
 
 
 @pytest.fixture(autouse=True)
