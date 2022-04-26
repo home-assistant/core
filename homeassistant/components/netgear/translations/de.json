@@ -15,7 +15,7 @@
                     "ssl": "Verwendet ein SSL-Zertifikat",
                     "username": "Benutzername (Optional)"
                 },
-                "description": "Standardhost: {host}\nStandardport: {port}\nStandardbenutzername: {username}",
+                "description": "Standardhost: {host}\nStandardbenutzername: {username}",
                 "title": "Netgear"
             }
         }

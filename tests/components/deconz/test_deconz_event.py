@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from pydeconz.sensor import (
+from pydeconz.models.sensor.ancillary_control import (
     ANCILLARY_CONTROL_ARMED_AWAY,
     ANCILLARY_CONTROL_EMERGENCY,
     ANCILLARY_CONTROL_FIRE,
@@ -80,9 +80,9 @@ async def test_deconz_events(hass, aioclient_mock, mock_deconz_websocket):
     assert (
         len(async_entries_for_config_entry(device_registry, config_entry.entry_id)) == 7
     )
-    assert hass.states.get("sensor.switch_2_battery_level").state == "100"
-    assert hass.states.get("sensor.switch_3_battery_level").state == "100"
-    assert hass.states.get("sensor.switch_4_battery_level").state == "100"
+    assert hass.states.get("sensor.switch_2_battery").state == "100"
+    assert hass.states.get("sensor.switch_3_battery").state == "100"
+    assert hass.states.get("sensor.switch_4_battery").state == "100"
 
     captured_events = async_capture_events(hass, CONF_DECONZ_EVENT)
 
@@ -269,7 +269,7 @@ async def test_deconz_alarm_events(hass, aioclient_mock, mock_deconz_websocket):
 
     device_registry = await hass.helpers.device_registry.async_get_registry()
 
-    assert len(hass.states.async_all()) == 3
+    assert len(hass.states.async_all()) == 4
     # 1 alarm control device + 2 additional devices for deconz service and host
     assert (
         len(async_entries_for_config_entry(device_registry, config_entry.entry_id)) == 3
@@ -404,7 +404,7 @@ async def test_deconz_alarm_events(hass, aioclient_mock, mock_deconz_websocket):
     await hass.config_entries.async_unload(config_entry.entry_id)
 
     states = hass.states.async_all()
-    assert len(hass.states.async_all()) == 3
+    assert len(hass.states.async_all()) == 4
     for state in states:
         assert state.state == STATE_UNAVAILABLE
 

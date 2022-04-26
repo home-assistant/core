@@ -6,29 +6,19 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from homeassistant.components.greeneye_monitor import (
-    CONF_MONITORS,
-    CONF_NUMBER,
-    CONF_SERIAL_NUMBER,
-    CONF_TEMPERATURE_SENSORS,
-    DOMAIN,
-)
-from homeassistant.const import (
-    CONF_NAME,
-    CONF_PORT,
-    CONF_SENSORS,
-    CONF_TEMPERATURE_UNIT,
-)
+from homeassistant.components.greeneye_monitor import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .common import (
+    MULTI_MONITOR_CONFIG,
     SINGLE_MONITOR_CONFIG_NO_SENSORS,
     SINGLE_MONITOR_CONFIG_POWER_SENSORS,
     SINGLE_MONITOR_CONFIG_PULSE_COUNTERS,
     SINGLE_MONITOR_CONFIG_TEMPERATURE_SENSORS,
     SINGLE_MONITOR_CONFIG_VOLTAGE_SENSORS,
     SINGLE_MONITOR_SERIAL_NUMBER,
+    connect_monitor,
     setup_greeneye_monitor_component_with_config,
 )
 from .conftest import (
@@ -64,7 +54,7 @@ async def test_setup_creates_temperature_entities(
     assert await setup_greeneye_monitor_component_with_config(
         hass, SINGLE_MONITOR_CONFIG_TEMPERATURE_SENSORS
     )
-
+    await connect_monitor(hass, monitors, SINGLE_MONITOR_SERIAL_NUMBER)
     assert_temperature_sensor_registered(
         hass, SINGLE_MONITOR_SERIAL_NUMBER, 1, "temp_a"
     )
@@ -98,7 +88,7 @@ async def test_setup_creates_pulse_counter_entities(
     assert await setup_greeneye_monitor_component_with_config(
         hass, SINGLE_MONITOR_CONFIG_PULSE_COUNTERS
     )
-
+    await connect_monitor(hass, monitors, SINGLE_MONITOR_SERIAL_NUMBER)
     assert_pulse_counter_registered(
         hass,
         SINGLE_MONITOR_SERIAL_NUMBER,
@@ -135,7 +125,7 @@ async def test_setup_creates_power_sensor_entities(
     assert await setup_greeneye_monitor_component_with_config(
         hass, SINGLE_MONITOR_CONFIG_POWER_SENSORS
     )
-
+    await connect_monitor(hass, monitors, SINGLE_MONITOR_SERIAL_NUMBER)
     assert_power_sensor_registered(hass, SINGLE_MONITOR_SERIAL_NUMBER, 1, "channel 1")
     assert_power_sensor_registered(hass, SINGLE_MONITOR_SERIAL_NUMBER, 2, "channel two")
 
@@ -147,7 +137,7 @@ async def test_setup_creates_voltage_sensor_entities(
     assert await setup_greeneye_monitor_component_with_config(
         hass, SINGLE_MONITOR_CONFIG_VOLTAGE_SENSORS
     )
-
+    await connect_monitor(hass, monitors, SINGLE_MONITOR_SERIAL_NUMBER)
     assert_voltage_sensor_registered(hass, SINGLE_MONITOR_SERIAL_NUMBER, 1, "voltage 1")
 
 
@@ -155,45 +145,26 @@ async def test_multi_monitor_config(hass: HomeAssistant, monitors: AsyncMock) ->
     """Test that component setup registers entities from multiple monitors correctly."""
     assert await setup_greeneye_monitor_component_with_config(
         hass,
-        {
-            DOMAIN: {
-                CONF_PORT: 7513,
-                CONF_MONITORS: [
-                    {
-                        CONF_SERIAL_NUMBER: "00000001",
-                        CONF_TEMPERATURE_SENSORS: {
-                            CONF_TEMPERATURE_UNIT: "C",
-                            CONF_SENSORS: [
-                                {CONF_NUMBER: 1, CONF_NAME: "unit_1_temp_1"}
-                            ],
-                        },
-                    },
-                    {
-                        CONF_SERIAL_NUMBER: "00000002",
-                        CONF_TEMPERATURE_SENSORS: {
-                            CONF_TEMPERATURE_UNIT: "F",
-                            CONF_SENSORS: [
-                                {CONF_NUMBER: 1, CONF_NAME: "unit_2_temp_1"}
-                            ],
-                        },
-                    },
-                ],
-            }
-        },
+        MULTI_MONITOR_CONFIG,
     )
+
+    await connect_monitor(hass, monitors, 1)
+    await connect_monitor(hass, monitors, 2)
+    await connect_monitor(hass, monitors, 3)
 
     assert_temperature_sensor_registered(hass, 1, 1, "unit_1_temp_1")
     assert_temperature_sensor_registered(hass, 2, 1, "unit_2_temp_1")
+    assert_temperature_sensor_registered(hass, 3, 1, "unit_3_temp_1")
 
 
 async def test_setup_and_shutdown(hass: HomeAssistant, monitors: AsyncMock) -> None:
     """Test that the component can set up and shut down cleanly, closing the underlying server on shutdown."""
-    server = AsyncMock()
-    monitors.start_server = AsyncMock(return_value=server)
+    monitors.start_server = AsyncMock(return_value=None)
+    monitors.close = AsyncMock(return_value=None)
     assert await setup_greeneye_monitor_component_with_config(
         hass, SINGLE_MONITOR_CONFIG_POWER_SENSORS
     )
 
     await hass.async_stop()
 
-    assert server.close.called
+    assert monitors.close.called

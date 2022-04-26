@@ -18,7 +18,6 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client, config_validation as cv
-from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_BALANCING_AUTHORITY,
@@ -190,7 +189,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
         return await self.async_step_coordinates()
 
-    async def async_step_reauth(self, config: ConfigType) -> FlowResult:
+    async def async_step_reauth(self, config: dict[str, Any]) -> FlowResult:
         """Handle configuration by re-auth."""
         self._data = {**config}
         return await self.async_step_reauth_confirm()

@@ -64,6 +64,7 @@
             "init": {
                 "data": {
                     "scan_interval": "P\u00e4ringute vahe minutites",
+                    "snap_profile_type": "Kaamera hetkt\u00f5mmiste kvaliteeditase (0: k\u00f5rge 1: keskmine 2: madal)",
                     "timeout": "Ajal\u00f5pp (sekundites)"
                 }
             }

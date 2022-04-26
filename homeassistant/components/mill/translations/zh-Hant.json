@@ -21,11 +21,11 @@
             },
             "user": {
                 "data": {
-                    "connection_type": "\u9078\u64c7\u9023\u7dda\u985e\u578b",
+                    "connection_type": "\u9078\u64c7\u9023\u7dda\u985e\u5225",
                     "password": "\u5bc6\u78bc",
                     "username": "\u4f7f\u7528\u8005\u540d\u7a31"
                 },
-                "description": "\u9078\u64c7\u9023\u7dda\u985e\u578b\u3002\u672c\u5730\u7aef\u5c07\u9700\u8981\u7b2c\u4e09\u4ee3\u52a0\u71b1\u5668"
+                "description": "\u9078\u64c7\u9023\u7dda\u985e\u5225\u3002\u672c\u5730\u7aef\u5c07\u9700\u8981\u7b2c\u4e09\u4ee3\u52a0\u71b1\u5668"
             }
         }
     }

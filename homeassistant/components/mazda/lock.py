@@ -1,12 +1,18 @@
 """Platform for Mazda lock integration."""
-
 from homeassistant.components.lock import LockEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import MazdaEntity
 from .const import DATA_CLIENT, DATA_COORDINATOR, DOMAIN
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the lock platform."""
     client = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
     coordinator = hass.data[DOMAIN][config_entry.entry_id][DATA_COORDINATOR]
@@ -22,16 +28,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class MazdaLock(MazdaEntity, LockEntity):
     """Class for the lock."""
 
-    @property
-    def name(self):
-        """Return the name of the entity."""
-        vehicle_name = self.get_vehicle_name()
-        return f"{vehicle_name} Lock"
+    def __init__(self, client, coordinator, index) -> None:
+        """Initialize Mazda lock."""
+        super().__init__(client, coordinator, index)
 
-    @property
-    def unique_id(self):
-        """Return a unique identifier for this entity."""
-        return self.vin
+        self._attr_name = f"{self.vehicle_name} Lock"
+        self._attr_unique_id = self.vin
 
     @property
     def is_locked(self):

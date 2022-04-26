@@ -15,7 +15,7 @@
                     "ssl": "SSL sertifikas\u0131 kullan\u0131r",
                     "username": "Kullan\u0131c\u0131 Ad\u0131 (\u0130ste\u011fe ba\u011fl\u0131)"
                 },
-                "description": "Varsay\u0131lan ana bilgisayar: {host}\n Varsay\u0131lan ba\u011flant\u0131 noktas\u0131: {port}\n Varsay\u0131lan kullan\u0131c\u0131 ad\u0131: {username}",
+                "description": "Varsay\u0131lan sunucu: {host}\nVarsay\u0131lan kullan\u0131c\u0131 ad\u0131: {username}",
                 "title": "Netgear"
             }
         }

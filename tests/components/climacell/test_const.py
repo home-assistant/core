@@ -6,7 +6,7 @@ from homeassistant.const import TEMP_FAHRENHEIT
 
 
 async def test_post_init():
-    """Test post initiailization check for ClimaCellSensorEntityDescription."""
+    """Test post initialization check for ClimaCellSensorEntityDescription."""
 
     with pytest.raises(RuntimeError):
         ClimaCellSensorEntityDescription(

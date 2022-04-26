@@ -17,7 +17,7 @@ set_auto_off:
 
 turn_on_with_timer:
   name: Turn on with timer
-  description: 'Turn on the Switcher device with timer.'
+  description: "Turn on the Switcher device with timer."
   target:
     entity:
       integration: switcher_kis
@@ -26,7 +26,7 @@ turn_on_with_timer:
   fields:
     timer_minutes:
       name: Timer
-      description: 'Time to turn on.'
+      description: "Time to turn on."
       required: true
       selector:
         number:

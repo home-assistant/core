@@ -107,7 +107,7 @@ To help with the load of incoming pull requests:
 
 - [ ] I have reviewed two other [open pull requests][prs] in this repository.
 
-[prs]: https://github.com/home-assistant/core/pulls?q=is%3Aopen+is%3Apr+-author%3A%40me+-draft%3Atrue+-label%3Awaiting-for-upstream+sort%3Acreated-desc+review%3Anone
+[prs]: https://github.com/home-assistant/core/pulls?q=is%3Aopen+is%3Apr+-author%3A%40me+-draft%3Atrue+-label%3Awaiting-for-upstream+sort%3Acreated-desc+review%3Anone+-status%3Afailure
 
 <!--
   Thank you for contributing <3

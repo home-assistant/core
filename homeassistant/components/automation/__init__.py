@@ -1,8 +1,9 @@
 """Allow to set up simple automation rules via the config file."""
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
 import logging
-from typing import Any, Awaitable, Callable, Dict, TypedDict, cast
+from typing import Any, TypedDict, cast
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
@@ -40,11 +41,15 @@ from homeassistant.exceptions import (
     ConditionErrorContainer,
     ConditionErrorIndex,
     HomeAssistantError,
+    TemplateError,
 )
-from homeassistant.helpers import condition, extract_domain_configs, template
+from homeassistant.helpers import condition, extract_domain_configs
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.integration_platform import (
+    async_process_integration_platform_for_component,
+)
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.script import (
     ATTR_CUR,
@@ -52,6 +57,7 @@ from homeassistant.helpers.script import (
     CONF_MAX,
     CONF_MAX_EXCEEDED,
     Script,
+    script_stack_cv,
 )
 from homeassistant.helpers.script_variables import ScriptVariables
 from homeassistant.helpers.service import (
@@ -66,7 +72,7 @@ from homeassistant.helpers.trace import (
     trace_path,
 )
 from homeassistant.helpers.trigger import async_initialize_triggers
-from homeassistant.helpers.typing import TemplateVarsType
+from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 from homeassistant.loader import bind_hass
 from homeassistant.util.dt import parse_datetime
 
@@ -220,9 +226,13 @@ def areas_in_automation(hass: HomeAssistant, entity_id: str) -> list[str]:
     return list(automation_entity.referenced_areas)
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up all automations."""
     hass.data[DOMAIN] = component = EntityComponent(LOGGER, DOMAIN, hass)
+
+    # Process integration platforms right away since
+    # we will create entities before firing EVENT_COMPONENT_LOADED
+    await async_process_integration_platform_for_component(hass, DOMAIN)
 
     # To register the automation blueprints
     async_get_blueprints(hass)
@@ -457,7 +467,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
             if self._variables:
                 try:
                     variables = self._variables.async_render(self.hass, variables)
-                except template.TemplateError as err:
+                except TemplateError as err:
                     self._logger.error("Error rendering variables: %s", err)
                     automation_trace.set_error(err)
                     return
@@ -502,6 +512,10 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
                 self.hass.bus.async_fire(
                     EVENT_AUTOMATION_TRIGGERED, event_data, context=trigger_context
                 )
+
+            # Make a new empty script stack; automations are allowed
+            # to recursively trigger themselves
+            script_stack_cv.set([])
 
             try:
                 with trace_path("action"):
@@ -589,7 +603,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
                     variables,
                     limited=True,
                 )
-            except template.TemplateError as err:
+            except TemplateError as err:
                 self._logger.error("Error rendering trigger variables: %s", err)
                 return None
 
@@ -631,7 +645,7 @@ async def _async_process_config(
                 try:
                     raw_config = blueprint_inputs.async_substitute()
                     config_block = cast(
-                        Dict[str, Any],
+                        dict[str, Any],
                         await async_validate_config_item(hass, raw_config),
                     )
                 except vol.Invalid as err:

@@ -19,8 +19,8 @@ STORAGE_VERSION_USER_DATA = 1
 async def async_setup_frontend_storage(hass: HomeAssistant) -> None:
     """Set up frontend storage."""
     hass.data[DATA_STORAGE] = ({}, {})
-    hass.components.websocket_api.async_register_command(websocket_set_user_data)
-    hass.components.websocket_api.async_register_command(websocket_get_user_data)
+    websocket_api.async_register_command(hass, websocket_set_user_data)
+    websocket_api.async_register_command(hass, websocket_get_user_data)
 
 
 def with_store(orig_func: Callable) -> Callable:

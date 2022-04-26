@@ -55,10 +55,8 @@ async def async_setup_entry(
     )
 
 
-class VerisureDoorlock(CoordinatorEntity, LockEntity):
+class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEntity):
     """Representation of a Verisure doorlock."""
-
-    coordinator: VerisureDataUpdateCoordinator
 
     def __init__(
         self, coordinator: VerisureDataUpdateCoordinator, serial_number: str
@@ -70,7 +68,7 @@ class VerisureDoorlock(CoordinatorEntity, LockEntity):
         self._attr_unique_id = serial_number
 
         self.serial_number = serial_number
-        self._state = None
+        self._state: str | None = None
         self._digits = coordinator.entry.options.get(
             CONF_LOCK_CODE_DIGITS, DEFAULT_LOCK_CODE_DIGITS
         )

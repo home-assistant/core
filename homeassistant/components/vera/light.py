@@ -8,13 +8,13 @@ import pyvera as veraApi
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_HS_COLOR,
-    DOMAIN as PLATFORM_DOMAIN,
     ENTITY_ID_FORMAT,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.color as color_util
@@ -33,7 +33,7 @@ async def async_setup_entry(
     async_add_entities(
         [
             VeraLight(device, controller_data)
-            for device in controller_data.devices.get(PLATFORM_DOMAIN)
+            for device in controller_data.devices[Platform.LIGHT]
         ],
         True,
     )
@@ -47,7 +47,7 @@ class VeraLight(VeraDevice[veraApi.VeraDimmer], LightEntity):
     ) -> None:
         """Initialize the light."""
         self._state = False
-        self._color = None
+        self._color: tuple[float, float] | None = None
         self._brightness = None
         VeraDevice.__init__(self, vera_device, controller_data)
         self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)

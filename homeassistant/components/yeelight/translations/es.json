@@ -21,7 +21,7 @@
                 "data": {
                     "host": "Host"
                 },
-                "description": "Si dejas la direcci\u00f3n IP vac\u00eda, se usar\u00e1 descubrimiento para encontrar dispositivos."
+                "description": "Si dejas el host vac\u00edo, se usar\u00e1 descubrimiento para encontrar dispositivos."
             }
         }
     },

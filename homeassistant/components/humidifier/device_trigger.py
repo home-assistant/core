@@ -35,7 +35,7 @@ from . import DOMAIN
 
 # mypy: disallow-any-generics
 
-TARGET_TRIGGER_SCHEMA = vol.All(
+HUMIDIFIER_TRIGGER_SCHEMA = vol.All(
     DEVICE_TRIGGER_BASE_SCHEMA.extend(
         {
             vol.Required(CONF_ENTITY_ID): cv.entity_id,
@@ -48,11 +48,13 @@ TARGET_TRIGGER_SCHEMA = vol.All(
     cv.has_at_least_one_key(CONF_BELOW, CONF_ABOVE),
 )
 
-TOGGLE_TRIGGER_SCHEMA = toggle_entity.TRIGGER_SCHEMA.extend(
-    {vol.Required(CONF_DOMAIN): DOMAIN}
+TRIGGER_SCHEMA = vol.All(
+    vol.Any(
+        HUMIDIFIER_TRIGGER_SCHEMA,
+        toggle_entity.TRIGGER_SCHEMA,
+    ),
+    vol.Schema({vol.Required(CONF_DOMAIN): DOMAIN}, extra=vol.ALLOW_EXTRA),
 )
-
-TRIGGER_SCHEMA = vol.Any(TARGET_TRIGGER_SCHEMA, TOGGLE_TRIGGER_SCHEMA)
 
 
 async def async_get_triggers(

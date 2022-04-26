@@ -58,10 +58,8 @@ async def async_setup_entry(
     async_add_entities(sensors, False)
 
 
-class NAMSensor(CoordinatorEntity, SensorEntity):
+class NAMSensor(CoordinatorEntity[NAMDataUpdateCoordinator], SensorEntity):
     """Define an Nettigo Air Monitor sensor."""
-
-    coordinator: NAMDataUpdateCoordinator
 
     def __init__(
         self,

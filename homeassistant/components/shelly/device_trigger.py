@@ -123,6 +123,9 @@ async def async_get_triggers(
             append_input_triggers(triggers, input_triggers, device_id)
             return triggers
 
+        if not block_wrapper.device.initialized:
+            return triggers
+
         assert block_wrapper.device.blocks
 
         for block in block_wrapper.device.blocks:

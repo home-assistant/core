@@ -69,22 +69,22 @@ class AmcrestSwitch(SwitchEntity):
         """Return True if entity is available."""
         return self._api.available
 
-    def turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        self._turn_switch(True)
+        await self._async_turn_switch(True)
 
-    def turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        self._turn_switch(False)
+        await self._async_turn_switch(False)
 
-    def _turn_switch(self, mode: bool) -> None:
+    async def _async_turn_switch(self, mode: bool) -> None:
         """Set privacy mode."""
         lower_str = str(mode).lower()
-        self._api.command(
+        await self._api.async_command(
             f"configManager.cgi?action=setConfig&LeLensMask[0].Enable={lower_str}"
         )
 
-    def update(self) -> None:
+    async def async_update(self) -> None:
         """Update switch."""
-        io_res = self._api.privacy_config().splitlines()[0].split("=")[1]
+        io_res = (await self._api.async_privacy_config()).splitlines()[0].split("=")[1]
         self._attr_is_on = io_res == "true"

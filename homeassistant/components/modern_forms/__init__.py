@@ -126,8 +126,6 @@ class ModernFormsDataUpdateCoordinator(DataUpdateCoordinator[ModernFormsDeviceSt
 class ModernFormsDeviceEntity(CoordinatorEntity[ModernFormsDataUpdateCoordinator]):
     """Defines a Modern Forms device entity."""
 
-    coordinator: ModernFormsDataUpdateCoordinator
-
     def __init__(
         self,
         *,

@@ -8,7 +8,7 @@ from xknx import XKNX
 from xknx.devices import Fan as XknxFan
 
 from homeassistant import config_entries
-from homeassistant.components.fan import SUPPORT_OSCILLATE, SUPPORT_SET_SPEED, FanEntity
+from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -78,10 +78,10 @@ class KNXFan(KnxEntity, FanEntity):
     @property
     def supported_features(self) -> int:
         """Flag supported features."""
-        flags = SUPPORT_SET_SPEED
+        flags: int = FanEntityFeature.SET_SPEED
 
         if self._device.supports_oscillation:
-            flags |= SUPPORT_OSCILLATE
+            flags |= FanEntityFeature.OSCILLATE
 
         return flags
 
@@ -106,7 +106,6 @@ class KNXFan(KnxEntity, FanEntity):
 
     async def async_turn_on(
         self,
-        speed: str | None = None,
         percentage: int | None = None,
         preset_mode: str | None = None,
         **kwargs: Any,

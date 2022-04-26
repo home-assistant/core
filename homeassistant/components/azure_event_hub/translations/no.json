@@ -2,9 +2,9 @@
     "config": {
         "abort": {
             "already_configured": "Tjenesten er allerede konfigurert",
-            "cannot_connect": "Tilkobling med p\u00e5loggingsinformasjonen fra configuration.yaml mislyktes, vennligst fjern fra yaml og bruk konfigurasjonsflyten.",
+            "cannot_connect": "Tilkobling med legitimasjonen fra configuration.yaml mislyktes. Fjern fra yaml og bruk konfigurasjonsflyten.",
             "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig.",
-            "unknown": "Tilkobling med p\u00e5loggingsinformasjonen fra configuration.yaml mislyktes med en ukjent feil, vennligst fjern fra yaml og bruk konfigurasjonsflyten."
+            "unknown": "Tilkobling med legitimasjonen fra configuration.yaml mislyktes med en ukjent feil. Fjern fra yaml og bruk konfigurasjonsflyten."
         },
         "error": {
             "cannot_connect": "Tilkobling mislyktes",

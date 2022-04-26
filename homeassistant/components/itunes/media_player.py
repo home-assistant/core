@@ -1,22 +1,17 @@
 """Support for interfacing to iTunes API."""
+from __future__ import annotations
+
 import requests
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
+from homeassistant.components.media_player import (
+    PLATFORM_SCHEMA,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
+)
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_PLAYLIST,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SEEK,
-    SUPPORT_SHUFFLE_SET,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -29,7 +24,10 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_PLAYING,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 DEFAULT_NAME = "iTunes"
 DEFAULT_PORT = 8181
@@ -37,20 +35,6 @@ DEFAULT_SSL = False
 DEFAULT_TIMEOUT = 10
 DOMAIN = "itunes"
 
-SUPPORT_ITUNES = (
-    SUPPORT_PAUSE
-    | SUPPORT_VOLUME_SET
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_SEEK
-    | SUPPORT_PLAY_MEDIA
-    | SUPPORT_PLAY
-    | SUPPORT_TURN_OFF
-    | SUPPORT_SHUFFLE_SET
-)
-
-SUPPORT_AIRPLAY = SUPPORT_VOLUME_SET | SUPPORT_TURN_ON | SUPPORT_TURN_OFF
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -186,7 +170,12 @@ class Itunes:
         return self._request("PUT", path, {"level": level})
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the iTunes platform."""
     add_entities(
         [
@@ -203,6 +192,19 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 class ItunesDevice(MediaPlayerEntity):
     """Representation of an iTunes API instance."""
+
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.PREVIOUS_TRACK
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.SEEK
+        | MediaPlayerEntityFeature.PLAY_MEDIA
+        | MediaPlayerEntityFeature.PLAY
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.SHUFFLE_SET
+    )
 
     def __init__(self, name, host, port, use_ssl, add_entities):
         """Initialize the iTunes device."""
@@ -352,11 +354,6 @@ class ItunesDevice(MediaPlayerEntity):
         """Boolean if shuffle is enabled."""
         return self.shuffled
 
-    @property
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        return SUPPORT_ITUNES
-
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
         response = self.client.set_volume(int(volume * 100))
@@ -406,6 +403,12 @@ class ItunesDevice(MediaPlayerEntity):
 
 class AirPlayDevice(MediaPlayerEntity):
     """Representation an AirPlay device via an iTunes API instance."""
+
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.TURN_OFF
+    )
 
     def __init__(self, device_id, client):
         """Initialize the AirPlay device."""
@@ -480,11 +483,6 @@ class AirPlayDevice(MediaPlayerEntity):
     def media_content_type(self):
         """Flag of media content that is supported."""
         return MEDIA_TYPE_MUSIC
-
-    @property
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        return SUPPORT_AIRPLAY
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""

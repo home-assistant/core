@@ -1,5 +1,8 @@
 """Tracking for bluetooth low energy devices."""
+from __future__ import annotations
+
 import asyncio
+from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
 from uuid import UUID
@@ -21,8 +24,10 @@ from homeassistant.components.device_tracker.legacy import (
     async_load_config,
 )
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_point_in_utc_time
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -48,10 +53,15 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_scanner(hass, config, see, discovery_info=None):  # noqa: C901
+def setup_scanner(  # noqa: C901
+    hass: HomeAssistant,
+    config: ConfigType,
+    see: Callable[..., None],
+    discovery_info: DiscoveryInfoType | None = None,
+) -> bool:
     """Set up the Bluetooth LE Scanner."""
 
-    new_devices = {}
+    new_devices: dict[str, dict] = {}
     hass.data.setdefault(DATA_BLE, {DATA_BLE_ADAPTER: None})
 
     def handle_stop(event):
@@ -126,7 +136,7 @@ def setup_scanner(hass, config, see, discovery_info=None):  # noqa: C901
     # We just need the devices so set consider_home and home range
     # to 0
     for device in asyncio.run_coroutine_threadsafe(
-        async_load_config(yaml_path, hass, 0), hass.loop
+        async_load_config(yaml_path, hass, timedelta(0)), hass.loop
     ).result():
         # check if device is a valid bluetooth device
         if device.mac and device.mac[:4].upper() == BLE_PREFIX:

@@ -7,6 +7,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import ServiceCall
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
@@ -73,7 +74,7 @@ class RachioPerson:
 
         all_devices = [rachio_iro.name for rachio_iro in self._controllers]
 
-        def pause_water(service):
+        def pause_water(service: ServiceCall) -> None:
             """Service to pause watering on all or specific controllers."""
             duration = service.data[ATTR_DURATION]
             devices = service.data.get(ATTR_DEVICES, all_devices)
@@ -81,14 +82,14 @@ class RachioPerson:
                 if iro.name in devices:
                     iro.pause_watering(duration)
 
-        def resume_water(service):
+        def resume_water(service: ServiceCall) -> None:
             """Service to resume watering on all or specific controllers."""
             devices = service.data.get(ATTR_DEVICES, all_devices)
             for iro in self._controllers:
                 if iro.name in devices:
                     iro.resume_watering()
 
-        def stop_water(service):
+        def stop_water(service: ServiceCall) -> None:
             """Service to stop watering on all or specific controllers."""
             devices = service.data.get(ATTR_DEVICES, all_devices)
             for iro in self._controllers:

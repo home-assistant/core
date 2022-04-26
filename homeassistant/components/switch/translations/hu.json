@@ -1,7 +1,17 @@
 {
+    "config": {
+        "step": {
+            "init": {
+                "data": {
+                    "entity_id": "Kapcsol\u00f3 entit\u00e1s"
+                },
+                "description": "V\u00e1lassza ki a kapcsol\u00f3t a vil\u00e1g\u00edt\u00e1shoz."
+            }
+        }
+    },
     "device_automation": {
         "action_type": {
-            "toggle": "{entity_name} be/kikapcsol\u00e1sa",
+            "toggle": "{entity_name} kapcsol\u00e1sa",
             "turn_off": "{entity_name} kikapcsol\u00e1sa",
             "turn_on": "{entity_name} bekapcsol\u00e1sa"
         },
@@ -10,6 +20,7 @@
             "is_on": "{entity_name} be van kapcsolva"
         },
         "trigger_type": {
+            "toggled": "{entity_name} \u00e1tkapcsolt",
             "turned_off": "{entity_name} ki lett kapcsolva",
             "turned_on": "{entity_name} be lett kapcsolva"
         }

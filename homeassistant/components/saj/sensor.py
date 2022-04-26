@@ -20,7 +20,6 @@ from homeassistant.const import (
     CONF_TYPE,
     CONF_USERNAME,
     ENERGY_KILO_WATT_HOUR,
-    EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
     MASS_KILOGRAMS,
     POWER_WATT,
@@ -28,10 +27,13 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
     TIME_HOURS,
 )
-from homeassistant.core import CALLBACK_TYPE, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.start import async_at_start
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,7 +62,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the SAJ sensors."""
 
     remove_interval_update = None
@@ -124,17 +131,19 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
         return values
 
+    @callback
     def start_update_interval(event):
         """Start the update interval scheduling."""
         nonlocal remove_interval_update
         remove_interval_update = async_track_time_interval_backoff(hass, async_saj)
 
+    @callback
     def stop_update_interval(event):
         """Properly cancel the scheduled update."""
         remove_interval_update()  # pylint: disable=not-callable
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_update_interval)
     hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, stop_update_interval)
+    async_at_start(hass, start_update_interval)
 
 
 @callback

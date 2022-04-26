@@ -17,13 +17,20 @@ from homeassistant.components.light import (
     SUPPORT_TRANSITION,
     LightEntity,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.color as color_util
 
 from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Add lights for a config entry."""
     broker = hass.data[DOMAIN][DATA_BROKERS][config_entry.entry_id]
     async_add_entities(
@@ -155,7 +162,7 @@ class SmartThingsLight(SmartThingsEntity, LightEntity):
     async def async_set_color_temp(self, value: float):
         """Set the color temperature of the device."""
         kelvin = color_util.color_temperature_mired_to_kelvin(value)
-        kelvin = max(min(kelvin, 30000.0), 1.0)
+        kelvin = max(min(kelvin, 30000), 1)
         await self._device.set_color_temperature(kelvin, set_status=True)
 
     async def async_set_level(self, brightness: int, transition: int):

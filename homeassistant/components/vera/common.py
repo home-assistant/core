@@ -2,14 +2,14 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Sequence
+from datetime import datetime
 from typing import NamedTuple
 
 import pyvera as pv
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers.event import call_later
 
 from .const import DOMAIN
@@ -26,7 +26,7 @@ class ControllerData(NamedTuple):
 
 def get_configured_platforms(controller_data: ControllerData) -> set[Platform]:
     """Get configured platforms for a controller."""
-    platforms: Sequence[Platform] = []
+    platforms: list[Platform] = []
     for platform in controller_data.devices:
         platforms.append(platform)
 
@@ -57,7 +57,7 @@ class SubscriptionRegistry(pv.AbstractSubscriptionRegistry):
         """Initialize the object."""
         super().__init__()
         self._hass = hass
-        self._cancel_poll = None
+        self._cancel_poll: CALLBACK_TYPE | None = None
 
     def start(self) -> None:
         """Start polling for data."""
@@ -73,7 +73,7 @@ class SubscriptionRegistry(pv.AbstractSubscriptionRegistry):
     def _schedule_poll(self, delay: float) -> None:
         self._cancel_poll = call_later(self._hass, delay, self._run_poll_server)
 
-    def _run_poll_server(self, now) -> None:
+    def _run_poll_server(self, now: datetime) -> None:
         delay = 1
 
         # Long poll for changes. The downstream API instructs the endpoint to wait a

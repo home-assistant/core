@@ -4,13 +4,10 @@ from zwave_js_server.event import Event
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_CURRENT_TILT_POSITION,
-    DEVICE_CLASS_BLIND,
-    DEVICE_CLASS_GARAGE,
-    DEVICE_CLASS_SHUTTER,
-    DEVICE_CLASS_WINDOW,
     DOMAIN,
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
+    CoverDeviceClass,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -35,7 +32,7 @@ async def test_window_cover(hass, client, chain_actuator_zws12, integration):
     state = hass.states.get(WINDOW_COVER_ENTITY)
 
     assert state
-    assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_WINDOW
+    assert state.attributes[ATTR_DEVICE_CLASS] == CoverDeviceClass.WINDOW
 
     assert state.state == "closed"
     assert state.attributes[ATTR_CURRENT_POSITION] == 0
@@ -315,7 +312,7 @@ async def test_fibaro_FGR222_shutter_cover(
     """Test tilt function of the Fibaro Shutter devices."""
     state = hass.states.get(FIBARO_SHUTTER_COVER_ENTITY)
     assert state
-    assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_SHUTTER
+    assert state.attributes[ATTR_DEVICE_CLASS] == CoverDeviceClass.SHUTTER
 
     assert state.state == "open"
     assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 0
@@ -396,7 +393,7 @@ async def test_aeotec_nano_shutter_cover(
     state = hass.states.get(AEOTEC_SHUTTER_COVER_ENTITY)
 
     assert state
-    assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_WINDOW
+    assert state.attributes[ATTR_DEVICE_CLASS] == CoverDeviceClass.WINDOW
 
     assert state.state == "closed"
     assert state.attributes[ATTR_CURRENT_POSITION] == 0
@@ -602,7 +599,7 @@ async def test_blind_cover(hass, client, iblinds_v2, integration):
     state = hass.states.get(BLIND_COVER_ENTITY)
 
     assert state
-    assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_BLIND
+    assert state.attributes[ATTR_DEVICE_CLASS] == CoverDeviceClass.BLIND
 
 
 async def test_shutter_cover(hass, client, qubino_shutter, integration):
@@ -610,7 +607,7 @@ async def test_shutter_cover(hass, client, qubino_shutter, integration):
     state = hass.states.get(SHUTTER_COVER_ENTITY)
 
     assert state
-    assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_SHUTTER
+    assert state.attributes[ATTR_DEVICE_CLASS] == CoverDeviceClass.SHUTTER
 
 
 async def test_motor_barrier_cover(hass, client, gdc_zw062, integration):
@@ -619,7 +616,7 @@ async def test_motor_barrier_cover(hass, client, gdc_zw062, integration):
 
     state = hass.states.get(GDC_COVER_ENTITY)
     assert state
-    assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_GARAGE
+    assert state.attributes[ATTR_DEVICE_CLASS] == CoverDeviceClass.GARAGE
 
     assert state.state == STATE_CLOSED
 

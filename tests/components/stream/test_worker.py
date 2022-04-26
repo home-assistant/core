@@ -270,7 +270,7 @@ class MockPyAv:
 
 def run_worker(hass, stream, stream_source):
     """Run the stream worker under test."""
-    stream_state = StreamState(hass, stream.outputs)
+    stream_state = StreamState(hass, stream.outputs, stream._diagnostics)
     stream_worker(
         stream_source, {}, stream_state, KeyFrameConverter(hass), threading.Event()
     )
@@ -669,8 +669,8 @@ async def test_update_stream_source(hass):
 
     stream = Stream(hass, STREAM_SOURCE, {})
     stream.add_provider(HLS_PROVIDER)
-    # Note that keepalive is not set here.  The stream is "restarted" even though
-    # it is not stopping due to failure.
+    # Note that retries are disabled by default in tests, however the stream is "restarted" when
+    # the stream source is updated.
 
     py_av = MockPyAv()
     py_av.container.packets = PacketSequence(TEST_SEQUENCE_LENGTH)
@@ -716,7 +716,10 @@ async def test_worker_log(hass, caplog):
         av_open.side_effect = av.error.InvalidDataError(-2, "error")
         run_worker(hass, stream, "https://abcd:efgh@foo.bar")
         await hass.async_block_till_done()
-    assert str(err.value) == "Error opening stream https://****:****@foo.bar"
+    assert (
+        str(err.value)
+        == "Error opening stream (ERRORTYPE_-2, error) https://****:****@foo.bar"
+    )
     assert "https://abcd:efgh@foo.bar" not in caplog.text
 
 
@@ -869,6 +872,14 @@ async def test_h265_video_is_hvc1(hass, record_worker_sync):
     await record_worker_sync.join()
 
     stream.stop()
+
+    assert stream.get_diagnostics() == {
+        "container_format": "mov,mp4,m4a,3gp,3g2,mj2",
+        "keepalive": False,
+        "start_worker": 1,
+        "video_codec": "hevc",
+        "worker_error": 1,
+    }
 
 
 async def test_get_image(hass, record_worker_sync):

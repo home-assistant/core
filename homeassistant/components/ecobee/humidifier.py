@@ -3,14 +3,20 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-from homeassistant.components.humidifier import HumidifierDeviceClass, HumidifierEntity
+from homeassistant.components.humidifier import (
+    HumidifierDeviceClass,
+    HumidifierEntity,
+    HumidifierEntityFeature,
+)
 from homeassistant.components.humidifier.const import (
     DEFAULT_MAX_HUMIDITY,
     DEFAULT_MIN_HUMIDITY,
     MODE_AUTO,
-    SUPPORT_MODES,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
 
@@ -20,7 +26,11 @@ MODE_MANUAL = "manual"
 MODE_OFF = "off"
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the ecobee thermostat humidifier entity."""
     data = hass.data[DOMAIN]
     entities = []
@@ -33,7 +43,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 class EcobeeHumidifier(HumidifierEntity):
-    """A humidifier class for an ecobee thermostat with humidifer attached."""
+    """A humidifier class for an ecobee thermostat with humidifier attached."""
+
+    _attr_supported_features = HumidifierEntityFeature.MODES
 
     def __init__(self, data, thermostat_index):
         """Initialize ecobee humidifier platform."""
@@ -117,11 +129,6 @@ class EcobeeHumidifier(HumidifierEntity):
     def mode(self):
         """Return the current mode, e.g., off, auto, manual."""
         return self.thermostat["settings"]["humidifierMode"]
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_MODES
 
     @property
     def target_humidity(self) -> int:

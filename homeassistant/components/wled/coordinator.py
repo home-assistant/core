@@ -113,6 +113,7 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
         # If the device supports a WebSocket, try activating it.
         if (
             device.info.websocket is not None
+            and device.info.leds.cct is not True
             and not self.wled.connected
             and not self.unsub
         ):

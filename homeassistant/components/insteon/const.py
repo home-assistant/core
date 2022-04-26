@@ -48,9 +48,9 @@ INSTEON_PLATFORMS = [
 ]
 
 X10_PLATFORMS = [
-    "binary_sensor",
-    "switch",
-    "light",
+    Platform.BINARY_SENSOR,
+    Platform.SWITCH,
+    Platform.LIGHT,
 ]
 
 CONF_IP_PORT = "ip_port"

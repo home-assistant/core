@@ -5,13 +5,7 @@ import functools
 import numbers
 from typing import Any
 
-from homeassistant.components.climate.const import (
-    CURRENT_HVAC_COOL,
-    CURRENT_HVAC_FAN,
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
-    CURRENT_HVAC_OFF,
-)
+from homeassistant.components.climate.const import HVACAction
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -25,7 +19,7 @@ from homeassistant.const import (
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
-    ENTITY_CATEGORY_DIAGNOSTIC,
+    FREQUENCY_HERTZ,
     LIGHT_LUX,
     PERCENTAGE,
     POWER_VOLT_AMPERE,
@@ -52,6 +46,7 @@ from .core import discovery
 from .core.const import (
     CHANNEL_ANALOG_INPUT,
     CHANNEL_BASIC,
+    CHANNEL_DEVICE_TEMPERATURE,
     CHANNEL_ELECTRICAL_MEASUREMENT,
     CHANNEL_HUMIDITY,
     CHANNEL_ILLUMINANCE,
@@ -231,7 +226,7 @@ class Battery(Sensor):
         return cls(unique_id, zha_device, channels, **kwargs)
 
     @staticmethod
-    def formatter(value: int) -> int:
+    def formatter(value: int) -> int:  # pylint: disable=arguments-differ
         """Return the state of the entity."""
         # per zcl specs battery percent is reported at 200% ¯\_(ツ)_/¯
         if not isinstance(value, numbers.Number) or value == -1:
@@ -306,6 +301,7 @@ class ElectricalMeasurementApparentPower(
     """Apparent power measurement."""
 
     SENSOR_ATTR = "apparent_power"
+    _attr_device_class: SensorDeviceClass = SensorDeviceClass.APPARENT_POWER
     _unit = POWER_VOLT_AMPERE
     _div_mul_prefix = "ac_power"
 
@@ -338,6 +334,35 @@ class ElectricalMeasurementRMSVoltage(ElectricalMeasurement, id_suffix="rms_volt
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.CURRENT
     _unit = ELECTRIC_POTENTIAL_VOLT
     _div_mul_prefix = "ac_voltage"
+
+    @property
+    def should_poll(self) -> bool:
+        """Poll indirectly by ElectricalMeasurementSensor."""
+        return False
+
+
+@MULTI_MATCH(channel_names=CHANNEL_ELECTRICAL_MEASUREMENT)
+class ElectricalMeasurementFrequency(ElectricalMeasurement, id_suffix="ac_frequency"):
+    """Frequency measurement."""
+
+    SENSOR_ATTR = "ac_frequency"
+    _device_class: SensorDeviceClass = SensorDeviceClass.FREQUENCY
+    _unit = FREQUENCY_HERTZ
+    _div_mul_prefix = "ac_frequency"
+
+    @property
+    def should_poll(self) -> bool:
+        """Poll indirectly by ElectricalMeasurementSensor."""
+        return False
+
+
+@MULTI_MATCH(channel_names=CHANNEL_ELECTRICAL_MEASUREMENT)
+class ElectricalMeasurementPowerFactor(ElectricalMeasurement, id_suffix="power_factor"):
+    """Frequency measurement."""
+
+    SENSOR_ATTR = "power_factor"
+    _device_class: SensorDeviceClass = SensorDeviceClass.POWER_FACTOR
+    _unit = PERCENTAGE
 
     @property
     def should_poll(self) -> bool:
@@ -390,8 +415,7 @@ class Illuminance(Sensor):
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
     _unit = LIGHT_LUX
 
-    @staticmethod
-    def formatter(value: int) -> float:
+    def formatter(self, value: int) -> float:
         """Convert illumination data."""
         return round(pow(10, ((value - 1) / 10000)), 1)
 
@@ -495,6 +519,18 @@ class Temperature(Sensor):
     _unit = TEMP_CELSIUS
 
 
+@MULTI_MATCH(channel_names=CHANNEL_DEVICE_TEMPERATURE)
+class DeviceTemperature(Sensor):
+    """Device Temperature Sensor."""
+
+    SENSOR_ATTR = "current_temperature"
+    _attr_device_class: SensorDeviceClass = SensorDeviceClass.TEMPERATURE
+    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+    _divisor = 100
+    _unit = TEMP_CELSIUS
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+
 @MULTI_MATCH(channel_names="carbon_dioxide_concentration")
 class CarbonDioxideConcentration(Sensor):
     """Carbon Dioxide Concentration sensor."""
@@ -589,7 +625,7 @@ class ThermostatHVACAction(Sensor, id_suffix="hvac_action"):
         return self._pi_demand_action
 
     @property
-    def _rm_rs_action(self) -> str | None:
+    def _rm_rs_action(self) -> HVACAction | None:
         """Return the current HVAC action based on running mode and running state."""
 
         if (running_state := self._channel.running_state) is None:
@@ -600,14 +636,14 @@ class ThermostatHVACAction(Sensor, id_suffix="hvac_action"):
             | self._channel.RunningState.Heat_2nd_Stage_On
         )
         if running_state & rs_heat:
-            return CURRENT_HVAC_HEAT
+            return HVACAction.HEATING
 
         rs_cool = (
             self._channel.RunningState.Cool_State_On
             | self._channel.RunningState.Cool_2nd_Stage_On
         )
         if running_state & rs_cool:
-            return CURRENT_HVAC_COOL
+            return HVACAction.COOLING
 
         running_state = self._channel.running_state
         if running_state and running_state & (
@@ -615,30 +651,30 @@ class ThermostatHVACAction(Sensor, id_suffix="hvac_action"):
             | self._channel.RunningState.Fan_2nd_Stage_On
             | self._channel.RunningState.Fan_3rd_Stage_On
         ):
-            return CURRENT_HVAC_FAN
+            return HVACAction.FAN
 
         running_state = self._channel.running_state
         if running_state and running_state & self._channel.RunningState.Idle:
-            return CURRENT_HVAC_IDLE
+            return HVACAction.IDLE
 
         if self._channel.system_mode != self._channel.SystemMode.Off:
-            return CURRENT_HVAC_IDLE
-        return CURRENT_HVAC_OFF
+            return HVACAction.IDLE
+        return HVACAction.OFF
 
     @property
-    def _pi_demand_action(self) -> str | None:
+    def _pi_demand_action(self) -> HVACAction:
         """Return the current HVAC action based on pi_demands."""
 
         heating_demand = self._channel.pi_heating_demand
         if heating_demand is not None and heating_demand > 0:
-            return CURRENT_HVAC_HEAT
+            return HVACAction.HEATING
         cooling_demand = self._channel.pi_cooling_demand
         if cooling_demand is not None and cooling_demand > 0:
-            return CURRENT_HVAC_COOL
+            return HVACAction.COOLING
 
         if self._channel.system_mode != self._channel.SystemMode.Off:
-            return CURRENT_HVAC_IDLE
-        return CURRENT_HVAC_OFF
+            return HVACAction.IDLE
+        return HVACAction.OFF
 
     @callback
     def async_set_state(self, *args, **kwargs) -> None:
@@ -655,14 +691,14 @@ class SinopeHVACAction(ThermostatHVACAction):
     """Sinope Thermostat HVAC action sensor."""
 
     @property
-    def _rm_rs_action(self) -> str | None:
+    def _rm_rs_action(self) -> HVACAction:
         """Return the current HVAC action based on running mode and running state."""
 
         running_mode = self._channel.running_mode
         if running_mode == self._channel.RunningMode.Heat:
-            return CURRENT_HVAC_HEAT
+            return HVACAction.HEATING
         if running_mode == self._channel.RunningMode.Cool:
-            return CURRENT_HVAC_COOL
+            return HVACAction.COOLING
 
         running_state = self._channel.running_state
         if running_state and running_state & (
@@ -670,13 +706,13 @@ class SinopeHVACAction(ThermostatHVACAction):
             | self._channel.RunningState.Fan_2nd_Stage_On
             | self._channel.RunningState.Fan_3rd_Stage_On
         ):
-            return CURRENT_HVAC_FAN
+            return HVACAction.FAN
         if (
             self._channel.system_mode != self._channel.SystemMode.Off
             and running_mode == self._channel.SystemMode.Off
         ):
-            return CURRENT_HVAC_IDLE
-        return CURRENT_HVAC_OFF
+            return HVACAction.IDLE
+        return HVACAction.OFF
 
 
 @MULTI_MATCH(channel_names=CHANNEL_BASIC)
@@ -685,7 +721,7 @@ class RSSISensor(Sensor, id_suffix="rssi"):
 
     _state_class: SensorStateClass = SensorStateClass.MEASUREMENT
     _device_class: SensorDeviceClass = SensorDeviceClass.SIGNAL_STRENGTH
-    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_entity_registry_enabled_default = False
 
     @classmethod

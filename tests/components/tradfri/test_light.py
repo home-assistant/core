@@ -8,11 +8,7 @@ from pytradfri.device import Device
 from pytradfri.device.light import Light
 from pytradfri.device.light_control import LightControl
 
-from homeassistant.components import tradfri
-
-from . import GATEWAY_ID
-
-from tests.common import MockConfigEntry
+from .common import setup_integration
 
 DEFAULT_TEST_FEATURES = {
     "can_set_dimmer": False,
@@ -98,24 +94,6 @@ def setup(request):
 async def generate_psk(self, code):
     """Mock psk."""
     return "mock"
-
-
-async def setup_integration(hass):
-    """Load the Tradfri platform with a mock gateway."""
-    entry = MockConfigEntry(
-        domain=tradfri.DOMAIN,
-        data={
-            "host": "mock-host",
-            "identity": "mock-identity",
-            "key": "mock-key",
-            "import_groups": True,
-            "gateway_id": GATEWAY_ID,
-        },
-    )
-
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
 
 
 def mock_light(test_features=None, test_state=None, light_number=0):
@@ -327,81 +305,3 @@ async def test_turn_off(hass, mock_gateway, mock_api_factory):
     # Check that the state is correct.
     states = hass.states.get("light.tradfri_light_0")
     assert states.state == "off"
-
-
-def mock_group(test_state=None, group_number=0):
-    """Mock a Tradfri group."""
-    if test_state is None:
-        test_state = {}
-    default_state = {"state": False, "dimmer": 0}
-
-    state = {**default_state, **test_state}
-
-    _mock_group = Mock(member_ids=[], observe=Mock(), **state)
-    _mock_group.name = f"tradfri_group_{group_number}"
-    return _mock_group
-
-
-async def test_group(hass, mock_gateway, mock_api_factory):
-    """Test that groups are correctly added."""
-    mock_gateway.mock_groups.append(mock_group())
-    state = {"state": True, "dimmer": 100}
-    mock_gateway.mock_groups.append(mock_group(state, 1))
-    await setup_integration(hass)
-
-    group = hass.states.get("light.tradfri_group_0")
-    assert group is not None
-    assert group.state == "off"
-
-    group = hass.states.get("light.tradfri_group_1")
-    assert group is not None
-    assert group.state == "on"
-    assert group.attributes["brightness"] == 100
-
-
-async def test_group_turn_on(hass, mock_gateway, mock_api_factory):
-    """Test turning on a group."""
-    group = mock_group()
-    group2 = mock_group(group_number=1)
-    group3 = mock_group(group_number=2)
-    mock_gateway.mock_groups.append(group)
-    mock_gateway.mock_groups.append(group2)
-    mock_gateway.mock_groups.append(group3)
-    await setup_integration(hass)
-
-    # Use the turn_off service call to change the light state.
-    await hass.services.async_call(
-        "light", "turn_on", {"entity_id": "light.tradfri_group_0"}, blocking=True
-    )
-    await hass.services.async_call(
-        "light",
-        "turn_on",
-        {"entity_id": "light.tradfri_group_1", "brightness": 100},
-        blocking=True,
-    )
-    await hass.services.async_call(
-        "light",
-        "turn_on",
-        {"entity_id": "light.tradfri_group_2", "brightness": 100, "transition": 1},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-
-    group.set_state.assert_called_with(1)
-    group2.set_dimmer.assert_called_with(100)
-    group3.set_dimmer.assert_called_with(100, transition_time=10)
-
-
-async def test_group_turn_off(hass, mock_gateway, mock_api_factory):
-    """Test turning off a group."""
-    group = mock_group({"state": True})
-    mock_gateway.mock_groups.append(group)
-    await setup_integration(hass)
-
-    # Use the turn_off service call to change the light state.
-    await hass.services.async_call(
-        "light", "turn_off", {"entity_id": "light.tradfri_group_0"}, blocking=True
-    )
-    await hass.async_block_till_done()
-
-    group.set_state.assert_called_with(0)

@@ -61,6 +61,7 @@
                     "debug": "Aktiver feils\u00f8king",
                     "device": "Velg enhet du vil konfigurere",
                     "event_code": "Angi hendelseskode for \u00e5 legge til",
+                    "protocols": "Protokoller",
                     "remove_device": "Velg enhet du vil slette"
                 },
                 "title": "[%key:component::rfxtrx::title%] alternativer"

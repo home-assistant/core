@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "addr_in_use": "A szerverport m\u00e1r haszn\u00e1latban van.",
+            "already_configured": "A kiszolg\u00e1l\u00f3 portja m\u00e1r be van \u00e1ll\u00edtva.",
             "start_server_failed": "A szerver ind\u00edt\u00e1sa nem siker\u00fclt."
         },
         "step": {

@@ -1,4 +1,6 @@
 """Support for openSenseMap Air Quality data."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
@@ -8,9 +10,12 @@ import voluptuous as vol
 
 from homeassistant.components.air_quality import PLATFORM_SCHEMA, AirQualityEntity
 from homeassistant.const import CONF_NAME
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,14 +31,19 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the openSenseMap air quality platform."""
 
     name = config.get(CONF_NAME)
     station_id = config[CONF_STATION_ID]
 
     session = async_get_clientsession(hass)
-    osm_api = OpenSenseMapData(OpenSenseMap(station_id, hass.loop, session))
+    osm_api = OpenSenseMapData(OpenSenseMap(station_id, session))
 
     await osm_api.async_update()
 

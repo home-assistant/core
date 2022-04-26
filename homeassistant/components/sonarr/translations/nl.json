@@ -12,7 +12,7 @@
         "flow_title": "{name}",
         "step": {
             "reauth_confirm": {
-                "description": "De Sonarr-integratie moet handmatig opnieuw worden geverifieerd met de Sonarr-API die wordt gehost op: {host}",
+                "description": "De Sonarr-integratie moet handmatig opnieuw worden geverifieerd met de Sonarr-API die wordt gehost op: {url}",
                 "title": "Verifieer de integratie opnieuw"
             },
             "user": {
@@ -22,6 +22,7 @@
                     "host": "Host",
                     "port": "Poort",
                     "ssl": "Maakt gebruik van een SSL-certificaat",
+                    "url": "URL",
                     "verify_ssl": "SSL-certificaat verifi\u00ebren"
                 }
             }

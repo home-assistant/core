@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import HuaweiLteBaseEntity
+from . import HuaweiLteBaseEntityWithDevice
 from .const import (
     DOMAIN,
     KEY_MONITORING_CHECK_NOTIFICATIONS,
@@ -49,7 +49,7 @@ async def async_setup_entry(
 
 
 @dataclass
-class HuaweiLteBaseBinarySensor(HuaweiLteBaseEntity, BinarySensorEntity):
+class HuaweiLteBaseBinarySensor(HuaweiLteBaseEntityWithDevice, BinarySensorEntity):
     """Huawei LTE binary sensor device base class."""
 
     key: str = field(init=False)

@@ -45,10 +45,10 @@ async def async_setup_entry(
     async_add_entities(sensors)
 
 
-class VerisureThermometer(CoordinatorEntity, SensorEntity):
+class VerisureThermometer(
+    CoordinatorEntity[VerisureDataUpdateCoordinator], SensorEntity
+):
     """Representation of a Verisure thermometer."""
-
-    coordinator: VerisureDataUpdateCoordinator
 
     _attr_device_class = SensorDeviceClass.TEMPERATURE
     _attr_native_unit_of_measurement = TEMP_CELSIUS
@@ -100,10 +100,10 @@ class VerisureThermometer(CoordinatorEntity, SensorEntity):
         )
 
 
-class VerisureHygrometer(CoordinatorEntity, SensorEntity):
+class VerisureHygrometer(
+    CoordinatorEntity[VerisureDataUpdateCoordinator], SensorEntity
+):
     """Representation of a Verisure hygrometer."""
-
-    coordinator: VerisureDataUpdateCoordinator
 
     _attr_device_class = SensorDeviceClass.HUMIDITY
     _attr_native_unit_of_measurement = PERCENTAGE
@@ -155,10 +155,10 @@ class VerisureHygrometer(CoordinatorEntity, SensorEntity):
         )
 
 
-class VerisureMouseDetection(CoordinatorEntity, SensorEntity):
+class VerisureMouseDetection(
+    CoordinatorEntity[VerisureDataUpdateCoordinator], SensorEntity
+):
     """Representation of a Verisure mouse detector."""
-
-    coordinator: VerisureDataUpdateCoordinator
 
     _attr_native_unit_of_measurement = "Mice"
 

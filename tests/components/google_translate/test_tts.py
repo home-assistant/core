@@ -16,7 +16,7 @@ from homeassistant.config import async_process_ha_core_config
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_service
-from tests.components.tts.test_init import mutagen_mock  # noqa: F401
+from tests.components.tts.conftest import mutagen_mock  # noqa: F401
 
 
 @pytest.fixture(autouse=True)

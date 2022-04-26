@@ -18,6 +18,11 @@
             "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
         },
         "step": {
+            "auth": {
+                "data": {
+                    "code": "P\u0159\u00edstupov\u00fd token"
+                }
+            },
             "init": {
                 "data": {
                     "flow_impl": "Poskytovatel"

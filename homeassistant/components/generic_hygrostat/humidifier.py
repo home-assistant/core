@@ -1,4 +1,6 @@
 """Adds support for generic hygrostat units."""
+from __future__ import annotations
+
 import asyncio
 import logging
 
@@ -6,12 +8,12 @@ from homeassistant.components.humidifier import (
     PLATFORM_SCHEMA,
     HumidifierDeviceClass,
     HumidifierEntity,
+    HumidifierEntityFeature,
 )
 from homeassistant.components.humidifier.const import (
     ATTR_HUMIDITY,
     MODE_AWAY,
     MODE_NORMAL,
-    SUPPORT_MODES,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -23,13 +25,15 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import DOMAIN as HA_DOMAIN, callback
+from homeassistant.core import DOMAIN as HA_DOMAIN, HomeAssistant, callback
 from homeassistant.helpers import condition
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
     async_track_state_change,
     async_track_time_interval,
 )
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import (
     CONF_AWAY_FIXED,
@@ -53,12 +57,16 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_SAVED_HUMIDITY = "saved_humidity"
 
-SUPPORT_FLAGS = 0
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(HYGROSTAT_SCHEMA.schema)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the generic hygrostat platform."""
     if discovery_info:
         config = discovery_info
@@ -139,9 +147,9 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         self._min_humidity = min_humidity
         self._max_humidity = max_humidity
         self._target_humidity = target_humidity
-        self._support_flags = SUPPORT_FLAGS
+        self._attr_supported_features = 0
         if away_humidity:
-            self._support_flags = SUPPORT_FLAGS | SUPPORT_MODES
+            self._attr_supported_features |= HumidifierEntityFeature.MODES
         self._away_humidity = away_humidity
         self._away_fixed = away_fixed
         self._sensor_stale_duration = sensor_stale_duration
@@ -424,11 +432,6 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
     def _is_device_active(self):
         """If the toggleable device is currently active."""
         return self.hass.states.is_state(self._switch_entity_id, STATE_ON)
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return self._support_flags
 
     async def _async_device_turn_on(self):
         """Turn humidifier toggleable device on."""

@@ -26,6 +26,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import SystemBridgeDeviceEntity
@@ -103,7 +104,7 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=DATA_GIGABYTES,
         icon="mdi:memory",
-        value=lambda bridge: round(bridge.memory.free / 1000 ** 3, 2),
+        value=lambda bridge: round(bridge.memory.free / 1000**3, 2),
     ),
     SystemBridgeSensorEntityDescription(
         key="memory_used_percentage",
@@ -120,7 +121,7 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=DATA_GIGABYTES,
         icon="mdi:memory",
-        value=lambda bridge: round(bridge.memory.used / 1000 ** 3, 2),
+        value=lambda bridge: round(bridge.memory.used / 1000**3, 2),
     ),
     SystemBridgeSensorEntityDescription(
         key="os",
@@ -200,7 +201,7 @@ BATTERY_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up System Bridge sensor based on a config entry."""
     coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
@@ -323,7 +324,7 @@ async def async_setup_entry(
                         native_unit_of_measurement=DATA_GIGABYTES,
                         icon="mdi:memory",
                         value=lambda bridge, i=index: round(
-                            bridge.graphics.controllers[i].memoryFree / 10 ** 3, 2
+                            bridge.graphics.controllers[i].memoryFree / 10**3, 2
                         ),
                     ),
                 ),
@@ -355,7 +356,7 @@ async def async_setup_entry(
                         native_unit_of_measurement=DATA_GIGABYTES,
                         icon="mdi:memory",
                         value=lambda bridge, i=index: round(
-                            bridge.graphics.controllers[i].memoryUsed / 10 ** 3, 2
+                            bridge.graphics.controllers[i].memoryUsed / 10**3, 2
                         ),
                     ),
                 ),
@@ -483,7 +484,6 @@ async def async_setup_entry(
 class SystemBridgeSensor(SystemBridgeDeviceEntity, SensorEntity):
     """Define a System Bridge sensor."""
 
-    coordinator: SystemBridgeDataUpdateCoordinator
     entity_description: SystemBridgeSensorEntityDescription
 
     def __init__(

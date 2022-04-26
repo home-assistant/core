@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from numbers import Real
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -18,6 +17,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -157,7 +157,7 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the sensors."""
     router: AsusWrtRouter = hass.data[DOMAIN][entry.entry_id][DATA_ASUSWRT]
@@ -196,10 +196,10 @@ class AsusWrtSensor(CoordinatorEntity, SensorEntity):
         self._attr_extra_state_attributes = {"hostname": router.host}
 
     @property
-    def native_value(self) -> float | str | None:
+    def native_value(self) -> float | int | str | None:
         """Return current state."""
         descr = self.entity_description
-        state = self.coordinator.data.get(descr.key)
-        if state is not None and descr.factor and isinstance(state, Real):
+        state: float | int | str | None = self.coordinator.data.get(descr.key)
+        if state is not None and descr.factor and isinstance(state, (float, int)):
             return round(state / descr.factor, descr.precision)
         return state

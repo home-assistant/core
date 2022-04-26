@@ -11,5 +11,6 @@
       "macaddress": "B8B7F1*"
     }
   ],
-  "iot_class": "assumed_state"
+  "iot_class": "assumed_state",
+  "loggers": ["somfy_mylink_synergy"]
 }

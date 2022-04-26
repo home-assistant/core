@@ -1,4 +1,6 @@
 """Support for displaying IPs banned by fail2ban."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 import os
@@ -8,7 +10,10 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_FILE_PATH, CONF_NAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,10 +35,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the fail2ban sensor."""
-    name = config.get(CONF_NAME)
-    jails = config.get(CONF_JAILS)
+    name = config[CONF_NAME]
+    jails = config[CONF_JAILS]
     log_file = config.get(CONF_FILE_PATH, DEFAULT_LOG)
 
     device_list = []
@@ -55,7 +65,7 @@ class BanSensor(SensorEntity):
         self.last_ban = None
         self.log_parser = log_parser
         self.log_parser.ip_regex[self.jail] = re.compile(
-            fr"\[{re.escape(self.jail)}\]\s*(Ban|Unban) (.*)"
+            rf"\[{re.escape(self.jail)}\]\s*(Ban|Unban) (.*)"
         )
         _LOGGER.debug("Setting up jail %s", self.jail)
 

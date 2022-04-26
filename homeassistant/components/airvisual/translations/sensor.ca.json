@@ -13,8 +13,8 @@
             "hazardous": "Perill\u00f3s",
             "moderate": "Moderat",
             "unhealthy": "Poc saludable",
-            "unhealthy_sensitive": "Poc saludable per a grups sensibles",
-            "very_unhealthy": "Molt poc saludable"
+            "unhealthy_sensitive": "No saludable per a grups sensibles",
+            "very_unhealthy": "Gens saludable"
         }
     }
 }

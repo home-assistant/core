@@ -1,5 +1,4 @@
 """Support for the Fitbit API."""
-
 from __future__ import annotations
 
 import datetime
@@ -14,6 +13,7 @@ from fitbit.api import FitbitOauth2Client
 from oauthlib.oauth2.rfc6749.errors import MismatchingStateError, MissingTokenError
 import voluptuous as vol
 
+from homeassistant.components import configurator
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
@@ -83,7 +83,6 @@ def request_app_setup(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Assist user with configuring the Fitbit dev application."""
-    configurator = hass.components.configurator
 
     def fitbit_configuration_callback(fields: list[dict[str, str]]) -> None:
         """Handle configuration updates."""
@@ -91,11 +90,9 @@ def request_app_setup(
         if os.path.isfile(config_path):
             config_file = load_json(config_path)
             if config_file == DEFAULT_CONFIG:
-                error_msg = (
-                    "You didn't correctly modify fitbit.conf",
-                    " please try again",
-                )
-                configurator.notify_errors(_CONFIGURING["fitbit"], error_msg)
+                error_msg = "You didn't correctly modify fitbit.conf, please try again."
+
+                configurator.notify_errors(hass, _CONFIGURING["fitbit"], error_msg)
             else:
                 setup_platform(hass, config, add_entities, discovery_info)
         else:
@@ -121,6 +118,7 @@ def request_app_setup(
     submit = "I have saved my Client ID and Client Secret into fitbit.conf."
 
     _CONFIGURING["fitbit"] = configurator.request_config(
+        hass,
         "Fitbit",
         fitbit_configuration_callback,
         description=description,
@@ -131,10 +129,9 @@ def request_app_setup(
 
 def request_oauth_completion(hass: HomeAssistant) -> None:
     """Request user complete Fitbit OAuth2 flow."""
-    configurator = hass.components.configurator
     if "fitbit" in _CONFIGURING:
         configurator.notify_errors(
-            _CONFIGURING["fitbit"], "Failed to register, please try again."
+            hass, _CONFIGURING["fitbit"], "Failed to register, please try again."
         )
 
         return
@@ -147,6 +144,7 @@ def request_oauth_completion(hass: HomeAssistant) -> None:
     description = f"Please authorize Fitbit by visiting {start_url}"
 
     _CONFIGURING["fitbit"] = configurator.request_config(
+        hass,
         "Fitbit",
         fitbit_configuration_callback,
         description=description,
@@ -175,7 +173,7 @@ def setup_platform(
         return
 
     if "fitbit" in _CONFIGURING:
-        hass.components.configurator.request_done(_CONFIGURING.pop("fitbit"))
+        configurator.request_done(hass, _CONFIGURING.pop("fitbit"))
 
     access_token: str | None = config_file.get(ATTR_ACCESS_TOKEN)
     refresh_token: str | None = config_file.get(ATTR_REFRESH_TOKEN)

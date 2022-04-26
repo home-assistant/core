@@ -97,7 +97,7 @@
             "addon_start_failed": "Impossibile avviare il componente aggiuntivo Z-Wave JS.",
             "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
             "cannot_connect": "Impossibile connettersi",
-            "different_device": "Il dispositivo USB connesso non \u00e8 lo stesso configurato in precedenza per questa voce di configurazione. Si prega, invece, di creare una nuova voce di configurazione per il nuovo dispositivo."
+            "different_device": "Il dispositivo USB connesso non \u00e8 lo stesso configurato in precedenza per questa voce di configurazione. Crea invece una nuova voce di configurazione per il nuovo dispositivo."
         },
         "error": {
             "cannot_connect": "Impossibile connettersi",

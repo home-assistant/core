@@ -1,4 +1,6 @@
 """Support for exposing NX584 elements as sensors."""
+from __future__ import annotations
+
 import logging
 import threading
 import time
@@ -14,7 +16,10 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,25 +44,30 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the NX584 binary sensor platform."""
 
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
-    exclude = config.get(CONF_EXCLUDE_ZONES)
-    zone_types = config.get(CONF_ZONE_TYPES)
+    host = config[CONF_HOST]
+    port = config[CONF_PORT]
+    exclude = config[CONF_EXCLUDE_ZONES]
+    zone_types = config[CONF_ZONE_TYPES]
 
     try:
         client = nx584_client.Client(f"http://{host}:{port}")
         zones = client.list_zones()
     except requests.exceptions.ConnectionError as ex:
         _LOGGER.error("Unable to connect to NX584: %s", str(ex))
-        return False
+        return
 
     version = [int(v) for v in client.get_version().split(".")]
     if version < [1, 1]:
         _LOGGER.error("NX584 is too old to use for sensors (>=0.2 required)")
-        return False
+        return
 
     zone_sensors = {
         zone["number"]: NX584ZoneSensor(
@@ -72,7 +82,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         watcher.start()
     else:
         _LOGGER.warning("No zones found on NX584")
-    return True
 
 
 class NX584ZoneSensor(BinarySensorEntity):

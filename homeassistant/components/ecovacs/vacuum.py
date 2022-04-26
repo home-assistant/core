@@ -1,45 +1,30 @@
-"""Support for Ecovacs Ecovacs Vaccums."""
+"""Support for Ecovacs Ecovacs Vacuums."""
+from __future__ import annotations
+
 import logging
 
 import sucks
 
-from homeassistant.components.vacuum import (
-    SUPPORT_BATTERY,
-    SUPPORT_CLEAN_SPOT,
-    SUPPORT_FAN_SPEED,
-    SUPPORT_LOCATE,
-    SUPPORT_RETURN_HOME,
-    SUPPORT_SEND_COMMAND,
-    SUPPORT_STATUS,
-    SUPPORT_STOP,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    VacuumEntity,
-)
+from homeassistant.components.vacuum import VacuumEntity, VacuumEntityFeature
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import ECOVACS_DEVICES
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_ECOVACS = (
-    SUPPORT_BATTERY
-    | SUPPORT_RETURN_HOME
-    | SUPPORT_CLEAN_SPOT
-    | SUPPORT_STOP
-    | SUPPORT_TURN_OFF
-    | SUPPORT_TURN_ON
-    | SUPPORT_LOCATE
-    | SUPPORT_STATUS
-    | SUPPORT_SEND_COMMAND
-    | SUPPORT_FAN_SPEED
-)
-
 ATTR_ERROR = "error"
 ATTR_COMPONENT_PREFIX = "component_"
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Ecovacs vacuums."""
     vacuums = []
     for device in hass.data[ECOVACS_DEVICES]:
@@ -50,6 +35,19 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 class EcovacsVacuum(VacuumEntity):
     """Ecovacs Vacuums such as Deebot."""
+
+    _attr_supported_features = (
+        VacuumEntityFeature.BATTERY
+        | VacuumEntityFeature.RETURN_HOME
+        | VacuumEntityFeature.CLEAN_SPOT
+        | VacuumEntityFeature.STOP
+        | VacuumEntityFeature.TURN_OFF
+        | VacuumEntityFeature.TURN_ON
+        | VacuumEntityFeature.LOCATE
+        | VacuumEntityFeature.STATUS
+        | VacuumEntityFeature.SEND_COMMAND
+        | VacuumEntityFeature.FAN_SPEED
+    )
 
     def __init__(self, device):
         """Initialize the Ecovacs Vacuum."""
@@ -114,9 +112,9 @@ class EcovacsVacuum(VacuumEntity):
         return self._name
 
     @property
-    def supported_features(self):
-        """Flag vacuum cleaner robot features that are supported."""
-        return SUPPORT_ECOVACS
+    def supported_features(self) -> int:
+        """Flag vacuum cleaner features that are supported."""
+        return self._attr_supported_features
 
     @property
     def status(self):

@@ -2,6 +2,8 @@
 from datetime import timedelta
 from unittest.mock import patch
 
+from freezegun import freeze_time
+
 from homeassistant.components import alarm_control_panel
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
@@ -147,7 +149,7 @@ async def test_arm_home_with_pending(hass, mqtt_mock):
 
     future = dt_util.utcnow() + timedelta(seconds=1)
     with patch(
-        ("homeassistant.components.manual_mqtt.alarm_control_panel." "dt_util.utcnow"),
+        ("homeassistant.components.manual_mqtt.alarm_control_panel.dt_util.utcnow"),
         return_value=future,
     ):
         async_fire_time_changed(hass, future)
@@ -307,7 +309,7 @@ async def test_arm_away_with_pending(hass, mqtt_mock):
 
     future = dt_util.utcnow() + timedelta(seconds=1)
     with patch(
-        ("homeassistant.components.manual_mqtt.alarm_control_panel." "dt_util.utcnow"),
+        ("homeassistant.components.manual_mqtt.alarm_control_panel.dt_util.utcnow"),
         return_value=future,
     ):
         async_fire_time_changed(hass, future)
@@ -437,7 +439,7 @@ async def test_arm_night_with_pending(hass, mqtt_mock):
 
     future = dt_util.utcnow() + timedelta(seconds=1)
     with patch(
-        ("homeassistant.components.manual_mqtt.alarm_control_panel." "dt_util.utcnow"),
+        ("homeassistant.components.manual_mqtt.alarm_control_panel.dt_util.utcnow"),
         return_value=future,
     ):
         async_fire_time_changed(hass, future)
@@ -510,7 +512,7 @@ async def test_trigger_no_pending(hass, mqtt_mock):
 
     future = dt_util.utcnow() + timedelta(seconds=60)
     with patch(
-        ("homeassistant.components.manual_mqtt.alarm_control_panel." "dt_util.utcnow"),
+        ("homeassistant.components.manual_mqtt.alarm_control_panel.dt_util.utcnow"),
         return_value=future,
     ):
         async_fire_time_changed(hass, future)
@@ -557,7 +559,7 @@ async def test_trigger_with_delay(hass, mqtt_mock):
 
     future = dt_util.utcnow() + timedelta(seconds=1)
     with patch(
-        ("homeassistant.components.manual_mqtt.alarm_control_panel." "dt_util.utcnow"),
+        ("homeassistant.components.manual_mqtt.alarm_control_panel.dt_util.utcnow"),
         return_value=future,
     ):
         async_fire_time_changed(hass, future)
@@ -658,7 +660,7 @@ async def test_trigger_with_pending(hass, mqtt_mock):
 
     future = dt_util.utcnow() + timedelta(seconds=2)
     with patch(
-        ("homeassistant.components.manual_mqtt.alarm_control_panel." "dt_util.utcnow"),
+        ("homeassistant.components.manual_mqtt.alarm_control_panel.dt_util.utcnow"),
         return_value=future,
     ):
         async_fire_time_changed(hass, future)
@@ -668,7 +670,7 @@ async def test_trigger_with_pending(hass, mqtt_mock):
 
     future = dt_util.utcnow() + timedelta(seconds=5)
     with patch(
-        ("homeassistant.components.manual_mqtt.alarm_control_panel." "dt_util.utcnow"),
+        ("homeassistant.components.manual_mqtt.alarm_control_panel.dt_util.utcnow"),
         return_value=future,
     ):
         async_fire_time_changed(hass, future)
@@ -707,7 +709,7 @@ async def test_trigger_with_disarm_after_trigger(hass, mqtt_mock):
 
     future = dt_util.utcnow() + timedelta(seconds=5)
     with patch(
-        ("homeassistant.components.manual_mqtt.alarm_control_panel." "dt_util.utcnow"),
+        ("homeassistant.components.manual_mqtt.alarm_control_panel.dt_util.utcnow"),
         return_value=future,
     ):
         async_fire_time_changed(hass, future)
@@ -777,7 +779,7 @@ async def test_trigger_with_unused_zero_specific_trigger_time(hass, mqtt_mock):
 
     future = dt_util.utcnow() + timedelta(seconds=5)
     with patch(
-        ("homeassistant.components.manual_mqtt.alarm_control_panel." "dt_util.utcnow"),
+        ("homeassistant.components.manual_mqtt.alarm_control_panel.dt_util.utcnow"),
         return_value=future,
     ):
         async_fire_time_changed(hass, future)
@@ -816,7 +818,7 @@ async def test_trigger_with_specific_trigger_time(hass, mqtt_mock):
 
     future = dt_util.utcnow() + timedelta(seconds=5)
     with patch(
-        ("homeassistant.components.manual_mqtt.alarm_control_panel." "dt_util.utcnow"),
+        ("homeassistant.components.manual_mqtt.alarm_control_panel.dt_util.utcnow"),
         return_value=future,
     ):
         async_fire_time_changed(hass, future)
@@ -860,7 +862,7 @@ async def test_back_to_back_trigger_with_no_disarm_after_trigger(hass, mqtt_mock
 
     future = dt_util.utcnow() + timedelta(seconds=5)
     with patch(
-        ("homeassistant.components.manual_mqtt.alarm_control_panel." "dt_util.utcnow"),
+        ("homeassistant.components.manual_mqtt.alarm_control_panel.dt_util.utcnow"),
         return_value=future,
     ):
         async_fire_time_changed(hass, future)
@@ -875,7 +877,7 @@ async def test_back_to_back_trigger_with_no_disarm_after_trigger(hass, mqtt_mock
 
     future = dt_util.utcnow() + timedelta(seconds=5)
     with patch(
-        ("homeassistant.components.manual_mqtt.alarm_control_panel." "dt_util.utcnow"),
+        ("homeassistant.components.manual_mqtt.alarm_control_panel.dt_util.utcnow"),
         return_value=future,
     ):
         async_fire_time_changed(hass, future)
@@ -918,7 +920,7 @@ async def test_disarm_while_pending_trigger(hass, mqtt_mock):
 
     future = dt_util.utcnow() + timedelta(seconds=5)
     with patch(
-        ("homeassistant.components.manual_mqtt.alarm_control_panel." "dt_util.utcnow"),
+        ("homeassistant.components.manual_mqtt.alarm_control_panel.dt_util.utcnow"),
         return_value=future,
     ):
         async_fire_time_changed(hass, future)
@@ -962,7 +964,7 @@ async def test_disarm_during_trigger_with_invalid_code(hass, mqtt_mock):
 
     future = dt_util.utcnow() + timedelta(seconds=5)
     with patch(
-        ("homeassistant.components.manual_mqtt.alarm_control_panel." "dt_util.utcnow"),
+        ("homeassistant.components.manual_mqtt.alarm_control_panel.dt_util.utcnow"),
         return_value=future,
     ):
         async_fire_time_changed(hass, future)
@@ -1010,7 +1012,7 @@ async def test_trigger_with_unused_specific_delay(hass, mqtt_mock):
 
     future = dt_util.utcnow() + timedelta(seconds=5)
     with patch(
-        ("homeassistant.components.manual_mqtt.alarm_control_panel." "dt_util.utcnow"),
+        ("homeassistant.components.manual_mqtt.alarm_control_panel.dt_util.utcnow"),
         return_value=future,
     ):
         async_fire_time_changed(hass, future)
@@ -1059,7 +1061,7 @@ async def test_trigger_with_specific_delay(hass, mqtt_mock):
 
     future = dt_util.utcnow() + timedelta(seconds=1)
     with patch(
-        ("homeassistant.components.manual_mqtt.alarm_control_panel." "dt_util.utcnow"),
+        ("homeassistant.components.manual_mqtt.alarm_control_panel.dt_util.utcnow"),
         return_value=future,
     ):
         async_fire_time_changed(hass, future)
@@ -1108,7 +1110,7 @@ async def test_trigger_with_pending_and_delay(hass, mqtt_mock):
 
     future = dt_util.utcnow() + timedelta(seconds=1)
     with patch(
-        ("homeassistant.components.manual_mqtt.alarm_control_panel." "dt_util.utcnow"),
+        ("homeassistant.components.manual_mqtt.alarm_control_panel.dt_util.utcnow"),
         return_value=future,
     ):
         async_fire_time_changed(hass, future)
@@ -1120,7 +1122,7 @@ async def test_trigger_with_pending_and_delay(hass, mqtt_mock):
 
     future += timedelta(seconds=1)
     with patch(
-        ("homeassistant.components.manual_mqtt.alarm_control_panel." "dt_util.utcnow"),
+        ("homeassistant.components.manual_mqtt.alarm_control_panel.dt_util.utcnow"),
         return_value=future,
     ):
         async_fire_time_changed(hass, future)
@@ -1170,7 +1172,7 @@ async def test_trigger_with_pending_and_specific_delay(hass, mqtt_mock):
 
     future = dt_util.utcnow() + timedelta(seconds=1)
     with patch(
-        ("homeassistant.components.manual_mqtt.alarm_control_panel." "dt_util.utcnow"),
+        ("homeassistant.components.manual_mqtt.alarm_control_panel.dt_util.utcnow"),
         return_value=future,
     ):
         async_fire_time_changed(hass, future)
@@ -1182,7 +1184,7 @@ async def test_trigger_with_pending_and_specific_delay(hass, mqtt_mock):
 
     future += timedelta(seconds=1)
     with patch(
-        ("homeassistant.components.manual_mqtt.alarm_control_panel." "dt_util.utcnow"),
+        ("homeassistant.components.manual_mqtt.alarm_control_panel.dt_util.utcnow"),
         return_value=future,
     ):
         async_fire_time_changed(hass, future)
@@ -1219,7 +1221,7 @@ async def test_armed_home_with_specific_pending(hass, mqtt_mock):
 
     future = dt_util.utcnow() + timedelta(seconds=2)
     with patch(
-        ("homeassistant.components.manual_mqtt.alarm_control_panel." "dt_util.utcnow"),
+        ("homeassistant.components.manual_mqtt.alarm_control_panel.dt_util.utcnow"),
         return_value=future,
     ):
         async_fire_time_changed(hass, future)
@@ -1255,7 +1257,7 @@ async def test_armed_away_with_specific_pending(hass, mqtt_mock):
 
     future = dt_util.utcnow() + timedelta(seconds=2)
     with patch(
-        ("homeassistant.components.manual_mqtt.alarm_control_panel." "dt_util.utcnow"),
+        ("homeassistant.components.manual_mqtt.alarm_control_panel.dt_util.utcnow"),
         return_value=future,
     ):
         async_fire_time_changed(hass, future)
@@ -1291,7 +1293,7 @@ async def test_armed_night_with_specific_pending(hass, mqtt_mock):
 
     future = dt_util.utcnow() + timedelta(seconds=2)
     with patch(
-        ("homeassistant.components.manual_mqtt.alarm_control_panel." "dt_util.utcnow"),
+        ("homeassistant.components.manual_mqtt.alarm_control_panel.dt_util.utcnow"),
         return_value=future,
     ):
         async_fire_time_changed(hass, future)
@@ -1329,7 +1331,7 @@ async def test_trigger_with_specific_pending(hass, mqtt_mock):
 
     future = dt_util.utcnow() + timedelta(seconds=2)
     with patch(
-        ("homeassistant.components.manual_mqtt.alarm_control_panel." "dt_util.utcnow"),
+        ("homeassistant.components.manual_mqtt.alarm_control_panel.dt_util.utcnow"),
         return_value=future,
     ):
         async_fire_time_changed(hass, future)
@@ -1339,7 +1341,7 @@ async def test_trigger_with_specific_pending(hass, mqtt_mock):
 
     future = dt_util.utcnow() + timedelta(seconds=5)
     with patch(
-        ("homeassistant.components.manual_mqtt.alarm_control_panel." "dt_util.utcnow"),
+        ("homeassistant.components.manual_mqtt.alarm_control_panel.dt_util.utcnow"),
         return_value=future,
     ):
         async_fire_time_changed(hass, future)
@@ -1348,7 +1350,7 @@ async def test_trigger_with_specific_pending(hass, mqtt_mock):
     assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
 
 
-async def test_arm_away_after_disabled_disarmed(hass, legacy_patchable_time, mqtt_mock):
+async def test_arm_away_after_disabled_disarmed(hass, mqtt_mock):
     """Test pending state with and without zero trigger time."""
     assert await async_setup_component(
         hass,
@@ -1391,10 +1393,7 @@ async def test_arm_away_after_disabled_disarmed(hass, legacy_patchable_time, mqt
     assert state.attributes["post_pending_state"] == STATE_ALARM_ARMED_AWAY
 
     future = dt_util.utcnow() + timedelta(seconds=1)
-    with patch(
-        ("homeassistant.components.manual_mqtt.alarm_control_panel." "dt_util.utcnow"),
-        return_value=future,
-    ):
+    with freeze_time(future):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
@@ -1410,10 +1409,7 @@ async def test_arm_away_after_disabled_disarmed(hass, legacy_patchable_time, mqt
         assert state.attributes["post_pending_state"] == STATE_ALARM_TRIGGERED
 
     future += timedelta(seconds=1)
-    with patch(
-        ("homeassistant.components.manual_mqtt.alarm_control_panel." "dt_util.utcnow"),
-        return_value=future,
-    ):
+    with freeze_time(future):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
@@ -1493,7 +1489,7 @@ async def test_arm_home_via_command_topic(hass, mqtt_mock):
     # Fast-forward a little bit
     future = dt_util.utcnow() + timedelta(seconds=1)
     with patch(
-        ("homeassistant.components.manual_mqtt.alarm_control_panel." "dt_util.utcnow"),
+        ("homeassistant.components.manual_mqtt.alarm_control_panel.dt_util.utcnow"),
         return_value=future,
     ):
         async_fire_time_changed(hass, future)
@@ -1532,7 +1528,7 @@ async def test_arm_away_via_command_topic(hass, mqtt_mock):
     # Fast-forward a little bit
     future = dt_util.utcnow() + timedelta(seconds=1)
     with patch(
-        ("homeassistant.components.manual_mqtt.alarm_control_panel." "dt_util.utcnow"),
+        ("homeassistant.components.manual_mqtt.alarm_control_panel.dt_util.utcnow"),
         return_value=future,
     ):
         async_fire_time_changed(hass, future)
@@ -1571,7 +1567,7 @@ async def test_arm_night_via_command_topic(hass, mqtt_mock):
     # Fast-forward a little bit
     future = dt_util.utcnow() + timedelta(seconds=1)
     with patch(
-        ("homeassistant.components.manual_mqtt.alarm_control_panel." "dt_util.utcnow"),
+        ("homeassistant.components.manual_mqtt.alarm_control_panel.dt_util.utcnow"),
         return_value=future,
     ):
         async_fire_time_changed(hass, future)
@@ -1649,7 +1645,7 @@ async def test_state_changes_are_published_to_mqtt(hass, mqtt_mock):
     # Fast-forward a little bit
     future = dt_util.utcnow() + timedelta(seconds=1)
     with patch(
-        ("homeassistant.components.manual_mqtt.alarm_control_panel." "dt_util.utcnow"),
+        ("homeassistant.components.manual_mqtt.alarm_control_panel.dt_util.utcnow"),
         return_value=future,
     ):
         async_fire_time_changed(hass, future)
@@ -1669,7 +1665,7 @@ async def test_state_changes_are_published_to_mqtt(hass, mqtt_mock):
     # Fast-forward a little bit
     future = dt_util.utcnow() + timedelta(seconds=1)
     with patch(
-        ("homeassistant.components.manual_mqtt.alarm_control_panel." "dt_util.utcnow"),
+        ("homeassistant.components.manual_mqtt.alarm_control_panel.dt_util.utcnow"),
         return_value=future,
     ):
         async_fire_time_changed(hass, future)
@@ -1689,7 +1685,7 @@ async def test_state_changes_are_published_to_mqtt(hass, mqtt_mock):
     # Fast-forward a little bit
     future = dt_util.utcnow() + timedelta(seconds=1)
     with patch(
-        ("homeassistant.components.manual_mqtt.alarm_control_panel." "dt_util.utcnow"),
+        ("homeassistant.components.manual_mqtt.alarm_control_panel.dt_util.utcnow"),
         return_value=future,
     ):
         async_fire_time_changed(hass, future)

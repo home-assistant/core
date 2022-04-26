@@ -2,6 +2,7 @@
     "device_automation": {
         "condition_type": {
             "is_bat_low": "bateria {entity_name} jest roz\u0142adowana",
+            "is_co": "sensor {entity_name} wykrywa tlenek w\u0119gla",
             "is_cold": "sensor {entity_name} wykrywa zimno",
             "is_connected": "sensor {entity_name} raportuje po\u0142\u0105czenie",
             "is_gas": "sensor {entity_name} wykrywa gaz",
@@ -11,6 +12,7 @@
             "is_moist": "sensor {entity_name} wykrywa wilgo\u0107",
             "is_motion": "sensor {entity_name} wykrywa ruch",
             "is_moving": "sensor {entity_name} porusza si\u0119",
+            "is_no_co": "sensor {entity_name} nie wykrywa tlenku w\u0119gla",
             "is_no_gas": "sensor {entity_name} nie wykrywa gazu",
             "is_no_light": "sensor {entity_name} nie wykrywa \u015bwiat\u0142a",
             "is_no_motion": "sensor {entity_name} nie wykrywa ruchu",
@@ -52,6 +54,7 @@
         },
         "trigger_type": {
             "bat_low": "nast\u0105pi roz\u0142adowanie baterii {entity_name}",
+            "co": "sensor {entity_name} wykryje tlenek w\u0119gla",
             "cold": "sensor {entity_name} wykryje zimno",
             "connected": "nast\u0105pi pod\u0142\u0105czenie {entity_name}",
             "gas": "sensor {entity_name} wykryje gaz",
@@ -63,6 +66,7 @@
             "moist": "nast\u0105pi wykrycie wilgoci {entity_name}",
             "motion": "sensor {entity_name} wykryje ruch",
             "moving": "sensor {entity_name} zacznie porusza\u0107 si\u0119",
+            "no_co": "sensor {entity_name} przestanie wykrywa\u0107 tlenek w\u0119gla",
             "no_gas": "sensor {entity_name} przestanie wykrywa\u0107 gaz",
             "no_light": "sensor {entity_name} przestanie wykrywa\u0107 \u015bwiat\u0142o",
             "no_motion": "sensor {entity_name} przestanie wykrywa\u0107 ruch",
@@ -104,6 +108,7 @@
         }
     },
     "device_class": {
+        "co": "tlenek_w\u0119gla",
         "cold": "zimno",
         "gas": "gaz",
         "heat": "gor\u0105co",
@@ -128,6 +133,14 @@
         "battery_charging": {
             "off": "roz\u0142adowywanie",
             "on": "\u0142adowanie"
+        },
+        "carbon_monoxide": {
+            "off": "brak",
+            "on": "wykryto"
+        },
+        "co": {
+            "off": "brak",
+            "on": "wykryto"
         },
         "cold": {
             "off": "normalnie",

@@ -25,7 +25,9 @@
     },
     "options": {
         "error": {
+            "currency_unavailable": "Eine oder mehrere der angeforderten W\u00e4hrungssalden werden von deiner Coinbase-API nicht bereitgestellt.",
             "currency_unavaliable": "Eine oder mehrere der angeforderten W\u00e4hrungssalden werden von deiner Coinbase-API nicht bereitgestellt.",
+            "exchange_rate_unavailable": "Einer oder mehrere der angeforderten Wechselkurse werden nicht von Coinbase bereitgestellt.",
             "exchange_rate_unavaliable": "Einer oder mehrere der angeforderten Wechselkurse werden nicht von Coinbase bereitgestellt.",
             "unknown": "Unerwarteter Fehler"
         },

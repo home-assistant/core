@@ -69,7 +69,10 @@ def validate_integration(config: Config, integration: Integration):
 
 def generate_and_validate(integrations: dict[str, Integration], config: Config):
     """Validate and generate config flow data."""
-    domains = []
+    domains = {
+        "integration": [],
+        "helper": [],
+    }
 
     for domain in sorted(integrations):
         integration = integrations[domain]
@@ -79,7 +82,7 @@ def generate_and_validate(integrations: dict[str, Integration], config: Config):
 
         validate_integration(config, integration)
 
-        domains.append(domain)
+        domains[integration.integration_type].append(domain)
 
     return BASE.format(json.dumps(domains, indent=4))
 

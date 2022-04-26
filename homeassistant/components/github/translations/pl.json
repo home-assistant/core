@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Us\u0142uga jest ju\u017c skonfigurowana",
+            "could_not_register": "Nie mo\u017cna zarejestrowa\u0107 integracji z GitHub"
+        },
+        "progress": {
+            "wait_for_device": "1. Otw\u00f3rz {url}\n2. Wklej nast\u0119puj\u0105cy klucz, aby autoryzowa\u0107 integracj\u0119:\n ```\n {code}\n ```\n"
+        },
+        "step": {
+            "repositories": {
+                "data": {
+                    "repositories": "Wybierz repozytoria do \u015bledzenia."
+                },
+                "title": "Konfiguracja repozytori\u00f3w"
+            }
+        }
+    }
+}

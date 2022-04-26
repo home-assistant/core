@@ -5,8 +5,9 @@ from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ENTITY_CATEGORY_CONFIG, STATE_UNKNOWN
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 import homeassistant.helpers.entity_registry as er
 
 DEFAULT_TONE_SELECT_ENTITY = "select.indoor_siren_6_default_tone_2"
@@ -63,7 +64,7 @@ async def test_default_tone_select(
     entity_entry = entity_registry.async_get(DEFAULT_TONE_SELECT_ENTITY)
 
     assert entity_entry
-    assert entity_entry.entity_category == ENTITY_CATEGORY_CONFIG
+    assert entity_entry.entity_category is EntityCategory.CONFIG
 
     # Test select option with string value
     await hass.services.async_call(
@@ -146,7 +147,7 @@ async def test_protection_select(
     entity_entry = entity_registry.async_get(PROTECTION_SELECT_ENTITY)
 
     assert entity_entry
-    assert entity_entry.entity_category == ENTITY_CATEGORY_CONFIG
+    assert entity_entry.entity_category is EntityCategory.CONFIG
 
     # Test select option with string value
     await hass.services.async_call(

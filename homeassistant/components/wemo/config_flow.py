@@ -5,7 +5,7 @@ import pywemo
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_flow
 
-from . import DOMAIN
+from .const import DOMAIN
 
 
 async def _async_has_devices(hass: HomeAssistant) -> bool:

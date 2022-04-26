@@ -1,16 +1,14 @@
 """Support for Overkiz lights."""
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_RGB_COLOR,
-    COLOR_MODE_BRIGHTNESS,
-    COLOR_MODE_ONOFF,
-    COLOR_MODE_RGB,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -28,7 +26,7 @@ async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-):
+) -> None:
     """Set up the Overkiz lights from a config entry."""
     data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
 
@@ -50,11 +48,11 @@ class OverkizLight(OverkizEntity, LightEntity):
         self._attr_supported_color_modes = set()
 
         if self.executor.has_command(OverkizCommand.SET_RGB):
-            self._attr_supported_color_modes.add(COLOR_MODE_RGB)
+            self._attr_supported_color_modes.add(ColorMode.RGB)
         if self.executor.has_command(OverkizCommand.SET_INTENSITY):
-            self._attr_supported_color_modes.add(COLOR_MODE_BRIGHTNESS)
+            self._attr_supported_color_modes.add(ColorMode.BRIGHTNESS)
         if not self.supported_color_modes:
-            self._attr_supported_color_modes = {COLOR_MODE_ONOFF}
+            self._attr_supported_color_modes = {ColorMode.ONOFF}
 
     @property
     def is_on(self) -> bool:
@@ -74,13 +72,14 @@ class OverkizLight(OverkizEntity, LightEntity):
         if red is None or green is None or blue is None:
             return None
 
-        return (int(red), int(green), int(blue))
+        return (cast(int, red), cast(int, green), cast(int, blue))
 
     @property
     def brightness(self) -> int | None:
         """Return the brightness of this light (0-255)."""
-        if brightness := self.executor.select_state(OverkizState.CORE_LIGHT_INTENSITY):
-            return round(int(brightness) * 255 / 100)
+        value = self.executor.select_state(OverkizState.CORE_LIGHT_INTENSITY)
+        if value is not None:
+            return round(cast(int, value) * 255 / 100)
 
         return None
 

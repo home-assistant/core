@@ -1,0 +1,29 @@
+{
+    "config": {
+        "error": {
+            "invalid_hostname": "Ung\u00fcltiger Hostname"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "hostname": "Der Hostname, f\u00fcr den die DNS-Abfrage durchgef\u00fchrt werden soll",
+                    "resolver": "Resolver f\u00fcr IPV4-Lookup",
+                    "resolver_ipv6": "Resolver f\u00fcr IPV6-Lookup"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_resolver": "Ung\u00fcltige IP-Adresse f\u00fcr Resolver"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "resolver": "Resolver f\u00fcr IPV4-Lookup",
+                    "resolver_ipv6": "Resolver f\u00fcr IPV6-Lookup"
+                }
+            }
+        }
+    }
+}

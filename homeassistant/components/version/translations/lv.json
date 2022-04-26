@@ -1,0 +1,16 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "version_source": "Versijas avots"
+                }
+            },
+            "version_source": {
+                "data": {
+                    "beta": "Iek\u013caut beta versijas"
+                }
+            }
+        }
+    }
+}

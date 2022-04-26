@@ -22,6 +22,7 @@ from homeassistant.util import dt
 
 from .test_common import (
     DEFAULT_CONFIG,
+    DEFAULT_SENSOR_CONFIG,
     help_test_availability,
     help_test_availability_discovery_update,
     help_test_availability_poll_state,
@@ -34,14 +35,6 @@ from .test_common import (
 )
 
 from tests.common import async_fire_mqtt_message, async_fire_time_changed
-
-DEFAULT_SENSOR_CONFIG = {
-    "sn": {
-        "Time": "2020-09-25T12:47:15",
-        "DHT11": {"Temperature": None},
-        "TempUnit": "C",
-    }
-}
 
 BAD_INDEXED_SENSOR_CONFIG_3 = {
     "sn": {

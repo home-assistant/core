@@ -16,14 +16,14 @@ SCHEMA_WS_DELETE = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
 
 async def async_setup(hass):
     """Enable the Home Assistant views."""
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_LIST, websocket_list, SCHEMA_WS_LIST
+    websocket_api.async_register_command(
+        hass, WS_TYPE_LIST, websocket_list, SCHEMA_WS_LIST
     )
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_DELETE, websocket_delete, SCHEMA_WS_DELETE
+    websocket_api.async_register_command(
+        hass, WS_TYPE_DELETE, websocket_delete, SCHEMA_WS_DELETE
     )
-    hass.components.websocket_api.async_register_command(websocket_create)
-    hass.components.websocket_api.async_register_command(websocket_update)
+    websocket_api.async_register_command(hass, websocket_create)
+    websocket_api.async_register_command(hass, websocket_update)
     return True
 
 
@@ -60,7 +60,6 @@ async def websocket_delete(hass, connection, msg):
 
 
 @websocket_api.require_admin
-@websocket_api.async_response
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "config/auth/create",
@@ -69,6 +68,7 @@ async def websocket_delete(hass, connection, msg):
         vol.Optional("local_only"): bool,
     }
 )
+@websocket_api.async_response
 async def websocket_create(hass, connection, msg):
     """Create a user."""
     user = await hass.auth.async_create_user(
@@ -81,7 +81,6 @@ async def websocket_create(hass, connection, msg):
 
 
 @websocket_api.require_admin
-@websocket_api.async_response
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "config/auth/update",
@@ -92,6 +91,7 @@ async def websocket_create(hass, connection, msg):
         vol.Optional("local_only"): bool,
     }
 )
+@websocket_api.async_response
 async def websocket_update(hass, connection, msg):
     """Update a user."""
     if not (user := await hass.auth.async_get_user(msg.pop("user_id"))):

@@ -314,6 +314,12 @@ def test_isnumber(hass, value, expected):
         )
         == expected
     )
+    assert (
+        template.Template("{{ value is is_number }}", hass).async_render(
+            {"value": value}
+        )
+        == expected
+    )
 
 
 def test_rounding_value(hass):
@@ -668,6 +674,7 @@ def test_strptime(hass):
 
 def test_timestamp_custom(hass):
     """Test the timestamps to custom filter."""
+    hass.config.set_time_zone("UTC")
     now = dt_util.utcnow()
     tests = [
         (None, None, None, None),
@@ -694,6 +701,7 @@ def test_timestamp_custom(hass):
 
 def test_timestamp_local(hass):
     """Test the timestamps to local filter."""
+    hass.config.set_time_zone("UTC")
     tests = {None: None, 1469119144: "2016-07-21T16:39:04+00:00"}
 
     for inp, out in tests.items():
@@ -835,12 +843,97 @@ def test_min(hass):
     assert template.Template("{{ min([1, 2, 3]) }}", hass).async_render() == 1
     assert template.Template("{{ min(1, 2, 3) }}", hass).async_render() == 1
 
+    with pytest.raises(TemplateError):
+        template.Template("{{ 1 | min }}", hass).async_render()
+
+    with pytest.raises(TemplateError):
+        template.Template("{{ min() }}", hass).async_render()
+
+    with pytest.raises(TemplateError):
+        template.Template("{{ min(1) }}", hass).async_render()
+
 
 def test_max(hass):
     """Test the max filter."""
     assert template.Template("{{ [1, 2, 3] | max }}", hass).async_render() == 3
     assert template.Template("{{ max([1, 2, 3]) }}", hass).async_render() == 3
     assert template.Template("{{ max(1, 2, 3) }}", hass).async_render() == 3
+
+    with pytest.raises(TemplateError):
+        template.Template("{{ 1 | max }}", hass).async_render()
+
+    with pytest.raises(TemplateError):
+        template.Template("{{ max() }}", hass).async_render()
+
+    with pytest.raises(TemplateError):
+        template.Template("{{ max(1) }}", hass).async_render()
+
+
+@pytest.mark.parametrize(
+    "attribute",
+    (
+        "a",
+        "b",
+        "c",
+    ),
+)
+def test_min_max_attribute(hass, attribute):
+    """Test the min and max filters with attribute."""
+    hass.states.async_set(
+        "test.object",
+        "test",
+        {
+            "objects": [
+                {
+                    "a": 1,
+                    "b": 2,
+                    "c": 3,
+                },
+                {
+                    "a": 2,
+                    "b": 1,
+                    "c": 2,
+                },
+                {
+                    "a": 3,
+                    "b": 3,
+                    "c": 1,
+                },
+            ],
+        },
+    )
+    assert (
+        template.Template(
+            "{{ (state_attr('test.object', 'objects') | min(attribute='%s'))['%s']}}"
+            % (attribute, attribute),
+            hass,
+        ).async_render()
+        == 1
+    )
+    assert (
+        template.Template(
+            "{{ (min(state_attr('test.object', 'objects'), attribute='%s'))['%s']}}"
+            % (attribute, attribute),
+            hass,
+        ).async_render()
+        == 1
+    )
+    assert (
+        template.Template(
+            "{{ (state_attr('test.object', 'objects') | max(attribute='%s'))['%s']}}"
+            % (attribute, attribute),
+            hass,
+        ).async_render()
+        == 3
+    )
+    assert (
+        template.Template(
+            "{{ (max(state_attr('test.object', 'objects'), attribute='%s'))['%s']}}"
+            % (attribute, attribute),
+            hass,
+        ).async_render()
+        == 3
+    )
 
 
 def test_ord(hass):
@@ -1199,10 +1292,7 @@ def test_today_at(mock_is_safe, hass, now, expected, expected_midnight, timezone
     freezer = freeze_time(now)
     freezer.start()
 
-    original_tz = dt_util.DEFAULT_TIME_ZONE
-
-    timezone = dt_util.get_time_zone(timezone_str)
-    dt_util.set_default_time_zone(timezone)
+    hass.config.set_time_zone(timezone_str)
 
     result = template.Template(
         "{{ today_at('10:00').isoformat() }}",
@@ -1232,7 +1322,6 @@ def test_today_at(mock_is_safe, hass, now, expected, expected_midnight, timezone
         template.Template("{{ today_at('bad') }}", hass).async_render()
 
     freezer.stop()
-    dt_util.set_default_time_zone(original_tz)
 
 
 @patch(
@@ -1241,6 +1330,7 @@ def test_today_at(mock_is_safe, hass, now, expected, expected_midnight, timezone
 )
 def test_relative_time(mock_is_safe, hass):
     """Test relative_time method."""
+    hass.config.set_time_zone("UTC")
     now = datetime.strptime("2000-01-01 10:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z")
     with patch("homeassistant.util.dt.now", return_value=now):
         result = template.Template(
@@ -1988,6 +2078,84 @@ async def test_expand(hass):
         {"group.power_sensors", "sensor.power_1", "sensor.power_2", "sensor.power_3"},
     )
     assert info.rate_limit is None
+
+    # With group entities
+    hass.states.async_set("light.first", "on")
+    hass.states.async_set("light.second", "off")
+
+    assert await async_setup_component(
+        hass,
+        "light",
+        {
+            "light": {
+                "platform": "group",
+                "name": "Grouped",
+                "entities": ["light.first", "light.second"],
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    info = render_to_info(
+        hass, "{{ expand('light.grouped') | map(attribute='entity_id') | join(', ') }}"
+    )
+    assert_result_info(
+        info,
+        "light.first, light.second",
+        ["light.grouped", "light.first", "light.second"],
+    )
+
+    assert await async_setup_component(
+        hass,
+        "zone",
+        {
+            "zone": {
+                "name": "Test",
+                "latitude": 32.880837,
+                "longitude": -117.237561,
+                "radius": 250,
+                "passive": False,
+            }
+        },
+    )
+    info = render_to_info(
+        hass, "{{ expand('zone.test') | map(attribute='entity_id') | join(', ') }}"
+    )
+    assert_result_info(
+        info,
+        "",
+        ["zone.test"],
+    )
+
+    hass.states.async_set(
+        "person.person1",
+        "test",
+    )
+    await hass.async_block_till_done()
+
+    info = render_to_info(
+        hass, "{{ expand('zone.test') | map(attribute='entity_id') | join(', ') }}"
+    )
+    assert_result_info(
+        info,
+        "person.person1",
+        ["zone.test", "person.person1"],
+    )
+
+    hass.states.async_set(
+        "person.person2",
+        "test",
+    )
+    await hass.async_block_till_done()
+
+    info = render_to_info(
+        hass, "{{ expand('zone.test') | map(attribute='entity_id') | join(', ') }}"
+    )
+    assert_result_info(
+        info,
+        "person.person1, person.person2",
+        ["zone.test", "person.person1", "person.person2"],
+    )
 
 
 async def test_device_entities(hass):
@@ -3091,12 +3259,12 @@ def test_render_complex_handling_non_template_values(hass):
 def test_urlencode(hass):
     """Test the urlencode method."""
     tpl = template.Template(
-        ("{% set dict = {'foo': 'x&y', 'bar': 42} %}" "{{ dict | urlencode }}"),
+        ("{% set dict = {'foo': 'x&y', 'bar': 42} %}{{ dict | urlencode }}"),
         hass,
     )
     assert tpl.async_render() == "foo=x%26y&bar=42"
     tpl = template.Template(
-        ("{% set string = 'the quick brown fox = true' %}" "{{ string | urlencode }}"),
+        ("{% set string = 'the quick brown fox = true' %}{{ string | urlencode }}"),
         hass,
     )
     assert tpl.async_render() == "the%20quick%20brown%20fox%20%3D%20true"

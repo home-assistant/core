@@ -1,6 +1,7 @@
 """Network helpers."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from contextlib import suppress
 from ipaddress import ip_address
 from typing import cast
@@ -15,6 +16,7 @@ from homeassistant.util.network import is_ip_address, is_loopback, normalize_url
 
 TYPE_URL_INTERNAL = "internal_url"
 TYPE_URL_EXTERNAL = "external_url"
+SUPERVISOR_NETWORK_HOST = "homeassistant"
 
 
 class NoURLAvailableError(HomeAssistantError):
@@ -25,10 +27,87 @@ class NoURLAvailableError(HomeAssistantError):
 def is_internal_request(hass: HomeAssistant) -> bool:
     """Test if the current request is internal."""
     try:
-        _get_internal_url(hass, require_current_request=True)
+        get_url(
+            hass, allow_external=False, allow_cloud=False, require_current_request=True
+        )
         return True
     except NoURLAvailableError:
         return False
+
+
+@bind_hass
+def get_supervisor_network_url(
+    hass: HomeAssistant, *, allow_ssl: bool = False
+) -> str | None:
+    """Get URL for home assistant within supervisor network."""
+    if hass.config.api is None or not hass.components.hassio.is_hassio():
+        return None
+
+    scheme = "http"
+    if hass.config.api.use_ssl:
+        # Certificate won't be valid for hostname so this URL usually won't work
+        if not allow_ssl:
+            return None
+
+        scheme = "https"
+
+    return str(
+        yarl.URL.build(
+            scheme=scheme,
+            host=SUPERVISOR_NETWORK_HOST,
+            port=hass.config.api.port,
+        )
+    )
+
+
+def is_hass_url(hass: HomeAssistant, url: str) -> bool:
+    """Return if the URL points at this Home Assistant instance."""
+    parsed = yarl.URL(url)
+
+    if not parsed.is_absolute():
+        return False
+
+    if parsed.is_default_port():
+        parsed = parsed.with_port(None)
+
+    def host_ip() -> str | None:
+        if hass.config.api is None or is_loopback(ip_address(hass.config.api.local_ip)):
+            return None
+
+        return str(
+            yarl.URL.build(
+                scheme="http", host=hass.config.api.local_ip, port=hass.config.api.port
+            )
+        )
+
+    def cloud_url() -> str | None:
+        try:
+            return _get_cloud_url(hass)
+        except NoURLAvailableError:
+            return None
+
+    potential_base_factory: Callable[[], str | None]
+    for potential_base_factory in (
+        lambda: hass.config.internal_url,
+        lambda: hass.config.external_url,
+        cloud_url,
+        host_ip,
+        lambda: get_supervisor_network_url(hass, allow_ssl=True),
+    ):
+        potential_base = potential_base_factory()
+
+        if potential_base is None:
+            continue
+
+        potential_parsed = yarl.URL(normalize_url(potential_base))
+
+        if (
+            parsed.scheme == potential_parsed.scheme
+            and parsed.authority == potential_parsed.authority
+        ):
+            return True
+
+    return False
 
 
 @bind_hass
@@ -41,13 +120,19 @@ def get_url(
     allow_internal: bool = True,
     allow_external: bool = True,
     allow_cloud: bool = True,
-    allow_ip: bool = True,
-    prefer_external: bool = False,
+    allow_ip: bool | None = None,
+    prefer_external: bool | None = None,
     prefer_cloud: bool = False,
 ) -> str:
     """Get a URL to this instance."""
     if require_current_request and http.current_request.get() is None:
         raise NoURLAvailableError
+
+    if prefer_external is None:
+        prefer_external = hass.config.api is not None and hass.config.api.use_ssl
+
+    if allow_ip is None:
+        allow_ip = hass.config.api is None or not hass.config.api.use_ssl
 
     order = [TYPE_URL_INTERNAL, TYPE_URL_EXTERNAL]
     if prefer_external:
@@ -151,7 +236,8 @@ def _get_internal_url(
             scheme="http", host=hass.config.api.local_ip, port=hass.config.api.port
         )
         if (
-            not is_loopback(ip_address(ip_url.host))
+            ip_url.host
+            and not is_loopback(ip_address(ip_url.host))
             and (not require_current_request or ip_url.host == _get_request_host())
             and (not require_standard_port or ip_url.is_default_port())
         ):

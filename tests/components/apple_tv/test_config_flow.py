@@ -22,6 +22,7 @@ from tests.common import MockConfigEntry
 
 DMAP_SERVICE = zeroconf.ZeroconfServiceInfo(
     host="127.0.0.1",
+    addresses=["127.0.0.1"],
     hostname="mock_hostname",
     port=None,
     type="_touch-able._tcp.local.",
@@ -32,6 +33,7 @@ DMAP_SERVICE = zeroconf.ZeroconfServiceInfo(
 
 RAOP_SERVICE = zeroconf.ZeroconfServiceInfo(
     host="127.0.0.1",
+    addresses=["127.0.0.1"],
     hostname="mock_hostname",
     port=None,
     type="_raop._tcp.local.",
@@ -531,6 +533,7 @@ async def test_zeroconf_unsupported_service_aborts(hass):
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="127.0.0.1",
+            addresses=["127.0.0.1"],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
@@ -549,6 +552,7 @@ async def test_zeroconf_add_mrp_device(hass, mrp_device, pairing):
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="127.0.0.2",
+            addresses=["127.0.0.2"],
             hostname="mock_hostname",
             port=None,
             name="Kitchen",
@@ -563,6 +567,7 @@ async def test_zeroconf_add_mrp_device(hass, mrp_device, pairing):
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="127.0.0.1",
+            addresses=["127.0.0.1"],
             hostname="mock_hostname",
             port=None,
             name="Kitchen",
@@ -750,6 +755,7 @@ async def test_zeroconf_abort_if_other_in_progress(hass, mock_scan):
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="127.0.0.1",
+            addresses=["127.0.0.1"],
             hostname="mock_hostname",
             port=None,
             type="_airplay._tcp.local.",
@@ -772,6 +778,7 @@ async def test_zeroconf_abort_if_other_in_progress(hass, mock_scan):
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="127.0.0.1",
+            addresses=["127.0.0.1"],
             hostname="mock_hostname",
             port=None,
             type="_mediaremotetv._tcp.local.",
@@ -797,6 +804,7 @@ async def test_zeroconf_missing_device_during_protocol_resolve(
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="127.0.0.1",
+            addresses=["127.0.0.1"],
             hostname="mock_hostname",
             port=None,
             type="_airplay._tcp.local.",
@@ -818,6 +826,7 @@ async def test_zeroconf_missing_device_during_protocol_resolve(
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="127.0.0.1",
+            addresses=["127.0.0.1"],
             hostname="mock_hostname",
             port=None,
             type="_mediaremotetv._tcp.local.",
@@ -853,6 +862,7 @@ async def test_zeroconf_additional_protocol_resolve_failure(
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="127.0.0.1",
+            addresses=["127.0.0.1"],
             hostname="mock_hostname",
             port=None,
             type="_airplay._tcp.local.",
@@ -874,6 +884,7 @@ async def test_zeroconf_additional_protocol_resolve_failure(
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="127.0.0.1",
+            addresses=["127.0.0.1"],
             hostname="mock_hostname",
             port=None,
             type="_mediaremotetv._tcp.local.",
@@ -911,6 +922,7 @@ async def test_zeroconf_pair_additionally_found_protocols(
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="127.0.0.1",
+            addresses=["127.0.0.1"],
             hostname="mock_hostname",
             port=None,
             type="_airplay._tcp.local.",
@@ -953,6 +965,7 @@ async def test_zeroconf_pair_additionally_found_protocols(
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="127.0.0.1",
+            addresses=["127.0.0.1"],
             hostname="mock_hostname",
             port=None,
             type="_mediaremotetv._tcp.local.",
@@ -1053,3 +1066,22 @@ async def test_option_start_off(hass):
     assert result2["type"] == "create_entry"
 
     assert config_entry.options[CONF_START_OFF]
+
+
+async def test_zeroconf_rejects_ipv6(hass):
+    """Test zeroconf discovery rejects ipv6."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=zeroconf.ZeroconfServiceInfo(
+            host="fd00::b27c:63bb:cc85:4ea0",
+            addresses=["fd00::b27c:63bb:cc85:4ea0"],
+            hostname="mock_hostname",
+            port=None,
+            type="_touch-able._tcp.local.",
+            name="dmapid._touch-able._tcp.local.",
+            properties={"CtlN": "Apple TV"},
+        ),
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "ipv6_not_supported"

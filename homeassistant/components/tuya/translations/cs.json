@@ -10,6 +10,11 @@
         },
         "flow_title": "Konfigurace Tuya",
         "step": {
+            "login": {
+                "data": {
+                    "country_code": "K\u00f3d zem\u011b"
+                }
+            },
             "user": {
                 "data": {
                     "country_code": "Zem\u011b",

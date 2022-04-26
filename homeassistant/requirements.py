@@ -13,8 +13,6 @@ from .helpers.typing import UNDEFINED, UndefinedType
 from .loader import Integration, IntegrationNotFound, async_get_integration
 from .util import package as pkg_util
 
-# mypy: disallow-any-generics
-
 PIP_TIMEOUT = 60  # The default is too low when the internet connection is satellite or high latency
 MAX_INSTALL_FAILURES = 3
 DATA_PIP_LOCK = "pip_lock"

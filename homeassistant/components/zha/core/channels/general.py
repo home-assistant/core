@@ -18,6 +18,8 @@ from ..const import (
     REPORT_CONFIG_BATTERY_SAVE,
     REPORT_CONFIG_DEFAULT,
     REPORT_CONFIG_IMMEDIATE,
+    REPORT_CONFIG_MAX_INT,
+    REPORT_CONFIG_MIN_INT,
     SIGNAL_ATTR_UPDATED,
     SIGNAL_MOVE_LEVEL,
     SIGNAL_SET_LEVEL,
@@ -101,7 +103,7 @@ class AnalogOutput(ZigbeeChannel):
         except zigpy.exceptions.ZigbeeException as ex:
             self.error("Could not set value: %s", ex)
             return False
-        if isinstance(res, list) and all(
+        if not isinstance(res, Exception) and all(
             record.status == Status.SUCCESS for record in res[0]
         ):
             return True
@@ -169,6 +171,13 @@ class Commissioning(ZigbeeChannel):
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.DeviceTemperature.cluster_id)
 class DeviceTemperature(ZigbeeChannel):
     """Device Temperature channel."""
+
+    REPORT_CONFIG = [
+        {
+            "attr": "current_temperature",
+            "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 50),
+        }
+    ]
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.GreenPowerProxy.cluster_id)
@@ -282,6 +291,9 @@ class OnOffChannel(ZigbeeChannel):
 
     ON_OFF = 0
     REPORT_CONFIG = ({"attr": "on_off", "config": REPORT_CONFIG_IMMEDIATE},)
+    ZCL_INIT_ATTRS = {
+        "start_up_on_off": True,
+    }
 
     def __init__(
         self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType
@@ -371,7 +383,11 @@ class Ota(ZigbeeChannel):
         self, tsn: int, command_id: int, args: list[Any] | None
     ) -> None:
         """Handle OTA commands."""
-        cmd_name = self.cluster.server_commands.get(command_id, [command_id])[0]
+        if command_id in self.cluster.server_commands:
+            cmd_name = self.cluster.server_commands[command_id].name
+        else:
+            cmd_name = command_id
+
         signal_id = self._ch_pool.unique_id.split("-")[0]
         if cmd_name == "query_next_image":
             self.async_send_signal(SIGNAL_UPDATE_DEVICE.format(signal_id), args[3])
@@ -409,7 +425,11 @@ class PollControl(ZigbeeChannel):
         self, tsn: int, command_id: int, args: list[Any] | None
     ) -> None:
         """Handle commands received to this cluster."""
-        cmd_name = self.cluster.client_commands.get(command_id, [command_id])[0]
+        if command_id in self.cluster.client_commands:
+            cmd_name = self.cluster.client_commands[command_id].name
+        else:
+            cmd_name = command_id
+
         self.debug("Received %s tsn command '%s': %s", tsn, cmd_name, args)
         self.zha_send_event(cmd_name, args)
         if cmd_name == "checkin":

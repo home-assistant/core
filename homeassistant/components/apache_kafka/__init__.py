@@ -15,8 +15,10 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import FILTER_SCHEMA
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import ssl as ssl_util
 
 DOMAIN = "apache_kafka"
@@ -45,7 +47,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Activate the Apache Kafka integration."""
     conf = config[DOMAIN]
 

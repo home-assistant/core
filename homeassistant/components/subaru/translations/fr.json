@@ -8,7 +8,7 @@
             "bad_pin_format": "Le code PIN doit \u00eatre compos\u00e9 de 4 chiffres",
             "cannot_connect": "\u00c9chec de connexion",
             "incorrect_pin": "PIN incorrect",
-            "invalid_auth": "Authentification invalide"
+            "invalid_auth": "Authentification non valide"
         },
         "step": {
             "pin": {

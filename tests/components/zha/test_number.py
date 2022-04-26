@@ -7,6 +7,7 @@ import zigpy.types
 import zigpy.zcl.clusters.general as general
 import zigpy.zcl.foundation as zcl_f
 
+from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.setup import async_setup_component
 
@@ -109,7 +110,7 @@ async def test_number(hass, zha_device_joined_restored, zigpy_analog_output_devi
     ):
         # set value via UI
         await hass.services.async_call(
-            Platform.NUMBER,
+            NUMBER_DOMAIN,
             "set_value",
             {"entity_id": entity_id, "value": 30.0},
             blocking=True,

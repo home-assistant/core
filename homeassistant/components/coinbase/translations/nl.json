@@ -25,7 +25,9 @@
     },
     "options": {
         "error": {
+            "currency_unavailable": "Een of meer van de gevraagde valutabalansen wordt niet geleverd door uw Coinbase API.",
             "currency_unavaliable": "Een of meer van de gevraagde valutasaldi worden niet geleverd door uw Coinbase API.",
+            "exchange_rate_unavailable": "Een of meer van de gevraagde wisselkoersen worden niet door Coinbase geleverd.",
             "exchange_rate_unavaliable": "Een of meer van de gevraagde wisselkoersen worden niet door Coinbase verstrekt.",
             "unknown": "Onverwachte fout"
         },

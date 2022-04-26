@@ -7,9 +7,33 @@ To update, run python3 -m script.hassfest
 
 USB = [
     {
+        "domain": "insteon",
+        "vid": "10BF"
+    },
+    {
         "domain": "modem_callerid",
         "vid": "0572",
         "pid": "1340"
+    },
+    {
+        "domain": "velbus",
+        "vid": "10CF",
+        "pid": "0B1B"
+    },
+    {
+        "domain": "velbus",
+        "vid": "10CF",
+        "pid": "0516"
+    },
+    {
+        "domain": "velbus",
+        "vid": "10CF",
+        "pid": "0517"
+    },
+    {
+        "domain": "velbus",
+        "vid": "10CF",
+        "pid": "0518"
     },
     {
         "domain": "zha",

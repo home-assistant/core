@@ -6,17 +6,28 @@ import voluptuous as vol
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
-from homeassistant.const import CONF_ABOVE, CONF_BELOW, CONF_ENTITY_ID, CONF_TYPE
-from homeassistant.core import HomeAssistant, HomeAssistantError, callback
+from homeassistant.const import (
+    CONF_ABOVE,
+    CONF_BELOW,
+    CONF_CONDITION,
+    CONF_ENTITY_ID,
+    CONF_TYPE,
+)
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import condition, config_validation as cv
-from homeassistant.helpers.entity import get_device_class, get_unit_of_measurement
+from homeassistant.helpers.entity import (
+    get_capability,
+    get_device_class,
+    get_unit_of_measurement,
+)
 from homeassistant.helpers.entity_registry import (
     async_entries_for_device,
     async_get_registry,
 )
 from homeassistant.helpers.typing import ConfigType
 
-from . import DOMAIN, SensorDeviceClass
+from . import ATTR_STATE_CLASS, DOMAIN, SensorDeviceClass
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -139,9 +150,10 @@ async def async_get_conditions(
 
     for entry in entries:
         device_class = get_device_class(hass, entry.entity_id) or DEVICE_CLASS_NONE
+        state_class = get_capability(hass, entry.entity_id, ATTR_STATE_CLASS)
         unit_of_measurement = get_unit_of_measurement(hass, entry.entity_id)
 
-        if not unit_of_measurement:
+        if not unit_of_measurement and not state_class:
             continue
 
         templates = ENTITY_CONDITIONS.get(
@@ -168,13 +180,13 @@ def async_condition_from_config(
 ) -> condition.ConditionCheckerType:
     """Evaluate state based on configuration."""
     numeric_state_config = {
-        condition.CONF_CONDITION: "numeric_state",
-        condition.CONF_ENTITY_ID: config[CONF_ENTITY_ID],
+        CONF_CONDITION: "numeric_state",
+        CONF_ENTITY_ID: config[CONF_ENTITY_ID],
     }
     if CONF_ABOVE in config:
-        numeric_state_config[condition.CONF_ABOVE] = config[CONF_ABOVE]
+        numeric_state_config[CONF_ABOVE] = config[CONF_ABOVE]
     if CONF_BELOW in config:
-        numeric_state_config[condition.CONF_BELOW] = config[CONF_BELOW]
+        numeric_state_config[CONF_BELOW] = config[CONF_BELOW]
 
     numeric_state_config = cv.NUMERIC_STATE_CONDITION_SCHEMA(numeric_state_config)
     numeric_state_config = condition.numeric_state_validate_config(

@@ -4,8 +4,7 @@ join:
   fields:
     master:
       name: Master
-      description:
-        Entity ID of the player that should become the coordinator of the group.
+      description: Entity ID of the player that should become the coordinator of the group.
       required: true
       selector:
         entity:

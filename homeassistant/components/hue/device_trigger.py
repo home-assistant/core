@@ -1,4 +1,5 @@
 """Provides device automations for Philips Hue events."""
+from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
@@ -40,14 +41,13 @@ async def async_validate_trigger_config(hass: "HomeAssistant", config: ConfigTyp
     device_id = config[CONF_DEVICE_ID]
     # lookup device in HASS DeviceRegistry
     dev_reg: dr.DeviceRegistry = dr.async_get(hass)
-    device_entry = dev_reg.async_get(device_id)
-    if device_entry is None:
+    if (device_entry := dev_reg.async_get(device_id)) is None:
         raise InvalidDeviceAutomationConfig(f"Device ID {device_id} is not valid")
 
     for conf_entry_id in device_entry.config_entries:
         if conf_entry_id not in hass.data[DOMAIN]:
             continue
-        bridge: "HueBridge" = hass.data[DOMAIN][conf_entry_id]
+        bridge: HueBridge = hass.data[DOMAIN][conf_entry_id]
         if bridge.api_version == 1:
             return await async_validate_trigger_config_v1(bridge, device_entry, config)
         return await async_validate_trigger_config_v2(bridge, device_entry, config)
@@ -63,14 +63,13 @@ async def async_attach_trigger(
     device_id = config[CONF_DEVICE_ID]
     # lookup device in HASS DeviceRegistry
     dev_reg: dr.DeviceRegistry = dr.async_get(hass)
-    device_entry = dev_reg.async_get(device_id)
-    if device_entry is None:
+    if (device_entry := dev_reg.async_get(device_id)) is None:
         raise InvalidDeviceAutomationConfig(f"Device ID {device_id} is not valid")
 
     for conf_entry_id in device_entry.config_entries:
         if conf_entry_id not in hass.data[DOMAIN]:
             continue
-        bridge: "HueBridge" = hass.data[DOMAIN][conf_entry_id]
+        bridge: HueBridge = hass.data[DOMAIN][conf_entry_id]
         if bridge.api_version == 1:
             return await async_attach_trigger_v1(
                 bridge, device_entry, config, action, automation_info
@@ -89,8 +88,7 @@ async def async_get_triggers(hass: "HomeAssistant", device_id: str):
         return []
     # lookup device in HASS DeviceRegistry
     dev_reg: dr.DeviceRegistry = dr.async_get(hass)
-    device_entry = dev_reg.async_get(device_id)
-    if device_entry is None:
+    if (device_entry := dev_reg.async_get(device_id)) is None:
         raise ValueError(f"Device ID {device_id} is not valid")
 
     # Iterate all config entries for this device
@@ -98,7 +96,7 @@ async def async_get_triggers(hass: "HomeAssistant", device_id: str):
     for conf_entry_id in device_entry.config_entries:
         if conf_entry_id not in hass.data[DOMAIN]:
             continue
-        bridge: "HueBridge" = hass.data[DOMAIN][conf_entry_id]
+        bridge: HueBridge = hass.data[DOMAIN][conf_entry_id]
 
         if bridge.api_version == 1:
             return await async_get_triggers_v1(bridge, device_entry)

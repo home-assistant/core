@@ -11,6 +11,8 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry
 
+SOME_PROTOCOLS = ["ac", "arc"]
+
 
 def serial_connect(self):
     """Mock a serial connection."""
@@ -31,6 +33,16 @@ def com_port():
     port.description = "Some serial port"
 
     return port
+
+
+async def start_options_flow(hass, entry):
+    """Start the options flow with the entry under test."""
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    return await hass.config_entries.options.async_init(entry.entry_id)
 
 
 @patch("homeassistant.components.rfxtrx.rfxtrxmod.PyNetworkTransport", autospec=True)
@@ -286,19 +298,20 @@ async def test_options_global(hass):
             "port": None,
             "device": "/dev/tty123",
             "automatic_add": False,
+            "protocols": None,
             "devices": {},
         },
         unique_id=DOMAIN,
     )
-    entry.add_to_hass(hass)
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
+    with patch("homeassistant.components.rfxtrx.async_setup_entry", return_value=True):
+        result = await start_options_flow(hass, entry)
 
     assert result["type"] == "form"
     assert result["step_id"] == "prompt_options"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"automatic_add": True}
+        result["flow_id"],
+        user_input={"automatic_add": True, "protocols": SOME_PROTOCOLS},
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -306,6 +319,43 @@ async def test_options_global(hass):
     await hass.async_block_till_done()
 
     assert entry.data["automatic_add"]
+
+    assert not set(entry.data["protocols"]) ^ set(SOME_PROTOCOLS)
+
+
+async def test_no_protocols(hass):
+    """Test we set protocols to None if none are selected."""
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "host": None,
+            "port": None,
+            "device": "/dev/tty123",
+            "automatic_add": True,
+            "protocols": SOME_PROTOCOLS,
+            "devices": {},
+        },
+        unique_id=DOMAIN,
+    )
+    with patch("homeassistant.components.rfxtrx.async_setup_entry", return_value=True):
+        result = await start_options_flow(hass, entry)
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "prompt_options"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"automatic_add": False, "protocols": []},
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+    await hass.async_block_till_done()
+
+    assert not entry.data["automatic_add"]
+
+    assert entry.data["protocols"] is None
 
 
 async def test_options_add_device(hass):
@@ -322,9 +372,7 @@ async def test_options_add_device(hass):
         },
         unique_id=DOMAIN,
     )
-    entry.add_to_hass(hass)
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await start_options_flow(hass, entry)
 
     assert result["type"] == "form"
     assert result["step_id"] == "prompt_options"
@@ -353,7 +401,7 @@ async def test_options_add_device(hass):
     assert result["step_id"] == "set_device_options"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"signal_repetitions": 5}
+        result["flow_id"], user_input={}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -363,7 +411,6 @@ async def test_options_add_device(hass):
     assert entry.data["automatic_add"]
 
     assert entry.data["devices"]["0b1100cd0213c7f230010f71"]
-    assert entry.data["devices"]["0b1100cd0213c7f230010f71"]["signal_repetitions"] == 5
     assert "delay_off" not in entry.data["devices"]["0b1100cd0213c7f230010f71"]
 
     state = hass.states.get("binary_sensor.ac_213c7f2_48")
@@ -383,7 +430,7 @@ async def test_options_add_duplicate_device(hass):
             "device": "/dev/tty123",
             "debug": False,
             "automatic_add": False,
-            "devices": {"0b1100cd0213c7f230010f71": {"signal_repetitions": 1}},
+            "devices": {"0b1100cd0213c7f230010f71": {}},
         },
         unique_id=DOMAIN,
     )
@@ -408,88 +455,6 @@ async def test_options_add_duplicate_device(hass):
     assert result["errors"]["event_code"] == "already_configured_device"
 
 
-async def test_options_add_remove_device(hass):
-    """Test we can add a device."""
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "host": None,
-            "port": None,
-            "device": "/dev/tty123",
-            "automatic_add": False,
-            "devices": {},
-        },
-        unique_id=DOMAIN,
-    )
-    entry.add_to_hass(hass)
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "prompt_options"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            "automatic_add": True,
-            "event_code": "0b1100cd0213c7f230010f71",
-        },
-    )
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "set_device_options"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={"signal_repetitions": 5, "off_delay": "4"},
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-
-    await hass.async_block_till_done()
-
-    assert entry.data["automatic_add"]
-
-    assert entry.data["devices"]["0b1100cd0213c7f230010f71"]
-    assert entry.data["devices"]["0b1100cd0213c7f230010f71"]["signal_repetitions"] == 5
-    assert entry.data["devices"]["0b1100cd0213c7f230010f71"]["off_delay"] == 4
-
-    state = hass.states.get("binary_sensor.ac_213c7f2_48")
-    assert state
-    assert state.state == STATE_UNKNOWN
-    assert state.attributes.get("friendly_name") == "AC 213c7f2:48"
-
-    device_registry = dr.async_get(hass)
-    device_entries = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
-
-    assert device_entries[0].id
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "prompt_options"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            "automatic_add": False,
-            "remove_device": [device_entries[0].id],
-        },
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-
-    await hass.async_block_till_done()
-
-    assert not entry.data["automatic_add"]
-
-    assert "0b1100cd0213c7f230010f71" not in entry.data["devices"]
-
-    state = hass.states.get("binary_sensor.ac_213c7f2_48")
-    assert not state
-
-
 async def test_options_replace_sensor_device(hass):
     """Test we can replace a sensor device."""
 
@@ -507,10 +472,7 @@ async def test_options_replace_sensor_device(hass):
         },
         unique_id=DOMAIN,
     )
-    entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    await start_options_flow(hass, entry)
 
     state = hass.states.get(
         "sensor.thgn122_123_thgn132_thgr122_228_238_268_f0_04_rssi_numeric"
@@ -663,20 +625,15 @@ async def test_options_replace_control_device(hass):
             "devices": {
                 "0b1100100118cdea02010f70": {
                     "device_id": ["11", "0", "118cdea:2"],
-                    "signal_repetitions": 1,
                 },
                 "0b1100101118cdea02010f70": {
                     "device_id": ["11", "0", "1118cdea:2"],
-                    "signal_repetitions": 1,
                 },
             },
         },
         unique_id=DOMAIN,
     )
-    entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    await start_options_flow(hass, entry)
 
     state = hass.states.get("binary_sensor.ac_118cdea_2")
     assert state
@@ -758,76 +715,6 @@ async def test_options_replace_control_device(hass):
     assert not state
 
 
-async def test_options_remove_multiple_devices(hass):
-    """Test we can add a device."""
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "host": None,
-            "port": None,
-            "device": "/dev/tty123",
-            "automatic_add": False,
-            "devices": {
-                "0b1100cd0213c7f230010f71": {"device_id": ["11", "0", "213c7f2:48"]},
-                "0b1100100118cdea02010f70": {"device_id": ["11", "0", "118cdea:2"]},
-                "0b1100101118cdea02010f70": {"device_id": ["11", "0", "1118cdea:2"]},
-            },
-        },
-        unique_id=DOMAIN,
-    )
-    entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("binary_sensor.ac_213c7f2_48")
-    assert state
-    state = hass.states.get("binary_sensor.ac_118cdea_2")
-    assert state
-    state = hass.states.get("binary_sensor.ac_1118cdea_2")
-    assert state
-
-    device_registry = dr.async_get(hass)
-    device_entries = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
-
-    assert len(device_entries) == 3
-
-    def match_device_id(entry):
-        device_id = next(iter(entry.identifiers))[1:]
-        if device_id == ("11", "0", "213c7f2:48"):
-            return True
-        if device_id == ("11", "0", "118cdea:2"):
-            return True
-        return False
-
-    remove_devices = [elem.id for elem in device_entries if match_device_id(elem)]
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "prompt_options"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            "automatic_add": False,
-            "remove_device": remove_devices,
-        },
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-
-    await hass.async_block_till_done()
-
-    state = hass.states.get("binary_sensor.ac_213c7f2_48")
-    assert not state
-    state = hass.states.get("binary_sensor.ac_118cdea_2")
-    assert not state
-    state = hass.states.get("binary_sensor.ac_1118cdea_2")
-    assert state
-
-
 async def test_options_add_and_configure_device(hass):
     """Test we can add a device."""
 
@@ -842,9 +729,7 @@ async def test_options_add_and_configure_device(hass):
         },
         unique_id=DOMAIN,
     )
-    entry.add_to_hass(hass)
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await start_options_flow(hass, entry)
 
     assert result["type"] == "form"
     assert result["step_id"] == "prompt_options"
@@ -863,7 +748,6 @@ async def test_options_add_and_configure_device(hass):
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            "signal_repetitions": 5,
             "data_bits": 4,
             "off_delay": "abcdef",
             "command_on": "xyz",
@@ -881,7 +765,6 @@ async def test_options_add_and_configure_device(hass):
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            "signal_repetitions": 5,
             "data_bits": 4,
             "command_on": "0xE",
             "command_off": "0x7",
@@ -896,7 +779,6 @@ async def test_options_add_and_configure_device(hass):
     assert entry.data["automatic_add"]
 
     assert entry.data["devices"]["0913000022670e013970"]
-    assert entry.data["devices"]["0913000022670e013970"]["signal_repetitions"] == 5
     assert entry.data["devices"]["0913000022670e013970"]["off_delay"] == 9
 
     state = hass.states.get("binary_sensor.pt2262_22670e")
@@ -928,7 +810,6 @@ async def test_options_add_and_configure_device(hass):
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            "signal_repetitions": 5,
             "data_bits": 4,
             "command_on": "0xE",
             "command_off": "0x7",
@@ -940,7 +821,6 @@ async def test_options_add_and_configure_device(hass):
     await hass.async_block_till_done()
 
     assert entry.data["devices"]["0913000022670e013970"]
-    assert entry.data["devices"]["0913000022670e013970"]["signal_repetitions"] == 5
     assert "delay_off" not in entry.data["devices"]["0913000022670e013970"]
 
 
@@ -958,12 +838,7 @@ async def test_options_configure_rfy_cover_device(hass):
         },
         unique_id=DOMAIN,
     )
-    entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await start_options_flow(hass, entry)
 
     assert result["type"] == "form"
     assert result["step_id"] == "prompt_options"

@@ -12,10 +12,10 @@ from typing import Any, Literal, cast
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.recorder.models import States
-from homeassistant.components.recorder.util import execute, session_scope
+from homeassistant.components.recorder import get_instance, history
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
 )
@@ -50,10 +50,12 @@ from . import DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
+# Stats for attributes only
 STAT_AGE_COVERAGE_RATIO = "age_coverage_ratio"
 STAT_BUFFER_USAGE_RATIO = "buffer_usage_ratio"
 STAT_SOURCE_VALUE_VALID = "source_value_valid"
 
+# All sensor statistics
 STAT_AVERAGE_LINEAR = "average_linear"
 STAT_AVERAGE_STEP = "average_step"
 STAT_AVERAGE_TIMELESS = "average_timeless"
@@ -76,28 +78,57 @@ STAT_VALUE_MAX = "value_max"
 STAT_VALUE_MIN = "value_min"
 STAT_VARIANCE = "variance"
 
-STAT_DEFAULT = "default"
-DEPRECATION_WARNING = (
+DEPRECATION_WARNING_CHARACTERISTIC = (
     "The configuration parameter 'state_characteristic' will become "
     "mandatory in a future release of the statistics integration. "
     "Please add 'state_characteristic: %s' to the configuration of "
-    'sensor "%s" to keep the current behavior. Read the documentation '
+    "sensor '%s' to keep the current behavior. Read the documentation "
     "for further details: "
     "https://www.home-assistant.io/integrations/statistics/"
 )
 
-STATS_NOT_A_NUMBER = (
-    STAT_DATETIME_OLDEST,
+# Statistics supported by a sensor source (numeric)
+STATS_NUMERIC_SUPPORT = (
+    STAT_AVERAGE_LINEAR,
+    STAT_AVERAGE_STEP,
+    STAT_AVERAGE_TIMELESS,
+    STAT_CHANGE_SAMPLE,
+    STAT_CHANGE_SECOND,
+    STAT_CHANGE,
+    STAT_COUNT,
     STAT_DATETIME_NEWEST,
+    STAT_DATETIME_OLDEST,
+    STAT_DISTANCE_95P,
+    STAT_DISTANCE_99P,
+    STAT_DISTANCE_ABSOLUTE,
+    STAT_MEAN,
+    STAT_MEDIAN,
+    STAT_NOISINESS,
     STAT_QUANTILES,
+    STAT_STANDARD_DEVIATION,
+    STAT_TOTAL,
+    STAT_VALUE_MAX,
+    STAT_VALUE_MIN,
+    STAT_VARIANCE,
 )
 
+# Statistics supported by a binary_sensor source
 STATS_BINARY_SUPPORT = (
     STAT_AVERAGE_STEP,
     STAT_AVERAGE_TIMELESS,
     STAT_COUNT,
     STAT_MEAN,
-    STAT_DEFAULT,
+)
+
+STATS_NOT_A_NUMBER = (
+    STAT_DATETIME_NEWEST,
+    STAT_DATETIME_OLDEST,
+    STAT_QUANTILES,
+)
+
+STATS_DATETIME = (
+    STAT_DATETIME_NEWEST,
+    STAT_DATETIME_OLDEST,
 )
 
 CONF_STATE_CHARACTERISTIC = "state_characteristic"
@@ -115,15 +146,27 @@ DEFAULT_QUANTILE_METHOD = "exclusive"
 ICON = "mdi:calculator"
 
 
-def valid_binary_characteristic_configuration(config: dict[str, Any]) -> dict[str, Any]:
+def valid_state_characteristic_configuration(config: dict[str, Any]) -> dict[str, Any]:
     """Validate that the characteristic selected is valid for the source sensor type, throw if it isn't."""
-    if split_entity_id(str(config.get(CONF_ENTITY_ID)))[0] == BINARY_SENSOR_DOMAIN:
-        if config.get(CONF_STATE_CHARACTERISTIC) not in STATS_BINARY_SUPPORT:
-            raise ValueError(
-                "The configured characteristic '"
-                + str(config.get(CONF_STATE_CHARACTERISTIC))
-                + "' is not supported for a binary source sensor."
+    is_binary = split_entity_id(config[CONF_ENTITY_ID])[0] == BINARY_SENSOR_DOMAIN
+
+    if config.get(CONF_STATE_CHARACTERISTIC) is None:
+        config[CONF_STATE_CHARACTERISTIC] = STAT_COUNT if is_binary else STAT_MEAN
+        _LOGGER.warning(
+            DEPRECATION_WARNING_CHARACTERISTIC,
+            config[CONF_STATE_CHARACTERISTIC],
+            config[CONF_NAME],
+        )
+
+    characteristic = cast(str, config[CONF_STATE_CHARACTERISTIC])
+    if (is_binary and characteristic not in STATS_BINARY_SUPPORT) or (
+        not is_binary and characteristic not in STATS_NUMERIC_SUPPORT
+    ):
+        raise vol.ValueInvalid(
+            "The configured characteristic '{}' is not supported for the configured source sensor".format(
+                characteristic
             )
+        )
     return config
 
 
@@ -132,32 +175,7 @@ _PLATFORM_SCHEMA_BASE = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
-        vol.Optional(CONF_STATE_CHARACTERISTIC, default=STAT_DEFAULT): vol.In(
-            [
-                STAT_AVERAGE_LINEAR,
-                STAT_AVERAGE_STEP,
-                STAT_AVERAGE_TIMELESS,
-                STAT_CHANGE_SAMPLE,
-                STAT_CHANGE_SECOND,
-                STAT_CHANGE,
-                STAT_COUNT,
-                STAT_DATETIME_NEWEST,
-                STAT_DATETIME_OLDEST,
-                STAT_DISTANCE_95P,
-                STAT_DISTANCE_99P,
-                STAT_DISTANCE_ABSOLUTE,
-                STAT_MEAN,
-                STAT_MEDIAN,
-                STAT_NOISINESS,
-                STAT_QUANTILES,
-                STAT_STANDARD_DEVIATION,
-                STAT_TOTAL,
-                STAT_VALUE_MAX,
-                STAT_VALUE_MIN,
-                STAT_VARIANCE,
-                STAT_DEFAULT,
-            ]
-        ),
+        vol.Optional(CONF_STATE_CHARACTERISTIC): cv.string,
         vol.Optional(
             CONF_SAMPLES_MAX_BUFFER_SIZE, default=DEFAULT_BUFFER_SIZE
         ): vol.All(vol.Coerce(int), vol.Range(min=1)),
@@ -173,7 +191,7 @@ _PLATFORM_SCHEMA_BASE = PLATFORM_SCHEMA.extend(
 )
 PLATFORM_SCHEMA = vol.All(
     _PLATFORM_SCHEMA_BASE,
-    valid_binary_characteristic_configuration,
+    valid_state_characteristic_configuration,
 )
 
 
@@ -218,7 +236,7 @@ class StatisticsSensor(SensorEntity):
         samples_max_age: timedelta | None,
         precision: int,
         quantile_intervals: int,
-        quantile_method: str,
+        quantile_method: Literal["exclusive", "inclusive"],
     ) -> None:
         """Initialize the Statistics sensor."""
         self._attr_icon: str = ICON
@@ -230,14 +248,11 @@ class StatisticsSensor(SensorEntity):
             split_entity_id(self._source_entity_id)[0] == BINARY_SENSOR_DOMAIN
         )
         self._state_characteristic: str = state_characteristic
-        if self._state_characteristic == STAT_DEFAULT:
-            self._state_characteristic = STAT_COUNT if self.is_binary else STAT_MEAN
-            _LOGGER.warning(DEPRECATION_WARNING, self._state_characteristic, name)
         self._samples_max_buffer_size: int = samples_max_buffer_size
         self._samples_max_age: timedelta | None = samples_max_age
         self._precision: int = precision
         self._quantile_intervals: int = quantile_intervals
-        self._quantile_method: str = quantile_method
+        self._quantile_method: Literal["exclusive", "inclusive"] = quantile_method
         self._value: StateType | datetime = None
         self._unit_of_measurement: str | None = None
         self._available: bool = False
@@ -287,7 +302,7 @@ class StatisticsSensor(SensorEntity):
             if "recorder" in self.hass.config.components:
                 self.hass.async_create_task(self._initialize_from_database())
 
-        async_at_start(self.hass, async_stats_sensor_startup)
+        self.async_on_remove(async_at_start(self.hass, async_stats_sensor_startup))
 
     def _add_state_to_queue(self, new_state: State) -> None:
         """Add the state to the queue."""
@@ -346,12 +361,9 @@ class StatisticsSensor(SensorEntity):
             STAT_VALUE_MIN,
         ):
             unit = base_unit
-        elif self._state_characteristic in (
-            STAT_COUNT,
-            STAT_DATETIME_NEWEST,
-            STAT_DATETIME_OLDEST,
-            STAT_QUANTILES,
-        ):
+        elif self._state_characteristic in STATS_NOT_A_NUMBER:
+            unit = None
+        elif self._state_characteristic == STAT_COUNT:
             unit = None
         elif self._state_characteristic == STAT_VARIANCE:
             unit = base_unit + "²"
@@ -360,6 +372,13 @@ class StatisticsSensor(SensorEntity):
         elif self._state_characteristic == STAT_CHANGE_SECOND:
             unit = base_unit + "/s"
         return unit
+
+    @property
+    def device_class(self) -> Literal[SensorDeviceClass.TIMESTAMP] | None:
+        """Return the class of this device."""
+        if self._state_characteristic in STATS_DATETIME:
+            return SensorDeviceClass.TIMESTAMP
+        return None
 
     @property
     def state_class(self) -> Literal[SensorStateClass.MEASUREMENT] | None:
@@ -450,6 +469,31 @@ class StatisticsSensor(SensorEntity):
                 self.hass, _scheduled_update, next_to_purge_timestamp
             )
 
+    def _fetch_states_from_database(self) -> list[State]:
+        """Fetch the states from the database."""
+        _LOGGER.debug("%s: initializing values from the database", self.entity_id)
+        lower_entity_id = self._source_entity_id.lower()
+        if self._samples_max_age is not None:
+            start_date = (
+                dt_util.utcnow() - self._samples_max_age - timedelta(microseconds=1)
+            )
+            _LOGGER.debug(
+                "%s: retrieve records not older then %s",
+                self.entity_id,
+                start_date,
+            )
+        else:
+            start_date = datetime.fromtimestamp(0, tz=dt_util.UTC)
+            _LOGGER.debug("%s: retrieving all records", self.entity_id)
+        return history.state_changes_during_period(
+            self.hass,
+            start_date,
+            entity_id=lower_entity_id,
+            descending=True,
+            limit=self._samples_max_buffer_size,
+            include_start_time_state=False,
+        ).get(lower_entity_id, [])
+
     async def _initialize_from_database(self) -> None:
         """Initialize the list of states from the database.
 
@@ -460,31 +504,9 @@ class StatisticsSensor(SensorEntity):
         If MaxAge is provided then query will restrict to entries younger then
         current datetime - MaxAge.
         """
-
-        _LOGGER.debug("%s: initializing values from the database", self.entity_id)
-
-        with session_scope(hass=self.hass) as session:
-            query = session.query(States).filter(
-                States.entity_id == self._source_entity_id.lower()
-            )
-
-            if self._samples_max_age is not None:
-                records_older_then = dt_util.utcnow() - self._samples_max_age
-                _LOGGER.debug(
-                    "%s: retrieve records not older then %s",
-                    self.entity_id,
-                    records_older_then,
-                )
-                query = query.filter(States.last_updated >= records_older_then)
-            else:
-                _LOGGER.debug("%s: retrieving all records", self.entity_id)
-
-            query = query.order_by(States.last_updated.desc()).limit(
-                self._samples_max_buffer_size
-            )
-            states = execute(query, to_native=True, validate_entity_ids=False)
-
-        if states:
+        if states := await get_instance(self.hass).async_add_executor_job(
+            self._fetch_states_from_database
+        ):
             for state in reversed(states):
                 self._add_state_to_queue(state)
 

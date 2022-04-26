@@ -69,7 +69,8 @@
                 "data": {
                     "allow_hue_groups": "Hue csoportok enged\u00e9lyez\u00e9se",
                     "allow_hue_scenes": "Hue jelenetek enged\u00e9lyez\u00e9se",
-                    "allow_unreachable": "Hagyja, hogy az el\u00e9rhetetlen izz\u00f3k helyesen jelents\u00e9k \u00e1llapotukat"
+                    "allow_unreachable": "Hagyja, hogy az el\u00e9rhetetlen izz\u00f3k helyesen jelents\u00e9k \u00e1llapotukat",
+                    "ignore_availability": "A megadott eszk\u00f6z\u00f6k kapcsol\u00f3d\u00e1si \u00e1llapot\u00e1nak figyelmen k\u00edv\u00fcl hagy\u00e1sa"
                 }
             }
         }

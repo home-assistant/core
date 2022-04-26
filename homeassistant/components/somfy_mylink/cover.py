@@ -2,8 +2,11 @@
 import logging
 
 from homeassistant.components.cover import CoverDeviceClass, CoverEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_CLOSED, STATE_OPEN
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
@@ -22,7 +25,11 @@ MYLINK_COVER_TYPE_TO_DEVICE_CLASS = {
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Discover and configure Somfy covers."""
     reversed_target_ids = config_entry.options.get(CONF_REVERSED_TARGET_IDS, {})
 
@@ -72,6 +79,7 @@ class SomfyShade(RestoreEntity, CoverEntity):
         self._attr_unique_id = target_id
         self._attr_name = name
         self._reverse = reverse
+        self._attr_is_closed = None
         self._attr_device_class = device_class
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._target_id)},

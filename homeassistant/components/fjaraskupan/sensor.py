@@ -39,7 +39,7 @@ async def async_setup_entry(
     async_setup_entry_platform(hass, config_entry, async_add_entities, _constructor)
 
 
-class RssiSensor(CoordinatorEntity[State], SensorEntity):
+class RssiSensor(CoordinatorEntity[DataUpdateCoordinator[State]], SensorEntity):
     """Sensor device."""
 
     def __init__(

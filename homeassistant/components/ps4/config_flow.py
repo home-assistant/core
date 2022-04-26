@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_REGION,
     CONF_TOKEN,
 )
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import location
 
 from .const import (
@@ -180,7 +181,7 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # Try to find region automatically.
         if not self.location:
             self.location = await location.async_detect_location_info(
-                self.hass.helpers.aiohttp_client.async_get_clientsession()
+                async_get_clientsession(self.hass)
             )
         if self.location:
             country = COUNTRYCODE_NAMES.get(self.location.country_code)

@@ -7,18 +7,17 @@ from pyps4_2ndscreen.errors import NotReady, PSDataIncomplete
 from pyps4_2ndscreen.media_art import TYPE_APP as PS_TYPE_APP
 import pyps4_2ndscreen.ps4 as pyps4
 
-from homeassistant.components.media_player import MediaPlayerEntity
+from homeassistant.components.media_player import (
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
+)
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_TITLE,
     MEDIA_TYPE_APP,
     MEDIA_TYPE_GAME,
-    SUPPORT_PAUSE,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_STOP,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_LOCKED,
     CONF_HOST,
@@ -29,9 +28,10 @@ from homeassistant.const import (
     STATE_PLAYING,
     STATE_STANDBY,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import format_unique_id, load_games, save_games
 from .const import (
@@ -44,13 +44,6 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_PS4 = (
-    SUPPORT_TURN_OFF
-    | SUPPORT_TURN_ON
-    | SUPPORT_PAUSE
-    | SUPPORT_STOP
-    | SUPPORT_SELECT_SOURCE
-)
 
 ICON = "mdi:sony-playstation"
 MEDIA_IMAGE_DEFAULT = None
@@ -58,7 +51,11 @@ MEDIA_IMAGE_DEFAULT = None
 DEFAULT_RETRIES = 2
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up PS4 from a config entry."""
     config = config_entry
     creds = config.data[CONF_TOKEN]
@@ -74,6 +71,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 class PS4Device(MediaPlayerEntity):
     """Representation of a PS4."""
+
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.STOP
+        | MediaPlayerEntityFeature.SELECT_SOURCE
+    )
 
     def __init__(self, config, name, host, region, ps4, creds):
         """Initialize the ps4 device."""
@@ -423,11 +428,6 @@ class PS4Device(MediaPlayerEntity):
     def media_title(self):
         """Title of current playing media."""
         return self._media_title
-
-    @property
-    def supported_features(self):
-        """Media player features that are supported."""
-        return SUPPORT_PS4
 
     @property
     def source(self):

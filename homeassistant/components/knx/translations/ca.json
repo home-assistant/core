@@ -12,16 +12,17 @@
                 "data": {
                     "host": "Amfitri\u00f3",
                     "individual_address": "Adre\u00e7a individual de la connexi\u00f3",
-                    "local_ip": "IP local (deixa-ho en blanc si no n'est\u00e0s segur/a)",
+                    "local_ip": "IP local de Home Assistant (deixa-ho en blanc si no n'est\u00e0s segur/a)",
                     "port": "Port",
-                    "route_back": "Encaminament de retorn / Mode NAT"
+                    "route_back": "Encaminament de retorn / Mode NAT",
+                    "tunneling_type": "Tipus de t\u00fanel KNX"
                 },
                 "description": "Introdueix la informaci\u00f3 de connexi\u00f3 del dispositiu de t\u00fanel."
             },
             "routing": {
                 "data": {
                     "individual_address": "Adre\u00e7a individual de la connexi\u00f3 d'encaminament",
-                    "local_ip": "IP local (deixa-ho en blanc si no n'est\u00e0s segur/a)",
+                    "local_ip": "IP local de Home Assistant (deixa-ho en blanc si no n'est\u00e0s segur/a)",
                     "multicast_group": "Grup de multidifusi\u00f3 utilitzat per a l'encaminament",
                     "multicast_port": "Port de multidifusi\u00f3 utilitzat per a l'encaminament"
                 },
@@ -47,7 +48,7 @@
                 "data": {
                     "connection_type": "Tipus de connexi\u00f3 KNX",
                     "individual_address": "Adre\u00e7a individual predeterminada",
-                    "local_ip": "IP local (deixa-ho en blanc si no n'est\u00e0s segur/a)",
+                    "local_ip": "IP local de Home Assistant (utilitza 0.0.0.0 per a detecci\u00f3 autom\u00e0tica)",
                     "multicast_group": "Grup de multidifusi\u00f3 utilitzat per a encaminament i descobriment",
                     "multicast_port": "Port de multidifusi\u00f3 utilitzat per a encaminament i descobriment",
                     "rate_limit": "Telegrames de sortida m\u00e0xims per segon",
@@ -59,7 +60,8 @@
                     "host": "Amfitri\u00f3",
                     "local_ip": "IP local (deixa-ho en blanc si no n'est\u00e0s segur/a)",
                     "port": "Port",
-                    "route_back": "Encaminament de retorn / Mode NAT"
+                    "route_back": "Encaminament de retorn / Mode NAT",
+                    "tunneling_type": "Tipus de t\u00fanel KNX"
                 }
             }
         }

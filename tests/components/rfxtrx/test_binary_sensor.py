@@ -38,7 +38,7 @@ async def test_one(hass, rfxtrx):
 
 
 async def test_one_pt2262(hass, rfxtrx):
-    """Test with 1 sensor."""
+    """Test with 1 PT2262 sensor."""
     entry_data = create_rfx_test_cfg(
         devices={
             "0913000022670e013970": {

@@ -4,7 +4,7 @@
             "press": "Appuyez sur le bouton {entity_name}"
         },
         "trigger_type": {
-            "pressed": "{entity_name} a \u00e9t\u00e9 press\u00e9"
+            "pressed": "Appui sur {entity_name}"
         }
     },
     "title": "Bouton"

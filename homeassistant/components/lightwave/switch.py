@@ -1,11 +1,21 @@
 """Support for LightwaveRF switches."""
+from __future__ import annotations
+
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import CONF_NAME
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import LIGHTWAVE_LINK
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Find and return LightWave switches."""
     if not discovery_info:
         return

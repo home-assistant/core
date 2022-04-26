@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "invalid_host": "Nieprawid\u0142owa nazwa hosta lub adres IP"
+        },
+        "flow_title": "{name} - {model} ({host})",
+        "step": {
+            "discovery_confirm": {
+                "description": "Czy chcesz skonfigurowa\u0107 {name} - {model} ({host})?"
+            },
+            "manual": {
+                "data": {
+                    "host": "Nazwa hosta lub adres IP"
+                },
+                "description": "Wprowad\u017a adres IP."
+            },
+            "user": {
+                "data": {
+                    "device": "Urz\u0105dzenie"
+                },
+                "description": "Wybierz urz\u0105dzenie lub wybierz \u201eAdres IP\u201d, aby r\u0119cznie wprowadzi\u0107 adres IP."
+            }
+        }
+    }
+}

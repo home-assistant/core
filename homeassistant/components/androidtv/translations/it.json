@@ -43,12 +43,12 @@
             "init": {
                 "data": {
                     "apps": "Configura l'elenco delle applicazioni",
-                    "exclude_unnamed_apps": "Escludi app con nome sconosciuto",
-                    "get_sources": "Decidi se recuperare o meno le app in esecuzione come elenco di fonti",
-                    "screencap": "Determina se la copertina dell'album deve essere estratta da ci\u00f2 che viene mostrato sullo schermo",
+                    "exclude_unnamed_apps": "Escludere le app con nome sconosciuto dall'elenco delle origini",
+                    "get_sources": "Recupera le app in esecuzione come elenco di origini",
+                    "screencap": "Utilizzare l'acquisizione dello schermo per le copertine degli album",
                     "state_detection_rules": "Configura le regole di rilevamento dello stato",
-                    "turn_off_command": "Comando shell ADB per sovrascrivere il comando turn_off predefinito",
-                    "turn_on_command": "Comando shell ADB per sovrascrivere il comando turn_on predefinito"
+                    "turn_off_command": "Comando di disattivazione della shell ADB (lascia vuoto per impostazione predefinita)",
+                    "turn_on_command": "Comando di attivazione della shell ADB (lascia vuoto per impostazione predefinita)"
                 },
                 "title": "Opzioni Android TV"
             },

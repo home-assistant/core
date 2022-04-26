@@ -1,23 +1,17 @@
 """Support for Logitech UE Smart Radios."""
+from __future__ import annotations
 
 import logging
 
 import requests
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_MUSIC,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_STOP,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
+from homeassistant.components.media_player import (
+    PLATFORM_SCHEMA,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
 )
+from homeassistant.components.media_player.const import MEDIA_TYPE_MUSIC
 from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
@@ -26,24 +20,15 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_PLAYING,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
 ICON = "mdi:radio"
 URL = "http://decibel.logitechmusic.com/jsonrpc.js"
-
-SUPPORT_UE_SMART_RADIO = (
-    SUPPORT_PLAY
-    | SUPPORT_PAUSE
-    | SUPPORT_STOP
-    | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-    | SUPPORT_VOLUME_SET
-    | SUPPORT_VOLUME_MUTE
-)
 
 PLAYBACK_DICT = {"play": STATE_PLAYING, "pause": STATE_PAUSED, "stop": STATE_IDLE}
 
@@ -69,7 +54,12 @@ def send_request(payload, session):
         return request.json()
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Logitech UE Smart Radio platform."""
     email = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
@@ -93,6 +83,18 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 class UERadioDevice(MediaPlayerEntity):
     """Representation of a Logitech UE Smart Radio device."""
+
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.PLAY
+        | MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.STOP
+        | MediaPlayerEntityFeature.PREVIOUS_TRACK
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.VOLUME_MUTE
+    )
 
     def __init__(self, session, player_id, player_name):
         """Initialize the Logitech UE Smart Radio device."""
@@ -169,11 +171,6 @@ class UERadioDevice(MediaPlayerEntity):
     def volume_level(self):
         """Volume level of the media player (0..1)."""
         return self._volume
-
-    @property
-    def supported_features(self):
-        """Flag of features that are supported."""
-        return SUPPORT_UE_SMART_RADIO
 
     @property
     def media_content_type(self):

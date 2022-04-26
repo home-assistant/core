@@ -1,4 +1,5 @@
 """Support for Nest devices."""
+# mypy: ignore-errors
 
 from datetime import datetime, timedelta
 import logging

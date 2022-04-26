@@ -4,23 +4,26 @@ from __future__ import annotations
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
-    SUPPORT_CLOSE,
-    SUPPORT_CLOSE_TILT,
-    SUPPORT_OPEN,
-    SUPPORT_OPEN_TILT,
-    SUPPORT_SET_TILT_POSITION,
-    SUPPORT_STOP_TILT,
     CoverDeviceClass,
     CoverEntity,
+    CoverEntityFeature,
 )
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_utc_time_change
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Demo covers."""
     async_add_entities(
         [
@@ -32,7 +35,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 "cover_4",
                 "Garage Door",
                 device_class=CoverDeviceClass.GARAGE,
-                supported_features=(SUPPORT_OPEN | SUPPORT_CLOSE),
+                supported_features=(CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE),
             ),
             DemoCover(
                 hass,
@@ -40,17 +43,21 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 "Pergola Roof",
                 tilt_position=60,
                 supported_features=(
-                    SUPPORT_OPEN_TILT
-                    | SUPPORT_STOP_TILT
-                    | SUPPORT_CLOSE_TILT
-                    | SUPPORT_SET_TILT_POSITION
+                    CoverEntityFeature.OPEN_TILT
+                    | CoverEntityFeature.STOP_TILT
+                    | CoverEntityFeature.CLOSE_TILT
+                    | CoverEntityFeature.SET_TILT_POSITION
                 ),
             ),
         ]
     )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Demo config entry."""
     await async_setup_platform(hass, {}, async_add_entities)
 

@@ -116,7 +116,7 @@ def get_astral_event_date(
         kwargs["observer_elevation"] = elevation
 
     try:
-        return getattr(location, event)(date, **kwargs)  # type: ignore
+        return getattr(location, event)(date, **kwargs)  # type: ignore[no-any-return]
     except ValueError:
         # Event never occurs for specified date.
         return None

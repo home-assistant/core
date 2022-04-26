@@ -2,7 +2,7 @@
 from homeassistant.components.alexa.auth import Auth
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 
-from . import TEST_TOKEN_URL
+from .test_common import TEST_TOKEN_URL
 
 
 async def run_auth_get_access_token(

@@ -1,7 +1,69 @@
 {
+    "config": {
+        "step": {
+            "cover": {
+                "data": {
+                    "entities": "Grup \u00fcyeleri",
+                    "name": "Grup ismi"
+                },
+                "description": "Grup se\u00e7eneklerini se\u00e7in"
+            },
+            "cover_options": {
+                "data": {
+                    "entities": "Grup \u00fcyeleri"
+                },
+                "description": "Grup se\u00e7eneklerini se\u00e7in"
+            },
+            "fan": {
+                "data": {
+                    "entities": "Grup \u00fcyeleri",
+                    "name": "Grup ismi"
+                },
+                "description": "Grup se\u00e7eneklerini se\u00e7in"
+            },
+            "fan_options": {
+                "data": {
+                    "entities": "Grup \u00fcyeleri"
+                },
+                "description": "Grup se\u00e7eneklerini se\u00e7in"
+            },
+            "init": {
+                "data": {
+                    "group_type": "Grup t\u00fcr\u00fc"
+                },
+                "description": "Grup t\u00fcr\u00fcn\u00fc se\u00e7in"
+            },
+            "light": {
+                "data": {
+                    "entities": "Grup \u00fcyeleri",
+                    "name": "Grup ismi"
+                },
+                "description": "Grup se\u00e7eneklerini se\u00e7in"
+            },
+            "light_options": {
+                "data": {
+                    "entities": "Grup \u00fcyeleri"
+                },
+                "description": "Grup se\u00e7eneklerini se\u00e7in"
+            },
+            "media_player": {
+                "data": {
+                    "entities": "Grup \u00fcyeleri",
+                    "name": "Grup ismi"
+                },
+                "description": "Grup se\u00e7eneklerini se\u00e7in"
+            },
+            "media_player_options": {
+                "data": {
+                    "entities": "Grup \u00fcyeleri"
+                },
+                "description": "Grup se\u00e7eneklerini se\u00e7in"
+            }
+        }
+    },
     "state": {
         "_": {
-            "closed": "Kapand\u0131",
+            "closed": "Kapal\u0131",
             "home": "Evde",
             "locked": "Kilitli",
             "not_home": "D\u0131\u015far\u0131da",

@@ -1,16 +1,19 @@
 """Support for Hive light devices."""
+from __future__ import annotations
+
 from datetime import timedelta
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_COLOR_TEMP,
+    ColorMode,
     LightEntity,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.color as color_util
 
 from . import HiveEntity, refresh_system
@@ -20,7 +23,9 @@ PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(seconds=15)
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up Hive thermostat based on a config entry."""
 
     hive = hass.data[DOMAIN][entry.entry_id]
@@ -133,17 +138,28 @@ class HiveDeviceLight(HiveEntity, LightEntity):
         await self.hive.light.turnOff(self.device)
 
     @property
-    def supported_features(self):
-        """Flag supported features."""
-        supported_features = None
+    def color_mode(self) -> str:
+        """Return the color mode of the light."""
         if self.device["hiveType"] == "warmwhitelight":
-            supported_features = SUPPORT_BRIGHTNESS
-        elif self.device["hiveType"] == "tuneablelight":
-            supported_features = SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP
-        elif self.device["hiveType"] == "colourtuneablelight":
-            supported_features = SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_COLOR
+            return ColorMode.BRIGHTNESS
+        if self.device["hiveType"] == "tuneablelight":
+            return ColorMode.COLOR_TEMP
+        if self.device["hiveType"] == "colourtuneablelight":
+            if self.device["status"]["mode"] == "COLOUR":
+                return ColorMode.HS
+            return ColorMode.COLOR_TEMP
+        return ColorMode.ONOFF
 
-        return supported_features
+    @property
+    def supported_color_modes(self) -> set[str] | None:
+        """Flag supported color modes."""
+        if self.device["hiveType"] == "warmwhitelight":
+            return {ColorMode.BRIGHTNESS}
+        if self.device["hiveType"] == "tuneablelight":
+            return {ColorMode.COLOR_TEMP}
+        if self.device["hiveType"] == "colourtuneablelight":
+            return {ColorMode.COLOR_TEMP, ColorMode.HS}
+        return {ColorMode.ONOFF}
 
     async def async_update(self):
         """Update all Node data from Hive."""

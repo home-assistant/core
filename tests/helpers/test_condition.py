@@ -3,6 +3,7 @@ from datetime import datetime
 from unittest.mock import AsyncMock, patch
 
 import pytest
+import voluptuous as vol
 
 from homeassistant.components import sun
 import homeassistant.components.automation as automation
@@ -15,6 +16,7 @@ from homeassistant.const import (
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConditionError, HomeAssistantError
 from homeassistant.helpers import (
     condition,
@@ -27,8 +29,6 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import async_mock_service
-
-ORIG_TIME_ZONE = dt_util.DEFAULT_TIME_ZONE
 
 
 @pytest.fixture
@@ -44,11 +44,6 @@ def setup_comp(hass):
     hass.loop.run_until_complete(
         async_setup_component(hass, sun.DOMAIN, {sun.DOMAIN: {sun.CONF_ELEVATION: 0}})
     )
-
-
-def teardown():
-    """Restore."""
-    dt_util.set_default_time_zone(ORIG_TIME_ZONE)
 
 
 def assert_element(trace_element, expected_element, path):
@@ -294,6 +289,101 @@ async def test_and_condition_with_template(hass):
     assert test(hass)
 
 
+async def test_and_condition_shorthand(hass):
+    """Test the 'and' condition shorthand."""
+    config = {
+        "alias": "And Condition Shorthand",
+        "and": [
+            {
+                "alias": "Template Condition",
+                "condition": "template",
+                "value_template": '{{ states.sensor.temperature.state == "100" }}',
+            },
+            {
+                "condition": "numeric_state",
+                "entity_id": "sensor.temperature",
+                "below": 110,
+            },
+        ],
+    }
+    config = cv.CONDITION_SCHEMA(config)
+    config = await condition.async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
+
+    assert config["alias"] == "And Condition Shorthand"
+    assert "and" not in config.keys()
+
+    hass.states.async_set("sensor.temperature", 120)
+    assert not test(hass)
+    assert_condition_trace(
+        {
+            "": [{"result": {"result": False}}],
+            "conditions/0": [
+                {"result": {"entities": ["sensor.temperature"], "result": False}}
+            ],
+        }
+    )
+
+    hass.states.async_set("sensor.temperature", 105)
+    assert not test(hass)
+
+    hass.states.async_set("sensor.temperature", 100)
+    assert test(hass)
+
+
+async def test_and_condition_list_shorthand(hass):
+    """Test the 'and' condition list shorthand."""
+    config = {
+        "alias": "And Condition List Shorthand",
+        "condition": [
+            {
+                "alias": "Template Condition",
+                "condition": "template",
+                "value_template": '{{ states.sensor.temperature.state == "100" }}',
+            },
+            {
+                "condition": "numeric_state",
+                "entity_id": "sensor.temperature",
+                "below": 110,
+            },
+        ],
+    }
+    config = cv.CONDITION_SCHEMA(config)
+    config = await condition.async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
+
+    assert config["alias"] == "And Condition List Shorthand"
+    assert "and" not in config.keys()
+
+    hass.states.async_set("sensor.temperature", 120)
+    assert not test(hass)
+    assert_condition_trace(
+        {
+            "": [{"result": {"result": False}}],
+            "conditions/0": [
+                {"result": {"entities": ["sensor.temperature"], "result": False}}
+            ],
+        }
+    )
+
+    hass.states.async_set("sensor.temperature", 105)
+    assert not test(hass)
+
+    hass.states.async_set("sensor.temperature", 100)
+    assert test(hass)
+
+
+async def test_malformed_and_condition_list_shorthand(hass):
+    """Test the 'and' condition list shorthand syntax check."""
+    config = {
+        "alias": "Bad shorthand syntax",
+        "condition": ["bad", "syntax"],
+    }
+
+    with pytest.raises(vol.MultipleInvalid):
+        cv.CONDITION_SCHEMA(config)
+
+
 async def test_or_condition(hass):
     """Test the 'or' condition."""
     config = {
@@ -466,6 +556,36 @@ async def test_or_condition_with_template(hass):
     config = cv.CONDITION_SCHEMA(config)
     config = await condition.async_validate_condition_config(hass, config)
     test = await condition.async_from_config(hass, config)
+
+    hass.states.async_set("sensor.temperature", 120)
+    assert not test(hass)
+
+    hass.states.async_set("sensor.temperature", 105)
+    assert test(hass)
+
+    hass.states.async_set("sensor.temperature", 100)
+    assert test(hass)
+
+
+async def test_or_condition_shorthand(hass):
+    """Test the 'or' condition shorthand."""
+    config = {
+        "alias": "Or Condition Shorthand",
+        "or": [
+            {'{{ states.sensor.temperature.state == "100" }}'},
+            {
+                "condition": "numeric_state",
+                "entity_id": "sensor.temperature",
+                "below": 110,
+            },
+        ],
+    }
+    config = cv.CONDITION_SCHEMA(config)
+    config = await condition.async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
+
+    assert config["alias"] == "Or Condition Shorthand"
+    assert "or" not in config.keys()
 
     hass.states.async_set("sensor.temperature", 120)
     assert not test(hass)
@@ -662,6 +782,42 @@ async def test_not_condition_with_template(hass):
     config = cv.CONDITION_SCHEMA(config)
     config = await condition.async_validate_condition_config(hass, config)
     test = await condition.async_from_config(hass, config)
+
+    hass.states.async_set("sensor.temperature", 101)
+    assert test(hass)
+
+    hass.states.async_set("sensor.temperature", 50)
+    assert test(hass)
+
+    hass.states.async_set("sensor.temperature", 49)
+    assert not test(hass)
+
+    hass.states.async_set("sensor.temperature", 100)
+    assert not test(hass)
+
+
+async def test_not_condition_shorthand(hass):
+    """Test the 'or' condition shorthand."""
+    config = {
+        "alias": "Not Condition Shorthand",
+        "not": [
+            {
+                "condition": "template",
+                "value_template": '{{ states.sensor.temperature.state == "100" }}',
+            },
+            {
+                "condition": "numeric_state",
+                "entity_id": "sensor.temperature",
+                "below": 50,
+            },
+        ],
+    }
+    config = cv.CONDITION_SCHEMA(config)
+    config = await condition.async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
+
+    assert config["alias"] == "Not Condition Shorthand"
+    assert "not" not in config.keys()
 
     hass.states.async_set("sensor.temperature", 101)
     assert test(hass)
@@ -1023,6 +1179,40 @@ async def test_state_multiple_entities(hass):
     assert not test(hass)
 
     hass.states.async_set("sensor.temperature_1", 100)
+    hass.states.async_set("sensor.temperature_2", 101)
+    assert not test(hass)
+
+
+async def test_state_multiple_entities_match_any(hass: HomeAssistant) -> None:
+    """Test with multiple entities in condition with match any."""
+    config = {
+        "condition": "and",
+        "conditions": [
+            {
+                "condition": "state",
+                "entity_id": ["sensor.temperature_1", "sensor.temperature_2"],
+                "match": "any",
+                "state": "100",
+            },
+        ],
+    }
+    config = cv.CONDITION_SCHEMA(config)
+    config = await condition.async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
+
+    hass.states.async_set("sensor.temperature_1", 100)
+    hass.states.async_set("sensor.temperature_2", 100)
+    assert test(hass)
+
+    hass.states.async_set("sensor.temperature_1", 101)
+    hass.states.async_set("sensor.temperature_2", 100)
+    assert test(hass)
+
+    hass.states.async_set("sensor.temperature_1", 100)
+    hass.states.async_set("sensor.temperature_2", 101)
+    assert test(hass)
+
+    hass.states.async_set("sensor.temperature_1", 101)
     hass.states.async_set("sensor.temperature_2", 101)
     assert not test(hass)
 
@@ -1810,54 +2000,51 @@ async def test_extract_entities():
 
 async def test_extract_devices():
     """Test extracting devices."""
-    assert (
-        condition.async_extract_devices(
-            {
-                "condition": "and",
-                "conditions": [
-                    {"condition": "device", "device_id": "abcd", "domain": "light"},
-                    {"condition": "device", "device_id": "qwer", "domain": "switch"},
-                    {
-                        "condition": "state",
-                        "entity_id": "sensor.not_a_device",
-                        "state": "100",
-                    },
-                    {
-                        "condition": "not",
-                        "conditions": [
-                            {
-                                "condition": "device",
-                                "device_id": "abcd_not",
-                                "domain": "light",
-                            },
-                            {
-                                "condition": "device",
-                                "device_id": "qwer_not",
-                                "domain": "switch",
-                            },
-                        ],
-                    },
-                    {
-                        "condition": "or",
-                        "conditions": [
-                            {
-                                "condition": "device",
-                                "device_id": "abcd_or",
-                                "domain": "light",
-                            },
-                            {
-                                "condition": "device",
-                                "device_id": "qwer_or",
-                                "domain": "switch",
-                            },
-                        ],
-                    },
-                    Template("{{ is_state('light.example', 'on') }}"),
-                ],
-            }
-        )
-        == {"abcd", "qwer", "abcd_not", "qwer_not", "abcd_or", "qwer_or"}
-    )
+    assert condition.async_extract_devices(
+        {
+            "condition": "and",
+            "conditions": [
+                {"condition": "device", "device_id": "abcd", "domain": "light"},
+                {"condition": "device", "device_id": "qwer", "domain": "switch"},
+                {
+                    "condition": "state",
+                    "entity_id": "sensor.not_a_device",
+                    "state": "100",
+                },
+                {
+                    "condition": "not",
+                    "conditions": [
+                        {
+                            "condition": "device",
+                            "device_id": "abcd_not",
+                            "domain": "light",
+                        },
+                        {
+                            "condition": "device",
+                            "device_id": "qwer_not",
+                            "domain": "switch",
+                        },
+                    ],
+                },
+                {
+                    "condition": "or",
+                    "conditions": [
+                        {
+                            "condition": "device",
+                            "device_id": "abcd_or",
+                            "domain": "light",
+                        },
+                        {
+                            "condition": "device",
+                            "device_id": "qwer_or",
+                            "domain": "switch",
+                        },
+                    ],
+                },
+                Template("{{ is_state('light.example', 'on') }}"),
+            ],
+        }
+    ) == {"abcd", "qwer", "abcd_not", "qwer_not", "abcd_or", "qwer_or"}
 
 
 async def test_condition_template_error(hass):
@@ -2659,8 +2846,7 @@ async def test_if_action_before_sunrise_no_offset_kotzebue(hass, hass_ws_client,
     at 7 AM and sunset at 3AM during summer
     After sunrise is true from sunrise until midnight, local time.
     """
-    tz = dt_util.get_time_zone("America/Anchorage")
-    dt_util.set_default_time_zone(tz)
+    hass.config.set_time_zone("America/Anchorage")
     hass.config.latitude = 66.5
     hass.config.longitude = 162.4
     await async_setup_component(
@@ -2736,8 +2922,7 @@ async def test_if_action_after_sunrise_no_offset_kotzebue(hass, hass_ws_client, 
     at 7 AM and sunset at 3AM during summer
     Before sunrise is true from midnight until sunrise, local time.
     """
-    tz = dt_util.get_time_zone("America/Anchorage")
-    dt_util.set_default_time_zone(tz)
+    hass.config.set_time_zone("America/Anchorage")
     hass.config.latitude = 66.5
     hass.config.longitude = 162.4
     await async_setup_component(
@@ -2813,8 +2998,7 @@ async def test_if_action_before_sunset_no_offset_kotzebue(hass, hass_ws_client, 
     at 7 AM and sunset at 3AM during summer
     Before sunset is true from midnight until sunset, local time.
     """
-    tz = dt_util.get_time_zone("America/Anchorage")
-    dt_util.set_default_time_zone(tz)
+    hass.config.set_time_zone("America/Anchorage")
     hass.config.latitude = 66.5
     hass.config.longitude = 162.4
     await async_setup_component(
@@ -2890,8 +3074,7 @@ async def test_if_action_after_sunset_no_offset_kotzebue(hass, hass_ws_client, c
     at 7 AM and sunset at 3AM during summer
     After sunset is true from sunset until midnight, local time.
     """
-    tz = dt_util.get_time_zone("America/Anchorage")
-    dt_util.set_default_time_zone(tz)
+    hass.config.set_time_zone("America/Anchorage")
     hass.config.latitude = 66.5
     hass.config.longitude = 162.4
     await async_setup_component(
@@ -2977,9 +3160,29 @@ async def test_platform_async_validate_condition_config(hass):
     config = {CONF_DEVICE_ID: "test", CONF_DOMAIN: "test", CONF_CONDITION: "device"}
     platform = AsyncMock()
     with patch(
-        "homeassistant.helpers.condition.async_get_device_automation_platform",
+        "homeassistant.components.device_automation.condition.async_get_device_automation_platform",
         return_value=platform,
     ):
         platform.async_validate_condition_config.return_value = config
         await condition.async_validate_condition_config(hass, config)
         platform.async_validate_condition_config.assert_awaited()
+
+
+async def test_disabled_condition(hass: HomeAssistant) -> None:
+    """Test a disabled condition always passes."""
+    config = {
+        "enabled": False,
+        "condition": "state",
+        "entity_id": "binary_sensor.test",
+        "state": "on",
+    }
+    config = cv.CONDITION_SCHEMA(config)
+    config = await condition.async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
+
+    hass.states.async_set("binary_sensor.test", "on")
+    assert test(hass)
+
+    # Still passses, condition is not enabled
+    hass.states.async_set("binary_sensor.test", "off")
+    assert test(hass)

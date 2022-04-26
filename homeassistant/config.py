@@ -74,7 +74,6 @@ VERSION_FILE = ".HA_VERSION"
 CONFIG_DIR_NAME = ".homeassistant"
 DATA_CUSTOMIZE = "hass_customize"
 
-GROUP_CONFIG_PATH = "groups.yaml"
 AUTOMATION_CONFIG_PATH = "automations.yaml"
 SCRIPT_CONFIG_PATH = "scripts.yaml"
 SCENE_CONFIG_PATH = "scenes.yaml"
@@ -87,14 +86,13 @@ INTEGRATION_LOAD_EXCEPTIONS = (
 )
 
 DEFAULT_CONFIG = f"""
-# Configure a default setup of Home Assistant (frontend, api, etc)
+# Loads default set of integrations. Do not remove.
 default_config:
 
 # Text to speech
 tts:
   - platform: google_translate
 
-group: !include {GROUP_CONFIG_PATH}
 automation: !include {AUTOMATION_CONFIG_PATH}
 script: !include {SCRIPT_CONFIG_PATH}
 scene: !include {SCENE_CONFIG_PATH}
@@ -262,8 +260,8 @@ CORE_CONFIG_SCHEMA = vol.All(
 
 def get_default_config_dir() -> str:
     """Put together the default configuration directory based on the OS."""
-    data_dir = os.getenv("APPDATA") if os.name == "nt" else os.path.expanduser("~")
-    return os.path.join(data_dir, CONFIG_DIR_NAME)  # type: ignore
+    data_dir = os.path.expanduser("~")
+    return os.path.join(data_dir, CONFIG_DIR_NAME)
 
 
 async def async_ensure_config_exists(hass: HomeAssistant) -> bool:
@@ -298,7 +296,6 @@ def _write_default_config(config_dir: str) -> bool:
     config_path = os.path.join(config_dir, YAML_CONFIG_FILE)
     secret_path = os.path.join(config_dir, SECRET_YAML)
     version_path = os.path.join(config_dir, VERSION_FILE)
-    group_yaml_path = os.path.join(config_dir, GROUP_CONFIG_PATH)
     automation_yaml_path = os.path.join(config_dir, AUTOMATION_CONFIG_PATH)
     script_yaml_path = os.path.join(config_dir, SCRIPT_CONFIG_PATH)
     scene_yaml_path = os.path.join(config_dir, SCENE_CONFIG_PATH)
@@ -315,10 +312,6 @@ def _write_default_config(config_dir: str) -> bool:
 
         with open(version_path, "wt", encoding="utf8") as version_file:
             version_file.write(__version__)
-
-        if not os.path.isfile(group_yaml_path):
-            with open(group_yaml_path, "wt", encoding="utf8"):
-                pass
 
         if not os.path.isfile(automation_yaml_path):
             with open(automation_yaml_path, "wt", encoding="utf8") as automation_file:
@@ -823,7 +816,7 @@ async def async_process_component_config(  # noqa: C901
         config_validator, "async_validate_config"
     ):
         try:
-            return await config_validator.async_validate_config(  # type: ignore
+            return await config_validator.async_validate_config(  # type: ignore[no-any-return]
                 hass, config
             )
         except (vol.Invalid, HomeAssistantError) as ex:
@@ -836,7 +829,7 @@ async def async_process_component_config(  # noqa: C901
     # No custom config validator, proceed with schema validation
     if hasattr(component, "CONFIG_SCHEMA"):
         try:
-            return component.CONFIG_SCHEMA(config)  # type: ignore
+            return component.CONFIG_SCHEMA(config)  # type: ignore[no-any-return]
         except vol.Invalid as ex:
             async_log_exception(ex, domain, config, hass, integration.documentation)
             return None

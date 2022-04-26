@@ -1,4 +1,6 @@
 """Support for monitoring emoncms feeds."""
+from __future__ import annotations
+
 from datetime import timedelta
 from http import HTTPStatus
 import logging
@@ -22,8 +24,11 @@ from homeassistant.const import (
     POWER_WATT,
     STATE_UNKNOWN,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -71,7 +76,12 @@ def get_id(sensorid, feedtag, feedname, feedid, feeduserid):
     return f"emoncms{sensorid}_{feedtag}_{feedname}_{feedid}_{feeduserid}"
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Emoncms sensor."""
     apikey = config.get(CONF_API_KEY)
     url = config.get(CONF_URL)
@@ -91,7 +101,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     data.update()
 
     if data.data is None:
-        return False
+        return
 
     sensors = []
 
@@ -153,11 +163,29 @@ class EmonCmsSensor(SensorEntity):
         self._sensorid = sensorid
         self._elem = elem
 
-        if unit_of_measurement == "kWh":
+        if unit_of_measurement in ("kWh", "Wh"):
             self._attr_device_class = SensorDeviceClass.ENERGY
             self._attr_state_class = SensorStateClass.TOTAL_INCREASING
         elif unit_of_measurement == "W":
             self._attr_device_class = SensorDeviceClass.POWER
+            self._attr_state_class = SensorStateClass.MEASUREMENT
+        elif unit_of_measurement == "V":
+            self._attr_device_class = SensorDeviceClass.VOLTAGE
+            self._attr_state_class = SensorStateClass.MEASUREMENT
+        elif unit_of_measurement == "A":
+            self._attr_device_class = SensorDeviceClass.CURRENT
+            self._attr_state_class = SensorStateClass.MEASUREMENT
+        elif unit_of_measurement == "VA":
+            self._attr_device_class = SensorDeviceClass.APPARENT_POWER
+            self._attr_state_class = SensorStateClass.MEASUREMENT
+        elif unit_of_measurement in ("°C", "°F", "K"):
+            self._attr_device_class = SensorDeviceClass.TEMPERATURE
+            self._attr_state_class = SensorStateClass.MEASUREMENT
+        elif unit_of_measurement == "Hz":
+            self._attr_device_class = SensorDeviceClass.FREQUENCY
+            self._attr_state_class = SensorStateClass.MEASUREMENT
+        elif unit_of_measurement == "hPa":
+            self._attr_device_class = SensorDeviceClass.PRESSURE
             self._attr_state_class = SensorStateClass.MEASUREMENT
 
         if self._value_template is not None:

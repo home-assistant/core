@@ -5,7 +5,7 @@ import logging
 import datapoint
 
 from homeassistant.helpers.update_coordinator import UpdateFailed
-from homeassistant.util import utcnow
+from homeassistant.util.dt import utcnow
 
 from .data import MetOfficeData
 

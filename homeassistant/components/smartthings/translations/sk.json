@@ -1,0 +1,16 @@
+{
+    "config": {
+        "step": {
+            "pat": {
+                "data": {
+                    "access_token": "Pr\u00edstupov\u00fd token"
+                }
+            },
+            "select_location": {
+                "data": {
+                    "location_id": "Umiestnenie"
+                }
+            }
+        }
+    }
+}

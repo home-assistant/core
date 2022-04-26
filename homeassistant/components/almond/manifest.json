@@ -3,8 +3,9 @@
   "name": "Almond",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/almond",
-  "dependencies": ["http", "conversation"],
+  "dependencies": ["auth", "conversation"],
   "codeowners": ["@gcampax", "@balloob"],
   "requirements": ["pyalmond==0.0.2"],
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "loggers": ["pyalmond"]
 }

@@ -191,7 +191,7 @@ SENSOR_TYPES = {
             4,
             SensorDeviceClass.TEMPERATURE,
         ],
-        "WaterPreasure": ["WaterPressure", PRESSURE_BAR, "mdi:pipe", 4, None],
+        "WaterPressure": ["WaterPressure", PRESSURE_BAR, "mdi:pipe", 4, None],
         "AverageIgnitionTime": [
             "averageIgnitiontime",
             TIME_SECONDS,

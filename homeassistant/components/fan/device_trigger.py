@@ -16,8 +16,9 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN
 
-TRIGGER_SCHEMA = toggle_entity.TRIGGER_SCHEMA.extend(
-    {vol.Required(CONF_DOMAIN): DOMAIN}
+TRIGGER_SCHEMA = vol.All(
+    toggle_entity.TRIGGER_SCHEMA,
+    vol.Schema({vol.Required(CONF_DOMAIN): DOMAIN}, extra=vol.ALLOW_EXTRA),
 )
 
 
