@@ -10,7 +10,12 @@ import logging
 
 import pychromecast
 from pychromecast.controllers.homeassistant import HomeAssistantController
-from pychromecast.controllers.media import MEDIA_PLAYER_ERROR_CODES
+from pychromecast.controllers.media import (
+    MEDIA_PLAYER_ERROR_CODES,
+    MEDIA_PLAYER_STATE_BUFFERING,
+    MEDIA_PLAYER_STATE_PLAYING,
+    MEDIA_PLAYER_STATE_UNKNOWN,
+)
 from pychromecast.controllers.multizone import MultizoneManager
 from pychromecast.controllers.receiver import VOLUME_CONTROL_TYPE_FIXED
 from pychromecast.quick_play import quick_play
@@ -40,6 +45,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CAST_APP_ID_HOMEASSISTANT_LOVELACE,
     EVENT_HOMEASSISTANT_STOP,
+    STATE_BUFFERING,
     STATE_IDLE,
     STATE_OFF,
     STATE_PAUSED,
@@ -453,10 +459,13 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         media_status = self.media_status
         media_controller = self._chromecast.media_controller
 
-        if media_status is None or media_status.player_state == "UNKNOWN":
+        if (
+            media_status is None
+            or media_status.player_state == MEDIA_PLAYER_STATE_UNKNOWN
+        ):
             groups = self.mz_media_status
             for k, val in groups.items():
-                if val and val.player_state != "UNKNOWN":
+                if val and val.player_state != MEDIA_PLAYER_STATE_UNKNOWN:
                     media_controller = self.mz_mgr.get_multizone_mediacontroller(k)
                     break
 
@@ -716,10 +725,13 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         media_status = self.media_status
         media_status_received = self.media_status_received
 
-        if media_status is None or media_status.player_state == "UNKNOWN":
+        if (
+            media_status is None
+            or media_status.player_state == MEDIA_PLAYER_STATE_UNKNOWN
+        ):
             groups = self.mz_media_status
             for k, val in groups.items():
-                if val and val.player_state != "UNKNOWN":
+                if val and val.player_state != MEDIA_PLAYER_STATE_UNKNOWN:
                     media_status = val
                     media_status_received = self.mz_media_status_received[k]
                     break
@@ -733,8 +745,10 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         if self.app_id == CAST_APP_ID_HOMEASSISTANT_LOVELACE:
             return STATE_PLAYING
         if (media_status := self._media_status()[0]) is not None:
-            if media_status.player_is_playing:
+            if media_status.player_state == MEDIA_PLAYER_STATE_PLAYING:
                 return STATE_PLAYING
+            if media_status.player_state == MEDIA_PLAYER_STATE_BUFFERING:
+                return STATE_BUFFERING
             if media_status.player_is_paused:
                 return STATE_PAUSED
             if media_status.player_is_idle:
