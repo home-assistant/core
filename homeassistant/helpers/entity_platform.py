@@ -611,7 +611,7 @@ class EntityPlatform:
             self.hass.states.async_reserve(entity.entity_id)
 
         def remove_entity_cb() -> None:
-            """Remove entity from entities list."""
+            """Remove entity from entities dict."""
             self.entities.pop(entity_id)
 
         entity.async_on_remove(remove_entity_cb)
