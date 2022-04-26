@@ -46,7 +46,6 @@ from tests.common import (  # noqa: E402, isort:skip
     MockUser,
     SetupRecorderInstanceT,
     async_fire_mqtt_message,
-    async_init_recorder_component,
     async_test_home_assistant,
     get_test_home_assistant,
     init_recorder_component,
@@ -56,6 +55,8 @@ from tests.test_util.aiohttp import mock_aiohttp_client  # noqa: E402, isort:ski
 from tests.components.recorder.common import (  # noqa: E402, isort:skip
     async_recorder_block_till_done,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 logging.basicConfig(level=logging.DEBUG)
 logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
@@ -737,6 +738,28 @@ def hass_recorder(enable_nightly_purge, enable_statistics, hass_storage):
     dt_util.DEFAULT_TIME_ZONE = original_tz
 
 
+async def _async_init_recorder_component(hass, add_config=None):
+    """Initialize the recorder asynchronously."""
+    config = dict(add_config) if add_config else {}
+    if recorder.CONF_DB_URL not in config:
+        config[recorder.CONF_DB_URL] = "sqlite://"  # In memory DB
+        if recorder.CONF_COMMIT_INTERVAL not in config:
+            config[recorder.CONF_COMMIT_INTERVAL] = 0
+
+    with patch(
+        "homeassistant.components.recorder.ALLOW_IN_MEMORY_DB",
+        True,
+    ), patch("homeassistant.components.recorder.migration.migrate_schema"):
+        assert await async_setup_component(
+            hass, recorder.DOMAIN, {recorder.DOMAIN: config}
+        )
+        assert recorder.DOMAIN in hass.config.components
+    _LOGGER.info(
+        "Test recorder successfully started, database location: %s",
+        config[recorder.CONF_DB_URL],
+    )
+
+
 @pytest.fixture
 async def async_setup_recorder_instance(
     enable_nightly_purge, enable_statistics
@@ -762,7 +785,7 @@ async def async_setup_recorder_instance(
             side_effect=stats,
             autospec=True,
         ):
-            await async_init_recorder_component(hass, config)
+            await _async_init_recorder_component(hass, config)
             await hass.async_block_till_done()
             instance = hass.data[recorder.DATA_INSTANCE]
             # The recorder's worker is not started until Home Assistant is running
