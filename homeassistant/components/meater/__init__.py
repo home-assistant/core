@@ -9,6 +9,7 @@ from meater import (
     ServiceUnavailableError,
     TooManyRequestsError,
 )
+from meater.MeaterApi import MeaterProbe
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
@@ -42,13 +43,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.error("Unable to authenticate with the Meater API: %s", err)
         return False
 
-    async def async_update_data():
+    async def async_update_data() -> dict[str, MeaterProbe]:
         """Fetch data from API endpoint."""
         try:
             # Note: asyncio.TimeoutError and aiohttp.ClientError are already
             # handled by the data update coordinator.
             async with async_timeout.timeout(10):
-                devices = await meater_api.get_all_devices()
+                devices: list[MeaterProbe] = await meater_api.get_all_devices()
         except AuthenticationError as err:
             raise UpdateFailed("The API call wasn't authenticated") from err
         except TooManyRequestsError as err:
@@ -56,7 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 "Too many requests have been made to the API, rate limiting is in place"
             ) from err
 
-        return devices
+        return {device.id: device for device in devices}
 
     coordinator = DataUpdateCoordinator(
         hass,
