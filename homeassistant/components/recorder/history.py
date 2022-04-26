@@ -23,6 +23,7 @@ from .models import (
     RecorderRuns,
     StateAttributes,
     States,
+    process_timestamp,
     process_timestamp_to_utc_isoformat,
 )
 from .util import execute, session_scope
@@ -478,11 +479,10 @@ def get_states(
     no_attributes: bool = False,
 ) -> list[State]:
     """Return the states at a specific point in time."""
-    if (
-        run is None
-        and (run := (recorder.run_information_from_instance(hass, utc_point_in_time)))
-        is None
-    ):
+    if run is None:
+        run = recorder.get_instance(hass).run_history.get(utc_point_in_time)
+
+    if run is None or process_timestamp(run.start) > utc_point_in_time:
         # History did not run before utc_point_in_time
         return []
 
@@ -507,11 +507,10 @@ def _get_states_with_session(
             hass, session, utc_point_in_time, entity_ids[0], no_attributes
         )
 
-    if (
-        run is None
-        and (run := (recorder.run_information_with_session(session, utc_point_in_time)))
-        is None
-    ):
+    if run is None:
+        run = recorder.get_instance(hass).run_history.get(utc_point_in_time)
+
+    if run is None or process_timestamp(run.start) > utc_point_in_time:
         # History did not run before utc_point_in_time
         return []
 
@@ -649,13 +648,11 @@ def _sorted_states_to_dict(
     # Get the states at the start time
     timer_start = time.perf_counter()
     if include_start_time_state:
-        run = recorder.run_information_from_instance(hass, start_time)
         for state in _get_states_with_session(
             hass,
             session,
             start_time,
             entity_ids,
-            run=run,
             filters=filters,
             no_attributes=no_attributes,
         ):
