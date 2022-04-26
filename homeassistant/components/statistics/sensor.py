@@ -236,7 +236,7 @@ class StatisticsSensor(SensorEntity):
         samples_max_age: timedelta | None,
         precision: int,
         quantile_intervals: int,
-        quantile_method: str,
+        quantile_method: Literal["exclusive", "inclusive"],
     ) -> None:
         """Initialize the Statistics sensor."""
         self._attr_icon: str = ICON
@@ -252,7 +252,7 @@ class StatisticsSensor(SensorEntity):
         self._samples_max_age: timedelta | None = samples_max_age
         self._precision: int = precision
         self._quantile_intervals: int = quantile_intervals
-        self._quantile_method: str = quantile_method
+        self._quantile_method: Literal["exclusive", "inclusive"] = quantile_method
         self._value: StateType | datetime = None
         self._unit_of_measurement: str | None = None
         self._available: bool = False

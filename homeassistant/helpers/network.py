@@ -236,7 +236,8 @@ def _get_internal_url(
             scheme="http", host=hass.config.api.local_ip, port=hass.config.api.port
         )
         if (
-            not is_loopback(ip_address(ip_url.host))
+            ip_url.host
+            and not is_loopback(ip_address(ip_url.host))
             and (not require_current_request or ip_url.host == _get_request_host())
             and (not require_standard_port or ip_url.is_default_port())
         ):

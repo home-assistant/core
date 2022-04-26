@@ -109,7 +109,7 @@ def report_integration(
         integration,
         found_frame.filename[index:],
         found_frame.lineno,
-        found_frame.line.strip(),
+        (found_frame.line or "?").strip(),
     )
 
 
