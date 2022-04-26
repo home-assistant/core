@@ -148,7 +148,7 @@ class GoogleProvider(Provider):
             as_tts = AudioSegment.from_file(BytesIO(mp3_data.getvalue()), "mp3")
             as_sil = AudioSegment.silent(duration=self._delay, frame_rate=as_tts.frame_rate)
             as_out = as_sil + as_tts
-            output=BytesIO()
+            output = BytesIO()
             as_out.export(output, format="mp3")
             return ("mp3", output.getvalue())
         else:
