@@ -917,7 +917,7 @@ async def test_setup_with_duplicate_scripts(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test setup with duplicate configs."""
-    assert not await async_setup_component(
+    assert await async_setup_component(
         hass,
         "script",
         {
@@ -934,4 +934,4 @@ async def test_setup_with_duplicate_scripts(
         },
     )
     assert "Duplicate script detected with name: 'duplicate'" in caplog.text
-    assert len(hass.states.async_entity_ids("script")) == 0
+    assert len(hass.states.async_entity_ids("script")) == 1
