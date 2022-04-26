@@ -11,7 +11,7 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
     ATTR_WHITE_VALUE,
-    SUPPORT_TRANSITION,
+    LightEntityFeature,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -1344,7 +1344,7 @@ async def test_supports_transition_template(
 
     assert state is not None
     assert (
-        int(state.attributes.get("supported_features")) & SUPPORT_TRANSITION
+        int(state.attributes.get("supported_features")) & LightEntityFeature.TRANSITION
     ) != expected_value
 
 
