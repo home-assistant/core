@@ -166,12 +166,14 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
     @callback
     def _async_log_debug_data(self, method: str) -> None:
         """Print debug data about entity."""
+        if not LOGGER.isEnabledFor(logging.DEBUG):
+            return
         last_seen = self.client.last_seen or 0
         LOGGER.debug(
-            "[%s, %s] %s [%s %s] [%s] %s (%s)",
+            "%s [%s, %s] [%s %s] [%s] %s (%s)",
+            method,
             self.entity_id,
             self.client.mac,
-            method,
             self.schedule_update,
             self._is_connected,
             dt_util.utc_from_timestamp(float(last_seen)),
