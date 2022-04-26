@@ -13,9 +13,9 @@ from homeassistant.components.light import (
     ATTR_EFFECT,
     ATTR_RGBW_COLOR,
     ATTR_RGBWW_COLOR,
-    SUPPORT_EFFECT,
     ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -91,7 +91,7 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
             self._attr_min_mireds = color_temperature_kelvin_to_mired(kelvin.max)
             self._attr_max_mireds = color_temperature_kelvin_to_mired(kelvin.min)
         if bulb_type.features.effect:
-            self._attr_supported_features = SUPPORT_EFFECT
+            self._attr_supported_features = LightEntityFeature.EFFECT
         self._async_update_attrs()
 
     @callback
