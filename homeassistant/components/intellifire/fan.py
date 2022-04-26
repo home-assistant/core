@@ -128,7 +128,7 @@ class IntellifireFan(IntellifireEntity, FanEntity):
         setattr(
             self.coordinator.read_api, self.entity_description.data_field, int_value
         )
-        await self.async_update_ha_state()
+        self.async_write_ha_state()
         LOGGER.info(
             "Fan speed %s [%s%%] = %s: [%s]",
             int_value,
@@ -152,7 +152,7 @@ class IntellifireFan(IntellifireEntity, FanEntity):
         LOGGER.debug("On  [ Coordinator    ] - Update Fan state")
         setattr(self.coordinator.read_api, self.entity_description.data_field, 1)
         LOGGER.debug("On  [ Home Assistant ] - Trigger State Update")
-        await self.async_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the fan."""
@@ -161,7 +161,7 @@ class IntellifireFan(IntellifireEntity, FanEntity):
         LOGGER.debug("Off [ Coordinator    ] - Update Fan state")
         setattr(self.coordinator.read_api, self.entity_description.data_field, 0)
         LOGGER.debug("Off [ Home Assistant ] - Trigger State Update")
-        await self.async_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def entity_registry_enabled_default(self) -> bool:
