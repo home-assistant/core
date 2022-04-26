@@ -23,7 +23,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import AqualinkEntity, refresh_system
-from .const import CLIMATE_SUPPORTED_MODES, DOMAIN as AQUALINK_DOMAIN
+from .const import DOMAIN as AQUALINK_DOMAIN
 from .utils import await_or_reraise
 
 _LOGGER = logging.getLogger(__name__)
@@ -46,7 +46,7 @@ async def async_setup_entry(
 class HassAqualinkThermostat(AqualinkEntity, ClimateEntity):
     """Representation of a thermostat."""
 
-    _attr_hvac_modes = CLIMATE_SUPPORTED_MODES
+    _attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
 
     @property
