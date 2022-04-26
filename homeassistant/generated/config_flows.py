@@ -271,6 +271,7 @@ FLOWS = {
         "pure_energie",
         "pvoutput",
         "pvpc_hourly_pricing",
+        "qnap_qsw",
         "rachio",
         "radio_browser",
         "rainforest_eagle",
