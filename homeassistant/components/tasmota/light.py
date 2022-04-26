@@ -94,7 +94,6 @@ class TasmotaLight(
     def __init__(self, **kwds: Any) -> None:
         """Initialize Tasmota light."""
         self._supported_color_modes: set[str] | None = None
-        self._attr_supported_features = 0
 
         self._brightness: int | None = None
         self._color_mode: str | None = None
