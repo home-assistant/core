@@ -4,6 +4,7 @@ import json
 import sqlite3
 from unittest.mock import MagicMock, patch
 
+import pytest
 from sqlalchemy.exc import DatabaseError, OperationalError
 from sqlalchemy.orm.session import Session
 
@@ -32,6 +33,16 @@ from .common import (
 )
 
 from tests.common import SetupRecorderInstanceT
+
+
+@pytest.fixture(name="use_sqlite")
+def mock_use_sqlite(request):
+    """Pytest fixture to switch purge method."""
+    with patch(
+        "homeassistant.components.recorder.Recorder.using_sqlite",
+        return_value=request.param,
+    ):
+        yield
 
 
 async def test_purge_old_states(
@@ -270,10 +281,12 @@ async def test_purge_old_statistics_runs(
         assert statistics_runs.count() == 1
 
 
+@pytest.mark.parametrize("use_sqlite", (True, False), indirect=True)
 async def test_purge_method(
     hass: HomeAssistant,
     async_setup_recorder_instance: SetupRecorderInstanceT,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
+    use_sqlite: bool,
 ):
     """Test purge method."""
 
@@ -384,9 +397,11 @@ async def test_purge_method(
     assert "Vacuuming SQL DB to free space" in caplog.text
 
 
+@pytest.mark.parametrize("use_sqlite", (True, False), indirect=True)
 async def test_purge_edge_case(
     hass: HomeAssistant,
     async_setup_recorder_instance: SetupRecorderInstanceT,
+    use_sqlite: bool,
 ):
     """Test states and events are purged even if they occurred shortly before purge_before."""
 
@@ -599,9 +614,11 @@ async def test_purge_cutoff_date(
         assert state_attributes.count() == 0
 
 
+@pytest.mark.parametrize("use_sqlite", (True, False), indirect=True)
 async def test_purge_filtered_states(
     hass: HomeAssistant,
     async_setup_recorder_instance: SetupRecorderInstanceT,
+    use_sqlite: bool,
 ):
     """Test filtered states are purged."""
     config: ConfigType = {"exclude": {"entities": ["sensor.excluded"]}}
@@ -792,9 +809,11 @@ async def test_purge_filtered_states(
         assert session.query(StateAttributes).count() == 1
 
 
+@pytest.mark.parametrize("use_sqlite", (True, False), indirect=True)
 async def test_purge_filtered_states_to_empty(
     hass: HomeAssistant,
     async_setup_recorder_instance: SetupRecorderInstanceT,
+    use_sqlite: bool,
 ):
     """Test filtered states are purged all the way to an empty db."""
     config: ConfigType = {"exclude": {"entities": ["sensor.excluded"]}}
@@ -847,9 +866,11 @@ async def test_purge_filtered_states_to_empty(
     await async_wait_purge_done(hass)
 
 
+@pytest.mark.parametrize("use_sqlite", (True, False), indirect=True)
 async def test_purge_without_state_attributes_filtered_states_to_empty(
     hass: HomeAssistant,
     async_setup_recorder_instance: SetupRecorderInstanceT,
+    use_sqlite: bool,
 ):
     """Test filtered legacy states without state attributes are purged all the way to an empty db."""
     config: ConfigType = {"exclude": {"entities": ["sensor.old_format"]}}
