@@ -8,7 +8,7 @@ from typing import Any
 
 from intellifire4py import IntellifireControlAsync, IntellifirePollData
 
-from homeassistant.components.fan import (  # SUPPORT_PRESET_MODE,; SUPPORT_SET_SPEED,
+from homeassistant.components.fan import (
     FanEntity,
     FanEntityDescription,
     FanEntityFeature,
