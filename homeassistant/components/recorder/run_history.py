@@ -50,18 +50,12 @@ class RunHistory:
 
     @property
     def recording_start(self) -> datetime:
-        """Return the time the recorder started recording states.
-
-        This function is thread safe.
-        """
+        """Return the time the recorder started recording states."""
         return self._recording_start
 
     @property
     def current(self) -> RecorderRuns:
-        """Get the current run.
-
-        This function is thread safe.
-        """
+        """Get the current run."""
         assert self._current_run_info is not None
         return self._current_run_info
 
@@ -69,8 +63,6 @@ class RunHistory:
         """Return the recorder run that started before or at start.
 
         If the first run started after the start, return None
-
-        This function is thread safe.
         """
         if start >= self.recording_start:
             return self.current
