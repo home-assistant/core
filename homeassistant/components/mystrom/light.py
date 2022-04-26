@@ -12,10 +12,9 @@ from homeassistant.components.light import (
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     PLATFORM_SCHEMA,
-    SUPPORT_EFFECT,
-    SUPPORT_FLASH,
     ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
 from homeassistant.core import HomeAssistant
@@ -73,7 +72,7 @@ class MyStromLight(LightEntity):
 
     _attr_color_mode = ColorMode.HS
     _attr_supported_color_modes = {ColorMode.HS}
-    _attr_supported_features = SUPPORT_EFFECT | SUPPORT_FLASH
+    _attr_supported_features = LightEntityFeature.EFFECT | LightEntityFeature.FLASH
 
     def __init__(self, bulb, name, mac):
         """Initialize the light."""

@@ -1,4 +1,5 @@
 """Config flow for fritzbox_callmonitor."""
+from __future__ import annotations
 
 from fritzconnection import FritzConnection
 from fritzconnection.core.exceptions import FritzConnectionException, FritzSecurityError
@@ -6,6 +7,7 @@ from requests.exceptions import ConnectionError as RequestsConnectionError
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.backports.enum import StrEnum
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -40,11 +42,15 @@ DATA_SCHEMA_USER = vol.Schema(
     }
 )
 
-RESULT_INVALID_AUTH = "invalid_auth"
-RESULT_INSUFFICIENT_PERMISSIONS = "insufficient_permissions"
-RESULT_MALFORMED_PREFIXES = "malformed_prefixes"
-RESULT_NO_DEVIES_FOUND = "no_devices_found"
-RESULT_SUCCESS = "success"
+
+class ConnectResult(StrEnum):
+    """FritzBoxPhonebook connection result."""
+
+    INVALID_AUTH = "invalid_auth"
+    INSUFFICIENT_PERMISSIONS = "insufficient_permissions"
+    MALFORMED_PREFIXES = "malformed_prefixes"
+    NO_DEVIES_FOUND = "no_devices_found"
+    SUCCESS = "success"
 
 
 class FritzBoxCallMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -81,7 +87,7 @@ class FritzBoxCallMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
-    def _try_connect(self):
+    def _try_connect(self) -> ConnectResult:
         """Try to connect and check auth."""
         self._fritzbox_phonebook = FritzBoxPhonebook(
             host=self._host,
@@ -103,13 +109,13 @@ class FritzBoxCallMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
             self._serial_number = device_info[FRITZ_ATTR_SERIAL_NUMBER]
 
-            return RESULT_SUCCESS
+            return ConnectResult.SUCCESS
         except RequestsConnectionError:
-            return RESULT_NO_DEVIES_FOUND
+            return ConnectResult.NO_DEVIES_FOUND
         except FritzSecurityError:
-            return RESULT_INSUFFICIENT_PERMISSIONS
+            return ConnectResult.INSUFFICIENT_PERMISSIONS
         except FritzConnectionException:
-            return RESULT_INVALID_AUTH
+            return ConnectResult.INVALID_AUTH
 
     async def _get_name_of_phonebook(self, phonebook_id):
         """Return name of phonebook for given phonebook_id."""
@@ -152,14 +158,14 @@ class FritzBoxCallMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         result = await self.hass.async_add_executor_job(self._try_connect)
 
-        if result == RESULT_INVALID_AUTH:
+        if result == ConnectResult.INVALID_AUTH:
             return self.async_show_form(
                 step_id="user",
                 data_schema=DATA_SCHEMA_USER,
-                errors={"base": RESULT_INVALID_AUTH},
+                errors={"base": ConnectResult.INVALID_AUTH},
             )
 
-        if result != RESULT_SUCCESS:
+        if result != ConnectResult.SUCCESS:
             return self.async_abort(reason=result)
 
         if self.context["source"] == config_entries.SOURCE_IMPORT:
@@ -252,7 +258,7 @@ class FritzBoxCallMonitorOptionsFlowHandler(config_entries.OptionsFlow):
             return self.async_show_form(
                 step_id="init",
                 data_schema=option_schema_prefixes,
-                errors={"base": RESULT_MALFORMED_PREFIXES},
+                errors={"base": ConnectResult.MALFORMED_PREFIXES},
             )
 
         return self.async_create_entry(
