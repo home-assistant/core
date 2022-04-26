@@ -166,7 +166,9 @@ async def async_setup_entry(
     coordinator.async_add_listener(async_update_data)
 
 
-class MeaterProbeTemperature(SensorEntity, CoordinatorEntity):
+class MeaterProbeTemperature(
+    SensorEntity, CoordinatorEntity[DataUpdateCoordinator[dict[str, MeaterProbe]]]
+):
     """Meater Temperature Sensor Entity."""
 
     _attr_device_class = SensorDeviceClass.TEMPERATURE
@@ -196,9 +198,7 @@ class MeaterProbeTemperature(SensorEntity, CoordinatorEntity):
     @property
     def native_value(self):
         """Return the temperature of the probe."""
-        devices: dict[str, MeaterProbe] = self.coordinator.data
-
-        if not (device := devices.get(self.device_id)):
+        if not (device := self.coordinator.data.get(self.device_id)):
             return None
 
         return self.entity_description.value(device)
@@ -207,8 +207,9 @@ class MeaterProbeTemperature(SensorEntity, CoordinatorEntity):
     def available(self):
         """Return if entity is available."""
         # See if the device was returned from the API. If not, it's offline
-        devices: dict[str, MeaterProbe] = self.coordinator.data
         return (
             self.coordinator.last_update_success
-            and self.entity_description.available(devices.get(self.device_id))
+            and self.entity_description.available(
+                self.coordinator.data.get(self.device_id)
+            )
         )
