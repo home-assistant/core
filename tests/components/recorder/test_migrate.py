@@ -26,7 +26,7 @@ from homeassistant.components.recorder.models import States
 from homeassistant.components.recorder.util import session_scope
 import homeassistant.util.dt as dt_util
 
-from .common import async_wait_recording_done_without_instance, create_engine_test
+from .common import async_wait_recording_done, create_engine_test
 
 from tests.common import async_fire_time_changed
 
@@ -52,7 +52,7 @@ async def test_schema_update_calls(hass):
         await async_setup_component(
             hass, "recorder", {"recorder": {"db_url": "sqlite://"}}
         )
-        await async_wait_recording_done_without_instance(hass)
+        await async_wait_recording_done(hass)
 
     assert recorder.util.async_migration_in_progress(hass) is False
     update.assert_has_calls(
@@ -76,7 +76,7 @@ async def test_migration_in_progress(hass):
         )
         await hass.data[DATA_INSTANCE].async_migration_event.wait()
         assert recorder.util.async_migration_in_progress(hass) is True
-        await async_wait_recording_done_without_instance(hass)
+        await async_wait_recording_done(hass)
 
     assert recorder.util.async_migration_in_progress(hass) is False
 
@@ -132,7 +132,7 @@ async def test_database_migration_encounters_corruption(hass):
         )
         hass.states.async_set("my.entity", "on", {})
         hass.states.async_set("my.entity", "off", {})
-        await async_wait_recording_done_without_instance(hass)
+        await async_wait_recording_done(hass)
 
     assert recorder.util.async_migration_in_progress(hass) is False
     assert move_away.called
@@ -190,10 +190,12 @@ async def test_events_during_migration_are_queued(hass):
         await hass.async_block_till_done()
         async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(hours=4))
         await hass.data[DATA_INSTANCE].async_recorder_ready.wait()
-        await async_wait_recording_done_without_instance(hass)
+        await async_wait_recording_done(hass)
 
     assert recorder.util.async_migration_in_progress(hass) is False
-    db_states = await hass.async_add_executor_job(_get_native_states, hass, "my.entity")
+    db_states = await recorder.get_instance(hass).async_add_executor_job(
+        _get_native_states, hass, "my.entity"
+    )
     assert len(db_states) == 2
 
 
@@ -218,14 +220,18 @@ async def test_events_during_migration_queue_exhausted(hass):
         await hass.async_block_till_done()
         hass.states.async_set("my.entity", "off", {})
         await hass.data[DATA_INSTANCE].async_recorder_ready.wait()
-        await async_wait_recording_done_without_instance(hass)
+        await async_wait_recording_done(hass)
 
     assert recorder.util.async_migration_in_progress(hass) is False
-    db_states = await hass.async_add_executor_job(_get_native_states, hass, "my.entity")
+    db_states = await recorder.get_instance(hass).async_add_executor_job(
+        _get_native_states, hass, "my.entity"
+    )
     assert len(db_states) == 1
     hass.states.async_set("my.entity", "on", {})
-    await async_wait_recording_done_without_instance(hass)
-    db_states = await hass.async_add_executor_job(_get_native_states, hass, "my.entity")
+    await async_wait_recording_done(hass)
+    db_states = await recorder.get_instance(hass).async_add_executor_job(
+        _get_native_states, hass, "my.entity"
+    )
     assert len(db_states) == 2
 
 
@@ -304,7 +310,7 @@ async def test_schema_migrate(hass, start_version):
         migration_stall.set()
         await hass.async_block_till_done()
         await hass.async_add_executor_job(migration_done.wait)
-        await async_wait_recording_done_without_instance(hass)
+        await async_wait_recording_done(hass)
         assert migration_version == models.SCHEMA_VERSION
         assert setup_run.called
         assert recorder.util.async_migration_in_progress(hass) is not True

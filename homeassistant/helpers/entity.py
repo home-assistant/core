@@ -230,7 +230,7 @@ class EntityDescription:
     device_class: str | None = None
     entity_category: EntityCategory | None = None
     entity_registry_enabled_default: bool = True
-    entity_registry_visible_default: bool = False
+    entity_registry_visible_default: bool = True
     force_update: bool = False
     icon: str | None = None
     name: str | None = None

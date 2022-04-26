@@ -39,7 +39,7 @@ def redact_value_of_zwave_value(zwave_value: ValueDataType) -> ValueDataType:
         zwave_value_id = ZwaveValueID(
             property_=zwave_value["property"],
             command_class=CommandClass(zwave_value["commandClass"]),
-            endpoint=zwave_value["endpoint"],
+            endpoint=zwave_value.get("endpoint"),
             property_key=zwave_value.get("propertyKey"),
         )
         if all(

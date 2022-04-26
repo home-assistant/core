@@ -292,8 +292,6 @@ async def async_test_home_assistant(loop, load_registries=True):
             "_": "Not empty or else some bad checks for hass config in discovery.py breaks"
         },
     )
-    hass.config_entries._entries = {}
-    hass.config_entries._store._async_ensure_stop_listener = lambda: None
 
     # Load the registries
     if load_registries:

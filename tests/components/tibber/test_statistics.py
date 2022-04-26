@@ -7,7 +7,7 @@ from homeassistant.util import dt as dt_util
 
 from .test_common import CONSUMPTION_DATA_1, mock_get_homes
 
-from tests.components.recorder.common import async_wait_recording_done_without_instance
+from tests.components.recorder.common import async_wait_recording_done
 
 
 async def test_async_setup_entry(hass, recorder_mock):
@@ -19,7 +19,7 @@ async def test_async_setup_entry(hass, recorder_mock):
 
     coordinator = TibberDataCoordinator(hass, tibber_connection)
     await coordinator._async_update_data()
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
 
     # Validate consumption
     statistic_id = "tibber:energy_consumption_home_id"

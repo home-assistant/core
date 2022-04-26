@@ -41,7 +41,7 @@ import homeassistant.util.dt as dt_util
 from tests.common import async_capture_events, mock_platform
 from tests.components.recorder.common import (
     async_trigger_db_commit,
-    async_wait_recording_done_without_instance,
+    async_wait_recording_done,
     trigger_db_commit,
 )
 
@@ -232,7 +232,6 @@ def test_process_custom_logbook_entries(hass_):
     assert_entry(entries[0], name=name, message=message, entity_id=entity_id)
 
 
-# pylint: disable=no-self-use
 def assert_entry(
     entry, when=None, name=None, message=None, domain=None, entity_id=None
 ):
@@ -261,7 +260,6 @@ def create_state_changed_event(
     )
 
 
-# pylint: disable=no-self-use
 def create_state_changed_event_from_old_new(
     entity_id, event_time_fired, old_state, new_state
 ):
@@ -645,7 +643,7 @@ async def test_logbook_entity_no_longer_in_state_machine(
     await async_setup_component(hass, "automation", {})
     await async_setup_component(hass, "script", {})
 
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
 
     entity_id_test = "alarm_control_panel.area_001"
     hass.states.async_set(
@@ -656,7 +654,7 @@ async def test_logbook_entity_no_longer_in_state_machine(
     )
 
     async_trigger_db_commit(hass)
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
 
     hass.states.async_remove(entity_id_test)
 

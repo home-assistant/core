@@ -29,7 +29,7 @@ from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
 
 from tests.common import async_setup_component, init_recorder_component
 from tests.components.recorder.common import (
-    async_wait_recording_done_without_instance,
+    async_wait_recording_done,
     wait_recording_done,
 )
 
@@ -374,7 +374,7 @@ async def test_compile_hourly_sum_statistics_amount(
     four, eight, states = await hass.async_add_executor_job(
         record_meter_states, hass, period0, "sensor.test1", attributes, seq
     )
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
     hist = history.get_significant_states(
         hass, period0 - timedelta.resolution, eight + timedelta.resolution
     )
@@ -383,15 +383,15 @@ async def test_compile_hourly_sum_statistics_amount(
     await hass.async_add_executor_job(
         partial(recorder.do_adhoc_statistics, start=period0)
     )
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
     await hass.async_add_executor_job(
         partial(recorder.do_adhoc_statistics, start=period1)
     )
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
     await hass.async_add_executor_job(
         partial(recorder.do_adhoc_statistics, start=period2)
     )
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
     statistic_ids = await hass.async_add_executor_job(list_statistic_ids, hass)
     assert statistic_ids == [
         {
@@ -478,7 +478,7 @@ async def test_compile_hourly_sum_statistics_amount(
     )
     response = await client.receive_json()
     assert response["success"]
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
 
     expected_stats["sensor.test1"][1]["sum"] = approx(factor * 40.0 + 100)
     expected_stats["sensor.test1"][2]["sum"] = approx(factor * 70.0 + 100)
@@ -497,7 +497,7 @@ async def test_compile_hourly_sum_statistics_amount(
     )
     response = await client.receive_json()
     assert response["success"]
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
 
     expected_stats["sensor.test1"][1]["sum"] = approx(factor * 40.0 + 100)
     expected_stats["sensor.test1"][2]["sum"] = approx(factor * 70.0 - 300)
