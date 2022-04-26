@@ -25,21 +25,14 @@ from homeassistant.components.climate.const import (
     FAN_MEDIUM,
     FAN_MIDDLE,
     FAN_OFF,
-    HVAC_MODE_AUTO,
-    HVAC_MODE_COOL,
-    HVAC_MODE_DRY,
-    HVAC_MODE_FAN_ONLY,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE,
-    SUPPORT_FAN_MODE,
-    SUPPORT_SWING_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
     SWING_HORIZONTAL,
     SWING_OFF,
+    ClimateEntityFeature,
+    HVACMode,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -101,20 +94,22 @@ async def test_static_attributes(hass: HomeAssistant, mock_aircon1_api: MagicMoc
         state = hass.states.get(entity_id)
         assert state is not None
         assert state.state != STATE_UNAVAILABLE
-        assert state.state == HVAC_MODE_COOL
+        assert state.state == HVACMode.COOL
 
         attributes = state.attributes
         assert attributes[ATTR_FRIENDLY_NAME] == "TestZone"
 
         assert (
             attributes[ATTR_SUPPORTED_FEATURES]
-            == SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE | SUPPORT_SWING_MODE
+            == ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.FAN_MODE
+            | ClimateEntityFeature.SWING_MODE
         )
         assert attributes[ATTR_HVAC_MODES] == [
-            HVAC_MODE_COOL,
-            HVAC_MODE_HEAT,
-            HVAC_MODE_FAN_ONLY,
-            HVAC_MODE_OFF,
+            HVACMode.COOL,
+            HVACMode.HEAT,
+            HVACMode.FAN_ONLY,
+            HVACMode.OFF,
         ]
         assert attributes[ATTR_FAN_MODES] == [
             FAN_AUTO,
@@ -155,13 +150,13 @@ async def test_dynamic_attributes(
         mock_instance_idx = clim_test_instance.mock_instance_idx
         state = hass.states.get(entity_id)
         assert state is not None
-        assert state.state == HVAC_MODE_COOL
+        assert state.state == HVACMode.COOL
 
         mock_instance.get_power_on.return_value = False
         state = await update_ac_state(
             hass, entity_id, mock_aircon_api_instances, mock_instance_idx
         )
-        assert state.state == HVAC_MODE_OFF
+        assert state.state == HVACMode.OFF
 
         mock_instance.get_online.return_value = False
         state = await update_ac_state(
@@ -174,25 +169,25 @@ async def test_dynamic_attributes(
         state = await update_ac_state(
             hass, entity_id, mock_aircon_api_instances, mock_instance_idx
         )
-        assert state.state == HVAC_MODE_COOL
+        assert state.state == HVACMode.COOL
 
         mock_instance.get_mode.return_value = whirlpool.aircon.Mode.Heat
         state = await update_ac_state(
             hass, entity_id, mock_aircon_api_instances, mock_instance_idx
         )
-        assert state.state == HVAC_MODE_HEAT
+        assert state.state == HVACMode.HEAT
 
         mock_instance.get_mode.return_value = whirlpool.aircon.Mode.Fan
         state = await update_ac_state(
             hass, entity_id, mock_aircon_api_instances, mock_instance_idx
         )
-        assert state.state == HVAC_MODE_FAN_ONLY
+        assert state.state == HVACMode.FAN_ONLY
 
         mock_instance.get_fanspeed.return_value = whirlpool.aircon.FanSpeed.Auto
         state = await update_ac_state(
             hass, entity_id, mock_aircon_api_instances, mock_instance_idx
         )
-        assert state.attributes[ATTR_FAN_MODE] == HVAC_MODE_AUTO
+        assert state.attributes[ATTR_FAN_MODE] == HVACMode.AUTO
 
         mock_instance.get_fanspeed.return_value = whirlpool.aircon.FanSpeed.Low
         state = await update_ac_state(
@@ -289,7 +284,7 @@ async def test_service_calls(
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVAC_MODE_COOL},
+            {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.COOL},
             blocking=True,
         )
         mock_instance.set_power_on.assert_called_once_with(True)
@@ -307,7 +302,7 @@ async def test_service_calls(
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVAC_MODE_COOL},
+            {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.COOL},
             blocking=True,
         )
         mock_instance.set_mode.assert_called_once_with(whirlpool.aircon.Mode.Cool)
@@ -316,18 +311,18 @@ async def test_service_calls(
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVAC_MODE_HEAT},
+            {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.HEAT},
             blocking=True,
         )
         mock_instance.set_mode.assert_called_once_with(whirlpool.aircon.Mode.Heat)
 
         mock_instance.set_mode.reset_mock()
-        # HVAC_MODE_DRY is not supported
+        # HVACMode.DRY is not supported
         with pytest.raises(ValueError):
             await hass.services.async_call(
                 CLIMATE_DOMAIN,
                 SERVICE_SET_HVAC_MODE,
-                {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVAC_MODE_DRY},
+                {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.DRY},
                 blocking=True,
             )
         mock_instance.set_mode.assert_not_called()
@@ -336,7 +331,7 @@ async def test_service_calls(
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVAC_MODE_FAN_ONLY},
+            {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.FAN_ONLY},
             blocking=True,
         )
         mock_instance.set_mode.assert_called_once_with(whirlpool.aircon.Mode.Fan)
