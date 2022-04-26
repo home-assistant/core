@@ -112,14 +112,3 @@ async def test_parse_http_error(hass, aioclient_mock, url, exc):
     aioclient_mock.get(url, text="", exc=exc)
     with pytest.raises(PlaylistError):
         await parse_playlist(hass, url)
-
-
-@pytest.mark.parametrize(
-    "url,content_type",
-    (("http://sverigesradio.se/164-hi-aac.pls", "audio/mpeg"),),
-)
-async def test_unexepected_content_type(hass, aioclient_mock, url, content_type):
-    """Test playlist parsing of HLS playlist when aioclient raises."""
-    aioclient_mock.get(url, text="", headers={"content-type": content_type})
-    with pytest.raises(PlaylistError):
-        await parse_playlist(hass, url)

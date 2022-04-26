@@ -197,8 +197,6 @@ async def _fetch_playlist(hass, url):
     try:
         session = aiohttp_client.async_get_clientsession(hass, verify_ssl=False)
         async with session.get(url, timeout=5) as resp:
-            if resp.content_type and resp.content_type.startswith("audio"):
-                raise PlaylistError(f"Not a playlist {url}")
             charset = resp.charset or "utf-8"
             try:
                 playlist_data = (await resp.content.read(64 * 1024)).decode(charset)
