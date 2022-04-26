@@ -1,8 +1,9 @@
 """Support for deCONZ alarm control panel devices."""
 from __future__ import annotations
 
-from pydeconz.alarm_system import AlarmSystem
-from pydeconz.sensor import (
+from pydeconz.models.alarm_system import AlarmSystem
+from pydeconz.models.event import EventType
+from pydeconz.models.sensor.ancillary_control import (
     ANCILLARY_CONTROL_ARMED_AWAY,
     ANCILLARY_CONTROL_ARMED_NIGHT,
     ANCILLARY_CONTROL_ARMED_STAY,
@@ -33,7 +34,6 @@ from homeassistant.const import (
     STATE_ALARM_TRIGGERED,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .deconz_device import DeconzDevice
@@ -68,50 +68,26 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the deCONZ alarm control panel devices.
-
-    Alarm control panels are based on the same device class as sensors in deCONZ.
-    """
+    """Set up the deCONZ alarm control panel devices."""
     gateway = get_gateway_from_config_entry(hass, config_entry)
     gateway.entities[DOMAIN] = set()
 
     @callback
-    def async_add_alarm_control_panel(
-        sensors: list[AncillaryControl] | None = None,
-    ) -> None:
+    def async_add_sensor(_: EventType, sensor_id: str) -> None:
         """Add alarm control panel devices from deCONZ."""
-        entities = []
-
-        if sensors is None:
-            sensors = list(gateway.api.sensors.ancillary_control.values())
-
-        for sensor in sensors:
-
-            if (
-                isinstance(sensor, AncillaryControl)
-                and sensor.unique_id not in gateway.entities[DOMAIN]
-                and (
-                    alarm_system := get_alarm_system_for_unique_id(
-                        gateway, sensor.unique_id
-                    )
-                )
-                is not None
-            ):
-
-                entities.append(DeconzAlarmControlPanel(sensor, gateway, alarm_system))
-
-        if entities:
-            async_add_entities(entities)
+        sensor = gateway.api.sensors.ancillary_control[sensor_id]
+        if alarm_system := get_alarm_system_for_unique_id(gateway, sensor.unique_id):
+            async_add_entities([DeconzAlarmControlPanel(sensor, gateway, alarm_system)])
 
     config_entry.async_on_unload(
-        async_dispatcher_connect(
-            hass,
-            gateway.signal_new_sensor,
-            async_add_alarm_control_panel,
+        gateway.api.sensors.ancillary_control.subscribe(
+            async_add_sensor,
+            EventType.ADDED,
         )
     )
 
-    async_add_alarm_control_panel()
+    for sensor_id in gateway.api.sensors.ancillary_control:
+        async_add_sensor(EventType.ADDED, sensor_id)
 
 
 class DeconzAlarmControlPanel(DeconzDevice, AlarmControlPanelEntity):

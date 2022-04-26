@@ -5,11 +5,7 @@ import logging
 
 import RFXtrx as rfxtrxmod
 
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    COLOR_MODE_BRIGHTNESS,
-    LightEntity,
-)
+from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant, callback
@@ -58,8 +54,8 @@ async def async_setup_entry(
 class RfxtrxLight(RfxtrxCommandEntity, LightEntity):
     """Representation of a RFXtrx light."""
 
-    _attr_color_mode = COLOR_MODE_BRIGHTNESS
-    _attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
+    _attr_color_mode = ColorMode.BRIGHTNESS
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
     _brightness = 0
     _device: rfxtrxmod.LightingDevice
 

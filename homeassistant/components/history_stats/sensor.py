@@ -6,7 +6,12 @@ import datetime
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_NAME,
@@ -26,7 +31,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from . import DOMAIN, PLATFORMS
 from .coordinator import HistoryStatsUpdateCoordinator
 from .data import HistoryStats
-from .helpers import pretty_duration, pretty_ratio
+from .helpers import pretty_ratio
 
 CONF_START = "start"
 CONF_END = "end"
@@ -45,8 +50,6 @@ UNITS: dict[str, str] = {
     CONF_TYPE_COUNT: "",
 }
 ICON = "mdi:chart-line"
-
-ATTR_VALUE = "value"
 
 
 def exactly_two_period_keys(conf):
@@ -136,6 +139,9 @@ class HistoryStatsSensorBase(
 class HistoryStatsSensor(HistoryStatsSensorBase):
     """A HistoryStats sensor."""
 
+    _attr_device_class = SensorDeviceClass.DURATION
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
     def __init__(
         self,
         coordinator: HistoryStatsUpdateCoordinator,
@@ -153,7 +159,6 @@ class HistoryStatsSensor(HistoryStatsSensorBase):
         state = self.coordinator.data
         if state is None or state.hours_matched is None:
             self._attr_native_value = None
-            self._attr_extra_state_attributes = {}
             return
 
         if self._type == CONF_TYPE_TIME:
@@ -162,6 +167,3 @@ class HistoryStatsSensor(HistoryStatsSensorBase):
             self._attr_native_value = pretty_ratio(state.hours_matched, state.period)
         elif self._type == CONF_TYPE_COUNT:
             self._attr_native_value = state.changes_to_match_state
-        self._attr_extra_state_attributes = {
-            ATTR_VALUE: pretty_duration(state.hours_matched)
-        }

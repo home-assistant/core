@@ -3,6 +3,7 @@
   "name": "SQL",
   "documentation": "https://www.home-assistant.io/integrations/sql",
   "requirements": ["sqlalchemy==1.4.35"],
-  "codeowners": ["@dgomes"],
+  "codeowners": ["@dgomes", "@gjohansson-ST"],
+  "config_flow": true,
   "iot_class": "local_polling"
 }

@@ -4,12 +4,7 @@ from unittest.mock import PropertyMock
 from fritzconnection.core.exceptions import FritzConnectionException, FritzSecurityError
 from requests.exceptions import ConnectionError as RequestsConnectionError
 
-from homeassistant.components.fritzbox_callmonitor.config_flow import (
-    RESULT_INSUFFICIENT_PERMISSIONS,
-    RESULT_INVALID_AUTH,
-    RESULT_MALFORMED_PREFIXES,
-    RESULT_NO_DEVIES_FOUND,
-)
+from homeassistant.components.fritzbox_callmonitor.config_flow import ConnectResult
 from homeassistant.components.fritzbox_callmonitor.const import (
     CONF_PHONEBOOK,
     CONF_PREFIXES,
@@ -56,7 +51,6 @@ MOCK_CONFIG_ENTRY = {
     CONF_PORT: MOCK_PORT,
     CONF_PASSWORD: MOCK_PASSWORD,
     CONF_USERNAME: MOCK_USERNAME,
-    CONF_PREFIXES: None,
     CONF_PHONEBOOK: MOCK_PHONEBOOK_ID,
     SERIAL_NUMBER: MOCK_SERIAL_NUMBER,
 }
@@ -207,7 +201,6 @@ async def test_setup_multiple_phonebooks(hass: HomeAssistant) -> None:
         CONF_PORT: MOCK_PORT,
         CONF_PASSWORD: MOCK_PASSWORD,
         CONF_USERNAME: MOCK_USERNAME,
-        CONF_PREFIXES: None,
         CONF_PHONEBOOK: 1,
         SERIAL_NUMBER: MOCK_SERIAL_NUMBER,
     }
@@ -230,7 +223,7 @@ async def test_setup_cannot_connect(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] == RESULT_TYPE_ABORT
-    assert result["reason"] == RESULT_NO_DEVIES_FOUND
+    assert result["reason"] == ConnectResult.NO_DEVIES_FOUND
 
 
 async def test_setup_insufficient_permissions(hass: HomeAssistant) -> None:
@@ -249,7 +242,7 @@ async def test_setup_insufficient_permissions(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] == RESULT_TYPE_ABORT
-    assert result["reason"] == RESULT_INSUFFICIENT_PERMISSIONS
+    assert result["reason"] == ConnectResult.INSUFFICIENT_PERMISSIONS
 
 
 async def test_setup_invalid_auth(hass: HomeAssistant) -> None:
@@ -268,7 +261,7 @@ async def test_setup_invalid_auth(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] == RESULT_TYPE_FORM
-    assert result["errors"] == {"base": RESULT_INVALID_AUTH}
+    assert result["errors"] == {"base": ConnectResult.INVALID_AUTH}
 
 
 async def test_options_flow_correct_prefixes(hass: HomeAssistant) -> None:
@@ -326,7 +319,7 @@ async def test_options_flow_incorrect_prefixes(hass: HomeAssistant) -> None:
         )
 
         assert result["type"] == RESULT_TYPE_FORM
-        assert result["errors"] == {"base": RESULT_MALFORMED_PREFIXES}
+        assert result["errors"] == {"base": ConnectResult.MALFORMED_PREFIXES}
 
 
 async def test_options_flow_no_prefixes(hass: HomeAssistant) -> None:

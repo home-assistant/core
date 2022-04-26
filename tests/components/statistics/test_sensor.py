@@ -24,7 +24,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed, get_fixture_path
-from tests.components.recorder.common import async_wait_recording_done_without_instance
+from tests.components.recorder.common import async_wait_recording_done
 
 VALUES_BINARY = ["on", "off", "on", "off", "on", "off", "on", "off", "on"]
 VALUES_NUMERIC = [17, 20, 15.2, 5, 3.8, 9.2, 6.7, 14, 6]
@@ -906,7 +906,7 @@ async def test_initialize_from_database(hass: HomeAssistant, recorder_mock):
     """Test initializing the statistics from the recorder database."""
     # enable and pre-fill the recorder
     await hass.async_block_till_done()
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
 
     for value in VALUES_NUMERIC:
         hass.states.async_set(
@@ -915,7 +915,7 @@ async def test_initialize_from_database(hass: HomeAssistant, recorder_mock):
             {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
         )
     await hass.async_block_till_done()
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
 
     # create the statistics component, get filled from database
     assert await async_setup_component(
@@ -958,7 +958,7 @@ async def test_initialize_from_database_with_maxage(hass: HomeAssistant, recorde
 
     # enable and pre-fill the recorder
     await hass.async_block_till_done()
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
 
     with patch(
         "homeassistant.components.statistics.sensor.dt_util.utcnow", new=mock_now
@@ -971,7 +971,7 @@ async def test_initialize_from_database_with_maxage(hass: HomeAssistant, recorde
             )
             await hass.async_block_till_done()
             mock_data["return_time"] += timedelta(hours=1)
-        await async_wait_recording_done_without_instance(hass)
+        await async_wait_recording_done(hass)
         # create the statistics component, get filled from database
         assert await async_setup_component(
             hass,

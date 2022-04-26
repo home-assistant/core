@@ -17,10 +17,9 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
 
-from tests.common import init_recorder_component
 from tests.components.recorder.common import (
-    async_wait_recording_done_without_instance,
-    trigger_db_commit,
+    async_recorder_block_till_done,
+    async_wait_recording_done,
     wait_recording_done,
 )
 
@@ -584,23 +583,21 @@ def record_states(hass):
     return zero, four, states
 
 
-async def test_fetch_period_api(hass, hass_client):
+async def test_fetch_period_api(hass, hass_client, recorder_mock):
     """Test the fetch period view for history."""
-    await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(hass, "history", {})
-    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
     client = await hass_client()
     response = await client.get(f"/api/history/period/{dt_util.utcnow().isoformat()}")
     assert response.status == HTTPStatus.OK
 
 
-async def test_fetch_period_api_with_use_include_order(hass, hass_client):
+async def test_fetch_period_api_with_use_include_order(
+    hass, hass_client, recorder_mock
+):
     """Test the fetch period view for history with include order."""
-    await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(
         hass, "history", {history.DOMAIN: {history.CONF_ORDER: True}}
     )
-    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
     client = await hass_client()
     response = await client.get(f"/api/history/period/{dt_util.utcnow().isoformat()}")
     assert response.status == HTTPStatus.OK
@@ -612,11 +609,11 @@ async def test_fetch_period_api_with_minimal_response(hass, recorder_mock, hass_
     await async_setup_component(hass, "history", {})
 
     hass.states.async_set("sensor.power", 0, {"attr": "any"})
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
     hass.states.async_set("sensor.power", 50, {"attr": "any"})
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
     hass.states.async_set("sensor.power", 23, {"attr": "any"})
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
     client = await hass_client()
     response = await client.get(
         f"/api/history/period/{now.isoformat()}?filter_entity_id=sensor.power&minimal_response&no_attributes"
@@ -639,19 +636,16 @@ async def test_fetch_period_api_with_minimal_response(hass, recorder_mock, hass_
     assert state_list[2]["state"] == "23"
 
 
-async def test_fetch_period_api_with_no_timestamp(hass, hass_client):
+async def test_fetch_period_api_with_no_timestamp(hass, hass_client, recorder_mock):
     """Test the fetch period view for history with no timestamp."""
-    await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(hass, "history", {})
-    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
     client = await hass_client()
     response = await client.get("/api/history/period")
     assert response.status == HTTPStatus.OK
 
 
-async def test_fetch_period_api_with_include_order(hass, hass_client):
+async def test_fetch_period_api_with_include_order(hass, hass_client, recorder_mock):
     """Test the fetch period view for history."""
-    await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(
         hass,
         "history",
@@ -662,7 +656,6 @@ async def test_fetch_period_api_with_include_order(hass, hass_client):
             }
         },
     )
-    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
     client = await hass_client()
     response = await client.get(
         f"/api/history/period/{dt_util.utcnow().isoformat()}",
@@ -671,9 +664,10 @@ async def test_fetch_period_api_with_include_order(hass, hass_client):
     assert response.status == HTTPStatus.OK
 
 
-async def test_fetch_period_api_with_entity_glob_include(hass, hass_client):
+async def test_fetch_period_api_with_entity_glob_include(
+    hass, hass_client, recorder_mock
+):
     """Test the fetch period view for history."""
-    await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(
         hass,
         "history",
@@ -683,16 +677,11 @@ async def test_fetch_period_api_with_entity_glob_include(hass, hass_client):
             }
         },
     )
-    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
     hass.states.async_set("light.kitchen", "on")
     hass.states.async_set("light.cow", "on")
     hass.states.async_set("light.nomatch", "on")
 
-    await hass.async_block_till_done()
-
-    await hass.async_add_executor_job(trigger_db_commit, hass)
-    await hass.async_block_till_done()
-    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    await async_wait_recording_done(hass)
 
     client = await hass_client()
     response = await client.get(
@@ -703,9 +692,10 @@ async def test_fetch_period_api_with_entity_glob_include(hass, hass_client):
     assert response_json[0][0]["entity_id"] == "light.kitchen"
 
 
-async def test_fetch_period_api_with_entity_glob_exclude(hass, hass_client):
+async def test_fetch_period_api_with_entity_glob_exclude(
+    hass, hass_client, recorder_mock
+):
     """Test the fetch period view for history."""
-    await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(
         hass,
         "history",
@@ -719,18 +709,13 @@ async def test_fetch_period_api_with_entity_glob_exclude(hass, hass_client):
             }
         },
     )
-    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
     hass.states.async_set("light.kitchen", "on")
     hass.states.async_set("light.cow", "on")
     hass.states.async_set("light.match", "on")
     hass.states.async_set("switch.match", "on")
     hass.states.async_set("media_player.test", "on")
 
-    await hass.async_block_till_done()
-
-    await hass.async_add_executor_job(trigger_db_commit, hass)
-    await hass.async_block_till_done()
-    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    await async_wait_recording_done(hass)
 
     client = await hass_client()
     response = await client.get(
@@ -743,9 +728,10 @@ async def test_fetch_period_api_with_entity_glob_exclude(hass, hass_client):
     assert response_json[1][0]["entity_id"] == "light.match"
 
 
-async def test_fetch_period_api_with_entity_glob_include_and_exclude(hass, hass_client):
+async def test_fetch_period_api_with_entity_glob_include_and_exclude(
+    hass, hass_client, recorder_mock
+):
     """Test the fetch period view for history."""
-    await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(
         hass,
         "history",
@@ -762,7 +748,6 @@ async def test_fetch_period_api_with_entity_glob_include_and_exclude(hass, hass_
             }
         },
     )
-    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
     hass.states.async_set("light.kitchen", "on")
     hass.states.async_set("light.cow", "on")
     hass.states.async_set("light.match", "on")
@@ -770,11 +755,7 @@ async def test_fetch_period_api_with_entity_glob_include_and_exclude(hass, hass_
     hass.states.async_set("switch.match", "on")
     hass.states.async_set("media_player.test", "on")
 
-    await hass.async_block_till_done()
-
-    await hass.async_add_executor_job(trigger_db_commit, hass)
-    await hass.async_block_till_done()
-    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    await async_wait_recording_done(hass)
 
     client = await hass_client()
     response = await client.get(
@@ -788,24 +769,18 @@ async def test_fetch_period_api_with_entity_glob_include_and_exclude(hass, hass_
     assert response_json[2][0]["entity_id"] == "switch.match"
 
 
-async def test_entity_ids_limit_via_api(hass, hass_client):
+async def test_entity_ids_limit_via_api(hass, hass_client, recorder_mock):
     """Test limiting history to entity_ids."""
-    await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(
         hass,
         "history",
         {"history": {}},
     )
-    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
     hass.states.async_set("light.kitchen", "on")
     hass.states.async_set("light.cow", "on")
     hass.states.async_set("light.nomatch", "on")
 
-    await hass.async_block_till_done()
-
-    await hass.async_add_executor_job(trigger_db_commit, hass)
-    await hass.async_block_till_done()
-    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    await async_wait_recording_done(hass)
 
     client = await hass_client()
     response = await client.get(
@@ -818,24 +793,20 @@ async def test_entity_ids_limit_via_api(hass, hass_client):
     assert response_json[1][0]["entity_id"] == "light.cow"
 
 
-async def test_entity_ids_limit_via_api_with_skip_initial_state(hass, hass_client):
+async def test_entity_ids_limit_via_api_with_skip_initial_state(
+    hass, hass_client, recorder_mock
+):
     """Test limiting history to entity_ids with skip_initial_state."""
-    await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(
         hass,
         "history",
         {"history": {}},
     )
-    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
     hass.states.async_set("light.kitchen", "on")
     hass.states.async_set("light.cow", "on")
     hass.states.async_set("light.nomatch", "on")
 
-    await hass.async_block_till_done()
-
-    await hass.async_add_executor_job(trigger_db_commit, hass)
-    await hass.async_block_till_done()
-    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    await async_wait_recording_done(hass)
 
     client = await hass_client()
     response = await client.get(
@@ -885,24 +856,20 @@ TEMPERATURE_SENSOR_ATTRIBUTES = {
     ],
 )
 async def test_statistics_during_period(
-    hass, hass_ws_client, units, attributes, state, value
+    hass, hass_ws_client, recorder_mock, units, attributes, state, value
 ):
     """Test statistics_during_period."""
     now = dt_util.utcnow()
 
     hass.config.units = units
-    await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(hass, "history", {})
     await async_setup_component(hass, "sensor", {})
-    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    await async_recorder_block_till_done(hass)
     hass.states.async_set("sensor.test", state, attributes=attributes)
-    await hass.async_block_till_done()
-
-    await hass.async_add_executor_job(trigger_db_commit, hass)
-    await hass.async_block_till_done()
+    await async_wait_recording_done(hass)
 
     hass.data[recorder.DATA_INSTANCE].do_adhoc_statistics(start=now)
-    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    await async_wait_recording_done(hass)
 
     client = await hass_ws_client()
     await client.send_json(
@@ -947,15 +914,15 @@ async def test_statistics_during_period(
     }
 
 
-async def test_statistics_during_period_bad_start_time(hass, hass_ws_client):
+async def test_statistics_during_period_bad_start_time(
+    hass, hass_ws_client, recorder_mock
+):
     """Test statistics_during_period."""
-    await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(
         hass,
         "history",
         {"history": {}},
     )
-    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
 
     client = await hass_ws_client()
     await client.send_json(
@@ -971,17 +938,17 @@ async def test_statistics_during_period_bad_start_time(hass, hass_ws_client):
     assert response["error"]["code"] == "invalid_start_time"
 
 
-async def test_statistics_during_period_bad_end_time(hass, hass_ws_client):
+async def test_statistics_during_period_bad_end_time(
+    hass, hass_ws_client, recorder_mock
+):
     """Test statistics_during_period."""
     now = dt_util.utcnow()
 
-    await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(
         hass,
         "history",
         {"history": {}},
     )
-    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
 
     client = await hass_ws_client()
     await client.send_json(
@@ -1009,15 +976,16 @@ async def test_statistics_during_period_bad_end_time(hass, hass_ws_client):
         (METRIC_SYSTEM, PRESSURE_SENSOR_ATTRIBUTES, "Pa"),
     ],
 )
-async def test_list_statistic_ids(hass, hass_ws_client, units, attributes, unit):
+async def test_list_statistic_ids(
+    hass, hass_ws_client, recorder_mock, units, attributes, unit
+):
     """Test list_statistic_ids."""
     now = dt_util.utcnow()
 
     hass.config.units = units
-    await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(hass, "history", {"history": {}})
     await async_setup_component(hass, "sensor", {})
-    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    await async_recorder_block_till_done(hass)
 
     client = await hass_ws_client()
     await client.send_json({"id": 1, "type": "history/list_statistic_ids"})
@@ -1026,10 +994,7 @@ async def test_list_statistic_ids(hass, hass_ws_client, units, attributes, unit)
     assert response["result"] == []
 
     hass.states.async_set("sensor.test", 10, attributes=attributes)
-    await hass.async_block_till_done()
-
-    await hass.async_add_executor_job(trigger_db_commit, hass)
-    await hass.async_block_till_done()
+    await async_wait_recording_done(hass)
 
     await client.send_json({"id": 2, "type": "history/list_statistic_ids"})
     response = await client.receive_json()
@@ -1046,7 +1011,7 @@ async def test_list_statistic_ids(hass, hass_ws_client, units, attributes, unit)
     ]
 
     hass.data[recorder.DATA_INSTANCE].do_adhoc_statistics(start=now)
-    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    await async_recorder_block_till_done(hass)
     # Remove the state, statistics will now be fetched from the database
     hass.states.async_remove("sensor.test")
     await hass.async_block_till_done()

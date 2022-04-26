@@ -51,7 +51,10 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         SERVICE_SET_SLEEP_MODE,
         {
-            vol.Required(ATTR_SLEEP_MINUTES, default=120): vol.In(SLEEP_MINUTE_OPTIONS),
+            vol.Required(ATTR_SLEEP_MINUTES, default=120): vol.All(
+                vol.Coerce(int),
+                vol.In(SLEEP_MINUTE_OPTIONS),
+            ),
             vol.Required(ATTR_REVERT_TO_MODE, default=SYSTEM_MODE_HOME): vol.In(
                 SYSTEM_REVERT_MODES
             ),

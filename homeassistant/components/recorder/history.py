@@ -58,8 +58,19 @@ BASE_STATES = [
     States.last_changed,
     States.last_updated,
 ]
+BASE_STATES_NO_LAST_UPDATED = [
+    States.entity_id,
+    States.state,
+    States.last_changed,
+    literal(value=None, type_=Text).label("last_updated"),
+]
 QUERY_STATE_NO_ATTR = [
     *BASE_STATES,
+    literal(value=None, type_=Text).label("attributes"),
+    literal(value=None, type_=Text).label("shared_attrs"),
+]
+QUERY_STATE_NO_ATTR_NO_LAST_UPDATED = [
+    *BASE_STATES_NO_LAST_UPDATED,
     literal(value=None, type_=Text).label("attributes"),
     literal(value=None, type_=Text).label("shared_attrs"),
 ]
@@ -71,8 +82,19 @@ QUERY_STATES_PRE_SCHEMA_25 = [
     States.attributes,
     literal(value=None, type_=Text).label("shared_attrs"),
 ]
+QUERY_STATES_PRE_SCHEMA_25_NO_LAST_UPDATED = [
+    *BASE_STATES_NO_LAST_UPDATED,
+    States.attributes,
+    literal(value=None, type_=Text).label("shared_attrs"),
+]
 QUERY_STATES = [
     *BASE_STATES,
+    # Remove States.attributes once all attributes are in StateAttributes.shared_attrs
+    States.attributes,
+    StateAttributes.shared_attrs,
+]
+QUERY_STATES_NO_LAST_UPDATED = [
+    *BASE_STATES_NO_LAST_UPDATED,
     # Remove States.attributes once all attributes are in StateAttributes.shared_attrs
     States.attributes,
     StateAttributes.shared_attrs,
@@ -102,7 +124,7 @@ def query_and_join_attributes(
 
 
 def bake_query_and_join_attributes(
-    hass: HomeAssistant, no_attributes: bool
+    hass: HomeAssistant, no_attributes: bool, include_last_updated: bool = True
 ) -> tuple[Any, bool]:
     """Return the initial backed query and if StateAttributes should be joined.
 
@@ -114,16 +136,35 @@ def bake_query_and_join_attributes(
     # without the attributes fields and do not join the
     # state_attributes table
     if no_attributes:
-        return bakery(lambda session: session.query(*QUERY_STATE_NO_ATTR)), False
+        if include_last_updated:
+            return bakery(lambda session: session.query(*QUERY_STATE_NO_ATTR)), False
+        return (
+            bakery(lambda session: session.query(*QUERY_STATE_NO_ATTR_NO_LAST_UPDATED)),
+            False,
+        )
     # If we in the process of migrating schema we do
     # not want to join the state_attributes table as we
     # do not know if it will be there yet
     if recorder.get_instance(hass).migration_in_progress:
-        return bakery(lambda session: session.query(*QUERY_STATES_PRE_SCHEMA_25)), False
+        if include_last_updated:
+            return (
+                bakery(lambda session: session.query(*QUERY_STATES_PRE_SCHEMA_25)),
+                False,
+            )
+        return (
+            bakery(
+                lambda session: session.query(
+                    *QUERY_STATES_PRE_SCHEMA_25_NO_LAST_UPDATED
+                )
+            ),
+            False,
+        )
     # Finally if no migration is in progress and no_attributes
     # was not requested, we query both attributes columns and
     # join state_attributes
-    return bakery(lambda session: session.query(*QUERY_STATES)), True
+    if include_last_updated:
+        return bakery(lambda session: session.query(*QUERY_STATES)), True
+    return bakery(lambda session: session.query(*QUERY_STATES_NO_LAST_UPDATED)), True
 
 
 def async_setup(hass: HomeAssistant) -> None:
@@ -179,6 +220,9 @@ def _query_significant_states_with_session(
             significant_changes_only
             and split_entity_id(entity_ids[0])[0] not in SIGNIFICANT_DOMAINS
         ):
+            baked_query, join_attributes = bake_query_and_join_attributes(
+                hass, no_attributes, include_last_updated=False
+            )
             baked_query += lambda q: q.filter(
                 States.last_changed == States.last_updated
             )
@@ -321,7 +365,7 @@ def state_changes_during_period(
     """Return states changes during UTC period start_time - end_time."""
     with session_scope(hass=hass) as session:
         baked_query, join_attributes = bake_query_and_join_attributes(
-            hass, no_attributes
+            hass, no_attributes, include_last_updated=False
         )
 
         baked_query += lambda q: q.filter(
@@ -343,15 +387,22 @@ def state_changes_during_period(
                 StateAttributes, States.attributes_id == StateAttributes.attributes_id
             )
 
-        last_updated = States.last_updated.desc() if descending else States.last_updated
-        baked_query += lambda q: q.order_by(States.entity_id, last_updated)
+        if descending:
+            baked_query += lambda q: q.order_by(
+                States.entity_id, States.last_updated.desc()
+            )
+        else:
+            baked_query += lambda q: q.order_by(States.entity_id, States.last_updated)
 
         if limit:
-            baked_query += lambda q: q.limit(limit)
+            baked_query += lambda q: q.limit(bindparam("limit"))
 
         states = execute(
             baked_query(session).params(
-                start_time=start_time, end_time=end_time, entity_id=entity_id
+                start_time=start_time,
+                end_time=end_time,
+                entity_id=entity_id,
+                limit=limit,
             )
         )
 
@@ -377,7 +428,9 @@ def get_last_state_changes(
     start_time = dt_util.utcnow()
 
     with session_scope(hass=hass) as session:
-        baked_query, join_attributes = bake_query_and_join_attributes(hass, False)
+        baked_query, join_attributes = bake_query_and_join_attributes(
+            hass, False, include_last_updated=False
+        )
 
         baked_query += lambda q: q.filter(States.last_changed == States.last_updated)
 
@@ -456,7 +509,7 @@ def _get_states_with_session(
 
     if (
         run is None
-        and (run := (recorder.run_information_from_instance(hass, utc_point_in_time)))
+        and (run := (recorder.run_information_with_session(session, utc_point_in_time)))
         is None
     ):
         # History did not run before utc_point_in_time
