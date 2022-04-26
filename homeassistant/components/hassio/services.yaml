@@ -127,7 +127,6 @@ backup_partial:
       selector:
         boolean:
 
-
 restore_full:
   name: Restore from full backup.
   description: Restore from full backup.
