@@ -26,7 +26,8 @@ class WallboxSwitchEntityDescription(SwitchEntityDescription):
 
 SWITCH_TYPES: dict[str, WallboxSwitchEntityDescription] = {
     CHARGER_PAUSE_RESUME_KEY: WallboxSwitchEntityDescription(
-        key=CHARGER_PAUSE_RESUME_KEY, name="Pause/Resume"
+        key=CHARGER_PAUSE_RESUME_KEY,
+        name="Pause/Resume",
     ),
 }
 
