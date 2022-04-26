@@ -1,12 +1,24 @@
 """Helpers to deal with Cast devices."""
 from __future__ import annotations
 
+import asyncio
+import configparser
+from dataclasses import dataclass
+import logging
 from typing import Optional
+from urllib.parse import urlparse
 
+import aiohttp
 import attr
 from pychromecast import dial
 from pychromecast.const import CAST_TYPE_GROUP
 from pychromecast.models import CastInfo
+
+from homeassistant.helpers import aiohttp_client
+
+_LOGGER = logging.getLogger(__name__)
+
+_PLS_SECTION_PLAYLIST = "playlist"
 
 
 @attr.s(slots=True, frozen=True)
@@ -155,3 +167,143 @@ class CastStatusListener:
         else:
             self._mz_mgr.deregister_listener(self._uuid, self)
         self._valid = False
+
+
+class PlaylistError(Exception):
+    """Exception wrapper for pls and m3u helpers."""
+
+
+class PlaylistSupported(PlaylistError):
+    """The playlist is supported by cast devices and should not be parsed."""
+
+
+@dataclass
+class PlaylistItem:
+    """Playlist item."""
+
+    length: str | None
+    title: str | None
+    url: str
+
+
+def _is_url(url):
+    """Validate the URL can be parsed and at least has scheme + netloc."""
+    result = urlparse(url)
+    return all([result.scheme, result.netloc])
+
+
+async def _fetch_playlist(hass, url):
+    """Fetch a playlist from the given url."""
+    try:
+        session = aiohttp_client.async_get_clientsession(hass, verify_ssl=False)
+        async with session.get(url, timeout=5) as resp:
+            charset = resp.charset or "utf-8"
+            try:
+                playlist_data = (await resp.content.read(64 * 1024)).decode(charset)
+            except ValueError as err:
+                raise PlaylistError(f"Could not decode playlist {url}") from err
+    except asyncio.TimeoutError as err:
+        raise PlaylistError(f"Timeout while fetching playlist {url}") from err
+    except aiohttp.client_exceptions.ClientError as err:
+        raise PlaylistError(f"Error while fetching playlist {url}") from err
+
+    return playlist_data
+
+
+async def parse_m3u(hass, url):
+    """Very simple m3u parser.
+
+    Based on https://github.com/dvndrsn/M3uParser/blob/master/m3uparser.py
+    """
+    m3u_data = await _fetch_playlist(hass, url)
+    m3u_lines = m3u_data.splitlines()
+
+    playlist = []
+
+    length = None
+    title = None
+
+    for line in m3u_lines:
+        line = line.strip()
+        if line.startswith("#EXTINF:"):
+            # Get length and title from #EXTINF line
+            info = line.split("#EXTINF:")[1].split(",", 1)
+            if len(info) != 2:
+                _LOGGER.warning("Ignoring invalid extinf %s in playlist %s", line, url)
+                continue
+            length = info[0].split(" ", 1)
+            title = info[1].strip()
+        elif line.startswith("#EXT-X-VERSION:"):
+            # HLS stream, supported by cast devices
+            raise PlaylistSupported("HLS")
+        elif line.startswith("#"):
+            # Ignore other extensions
+            continue
+        elif len(line) != 0:
+            # Get song path from all other, non-blank lines
+            if not _is_url(line):
+                raise PlaylistError(f"Invalid item {line} in playlist {url}")
+            playlist.append(PlaylistItem(length=length, title=title, url=line))
+            # reset the song variables so it doesn't use the same EXTINF more than once
+            length = None
+            title = None
+
+    return playlist
+
+
+async def parse_pls(hass, url):
+    """Very simple pls parser.
+
+    Based on https://github.com/mariob/plsparser/blob/master/src/plsparser.py
+    """
+    pls_data = await _fetch_playlist(hass, url)
+
+    pls_parser = configparser.ConfigParser()
+    try:
+        pls_parser.read_string(pls_data, url)
+    except configparser.Error as err:
+        raise PlaylistError(f"Can't parse playlist {url}") from err
+
+    if (
+        _PLS_SECTION_PLAYLIST not in pls_parser
+        or pls_parser[_PLS_SECTION_PLAYLIST].getint("Version") != 2
+    ):
+        raise PlaylistError(f"Invalid playlist {url}")
+
+    try:
+        num_entries = pls_parser.getint(_PLS_SECTION_PLAYLIST, "NumberOfEntries")
+    except (configparser.NoOptionError, ValueError) as err:
+        raise PlaylistError(f"Invalid NumberOfEntries in playlist {url}") from err
+
+    playlist_section = pls_parser[_PLS_SECTION_PLAYLIST]
+
+    playlist = []
+    for entry in range(1, num_entries + 1):
+        file_option = f"File{entry}"
+        if file_option not in playlist_section:
+            _LOGGER.warning("Missing %s in pls from %s", file_option, url)
+            continue
+        item_url = playlist_section[file_option]
+        if not _is_url(item_url):
+            raise PlaylistError(f"Invalid item {item_url} in playlist {url}")
+        playlist.append(
+            PlaylistItem(
+                length=playlist_section.get(f"Length{entry}"),
+                title=playlist_section.get(f"Title{entry}"),
+                url=item_url,
+            )
+        )
+    return playlist
+
+
+async def parse_playlist(hass, url):
+    """Parse an m3u or pls playlist."""
+    if url.endswith(".m3u") or url.endswith(".m3u8"):
+        playlist = await parse_m3u(hass, url)
+    else:
+        playlist = await parse_pls(hass, url)
+
+    if not playlist:
+        raise PlaylistError(f"Empty playlist {url}")
+
+    return playlist
