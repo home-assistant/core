@@ -375,8 +375,11 @@ class UpdateEntity(RestoreEntity):
         # Clear skipped version in case it matches the current installed
         # version or the latest version diverged.
         if (
-            self.__skipped_version == self.installed_version
-            or self.__skipped_version != self.latest_version
+            self.installed_version is not None
+            and self.__skipped_version == self.installed_version
+        ) or (
+            self.latest_version is not None
+            and self.__skipped_version != self.latest_version
         ):
             self.__skipped_version = None
 
