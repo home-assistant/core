@@ -1144,16 +1144,11 @@ class Recorder(threading.Thread):
         #
         assert self.event_session is not None
         if self._find_shared_attr_query is None:
-            baked_query = self._bakery(
+            self._find_shared_attr_query = self._bakery(
                 lambda session: session.query(StateAttributes.attributes_id)
+                .filter(StateAttributes.hash == bindparam("attr_hash"))
+                .filter(StateAttributes.shared_attrs == bindparam("shared_attrs"))
             )
-            baked_query += lambda q: q.filter(
-                StateAttributes.hash == bindparam("attr_hash")
-            )
-            baked_query += lambda q: q.filter(
-                StateAttributes.shared_attrs == bindparam("shared_attrs")
-            )
-            self._find_shared_attr_query = baked_query
         with self.event_session.no_autoflush:
             if (
                 attributes := self._find_shared_attr_query(self.event_session)
