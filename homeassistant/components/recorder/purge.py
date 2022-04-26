@@ -126,7 +126,7 @@ def _select_unused_attributes_ids(
     else:
         #
         # We are jumping through hoops a bit here to handle
-        # a case sqlite performance on finding unused attributes_id
+        # a case where sqlite performance on finding unused attributes_id
         # far exceeds other DBMS
         #
         # MariaDB/MySQL cannot optimize that query well and has to examine
