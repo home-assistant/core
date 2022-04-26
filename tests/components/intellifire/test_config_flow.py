@@ -305,7 +305,7 @@ async def test_reauth_flow(
     )
     await hass.async_block_till_done()
     assert result3["type"] == RESULT_TYPE_ABORT
-    assert entry.data["password"] == "AROONIE"
+    assert entry.data[CONF_PASSWORD] == "AROONIE"
     assert entry.data["username"] == "test"
 
 
