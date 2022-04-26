@@ -16,10 +16,6 @@ from homeassistant.components.light import (
     ATTR_FLASH,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
-    COLOR_MODE_BRIGHTNESS,
-    COLOR_MODE_COLOR_TEMP,
-    COLOR_MODE_HS,
-    COLOR_MODE_ONOFF,
     EFFECT_COLORLOOP,
     EFFECT_RANDOM,
     FLASH_LONG,
@@ -27,6 +23,7 @@ from homeassistant.components.light import (
     SUPPORT_EFFECT,
     SUPPORT_FLASH,
     SUPPORT_TRANSITION,
+    ColorMode,
     LightEntity,
     filter_supported_color_modes,
 )
@@ -62,11 +59,11 @@ SCAN_INTERVAL = timedelta(seconds=5)
 
 LOGGER = logging.getLogger(__name__)
 
-COLOR_MODES_HUE_ON_OFF = {COLOR_MODE_ONOFF}
-COLOR_MODES_HUE_DIMMABLE = {COLOR_MODE_BRIGHTNESS}
-COLOR_MODES_HUE_COLOR_TEMP = {COLOR_MODE_COLOR_TEMP}
-COLOR_MODES_HUE_COLOR = {COLOR_MODE_HS}
-COLOR_MODES_HUE_EXTENDED = {COLOR_MODE_COLOR_TEMP, COLOR_MODE_HS}
+COLOR_MODES_HUE_ON_OFF = {ColorMode.ONOFF}
+COLOR_MODES_HUE_DIMMABLE = {ColorMode.BRIGHTNESS}
+COLOR_MODES_HUE_COLOR_TEMP = {ColorMode.COLOR_TEMP}
+COLOR_MODES_HUE_COLOR = {ColorMode.HS}
+COLOR_MODES_HUE_EXTENDED = {ColorMode.COLOR_TEMP, ColorMode.HS}
 
 COLOR_MODES_HUE = {
     "Extended color light": COLOR_MODES_HUE_EXTENDED,
@@ -338,7 +335,7 @@ class HueLight(CoordinatorEntity, LightEntity):
         if len(supported_color_modes) == 1:
             self._fixed_color_mode = next(iter(supported_color_modes))
         else:
-            assert supported_color_modes == {COLOR_MODE_COLOR_TEMP, COLOR_MODE_HS}
+            assert supported_color_modes == {ColorMode.COLOR_TEMP, ColorMode.HS}
 
         if is_group:
             self.is_osram = False
@@ -410,9 +407,9 @@ class HueLight(CoordinatorEntity, LightEntity):
         # The light supports both hs/xy and white with adjustabe color_temperature
         mode = self._color_mode
         if mode in ("xy", "hs"):
-            return COLOR_MODE_HS
+            return ColorMode.HS
 
-        return COLOR_MODE_COLOR_TEMP
+        return ColorMode.COLOR_TEMP
 
     @property
     def _color_mode(self):
