@@ -23,11 +23,9 @@ from homeassistant.components.light import (
     ATTR_TRANSITION,
     FLASH_LONG,
     FLASH_SHORT,
-    SUPPORT_EFFECT,
-    SUPPORT_FLASH,
-    SUPPORT_TRANSITION,
     ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE, CONF_NAME
@@ -67,8 +65,6 @@ from .const import (
 from .entity import YeelightEntity
 
 _LOGGER = logging.getLogger(__name__)
-
-SUPPORT_YEELIGHT = SUPPORT_TRANSITION | SUPPORT_FLASH | SUPPORT_EFFECT
 
 ATTR_MINUTES = "minutes"
 
@@ -410,6 +406,11 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
 
     _attr_color_mode = ColorMode.BRIGHTNESS
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+    _attr_supported_features = (
+        LightEntityFeature.TRANSITION
+        | LightEntityFeature.FLASH
+        | LightEntityFeature.EFFECT
+    )
     _attr_should_poll = False
 
     def __init__(self, device, entry, custom_effects=None):
@@ -451,11 +452,6 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
             )
         )
         await super().async_added_to_hass()
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return SUPPORT_YEELIGHT
 
     @property
     def effect_list(self):

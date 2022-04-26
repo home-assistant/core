@@ -349,6 +349,8 @@ build.json @home-assistant/supervisor
 /tests/components/fritz/ @mammuth @AaronDavidSchneider @chemelli74 @mib1185
 /homeassistant/components/fritzbox/ @mib1185 @flabbamann
 /tests/components/fritzbox/ @mib1185 @flabbamann
+/homeassistant/components/fritzbox_callmonitor/ @cdce8p
+/tests/components/fritzbox_callmonitor/ @cdce8p
 /homeassistant/components/fronius/ @nielstron @farmio
 /tests/components/fronius/ @nielstron @farmio
 /homeassistant/components/frontend/ @home-assistant/frontend
@@ -548,6 +550,7 @@ build.json @home-assistant/supervisor
 /tests/components/lcn/ @alengwenus
 /homeassistant/components/lg_netcast/ @Drafteed
 /homeassistant/components/life360/ @pnbruckner
+/homeassistant/components/lifx/ @Djelibeybi
 /homeassistant/components/light/ @home-assistant/core
 /tests/components/light/ @home-assistant/core
 /homeassistant/components/linux_battery/ @fabaff
@@ -1034,8 +1037,8 @@ build.json @home-assistant/supervisor
 /tests/components/tomorrowio/ @raman325
 /homeassistant/components/totalconnect/ @austinmroczek
 /tests/components/totalconnect/ @austinmroczek
-/homeassistant/components/tplink/ @rytilahti @thegardenmonkey
-/tests/components/tplink/ @rytilahti @thegardenmonkey
+/homeassistant/components/tplink/ @rytilahti @thegardenmonkey @bdraco
+/tests/components/tplink/ @rytilahti @thegardenmonkey @bdraco
 /homeassistant/components/traccar/ @ludeeus
 /tests/components/traccar/ @ludeeus
 /homeassistant/components/trace/ @home-assistant/core
@@ -1050,8 +1053,8 @@ build.json @home-assistant/supervisor
 /tests/components/transmission/ @engrbm87 @JPHutchins
 /homeassistant/components/tts/ @pvizeli
 /tests/components/tts/ @pvizeli
-/homeassistant/components/tuya/ @Tuya @zlinoliver @METISU @frenck
-/tests/components/tuya/ @Tuya @zlinoliver @METISU @frenck
+/homeassistant/components/tuya/ @Tuya @zlinoliver @frenck
+/tests/components/tuya/ @Tuya @zlinoliver @frenck
 /homeassistant/components/twentemilieu/ @frenck
 /tests/components/twentemilieu/ @frenck
 /homeassistant/components/twinkly/ @dr1rrb @Robbie1221

@@ -4,6 +4,8 @@ from __future__ import annotations
 from typing import Any, Generic, TypedDict, TypeVar
 
 from pydeconz.interfaces.lights import LightResources
+from pydeconz.models import ResourceType
+from pydeconz.models.event import EventType
 from pydeconz.models.group import Group
 from pydeconz.models.light import (
     ALERT_LONG,
@@ -31,6 +33,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -70,6 +73,17 @@ async def async_setup_entry(
     gateway = get_gateway_from_config_entry(hass, config_entry)
     gateway.entities[DOMAIN] = set()
 
+    entity_registry = er.async_get(hass)
+
+    # On/Off Output should be switch not light 2022.5
+    for light in gateway.api.lights.lights.values():
+        if light.type == ResourceType.ON_OFF_OUTPUT.value and (
+            entity_id := entity_registry.async_get_entity_id(
+                DOMAIN, DECONZ_DOMAIN, light.unique_id
+            )
+        ):
+            entity_registry.async_remove(entity_id)
+
     @callback
     def async_add_light(lights: list[LightResources] | None = None) -> None:
         """Add light from deCONZ."""
@@ -97,39 +111,42 @@ async def async_setup_entry(
         )
     )
 
+    async_add_light()
+
     @callback
-    def async_add_group(groups: list[Group] | None = None) -> None:
+    def async_add_group(_: EventType, group_id: str) -> None:
         """Add group from deCONZ."""
-        if not gateway.option_allow_deconz_groups:
+        if (
+            not gateway.option_allow_deconz_groups
+            or (group := gateway.api.groups[group_id])
+            and not group.lights
+        ):
             return
 
-        entities = []
+        async_add_entities([DeconzGroup(group, gateway)])
 
-        if groups is None:
-            groups = list(gateway.api.groups.values())
+    config_entry.async_on_unload(
+        gateway.api.groups.subscribe(
+            async_add_group,
+            EventType.ADDED,
+        )
+    )
 
-        for group in groups:
-            if not group.lights:
-                continue
-
-            known_groups = set(gateway.entities[DOMAIN])
-            new_group = DeconzGroup(group, gateway)
-            if new_group.unique_id not in known_groups:
-                entities.append(new_group)
-
-        if entities:
-            async_add_entities(entities)
+    @callback
+    def async_load_groups() -> None:
+        """Load deCONZ groups."""
+        for group_id in gateway.api.groups:
+            async_add_group(EventType.ADDED, group_id)
 
     config_entry.async_on_unload(
         async_dispatcher_connect(
             hass,
-            gateway.signal_new_group,
-            async_add_group,
+            gateway.signal_reload_groups,
+            async_load_groups,
         )
     )
 
-    async_add_light()
-    async_add_group()
+    async_load_groups()
 
 
 class DeconzBaseLight(Generic[_L], DeconzDevice, LightEntity):

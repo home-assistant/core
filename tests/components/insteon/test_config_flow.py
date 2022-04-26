@@ -2,10 +2,8 @@
 
 from unittest.mock import patch
 
-import pytest
-
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components import dhcp, usb
+from homeassistant.components import usb
 from homeassistant.components.insteon.config_flow import (
     HUB1,
     HUB2,
@@ -650,37 +648,3 @@ async def test_discovery_via_usb_already_setup(hass):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "single_instance_allowed"
-
-
-@pytest.mark.parametrize("modem_type", [HUB1, HUB2])
-async def test_discovery_via_dhcp(hass, modem_type):
-    """Test the dhcp discovery for a moddem type."""
-    discovery_info = dhcp.DhcpServiceInfo(
-        ip="11.22.33.44", hostname="", macaddress="00:0e:f3:aa:bb:cc"
-    )
-    result = await hass.config_entries.flow.async_init(
-        "insteon",
-        context={"source": config_entries.SOURCE_DHCP},
-        data=discovery_info,
-    )
-    await hass.async_block_till_done()
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
-
-    with patch("homeassistant.components.insteon.config_flow.async_connect"), patch(
-        "homeassistant.components.insteon.async_setup_entry", return_value=True
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={"modem_type": modem_type}
-        )
-        await hass.async_block_till_done()
-
-        assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["step_id"] == "user"
-
-        other_params = {}
-        if modem_type == HUB2:
-            other_params[CONF_USERNAME] = "some_user"
-            other_params[CONF_PASSWORD] = "some_password"
-        defaults = result2["data_schema"](other_params)
-        assert defaults.get("host") == discovery_info.ip

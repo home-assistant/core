@@ -110,7 +110,7 @@ aio_geojson_nsw_rfs_incidents==0.4
 aio_georss_gdacs==0.7
 
 # homeassistant.components.airzone
-aioairzone==0.4.0
+aioairzone==0.4.2
 
 # homeassistant.components.ambient_station
 aioambient==2021.11.0
@@ -250,7 +250,7 @@ aioswitcher==2.0.6
 aiosyncthing==0.5.1
 
 # homeassistant.components.tractive
-aiotractive==0.5.2
+aiotractive==0.5.4
 
 # homeassistant.components.unifi
 aiounifi==31
@@ -333,7 +333,7 @@ asterisk_mbox==0.5.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.28.0
+async-upnp-client==0.29.0
 
 # homeassistant.components.supla
 asyncpysupla==0.0.5
@@ -574,7 +574,7 @@ elgato==3.0.0
 eliqonline==1.2.2
 
 # homeassistant.components.elkm1
-elkm1-lib==1.3.4
+elkm1-lib==1.3.5
 
 # homeassistant.components.elmax
 elmax_api==0.0.2
@@ -813,7 +813,7 @@ hole==0.7.0
 holidays==0.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220424.0
+home-assistant-frontend==20220425.0
 
 # homeassistant.components.home_connect
 homeconnect==0.7.0
@@ -1023,7 +1023,7 @@ mitemp_bt==0.0.5
 moehlenhoff-alpha2==1.1.2
 
 # homeassistant.components.motion_blinds
-motionblinds==0.6.4
+motionblinds==0.6.5
 
 # homeassistant.components.motioneye
 motioneye-client==0.3.12
@@ -1059,7 +1059,7 @@ netdisco==3.0.0
 netmap==0.7.0.2
 
 # homeassistant.components.nam
-nettigo-air-monitor==1.2.1
+nettigo-air-monitor==1.2.2
 
 # homeassistant.components.neurio_energy
 neurio==0.3.1
@@ -1393,7 +1393,7 @@ pycfdns==1.2.2
 pychannels==1.0.0
 
 # homeassistant.components.cast
-pychromecast==11.0.0
+pychromecast==12.0.0
 
 # homeassistant.components.pocketcasts
 pycketcasts==1.0.0
@@ -1901,7 +1901,7 @@ python-join-api==0.0.9
 python-juicenet==1.1.0
 
 # homeassistant.components.tplink
-python-kasa==0.4.3
+python-kasa==0.5.0
 
 # homeassistant.components.lirc
 # python-lirc==1.2.3

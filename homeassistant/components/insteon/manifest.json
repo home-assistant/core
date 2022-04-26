@@ -8,14 +8,7 @@
     "insteon-frontend-home-assistant==0.0.1b3"
   ],
   "codeowners": ["@teharris1"],
-  "dhcp": [
-    {
-      "macaddress": "000EF3*"
-    },
-    {
-      "registered_devices": true
-    }
-  ],
+  "dhcp": [{ "macaddress": "000EF3*" }, { "registered_devices": true }],
   "config_flow": true,
   "iot_class": "local_push",
   "loggers": ["pyinsteon", "pypubsub"],

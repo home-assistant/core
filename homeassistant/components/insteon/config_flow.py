@@ -206,7 +206,7 @@ class InsteonFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
         self._set_confirm_only()
         self.context["title_placeholders"] = {
-            CONF_NAME: f"Instoen PLM {self._device_name}"
+            CONF_NAME: f"Insteon PLM {self._device_name}"
         }
         await self.async_set_unique_id(config_entries.DEFAULT_DISCOVERY_UNIQUE_ID)
         return await self.async_step_confirm_usb()
