@@ -123,7 +123,7 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 CHARGER_LOCKED_UNLOCKED_KEY
             ]
             data[CHARGER_STATUS_DESCRIPTION_KEY] = CHARGER_STATUS.get(
-                data[CHARGER_STATUS_ID_KEY], "Unknown"
+                data[CHARGER_STATUS_ID_KEY], ChargerStatus.UNKNOWN
             )
 
             return data
