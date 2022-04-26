@@ -4,7 +4,7 @@ import logging
 
 from pyinsteon import devices
 from pyinsteon.address import Address
-from pyinsteon.constants import ALDBStatus
+from pyinsteon.constants import ALDBStatus, DeviceAction
 from pyinsteon.events import OFF_EVENT, OFF_FAST_EVENT, ON_EVENT, ON_FAST_EVENT
 from pyinsteon.managers.link_manager import (
     async_enter_linking_mode,
@@ -137,9 +137,10 @@ def register_new_device_callback(hass):
     """Register callback for new Insteon device."""
 
     @callback
-    def async_new_insteon_device(address=None):
+    def async_new_insteon_device(address, action: DeviceAction):
         """Detect device from transport to be delegated to platform."""
-        hass.async_create_task(async_create_new_entities(address))
+        if action == DeviceAction.ADDED:
+            hass.async_create_task(async_create_new_entities(address))
 
     async def async_create_new_entities(address):
         _LOGGER.debug(

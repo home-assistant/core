@@ -14,6 +14,7 @@ from homeassistant.helpers.typing import ConfigType
 from . import api
 from .const import (
     CONF_CAT,
+    CONF_DEV_URL,
     CONF_DIM_STEPS,
     CONF_HOUSECODE,
     CONF_OVERRIDE,
@@ -78,6 +79,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         return True
 
     conf = config[DOMAIN]
+    hass.data[DOMAIN] = {}
+    hass.data[DOMAIN][CONF_DEV_URL] = conf.get(CONF_DEV_URL)
+    try:
+        conf.pop(CONF_DEV_URL)
+    except KeyError:
+        pass
+    if not conf:
+        return True
     data, options = convert_yaml_to_config_flow(conf)
     if options:
         hass.data[DOMAIN] = {}
@@ -149,17 +158,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
+    device_registry = await hass.helpers.device_registry.async_get_registry()
     for address in devices:
         device = devices[address]
         platforms = get_device_platforms(device)
         if ON_OFF_EVENTS in platforms:
             add_on_off_event_device(hass, device)
+            device_registry.async_get_or_create(
+                config_entry_id=entry.entry_id,
+                identifiers={(DOMAIN, str(device.address))},
+                manufacturer="Smart Home",
+                name=f"{device.description} {device.address}",
+                model=f"{device.model} ({device.cat!r}, 0x{device.subcat:02x})",
+                sw_version=f"{device.firmware:02x} Engine Version: {device.engine_version}",
+            )
 
     _LOGGER.debug("Insteon device count: %s", len(devices))
     register_new_device_callback(hass)
     async_register_services(hass)
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, str(devices.modem.address))},
@@ -170,6 +187,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     api.async_load_api(hass)
+    await api.async_register_insteon_frontend(hass)
 
     asyncio.create_task(async_get_device_config(hass, entry))
 

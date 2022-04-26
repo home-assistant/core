@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-import voluptuous_serialize
+import pytest
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import dhcp, usb
@@ -39,7 +39,6 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
 
 from .const import (
     MOCK_HOSTNAME,
@@ -653,17 +652,8 @@ async def test_discovery_via_usb_already_setup(hass):
     assert result["reason"] == "single_instance_allowed"
 
 
-async def test_discovery_via_dhcp_hubv1(hass):
-    """Test usb flow."""
-    await _test_dhcp(hass, HUB1)
-
-
-async def test_discovery_via_dhcp_hubv2(hass):
-    """Test usb flow."""
-    await _test_dhcp(hass, HUB2)
-
-
-async def _test_dhcp(hass, modem_type):
+@pytest.mark.parametrize("modem_type", [HUB1, HUB2])
+async def test_discovery_via_dhcp(hass, modem_type):
     """Test the dhcp discovery for a moddem type."""
     discovery_info = dhcp.DhcpServiceInfo(
         ip="11.22.33.44", hostname="", macaddress="00:0e:f3:aa:bb:cc"
@@ -688,11 +678,9 @@ async def _test_dhcp(hass, modem_type):
         assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "user"
 
-        schema = voluptuous_serialize.convert(
-            result2["data_schema"],
-            custom_serializer=cv.custom_serializer,
-        )
-        for field in schema:
-            if field["name"] == "host":
-                assert field.get("default") == "11.22.33.44"
-                break
+        other_params = {}
+        if modem_type == HUB2:
+            other_params[CONF_USERNAME] = "some_user"
+            other_params[CONF_PASSWORD] = "some_password"
+        defaults = result2["data_schema"](other_params)
+        assert defaults.get("host") == discovery_info.ip

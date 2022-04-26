@@ -1,6 +1,10 @@
 """Test the device level APIs."""
 from unittest.mock import patch
 
+from pyinsteon import pub
+from pyinsteon.constants import DeviceAction
+from pyinsteon.topics import DEVICE_LIST_CHANGED
+
 from homeassistant.components import insteon
 from homeassistant.components.insteon.api import async_load_api
 from homeassistant.components.insteon.api.device import (
@@ -11,7 +15,7 @@ from homeassistant.components.insteon.api.device import (
     TYPE,
     async_device_name,
 )
-from homeassistant.components.insteon.const import DOMAIN
+from homeassistant.components.insteon.const import DOMAIN, MULTIPLE
 from homeassistant.helpers.device_registry import async_get_registry
 
 from .const import MOCK_USER_INPUT_PLM
@@ -137,3 +141,59 @@ async def test_get_ha_device_name(hass, hass_ws_client):
         # Test no HA or Insteon device
         name = await async_device_name(device_reg, "BB.BB.BB")
         assert name == ""
+
+
+async def test_add_device_api(hass, hass_ws_client):
+    """Test adding an Insteon device."""
+
+    ws_client, devices, _, _ = await _async_setup(hass, hass_ws_client)
+    with patch.object(insteon.api.device, "devices", devices):
+        await ws_client.send_json({ID: 2, TYPE: "insteon/device/add", MULTIPLE: False})
+        await ws_client.receive_json()
+        assert devices.async_add_device_called_with["address"] is None
+        assert devices.async_add_device_called_with["multiple"] is False
+
+
+async def test_notify_on_device_added(hass, hass_ws_client):
+    """Test receiving notifications of a new device added."""
+
+    ws_client, devices, _, _ = await _async_setup(hass, hass_ws_client)
+
+    with patch.object(insteon.api.aldb, "devices", devices):
+        await ws_client.send_json(
+            {
+                ID: 2,
+                TYPE: "insteon/device/adding",
+            }
+        )
+        msg = await ws_client.receive_json()
+        assert msg["success"]
+
+        pub.sendMessage(
+            DEVICE_LIST_CHANGED, address="11.22.33", action=DeviceAction.ADDED
+        )
+        msg = await ws_client.receive_json()
+        assert msg["event"]["type"] == "device_added"
+        assert msg["event"]["address"] == "11.22.33"
+
+        pub.sendMessage(
+            DEVICE_LIST_CHANGED, address=None, action=DeviceAction.COMPLETED
+        )
+        msg = await ws_client.receive_json()
+        assert msg["event"]["type"] == "linking_stopped"
+
+
+async def test_cancel_add_device(hass, hass_ws_client):
+    """Test cancelling adding of a new device."""
+
+    ws_client, devices, _, _ = await _async_setup(hass, hass_ws_client)
+
+    with patch.object(insteon.api.aldb, "devices", devices):
+        await ws_client.send_json(
+            {
+                ID: 2,
+                TYPE: "insteon/device/add/cancel",
+            }
+        )
+        msg = await ws_client.receive_json()
+        assert msg["success"]
