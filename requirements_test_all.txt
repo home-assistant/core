@@ -1029,7 +1029,7 @@ pyipma==2.0.5
 pyipp==0.11.0
 
 # homeassistant.components.iqvia
-pyiqvia==2021.11.0
+pyiqvia==2022.04.0
 
 # homeassistant.components.iss
 pyiss==1.0.1
