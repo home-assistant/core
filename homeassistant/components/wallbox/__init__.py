@@ -42,7 +42,7 @@ UPDATE_INTERVAL = 30
 
 # Translation of StatusId based on Wallbox portal code:
 # https://my.wallbox.com/src/utilities/charger/chargerStatuses.js
-CHARGER_STATUS: dict[int, str] = {
+CHARGER_STATUS: dict[int, ChargerStatus] = {
     0: ChargerStatus.DISCONNECTED,
     14: ChargerStatus.ERROR,
     15: ChargerStatus.ERROR,

@@ -39,8 +39,6 @@ async def async_setup_entry(
 class WallboxSwitch(WallboxEntity, SwitchEntity):
     """Representation of the Wallbox portal."""
 
-    entity_description: SwitchEntityDescription
-
     def __init__(
         self,
         coordinator: WallboxCoordinator,
