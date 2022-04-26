@@ -72,7 +72,7 @@ class WallboxSwitch(WallboxEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return the status of pause/resume."""
-        return self._coordinator.data[CHARGER_STATUS_DESCRIPTION_KEY].lower in [
+        return self.coordinator.data[CHARGER_STATUS_DESCRIPTION_KEY].lower() in [
             "charging",
             "waiting for car demand",
             "waiting",
