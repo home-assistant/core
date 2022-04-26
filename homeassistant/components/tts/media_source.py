@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import mimetypes
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from yarl import URL
 
@@ -46,19 +46,17 @@ class TTSMediaSource(MediaSource):
             raise Unresolvable("No message specified.")
 
         options = dict(parsed.query)
-        kwargs: dict[str, Any] = {
+        kwargs = {
             "engine": parsed.name,
             "message": options.pop("message"),
             "language": options.pop("language", None),
             "options": options,
         }
-        if "cache" in options:
-            kwargs["cache"] = options.pop("cache") == "true"
 
         manager: SpeechManager = self.hass.data[DOMAIN]
 
         try:
-            url = await manager.async_get_url_path(**kwargs)
+            url = await manager.async_get_url_path(**kwargs)  # type: ignore[arg-type]
         except HomeAssistantError as err:
             raise Unresolvable(str(err)) from err
 

@@ -6,12 +6,11 @@ import shutil
 
 import pytest
 
-from homeassistant.components import media_source, tts
 from homeassistant.components.media_player.const import (
-    ATTR_MEDIA_CONTENT_ID,
     DOMAIN as DOMAIN_MP,
     SERVICE_PLAY_MEDIA,
 )
+import homeassistant.components.tts as tts
 from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component, async_mock_service
@@ -20,15 +19,6 @@ from tests.components.tts.conftest import (  # noqa: F401, pylint: disable=unuse
 )
 
 URL = "https://tts.voicetech.yandex.net/generate?"
-
-
-async def get_media_source_url(hass, media_content_id):
-    """Get the media source url."""
-    if media_source.DOMAIN not in hass.config.components:
-        assert await async_setup_component(hass, media_source.DOMAIN, {})
-
-    resolved = await media_source.async_resolve_media(hass, media_content_id)
-    return resolved.url
 
 
 @pytest.fixture(autouse=True)
@@ -83,11 +73,11 @@ async def test_service_say(hass, aioclient_mock):
         tts.DOMAIN,
         "yandextts_say",
         {"entity_id": "media_player.something", tts.ATTR_MESSAGE: "HomeAssistant"},
-        blocking=True,
     )
-    assert len(calls) == 1
-    await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+    await hass.async_block_till_done()
+
     assert len(aioclient_mock.mock_calls) == 1
+    assert len(calls) == 1
 
 
 async def test_service_say_russian_config(hass, aioclient_mock):
@@ -121,12 +111,11 @@ async def test_service_say_russian_config(hass, aioclient_mock):
         tts.DOMAIN,
         "yandextts_say",
         {"entity_id": "media_player.something", tts.ATTR_MESSAGE: "HomeAssistant"},
-        blocking=True,
     )
+    await hass.async_block_till_done()
 
-    assert len(calls) == 1
-    await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
     assert len(aioclient_mock.mock_calls) == 1
+    assert len(calls) == 1
 
 
 async def test_service_say_russian_service(hass, aioclient_mock):
@@ -158,11 +147,11 @@ async def test_service_say_russian_service(hass, aioclient_mock):
             tts.ATTR_MESSAGE: "HomeAssistant",
             tts.ATTR_LANGUAGE: "ru-RU",
         },
-        blocking=True,
     )
-    assert len(calls) == 1
-    await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+    await hass.async_block_till_done()
+
     assert len(aioclient_mock.mock_calls) == 1
+    assert len(calls) == 1
 
 
 async def test_service_say_timeout(hass, aioclient_mock):
@@ -195,13 +184,10 @@ async def test_service_say_timeout(hass, aioclient_mock):
         tts.DOMAIN,
         "yandextts_say",
         {"entity_id": "media_player.something", tts.ATTR_MESSAGE: "HomeAssistant"},
-        blocking=True,
     )
     await hass.async_block_till_done()
 
-    assert len(calls) == 1
-    with pytest.raises(media_source.Unresolvable):
-        await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+    assert len(calls) == 0
     assert len(aioclient_mock.mock_calls) == 1
 
 
@@ -235,12 +221,10 @@ async def test_service_say_http_error(hass, aioclient_mock):
         tts.DOMAIN,
         "yandextts_say",
         {"entity_id": "media_player.something", tts.ATTR_MESSAGE: "HomeAssistant"},
-        blocking=True,
     )
+    await hass.async_block_till_done()
 
-    assert len(calls) == 1
-    with pytest.raises(media_source.Unresolvable):
-        await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+    assert len(calls) == 0
 
 
 async def test_service_say_specified_speaker(hass, aioclient_mock):
@@ -274,11 +258,11 @@ async def test_service_say_specified_speaker(hass, aioclient_mock):
         tts.DOMAIN,
         "yandextts_say",
         {"entity_id": "media_player.something", tts.ATTR_MESSAGE: "HomeAssistant"},
-        blocking=True,
     )
-    assert len(calls) == 1
-    await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+    await hass.async_block_till_done()
+
     assert len(aioclient_mock.mock_calls) == 1
+    assert len(calls) == 1
 
 
 async def test_service_say_specified_emotion(hass, aioclient_mock):
@@ -312,12 +296,11 @@ async def test_service_say_specified_emotion(hass, aioclient_mock):
         tts.DOMAIN,
         "yandextts_say",
         {"entity_id": "media_player.something", tts.ATTR_MESSAGE: "HomeAssistant"},
-        blocking=True,
     )
-    assert len(calls) == 1
-    await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+    await hass.async_block_till_done()
 
     assert len(aioclient_mock.mock_calls) == 1
+    assert len(calls) == 1
 
 
 async def test_service_say_specified_low_speed(hass, aioclient_mock):
@@ -347,12 +330,11 @@ async def test_service_say_specified_low_speed(hass, aioclient_mock):
         tts.DOMAIN,
         "yandextts_say",
         {"entity_id": "media_player.something", tts.ATTR_MESSAGE: "HomeAssistant"},
-        blocking=True,
     )
-    assert len(calls) == 1
-    await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+    await hass.async_block_till_done()
 
     assert len(aioclient_mock.mock_calls) == 1
+    assert len(calls) == 1
 
 
 async def test_service_say_specified_speed(hass, aioclient_mock):
@@ -380,12 +362,11 @@ async def test_service_say_specified_speed(hass, aioclient_mock):
         tts.DOMAIN,
         "yandextts_say",
         {"entity_id": "media_player.something", tts.ATTR_MESSAGE: "HomeAssistant"},
-        blocking=True,
     )
-    assert len(calls) == 1
-    await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+    await hass.async_block_till_done()
 
     assert len(aioclient_mock.mock_calls) == 1
+    assert len(calls) == 1
 
 
 async def test_service_say_specified_options(hass, aioclient_mock):
@@ -416,9 +397,8 @@ async def test_service_say_specified_options(hass, aioclient_mock):
             tts.ATTR_MESSAGE: "HomeAssistant",
             "options": {"emotion": "evil", "speed": 2},
         },
-        blocking=True,
     )
-    assert len(calls) == 1
-    await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+    await hass.async_block_till_done()
 
     assert len(aioclient_mock.mock_calls) == 1
+    assert len(calls) == 1
