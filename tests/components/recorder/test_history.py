@@ -1,4 +1,6 @@
 """The tests the History component."""
+from __future__ import annotations
+
 # pylint: disable=protected-access,invalid-name
 from copy import copy
 from datetime import datetime, timedelta
@@ -12,16 +14,39 @@ from homeassistant.components import recorder
 from homeassistant.components.recorder import history
 from homeassistant.components.recorder.models import (
     Events,
+    RecorderRuns,
     StateAttributes,
     States,
     process_timestamp,
 )
+from homeassistant.components.recorder.util import session_scope
 import homeassistant.core as ha
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.json import JSONEncoder
 import homeassistant.util.dt as dt_util
 
 from tests.common import SetupRecorderInstanceT, mock_state_change_event
 from tests.components.recorder.common import wait_recording_done
+
+
+async def _async_get_states(
+    hass: HomeAssistant,
+    utc_point_in_time: datetime,
+    entity_ids: list[str] | None = None,
+    run: RecorderRuns | None = None,
+    no_attributes: bool = False,
+):
+    """Get states from the database."""
+
+    def _get_states_with_session():
+        with session_scope(hass=hass) as session:
+            return history._get_states_with_session(
+                hass, session, utc_point_in_time, entity_ids, run, None, no_attributes
+            )
+
+    return await recorder.get_instance(hass).async_add_executor_job(
+        _get_states_with_session
+    )
 
 
 def _add_db_entries(
@@ -92,37 +117,6 @@ def _setup_get_states(hass):
     return now, future, states
 
 
-def test_get_states(hass_recorder):
-    """Test getting states at a specific point in time."""
-    hass = hass_recorder()
-    now, future, states = _setup_get_states(hass)
-    # Get states returns everything before POINT for all entities
-    for state1, state2 in zip(
-        states,
-        sorted(history.get_states(hass, future), key=lambda state: state.entity_id),
-    ):
-        assert state1 == state2
-
-    # Get states returns everything before POINT for tested entities
-    entities = [f"test.point_in_time_{i % 5}" for i in range(5)]
-    for state1, state2 in zip(
-        states,
-        sorted(
-            history.get_states(hass, future, entities),
-            key=lambda state: state.entity_id,
-        ),
-    ):
-        assert state1 == state2
-
-    # Test get_state here because we have a DB setup
-    assert states[0] == history.get_state(hass, future, states[0].entity_id)
-
-    time_before_recorder_ran = now - timedelta(days=1000)
-    assert history.get_states(hass, time_before_recorder_ran) == []
-
-    assert history.get_state(hass, time_before_recorder_ran, "demo.id") is None
-
-
 def test_get_full_significant_states_with_session_entity_no_matches(hass_recorder):
     """Test getting states at a specific point in time for entities that never have been recorded."""
     hass = hass_recorder()
@@ -177,48 +171,6 @@ def test_significant_states_with_session_entity_minimal_response_no_matches(
             )
             == {}
         )
-
-
-def test_get_states_no_attributes(hass_recorder):
-    """Test getting states without attributes at a specific point in time."""
-    hass = hass_recorder()
-    now, future, states = _setup_get_states(hass)
-    for state in states:
-        state.attributes = {}
-
-    # Get states returns everything before POINT for all entities
-    for state1, state2 in zip(
-        states,
-        sorted(
-            history.get_states(hass, future, no_attributes=True),
-            key=lambda state: state.entity_id,
-        ),
-    ):
-        assert state1 == state2
-
-    # Get states returns everything before POINT for tested entities
-    entities = [f"test.point_in_time_{i % 5}" for i in range(5)]
-    for state1, state2 in zip(
-        states,
-        sorted(
-            history.get_states(hass, future, entities, no_attributes=True),
-            key=lambda state: state.entity_id,
-        ),
-    ):
-        assert state1 == state2
-
-    # Test get_state here because we have a DB setup
-    assert states[0] == history.get_state(
-        hass, future, states[0].entity_id, no_attributes=True
-    )
-
-    time_before_recorder_ran = now - timedelta(days=1000)
-    assert history.get_states(hass, time_before_recorder_ran, no_attributes=True) == []
-
-    assert (
-        history.get_state(hass, time_before_recorder_ran, "demo.id", no_attributes=True)
-        is None
-    )
 
 
 @pytest.mark.parametrize(
@@ -653,7 +605,9 @@ async def test_state_changes_during_period_query_during_migration_to_schema_25(
     point = start + timedelta(seconds=1)
     end = point + timedelta(seconds=1)
     entity_id = "light.test"
-    await hass.async_add_executor_job(_add_db_entries, hass, point, [entity_id])
+    await recorder.get_instance(hass).async_add_executor_job(
+        _add_db_entries, hass, point, [entity_id]
+    )
 
     no_attributes = True
     hist = history.state_changes_during_period(
@@ -701,15 +655,17 @@ async def test_get_states_query_during_migration_to_schema_25(
     point = start + timedelta(seconds=1)
     end = point + timedelta(seconds=1)
     entity_id = "light.test"
-    await hass.async_add_executor_job(_add_db_entries, hass, point, [entity_id])
+    await recorder.get_instance(hass).async_add_executor_job(
+        _add_db_entries, hass, point, [entity_id]
+    )
 
     no_attributes = True
-    hist = history.get_states(hass, end, [entity_id], no_attributes=no_attributes)
+    hist = await _async_get_states(hass, end, [entity_id], no_attributes=no_attributes)
     state = hist[0]
     assert state.attributes == {}
 
     no_attributes = False
-    hist = history.get_states(hass, end, [entity_id], no_attributes=no_attributes)
+    hist = await _async_get_states(hass, end, [entity_id], no_attributes=no_attributes)
     state = hist[0]
     assert state.attributes == {"name": "the shared light"}
 
@@ -720,12 +676,16 @@ async def test_get_states_query_during_migration_to_schema_25(
 
     with patch.object(instance, "migration_in_progress", True):
         no_attributes = True
-        hist = history.get_states(hass, end, [entity_id], no_attributes=no_attributes)
+        hist = await _async_get_states(
+            hass, end, [entity_id], no_attributes=no_attributes
+        )
         state = hist[0]
         assert state.attributes == {}
 
         no_attributes = False
-        hist = history.get_states(hass, end, [entity_id], no_attributes=no_attributes)
+        hist = await _async_get_states(
+            hass, end, [entity_id], no_attributes=no_attributes
+        )
         state = hist[0]
         assert state.attributes == {"name": "the light"}
 
@@ -744,15 +704,17 @@ async def test_get_states_query_during_migration_to_schema_25_multiple_entities(
     entity_id_2 = "switch.test"
     entity_ids = [entity_id_1, entity_id_2]
 
-    await hass.async_add_executor_job(_add_db_entries, hass, point, entity_ids)
+    await recorder.get_instance(hass).async_add_executor_job(
+        _add_db_entries, hass, point, entity_ids
+    )
 
     no_attributes = True
-    hist = history.get_states(hass, end, entity_ids, no_attributes=no_attributes)
+    hist = await _async_get_states(hass, end, entity_ids, no_attributes=no_attributes)
     assert hist[0].attributes == {}
     assert hist[1].attributes == {}
 
     no_attributes = False
-    hist = history.get_states(hass, end, entity_ids, no_attributes=no_attributes)
+    hist = await _async_get_states(hass, end, entity_ids, no_attributes=no_attributes)
     assert hist[0].attributes == {"name": "the shared light"}
     assert hist[1].attributes == {"name": "the shared light"}
 
@@ -763,11 +725,15 @@ async def test_get_states_query_during_migration_to_schema_25_multiple_entities(
 
     with patch.object(instance, "migration_in_progress", True):
         no_attributes = True
-        hist = history.get_states(hass, end, entity_ids, no_attributes=no_attributes)
+        hist = await _async_get_states(
+            hass, end, entity_ids, no_attributes=no_attributes
+        )
         assert hist[0].attributes == {}
         assert hist[1].attributes == {}
 
         no_attributes = False
-        hist = history.get_states(hass, end, entity_ids, no_attributes=no_attributes)
+        hist = await _async_get_states(
+            hass, end, entity_ids, no_attributes=no_attributes
+        )
         assert hist[0].attributes == {"name": "the light"}
         assert hist[1].attributes == {"name": "the light"}
