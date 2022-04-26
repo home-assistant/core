@@ -64,7 +64,14 @@ from .const import (
     SIGNAL_HASS_CAST_SHOW_VIEW,
 )
 from .discovery import setup_internal_discovery
-from .helpers import CastStatusListener, ChromecastInfo, ChromeCastZeroconf
+from .helpers import (
+    CastStatusListener,
+    ChromecastInfo,
+    ChromeCastZeroconf,
+    PlaylistError,
+    PlaylistSupported,
+    parse_playlist,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -582,14 +589,13 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
             media_id = sourced_media.url
 
         extra = kwargs.get(ATTR_MEDIA_EXTRA, {})
-        metadata = extra.get("metadata")
 
         # Handle media supported by a known cast app
         if media_type == CAST_DOMAIN:
             try:
                 app_data = json.loads(media_id)
-                if metadata is not None:
-                    app_data["metadata"] = extra.get("metadata")
+                if metadata := extra.get("metadata"):
+                    app_data["metadata"] = metadata
             except json.JSONDecodeError:
                 _LOGGER.error("Invalid JSON in media_content_id")
                 raise
@@ -640,9 +646,51 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
                         "hlsVideoSegmentFormat": "fmp4",
                     },
                 }
+        elif (
+            media_id.endswith(".m3u")
+            or media_id.endswith(".m3u8")
+            or media_id.endswith(".pls")
+        ):
+            try:
+                playlist = await parse_playlist(self.hass, media_id)
+                _LOGGER.debug(
+                    "[%s %s] Playing item %s from playlist %s",
+                    self.entity_id,
+                    self._cast_info.friendly_name,
+                    playlist[0].url,
+                    media_id,
+                )
+                media_id = playlist[0].url
+                if title := playlist[0].title:
+                    extra = {
+                        **extra,
+                        "metadata": {"title": title},
+                    }
+            except PlaylistSupported as err:
+                _LOGGER.debug(
+                    "[%s %s] Playlist %s is supported: %s",
+                    self.entity_id,
+                    self._cast_info.friendly_name,
+                    media_id,
+                    err,
+                )
+            except PlaylistError as err:
+                _LOGGER.warning(
+                    "[%s %s] Failed to parse playlist %s: %s",
+                    self.entity_id,
+                    self._cast_info.friendly_name,
+                    media_id,
+                    err,
+                )
 
         # Default to play with the default media receiver
         app_data = {"media_id": media_id, "media_type": media_type, **extra}
+        _LOGGER.debug(
+            "[%s %s] Playing %s with default_media_receiver",
+            self.entity_id,
+            self._cast_info.friendly_name,
+            app_data,
+        )
         await self.hass.async_add_executor_job(
             quick_play, self._chromecast, "default_media_receiver", app_data
         )
