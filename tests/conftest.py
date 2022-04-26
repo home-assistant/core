@@ -5,7 +5,6 @@ import asyncio
 from collections.abc import AsyncGenerator
 import functools
 import logging
-import socket
 import ssl
 import threading
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
@@ -87,63 +86,10 @@ def pytest_runtest_setup():
     Modified to include https://github.com/spulec/freezegun/pull/424
     """
     pytest_socket.socket_allow_hosts(["127.0.0.1"])
-    disable_socket(allow_unix_socket=True)
+    pytest_socket.disable_socket(allow_unix_socket=True)
 
     freezegun.api.datetime_to_fakedatetime = ha_datetime_to_fakedatetime
     freezegun.api.FakeDatetime = HAFakeDatetime
-
-
-@pytest.fixture
-def socket_disabled(pytestconfig):
-    """Disable socket.socket for duration of this test function.
-
-    This incorporates changes from https://github.com/miketheman/pytest-socket/pull/76
-    and hardcodes allow_unix_socket to True because it's not passed on the command line.
-    """
-    socket_was_enabled = socket.socket == pytest_socket._true_socket
-    disable_socket(allow_unix_socket=True)
-    yield
-    if socket_was_enabled:
-        pytest_socket.enable_socket()
-
-
-@pytest.fixture
-def socket_enabled(pytestconfig):
-    """Enable socket.socket for duration of this test function.
-
-    This incorporates changes from https://github.com/miketheman/pytest-socket/pull/76
-    and hardcodes allow_unix_socket to True because it's not passed on the command line.
-    """
-    socket_was_disabled = socket.socket != pytest_socket._true_socket
-    pytest_socket.enable_socket()
-    yield
-    if socket_was_disabled:
-        disable_socket(allow_unix_socket=True)
-
-
-def disable_socket(allow_unix_socket=False):
-    """Disable socket.socket to disable the Internet. useful in testing.
-
-    This incorporates changes from https://github.com/miketheman/pytest-socket/pull/75
-    """
-
-    class GuardedSocket(socket.socket):
-        """socket guard to disable socket creation (from pytest-socket)."""
-
-        def __new__(cls, *args, **kwargs):
-            try:
-                if len(args) > 0:
-                    is_unix_socket = args[0] == socket.AF_UNIX
-                else:
-                    is_unix_socket = kwargs.get("family") == socket.AF_UNIX
-            except AttributeError:
-                # AF_UNIX not supported on Windows https://bugs.python.org/issue33408
-                is_unix_socket = False
-            if is_unix_socket and allow_unix_socket:
-                return super().__new__(cls, *args, **kwargs)
-            raise pytest_socket.SocketBlockedError()
-
-    socket.socket = GuardedSocket
 
 
 def ha_datetime_to_fakedatetime(datetime):
