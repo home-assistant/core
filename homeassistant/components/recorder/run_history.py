@@ -12,7 +12,26 @@ import homeassistant.util.dt as dt_util
 from .models import RecorderRuns, process_timestamp
 
 
-@dataclass
+def _find_recorder_run_for_start_time(
+    run_history: _RecorderRunsHistory, start: datetime
+) -> RecorderRuns | None:
+    """Find the recorder run for a start time in _RecorderRunsHistory."""
+    run_timestamps = run_history.run_timestamps
+    runs_by_timestamp = run_history.runs_by_timestamp
+
+    # bisect_left tells us were we would insert
+    # a value in the list of runs after the start timestamp.
+    #
+    # The run before that (idx-1) is when the run started
+    #
+    # If idx is 0, history never ran before the start timestamp
+    #
+    if idx := bisect.bisect_left(run_timestamps, start.timestamp()):
+        return runs_by_timestamp[run_timestamps[idx - 1]]
+    return None
+
+
+@dataclass(frozen=True)
 class _RecorderRunsHistory:
     """Bisectable history of RecorderRuns."""
 
@@ -31,18 +50,12 @@ class RunHistory:
 
     @property
     def recording_start(self) -> datetime:
-        """Return the time the recorder started recording states.
-
-        This function is thread safe.
-        """
+        """Return the time the recorder started recording states."""
         return self._recording_start
 
     @property
     def current(self) -> RecorderRuns:
-        """Get the current run.
-
-        This function is thread safe.
-        """
+        """Get the current run."""
         assert self._current_run_info is not None
         return self._current_run_info
 
@@ -50,33 +63,10 @@ class RunHistory:
         """Return the recorder run that started before or at start.
 
         If the first run started after the start, return None
-
-        This function is thread safe.
         """
         if start >= self.recording_start:
             return self.current
-
-        # Hold a reference here to self._run_history
-        # to ensure it does not get changed out from
-        # under us in the recorder thread.
-        run_history = self._run_history
-
-        # Ensure we do not access self._run_history
-        # after this point as the other thread
-        # could change it out on us
-        run_timestamps = run_history.run_timestamps
-        runs_by_timestamp = run_history.runs_by_timestamp
-
-        # bisect_left tells us were we would insert
-        # a value in the list of runs after the start timestamp.
-        #
-        # The run before that (idx-1) is when the run started
-        #
-        # If idx is 0, history never ran before the start timestamp
-        #
-        if idx := bisect.bisect_left(run_timestamps, start.timestamp()):
-            return runs_by_timestamp[run_timestamps[idx - 1]]
-        return None
+        return _find_recorder_run_for_start_time(self._run_history, start)
 
     def start(self, session: Session) -> None:
         """Start a new run.
@@ -128,9 +118,8 @@ class RunHistory:
         # which is allowed to be called from any thread
         #
         # We use a dataclass to ensure that when we update
-        # self._run_history it is done so atomiclly to avoid
-        # run_timestamps and runs_by_timestamp ever being out of
-        # sync with each other due to races between threads.
+        # run_timestamps and runs_by_timestamp
+        # are never out of sync with each other.
         #
         self._run_history = _RecorderRunsHistory(run_timestamps, runs_by_timestamp)
 
