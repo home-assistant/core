@@ -80,7 +80,7 @@ class WallboxSwitch(WallboxEntity, SwitchEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Pause charger."""
-        await self._coordinator.async_pause_charger(True)
+        await self.coordinator.async_pause_charger(True)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Resume charger."""
