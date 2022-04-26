@@ -1,14 +1,13 @@
 """Initialization of ATAG One climate platform."""
 from __future__ import annotations
 
-from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
-    HVAC_MODE_AUTO,
-    HVAC_MODE_HEAT,
     PRESET_AWAY,
     PRESET_BOOST,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, Platform
@@ -25,7 +24,7 @@ PRESET_MAP = {
     PRESET_BOOST: "fireplace",
 }
 PRESET_INVERTED = {v: k for k, v in PRESET_MAP.items()}
-HVAC_MODES = [HVAC_MODE_AUTO, HVAC_MODE_HEAT]
+HVAC_MODES = [HVACMode.AUTO, HVACMode.HEAT]
 
 
 async def async_setup_entry(
@@ -61,7 +60,7 @@ class AtagThermostat(AtagEntity, ClimateEntity):
     def hvac_action(self) -> str | None:
         """Return the current running hvac operation."""
         is_active = self.coordinator.data.climate.status
-        return CURRENT_HVAC_HEAT if is_active else CURRENT_HVAC_IDLE
+        return HVACAction.HEATING if is_active else HVACAction.IDLE
 
     @property
     def current_temperature(self) -> float | None:
