@@ -4,9 +4,9 @@ import logging
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_TRANSITION,
-    SUPPORT_TRANSITION,
     ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -43,7 +43,7 @@ class LiteJetLight(LightEntity):
 
     _attr_color_mode = ColorMode.BRIGHTNESS
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
-    _attr_supported_features = SUPPORT_TRANSITION
+    _attr_supported_features = LightEntityFeature.TRANSITION
 
     def __init__(self, config_entry, lj, i, name):  # pylint: disable=invalid-name
         """Initialize a LiteJet light."""
