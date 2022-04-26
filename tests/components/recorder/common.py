@@ -60,7 +60,7 @@ async def async_wait_purge_done(hass: HomeAssistant, max: int = None) -> None:
 
 @ha.callback
 def async_trigger_db_commit(hass: HomeAssistant) -> None:
-    """Fore the recorder to commit. Async friendly."""
+    """Force the recorder to commit. Async friendly."""
     for _ in range(recorder.DEFAULT_COMMIT_INTERVAL):
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
 

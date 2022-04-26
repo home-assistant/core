@@ -1053,8 +1053,8 @@ build.json @home-assistant/supervisor
 /tests/components/transmission/ @engrbm87 @JPHutchins
 /homeassistant/components/tts/ @pvizeli
 /tests/components/tts/ @pvizeli
-/homeassistant/components/tuya/ @Tuya @zlinoliver @METISU @frenck
-/tests/components/tuya/ @Tuya @zlinoliver @METISU @frenck
+/homeassistant/components/tuya/ @Tuya @zlinoliver @frenck
+/tests/components/tuya/ @Tuya @zlinoliver @frenck
 /homeassistant/components/twentemilieu/ @frenck
 /tests/components/twentemilieu/ @frenck
 /homeassistant/components/twinkly/ @dr1rrb @Robbie1221

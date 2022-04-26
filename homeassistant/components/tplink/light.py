@@ -14,10 +14,9 @@ from homeassistant.components.light import (
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
-    SUPPORT_EFFECT,
-    SUPPORT_TRANSITION,
     ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -163,6 +162,8 @@ async def async_setup_entry(
 class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
     """Representation of a TPLink Smart Bulb."""
 
+    _attr_supported_features = LightEntityFeature.TRANSITION
+
     device: SmartBulb
 
     def __init__(
@@ -278,11 +279,6 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
         return hue, saturation
 
     @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return SUPPORT_TRANSITION
-
-    @property
     def supported_color_modes(self) -> set[ColorMode | str] | None:
         """Return list of available color modes."""
         modes: set[ColorMode | str] = set()
@@ -319,7 +315,7 @@ class TPLinkSmartLightStrip(TPLinkSmartBulb):
     @property
     def supported_features(self) -> int:
         """Flag supported features."""
-        return super().supported_features | SUPPORT_EFFECT
+        return super().supported_features | LightEntityFeature.EFFECT
 
     @property
     def effect_list(self) -> list[str] | None:

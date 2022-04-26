@@ -1,11 +1,6 @@
 """Constants for the AVM Fritz!Box call monitor integration."""
 from homeassistant.const import Platform
 
-STATE_RINGING = "ringing"
-STATE_DIALING = "dialing"
-STATE_TALKING = "talking"
-STATE_IDLE = "idle"
-
 FRITZ_STATE_RING = "RING"
 FRITZ_STATE_CALL = "CALL"
 FRITZ_STATE_CONNECT = "CONNECT"
