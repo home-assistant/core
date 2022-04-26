@@ -8,19 +8,9 @@ from typing import NamedTuple
 from pyintesishome import IHAuthenticationError, IHConnectionError, IntesisHome
 import voluptuous as vol
 
-from homeassistant.components.climate import (
-    PLATFORM_SCHEMA,
-    ClimateEntity,
-    ClimateEntityFeature,
-)
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
-    HVAC_MODE_COOL,
-    HVAC_MODE_DRY,
-    HVAC_MODE_FAN_ONLY,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_HEAT_COOL,
-    HVAC_MODE_OFF,
     PRESET_BOOST,
     PRESET_COMFORT,
     PRESET_ECO,
@@ -28,6 +18,8 @@ from homeassistant.components.climate.const import (
     SWING_HORIZONTAL,
     SWING_OFF,
     SWING_VERTICAL,
+    ClimateEntityFeature,
+    HVACMode,
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
@@ -68,12 +60,12 @@ class SwingSettings(NamedTuple):
 
 
 MAP_IH_TO_HVAC_MODE = {
-    "auto": HVAC_MODE_HEAT_COOL,
-    "cool": HVAC_MODE_COOL,
-    "dry": HVAC_MODE_DRY,
-    "fan": HVAC_MODE_FAN_ONLY,
-    "heat": HVAC_MODE_HEAT,
-    "off": HVAC_MODE_OFF,
+    "auto": HVACMode.HEAT_COOL,
+    "cool": HVACMode.COOL,
+    "dry": HVACMode.DRY,
+    "fan": HVACMode.FAN_ONLY,
+    "heat": HVACMode.HEAT,
+    "off": HVACMode.OFF,
 }
 MAP_HVAC_MODE_TO_IH = {v: k for k, v in MAP_IH_TO_HVAC_MODE.items()}
 
@@ -95,11 +87,11 @@ MAP_SWING_TO_IH = {
 
 
 MAP_STATE_ICONS = {
-    HVAC_MODE_COOL: "mdi:snowflake",
-    HVAC_MODE_DRY: "mdi:water-off",
-    HVAC_MODE_FAN_ONLY: "mdi:fan",
-    HVAC_MODE_HEAT: "mdi:white-balance-sunny",
-    HVAC_MODE_HEAT_COOL: "mdi:cached",
+    HVACMode.COOL: "mdi:snowflake",
+    HVACMode.DRY: "mdi:water-off",
+    HVACMode.FAN_ONLY: "mdi:fan",
+    HVACMode.HEAT: "mdi:white-balance-sunny",
+    HVACMode.HEAT_COOL: "mdi:cached",
 }
 
 
@@ -161,7 +153,7 @@ class IntesisAC(ClimateEntity):
         self._setpoint_step = 1
         self._current_temp = None
         self._max_temp = None
-        self._hvac_mode_list = []
+        self._attr_hvac_modes = []
         self._min_temp = None
         self._target_temp = None
         self._outdoor_temp = None
@@ -205,8 +197,8 @@ class IntesisAC(ClimateEntity):
         # Setup HVAC modes
         if modes := controller.get_mode_list(ih_device_id):
             mode_list = [MAP_IH_TO_HVAC_MODE[mode] for mode in modes]
-            self._hvac_mode_list.extend(mode_list)
-        self._hvac_mode_list.append(HVAC_MODE_OFF)
+            self._attr_hvac_modes.extend(mode_list)
+        self._attr_hvac_modes.append(HVACMode.OFF)
 
     async def async_added_to_hass(self):
         """Subscribe to event updates."""
@@ -278,10 +270,10 @@ class IntesisAC(ClimateEntity):
         # Write updated temperature to HA state to avoid flapping (API confirmation is slow)
         self.async_write_ha_state()
 
-    async def async_set_hvac_mode(self, hvac_mode):
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set operation mode."""
         _LOGGER.debug("Setting %s to %s mode", self._device_type, hvac_mode)
-        if hvac_mode == HVAC_MODE_OFF:
+        if hvac_mode == HVACMode.OFF:
             self._power = False
             await self._controller.set_power_off(self._device_id)
             # Write changes to HA, API can be slow to push changes
@@ -423,11 +415,6 @@ class IntesisAC(ClimateEntity):
         return False
 
     @property
-    def hvac_modes(self):
-        """List of available operation modes."""
-        return self._hvac_mode_list
-
-    @property
     def fan_mode(self):
         """Return whether the fan is on."""
         return self._fan_speed
@@ -466,11 +453,11 @@ class IntesisAC(ClimateEntity):
         return self._current_temp
 
     @property
-    def hvac_mode(self):
+    def hvac_mode(self) -> HVACMode:
         """Return the current mode of operation if unit is on."""
         if self._power:
             return self._hvac_mode
-        return HVAC_MODE_OFF
+        return HVACMode.OFF
 
     @property
     def target_temperature(self):
