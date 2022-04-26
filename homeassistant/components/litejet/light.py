@@ -4,8 +4,8 @@ import logging
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_TRANSITION,
-    COLOR_MODE_BRIGHTNESS,
     SUPPORT_TRANSITION,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -41,8 +41,8 @@ async def async_setup_entry(
 class LiteJetLight(LightEntity):
     """Representation of a single LiteJet light."""
 
-    _attr_color_mode = COLOR_MODE_BRIGHTNESS
-    _attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
+    _attr_color_mode = ColorMode.BRIGHTNESS
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
     _attr_supported_features = SUPPORT_TRANSITION
 
     def __init__(self, config_entry, lj, i, name):  # pylint: disable=invalid-name

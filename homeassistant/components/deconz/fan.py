@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-from pydeconz.light import (
+from pydeconz.models.light.fan import (
     FAN_SPEED_25_PERCENT,
     FAN_SPEED_50_PERCENT,
     FAN_SPEED_75_PERCENT,
@@ -92,7 +92,7 @@ class DeconzFan(DeconzDevice, FanEntity):
     @property
     def is_on(self) -> bool:
         """Return true if fan is on."""
-        return self._device.speed != FAN_SPEED_OFF  # type: ignore[no-any-return]
+        return self._device.speed != FAN_SPEED_OFF
 
     @property
     def percentage(self) -> int | None:

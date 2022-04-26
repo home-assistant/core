@@ -8,7 +8,7 @@ import pytest
 from homeassistant import core
 from homeassistant.components.alexa import errors, state_report
 
-from . import TEST_URL, get_default_config
+from .test_common import TEST_URL, get_default_config
 
 
 async def test_report_state(hass, aioclient_mock):

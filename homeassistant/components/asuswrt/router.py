@@ -119,7 +119,7 @@ class AsusWrtSensorDataHandler:
     async def _get_temperatures(self) -> dict[str, Any]:
         """Fetch temperatures information from the router."""
         try:
-            temperatures = await self._api.async_get_temperature()
+            temperatures: dict[str, Any] = await self._api.async_get_temperature()
         except (OSError, ValueError) as exc:
             raise UpdateFailed(exc) from exc
 

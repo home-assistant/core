@@ -110,7 +110,7 @@ aio_geojson_nsw_rfs_incidents==0.4
 aio_georss_gdacs==0.7
 
 # homeassistant.components.airzone
-aioairzone==0.4.0
+aioairzone==0.4.2
 
 # homeassistant.components.ambient_station
 aioambient==2021.11.0
@@ -128,7 +128,7 @@ aioazuredevops==1.3.5
 aiobotocore==2.1.0
 
 # homeassistant.components.dhcp
-aiodiscover==1.4.10
+aiodiscover==1.4.11
 
 # homeassistant.components.dnsip
 # homeassistant.components.minecraft_server
@@ -333,7 +333,7 @@ asterisk_mbox==0.5.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.27.0
+async-upnp-client==0.29.0
 
 # homeassistant.components.supla
 asyncpysupla==0.0.5
@@ -387,7 +387,7 @@ beautifulsoup4==4.11.1
 bellows==0.29.0
 
 # homeassistant.components.bmw_connected_drive
-bimmer_connected==0.8.11
+bimmer_connected==0.8.12
 
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
@@ -526,7 +526,7 @@ defusedxml==0.7.1
 deluge-client==1.7.1
 
 # homeassistant.components.denonavr
-denonavr==0.10.10
+denonavr==0.10.11
 
 # homeassistant.components.devolo_home_control
 devolo-home-control-api==0.18.1
@@ -574,7 +574,7 @@ elgato==3.0.0
 eliqonline==1.2.2
 
 # homeassistant.components.elkm1
-elkm1-lib==1.3.4
+elkm1-lib==1.3.5
 
 # homeassistant.components.elmax
 elmax_api==0.0.2
@@ -813,7 +813,7 @@ hole==0.7.0
 holidays==0.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220420.0
+home-assistant-frontend==20220425.0
 
 # homeassistant.components.home_connect
 homeconnect==0.7.0
@@ -1020,7 +1020,7 @@ mitemp_bt==0.0.5
 moehlenhoff-alpha2==1.1.2
 
 # homeassistant.components.motion_blinds
-motionblinds==0.6.4
+motionblinds==0.6.5
 
 # homeassistant.components.motioneye
 motioneye-client==0.3.12
@@ -1350,9 +1350,6 @@ pyairvisual==5.0.9
 # homeassistant.components.almond
 pyalmond==0.0.2
 
-# homeassistant.components.arlo
-pyarlo==0.2.4
-
 # homeassistant.components.atag
 pyatag==0.3.5.3
 
@@ -1426,7 +1423,7 @@ pydaikin==2.7.0
 pydanfossair==0.1.0
 
 # homeassistant.components.deconz
-pydeconz==88
+pydeconz==90
 
 # homeassistant.components.delijn
 pydelijn==1.0.0
@@ -1726,7 +1723,7 @@ pypck==0.7.14
 pypjlink2==1.2.1
 
 # homeassistant.components.plaato
-pyplaato==0.0.16
+pyplaato==0.0.18
 
 # homeassistant.components.point
 pypoint==2.3.0
@@ -1777,7 +1774,7 @@ pysaj==0.0.16
 pysdcp==1
 
 # homeassistant.components.sensibo
-pysensibo==1.0.10
+pysensibo==1.0.12
 
 # homeassistant.components.serial
 # homeassistant.components.zha
@@ -1901,7 +1898,7 @@ python-join-api==0.0.9
 python-juicenet==1.1.0
 
 # homeassistant.components.tplink
-python-kasa==0.4.3
+python-kasa==0.5.0
 
 # homeassistant.components.lirc
 # python-lirc==1.2.3
@@ -1955,7 +1952,7 @@ pythonegardia==1.0.40
 pytile==2022.02.0
 
 # homeassistant.components.tomorrowio
-pytomorrowio==0.1.0
+pytomorrowio==0.3.3
 
 # homeassistant.components.touchline
 pytouchline==0.7
@@ -2503,7 +2500,7 @@ zigpy==0.44.2
 zm-py==0.5.2
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.35.3
+zwave-js-server-python==0.36.0
 
 # homeassistant.components.zwave_me
 zwave_me_ws==0.2.4
