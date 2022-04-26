@@ -31,9 +31,9 @@ from homeassistant.components.light import (
     ATTR_RGBW_COLOR,
     ATTR_TRANSITION,
     DOMAIN as LIGHT_DOMAIN,
-    SUPPORT_TRANSITION,
     ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -160,7 +160,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         )
 
         if self.supports_brightness_transition or self.supports_color_transition:
-            self._attr_supported_features |= SUPPORT_TRANSITION
+            self._attr_supported_features |= LightEntityFeature.TRANSITION
 
     @callback
     def on_value_update(self) -> None:
