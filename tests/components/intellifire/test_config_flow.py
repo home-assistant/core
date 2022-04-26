@@ -306,7 +306,7 @@ async def test_reauth_flow(
     await hass.async_block_till_done()
     assert result3["type"] == RESULT_TYPE_ABORT
     assert entry.data[CONF_PASSWORD] == "AROONIE"
-    assert entry.data["username"] == "test"
+    assert entry.data[CONF_USERNAME] == "test"
 
 
 async def test_dhcp_discovery_intellifire_device(
