@@ -3,14 +3,7 @@ from unittest.mock import MagicMock
 
 import pyvera as pv
 
-from homeassistant.components.climate.const import (
-    FAN_AUTO,
-    FAN_ON,
-    HVAC_MODE_COOL,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_HEAT_COOL,
-    HVAC_MODE_OFF,
-)
+from homeassistant.components.climate.const import FAN_AUTO, FAN_ON, HVACMode
 from homeassistant.core import HomeAssistant
 
 from .common import ComponentFactory, new_simple_controller_config
@@ -38,55 +31,55 @@ async def test_climate(
     )
     update_callback = component_data.controller_data[0].update_callback
 
-    assert hass.states.get(entity_id).state == HVAC_MODE_OFF
+    assert hass.states.get(entity_id).state == HVACMode.OFF
 
     await hass.services.async_call(
         "climate",
         "set_hvac_mode",
-        {"entity_id": entity_id, "hvac_mode": HVAC_MODE_COOL},
+        {"entity_id": entity_id, "hvac_mode": HVACMode.COOL},
     )
     await hass.async_block_till_done()
     vera_device.turn_cool_on.assert_called()
     vera_device.get_hvac_mode.return_value = "CoolOn"
     update_callback(vera_device)
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state == HVAC_MODE_COOL
+    assert hass.states.get(entity_id).state == HVACMode.COOL
 
     await hass.services.async_call(
         "climate",
         "set_hvac_mode",
-        {"entity_id": entity_id, "hvac_mode": HVAC_MODE_HEAT},
+        {"entity_id": entity_id, "hvac_mode": HVACMode.HEAT},
     )
     await hass.async_block_till_done()
     vera_device.turn_heat_on.assert_called()
     vera_device.get_hvac_mode.return_value = "HeatOn"
     update_callback(vera_device)
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state == HVAC_MODE_HEAT
+    assert hass.states.get(entity_id).state == HVACMode.HEAT
 
     await hass.services.async_call(
         "climate",
         "set_hvac_mode",
-        {"entity_id": entity_id, "hvac_mode": HVAC_MODE_HEAT_COOL},
+        {"entity_id": entity_id, "hvac_mode": HVACMode.HEAT_COOL},
     )
     await hass.async_block_till_done()
     vera_device.turn_auto_on.assert_called()
     vera_device.get_hvac_mode.return_value = "AutoChangeOver"
     update_callback(vera_device)
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state == HVAC_MODE_HEAT_COOL
+    assert hass.states.get(entity_id).state == HVACMode.HEAT_COOL
 
     await hass.services.async_call(
         "climate",
         "set_hvac_mode",
-        {"entity_id": entity_id, "hvac_mode": HVAC_MODE_OFF},
+        {"entity_id": entity_id, "hvac_mode": HVACMode.OFF},
     )
     await hass.async_block_till_done()
     vera_device.turn_auto_on.assert_called()
     vera_device.get_hvac_mode.return_value = "Off"
     update_callback(vera_device)
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state == HVAC_MODE_OFF
+    assert hass.states.get(entity_id).state == HVACMode.OFF
 
     await hass.services.async_call(
         "climate",
