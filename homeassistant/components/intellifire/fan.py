@@ -166,6 +166,10 @@ class IntellifireFan(IntellifireEntity, FanEntity):
     @property
     def entity_registry_enabled_default(self) -> bool:
         """Enable entity if configured with a thermostat."""
-        # Should this be moved into a lambda function in the fan description?
-        # If so we can wait for the PR process
-        return bool(self.coordinator.data.has_fan)
+        enabled = bool(self.coordinator.data.has_fan)
+
+        if not enabled:
+            LOGGER.info(
+                "Disabling Fan - IntelliFire device does not appear to have one"
+            )
+        return enabled
