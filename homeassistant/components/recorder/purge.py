@@ -120,37 +120,37 @@ def _select_unused_attributes_ids(
         return set()
 
     if using_sqlite:
+        #
+        # SQLite has a superior query optimizer for the distinct query below as it uses the
+        # covering index without having to examine the rows directly for both of the queries
+        # below.
+        #
+        # We use the distinct query for SQLite since the query in the other branch can
+        # generate more than 500 unions which SQLite does not support.
+        #
+        # How MariaDB's query optimizer handles this query:
+        # > explain select distinct attributes_id from states where attributes_id in (136723);
+        # ...Using index
+        #
         id_query = session.query(distinct(States.attributes_id)).filter(
             States.attributes_id.in_(attributes_ids)
         )
     else:
         #
-        # We are jumping through hoops a bit here to handle
-        # a case sqlite performance on finding unused attributes_id
-        # far exceeds other DBMS
+        # This branch is for DBMS that cannot optimize the distinct query well and has to examine
+        # all the rows that match.
         #
-        # MariaDB/MySQL cannot optimize that query well and has to examine
-        # all the rows that match
+        # This branch uses a union of simple queries, as each query is optimized away as the answer
+        # to the query can be found in the index.
         #
-        # > explain select distinct attributes_id from states where attributes_id in (136723);
-        # +------+-------------+--------+------+-------------------------+-------------------------+---------+-------+-------+-------------+
-        # | id   | select_type | table  | type | possible_keys           | key                     | key_len | ref   | rows  | Extra       |
-        # +------+-------------+--------+------+-------------------------+-------------------------+---------+-------+-------+-------------+
-        # |    1 | SIMPLE      | states | ref  | ix_states_attributes_id | ix_states_attributes_id | 5       | const | 22842 | Using index |
-        # +------+-------------+--------+------+-------------------------+-------------------------+---------+-------+-------+-------------+
+        # The below query works for SQLite as long as there are no more than 500 attributes_id
+        # to be selected. We currently do not have MySQL or PostgreSQL servers running in the
+        # test suite; we test this path using SQLite when there are less than 500 attributes_id.
         #
-        # With a single query, it can be optimized away
-        #
+        # How MariaDB's query optimizer handles this query:
         # > explain select min(attributes_id) from states where attributes_id = 136723;
-        # +------+-------------+-------+------+---------------+------+---------+------+------+------------------------------+
-        # | id   | select_type | table | type | possible_keys | key  | key_len | ref  | rows | Extra                        |
-        # +------+-------------+-------+------+---------------+------+---------+------+------+------------------------------+
-        # |    1 | SIMPLE      | NULL  | NULL | NULL          | NULL | NULL    | NULL | NULL | Select tables optimized away |
-        # +------+-------------+-------+------+---------------+------+---------+------+------+------------------------------+
+        # ...Select tables optimized away
         #
-        # We test this path to make sure it will work with
-        # sqlite, however only on tests that have < 500 ids
-        # since otherwise we hit the limit
         id_query = session.query(column("id")).from_statement(
             union(
                 *[

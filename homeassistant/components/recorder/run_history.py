@@ -79,7 +79,7 @@ class RunHistory:
         session.add(self._current_run_info)
         session.flush()
         session.expunge(self._current_run_info)
-        self.update_from_db(session)
+        self.load_from_db(session)
 
     def reset(self) -> None:
         """Reset the run when the database is changed or fails.
@@ -98,7 +98,7 @@ class RunHistory:
         self._current_run_info.end = dt_util.utcnow()
         session.add(self._current_run_info)
 
-    def update_from_db(self, session: Session) -> None:
+    def load_from_db(self, session: Session) -> None:
         """Update the run cache.
 
         Must run in the recorder thread.

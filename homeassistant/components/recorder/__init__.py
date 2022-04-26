@@ -409,7 +409,7 @@ class PurgeTask(RecorderTask):
             instance, self.purge_before, self.repack, self.apply_filter
         ):
             with instance.get_session() as session:
-                instance.run_history.update_from_db(session)
+                instance.run_history.load_from_db(session)
             # We always need to do the db cleanups after a purge
             # is finished to ensure the WAL checkpoint and other
             # tasks happen after a vacuum.

@@ -65,7 +65,7 @@ class FritzBoxPhonebook:
 
     def get_phonebook_ids(self) -> list[int]:
         """Return list of phonebook ids."""
-        return self.fph.phonebook_ids
+        return self.fph.phonebook_ids  # type: ignore[no-any-return]
 
     def get_name(self, number: str) -> str:
         """Return a name for a given phone number."""
