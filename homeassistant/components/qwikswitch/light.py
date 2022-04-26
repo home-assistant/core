@@ -33,11 +33,11 @@ class QSLight(QSToggleEntity, LightEntity):
         return self.device.value if self.device.is_dimmer else None
 
     @property
-    def color_mode(self) -> str | None:
+    def color_mode(self) -> ColorMode | None:
         """Return the color mode of the light."""
         return ColorMode.BRIGHTNESS if self.device.is_dimmer else None
 
     @property
-    def supported_color_modes(self) -> set[str] | None:
+    def supported_color_modes(self) -> set[ColorMode] | None:
         """Flag supported color modes."""
         return {ColorMode.BRIGHTNESS} if self.device.is_dimmer else None
