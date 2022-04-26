@@ -60,26 +60,26 @@ PLATFORMS = [
 ]
 
 FIBARO_TYPEMAP = {
-    "com.fibaro.multilevelSensor": "sensor",
-    "com.fibaro.binarySwitch": "switch",
-    "com.fibaro.multilevelSwitch": "switch",
-    "com.fibaro.FGD212": "light",
-    "com.fibaro.FGR": "cover",
-    "com.fibaro.doorSensor": "binary_sensor",
-    "com.fibaro.doorWindowSensor": "binary_sensor",
-    "com.fibaro.FGMS001": "binary_sensor",
-    "com.fibaro.heatDetector": "binary_sensor",
-    "com.fibaro.lifeDangerSensor": "binary_sensor",
-    "com.fibaro.smokeSensor": "binary_sensor",
-    "com.fibaro.remoteSwitch": "switch",
-    "com.fibaro.sensor": "sensor",
-    "com.fibaro.colorController": "light",
-    "com.fibaro.securitySensor": "binary_sensor",
-    "com.fibaro.hvac": "climate",
-    "com.fibaro.setpoint": "climate",
-    "com.fibaro.FGT001": "climate",
-    "com.fibaro.thermostatDanfoss": "climate",
-    "com.fibaro.doorLock": "lock",
+    "com.fibaro.multilevelSensor": Platform.SENSOR,
+    "com.fibaro.binarySwitch": Platform.SWITCH,
+    "com.fibaro.multilevelSwitch": Platform.SWITCH,
+    "com.fibaro.FGD212": Platform.LIGHT,
+    "com.fibaro.FGR": Platform.COVER,
+    "com.fibaro.doorSensor": Platform.BINARY_SENSOR,
+    "com.fibaro.doorWindowSensor": Platform.BINARY_SENSOR,
+    "com.fibaro.FGMS001": Platform.BINARY_SENSOR,
+    "com.fibaro.heatDetector": Platform.BINARY_SENSOR,
+    "com.fibaro.lifeDangerSensor": Platform.BINARY_SENSOR,
+    "com.fibaro.smokeSensor": Platform.BINARY_SENSOR,
+    "com.fibaro.remoteSwitch": Platform.SWITCH,
+    "com.fibaro.sensor": Platform.SENSOR,
+    "com.fibaro.colorController": Platform.LIGHT,
+    "com.fibaro.securitySensor": Platform.BINARY_SENSOR,
+    "com.fibaro.hvac": Platform.CLIMATE,
+    "com.fibaro.setpoint": Platform.CLIMATE,
+    "com.fibaro.FGT001": Platform.CLIMATE,
+    "com.fibaro.thermostatDanfoss": Platform.CLIMATE,
+    "com.fibaro.doorLock": Platform.LOCK,
 }
 
 DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema(
@@ -158,9 +158,9 @@ class FibaroController:
         self._import_plugins = config[CONF_IMPORT_PLUGINS]
         self._room_map = None  # Mapping roomId to room object
         self._device_map = None  # Mapping deviceId to device object
-        self.fibaro_devices: dict[str, list] = defaultdict(
+        self.fibaro_devices: dict[Platform, list] = defaultdict(
             list
-        )  # List of devices by type
+        )  # List of devices by entity platform
         self._callbacks: dict[Any, Any] = {}  # Update value callbacks by deviceId
         self._state_handler = None  # Fiblary's StateHandler object
         self.hub_serial = None  # Unique serial number of the hub
@@ -282,35 +282,35 @@ class FibaroController:
         return self.get_children(self._device_map[device.id].parentId)
 
     @staticmethod
-    def _map_device_to_type(device):
+    def _map_device_to_platform(device: Any) -> Platform | None:
         """Map device to HA device type."""
         # Use our lookup table to identify device type
-        device_type = None
+        platform: Platform | None = None
         if "type" in device:
-            device_type = FIBARO_TYPEMAP.get(device.type)
-        if device_type is None and "baseType" in device:
-            device_type = FIBARO_TYPEMAP.get(device.baseType)
+            platform = FIBARO_TYPEMAP.get(device.type)
+        if platform is None and "baseType" in device:
+            platform = FIBARO_TYPEMAP.get(device.baseType)
 
         # We can also identify device type by its capabilities
-        if device_type is None:
+        if platform is None:
             if "setBrightness" in device.actions:
-                device_type = "light"
+                platform = Platform.LIGHT
             elif "turnOn" in device.actions:
-                device_type = "switch"
+                platform = Platform.SWITCH
             elif "open" in device.actions:
-                device_type = "cover"
+                platform = Platform.COVER
             elif "secure" in device.actions:
-                device_type = "lock"
+                platform = Platform.LOCK
             elif "value" in device.properties:
                 if device.properties.value in ("true", "false"):
-                    device_type = "binary_sensor"
+                    platform = Platform.BINARY_SENSOR
                 else:
-                    device_type = "sensor"
+                    platform = Platform.SENSOR
 
         # Switches that control lights should show up as lights
-        if device_type == "switch" and device.properties.get("isLight", False):
-            device_type = "light"
-        return device_type
+        if platform == Platform.SWITCH and device.properties.get("isLight", False):
+            platform = Platform.LIGHT
+        return platform
 
     def _read_scenes(self):
         scenes = self._client.scenes.list()
@@ -330,7 +330,7 @@ class FibaroController:
             )
             device.unique_id_str = f"{self.hub_serial}.scene.{device.id}"
             self._scene_map[device.id] = device
-            self.fibaro_devices["scene"].append(device)
+            self.fibaro_devices[Platform.SCENE].append(device)
             _LOGGER.debug("%s scene -> %s", device.ha_id, device)
 
     def _read_devices(self):
@@ -357,10 +357,10 @@ class FibaroController:
                     "isPlugin" not in device
                     or (not device.isPlugin or self._import_plugins)
                 ):
-                    device.mapped_type = self._map_device_to_type(device)
+                    device.mapped_platform = self._map_device_to_platform(device)
                 else:
-                    device.mapped_type = None
-                if (dtype := device.mapped_type) is None:
+                    device.mapped_platform = None
+                if (platform := device.mapped_platform) is None:
                     continue
                 device.unique_id_str = f"{self.hub_serial}.{device.id}"
                 self._device_map[device.id] = device
@@ -369,11 +369,11 @@ class FibaroController:
                     device.ha_id,
                     device.type,
                     device.baseType,
-                    dtype,
+                    platform,
                     str(device),
                 )
-                if dtype != "climate":
-                    self.fibaro_devices[dtype].append(device)
+                if platform != Platform.CLIMATE:
+                    self.fibaro_devices[platform].append(device)
                     continue
                 # We group climate devices into groups with the same
                 # endPointID belonging to the same parent device.
@@ -394,7 +394,7 @@ class FibaroController:
                     and last_endpoint != device.properties.endPointId
                 ):
                     _LOGGER.debug("Handle separately")
-                    self.fibaro_devices[dtype].append(device)
+                    self.fibaro_devices[platform].append(device)
                     last_climate_parent = device.parentId
                     if "endPointId" in device.properties:
                         last_endpoint = device.properties.endPointId
