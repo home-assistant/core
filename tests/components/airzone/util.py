@@ -42,17 +42,10 @@ from tests.common import MockConfigEntry
 CONFIG = {
     CONF_HOST: "192.168.1.100",
     CONF_PORT: 3000,
-    CONF_ID: 0,
-}
-
-CONFIG_NO_ID = {
-    CONF_HOST: CONFIG[CONF_HOST],
-    CONF_PORT: CONFIG[CONF_PORT],
 }
 
 CONFIG_ID1 = {
-    CONF_HOST: CONFIG[CONF_HOST],
-    CONF_PORT: CONFIG[CONF_PORT],
+    **CONFIG,
     CONF_ID: 1,
 }
 

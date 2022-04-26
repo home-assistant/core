@@ -3,13 +3,13 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
     PRESET_COMFORT,
     PRESET_ECO,
+    ClimateEntityFeature,
+    HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -32,7 +32,7 @@ from .const import (
 )
 from .model import ClimateExtraAttributes
 
-OPERATION_LIST = [HVAC_MODE_HEAT, HVAC_MODE_OFF]
+OPERATION_LIST = [HVACMode.HEAT, HVACMode.OFF]
 
 MIN_TEMPERATURE = 8
 MAX_TEMPERATURE = 28
@@ -113,18 +113,18 @@ class FritzboxThermostat(FritzBoxEntity, ClimateEntity):
             OFF_REPORT_SET_TEMPERATURE,
             OFF_API_TEMPERATURE,
         ):
-            return HVAC_MODE_OFF
+            return HVACMode.OFF
 
-        return HVAC_MODE_HEAT
+        return HVACMode.HEAT
 
     @property
-    def hvac_modes(self) -> list[str]:
+    def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available operation modes."""
         return OPERATION_LIST
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new operation mode."""
-        if hvac_mode == HVAC_MODE_OFF:
+        if hvac_mode == HVACMode.OFF:
             await self.async_set_temperature(temperature=OFF_REPORT_SET_TEMPERATURE)
         else:
             await self.async_set_temperature(

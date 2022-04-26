@@ -1,6 +1,5 @@
 """Test KNX climate."""
-from homeassistant.components.climate import HVAC_MODE_HEAT, HVAC_MODE_OFF
-from homeassistant.components.climate.const import PRESET_ECO, PRESET_SLEEP
+from homeassistant.components.climate.const import PRESET_ECO, PRESET_SLEEP, HVACMode
 from homeassistant.components.knx.schema import ClimateSchema
 from homeassistant.const import CONF_NAME, STATE_IDLE
 from homeassistant.core import HomeAssistant
@@ -82,7 +81,7 @@ async def test_climate_hvac_mode(hass: HomeAssistant, knx: KNXTestKit):
     await hass.services.async_call(
         "climate",
         "set_hvac_mode",
-        {"entity_id": "climate.test", "hvac_mode": HVAC_MODE_OFF},
+        {"entity_id": "climate.test", "hvac_mode": HVACMode.OFF},
         blocking=True,
     )
     await knx.assert_write("1/2/8", False)
@@ -91,7 +90,7 @@ async def test_climate_hvac_mode(hass: HomeAssistant, knx: KNXTestKit):
     await hass.services.async_call(
         "climate",
         "set_hvac_mode",
-        {"entity_id": "climate.test", "hvac_mode": HVAC_MODE_HEAT},
+        {"entity_id": "climate.test", "hvac_mode": HVACMode.HEAT},
         blocking=True,
     )
     await knx.assert_write("1/2/8", True)
@@ -235,10 +234,10 @@ async def test_command_value_idle_mode(hass: HomeAssistant, knx: KNXTestKit):
     assert len(events) == 2
     events.pop()
 
-    knx.assert_state("climate.test", HVAC_MODE_HEAT, command_value=20)
+    knx.assert_state("climate.test", HVACMode.HEAT, command_value=20)
 
     await knx.receive_write("1/2/6", (0x00,))
 
     knx.assert_state(
-        "climate.test", HVAC_MODE_HEAT, command_value=0, hvac_action=STATE_IDLE
+        "climate.test", HVACMode.HEAT, command_value=0, hvac_action=STATE_IDLE
     )

@@ -1,4 +1,7 @@
 """Test the services for the Flo by Moen integration."""
+import pytest
+from voluptuous.error import MultipleInvalid
+
 from homeassistant.components.flo.const import DOMAIN as FLO_DOMAIN
 from homeassistant.components.flo.switch import (
     ATTR_REVERT_TO_MODE,
@@ -67,3 +70,32 @@ async def test_services(hass, config_entry, aioclient_mock_fixture, aioclient_mo
     )
     await hass.async_block_till_done()
     assert aioclient_mock.call_count == 12
+
+    # test calling with a string value to ensure it is converted to int
+    await hass.services.async_call(
+        FLO_DOMAIN,
+        SERVICE_SET_SLEEP_MODE,
+        {
+            ATTR_ENTITY_ID: SWITCH_ENTITY_ID,
+            ATTR_REVERT_TO_MODE: SYSTEM_MODE_HOME,
+            ATTR_SLEEP_MINUTES: "120",
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert aioclient_mock.call_count == 13
+
+    # test calling with a non string -> int value and ensure exception is thrown
+    with pytest.raises(MultipleInvalid):
+        await hass.services.async_call(
+            FLO_DOMAIN,
+            SERVICE_SET_SLEEP_MODE,
+            {
+                ATTR_ENTITY_ID: SWITCH_ENTITY_ID,
+                ATTR_REVERT_TO_MODE: SYSTEM_MODE_HOME,
+                ATTR_SLEEP_MINUTES: "test",
+            },
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        assert aioclient_mock.call_count == 13

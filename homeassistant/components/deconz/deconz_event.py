@@ -5,14 +5,14 @@ from __future__ import annotations
 from typing import Any
 
 from pydeconz.models.event import EventType
-from pydeconz.sensor import (
+from pydeconz.models.sensor.ancillary_control import (
     ANCILLARY_CONTROL_EMERGENCY,
     ANCILLARY_CONTROL_FIRE,
     ANCILLARY_CONTROL_INVALID_CODE,
     ANCILLARY_CONTROL_PANIC,
     AncillaryControl,
-    Switch,
 )
+from pydeconz.models.sensor.switch import Switch
 
 from homeassistant.const import (
     CONF_DEVICE_ID,

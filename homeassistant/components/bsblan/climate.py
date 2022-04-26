@@ -7,15 +7,14 @@ from typing import Any
 
 from bsblan import BSBLan, BSBLanError, Info, State
 
-from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
-    HVAC_MODE_AUTO,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
     PRESET_ECO,
     PRESET_NONE,
+    ClimateEntityFeature,
+    HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
@@ -31,9 +30,9 @@ PARALLEL_UPDATES = 1
 SCAN_INTERVAL = timedelta(seconds=20)
 
 HVAC_MODES = [
-    HVAC_MODE_AUTO,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
+    HVACMode.AUTO,
+    HVACMode.HEAT,
+    HVACMode.OFF,
 ]
 
 PRESET_MODES = [
@@ -42,9 +41,9 @@ PRESET_MODES = [
 ]
 
 HA_STATE_TO_BSBLAN = {
-    HVAC_MODE_AUTO: "1",
-    HVAC_MODE_HEAT: "3",
-    HVAC_MODE_OFF: "0",
+    HVACMode.AUTO: "1",
+    HVACMode.HEAT: "3",
+    HVACMode.OFF: "0",
 }
 
 BSBLAN_TO_HA_STATE = {value: key for key, value in HA_STATE_TO_BSBLAN.items()}
