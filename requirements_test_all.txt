@@ -718,7 +718,7 @@ netdisco==3.0.0
 netmap==0.7.0.2
 
 # homeassistant.components.nam
-nettigo-air-monitor==1.2.1
+nettigo-air-monitor==1.2.2
 
 # homeassistant.components.nexia
 nexia==0.9.13
