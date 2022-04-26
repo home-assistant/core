@@ -61,7 +61,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 if mac:
                     await self.async_set_unique_id(format_mac(mac))
-                    self._abort_if_unique_id_configured(updates={CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]})
+                    self._abort_if_unique_id_configured(
+                        updates={
+                            CONF_HOST: user_input[CONF_HOST],
+                            CONF_PORT: user_input[CONF_PORT],
+                        }
+                    )
 
                 title = f"Airzone {user_input[CONF_HOST]}:{user_input[CONF_PORT]}"
                 return self.async_create_entry(title=title, data=user_input)
