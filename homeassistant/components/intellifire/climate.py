@@ -67,7 +67,7 @@ class IntellifireClimate(IntellifireEntity, ClimateEntity):
         # Can i use a walrus operator here?
         if not enabled:
             LOGGER.info(
-                "Disabling climate sensor - intellifire device does not appear to have one"
+                "Disabling climate sensor - IntelliFire device does not appear to have one"
             )
             return False
         return True
@@ -116,10 +116,13 @@ class IntellifireClimate(IntellifireEntity, ClimateEntity):
                 fireplace=self.coordinator.control_api.default_fireplace,
                 temp_c=self.last_temp,
             )
+
             # 2) Make sure the fireplace is on!
-            await self.coordinator.control_api.flame_on(
-                fireplace=self.coordinator.control_api.default_fireplace,
-            )
+            if not self.coordinator.read_api.data.is_on:
+                await self.coordinator.control_api.flame_on(
+                    fireplace=self.coordinator.control_api.default_fireplace,
+                )
+
         if hvac_mode == HVAC_MODE_OFF:
             await self.coordinator.control_api.turn_off_thermostat(
                 fireplace=self.coordinator.control_api.default_fireplace
