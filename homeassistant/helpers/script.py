@@ -429,7 +429,8 @@ class _ScriptRun:
                         ex, continue_on_error, self._log_exceptions or log_exceptions
                     )
                 else:
-                    self._variables["last_step_error"] = None
+                    if continue_on_error:
+                        self._variables["last_step_error"] = None
 
     def _finish(self) -> None:
         self._script._runs.remove(self)  # pylint: disable=protected-access
