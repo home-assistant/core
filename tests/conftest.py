@@ -1,5 +1,8 @@
 """Set up some common test helper things."""
+from __future__ import annotations
+
 import asyncio
+from collections.abc import AsyncGenerator
 import functools
 import logging
 import socket
@@ -26,7 +29,9 @@ from homeassistant.components.websocket_api.auth import (
 )
 from homeassistant.components.websocket_api.http import URL
 from homeassistant.const import HASSIO_USER_NAME
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util, location
 
@@ -39,6 +44,7 @@ from tests.common import (  # noqa: E402, isort:skip
     INSTANCES,
     MockConfigEntry,
     MockUser,
+    SetupRecorderInstanceT,
     async_fire_mqtt_message,
     async_init_recorder_component,
     async_test_home_assistant,
@@ -47,7 +53,9 @@ from tests.common import (  # noqa: E402, isort:skip
     mock_storage as mock_storage,
 )
 from tests.test_util.aiohttp import mock_aiohttp_client  # noqa: E402, isort:skip
-
+from tests.components.recorder.common import (  # noqa: E402, isort:skip
+    async_recorder_block_till_done,
+)
 
 logging.basicConfig(level=logging.DEBUG)
 logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
@@ -269,7 +277,6 @@ def hass(loop, load_registries, hass_storage, request):
 
     exceptions = []
     hass = loop.run_until_complete(async_test_home_assistant(loop, load_registries))
-    orig_units = hass.config.units
     orig_exception_handler = loop.get_exception_handler()
     loop.set_exception_handler(exc_handle)
 
@@ -279,8 +286,6 @@ def hass(loop, load_registries, hass_storage, request):
 
     # Restore timezone, it is set when creating the hass object
     dt_util.DEFAULT_TIME_ZONE = orig_tz
-    # Restore the units as well
-    hass.config.units = orig_units
 
     for ex in exceptions:
         if (
@@ -683,10 +688,20 @@ def enable_statistics():
 def enable_nightly_purge():
     """Fixture to control enabling of recorder's nightly purge job.
 
-    To enable nightly purgin, tests can be marked with:
+    To enable nightly purging, tests can be marked with:
     @pytest.mark.parametrize("enable_nightly_purge", [True])
     """
     return False
+
+
+@pytest.fixture
+def recorder_config():
+    """Fixture to override recorder config.
+
+    To override the config, tests can be marked with:
+    @pytest.mark.parametrize("recorder_config", [{...}])
+    """
+    return None
 
 
 @pytest.fixture
@@ -695,15 +710,15 @@ def hass_recorder(enable_nightly_purge, enable_statistics, hass_storage):
     original_tz = dt_util.DEFAULT_TIME_ZONE
 
     hass = get_test_home_assistant()
-    stats = recorder.Recorder.async_periodic_statistics if enable_statistics else None
     nightly = recorder.Recorder.async_nightly_tasks if enable_nightly_purge else None
+    stats = recorder.Recorder.async_periodic_statistics if enable_statistics else None
     with patch(
-        "homeassistant.components.recorder.Recorder.async_periodic_statistics",
-        side_effect=stats,
-        autospec=True,
-    ), patch(
         "homeassistant.components.recorder.Recorder.async_nightly_tasks",
         side_effect=nightly,
+        autospec=True,
+    ), patch(
+        "homeassistant.components.recorder.Recorder.async_periodic_statistics",
+        side_effect=stats,
         autospec=True,
     ):
 
@@ -723,25 +738,45 @@ def hass_recorder(enable_nightly_purge, enable_statistics, hass_storage):
 
 
 @pytest.fixture
-async def recorder_mock(enable_nightly_purge, enable_statistics, hass):
-    """Fixture with in-memory recorder."""
-    stats = recorder.Recorder.async_periodic_statistics if enable_statistics else None
-    nightly = recorder.Recorder.async_nightly_tasks if enable_nightly_purge else None
-    with patch(
-        "homeassistant.components.recorder.Recorder.async_periodic_statistics",
-        side_effect=stats,
-        autospec=True,
-    ), patch(
-        "homeassistant.components.recorder.Recorder.async_nightly_tasks",
-        side_effect=nightly,
-        autospec=True,
-    ):
-        await async_init_recorder_component(hass)
-        await hass.async_start()
-        await hass.async_block_till_done()
-        await hass.async_add_executor_job(
-            hass.data[recorder.DATA_INSTANCE].block_till_done
+async def async_setup_recorder_instance(
+    enable_nightly_purge, enable_statistics
+) -> AsyncGenerator[SetupRecorderInstanceT, None]:
+    """Yield callable to setup recorder instance."""
+
+    async def async_setup_recorder(
+        hass: HomeAssistant, config: ConfigType | None = None
+    ) -> recorder.Recorder:
+        """Setup and return recorder instance."""  # noqa: D401
+        nightly = (
+            recorder.Recorder.async_nightly_tasks if enable_nightly_purge else None
         )
+        stats = (
+            recorder.Recorder.async_periodic_statistics if enable_statistics else None
+        )
+        with patch(
+            "homeassistant.components.recorder.Recorder.async_nightly_tasks",
+            side_effect=nightly,
+            autospec=True,
+        ), patch(
+            "homeassistant.components.recorder.Recorder.async_periodic_statistics",
+            side_effect=stats,
+            autospec=True,
+        ):
+            await async_init_recorder_component(hass, config)
+            await hass.async_block_till_done()
+            instance = hass.data[recorder.DATA_INSTANCE]
+            # The recorder's worker is not started until Home Assistant is running
+            if hass.state == CoreState.running:
+                await async_recorder_block_till_done(hass)
+            return instance
+
+    return async_setup_recorder
+
+
+@pytest.fixture
+async def recorder_mock(recorder_config, async_setup_recorder_instance, hass):
+    """Fixture with in-memory recorder."""
+    await async_setup_recorder_instance(hass, recorder_config)
 
 
 @pytest.fixture

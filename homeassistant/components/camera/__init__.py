@@ -549,7 +549,6 @@ class Camera(Entity):
         This is used by cameras with CameraEntityFeature.STREAM
         and StreamType.HLS.
         """
-        # pylint: disable=no-self-use
         return None
 
     async def async_handle_web_rtc_offer(self, offer_sdp: str) -> str | None:

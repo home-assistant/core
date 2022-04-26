@@ -27,7 +27,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 
-from . import (
+from .test_common import (
     assert_request_calls_service,
     assert_request_fails,
     get_default_config,

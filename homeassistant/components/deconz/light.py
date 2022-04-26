@@ -3,15 +3,16 @@ from __future__ import annotations
 
 from typing import Any, Generic, TypedDict, TypeVar
 
-from pydeconz.group import Group
-from pydeconz.light import (
+from pydeconz.interfaces.lights import LightResources
+from pydeconz.models import ResourceType
+from pydeconz.models.group import Group
+from pydeconz.models.light import (
     ALERT_LONG,
     ALERT_SHORT,
     EFFECT_COLOR_LOOP,
     EFFECT_NONE,
-    Light,
-    LightResources,
 )
+from pydeconz.models.light.light import Light
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -21,20 +22,17 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
     ATTR_XY_COLOR,
-    COLOR_MODE_BRIGHTNESS,
-    COLOR_MODE_COLOR_TEMP,
-    COLOR_MODE_HS,
-    COLOR_MODE_ONOFF,
-    COLOR_MODE_XY,
     DOMAIN,
     EFFECT_COLORLOOP,
     FLASH_LONG,
     FLASH_SHORT,
+    ColorMode,
     LightEntity,
     LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -73,6 +71,17 @@ async def async_setup_entry(
     """Set up the deCONZ lights and groups from a config entry."""
     gateway = get_gateway_from_config_entry(hass, config_entry)
     gateway.entities[DOMAIN] = set()
+
+    entity_registry = er.async_get(hass)
+
+    # On/Off Output should be switch not light 2022.5
+    for light in gateway.api.lights.lights.values():
+        if light.type == ResourceType.ON_OFF_OUTPUT.value and (
+            entity_id := entity_registry.async_get_entity_id(
+                DOMAIN, DECONZ_DOMAIN, light.unique_id
+            )
+        ):
+            entity_registry.async_remove(entity_id)
 
     @callback
     def async_add_light(lights: list[LightResources] | None = None) -> None:
@@ -150,19 +159,19 @@ class DeconzBaseLight(Generic[_L], DeconzDevice, LightEntity):
         self._attr_supported_color_modes: set[str] = set()
 
         if device.color_temp is not None:
-            self._attr_supported_color_modes.add(COLOR_MODE_COLOR_TEMP)
+            self._attr_supported_color_modes.add(ColorMode.COLOR_TEMP)
 
         if device.hue is not None and device.saturation is not None:
-            self._attr_supported_color_modes.add(COLOR_MODE_HS)
+            self._attr_supported_color_modes.add(ColorMode.HS)
 
         if device.xy is not None:
-            self._attr_supported_color_modes.add(COLOR_MODE_XY)
+            self._attr_supported_color_modes.add(ColorMode.XY)
 
         if not self._attr_supported_color_modes and device.brightness is not None:
-            self._attr_supported_color_modes.add(COLOR_MODE_BRIGHTNESS)
+            self._attr_supported_color_modes.add(ColorMode.BRIGHTNESS)
 
         if not self._attr_supported_color_modes:
-            self._attr_supported_color_modes.add(COLOR_MODE_ONOFF)
+            self._attr_supported_color_modes.add(ColorMode.ONOFF)
 
         if device.brightness is not None:
             self._attr_supported_features |= LightEntityFeature.FLASH
@@ -176,26 +185,26 @@ class DeconzBaseLight(Generic[_L], DeconzDevice, LightEntity):
     def color_mode(self) -> str | None:
         """Return the color mode of the light."""
         if self._device.color_mode == "ct":
-            color_mode = COLOR_MODE_COLOR_TEMP
+            color_mode = ColorMode.COLOR_TEMP
         elif self._device.color_mode == "hs":
-            color_mode = COLOR_MODE_HS
+            color_mode = ColorMode.HS
         elif self._device.color_mode == "xy":
-            color_mode = COLOR_MODE_XY
+            color_mode = ColorMode.XY
         elif self._device.brightness is not None:
-            color_mode = COLOR_MODE_BRIGHTNESS
+            color_mode = ColorMode.BRIGHTNESS
         else:
-            color_mode = COLOR_MODE_ONOFF
+            color_mode = ColorMode.ONOFF
         return color_mode
 
     @property
     def brightness(self) -> int | None:
         """Return the brightness of this light between 0..255."""
-        return self._device.brightness  # type: ignore[no-any-return]
+        return self._device.brightness
 
     @property
     def color_temp(self) -> int | None:
         """Return the CT color value."""
-        return self._device.color_temp  # type: ignore[no-any-return]
+        return self._device.color_temp
 
     @property
     def hs_color(self) -> tuple[float, float] | None:
@@ -207,12 +216,12 @@ class DeconzBaseLight(Generic[_L], DeconzDevice, LightEntity):
     @property
     def xy_color(self) -> tuple[float, float] | None:
         """Return the XY color value."""
-        return self._device.xy  # type: ignore[no-any-return]
+        return self._device.xy
 
     @property
     def is_on(self) -> bool | None:
         """Return true if light is on."""
-        return self._device.state  # type: ignore[no-any-return]
+        return self._device.state
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on light."""
@@ -225,7 +234,7 @@ class DeconzBaseLight(Generic[_L], DeconzDevice, LightEntity):
             data["color_temperature"] = kwargs[ATTR_COLOR_TEMP]
 
         if ATTR_HS_COLOR in kwargs:
-            if COLOR_MODE_XY in self._attr_supported_color_modes:
+            if ColorMode.XY in self._attr_supported_color_modes:
                 data["xy"] = color_hs_to_xy(*kwargs[ATTR_HS_COLOR])
             else:
                 data["hue"] = int(kwargs[ATTR_HS_COLOR][0] / 360 * 65535)

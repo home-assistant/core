@@ -18,15 +18,14 @@ from homeassistant.core import HomeAssistant, State
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import async_fire_time_changed, async_init_recorder_component
-from tests.components.recorder.common import async_wait_recording_done_without_instance
+from tests.common import async_fire_time_changed
+from tests.components.recorder.common import async_wait_recording_done
 
 
 async def test_exclude_attributes(
-    hass: HomeAssistant, enable_custom_integrations: None
+    hass: HomeAssistant, recorder_mock, enable_custom_integrations: None
 ):
     """Test attributes to be excluded."""
-    await async_init_recorder_component(hass)
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {"test": {}}})
 
     state = hass.states.get("input_text.test")
@@ -40,7 +39,7 @@ async def test_exclude_attributes(
     await hass.async_block_till_done()
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
     await hass.async_block_till_done()
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
 
     def _fetch_states() -> list[State]:
         with session_scope(hass=hass) as session:
