@@ -44,7 +44,7 @@ from .const import ALL_DOMAIN_EXCLUDE_ATTRS, JSON_DUMP
 # pylint: disable=invalid-name
 Base = declarative_base()
 
-SCHEMA_VERSION = 25
+SCHEMA_VERSION = 26
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -484,7 +484,7 @@ class StatisticsRuns(Base):  # type: ignore[misc,valid-type]
 
     __tablename__ = TABLE_STATISTICS_RUNS
     run_id = Column(Integer, Identity(), primary_key=True)
-    start = Column(DateTime(timezone=True))
+    start = Column(DateTime(timezone=True), index=True)
 
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
