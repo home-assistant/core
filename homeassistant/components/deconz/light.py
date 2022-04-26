@@ -5,6 +5,7 @@ from typing import Any, Generic, TypedDict, TypeVar
 
 from pydeconz.interfaces.lights import LightResources
 from pydeconz.models import ResourceType
+from pydeconz.models.event import EventType
 from pydeconz.models.group import Group
 from pydeconz.models.light import (
     ALERT_LONG,
@@ -110,39 +111,42 @@ async def async_setup_entry(
         )
     )
 
+    async_add_light()
+
     @callback
-    def async_add_group(groups: list[Group] | None = None) -> None:
+    def async_add_group(_: EventType, group_id: str) -> None:
         """Add group from deCONZ."""
-        if not gateway.option_allow_deconz_groups:
+        if (
+            not gateway.option_allow_deconz_groups
+            or (group := gateway.api.groups[group_id])
+            and not group.lights
+        ):
             return
 
-        entities = []
+        async_add_entities([DeconzGroup(group, gateway)])
 
-        if groups is None:
-            groups = list(gateway.api.groups.values())
+    config_entry.async_on_unload(
+        gateway.api.groups.subscribe(
+            async_add_group,
+            EventType.ADDED,
+        )
+    )
 
-        for group in groups:
-            if not group.lights:
-                continue
-
-            known_groups = set(gateway.entities[DOMAIN])
-            new_group = DeconzGroup(group, gateway)
-            if new_group.unique_id not in known_groups:
-                entities.append(new_group)
-
-        if entities:
-            async_add_entities(entities)
+    @callback
+    def async_load_groups() -> None:
+        """Load deCONZ groups."""
+        for group_id in gateway.api.groups:
+            async_add_group(EventType.ADDED, group_id)
 
     config_entry.async_on_unload(
         async_dispatcher_connect(
             hass,
-            gateway.signal_new_group,
-            async_add_group,
+            gateway.signal_reload_groups,
+            async_load_groups,
         )
     )
 
-    async_add_light()
-    async_add_group()
+    async_load_groups()
 
 
 class DeconzBaseLight(Generic[_L], DeconzDevice, LightEntity):
