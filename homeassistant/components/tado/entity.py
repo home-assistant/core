@@ -1,14 +1,12 @@
 """Base class for Tado entity."""
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
-from .const import (
-    CONFIGURATION_URL_DEVICE,
-    CONFIGURATION_URL_HOME,
-    CONFIGURATION_URL_ZONE,
-    DEFAULT_NAME,
-    DOMAIN,
-    TADO_HOME,
-    TADO_ZONE,
+from .const import DEFAULT_NAME, DOMAIN, TADO_HOME, TADO_ZONE
+
+CONFIGURATION_URL_HOME = "https://app.tado.com"
+CONFIGURATION_URL_ZONE = "https://app.tado.com/en/main/home/zoneV2/{}"
+CONFIGURATION_URL_DEVICE = (
+    "https://app.tado.com/en/main/settings/rooms-and-devices/device/{}"
 )
 
 
