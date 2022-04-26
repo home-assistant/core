@@ -61,18 +61,6 @@ class IntellifireClimate(IntellifireEntity, ClimateEntity):
     last_temp = 21
 
     @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Enable entity if configured with a thermostat."""
-        enabled = bool(self.coordinator.data.has_thermostat)
-        # Can i use a walrus operator here?
-        if not enabled:
-            LOGGER.info(
-                "Disabling climate sensor - IntelliFire device does not appear to have one"
-            )
-            return False
-        return True
-
-    @property
     def hvac_mode(self) -> str:
         """Return current hvac mode."""
         if self.coordinator.read_api.data.thermostat_on:
@@ -127,3 +115,13 @@ class IntellifireClimate(IntellifireEntity, ClimateEntity):
             await self.coordinator.control_api.turn_off_thermostat(
                 fireplace=self.coordinator.control_api.default_fireplace
             )
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Enable entity if it exists."""
+        enabled = bool(self.coordinator.data.has_thermostat)
+        if not enabled:
+            LOGGER.info(
+                "Disabling climate entity - IntelliFire device does not appear to have one"
+            )
+        return enabled
