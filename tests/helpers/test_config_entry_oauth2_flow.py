@@ -26,7 +26,7 @@ TOKEN_URL = "https://example.como/auth/token"
 @pytest.fixture
 async def local_impl(hass):
     """Local implementation."""
-    assert await setup.async_setup_component(hass, "http", {})
+    assert await setup.async_setup_component(hass, "auth", {})
     return config_entry_oauth2_flow.LocalOAuth2Implementation(
         hass, TEST_DOMAIN, CLIENT_ID, CLIENT_SECRET, AUTHORIZE_URL, TOKEN_URL
     )

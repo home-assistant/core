@@ -582,15 +582,10 @@ class SonosSpeaker:
         )
         await self.async_offline()
 
-    async def async_rebooted(self, soco: SoCo) -> None:
+    async def async_rebooted(self) -> None:
         """Handle a detected speaker reboot."""
-        _LOGGER.debug(
-            "%s rebooted, reconnecting with %s",
-            self.zone_name,
-            soco,
-        )
+        _LOGGER.debug("%s rebooted, reconnecting", self.zone_name)
         await self.async_offline()
-        self.soco = soco
         self.speaker_activity("reboot")
 
     #

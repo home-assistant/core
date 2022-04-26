@@ -75,7 +75,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -170,14 +170,14 @@ class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(minutes=update_interval),
         )
 
-        self._api_key = entry.data[CONF_API_KEY]
-        self._selected_stations = entry.data[CONF_STATIONS]
+        self._api_key: str = entry.data[CONF_API_KEY]
+        self._selected_stations: list[str] = entry.data[CONF_STATIONS]
         self._hass = hass
         self.stations: dict[str, dict] = {}
-        self.fuel_types = entry.data[CONF_FUEL_TYPES]
-        self.show_on_map = entry.options[CONF_SHOW_ON_MAP]
+        self.fuel_types: list[str] = entry.data[CONF_FUEL_TYPES]
+        self.show_on_map: bool = entry.options[CONF_SHOW_ON_MAP]
 
-    def setup(self):
+    def setup(self) -> bool:
         """Set up the tankerkoenig API."""
         for station_id in self._selected_stations:
             try:
@@ -205,7 +205,7 @@ class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator):
             )
         return True
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> dict:
         """Get the latest data from tankerkoenig.de."""
         _LOGGER.debug("Fetching new data from tankerkoenig.de")
         station_ids = list(self.stations)

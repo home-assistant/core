@@ -5,6 +5,8 @@ from datetime import datetime
 from typing import Any
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.tomorrowio.config_flow import (
     _get_config_schema,
@@ -17,6 +19,7 @@ from homeassistant.components.tomorrowio.const import (
     DEFAULT_TIMESTEP,
     DOMAIN,
 )
+from homeassistant.components.tomorrowio.sensor import TomorrowioSensorEntityDescription
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
 from homeassistant.core import HomeAssistant, State, callback
@@ -139,12 +142,12 @@ def check_sensor_state(hass: HomeAssistant, entity_name: str, value: str):
 async def test_v4_sensor(hass: HomeAssistant) -> None:
     """Test v4 sensor data."""
     await _setup(hass, V4_FIELDS, API_V4_ENTRY_DATA)
-    check_sensor_state(hass, O3, "94.46")
-    check_sensor_state(hass, CO, "0.63")
-    check_sensor_state(hass, NO2, "20.81")
-    check_sensor_state(hass, SO2, "4.47")
-    check_sensor_state(hass, PM25, "5.3")
-    check_sensor_state(hass, PM10, "20.13")
+    check_sensor_state(hass, O3, "91.35")
+    check_sensor_state(hass, CO, "0.0")
+    check_sensor_state(hass, NO2, "20.08")
+    check_sensor_state(hass, SO2, "4.32")
+    check_sensor_state(hass, PM25, "0.15")
+    check_sensor_state(hass, PM10, "0.57")
     check_sensor_state(hass, MEP_AQI, "23")
     check_sensor_state(hass, MEP_HEALTH_CONCERN, "good")
     check_sensor_state(hass, MEP_PRIMARY_POLLUTANT, "pm10")
@@ -155,12 +158,18 @@ async def test_v4_sensor(hass: HomeAssistant) -> None:
     check_sensor_state(hass, GRASS_POLLEN, "none")
     check_sensor_state(hass, WEED_POLLEN, "none")
     check_sensor_state(hass, TREE_POLLEN, "none")
-    check_sensor_state(hass, FEELS_LIKE, "38.5")
-    check_sensor_state(hass, DEW_POINT, "22.68")
-    check_sensor_state(hass, PRESSURE_SURFACE_LEVEL, "997.97")
-    check_sensor_state(hass, GHI, "0.0")
-    check_sensor_state(hass, CLOUD_BASE, "1.19")
+    check_sensor_state(hass, FEELS_LIKE, "101.3")
+    check_sensor_state(hass, DEW_POINT, "72.82")
+    check_sensor_state(hass, PRESSURE_SURFACE_LEVEL, "29.47")
+    check_sensor_state(hass, GHI, "0")
+    check_sensor_state(hass, CLOUD_BASE, "0.74")
     check_sensor_state(hass, CLOUD_COVER, "100")
-    check_sensor_state(hass, CLOUD_CEILING, "1.19")
-    check_sensor_state(hass, WIND_GUST, "5.65")
+    check_sensor_state(hass, CLOUD_CEILING, "0.74")
+    check_sensor_state(hass, WIND_GUST, "12.64")
     check_sensor_state(hass, PRECIPITATION_TYPE, "rain")
+
+
+async def test_entity_description() -> None:
+    """Test improper entity description raises."""
+    with pytest.raises(ValueError):
+        TomorrowioSensorEntityDescription("a", unit_imperial="b")

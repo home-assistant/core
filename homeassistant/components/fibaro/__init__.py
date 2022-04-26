@@ -5,7 +5,14 @@ from collections import defaultdict
 import logging
 from typing import Any
 
-from fiblary3.client.v4.client import Client as FibaroClient, StateHandler
+from fiblary3.client.v4.client import (
+    Client as FibaroClientV4,
+    StateHandler as StateHandlerV4,
+)
+from fiblary3.client.v5.client import (
+    Client as FibaroClientV5,
+    StateHandler as StateHandlerV5,
+)
 from fiblary3.common.exceptions import HTTPException
 import voluptuous as vol
 
@@ -118,20 +125,43 @@ CONFIG_SCHEMA = vol.Schema(
 class FibaroController:
     """Initiate Fibaro Controller Class."""
 
-    def __init__(self, config):
-        """Initialize the Fibaro controller."""
-        self._client = FibaroClient(
-            config[CONF_URL], config[CONF_USERNAME], config[CONF_PASSWORD]
-        )
+    def __init__(
+        self, config: dict[str, Any], serial_number: str | None = None
+    ) -> None:
+        """Initialize the Fibaro controller.
+
+        Version 4 is used for home center 2 (SN starts with HC2) and
+        home center lite (SN starts with HCL).
+
+        Version 5 is used for home center 3 (SN starts with HC3),
+        home center 3 lite (SN starts with HC3L) and yubii home (SN starts with YH).
+
+        Here the serial number is optional and we choose then the V4 client. You
+        should do that only when you use the FibaroController for login test as only
+        the login and info API's are equal throughout the different versions.
+        """
+        if (
+            serial_number is None
+            or serial_number.upper().startswith("HC2")
+            or serial_number.upper().startswith("HCL")
+        ):
+            self._client = FibaroClientV4(
+                config[CONF_URL], config[CONF_USERNAME], config[CONF_PASSWORD]
+            )
+        else:
+            self._client = FibaroClientV5(
+                config[CONF_URL], config[CONF_USERNAME], config[CONF_PASSWORD]
+            )
+
         self._scene_map = None
         # Whether to import devices from plugins
         self._import_plugins = config[CONF_IMPORT_PLUGINS]
         self._room_map = None  # Mapping roomId to room object
         self._device_map = None  # Mapping deviceId to device object
-        self.fibaro_devices: defaultdict[Platform, list] = defaultdict(
+        self.fibaro_devices: dict[Platform, list] = defaultdict(
             list
         )  # List of devices by entity platform
-        self._callbacks = {}  # Update value callbacks by deviceId
+        self._callbacks: dict[Any, Any] = {}  # Update value callbacks by deviceId
         self._state_handler = None  # Fiblary's StateHandler object
         self.hub_serial = None  # Unique serial number of the hub
         self.name = None  # The friendly name of the hub
@@ -176,7 +206,10 @@ class FibaroController:
 
     def enable_state_handler(self):
         """Start StateHandler thread for monitoring updates."""
-        self._state_handler = StateHandler(self._client, self._on_state_change)
+        if isinstance(self._client, FibaroClientV4):
+            self._state_handler = StateHandlerV4(self._client, self._on_state_change)
+        else:
+            self._state_handler = StateHandlerV5(self._client, self._on_state_change)
 
     def disable_state_handler(self):
         """Stop StateHandler thread used for monitoring updates."""
@@ -304,7 +337,6 @@ class FibaroController:
         """Read and process the device list."""
         devices = self._client.devices.list()
         self._device_map = {}
-        self.fibaro_devices = defaultdict(list)
         last_climate_parent = None
         last_endpoint = None
         for device in devices:
@@ -405,17 +437,22 @@ async def async_setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
     return True
 
 
-def _init_controller(data: dict[str, Any]) -> FibaroController:
+def _init_controller(data: dict[str, Any], serial_number: str) -> FibaroController:
     """Validate the user input allows us to connect to fibaro."""
-    controller = FibaroController(data)
+    controller = FibaroController(data, serial_number)
     controller.connect_with_error_handling()
     return controller
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up the Fibaro Component."""
+    """Set up the Fibaro Component.
+
+    The unique id of the config entry is the serial number of the home center.
+    """
     try:
-        controller = await hass.async_add_executor_job(_init_controller, entry.data)
+        controller = await hass.async_add_executor_job(
+            _init_controller, entry.data, entry.unique_id
+        )
     except FibaroConnectFailed as connect_ex:
         raise ConfigEntryNotReady(
             f"Could not connect to controller at {entry.data[CONF_URL]}"

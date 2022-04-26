@@ -89,6 +89,7 @@ async def test_get_triggers(hass, aioclient_mock):
             CONF_PLATFORM: "device",
             CONF_TYPE: device_trigger.CONF_SHORT_PRESS,
             CONF_SUBTYPE: device_trigger.CONF_TURN_ON,
+            "metadata": {},
         },
         {
             CONF_DEVICE_ID: device.id,
@@ -96,6 +97,7 @@ async def test_get_triggers(hass, aioclient_mock):
             CONF_PLATFORM: "device",
             CONF_TYPE: device_trigger.CONF_LONG_PRESS,
             CONF_SUBTYPE: device_trigger.CONF_TURN_ON,
+            "metadata": {},
         },
         {
             CONF_DEVICE_ID: device.id,
@@ -103,6 +105,7 @@ async def test_get_triggers(hass, aioclient_mock):
             CONF_PLATFORM: "device",
             CONF_TYPE: device_trigger.CONF_LONG_RELEASE,
             CONF_SUBTYPE: device_trigger.CONF_TURN_ON,
+            "metadata": {},
         },
         {
             CONF_DEVICE_ID: device.id,
@@ -110,6 +113,7 @@ async def test_get_triggers(hass, aioclient_mock):
             CONF_PLATFORM: "device",
             CONF_TYPE: device_trigger.CONF_SHORT_PRESS,
             CONF_SUBTYPE: device_trigger.CONF_TURN_OFF,
+            "metadata": {},
         },
         {
             CONF_DEVICE_ID: device.id,
@@ -117,6 +121,7 @@ async def test_get_triggers(hass, aioclient_mock):
             CONF_PLATFORM: "device",
             CONF_TYPE: device_trigger.CONF_LONG_PRESS,
             CONF_SUBTYPE: device_trigger.CONF_TURN_OFF,
+            "metadata": {},
         },
         {
             CONF_DEVICE_ID: device.id,
@@ -124,6 +129,7 @@ async def test_get_triggers(hass, aioclient_mock):
             CONF_PLATFORM: "device",
             CONF_TYPE: device_trigger.CONF_LONG_RELEASE,
             CONF_SUBTYPE: device_trigger.CONF_TURN_OFF,
+            "metadata": {},
         },
         {
             CONF_DEVICE_ID: device.id,
@@ -131,6 +137,7 @@ async def test_get_triggers(hass, aioclient_mock):
             ATTR_ENTITY_ID: "sensor.tradfri_on_off_switch_battery",
             CONF_PLATFORM: "device",
             CONF_TYPE: ATTR_BATTERY_LEVEL,
+            "metadata": {"secondary": True},
         },
     ]
 
@@ -188,6 +195,7 @@ async def test_get_triggers_for_alarm_event(hass, aioclient_mock):
             ATTR_ENTITY_ID: "binary_sensor.keypad_low_battery",
             CONF_PLATFORM: "device",
             CONF_TYPE: CONF_BAT_LOW,
+            "metadata": {"secondary": True},
         },
         {
             CONF_DEVICE_ID: device.id,
@@ -195,6 +203,7 @@ async def test_get_triggers_for_alarm_event(hass, aioclient_mock):
             ATTR_ENTITY_ID: "binary_sensor.keypad_low_battery",
             CONF_PLATFORM: "device",
             CONF_TYPE: CONF_NOT_BAT_LOW,
+            "metadata": {"secondary": True},
         },
         {
             CONF_DEVICE_ID: device.id,
@@ -202,6 +211,7 @@ async def test_get_triggers_for_alarm_event(hass, aioclient_mock):
             ATTR_ENTITY_ID: "binary_sensor.keypad_tampered",
             CONF_PLATFORM: "device",
             CONF_TYPE: CONF_TAMPERED,
+            "metadata": {"secondary": True},
         },
         {
             CONF_DEVICE_ID: device.id,
@@ -209,6 +219,7 @@ async def test_get_triggers_for_alarm_event(hass, aioclient_mock):
             ATTR_ENTITY_ID: "binary_sensor.keypad_tampered",
             CONF_PLATFORM: "device",
             CONF_TYPE: CONF_NOT_TAMPERED,
+            "metadata": {"secondary": True},
         },
         {
             CONF_DEVICE_ID: device.id,
@@ -216,6 +227,7 @@ async def test_get_triggers_for_alarm_event(hass, aioclient_mock):
             ATTR_ENTITY_ID: "sensor.keypad_battery",
             CONF_PLATFORM: "device",
             CONF_TYPE: ATTR_BATTERY_LEVEL,
+            "metadata": {"secondary": True},
         },
     ]
 

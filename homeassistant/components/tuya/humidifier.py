@@ -6,10 +6,10 @@ from dataclasses import dataclass
 from tuya_iot import TuyaDevice, TuyaDeviceManager
 
 from homeassistant.components.humidifier import (
-    SUPPORT_MODES,
     HumidifierDeviceClass,
     HumidifierEntity,
     HumidifierEntityDescription,
+    HumidifierEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -112,7 +112,7 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
         if enum_type := self.find_dpcode(
             DPCode.MODE, dptype=DPType.ENUM, prefer_function=True
         ):
-            self._attr_supported_features |= SUPPORT_MODES
+            self._attr_supported_features |= HumidifierEntityFeature.MODES
             self._attr_available_modes = enum_type.range
 
     @property

@@ -25,6 +25,7 @@ from homeassistant.components.media_player import (
     BrowseError,
     BrowseMedia,
     MediaPlayerEntity,
+    MediaPlayerEntityFeature,
     async_process_play_media_url,
 )
 from homeassistant.components.media_player.const import (
@@ -33,18 +34,6 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MOVIE,
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_TVSHOW,
-    SUPPORT_BROWSE_MEDIA,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SEEK,
-    SUPPORT_STOP,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -82,8 +71,6 @@ _LOGGER = logging.getLogger(__name__)
 APP_IDS_UNRELIABLE_MEDIA_INFO = ("Netflix",)
 
 CAST_SPLASH = "https://www.home-assistant.io/images/cast/splash.png"
-
-SUPPORT_CAST = SUPPORT_PLAY_MEDIA | SUPPORT_TURN_OFF
 
 ENTITY_SCHEMA = vol.All(
     vol.Schema(
@@ -469,7 +456,8 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
 
         # The only way we can turn the Chromecast is on is by launching an app
         if self._chromecast.cast_type == pychromecast.const.CAST_TYPE_CHROMECAST:
-            self._chromecast.play_media(CAST_SPLASH, "image/png")
+            app_data = {"media_id": CAST_SPLASH, "media_type": "image/png"}
+            quick_play(self._chromecast, "default_media_receiver", app_data)
         else:
             self._chromecast.start_app(pychromecast.config.APP_MEDIA_RECEIVER)
 
@@ -805,30 +793,38 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        support = SUPPORT_CAST
+        support = (
+            MediaPlayerEntityFeature.PLAY_MEDIA
+            | MediaPlayerEntityFeature.TURN_OFF
+            | MediaPlayerEntityFeature.TURN_ON
+        )
         media_status = self._media_status()[0]
-
-        if self._chromecast and self._chromecast.cast_type in (
-            pychromecast.const.CAST_TYPE_CHROMECAST,
-            pychromecast.const.CAST_TYPE_AUDIO,
-        ):
-            support |= SUPPORT_TURN_ON
 
         if (
             self.cast_status
             and self.cast_status.volume_control_type != VOLUME_CONTROL_TYPE_FIXED
         ):
-            support |= SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET
+            support |= (
+                MediaPlayerEntityFeature.VOLUME_MUTE
+                | MediaPlayerEntityFeature.VOLUME_SET
+            )
 
         if media_status and self.app_id != CAST_APP_ID_HOMEASSISTANT_LOVELACE:
-            support |= SUPPORT_PAUSE | SUPPORT_PLAY | SUPPORT_STOP
+            support |= (
+                MediaPlayerEntityFeature.PAUSE
+                | MediaPlayerEntityFeature.PLAY
+                | MediaPlayerEntityFeature.STOP
+            )
             if media_status.supports_queue_next:
-                support |= SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK
+                support |= (
+                    MediaPlayerEntityFeature.PREVIOUS_TRACK
+                    | MediaPlayerEntityFeature.NEXT_TRACK
+                )
             if media_status.supports_seek:
-                support |= SUPPORT_SEEK
+                support |= MediaPlayerEntityFeature.SEEK
 
         if "media_source" in self.hass.config.components:
-            support |= SUPPORT_BROWSE_MEDIA
+            support |= MediaPlayerEntityFeature.BROWSE_MEDIA
 
         return support
 

@@ -13,6 +13,7 @@ from homeassistant.components import siren
 from homeassistant.components.siren import (
     TURN_ON_SCHEMA,
     SirenEntity,
+    SirenEntityFeature,
     process_turn_on_params,
 )
 from homeassistant.components.siren.const import (
@@ -20,11 +21,6 @@ from homeassistant.components.siren.const import (
     ATTR_DURATION,
     ATTR_TONE,
     ATTR_VOLUME_LEVEL,
-    SUPPORT_DURATION,
-    SUPPORT_TONES,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_SET,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -103,12 +99,12 @@ MQTT_SIREN_ATTRIBUTES_BLOCKED = frozenset(
     }
 )
 
-SUPPORTED_BASE = SUPPORT_TURN_OFF | SUPPORT_TURN_ON
+SUPPORTED_BASE = SirenEntityFeature.TURN_OFF | SirenEntityFeature.TURN_ON
 
 SUPPORTED_ATTRIBUTES = {
-    ATTR_DURATION: SUPPORT_DURATION,
-    ATTR_TONE: SUPPORT_TONES,
-    ATTR_VOLUME_LEVEL: SUPPORT_VOLUME_SET,
+    ATTR_DURATION: SirenEntityFeature.DURATION,
+    ATTR_TONE: SirenEntityFeature.TONES,
+    ATTR_VOLUME_LEVEL: SirenEntityFeature.VOLUME_SET,
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -182,16 +178,16 @@ class MqttSiren(MqttEntity, SirenEntity):
         self._state_off = state_off if state_off else config[CONF_PAYLOAD_OFF]
 
         if config[CONF_SUPPORT_DURATION]:
-            self._supported_features |= SUPPORT_DURATION
+            self._supported_features |= SirenEntityFeature.DURATION
             self._attr_extra_state_attributes[ATTR_DURATION] = None
 
         if config.get(CONF_AVAILABLE_TONES):
-            self._supported_features |= SUPPORT_TONES
+            self._supported_features |= SirenEntityFeature.TONES
             self._attr_available_tones = config[CONF_AVAILABLE_TONES]
             self._attr_extra_state_attributes[ATTR_TONE] = None
 
         if config[CONF_SUPPORT_VOLUME_SET]:
-            self._supported_features |= SUPPORT_VOLUME_SET
+            self._supported_features |= SirenEntityFeature.VOLUME_SET
             self._attr_extra_state_attributes[ATTR_VOLUME_LEVEL] = None
 
         self._optimistic = config[CONF_OPTIMISTIC] or CONF_STATE_TOPIC not in config

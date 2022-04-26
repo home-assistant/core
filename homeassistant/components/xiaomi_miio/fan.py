@@ -17,13 +17,7 @@ from miio.integrations.fan.zhimi.zhimi_miot import (
 )
 import voluptuous as vol
 
-from homeassistant.components.fan import (
-    SUPPORT_DIRECTION,
-    SUPPORT_OSCILLATE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_SET_SPEED,
-    FanEntity,
-)
+from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, CONF_MODEL
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -289,13 +283,7 @@ class XiaomiGenericDevice(XiaomiCoordinatedMiioEntity, FanEntity):
         self._fan_level = None
         self._state_attrs = {}
         self._device_features = 0
-        self._supported_features = 0
         self._preset_modes = []
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return self._supported_features
 
     @property
     @abstractmethod
@@ -412,37 +400,39 @@ class XiaomiAirPurifier(XiaomiGenericAirPurifier):
             self._device_features = FEATURE_FLAGS_AIRPURIFIER_PRO
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_PRO
             self._preset_modes = PRESET_MODES_AIRPURIFIER_PRO
-            self._supported_features = SUPPORT_PRESET_MODE
+            self._attr_supported_features = FanEntityFeature.PRESET_MODE
             self._speed_count = 1
         elif self._model == MODEL_AIRPURIFIER_PRO_V7:
             self._device_features = FEATURE_FLAGS_AIRPURIFIER_PRO_V7
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_PRO_V7
             self._preset_modes = PRESET_MODES_AIRPURIFIER_PRO_V7
-            self._supported_features = SUPPORT_PRESET_MODE
+            self._attr_supported_features = FanEntityFeature.PRESET_MODE
             self._speed_count = 1
         elif self._model in [MODEL_AIRPURIFIER_2S, MODEL_AIRPURIFIER_2H]:
             self._device_features = FEATURE_FLAGS_AIRPURIFIER_2S
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_COMMON
             self._preset_modes = PRESET_MODES_AIRPURIFIER_2S
-            self._supported_features = SUPPORT_PRESET_MODE
+            self._attr_supported_features = FanEntityFeature.PRESET_MODE
             self._speed_count = 1
         elif self._model in MODELS_PURIFIER_MIOT:
             self._device_features = FEATURE_FLAGS_AIRPURIFIER_MIOT
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_MIOT
             self._preset_modes = PRESET_MODES_AIRPURIFIER_MIOT
-            self._supported_features = SUPPORT_SET_SPEED | SUPPORT_PRESET_MODE
+            self._attr_supported_features = (
+                FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE
+            )
             self._speed_count = 3
         elif self._model == MODEL_AIRPURIFIER_V3:
             self._device_features = FEATURE_FLAGS_AIRPURIFIER_V3
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_V3
             self._preset_modes = PRESET_MODES_AIRPURIFIER_V3
-            self._supported_features = SUPPORT_PRESET_MODE
+            self._attr_supported_features = FanEntityFeature.PRESET_MODE
             self._speed_count = 1
         else:
             self._device_features = FEATURE_FLAGS_AIRPURIFIER_MIIO
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER
             self._preset_modes = PRESET_MODES_AIRPURIFIER
-            self._supported_features = SUPPORT_PRESET_MODE
+            self._attr_supported_features = FanEntityFeature.PRESET_MODE
             self._speed_count = 1
 
         self._state = self.coordinator.data.is_on
@@ -577,7 +567,7 @@ class XiaomiAirPurifierMB4(XiaomiGenericAirPurifier):
 
         self._device_features = FEATURE_FLAGS_AIRPURIFIER_3C
         self._preset_modes = PRESET_MODES_AIRPURIFIER_3C
-        self._supported_features = SUPPORT_PRESET_MODE
+        self._attr_supported_features = FanEntityFeature.PRESET_MODE
 
         self._state = self.coordinator.data.is_on
         self._mode = self.coordinator.data.mode.value
@@ -633,7 +623,9 @@ class XiaomiAirFresh(XiaomiGenericAirPurifier):
         self._available_attributes = AVAILABLE_ATTRIBUTES_AIRFRESH
         self._speed_count = 4
         self._preset_modes = PRESET_MODES_AIRFRESH
-        self._supported_features = SUPPORT_SET_SPEED | SUPPORT_PRESET_MODE
+        self._attr_supported_features = (
+            FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE
+        )
 
         self._state = self.coordinator.data.is_on
         self._state_attrs.update(
@@ -727,7 +719,9 @@ class XiaomiAirFreshA1(XiaomiGenericAirPurifier):
         self._favorite_speed = None
         self._device_features = FEATURE_FLAGS_AIRFRESH_A1
         self._preset_modes = PRESET_MODES_AIRFRESH_A1
-        self._supported_features = SUPPORT_SET_SPEED | SUPPORT_PRESET_MODE
+        self._attr_supported_features = (
+            FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE
+        )
 
         self._state = self.coordinator.data.is_on
         self._mode = self.coordinator.data.mode.value
@@ -820,11 +814,13 @@ class XiaomiGenericFan(XiaomiGenericDevice):
             self._device_features = FEATURE_FLAGS_FAN_P10_P11
         else:
             self._device_features = FEATURE_FLAGS_FAN
-        self._supported_features = (
-            SUPPORT_SET_SPEED | SUPPORT_OSCILLATE | SUPPORT_PRESET_MODE
+        self._attr_supported_features = (
+            FanEntityFeature.SET_SPEED
+            | FanEntityFeature.OSCILLATE
+            | FanEntityFeature.PRESET_MODE
         )
         if self._model != MODEL_FAN_1C:
-            self._supported_features |= SUPPORT_DIRECTION
+            self._attr_supported_features |= FanEntityFeature.DIRECTION
         self._preset_mode = None
         self._oscillating = None
         self._percentage = None

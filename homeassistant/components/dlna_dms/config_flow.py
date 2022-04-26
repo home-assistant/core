@@ -77,10 +77,16 @@ class DlnaDmsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         discovery_service_list = discovery_info.upnp.get(ssdp.ATTR_UPNP_SERVICE_LIST)
         if not discovery_service_list:
             return self.async_abort(reason="not_dms")
-        discovery_service_ids = {
-            service.get("serviceId")
-            for service in discovery_service_list.get("service") or []
-        }
+
+        services = discovery_service_list.get("service")
+        if not services:
+            discovery_service_ids: set[str] = set()
+        elif isinstance(services, list):
+            discovery_service_ids = {service.get("serviceId") for service in services}
+        else:
+            # Only one service defined (etree_to_dict failed to make a list)
+            discovery_service_ids = {services.get("serviceId")}
+
         if not DmsDevice.SERVICE_IDS.issubset(discovery_service_ids):
             return self.async_abort(reason="not_dms")
 

@@ -38,7 +38,7 @@ from homeassistant.core import Context, Event, EventOrigin, State, split_entity_
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 import homeassistant.util.dt as dt_util
 
-from .const import JSON_DUMP
+from .const import ALL_DOMAIN_EXCLUDE_ATTRS, JSON_DUMP
 
 # SQLAlchemy Schema
 # pylint: disable=invalid-name
@@ -269,11 +269,12 @@ class StateAttributes(Base):  # type: ignore[misc,valid-type]
         if state is None:
             return "{}"
         domain = split_entity_id(state.entity_id)[0]
-        if exclude_attrs := exclude_attrs_by_domain.get(domain):
-            return JSON_DUMP(
-                {k: v for k, v in state.attributes.items() if k not in exclude_attrs}
-            )
-        return JSON_DUMP(state.attributes)
+        exclude_attrs = (
+            exclude_attrs_by_domain.get(domain, set()) | ALL_DOMAIN_EXCLUDE_ATTRS
+        )
+        return JSON_DUMP(
+            {k: v for k, v in state.attributes.items() if k not in exclude_attrs}
+        )
 
     @staticmethod
     def hash_shared_attrs(shared_attrs: str) -> int:
@@ -618,7 +619,10 @@ class LazyState(State):
     def last_updated(self) -> datetime:  # type: ignore[override]
         """Last updated datetime."""
         if self._last_updated is None:
-            self._last_updated = process_timestamp(self._row.last_updated)
+            if (last_updated := self._row.last_updated) is not None:
+                self._last_updated = process_timestamp(last_updated)
+            else:
+                self._last_updated = self.last_changed
         return self._last_updated
 
     @last_updated.setter
@@ -637,7 +641,10 @@ class LazyState(State):
             last_changed_isoformat = process_timestamp_to_utc_isoformat(
                 self._row.last_changed
             )
-            if self._row.last_changed == self._row.last_updated:
+            if (
+                self._row.last_updated is None
+                or self._row.last_changed == self._row.last_updated
+            ):
                 last_updated_isoformat = last_changed_isoformat
             else:
                 last_updated_isoformat = process_timestamp_to_utc_isoformat(

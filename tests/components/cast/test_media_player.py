@@ -800,10 +800,12 @@ async def test_entity_cast_status(hass: HomeAssistant):
             | SUPPORT_PLAY_MEDIA
             | SUPPORT_STOP
             | SUPPORT_TURN_OFF
+            | SUPPORT_TURN_ON
             | SUPPORT_VOLUME_MUTE
             | SUPPORT_VOLUME_SET,
             SUPPORT_PLAY_MEDIA
             | SUPPORT_TURN_OFF
+            | SUPPORT_TURN_ON
             | SUPPORT_VOLUME_MUTE
             | SUPPORT_VOLUME_SET,
         ),
@@ -1157,7 +1159,7 @@ async def test_entity_media_content_type(hass: HomeAssistant):
     assert state.attributes.get("media_content_type") == "movie"
 
 
-async def test_entity_control(hass: HomeAssistant):
+async def test_entity_control(hass: HomeAssistant, quick_play_mock):
     """Test various device and media controls."""
     entity_id = "media_player.speaker"
     reg = er.async_get(hass)
@@ -1200,8 +1202,13 @@ async def test_entity_control(hass: HomeAssistant):
 
     # Turn on
     await common.async_turn_on(hass, entity_id)
-    chromecast.play_media.assert_called_once_with(
-        "https://www.home-assistant.io/images/cast/splash.png", "image/png"
+    quick_play_mock.assert_called_once_with(
+        chromecast,
+        "default_media_receiver",
+        {
+            "media_id": "https://www.home-assistant.io/images/cast/splash.png",
+            "media_type": "image/png",
+        },
     )
     chromecast.quit_app.reset_mock()
 
@@ -1381,7 +1388,11 @@ async def test_entity_media_states_lovelace_app(hass: HomeAssistant):
     state = hass.states.get(entity_id)
     assert state.state == "playing"
     assert state.attributes.get("supported_features") == (
-        SUPPORT_PLAY_MEDIA | SUPPORT_TURN_OFF | SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET
+        SUPPORT_PLAY_MEDIA
+        | SUPPORT_TURN_OFF
+        | SUPPORT_TURN_ON
+        | SUPPORT_VOLUME_MUTE
+        | SUPPORT_VOLUME_SET
     )
 
     media_status = MagicMock(images=None)

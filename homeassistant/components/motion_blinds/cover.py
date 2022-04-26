@@ -58,6 +58,7 @@ TILT_DEVICE_MAP = {
     BlindType.VenetianBlind: CoverDeviceClass.BLIND,
     BlindType.ShangriLaBlind: CoverDeviceClass.BLIND,
     BlindType.DoubleRoller: CoverDeviceClass.SHADE,
+    BlindType.DualShade: CoverDeviceClass.SHADE,
     BlindType.VerticalBlind: CoverDeviceClass.BLIND,
     BlindType.VerticalBlindLeft: CoverDeviceClass.BLIND,
     BlindType.VerticalBlindRight: CoverDeviceClass.BLIND,
@@ -155,7 +156,7 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         SERVICE_SET_ABSOLUTE_POSITION,
         SET_ABSOLUTE_POSITION_SCHEMA,
-        SERVICE_SET_ABSOLUTE_POSITION,
+        "async_set_absolute_position",
     )
 
 

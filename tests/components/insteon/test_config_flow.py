@@ -2,7 +2,10 @@
 
 from unittest.mock import patch
 
+import voluptuous_serialize
+
 from homeassistant import config_entries, data_entry_flow
+from homeassistant.components import dhcp, usb
 from homeassistant.components.insteon.config_flow import (
     HUB1,
     HUB2,
@@ -36,6 +39,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
+import homeassistant.helpers.config_validation as cv
 
 from .const import (
     MOCK_HOSTNAME,
@@ -594,3 +598,101 @@ async def test_options_override_bad_data(hass: HomeAssistant):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {"base": "input_error"}
+
+
+async def test_discovery_via_usb(hass):
+    """Test usb flow."""
+    discovery_info = usb.UsbServiceInfo(
+        device="/dev/ttyINSTEON",
+        pid="AAAA",
+        vid="AAAA",
+        serial_number="1234",
+        description="insteon radio",
+        manufacturer="test",
+    )
+    result = await hass.config_entries.flow.async_init(
+        "insteon", context={"source": config_entries.SOURCE_USB}, data=discovery_info
+    )
+    await hass.async_block_till_done()
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "confirm_usb"
+
+    with patch("homeassistant.components.insteon.config_flow.async_connect"), patch(
+        "homeassistant.components.insteon.async_setup_entry", return_value=True
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result2["data"] == {"device": "/dev/ttyINSTEON"}
+
+
+async def test_discovery_via_usb_already_setup(hass):
+    """Test usb flow -- already setup."""
+
+    MockConfigEntry(
+        domain=DOMAIN, data={CONF_DEVICE: {CONF_DEVICE: "/dev/ttyUSB1"}}
+    ).add_to_hass(hass)
+
+    discovery_info = usb.UsbServiceInfo(
+        device="/dev/ttyINSTEON",
+        pid="AAAA",
+        vid="AAAA",
+        serial_number="1234",
+        description="insteon radio",
+        manufacturer="test",
+    )
+    result = await hass.config_entries.flow.async_init(
+        "insteon", context={"source": config_entries.SOURCE_USB}, data=discovery_info
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "single_instance_allowed"
+
+
+async def test_discovery_via_dhcp_hubv1(hass):
+    """Test usb flow."""
+    await _test_dhcp(hass, HUB1)
+
+
+async def test_discovery_via_dhcp_hubv2(hass):
+    """Test usb flow."""
+    await _test_dhcp(hass, HUB2)
+
+
+async def _test_dhcp(hass, modem_type):
+    """Test the dhcp discovery for a moddem type."""
+    discovery_info = dhcp.DhcpServiceInfo(
+        ip="11.22.33.44", hostname="", macaddress="00:0e:f3:aa:bb:cc"
+    )
+    result = await hass.config_entries.flow.async_init(
+        "insteon",
+        context={"source": config_entries.SOURCE_DHCP},
+        data=discovery_info,
+    )
+    await hass.async_block_till_done()
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+
+    with patch("homeassistant.components.insteon.config_flow.async_connect"), patch(
+        "homeassistant.components.insteon.async_setup_entry", return_value=True
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={"modem_type": modem_type}
+        )
+        await hass.async_block_till_done()
+
+        assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "user"
+
+        schema = voluptuous_serialize.convert(
+            result2["data_schema"],
+            custom_serializer=cv.custom_serializer,
+        )
+        for field in schema:
+            if field["name"] == "host":
+                assert field.get("default") == "11.22.33.44"
+                break

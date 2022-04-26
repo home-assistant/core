@@ -3,7 +3,7 @@ import json
 
 import requests_mock
 
-from homeassistant.components.wallbox import CONF_MAX_CHARGING_CURRENT_KEY
+from homeassistant.components.wallbox import CHARGER_MAX_CHARGING_CURRENT_KEY
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -16,22 +16,16 @@ from tests.components.wallbox import (
     setup_integration_connection_error,
     setup_integration_read_only,
 )
-from tests.components.wallbox.const import (
-    CONF_ERROR,
-    CONF_JWT,
-    CONF_STATUS,
-    CONF_TTL,
-    CONF_USER_ID,
-)
+from tests.components.wallbox.const import ERROR, JWT, STATUS, TTL, USER_ID
 
 authorisation_response = json.loads(
     json.dumps(
         {
-            CONF_JWT: "fakekeyhere",
-            CONF_USER_ID: 12345,
-            CONF_TTL: 145656758,
-            CONF_ERROR: "false",
-            CONF_STATUS: 200,
+            JWT: "fakekeyhere",
+            USER_ID: 12345,
+            TTL: 145656758,
+            ERROR: "false",
+            STATUS: 200,
         }
     )
 )
@@ -71,7 +65,7 @@ async def test_wallbox_refresh_failed_invalid_auth(hass: HomeAssistant) -> None:
         )
         mock_request.put(
             "https://api.wall-box.com/v2/charger/12345",
-            json=json.loads(json.dumps({CONF_MAX_CHARGING_CURRENT_KEY: 20})),
+            json=json.loads(json.dumps({CHARGER_MAX_CHARGING_CURRENT_KEY: 20})),
             status_code=403,
         )
 
