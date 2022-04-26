@@ -12,10 +12,10 @@ import homeassistant.util.dt as dt_util
 from .models import RecorderRuns, process_timestamp
 
 
-def _find_start_of_run(
+def _find_recorder_run_for_start_time(
     run_history: _RecorderRunsHistory, start: datetime
 ) -> RecorderRuns | None:
-    """Find the start of a run from a _RecorderRunsHistory."""
+    """Find the recorder run for a start time in _RecorderRunsHistory."""
     run_timestamps = run_history.run_timestamps
     runs_by_timestamp = run_history.runs_by_timestamp
 
@@ -74,7 +74,7 @@ class RunHistory:
         """
         if start >= self.recording_start:
             return self.current
-        return _find_start_of_run(self._run_history, start)
+        return _find_recorder_run_for_start_time(self._run_history, start)
 
     def start(self, session: Session) -> None:
         """Start a new run.
