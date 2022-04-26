@@ -70,6 +70,9 @@ class AirzoneSystemEntity(AirzoneEntity):
             "sw_version": self.get_airzone_value(AZD_FIRMWARE),
             "via_device": (DOMAIN, f"{entry.entry_id}_ws"),
         }
+        self._attr_unique_id = (
+            entry.entry_id if entry.unique_id is None else entry.unique_id
+        )
 
     def get_airzone_value(self, key) -> Any:
         """Return system value by key."""
