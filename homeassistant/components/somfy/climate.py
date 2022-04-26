@@ -10,14 +10,13 @@ from pymfy.api.devices.thermostat import (
     Thermostat,
 )
 
-from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
-    HVAC_MODE_AUTO,
-    HVAC_MODE_COOL,
-    HVAC_MODE_HEAT,
     PRESET_AWAY,
     PRESET_HOME,
     PRESET_SLEEP,
+    ClimateEntityFeature,
+    HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
@@ -43,7 +42,7 @@ PRESETS_MAPPING = {
 }
 REVERSE_PRESET_MAPPING = {v: k for k, v in PRESETS_MAPPING.items()}
 
-HVAC_MODES_MAPPING = {HvacState.COOL: HVAC_MODE_COOL, HvacState.HEAT: HVAC_MODE_HEAT}
+HVAC_MODES_MAPPING = {HvacState.COOL: HVACMode.COOL, HvacState.HEAT: HVACMode.HEAT}
 
 
 async def async_setup_entry(
@@ -119,25 +118,25 @@ class SomfyClimate(SomfyEntity, ClimateEntity):
         return self._climate.get_humidity()
 
     @property
-    def hvac_mode(self) -> str:
+    def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode."""
         if self._climate.get_regulation_state() == RegulationState.TIMETABLE:
-            return HVAC_MODE_AUTO
+            return HVACMode.AUTO
         return HVAC_MODES_MAPPING[self._climate.get_hvac_state()]
 
     @property
-    def hvac_modes(self) -> list[str]:
+    def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available hvac operation modes.
 
         HEAT and COOL mode are exclusive. End user has to enable a mode manually within the Somfy application.
         So only one mode can be displayed. Auto mode is a scheduler.
         """
         hvac_state = HVAC_MODES_MAPPING[self._climate.get_hvac_state()]
-        return [HVAC_MODE_AUTO, hvac_state]
+        return [HVACMode.AUTO, hvac_state]
 
-    def set_hvac_mode(self, hvac_mode: str) -> None:
+    def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
-        if hvac_mode == HVAC_MODE_AUTO:
+        if hvac_mode == HVACMode.AUTO:
             self._climate.cancel_target()
         else:
             self._climate.set_target(
