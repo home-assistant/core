@@ -1,4 +1,9 @@
-"""Fido2 WebAuthn authentication and registration module."""
+"""
+Fido2 WebAuthn authentication and registration module.
+
+In order to use this module a correctly configured https reverse proxy and dns record must be set up.
+this is because only https sites are allowed to use WebAuthn.
+"""
 from __future__ import annotations
 
 import asyncio
@@ -40,6 +45,23 @@ STORAGE_CREDENTIALS = "fido2_credentials"
 INPUT_FIELD_REGISTRATION_ANS = "fido2_registration_answer"
 INPUT_FIELD_LOGIN_ATTESTATION = "fido2_attestation"
 
+registration_attestation_schema = vol.Schema(
+    {
+        vol.Required("result"): bool,
+        vol.Required("clientData"): bytes,
+        vol.Required("attestationObject"): bytes,
+    }
+)
+login_decoded_schema = vol.Schema(
+    {
+        vol.Required("result"): bool,
+        vol.Required("credentialId"): bytes,
+        vol.Required("clientData"): bytes,
+        vol.Required("authenticatorData"): bytes,
+        vol.Required("signature"): bytes,
+    }
+)
+
 
 class Fido2Wrapper:
     """Wrapper for fido2 server."""
@@ -70,12 +92,15 @@ class Fido2Wrapper:
         )
 
     @staticmethod
-    def _sanitize_object(data: dict) -> dict:
+    def _sanitize_object(data: Any) -> Any:
         """
         Sanitize data for CBOR encoding.
 
         This is needed because cbor does not support None.
         """
+        if isinstance(data, dict):
+            return data
+
         keys = list(data.keys())
         if "_nones" in keys:
             raise ValueError()
@@ -89,12 +114,15 @@ class Fido2Wrapper:
         return data
 
     @staticmethod
-    def _desanitize_object(data: dict) -> dict:
+    def _desanitize_object(data: Any) -> Any:
         """
         Desanitize data from CBOR encoding.
 
         This is needed because cbor does not support None.
         """
+        if isinstance(data, dict):
+            return data
+
         keys = list(data.keys())
         if "_nones" not in keys:
             return data
@@ -169,8 +197,6 @@ class Fido2Wrapper:
         client_data = self.fido.client.ClientData(c_data)
         auth_data = self.fido.ctap2.AuthenticatorData(a_data)
         try:
-            if "user_verification" not in state:
-                state["user_verification"] = None
             self.fido2server.authenticate_complete(
                 state,
                 self._map_credentials(credentials),
@@ -217,12 +243,14 @@ class Fido2AuthModule(MultiFactorAuthModule):
         return vol.Schema(
             {
                 FrontendFormField(
-                    "auth_response",
+                    vol.Required("auth_response"),
                     Fido2LoginField(),
                     auth_data=self._server.encode(auth_data),
                 ): str,
                 FrontendFormField(
-                    "state", HiddenField(), default=self._server.encode(state)
+                    vol.Required("state"),
+                    HiddenField(),
+                    default=self._server.encode(state),
                 ): str,
             }
         )
@@ -319,16 +347,20 @@ class Fido2AuthModule(MultiFactorAuthModule):
         if "state" in user_input.keys() and "auth_response" in user_input.keys():
             if self._users is None:
                 await self._async_load()
-            decoded = self._server.decode(user_input["auth_response"])
-            return await self.hass.async_add_executor_job(
-                self._validate,
-                user_id,
-                self._server.decode(user_input["state"]),
-                decoded["credentialId"],
-                decoded["clientData"],
-                decoded["authenticatorData"],
-                decoded["signature"],
-            )
+            try:
+                decoded = self._server.decode(user_input["auth_response"])
+                decoded = login_decoded_schema(decoded)
+                return await self.hass.async_add_executor_job(
+                    self._validate,
+                    user_id,
+                    self._server.decode(user_input["state"]),
+                    decoded["credentialId"],
+                    decoded["clientData"],
+                    decoded["authenticatorData"],
+                    decoded["signature"],
+                )
+            except ValueError:
+                return False
         return False
 
 
@@ -355,18 +387,26 @@ class Fido2SetupFlow(SetupFlow):
         """
 
         if user_input:
-            if "state" in user_input.keys() and "attestation" in user_input.keys():
-                await self._auth_module.async_setup_user(
-                    self._user.id,
-                    {
-                        "state": self._server.decode(user_input["state"]),
-                        "attestation": self._server.decode(user_input["attestation"]),
-                    },
+            attestation_data = self._server.decode(user_input["attestation"])
+            try:
+                attestation_data = registration_attestation_schema(attestation_data)
+                if attestation_data["result"]:
+                    await self._auth_module.async_setup_user(
+                        self._user.id,
+                        {
+                            "state": self._server.decode(user_input["state"]),
+                            "attestation": attestation_data,
+                        },
+                    )
+                    return self.async_create_entry(
+                        title=self._auth_module.name, data={"result": "ok"}
+                    )
+                return self.async_abort(
+                    reason=f"failure caused by "
+                    f"{attestation_data['cause'] if 'cause' in attestation_data.keys() else 'unknown'}"
                 )
-                return self.async_create_entry(
-                    title=self._auth_module.name, data={"result": "ok"}
-                )
-            return self.async_abort(reason="invalid data")
+            except ValueError as exception:
+                return self.async_abort(reason=f"invalid data. {str(exception)}")
 
         reg_data, state = self._server.registration_begin(
             self._user.id.encode(), self._user.name, self._user.name
@@ -376,12 +416,14 @@ class Fido2SetupFlow(SetupFlow):
             data_schema=vol.Schema(
                 {
                     FrontendFormField(
-                        "attestation",
+                        vol.Required("attestation"),
                         Fido2RegisterField(),
                         registration_data=self._server.encode(reg_data),
                     ): str,
                     FrontendFormField(
-                        "state", HiddenField(), default=self._server.encode(state)
+                        vol.Required("state"),
+                        HiddenField(),
+                        default=self._server.encode(state),
                     ): str,
                 }
             ),
