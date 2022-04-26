@@ -46,7 +46,6 @@ class WallboxSwitch(WallboxEntity, SwitchEntity):
     """Representation of the Wallbox portal."""
 
     entity_description: WallboxSwitchEntityDescription
-    coordinator: WallboxCoordinator
 
     def __init__(
         self,
