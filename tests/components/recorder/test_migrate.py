@@ -181,7 +181,9 @@ async def test_events_during_migration_are_queued(hass):
         True,
     ), patch("homeassistant.components.recorder.create_engine", new=create_engine_test):
         await async_setup_component(
-            hass, "recorder", {"recorder": {"db_url": "sqlite://"}}
+            hass,
+            "recorder",
+            {"recorder": {"db_url": "sqlite://", "commit_interval": 0}},
         )
         hass.states.async_set("my.entity", "on", {})
         hass.states.async_set("my.entity", "off", {})
