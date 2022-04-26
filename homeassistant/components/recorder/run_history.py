@@ -31,7 +31,7 @@ def _find_recorder_run_for_start_time(
     return None
 
 
-@dataclass
+@dataclass(frozen=True)
 class _RecorderRunsHistory:
     """Bisectable history of RecorderRuns."""
 
