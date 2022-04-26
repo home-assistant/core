@@ -20,9 +20,9 @@ from sqlalchemy.pool import StaticPool
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import persistent_notification as pn, recorder
-from homeassistant.components.recorder import RecorderRuns, migration, models
+from homeassistant.components.recorder import migration, models
 from homeassistant.components.recorder.const import DATA_INSTANCE
-from homeassistant.components.recorder.models import States
+from homeassistant.components.recorder.models import RecorderRuns, States
 from homeassistant.components.recorder.util import session_scope
 import homeassistant.util.dt as dt_util
 
@@ -267,7 +267,7 @@ async def test_schema_migrate(hass, start_version):
 
     def _mock_setup_run(self):
         self.run_info = RecorderRuns(
-            start=self.recording_start, created=dt_util.utcnow()
+            start=self.run_history.recording_start, created=dt_util.utcnow()
         )
 
     def _instrument_migration(*args):
