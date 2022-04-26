@@ -170,6 +170,10 @@ def process_plex_payload(
     search_query = content.copy()
     shuffle = search_query.pop("shuffle", 0)
 
+    # Remove internal kwargs before passing copy to plexapi
+    for internal_key in ("resume", "offset"):
+        search_query.pop(internal_key, None)
+
     media = plex_server.lookup_media(content_type, **search_query)
 
     if supports_playqueues and (isinstance(media, list) or shuffle):
