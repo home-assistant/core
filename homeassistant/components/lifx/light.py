@@ -25,15 +25,13 @@ from homeassistant.components.light import (
     ATTR_TRANSITION,
     ATTR_XY_COLOR,
     COLOR_GROUP,
-    COLOR_MODE_BRIGHTNESS,
-    COLOR_MODE_COLOR_TEMP,
-    COLOR_MODE_HS,
     DOMAIN,
     LIGHT_TURN_ON_SCHEMA,
     SUPPORT_EFFECT,
     SUPPORT_TRANSITION,
     VALID_BRIGHTNESS,
     VALID_BRIGHTNESS_PCT,
+    ColorMode,
     LightEntity,
     preprocess_turn_on_alternatives,
 )
@@ -573,8 +571,8 @@ class LIFXLight(LightEntity):
         """Return the color mode of the light."""
         bulb_features = lifx_features(self.bulb)
         if bulb_features["min_kelvin"] != bulb_features["max_kelvin"]:
-            return COLOR_MODE_COLOR_TEMP
-        return COLOR_MODE_BRIGHTNESS
+            return ColorMode.COLOR_TEMP
+        return ColorMode.BRIGHTNESS
 
     @property
     def supported_color_modes(self) -> set[str] | None:
@@ -731,12 +729,15 @@ class LIFXColor(LIFXLight):
     @property
     def color_mode(self) -> str:
         """Return the color mode of the light."""
-        return COLOR_MODE_HS
+        sat = self.bulb.color[1]
+        if sat:
+            return ColorMode.HS
+        return ColorMode.COLOR_TEMP
 
     @property
     def supported_color_modes(self) -> set[str] | None:
         """Flag supported color modes."""
-        return {self.color_mode}
+        return {ColorMode.COLOR_TEMP, ColorMode.HS}
 
     @property
     def effect_list(self):
