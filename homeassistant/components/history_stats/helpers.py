@@ -72,19 +72,6 @@ def async_calculate_period(
     return start, end
 
 
-def pretty_duration(hours: float) -> str:
-    """Format a duration in days, hours, minutes, seconds."""
-    seconds = int(3600 * hours)
-    days, seconds = divmod(seconds, 86400)
-    hours, seconds = divmod(seconds, 3600)
-    minutes, seconds = divmod(seconds, 60)
-    if days > 0:
-        return "%dd %dh %dm" % (days, hours, minutes)
-    if hours > 0:
-        return "%dh %dm" % (hours, minutes)
-    return "%dm" % minutes
-
-
 def pretty_ratio(
     value: float, period: tuple[datetime.datetime, datetime.datetime]
 ) -> float:

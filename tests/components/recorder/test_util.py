@@ -9,7 +9,7 @@ from sqlalchemy import text
 from sqlalchemy.sql.elements import TextClause
 
 from homeassistant.components import recorder
-from homeassistant.components.recorder import run_information_with_session, util
+from homeassistant.components.recorder import util
 from homeassistant.components.recorder.const import DATA_INSTANCE, SQLITE_URL_PREFIX
 from homeassistant.components.recorder.models import RecorderRuns
 from homeassistant.components.recorder.util import (
@@ -21,7 +21,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from .common import corrupt_db_file
+from .common import corrupt_db_file, run_information_with_session
 
 from tests.common import SetupRecorderInstanceT, async_test_home_assistant
 

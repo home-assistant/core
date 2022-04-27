@@ -1,10 +1,15 @@
 """Common test utils for working with recorder."""
-from datetime import timedelta
+from __future__ import annotations
+
+from datetime import datetime, timedelta
+from typing import cast
 
 from sqlalchemy import create_engine
+from sqlalchemy.orm.session import Session
 
 from homeassistant import core as ha
 from homeassistant.components import recorder
+from homeassistant.components.recorder.models import RecorderRuns
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
@@ -81,3 +86,21 @@ def create_engine_test(*args, **kwargs):
     engine = create_engine(*args, **kwargs)
     models_schema_0.Base.metadata.create_all(engine)
     return engine
+
+
+def run_information_with_session(
+    session: Session, point_in_time: datetime | None = None
+) -> RecorderRuns | None:
+    """Return information about current run from the database."""
+    recorder_runs = RecorderRuns
+
+    query = session.query(recorder_runs)
+    if point_in_time:
+        query = query.filter(
+            (recorder_runs.start < point_in_time) & (recorder_runs.end > point_in_time)
+        )
+
+    if (res := query.first()) is not None:
+        session.expunge(res)
+        return cast(RecorderRuns, res)
+    return res
