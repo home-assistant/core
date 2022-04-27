@@ -265,6 +265,17 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             brightness=DPCode.BRIGHT_VALUE_2,
         ),
     ),
+    # Wake Up Light II
+    # Not documented
+    "hxd": (
+        TuyaLightEntityDescription(
+            key=DPCode.SWITCH_LED,
+            name="Light",
+            brightness=(DPCode.BRIGHT_VALUE_V2, DPCode.BRIGHT_VALUE),
+            brightness_max=DPCode.BRIGHTNESS_MAX_1,
+            brightness_min=DPCode.BRIGHTNESS_MIN_1,
+        ),
+    ),
     # Solar Light
     # https://developer.tuya.com/en/docs/iot/tynd?id=Kaof8j02e1t98
     "tyndj": (

@@ -86,6 +86,7 @@ homeassistant.components.flunearyou.*
 homeassistant.components.flux_led.*
 homeassistant.components.forecast_solar.*
 homeassistant.components.fritzbox.*
+homeassistant.components.fritzbox_callmonitor.*
 homeassistant.components.fronius.*
 homeassistant.components.frontend.*
 homeassistant.components.fritz.*
