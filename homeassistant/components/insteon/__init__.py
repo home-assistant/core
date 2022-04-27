@@ -80,12 +80,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     conf = config[DOMAIN]
     hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][CONF_DEV_URL] = conf.get(CONF_DEV_URL)
-    try:
-        conf.pop(CONF_DEV_URL)
-    except KeyError:
-        pass
-    if not conf:
+    hass.data[DOMAIN][CONF_DEV_URL] = conf.pop(CONF_DEV_URL, None)
+
+    if hass.data[DOMAIN][CONF_DEV_URL] is None:
         return True
     data, options = convert_yaml_to_config_flow(conf)
     if options:
