@@ -206,7 +206,7 @@ async def test_notifications(hass, hank_binary_switch, integration, client):
             "event": "notification",
             "nodeId": 32,
             "ccId": 38,
-            "args": {"eventType": 5},
+            "args": {"eventType": 4, "direction": "up"},
         },
     )
 
@@ -216,7 +216,8 @@ async def test_notifications(hass, hank_binary_switch, integration, client):
     assert len(events) == 3
     assert events[2].data["home_id"] == client.driver.controller.home_id
     assert events[2].data["node_id"] == 32
-    assert events[2].data["event_type"] == 5
+    assert events[2].data["event_type"] == 4
+    assert events[2].data["direction"] == "up"
     assert events[2].data["command_class"] == CommandClass.SWITCH_MULTILEVEL
     assert events[2].data["command_class_name"] == "Multilevel Switch"
 
