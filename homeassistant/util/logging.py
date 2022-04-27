@@ -142,7 +142,7 @@ def catch_log_exception(
     while isinstance(check_func, partial):
         check_func = check_func.func
 
-    wrapper_func: Callable[..., None] | Callable[..., Coroutine[Any, Any, None]]
+    wrapper_func: Callable[..., None | Coroutine[Any, Any, None]]
     if asyncio.iscoroutinefunction(check_func):
         async_func = cast(Callable[..., Coroutine[Any, Any, None]], func)
 
@@ -186,7 +186,7 @@ def catch_log_coro_exception(
             log_exception(format_err, *args)
             return None
 
-    return coro_wrapper()
+    return coro_wrapper(*args)
 
 
 def async_create_catching_coro(
@@ -202,7 +202,7 @@ def async_create_catching_coro(
     trace = traceback.extract_stack()
     wrapped_target = catch_log_coro_exception(
         target,
-        lambda *args: "Exception in {} called from\n {}".format(
+        lambda: "Exception in {} called from\n {}".format(
             target.__name__,
             "".join(traceback.format_list(trace[:-1])),
         ),
