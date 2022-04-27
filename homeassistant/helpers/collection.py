@@ -351,6 +351,8 @@ def sync_entity_lifecycle(
             ent_reg.async_remove(ent_to_remove)
         elif change_set.item_id in entities:
             await entities[change_set.item_id].async_remove(force_remove=True)
+        # Unconditionally pop the entity from the entity list to avoid racing against
+        # the entity registry event handled by Entity._async_registry_updated
         if change_set.item_id in entities:
             entities.pop(change_set.item_id)
 
