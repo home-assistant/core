@@ -488,7 +488,7 @@ class Light(BaseLight, ZhaEntity):
             ]
 
             results = await self._color_channel.get_attributes(
-                attributes, from_cache=False, only_cache=False
+                attributes, from_cache=False
             )
 
             if (color_mode := results.get("color_mode")) is not None:
