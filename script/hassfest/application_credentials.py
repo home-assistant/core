@@ -33,7 +33,7 @@ def generate_and_validate(integrations: dict[str, Integration], config: Config) 
     return BASE.format(json.dumps(match_list, indent=4))
 
 
-def validate(integrations: dict[str, Integration], config: Config):
+def validate(integrations: dict[str, Integration], config: Config) -> None:
     """Validate application_credentials data."""
     application_credentials_path = (
         config.root / "homeassistant/generated/application_credentials.py"
