@@ -45,14 +45,12 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
     if config.specific_integrations:
         return
 
-    with open(str(application_credentials_path)) as fp:
-        if fp.read().strip() != content:
-            config.add_error(
-                "application_credentials",
-                "File application_credentials.py is not up to date. Run python3 -m script.hassfest",
-                fixable=True,
-            )
-        return
+    if application_credentials_path.read_text(encoding="utf-8").strip() != content:
+        config.add_error(
+            "application_credentials",
+            "File application_credentials.py is not up to date. Run python3 -m script.hassfest",
+            fixable=True,
+        )
 
 
 def generate(integrations: dict[str, Integration], config: Config):
