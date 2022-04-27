@@ -63,9 +63,9 @@ class SlackFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             "has been imported into the UI automatically and can be safely removed "
             "from your configuration.yaml file"
         )
-        for entry in self._async_current_entries():
-            if entry.data[CONF_API_KEY] == import_config[CONF_API_KEY]:
-                return self.async_abort(reason="already_configured")
+        entries = self._async_current_entries()
+        if any(x.data[CONF_API_KEY] == import_config[CONF_API_KEY] for x in entries):
+            return self.async_abort(reason="already_configured")
         return await self.async_step_user(import_config)
 
     async def _async_try_connect(
