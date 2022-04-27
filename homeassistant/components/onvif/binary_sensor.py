@@ -5,12 +5,8 @@ from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.entity_registry import (
-    EntityRegistry,
-    RegistryEntry,
-    async_entries_for_config_entry,
-)
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .base import ONVIFBaseEntity
@@ -31,14 +27,9 @@ async def async_setup_entry(
         for event in device.events.get_platform("binary_sensor")
     }
 
-    entity_registry: EntityRegistry = (
-        await hass.helpers.entity_registry.async_get_registry()
-    )
-    for entry in async_entries_for_config_entry(entity_registry, config_entry.entry_id):
-        if (
-            entry.entity_id.startswith("binary_sensor")
-            and entry.unique_id not in entities
-        ):
+    ent_reg = er.async_get(hass)
+    for entry in er.async_entries_for_config_entry(ent_reg, config_entry.entry_id):
+        if entry.domain == "binary_sensor" and entry.unique_id not in entities:
             entities[entry.unique_id] = ONVIFBinarySensor(
                 entry.unique_id, device, entry
             )
@@ -65,7 +56,7 @@ class ONVIFBinarySensor(ONVIFBaseEntity, RestoreEntity, BinarySensorEntity):
 
     _attr_should_poll = False
 
-    def __init__(self, uid, device: ONVIFDevice, entry: RegistryEntry | None = None):
+    def __init__(self, uid, device: ONVIFDevice, entry: er.RegistryEntry | None = None):
         """Initialize the ONVIF binary sensor."""
         self._attr_unique_id = uid
         if entry is not None:
