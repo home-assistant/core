@@ -1,9 +1,9 @@
 {
-  "domain": "squeezebox_player",
-  "name": "Squeezebox Player",
+  "domain": "slimproto",
+  "name": "SlimProto (Squeezebox players)",
   "config_flow": true,
   "iot_class": "local_push",
-  "documentation": "https://www.home-assistant.io/integrations/squeezebox_player",
+  "documentation": "https://www.home-assistant.io/integrations/slimproto",
   "requirements": ["aioslimproto==1.0.0"],
   "codeowners": ["@marcelveldt"],
   "after_dependencies": ["media_source"]

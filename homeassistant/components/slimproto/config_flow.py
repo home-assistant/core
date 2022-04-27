@@ -1,4 +1,4 @@
-"""Config flow for Squeezebox Player integration."""
+"""Config flow for SlimProto Player integration."""
 
 from __future__ import annotations
 
@@ -10,8 +10,8 @@ from homeassistant.data_entry_flow import FlowResult
 from .const import DEFAULT_NAME, DOMAIN
 
 
-class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Squeezebox Player."""
+class SlimProtoConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for SlimProto Player."""
 
     VERSION = 1
 

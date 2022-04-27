@@ -1,4 +1,4 @@
-"""MediaPlayer platform for Squeezebox Player integration."""
+"""MediaPlayer platform for SlimProto Player integration."""
 from __future__ import annotations
 
 import asyncio
@@ -38,7 +38,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up Squeezebox MediaPlayer(s) from Config Entry."""
+    """Set up SlimProto MediaPlayer(s) from Config Entry."""
     slimserver: SlimServer = hass.data[DOMAIN]
     added_ids = set()
 
@@ -52,7 +52,7 @@ async def async_setup_entry(
             if player.player_id not in player.name:
                 break
             await asyncio.sleep(0.1)
-        async_add_entities([SqueezeboxPlayer(slimserver, player)])
+        async_add_entities([SlimProtoPlayer(slimserver, player)])
 
     async def on_slim_event(event: SlimEvent) -> None:
         """Handle player added/connected event."""
@@ -71,8 +71,8 @@ async def async_setup_entry(
     await asyncio.gather(*(async_add_player(player) for player in slimserver.players))
 
 
-class SqueezeboxPlayer(MediaPlayerEntity):
-    """Representation of MediaPlayerEntity from Squeezebox Player."""
+class SlimProtoPlayer(MediaPlayerEntity):
+    """Representation of MediaPlayerEntity from SlimProto Player."""
 
     _attr_should_poll = False
     _attr_supported_features = (
