@@ -55,7 +55,7 @@ async def async_setup_entry(
     """Add QNAP QSW binary sensors from a config_entry."""
     coordinator: QswUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        QswSensor(coordinator, description, entry)
+        QswBinarySensor(coordinator, description, entry)
         for description in BINARY_SENSOR_TYPES
         if (
             description.key in coordinator.data
@@ -64,7 +64,7 @@ async def async_setup_entry(
     )
 
 
-class QswSensor(QswEntity, BinarySensorEntity):
+class QswBinarySensor(QswEntity, BinarySensorEntity):
     """Define a QNAP QSW binary sensor."""
 
     entity_description: QswBinarySensorEntityDescription
