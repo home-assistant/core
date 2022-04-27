@@ -1,0 +1,31 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "To find your API key, open the Tautulli webpage and navigate to Settings and then to Web interface. The API key will be at the bottom of that page.\n\nExample of the URL: ```http://192.168.0.10:8181``` with 8181 being the default port.",
+        "data": {
+          "api_key": "Api Key",
+          "url": "URL",
+          "verify_ssl": "Verify SSL certificate"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Re-authenticate Tautulli",
+        "description": "To find your API key, open the Tautulli webpage and navigate to Settings and then to Web interface. The API key will be at the bottom of that page.",
+        "data": {
+          "api_key": "Api Key"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect",
+      "invalid_auth": "Invalid authentication",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "single_instance_allowed": "Already configured. Only a single configuration possible.",
+      "reauth_successful": "Re-authentication was successful"
+    }
+  }
+}
+  

@@ -17,12 +17,15 @@ homeassistant.helpers.area_registry
 homeassistant.helpers.condition
 homeassistant.helpers.discovery
 homeassistant.helpers.entity_values
+homeassistant.helpers.event
 homeassistant.helpers.reload
 homeassistant.helpers.script_variables
+homeassistant.helpers.sun
 homeassistant.helpers.translation
 homeassistant.util.async_
 homeassistant.util.color
 homeassistant.util.decorator
+homeassistant.util.location
 homeassistant.util.process
 homeassistant.util.unit_system
 
@@ -86,6 +89,7 @@ homeassistant.components.flunearyou.*
 homeassistant.components.flux_led.*
 homeassistant.components.forecast_solar.*
 homeassistant.components.fritzbox.*
+homeassistant.components.fritzbox_callmonitor.*
 homeassistant.components.fronius.*
 homeassistant.components.frontend.*
 homeassistant.components.fritz.*

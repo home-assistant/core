@@ -8,10 +8,15 @@ from typing import Any
 from unittest.mock import patch
 
 from homeassistant import config as hass_config
-from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
+from homeassistant.components.sensor import (
+    ATTR_STATE_CLASS,
+    SensorDeviceClass,
+    SensorStateClass,
+)
 from homeassistant.components.statistics import DOMAIN as STATISTICS_DOMAIN
 from homeassistant.components.statistics.sensor import StatisticsSensor
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
     SERVICE_RELOAD,
     STATE_UNAVAILABLE,
@@ -426,6 +431,61 @@ async def test_precision(hass: HomeAssistant):
     state = hass.states.get("sensor.test_precision_3")
     assert state is not None
     assert state.state == str(round(mean, 3))
+
+
+async def test_device_class(hass: HomeAssistant):
+    """Test device class, which depends on the source entity."""
+    assert await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": [
+                {
+                    # Device class is carried over from source sensor for characteristics with same unit
+                    "platform": "statistics",
+                    "name": "test_source_class",
+                    "entity_id": "sensor.test_monitored",
+                    "state_characteristic": "mean",
+                },
+                {
+                    # Device class is set to None for characteristics with special meaning
+                    "platform": "statistics",
+                    "name": "test_none",
+                    "entity_id": "sensor.test_monitored",
+                    "state_characteristic": "count",
+                },
+                {
+                    # Device class is set to timestamp for datetime characteristics
+                    "platform": "statistics",
+                    "name": "test_timestamp",
+                    "entity_id": "sensor.test_monitored",
+                    "state_characteristic": "datetime_oldest",
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    for value in VALUES_NUMERIC:
+        hass.states.async_set(
+            "sensor.test_monitored",
+            str(value),
+            {
+                ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
+                ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
+            },
+        )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_source_class")
+    assert state is not None
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TEMPERATURE
+    state = hass.states.get("sensor.test_none")
+    assert state is not None
+    assert state.attributes.get(ATTR_DEVICE_CLASS) is None
+    state = hass.states.get("sensor.test_timestamp")
+    assert state is not None
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TIMESTAMP
 
 
 async def test_state_class(hass: HomeAssistant):

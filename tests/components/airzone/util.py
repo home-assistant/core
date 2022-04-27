@@ -12,6 +12,7 @@ from aioairzone.const import (
     API_HEAT_STAGE,
     API_HEAT_STAGES,
     API_HUMIDITY,
+    API_MAC,
     API_MAX_TEMP,
     API_MIN_TEMP,
     API_MODE,
@@ -26,6 +27,8 @@ from aioairzone.const import (
     API_THERMOS_RADIO,
     API_THERMOS_TYPE,
     API_UNITS,
+    API_WIFI_CHANNEL,
+    API_WIFI_RSSI,
     API_ZONE_ID,
 )
 from aioairzone.exceptions import InvalidMethod, SystemOutOfRange
@@ -39,17 +42,10 @@ from tests.common import MockConfigEntry
 CONFIG = {
     CONF_HOST: "192.168.1.100",
     CONF_PORT: 3000,
-    CONF_ID: 0,
-}
-
-CONFIG_NO_ID = {
-    CONF_HOST: CONFIG[CONF_HOST],
-    CONF_PORT: CONFIG[CONF_PORT],
 }
 
 CONFIG_ID1 = {
-    CONF_HOST: CONFIG[CONF_HOST],
-    CONF_PORT: CONFIG[CONF_PORT],
+    **CONFIG,
     CONF_ID: 1,
 }
 
@@ -182,14 +178,24 @@ HVAC_MOCK = {
     ]
 }
 
+HVAC_WEBSERVER_MOCK = {
+    API_MAC: "11:22:33:44:55:66",
+    API_WIFI_CHANNEL: 6,
+    API_WIFI_RSSI: -42,
+}
+
 
 async def async_init_integration(
     hass: HomeAssistant,
 ) -> None:
     """Set up the Airzone integration in Home Assistant."""
 
-    entry = MockConfigEntry(domain=DOMAIN, data=CONFIG)
-    entry.add_to_hass(hass)
+    config_entry = MockConfigEntry(
+        data=CONFIG,
+        domain=DOMAIN,
+        unique_id="airzone_unique_id",
+    )
+    config_entry.add_to_hass(hass)
 
     with patch(
         "homeassistant.components.airzone.AirzoneLocalApi.get_hvac",
@@ -201,5 +207,5 @@ async def async_init_integration(
         "homeassistant.components.airzone.AirzoneLocalApi.get_webserver",
         side_effect=InvalidMethod,
     ):
-        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()

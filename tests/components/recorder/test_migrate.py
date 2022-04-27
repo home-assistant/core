@@ -20,9 +20,9 @@ from sqlalchemy.pool import StaticPool
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import persistent_notification as pn, recorder
-from homeassistant.components.recorder import RecorderRuns, migration, models
+from homeassistant.components.recorder import migration, models
 from homeassistant.components.recorder.const import DATA_INSTANCE
-from homeassistant.components.recorder.models import States
+from homeassistant.components.recorder.models import RecorderRuns, States
 from homeassistant.components.recorder.util import session_scope
 import homeassistant.util.dt as dt_util
 
@@ -181,7 +181,9 @@ async def test_events_during_migration_are_queued(hass):
         True,
     ), patch("homeassistant.components.recorder.create_engine", new=create_engine_test):
         await async_setup_component(
-            hass, "recorder", {"recorder": {"db_url": "sqlite://"}}
+            hass,
+            "recorder",
+            {"recorder": {"db_url": "sqlite://", "commit_interval": 0}},
         )
         hass.states.async_set("my.entity", "on", {})
         hass.states.async_set("my.entity", "off", {})
@@ -193,7 +195,9 @@ async def test_events_during_migration_are_queued(hass):
         await async_wait_recording_done(hass)
 
     assert recorder.util.async_migration_in_progress(hass) is False
-    db_states = await hass.async_add_executor_job(_get_native_states, hass, "my.entity")
+    db_states = await recorder.get_instance(hass).async_add_executor_job(
+        _get_native_states, hass, "my.entity"
+    )
     assert len(db_states) == 2
 
 
@@ -221,11 +225,15 @@ async def test_events_during_migration_queue_exhausted(hass):
         await async_wait_recording_done(hass)
 
     assert recorder.util.async_migration_in_progress(hass) is False
-    db_states = await hass.async_add_executor_job(_get_native_states, hass, "my.entity")
+    db_states = await recorder.get_instance(hass).async_add_executor_job(
+        _get_native_states, hass, "my.entity"
+    )
     assert len(db_states) == 1
     hass.states.async_set("my.entity", "on", {})
     await async_wait_recording_done(hass)
-    db_states = await hass.async_add_executor_job(_get_native_states, hass, "my.entity")
+    db_states = await recorder.get_instance(hass).async_add_executor_job(
+        _get_native_states, hass, "my.entity"
+    )
     assert len(db_states) == 2
 
 
@@ -261,7 +269,7 @@ async def test_schema_migrate(hass, start_version):
 
     def _mock_setup_run(self):
         self.run_info = RecorderRuns(
-            start=self.recording_start, created=dt_util.utcnow()
+            start=self.run_history.recording_start, created=dt_util.utcnow()
         )
 
     def _instrument_migration(*args):

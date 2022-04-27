@@ -558,7 +558,7 @@ class _TrackStateChangeFiltered:
         self._setup_entities_listener(track_states.domains, track_states.entities)
 
     @property
-    def listeners(self) -> dict:
+    def listeners(self) -> dict[str, bool | set[str]]:
         """State changes that will cause a re-render."""
         track_states = self._last_track_states
         return {
@@ -853,7 +853,7 @@ class _TrackTemplateResultInfo:
         )
 
     @property
-    def listeners(self) -> dict:
+    def listeners(self) -> dict[str, bool | set[str]]:
         """State changes that will cause a re-render."""
         assert self._track_state_changes
         return {
