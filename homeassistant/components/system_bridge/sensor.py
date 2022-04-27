@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import timedelta
 from typing import Final, cast
 
 from homeassistant.components.sensor import (
@@ -22,6 +22,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.util.dt import utcnow
 
 from . import SystemBridgeDeviceEntity
 from .const import DOMAIN
@@ -153,10 +154,8 @@ BATTERY_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         name="Battery Time Remaining",
         device_class=SensorDeviceClass.TIMESTAMP,
         state_class=SensorStateClass.MEASUREMENT,
-        value=lambda data: str(
-            datetime.now()
-            + timedelta(minutes=data["battery"]["sensors_time_remaining"])
-        ),
+        value=lambda data: utcnow()
+        + timedelta(seconds=data["battery"]["sensors_secsleft"]),
     ),
 )
 
