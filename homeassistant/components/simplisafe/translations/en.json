@@ -2,12 +2,16 @@
     "config": {
         "abort": {
             "already_configured": "This SimpliSafe account is already in use.",
+            "email_2fa_timed_out": "Timed out while waiting for email-based two-factor authentication.",
+            "email_2fa_unknown": "Unknown error while authenticating email-based two-factor authentication.",
             "reauth_successful": "Re-authentication was successful"
         },
         "error": {
-            "2fa_timed_out": "Timed out while waiting for two-factor authentication",
             "invalid_auth": "Invalid authentication",
             "unknown": "Unexpected error"
+        },
+        "progress": {
+            "email_2fa": "Input the two-factor authentication code\nsent to you via email."
         },
         "step": {
             "reauth_confirm": {
