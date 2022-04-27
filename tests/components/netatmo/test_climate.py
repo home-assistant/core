@@ -12,11 +12,9 @@ from homeassistant.components.climate import (
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
-    HVAC_MODE_AUTO,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
     PRESET_AWAY,
     PRESET_BOOST,
+    HVACMode,
 )
 from homeassistant.components.netatmo.climate import PRESET_FROST_GUARD, PRESET_SCHEDULE
 from homeassistant.components.netatmo.const import (
@@ -93,7 +91,7 @@ async def test_webhook_event_handling_thermostats(hass, config_entry, netatmo_au
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: climate_entity_livingroom, ATTR_HVAC_MODE: HVAC_MODE_HEAT},
+        {ATTR_ENTITY_ID: climate_entity_livingroom, ATTR_HVAC_MODE: HVACMode.HEAT},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -131,7 +129,7 @@ async def test_webhook_event_handling_thermostats(hass, config_entry, netatmo_au
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: climate_entity_livingroom, ATTR_HVAC_MODE: HVAC_MODE_OFF},
+        {ATTR_ENTITY_ID: climate_entity_livingroom, ATTR_HVAC_MODE: HVACMode.OFF},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -166,7 +164,7 @@ async def test_webhook_event_handling_thermostats(hass, config_entry, netatmo_au
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: climate_entity_livingroom, ATTR_HVAC_MODE: HVAC_MODE_AUTO},
+        {ATTR_ENTITY_ID: climate_entity_livingroom, ATTR_HVAC_MODE: HVACMode.AUTO},
         blocking=True,
     )
     await hass.async_block_till_done()

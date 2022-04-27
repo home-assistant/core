@@ -15,8 +15,10 @@ from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
     LIGHT_LUX,
     PERCENTAGE,
+    POWER_WATT,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -62,12 +64,14 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Fibaro controller devices."""
     entities: list[SensorEntity] = []
-    for device in hass.data[DOMAIN][entry.entry_id][FIBARO_DEVICES]["sensor"]:
+    for device in hass.data[DOMAIN][entry.entry_id][FIBARO_DEVICES][Platform.SENSOR]:
         entities.append(FibaroSensor(device))
-    for device_type in ("cover", "light", "switch"):
-        for device in hass.data[DOMAIN][entry.entry_id][FIBARO_DEVICES][device_type]:
+    for platform in (Platform.COVER, Platform.LIGHT, Platform.SWITCH):
+        for device in hass.data[DOMAIN][entry.entry_id][FIBARO_DEVICES][platform]:
             if "energy" in device.interfaces:
                 entities.append(FibaroEnergySensor(device))
+            if "power" in device.interfaces:
+                entities.append(FibaroPowerSensor(device))
 
     async_add_entities(entities, True)
 
@@ -145,4 +149,26 @@ class FibaroEnergySensor(FibaroDevice, SensorEntity):
         with suppress(KeyError, ValueError):
             self._attr_native_value = convert(
                 self.fibaro_device.properties.energy, float
+            )
+
+
+class FibaroPowerSensor(FibaroDevice, SensorEntity):
+    """Representation of a Fibaro Power Sensor."""
+
+    _attr_device_class = SensorDeviceClass.POWER
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_native_unit_of_measurement = POWER_WATT
+
+    def __init__(self, fibaro_device):
+        """Initialize the sensor."""
+        super().__init__(fibaro_device)
+        self.entity_id = ENTITY_ID_FORMAT.format(f"{self.ha_id}_power")
+        self._attr_name = f"{fibaro_device.friendly_name} Power"
+        self._attr_unique_id = f"{fibaro_device.unique_id_str}_power"
+
+    def update(self):
+        """Update the state."""
+        with suppress(KeyError, ValueError):
+            self._attr_native_value = convert(
+                self.fibaro_device.properties.power, float
             )

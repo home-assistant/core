@@ -782,9 +782,12 @@ async def test_disabling_entity(
     assert "climate.heatpump" in registry.entities
     registry.async_update_entity(
         entity_id=data["sensor_1"].entity_id,
-        disabled_by="user",
+        disabled_by=entity_registry.RegistryEntryDisabler.USER,
     )
-    registry.async_update_entity(entity_id="climate.heatpump", disabled_by="user")
+    registry.async_update_entity(
+        entity_id="climate.heatpump",
+        disabled_by=entity_registry.RegistryEntryDisabler.USER,
+    )
 
     await hass.async_block_till_done()
     body = await generate_latest_metrics(client)

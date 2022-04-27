@@ -118,6 +118,10 @@ multidict>=6.0.2
 # Required for compatibility with point integration - ensure_active_token
 # https://github.com/home-assistant/core/pull/68176
 authlib<1.0
+
+# Pin backoff for compatibility until most libraries have been updated
+# https://github.com/home-assistant/core/pull/70817
+backoff<2.0
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (

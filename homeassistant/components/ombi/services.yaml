@@ -29,9 +29,9 @@ submit_tv_request:
       selector:
         select:
           options:
-            - 'all'
-            - 'first'
-            - 'latest'
+            - "all"
+            - "first"
+            - "latest"
 
 submit_music_request:
   name: Submit music request

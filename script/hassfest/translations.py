@@ -26,6 +26,7 @@ ALLOW_NAME_TRANSLATION = {
     "cert_expiry",
     "cpuspeed",
     "emulated_roku",
+    "faa_delays",
     "garages_amsterdam",
     "google_travel_time",
     "homekit_controller",
@@ -48,6 +49,16 @@ MOVED_TRANSLATIONS_DIRECTORY_MSG = (
     "starting with Home Assistant 0.112 your translations will no longer "
     "load if you do not move/rename this "
 )
+
+
+def allow_name_translation(integration: Integration):
+    """Validate that the translation name is not the same as the integration name."""
+    # Only enforce for core because custom integrations can't be
+    # added to allow list.
+    return integration.core and (
+        integration.domain in ALLOW_NAME_TRANSLATION
+        or integration.quality_scale == "internal"
+    )
 
 
 def check_translations_directory_name(integration: Integration) -> None:
@@ -100,6 +111,7 @@ def gen_data_entry_schema(
     integration: Integration,
     flow_title: int,
     require_step_title: bool,
+    mandatory_description: str | None = None,
 ):
     """Generate a data entry schema."""
     step_title_class = vol.Required if require_step_title else vol.Optional
@@ -138,7 +150,39 @@ def gen_data_entry_schema(
 
         return value
 
-    return vol.All(vol.Schema(schema), data_description_validator)
+    validators = [vol.Schema(schema), data_description_validator]
+
+    if mandatory_description is not None:
+
+        def validate_description_set(value):
+            """Validate description is set."""
+            steps = value["step"]
+            if mandatory_description not in steps:
+                raise vol.Invalid(f"{mandatory_description} needs to be defined")
+
+            if "description" not in steps[mandatory_description]:
+                raise vol.Invalid(f"Step {mandatory_description} needs a description")
+
+            return value
+
+        validators.append(validate_description_set)
+
+    if not allow_name_translation(integration):
+
+        def name_validator(value):
+            """Validate name."""
+            for step_id, info in value["step"].items():
+                if info.get("title") == integration.name:
+                    raise vol.Invalid(
+                        f"Do not set title of step {step_id} if it's a brand name "
+                        "or add exception to ALLOW_NAME_TRANSLATION"
+                    )
+
+            return value
+
+        validators.append(name_validator)
+
+    return vol.All(*validators)
 
 
 def gen_strings_schema(config: Config, integration: Integration):
@@ -151,6 +195,9 @@ def gen_strings_schema(config: Config, integration: Integration):
                 integration=integration,
                 flow_title=REMOVED,
                 require_step_title=False,
+                mandatory_description=(
+                    "user" if integration.integration_type == "helper" else None
+                ),
             ),
             vol.Optional("options"): gen_data_entry_schema(
                 config=config,
@@ -294,14 +341,9 @@ def validate_translation_file(config: Config, integration: Integration, all_stri
             if strings_file.name == "strings.json":
                 find_references(strings, name, references)
 
-                if (
-                    integration.domain not in ALLOW_NAME_TRANSLATION
-                    # Only enforce for core because custom integratinos can't be
-                    # added to allow list.
-                    and integration.core
-                    and strings.get("title") == integration.name
-                    and integration.quality_scale != "internal"
-                ):
+                if strings.get(
+                    "title"
+                ) == integration.name and not allow_name_translation(integration):
                     integration.add_error(
                         "translations",
                         "Don't specify title in translation strings if it's a brand name "

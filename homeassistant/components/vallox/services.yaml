@@ -10,7 +10,7 @@ set_profile_fan_speed_home:
         number:
           min: 0
           max: 100
-          unit_of_measurement: '%'
+          unit_of_measurement: "%"
 
 set_profile_fan_speed_away:
   name: Set profile fan speed away
@@ -24,7 +24,7 @@ set_profile_fan_speed_away:
         number:
           min: 0
           max: 100
-          unit_of_measurement: '%'
+          unit_of_measurement: "%"
 
 set_profile_fan_speed_boost:
   name: Set profile fan speed boost
@@ -38,4 +38,4 @@ set_profile_fan_speed_boost:
         number:
           min: 0
           max: 100
-          unit_of_measurement: '%'
+          unit_of_measurement: "%"

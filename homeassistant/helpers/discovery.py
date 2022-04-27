@@ -95,7 +95,7 @@ def async_listen_platform(
     hass: core.HomeAssistant,
     component: str,
     callback: Callable[[str, dict[str, Any] | None], Any],
-) -> None:
+) -> Callable[[], None]:
     """Register a platform loader listener.
 
     This method must be run in the event loop.
@@ -112,7 +112,7 @@ def async_listen_platform(
         if task:
             await task
 
-    async_dispatcher_connect(
+    return async_dispatcher_connect(
         hass, SIGNAL_PLATFORM_DISCOVERED.format(service), discovery_platform_listener
     )
 
@@ -146,7 +146,7 @@ async def async_load_platform(
     Warning: Do not await this inside a setup method to avoid a dead lock.
     Use `hass.async_create_task(async_load_platform(..))` instead.
     """
-    assert hass_config, "You need to pass in the real hass config"
+    assert hass_config is not None, "You need to pass in the real hass config"
 
     setup_success = True
 

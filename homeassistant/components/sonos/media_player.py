@@ -19,6 +19,7 @@ import voluptuous as vol
 from homeassistant.components import media_source, spotify
 from homeassistant.components.media_player import (
     MediaPlayerEntity,
+    MediaPlayerEntityFeature,
     async_process_play_media_url,
 )
 from homeassistant.components.media_player.const import (
@@ -32,21 +33,6 @@ from homeassistant.components.media_player.const import (
     REPEAT_MODE_ALL,
     REPEAT_MODE_OFF,
     REPEAT_MODE_ONE,
-    SUPPORT_BROWSE_MEDIA,
-    SUPPORT_CLEAR_PLAYLIST,
-    SUPPORT_GROUPING,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_REPEAT_SET,
-    SUPPORT_SEEK,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_SHUFFLE_SET,
-    SUPPORT_STOP,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
 )
 from homeassistant.components.plex.const import PLEX_URI_SCHEME
 from homeassistant.components.plex.services import process_plex_payload
@@ -80,24 +66,6 @@ from .speaker import SonosMedia, SonosSpeaker
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_SONOS = (
-    SUPPORT_BROWSE_MEDIA
-    | SUPPORT_CLEAR_PLAYLIST
-    | SUPPORT_GROUPING
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_PAUSE
-    | SUPPORT_PLAY
-    | SUPPORT_PLAY_MEDIA
-    | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_REPEAT_SET
-    | SUPPORT_SEEK
-    | SUPPORT_SELECT_SOURCE
-    | SUPPORT_SHUFFLE_SET
-    | SUPPORT_STOP
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_VOLUME_SET
-)
-
 VOLUME_INCREMENT = 2
 
 REPEAT_TO_SONOS = {
@@ -107,8 +75,6 @@ REPEAT_TO_SONOS = {
 }
 
 SONOS_TO_REPEAT = {meaning: mode for mode, meaning in REPEAT_TO_SONOS.items()}
-
-ATTR_SONOS_GROUP = "sonos_group"
 
 UPNP_ERRORS_TO_IGNORE = ["701", "711", "712"]
 
@@ -250,7 +216,23 @@ async def async_setup_entry(
 class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     """Representation of a Sonos entity."""
 
-    _attr_supported_features = SUPPORT_SONOS
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.BROWSE_MEDIA
+        | MediaPlayerEntityFeature.CLEAR_PLAYLIST
+        | MediaPlayerEntityFeature.GROUPING
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.PLAY
+        | MediaPlayerEntityFeature.PLAY_MEDIA
+        | MediaPlayerEntityFeature.PREVIOUS_TRACK
+        | MediaPlayerEntityFeature.REPEAT_SET
+        | MediaPlayerEntityFeature.SEEK
+        | MediaPlayerEntityFeature.SELECT_SOURCE
+        | MediaPlayerEntityFeature.SHUFFLE_SET
+        | MediaPlayerEntityFeature.STOP
+        | MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.VOLUME_SET
+    )
     _attr_media_content_type = MEDIA_TYPE_MUSIC
 
     def __init__(self, speaker: SonosSpeaker) -> None:
@@ -280,6 +262,11 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     def coordinator(self) -> SonosSpeaker:
         """Return the current coordinator SonosSpeaker."""
         return self.speaker.coordinator or self.speaker
+
+    @property
+    def group_members(self) -> list[str] | None:
+        """List of entity_ids which are currently grouped together."""
+        return self.speaker.sonos_group_entities
 
     def __hash__(self) -> int:
         """Return a hash of self."""
@@ -670,9 +657,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return entity specific state attributes."""
-        attributes: dict[str, Any] = {
-            ATTR_SONOS_GROUP: self.speaker.sonos_group_entities
-        }
+        attributes: dict[str, Any] = {}
 
         if self.media.queue_position is not None:
             attributes[ATTR_QUEUE_POSITION] = self.media.queue_position

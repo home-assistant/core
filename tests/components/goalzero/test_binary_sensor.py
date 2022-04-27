@@ -1,17 +1,17 @@
 """Binary sensor tests for the Goalzero integration."""
-from homeassistant.components.binary_sensor import DOMAIN, BinarySensorDeviceClass
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.goalzero.const import DEFAULT_NAME
 from homeassistant.const import ATTR_DEVICE_CLASS, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 
-from . import async_setup_platform
+from . import async_init_integration
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_binary_sensors(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker):
     """Test we get sensor data."""
-    await async_setup_platform(hass, aioclient_mock, DOMAIN)
+    await async_init_integration(hass, aioclient_mock)
 
     state = hass.states.get(f"binary_sensor.{DEFAULT_NAME}_backlight")
     assert state.state == STATE_ON

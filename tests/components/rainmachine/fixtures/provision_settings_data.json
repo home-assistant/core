@@ -41,18 +41,7 @@
     "zoneListShowInactive": true,
     "rainSensorRainStart": null,
     "zoneDuration": [
-      300,
-      300,
-      300,
-      300,
-      300,
-      300,
-      300,
-      300,
-      300,
-      300,
-      300,
-      300
+      300, 300, 300, 300, 300, 300, 300, 300, 300, 300, 300, 300
     ],
     "rainSensorIsNormallyClosed": true,
     "useCorrectionForPast": true,

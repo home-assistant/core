@@ -4,7 +4,9 @@
             "address_already_configured": "An ElkM1 with this address is already configured",
             "already_configured": "An ElkM1 with this prefix is already configured",
             "already_in_progress": "Configuration flow is already in progress",
-            "cannot_connect": "Failed to connect"
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
         },
         "error": {
             "cannot_connect": "Failed to connect",
@@ -37,13 +39,7 @@
             },
             "user": {
                 "data": {
-                    "address": "The IP address or domain or serial port if connecting via serial.",
-                    "device": "Device",
-                    "password": "Password",
-                    "prefix": "A unique prefix (leave blank if you only have one ElkM1).",
-                    "protocol": "Protocol",
-                    "temperature_unit": "The temperature unit ElkM1 uses.",
-                    "username": "Username"
+                    "device": "Device"
                 },
                 "description": "Choose a discovered system or 'Manual Entry' if no devices have been discovered.",
                 "title": "Connect to Elk-M1 Control"

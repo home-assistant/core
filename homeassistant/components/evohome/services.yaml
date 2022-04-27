@@ -14,12 +14,12 @@ set_system_mode:
       selector:
         select:
           options:
-            - 'Auto'
-            - 'AutoWithEco'
-            - 'Away'
-            - 'Custom'
-            - 'DayOff'
-            - 'HeatingOff'
+            - "Auto"
+            - "AutoWithEco"
+            - "Away"
+            - "Custom"
+            - "DayOff"
+            - "HeatingOff"
     period:
       name: Period
       description: >-

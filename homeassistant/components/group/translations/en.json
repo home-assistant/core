@@ -9,7 +9,7 @@
                     "name": "Name"
                 },
                 "description": "If \"all entities\" is enabled, the group's state is on only if all members are on. If \"all entities\" is disabled, the group's state is on if any member is on.",
-                "title": "New Group"
+                "title": "Add Group"
             },
             "cover": {
                 "data": {
@@ -17,7 +17,7 @@
                     "hide_members": "Hide members",
                     "name": "Name"
                 },
-                "title": "New Group"
+                "title": "Add Group"
             },
             "fan": {
                 "data": {
@@ -25,7 +25,7 @@
                     "hide_members": "Hide members",
                     "name": "Name"
                 },
-                "title": "New Group"
+                "title": "Add Group"
             },
             "light": {
                 "data": {
@@ -33,7 +33,15 @@
                     "hide_members": "Hide members",
                     "name": "Name"
                 },
-                "title": "New Group"
+                "title": "Add Group"
+            },
+            "lock": {
+                "data": {
+                    "entities": "Members",
+                    "hide_members": "Hide members",
+                    "name": "Name"
+                },
+                "title": "Add Group"
             },
             "media_player": {
                 "data": {
@@ -41,18 +49,28 @@
                     "hide_members": "Hide members",
                     "name": "Name"
                 },
-                "title": "New Group"
+                "title": "Add Group"
+            },
+            "switch": {
+                "data": {
+                    "entities": "Members",
+                    "hide_members": "Hide members",
+                    "name": "Name"
+                },
+                "title": "Add Group"
             },
             "user": {
-                "description": "Select group type",
+                "description": "Groups allow you to create a new entity that represents multiple entities of the same type.",
                 "menu_options": {
                     "binary_sensor": "Binary sensor group",
                     "cover": "Cover group",
                     "fan": "Fan group",
                     "light": "Light group",
-                    "media_player": "Media player group"
+                    "lock": "Lock group",
+                    "media_player": "Media player group",
+                    "switch": "Switch group"
                 },
-                "title": "New Group"
+                "title": "Add Group"
             }
         }
     },
@@ -86,11 +104,25 @@
                 },
                 "description": "If \"all entities\" is enabled, the group's state is on only if all members are on. If \"all entities\" is disabled, the group's state is on if any member is on."
             },
+            "lock": {
+                "data": {
+                    "entities": "Members",
+                    "hide_members": "Hide members"
+                }
+            },
             "media_player": {
                 "data": {
                     "entities": "Members",
                     "hide_members": "Hide members"
                 }
+            },
+            "switch": {
+                "data": {
+                    "all": "All entities",
+                    "entities": "Members",
+                    "hide_members": "Hide members"
+                },
+                "description": "If \"all entities\" is enabled, the group's state is on only if all members are on. If \"all entities\" is disabled, the group's state is on if any member is on."
             }
         }
     },
