@@ -463,7 +463,9 @@ class PowerConfigurationChannel(ZigbeeChannel):
             "battery_size",
             "battery_quantity",
         ]
-        return self.get_attributes(attributes, from_cache=from_cache)
+        return self.get_attributes(
+            attributes, from_cache=from_cache, only_cache=from_cache
+        )
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.PowerProfile.cluster_id)
