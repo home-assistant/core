@@ -53,6 +53,7 @@ from .const import (
     ATTR_ADDONS,
     ATTR_AUTO_UPDATE,
     ATTR_CHANGELOG,
+    ATTR_COMPRESSED,
     ATTR_DISCOVERY,
     ATTR_FOLDERS,
     ATTR_HOMEASSISTANT,
@@ -127,7 +128,11 @@ SCHEMA_ADDON_STDIN = SCHEMA_ADDON.extend(
 )
 
 SCHEMA_BACKUP_FULL = vol.Schema(
-    {vol.Optional(ATTR_NAME): cv.string, vol.Optional(ATTR_PASSWORD): cv.string}
+    {
+        vol.Optional(ATTR_NAME): cv.string,
+        vol.Optional(ATTR_PASSWORD): cv.string,
+        vol.Optional(ATTR_COMPRESSED): cv.boolean,
+    }
 )
 
 SCHEMA_BACKUP_PARTIAL = SCHEMA_BACKUP_FULL.extend(

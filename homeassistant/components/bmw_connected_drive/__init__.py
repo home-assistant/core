@@ -132,10 +132,9 @@ async def async_update_options(hass: HomeAssistant, config_entry: ConfigEntry) -
     await hass.config_entries.async_reload(config_entry.entry_id)
 
 
-class BMWConnectedDriveBaseEntity(CoordinatorEntity, Entity):
+class BMWConnectedDriveBaseEntity(CoordinatorEntity[BMWDataUpdateCoordinator], Entity):
     """Common base for BMW entities."""
 
-    coordinator: BMWDataUpdateCoordinator
     _attr_attribution = ATTRIBUTION
 
     def __init__(

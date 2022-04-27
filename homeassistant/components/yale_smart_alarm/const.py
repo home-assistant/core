@@ -34,7 +34,12 @@ LOGGER = logging.getLogger(__package__)
 ATTR_ONLINE = "online"
 ATTR_STATUS = "status"
 
-PLATFORMS = [Platform.ALARM_CONTROL_PANEL, Platform.BINARY_SENSOR, Platform.LOCK]
+PLATFORMS = [
+    Platform.ALARM_CONTROL_PANEL,
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.LOCK,
+]
 
 STATE_MAP = {
     YALE_STATE_DISARM: STATE_ALARM_DISARMED,
