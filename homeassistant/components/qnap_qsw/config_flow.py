@@ -10,7 +10,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
-from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.device_registry import format_mac
 
 from .const import DOMAIN
@@ -56,9 +56,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_URL): cv.url_no_path,
-                    vol.Required(CONF_USERNAME): cv.string,
-                    vol.Required(CONF_PASSWORD): cv.string,
+                    vol.Required(CONF_URL): str,
+                    vol.Required(CONF_USERNAME): str,
+                    vol.Required(CONF_PASSWORD): str,
                 }
             ),
             errors=errors,

@@ -243,6 +243,9 @@ aiosenz==1.0.0
 # homeassistant.components.shelly
 aioshelly==2.0.0
 
+# homeassistant.components.slimproto
+aioslimproto==1.0.0
+
 # homeassistant.components.steamist
 aiosteamist==0.3.1
 
@@ -816,7 +819,7 @@ hole==0.7.0
 holidays==0.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220425.0
+home-assistant-frontend==20220427.0
 
 # homeassistant.components.home_connect
 homeconnect==0.7.0
@@ -1553,7 +1556,7 @@ pyipma==2.0.5
 pyipp==0.11.0
 
 # homeassistant.components.iqvia
-pyiqvia==2021.11.0
+pyiqvia==2022.04.0
 
 # homeassistant.components.irish_rail_transport
 pyirishrail==0.0.2
@@ -1691,7 +1694,7 @@ pyoctoprintapi==0.1.8
 pyombi==0.1.10
 
 # homeassistant.components.openuv
-pyopenuv==2021.11.0
+pyopenuv==2022.04.0
 
 # homeassistant.components.opnsense
 pyopnsense==0.2.0
@@ -1966,6 +1969,7 @@ pytraccar==0.10.0
 # homeassistant.components.tradfri
 pytradfri[async]==9.0.0
 
+# homeassistant.components.trafikverket_ferry
 # homeassistant.components.trafikverket_train
 # homeassistant.components.trafikverket_weatherstation
 pytrafikverket==0.1.6.2
