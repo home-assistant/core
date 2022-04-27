@@ -1,8 +1,6 @@
 """Sensor support for Skybell Doorbells."""
 from __future__ import annotations
 
-from datetime import timedelta
-
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -10,15 +8,14 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DEFAULT_ENTITY_NAMESPACE, DOMAIN as SKYBELL_DOMAIN, SkybellDevice
-
-SCAN_INTERVAL = timedelta(seconds=30)
+from . import DOMAIN, SkybellEntity
+from .coordinator import SkybellDataUpdateCoordinator
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -27,56 +24,44 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         icon="mdi:bell-ring",
     ),
 )
-MONITORED_CONDITIONS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
-
+# Deprecated in Home Assistant 2022.5
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(
-            CONF_ENTITY_NAMESPACE, default=DEFAULT_ENTITY_NAMESPACE
-        ): cv.string,
+        vol.Optional(CONF_ENTITY_NAMESPACE, default=DOMAIN): cv.string,
         vol.Required(CONF_MONITORED_CONDITIONS, default=[]): vol.All(
-            cv.ensure_list, [vol.In(MONITORED_CONDITIONS)]
+            cv.ensure_list, [vol.In(SENSOR_TYPES)]
         ),
     }
 )
 
 
-def setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up the platform for a Skybell device."""
-    skybell = hass.data[SKYBELL_DOMAIN]
-
-    sensors = [
-        SkybellSensor(device, description)
-        for device in skybell.get_devices()
+    """Set up Skybell sensor."""
+    async_add_entities(
+        SkybellSensor(coordinator, description)
+        for coordinator in hass.data[DOMAIN][entry.entry_id]
         for description in SENSOR_TYPES
-        if description.key in config[CONF_MONITORED_CONDITIONS]
-    ]
-
-    add_entities(sensors, True)
+    )
 
 
-class SkybellSensor(SkybellDevice, SensorEntity):
+class SkybellSensor(SkybellEntity, SensorEntity):
     """A sensor implementation for Skybell devices."""
 
     def __init__(
         self,
-        device,
+        coordinator: SkybellDataUpdateCoordinator,
         description: SensorEntityDescription,
-    ):
+    ) -> None:
         """Initialize a sensor for a Skybell device."""
-        super().__init__(device)
+        super().__init__(coordinator)
         self.entity_description = description
-        self._attr_name = f"{self._device.name} {description.name}"
+        self._attr_name = f"{coordinator.name} {description.name}"
+        self._attr_unique_id = f"{coordinator.device.device_id}_{description.key}"
 
-    def update(self):
-        """Get the latest data and updates the state."""
-        super().update()
-
-        if self.entity_description.key == "chime_level":
-            self._attr_native_value = self._device.outdoor_chime_level
+    @property
+    def native_value(self) -> int:
+        """Return the state of the sensor."""
+        return self.coordinator.device.outdoor_chime_level

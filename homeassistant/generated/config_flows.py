@@ -304,6 +304,7 @@ FLOWS = {
         "shopping_list",
         "sia",
         "simplisafe",
+        "skybell",
         "sleepiq",
         "slimproto",
         "sma",

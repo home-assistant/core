@@ -1057,7 +1057,13 @@ omit =
     homeassistant/components/sisyphus/*
     homeassistant/components/sky_hub/*
     homeassistant/components/skybeacon/sensor.py
-    homeassistant/components/skybell/*
+    homeassistant/components/skybell/__init__.py
+    homeassistant/components/skybell/binary_sensor.py
+    homeassistant/components/skybell/camera.py
+    homeassistant/components/skybell/coordinator.py
+    homeassistant/components/skybell/light.py
+    homeassistant/components/skybell/sensor.py
+    homeassistant/components/skybell/switch.py
     homeassistant/components/slack/notify.py
     homeassistant/components/sia/__init__.py
     homeassistant/components/sia/alarm_control_panel.py

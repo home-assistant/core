@@ -1,101 +1,162 @@
 """Support for the Skybell HD Doorbell."""
-import logging
+from __future__ import annotations
 
-from requests.exceptions import ConnectTimeout, HTTPError
-from skybellpy import Skybell
+import asyncio
+import os
+
+from aioskybell import Skybell
+from aioskybell.exceptions import SkybellAuthenticationException, SkybellException
 import voluptuous as vol
 
-from homeassistant.components import persistent_notification
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
+    ATTR_CONNECTIONS,
+    CONF_EMAIL,
     CONF_PASSWORD,
     CONF_USERNAME,
-    __version__,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-_LOGGER = logging.getLogger(__name__)
-
-ATTRIBUTION = "Data provided by Skybell.com"
-
-NOTIFICATION_ID = "skybell_notification"
-NOTIFICATION_TITLE = "Skybell Sensor Setup"
-
-DOMAIN = "skybell"
-DEFAULT_CACHEDB = "./skybell_cache.pickle"
-DEFAULT_ENTITY_NAMESPACE = "skybell"
-
-AGENT_IDENTIFIER = f"HomeAssistant/{__version__}"
+from .const import DEFAULT_CACHEDB, DEFAULT_NAME, DOMAIN
+from .coordinator import SkybellDataUpdateCoordinator
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string,
-            }
-        )
-    },
+    vol.All(
+        # Deprecated in Home Assistant 2022.5
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.Schema(
+                {
+                    vol.Required(CONF_USERNAME): cv.string,
+                    vol.Required(CONF_PASSWORD): cv.string,
+                }
+            )
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.CAMERA,
+    Platform.LIGHT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Skybell component."""
-    conf = config[DOMAIN]
-    username = conf.get(CONF_USERNAME)
-    password = conf.get(CONF_PASSWORD)
 
-    try:
-        cache = hass.config.path(DEFAULT_CACHEDB)
-        skybell = Skybell(
-            username=username,
-            password=password,
-            get_devices=True,
-            cache_path=cache,
-            agent_identifier=AGENT_IDENTIFIER,
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the SkyBell component."""
+    hass.data.setdefault(DOMAIN, {})
+
+    entry_config = {}
+    if DOMAIN not in config:
+        return True
+    for parameter, value in config[DOMAIN].items():
+        if parameter == CONF_USERNAME:
+            entry_config[CONF_EMAIL] = value
+        else:
+            entry_config[parameter] = value
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data=entry_config,
+            )
         )
 
-        hass.data[DOMAIN] = skybell
-    except (ConnectTimeout, HTTPError) as ex:
-        _LOGGER.error("Unable to connect to Skybell service: %s", str(ex))
-        persistent_notification.create(
-            hass,
-            "Error: {}<br />"
-            "You will need to restart hass after fixing."
-            "".format(ex),
-            title=NOTIFICATION_TITLE,
-            notification_id=NOTIFICATION_ID,
-        )
-        return False
+    # Clean up unused cache file since we are using an account specific name
+    if os.path.exists(hass.config.path(DEFAULT_CACHEDB)):
+        os.remove(hass.config.path(DEFAULT_CACHEDB))
+
     return True
 
 
-class SkybellDevice(Entity):
-    """A HA implementation for Skybell devices."""
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up Skybell from a config entry."""
+    email = entry.data[CONF_EMAIL]
+    password = entry.data[CONF_PASSWORD]
 
-    def __init__(self, device):
-        """Initialize a sensor for Skybell device."""
-        self._device = device
+    api = Skybell(
+        username=email,
+        password=password,
+        get_devices=True,
+        cache_path=hass.config.path(f"./skybell_{entry.unique_id}.pickle"),
+        session=async_get_clientsession(hass),
+    )
+    try:
+        devices = await api.async_initialize()
+    except SkybellAuthenticationException:
+        return False
+    except SkybellException as ex:
+        raise ConfigEntryNotReady(f"Unable to connect to Skybell service: {ex}") from ex
 
-    def update(self):
-        """Update automation state."""
-        self._device.refresh()
+    device_coordinators: list[SkybellDataUpdateCoordinator] = [
+        SkybellDataUpdateCoordinator(hass, device) for device in devices
+    ]
+    await asyncio.gather(
+        *[
+            coordinator.async_config_entry_first_refresh()
+            for coordinator in device_coordinators
+        ]
+    )
+    hass.data[DOMAIN][entry.entry_id] = device_coordinators
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        hass.data[DOMAIN].pop(entry.entry_id)
+    return unload_ok
+
+
+class SkybellEntity(CoordinatorEntity[SkybellDataUpdateCoordinator]):
+    """An HA implementation for Skybell entity."""
+
+    _attr_attribution = "Data provided by Skybell.com"
+
+    def __init__(self, coordinator: SkybellDataUpdateCoordinator) -> None:
+        """Initialize a SkyBell entity."""
+        super().__init__(coordinator)
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self.coordinator.device.device_id)},
+            manufacturer=DEFAULT_NAME,
+            model=self.coordinator.device.type,
+            name=self.coordinator.device.name,
+            sw_version=self.coordinator.device.firmware_ver,
+        )
+        if self.coordinator.device.mac:
+            self._attr_device_info[ATTR_CONNECTIONS] = {
+                (dr.CONNECTION_NETWORK_MAC, self.coordinator.device.mac)
+            }
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, str | int | tuple[str, str]]:
         """Return the state attributes."""
-        return {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
-            "device_id": self._device.device_id,
-            "status": self._device.status,
-            "location": self._device.location,
-            "wifi_ssid": self._device.wifi_ssid,
-            "wifi_status": self._device.wifi_status,
-            "last_check_in": self._device.last_check_in,
-            "motion_threshold": self._device.motion_threshold,
-            "video_profile": self._device.video_profile,
+        attr: dict[str, str | int | tuple[str, str]] = {
+            "device_id": self.coordinator.device.device_id,
+            "status": self.coordinator.device.status,
+            "location": self.coordinator.device.location,
+            "motion_threshold": self.coordinator.device.motion_threshold,
+            "video_profile": self.coordinator.device.video_profile,
         }
+        if self.coordinator.device.owner:
+            attr["wifi_ssid"] = self.coordinator.device.wifi_ssid
+            attr["wifi_status"] = self.coordinator.device.wifi_status
+            attr["last_check_in"] = self.coordinator.device.last_check_in
+        return attr
+
+    @property
+    def available(self) -> bool:
+        """Return True if device is available."""
+        return super().available

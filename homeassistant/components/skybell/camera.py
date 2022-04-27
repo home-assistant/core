@@ -1,106 +1,69 @@
 """Camera support for the Skybell HD Doorbell."""
 from __future__ import annotations
 
-from datetime import timedelta
-import logging
-
-import requests
 import voluptuous as vol
 
-from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
+from homeassistant.components.camera import (
+    PLATFORM_SCHEMA,
+    Camera,
+    CameraEntityDescription,
+)
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MONITORED_CONDITIONS
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN as SKYBELL_DOMAIN, SkybellDevice
+from . import SkybellEntity
+from .const import DOMAIN, IMAGE_ACTIVITY, IMAGE_AVATAR
+from .coordinator import SkybellDataUpdateCoordinator
 
-_LOGGER = logging.getLogger(__name__)
-
-SCAN_INTERVAL = timedelta(seconds=90)
-
-IMAGE_AVATAR = "avatar"
-IMAGE_ACTIVITY = "activity"
-
-CONF_ACTIVITY_NAME = "activity_name"
-CONF_AVATAR_NAME = "avatar_name"
-
+# Deprecated in Home Assistant 2022.5
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_MONITORED_CONDITIONS, default=[IMAGE_AVATAR]): vol.All(
             cv.ensure_list, [vol.In([IMAGE_AVATAR, IMAGE_ACTIVITY])]
         ),
-        vol.Optional(CONF_ACTIVITY_NAME): cv.string,
-        vol.Optional(CONF_AVATAR_NAME): cv.string,
+        vol.Optional("activity_name"): cv.string,
+        vol.Optional("avatar_name"): cv.string,
     }
 )
 
+CAMERA_TYPES: tuple[CameraEntityDescription, ...] = (
+    CameraEntityDescription(key="activity", name="Last Activity"),
+    CameraEntityDescription(key="avatar", name="Camera"),
+)
 
-def setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up the platform for a Skybell device."""
-    cond = config[CONF_MONITORED_CONDITIONS]
-    names = {}
-    names[IMAGE_ACTIVITY] = config.get(CONF_ACTIVITY_NAME)
-    names[IMAGE_AVATAR] = config.get(CONF_AVATAR_NAME)
-    skybell = hass.data[SKYBELL_DOMAIN]
-
-    sensors = []
-    for device in skybell.get_devices():
-        for camera_type in cond:
-            sensors.append(SkybellCamera(device, camera_type, names.get(camera_type)))
-
-    add_entities(sensors, True)
+    """Set up Skybell switch."""
+    async_add_entities(
+        SkybellCamera(coordinator, description)
+        for description in CAMERA_TYPES
+        for coordinator in hass.data[DOMAIN][entry.entry_id]
+    )
 
 
-class SkybellCamera(SkybellDevice, Camera):
+class SkybellCamera(SkybellEntity, Camera):
     """A camera implementation for Skybell devices."""
 
-    def __init__(self, device, camera_type, name=None):
+    def __init__(
+        self,
+        coordinator: SkybellDataUpdateCoordinator,
+        description: EntityDescription,
+    ) -> None:
         """Initialize a camera for a Skybell device."""
-        self._type = camera_type
-        SkybellDevice.__init__(self, device)
+        super().__init__(coordinator)
         Camera.__init__(self)
-        if name is not None:
-            self._name = f"{self._device.name} {name}"
-        else:
-            self._name = self._device.name
-        self._url = None
-        self._response = None
+        self.entity_description = description
+        self._attr_name = f"{coordinator.name} {description.name}"
+        self._attr_unique_id = f"{coordinator.device.device_id}_{description.key}"
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def image_url(self):
-        """Get the camera image url based on type."""
-        if self._type == IMAGE_ACTIVITY:
-            return self._device.activity_image
-        return self._device.image
-
-    def camera_image(
+    async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Get the latest camera image."""
-        super().update()
-
-        if self._url != self.image_url:
-            self._url = self.image_url
-
-            try:
-                self._response = requests.get(self._url, stream=True, timeout=10)
-            except requests.HTTPError as err:
-                _LOGGER.warning("Failed to get camera image: %s", err)
-                self._response = None
-
-        if not self._response:
-            return None
-
-        return self._response.content
+        return self.coordinator.device.images[self.entity_description.key]
