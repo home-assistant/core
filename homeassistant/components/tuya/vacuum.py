@@ -120,8 +120,9 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
         if enum_type := self.find_dpcode(
             DPCode.SUCTION, dptype=DPType.ENUM, prefer_function=True
         ):
-            self._attr_supported_features |= VacuumEntityFeature.FAN_SPEED
+            self._fan_speed = enum_type
             self._attr_fan_speed_list = enum_type.range
+            self._attr_supported_features |= VacuumEntityFeature.FAN_SPEED
 
         if int_type := self.find_dpcode(DPCode.ELECTRICITY_LEFT, dptype=DPType.INTEGER):
             self._attr_supported_features |= VacuumEntityFeature.BATTERY
