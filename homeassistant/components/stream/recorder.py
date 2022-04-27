@@ -141,7 +141,7 @@ class RecorderOutput(StreamOutput):
         thread = threading.Thread(
             name="recorder_save_worker",
             target=recorder_save_worker,
-            args=(self.video_path, self._segments),
+            args=(self.video_path, self._segments.copy()),
         )
         thread.start()
 
