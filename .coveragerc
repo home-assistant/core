@@ -992,7 +992,8 @@ omit =
     homeassistant/components/rtorrent/sensor.py
     homeassistant/components/russound_rio/media_player.py
     homeassistant/components/russound_rnet/media_player.py
-    homeassistant/components/sabnzbd/*
+    homeassistant/components/sabnzbd/__init__.py
+    homeassistant/components/sabnzbd/sensor.py
     homeassistant/components/saj/sensor.py
     homeassistant/components/satel_integra/*
     homeassistant/components/schluter/*
