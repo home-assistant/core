@@ -268,6 +268,4 @@ class CloudGoogleConfig(AbstractConfig):
         ):
             return
 
-        print(event.data)
-
         self.async_schedule_google_sync_all()
