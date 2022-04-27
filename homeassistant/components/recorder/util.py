@@ -35,6 +35,7 @@ from .models import (
     TABLE_SCHEMA_CHANGES,
     TABLES_TO_CHECK,
     RecorderRuns,
+    UnsupportedDialect,
     process_timestamp,
 )
 
@@ -331,29 +332,31 @@ def query_on_connection(dbapi_connection: Any, statement: str) -> Any:
     return result
 
 
-def _warn_unsupported_dialect(dialect_name: str) -> None:
+def _fail_unsupported_dialect(dialect_name: str) -> None:
     """Warn about unsupported database version."""
-    _LOGGER.warning(
+    _LOGGER.error(
         "Database %s is not supported; Home Assistant supports %s. "
-        "Starting with Home Assistant 2022.2 this will prevent the recorder from "
-        "starting. Please migrate your database to a supported software before then",
+        "Starting with Home Assistant 2022.6 this prevents the recorder from "
+        "starting. Please migrate your database to a supported software",
         dialect_name,
         "MariaDB ≥ 10.3, MySQL ≥ 8.0, PostgreSQL ≥ 12, SQLite ≥ 3.31.0",
     )
+    raise UnsupportedDialect
 
 
-def _warn_unsupported_version(
+def _fail_unsupported_version(
     server_version: str, dialect_name: str, minimum_version: str
 ) -> None:
     """Warn about unsupported database version."""
-    _LOGGER.warning(
+    _LOGGER.error(
         "Version %s of %s is not supported; minimum supported version is %s. "
-        "Starting with Home Assistant 2022.2 this will prevent the recorder from "
-        "starting. Please upgrade your database software before then",
+        "Starting with Home Assistant 2022.6 this prevents the recorder from "
+        "starting. Please upgrade your database software",
         server_version,
         dialect_name,
         minimum_version,
     )
+    raise UnsupportedDialect
 
 
 def _extract_version_from_server_response(
@@ -401,9 +404,6 @@ def setup_connection_for_dialect(
     first_connection: bool,
 ) -> None:
     """Execute statements needed for dialect connection."""
-    # Returns False if the the connection needs to be setup
-    # on the next connection, returns True if the connection
-    # never needs to be setup again.
     if dialect_name == SupportedDialect.SQLITE:
         if first_connection:
             old_isolation = dbapi_connection.isolation_level
@@ -422,7 +422,7 @@ def setup_connection_for_dialect(
                     False
                 )
             if not version or version < MIN_VERSION_SQLITE:
-                _warn_unsupported_version(
+                _fail_unsupported_version(
                     version or version_string, "SQLite", MIN_VERSION_SQLITE
                 )
 
@@ -456,7 +456,7 @@ def setup_connection_for_dialect(
                         False
                     )
                 if not version or version < MIN_VERSION_MARIA_DB:
-                    _warn_unsupported_version(
+                    _fail_unsupported_version(
                         version or version_string, "MariaDB", MIN_VERSION_MARIA_DB
                     )
             else:
@@ -465,7 +465,7 @@ def setup_connection_for_dialect(
                         False
                     )
                 if not version or version < MIN_VERSION_MYSQL:
-                    _warn_unsupported_version(
+                    _fail_unsupported_version(
                         version or version_string, "MySQL", MIN_VERSION_MYSQL
                     )
 
@@ -476,12 +476,12 @@ def setup_connection_for_dialect(
             version_string = result[0][0]
             version = _extract_version_from_server_response(version_string)
             if not version or version < MIN_VERSION_PGSQL:
-                _warn_unsupported_version(
+                _fail_unsupported_version(
                     version or version_string, "PostgreSQL", MIN_VERSION_PGSQL
                 )
 
     else:
-        _warn_unsupported_dialect(dialect_name)
+        _fail_unsupported_dialect(dialect_name)
 
 
 def end_incomplete_runs(session: Session, start_time: datetime) -> None:
