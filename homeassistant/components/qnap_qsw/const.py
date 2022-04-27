@@ -9,4 +9,5 @@ MANUFACTURER: Final = "QNAP"
 
 RPM: Final = "rpm"
 
+QSW_REBOOT = "reboot"
 QSW_TIMEOUT_SEC: Final = 25

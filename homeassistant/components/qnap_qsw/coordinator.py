@@ -21,6 +21,8 @@ _LOGGER = logging.getLogger(__name__)
 class QswUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching data from the QNAP QSW device."""
 
+    qsw: QnapQswApi
+
     def __init__(self, hass: HomeAssistant, qsw: QnapQswApi) -> None:
         """Initialize."""
         self.qsw = qsw
