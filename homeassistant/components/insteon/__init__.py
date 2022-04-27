@@ -9,6 +9,7 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_PLATFORM, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
 from . import api
@@ -155,33 +156,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
     for address in devices:
         device = devices[address]
         platforms = get_device_platforms(device)
         if ON_OFF_EVENTS in platforms:
             add_on_off_event_device(hass, device)
-            device_registry.async_get_or_create(
-                config_entry_id=entry.entry_id,
-                identifiers={(DOMAIN, str(device.address))},
-                manufacturer="Smart Home",
-                name=f"{device.description} {device.address}",
-                model=f"{device.model} ({device.cat!r}, 0x{device.subcat:02x})",
-                sw_version=f"{device.firmware:02x} Engine Version: {device.engine_version}",
-            )
+            create_insteon_device(hass, device, entry.entry_id)
 
     _LOGGER.debug("Insteon device count: %s", len(devices))
     register_new_device_callback(hass)
     async_register_services(hass)
 
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, str(devices.modem.address))},
-        manufacturer="Smart Home",
-        name=f"{devices.modem.description} {devices.modem.address}",
-        model=f"{devices.modem.model} ({devices.modem.cat!r}, 0x{devices.modem.subcat:02x})",
-        sw_version=f"{devices.modem.firmware:02x} Engine Version: {devices.modem.engine_version}",
-    )
+    create_insteon_device(hass, devices.modem, entry.entry_id)
 
     api.async_load_api(hass)
     await api.async_register_insteon_frontend(hass)
@@ -189,3 +175,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     asyncio.create_task(async_get_device_config(hass, entry))
 
     return True
+
+
+def create_insteon_device(hass, device, config_entry_id):
+    """Create an Insteon device."""
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry_id,  # entry.entry_id,
+        identifiers={(DOMAIN, str(device.address))},
+        manufacturer="SmartLabs, Inc",
+        name=f"{device.description} {device.address}",
+        model=f"{device.model} ({device.cat!r}, 0x{device.subcat:02x})",
+        sw_version=f"{device.firmware:02x} Engine Version: {device.engine_version}",
+    )
