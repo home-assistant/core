@@ -482,7 +482,7 @@ gTTS==2.2.4
 garages-amsterdam==3.0.0
 
 # homeassistant.components.google
-gcal-sync==0.6.0
+gcal-sync==0.6.1
 
 # homeassistant.components.usgs_earthquakes_feed
 geojson_client==0.6
