@@ -45,7 +45,7 @@ class OverkizLight(OverkizEntity, LightEntity):
         """Initialize a device."""
         super().__init__(device_url, coordinator)
 
-        self._attr_supported_color_modes = set()
+        self._attr_supported_color_modes: set[ColorMode] = set()
 
         if self.executor.has_command(OverkizCommand.SET_RGB):
             self._attr_supported_color_modes.add(ColorMode.RGB)
