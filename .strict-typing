@@ -17,6 +17,7 @@ homeassistant.helpers.area_registry
 homeassistant.helpers.condition
 homeassistant.helpers.discovery
 homeassistant.helpers.entity_values
+homeassistant.helpers.event
 homeassistant.helpers.reload
 homeassistant.helpers.script_variables
 homeassistant.helpers.translation
