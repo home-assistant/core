@@ -1129,6 +1129,8 @@ omit =
     homeassistant/components/spotify/media_player.py
     homeassistant/components/spotify/system_health.py
     homeassistant/components/spotify/util.py
+    homeassistant/components/slimproto/__init__.py
+    homeassistant/components/slimproto/media_player.py
     homeassistant/components/squeezebox/__init__.py
     homeassistant/components/squeezebox/browse_media.py
     homeassistant/components/squeezebox/media_player.py

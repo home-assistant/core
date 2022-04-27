@@ -305,6 +305,7 @@ FLOWS = {
         "sia",
         "simplisafe",
         "sleepiq",
+        "slimproto",
         "sma",
         "smappee",
         "smart_meter_texas",

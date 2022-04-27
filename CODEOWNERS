@@ -917,6 +917,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/sleepiq/ @mfugate1 @kbickar
 /tests/components/sleepiq/ @mfugate1 @kbickar
 /homeassistant/components/slide/ @ualex73
+/homeassistant/components/slimproto/ @marcelveldt
+/tests/components/slimproto/ @marcelveldt
 /homeassistant/components/sma/ @kellerza @rklomp
 /tests/components/sma/ @kellerza @rklomp
 /homeassistant/components/smappee/ @bsmappee
