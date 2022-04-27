@@ -43,6 +43,7 @@ class QswSensorEntityDescription(SensorEntityDescription):
 
 SENSOR_TYPES: Final[tuple[QswSensorEntityDescription, ...]] = (
     QswSensorEntityDescription(
+        icon="mdi:fan-speed-1",
         key=QSD_SYSTEM_SENSOR,
         name="Fan 1 Speed",
         native_unit_of_measurement=RPM,
@@ -50,6 +51,7 @@ SENSOR_TYPES: Final[tuple[QswSensorEntityDescription, ...]] = (
         subkey=QSD_FAN1_SPEED,
     ),
     QswSensorEntityDescription(
+        icon="mdi:fan-speed-2",
         key=QSD_SYSTEM_SENSOR,
         name="Fan 2 Speed",
         native_unit_of_measurement=RPM,
@@ -68,6 +70,7 @@ SENSOR_TYPES: Final[tuple[QswSensorEntityDescription, ...]] = (
         subkey=QSD_TEMP,
     ),
     QswSensorEntityDescription(
+        icon="mdi:timer-outline",
         key=QSD_SYSTEM_TIME,
         entity_category=EntityCategory.DIAGNOSTIC,
         name="Uptime",
