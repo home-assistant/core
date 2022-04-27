@@ -14,13 +14,9 @@ from homeassistant.components.light import (
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
-    COLOR_MODE_BRIGHTNESS,
-    COLOR_MODE_COLOR_TEMP,
-    COLOR_MODE_HS,
-    COLOR_MODE_ONOFF,
-    SUPPORT_EFFECT,
-    SUPPORT_TRANSITION,
+    ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -101,7 +97,7 @@ RANDOM_EFFECT_DICT: Final = {
         cv.ensure_list_csv, [vol.Coerce(int)], HSV_SEQUENCE
     ),
     vol.Optional("random_seed", default=100): vol.All(
-        vol.Coerce(int), vol.Range(min=1, max=100)
+        vol.Coerce(int), vol.Range(min=1, max=600)
     ),
     vol.Optional("backgrounds"): vol.All(
         cv.ensure_list,
@@ -165,6 +161,8 @@ async def async_setup_entry(
 
 class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
     """Representation of a TPLink Smart Bulb."""
+
+    _attr_supported_features = LightEntityFeature.TRANSITION
 
     device: SmartBulb
 
@@ -280,37 +278,32 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
         return hue, saturation
 
     @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return SUPPORT_TRANSITION
-
-    @property
-    def supported_color_modes(self) -> set[str] | None:
+    def supported_color_modes(self) -> set[ColorMode | str] | None:
         """Return list of available color modes."""
-        modes = set()
+        modes: set[ColorMode | str] = set()
         if self.device.is_variable_color_temp:
-            modes.add(COLOR_MODE_COLOR_TEMP)
+            modes.add(ColorMode.COLOR_TEMP)
         if self.device.is_color:
-            modes.add(COLOR_MODE_HS)
+            modes.add(ColorMode.HS)
         if self.device.is_dimmable:
-            modes.add(COLOR_MODE_BRIGHTNESS)
+            modes.add(ColorMode.BRIGHTNESS)
 
         if not modes:
-            modes.add(COLOR_MODE_ONOFF)
+            modes.add(ColorMode.ONOFF)
 
         return modes
 
     @property
-    def color_mode(self) -> str | None:
+    def color_mode(self) -> ColorMode:
         """Return the active color mode."""
         if self.device.is_color:
             if self.device.is_variable_color_temp and self.device.color_temp:
-                return COLOR_MODE_COLOR_TEMP
-            return COLOR_MODE_HS
+                return ColorMode.COLOR_TEMP
+            return ColorMode.HS
         if self.device.is_variable_color_temp:
-            return COLOR_MODE_COLOR_TEMP
+            return ColorMode.COLOR_TEMP
 
-        return COLOR_MODE_BRIGHTNESS
+        return ColorMode.BRIGHTNESS
 
 
 class TPLinkSmartLightStrip(TPLinkSmartBulb):
@@ -321,7 +314,7 @@ class TPLinkSmartLightStrip(TPLinkSmartBulb):
     @property
     def supported_features(self) -> int:
         """Flag supported features."""
-        return super().supported_features | SUPPORT_EFFECT
+        return super().supported_features | LightEntityFeature.EFFECT
 
     @property
     def effect_list(self) -> list[str] | None:

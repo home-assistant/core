@@ -13,7 +13,12 @@ from homeassistant.components.select.const import (
     SERVICE_SELECT_OPTION,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, STATE_UNAVAILABLE
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_FRIENDLY_NAME,
+    CONF_UNIQUE_ID,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import Event, HomeAssistant, callback, split_entity_id
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -28,6 +33,7 @@ from .const import (
     CONF_METER,
     CONF_TARIFFS,
     DATA_LEGACY_COMPONENT,
+    DATA_UTILITY,
     SERVICE_SELECT_NEXT_TARIFF,
     SERVICE_SELECT_TARIFF,
     TARIFF_ICON,
@@ -66,13 +72,18 @@ async def async_setup_platform(
         return
 
     legacy_component = hass.data[DATA_LEGACY_COMPONENT]
+    meter: str = discovery_info[CONF_METER]
+    conf_meter_unique_id: str | None = hass.data[DATA_UTILITY][meter].get(
+        CONF_UNIQUE_ID
+    )
+
     async_add_entities(
         [
             TariffSelect(
                 discovery_info[CONF_METER],
                 discovery_info[CONF_TARIFFS],
                 legacy_component.async_add_entities,
-                None,
+                conf_meter_unique_id,
             )
         ]
     )
@@ -136,7 +147,7 @@ class LegacyTariffSelect(Entity):
     def __init__(self, tracked_entity_id):
         """Initialize the entity."""
         self._attr_icon = TARIFF_ICON
-        # Set name to influence enity_id
+        # Set name to influence entity_id
         self._attr_name = split_entity_id(tracked_entity_id)[1]
         self.tracked_entity_id = tracked_entity_id
 

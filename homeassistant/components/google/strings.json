@@ -6,7 +6,7 @@
       },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "The Nest integration needs to re-authenticate your account"
+        "description": "The Google Calendar integration needs to re-authenticate your account"
       },
       "auth": {
         "title": "Link Google Account"

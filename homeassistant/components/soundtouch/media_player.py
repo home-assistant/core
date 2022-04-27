@@ -121,11 +121,13 @@ def setup_platform(
             ]
 
         master = next(
-            [
-                device
-                for device in hass.data[DATA_SOUNDTOUCH]
-                if device.entity_id == master_device_id
-            ].__iter__(),
+            iter(
+                [
+                    device
+                    for device in hass.data[DATA_SOUNDTOUCH]
+                    if device.entity_id == master_device_id
+                ]
+            ),
             None,
         )
 
@@ -357,9 +359,9 @@ class SoundTouchDevice(MediaPlayerEntity):
             # Preset
             presets = self._device.presets()
             preset = next(
-                [
-                    preset for preset in presets if preset.preset_id == str(media_id)
-                ].__iter__(),
+                iter(
+                    [preset for preset in presets if preset.preset_id == str(media_id)]
+                ),
                 None,
             )
             if preset is not None:

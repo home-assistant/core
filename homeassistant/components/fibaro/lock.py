@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from homeassistant.components.lock import ENTITY_ID_FORMAT, LockEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -19,7 +20,9 @@ async def async_setup_entry(
     async_add_entities(
         [
             FibaroLock(device)
-            for device in hass.data[DOMAIN][entry.entry_id][FIBARO_DEVICES]["lock"]
+            for device in hass.data[DOMAIN][entry.entry_id][FIBARO_DEVICES][
+                Platform.LOCK
+            ]
         ],
         True,
     )

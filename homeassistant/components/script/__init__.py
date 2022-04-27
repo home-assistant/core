@@ -32,6 +32,9 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import make_entity_service_schema
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.integration_platform import (
+    async_process_integration_platform_for_component,
+)
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.script import (
     ATTR_CUR,
@@ -164,6 +167,10 @@ def areas_in_script(hass: HomeAssistant, entity_id: str) -> list[str]:
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Load the scripts from the configuration."""
     hass.data[DOMAIN] = component = EntityComponent(LOGGER, DOMAIN, hass)
+
+    # Process integration platforms right away since
+    # we will create entities before firing EVENT_COMPONENT_LOADED
+    await async_process_integration_platform_for_component(hass, DOMAIN)
 
     # To register scripts as valid domain for Blueprint
     async_get_blueprints(hass)
@@ -311,6 +318,10 @@ class ScriptEntity(ToggleEntity, RestoreEntity):
         self.icon = cfg.get(CONF_ICON)
         self.description = cfg[CONF_DESCRIPTION]
         self.fields = cfg[CONF_FIELDS]
+
+        # The object ID of scripts need / are unique already
+        # they cannot be changed from the UI after creating
+        self._attr_unique_id = object_id
 
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
         self.script = Script(

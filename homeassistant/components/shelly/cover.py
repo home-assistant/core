@@ -158,9 +158,6 @@ class RpcShellyCover(ShellyRpcEntity, CoverEntity):
     @property
     def is_closed(self) -> bool | None:
         """If cover is closed."""
-        if not self.status["pos_control"]:
-            return None
-
         return cast(bool, self.status["state"] == "closed")
 
     @property

@@ -1,14 +1,15 @@
 """The tests for the Met Office sensor component."""
+import datetime
 from datetime import timedelta
 import json
-from unittest.mock import patch
+
+from freezegun import freeze_time
 
 from homeassistant.components.metoffice.const import DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.helpers.device_registry import async_get as get_dev_reg
 from homeassistant.util import utcnow
 
-from . import NewDateTime
 from .const import (
     DEVICE_KEY_KINGSLYNN,
     DEVICE_KEY_WAVERTREE,
@@ -20,11 +21,8 @@ from .const import (
 from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
 
 
-@patch(
-    "datapoint.Forecast.datetime.datetime",
-    NewDateTime,
-)
-async def test_site_cannot_connect(hass, requests_mock, legacy_patchable_time):
+@freeze_time(datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.timezone.utc))
+async def test_site_cannot_connect(hass, requests_mock):
     """Test we handle cannot connect error."""
 
     requests_mock.get("/public/data/val/wxfcs/all/json/sitelist/", text="")
@@ -50,11 +48,8 @@ async def test_site_cannot_connect(hass, requests_mock, legacy_patchable_time):
         assert sensor is None
 
 
-@patch(
-    "datapoint.Forecast.datetime.datetime",
-    NewDateTime,
-)
-async def test_site_cannot_update(hass, requests_mock, legacy_patchable_time):
+@freeze_time(datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.timezone.utc))
+async def test_site_cannot_update(hass, requests_mock):
     """Test we handle cannot connect error."""
 
     # all metoffice test data encapsulated in here
@@ -99,11 +94,8 @@ async def test_site_cannot_update(hass, requests_mock, legacy_patchable_time):
     assert weather.state == STATE_UNAVAILABLE
 
 
-@patch(
-    "datapoint.Forecast.datetime.datetime",
-    NewDateTime,
-)
-async def test_one_weather_site_running(hass, requests_mock, legacy_patchable_time):
+@freeze_time(datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.timezone.utc))
+async def test_one_weather_site_running(hass, requests_mock):
     """Test the Met Office weather platform."""
 
     # all metoffice test data encapsulated in here
@@ -183,11 +175,8 @@ async def test_one_weather_site_running(hass, requests_mock, legacy_patchable_ti
     assert weather.attributes.get("forecast")[7]["wind_bearing"] == "SE"
 
 
-@patch(
-    "datapoint.Forecast.datetime.datetime",
-    NewDateTime,
-)
-async def test_two_weather_sites_running(hass, requests_mock, legacy_patchable_time):
+@freeze_time(datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.timezone.utc))
+async def test_two_weather_sites_running(hass, requests_mock):
     """Test we handle two different weather sites both running."""
 
     # all metoffice test data encapsulated in here

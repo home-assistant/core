@@ -61,8 +61,6 @@ def mock_handlers():
 def manager(hass):
     """Fixture of a loaded config manager."""
     manager = config_entries.ConfigEntries(hass, {})
-    manager._entries = {}
-    manager._store._async_ensure_stop_listener = lambda: None
     hass.config_entries = manager
     return manager
 
@@ -2305,6 +2303,7 @@ async def test_async_setup_init_entry(hass):
 
 async def test_async_setup_init_entry_completes_before_loaded_event_fires(hass):
     """Test a config entry being initialized during integration setup before the loaded event fires."""
+    load_events: list[Event] = []
 
     @callback
     def _record_load(event: Event) -> None:
@@ -2312,7 +2311,6 @@ async def test_async_setup_init_entry_completes_before_loaded_event_fires(hass):
         load_events.append(event)
 
     listener = hass.bus.async_listen(EVENT_COMPONENT_LOADED, _record_load)
-    load_events: list[Event] = []
 
     async def mock_async_setup(hass, config):
         """Mock setup."""

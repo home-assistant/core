@@ -314,7 +314,7 @@ async def test_services_config_entry(hass):
     assert state.state == "4"
 
 
-async def test_cron(hass, legacy_patchable_time):
+async def test_cron(hass):
     """Test cron pattern."""
 
     config = {
@@ -329,7 +329,7 @@ async def test_cron(hass, legacy_patchable_time):
     assert await async_setup_component(hass, DOMAIN, config)
 
 
-async def test_cron_and_meter(hass, legacy_patchable_time):
+async def test_cron_and_meter(hass):
     """Test cron pattern and meter type fails."""
     config = {
         "utility_meter": {
@@ -344,7 +344,7 @@ async def test_cron_and_meter(hass, legacy_patchable_time):
     assert not await async_setup_component(hass, DOMAIN, config)
 
 
-async def test_both_cron_and_meter(hass, legacy_patchable_time):
+async def test_both_cron_and_meter(hass):
     """Test cron pattern and meter type passes in different meter."""
     config = {
         "utility_meter": {
@@ -362,7 +362,7 @@ async def test_both_cron_and_meter(hass, legacy_patchable_time):
     assert await async_setup_component(hass, DOMAIN, config)
 
 
-async def test_cron_and_offset(hass, legacy_patchable_time):
+async def test_cron_and_offset(hass):
     """Test cron pattern and offset fails."""
 
     config = {
@@ -378,7 +378,7 @@ async def test_cron_and_offset(hass, legacy_patchable_time):
     assert not await async_setup_component(hass, DOMAIN, config)
 
 
-async def test_bad_cron(hass, legacy_patchable_time):
+async def test_bad_cron(hass):
     """Test bad cron pattern."""
 
     config = {

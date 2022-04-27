@@ -25,7 +25,7 @@ from homeassistant.core import (
     split_entity_id,
 )
 from homeassistant.exceptions import ServiceNotFound
-from homeassistant.helpers import template
+from homeassistant.helpers import entity_registry as er, template
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.script import (
     SCRIPT_MODE_CHOICES,
@@ -205,7 +205,8 @@ async def test_reload_service(hass, running):
         await hass.async_block_till_done()
 
     if running != "same":
-        assert hass.states.get(ENTITY_ID) is None
+        state = hass.states.get(ENTITY_ID)
+        assert state.attributes["restored"] is True
         assert not hass.services.has_service(script.DOMAIN, "test")
 
         assert hass.states.get("script.test2") is not None
@@ -481,6 +482,11 @@ async def test_config_basic(hass):
     test_script = hass.states.get("script.test_script")
     assert test_script.name == "Script Name"
     assert test_script.attributes["icon"] == "mdi:party"
+
+    registry = er.async_get(hass)
+    entry = registry.async_get("script.test_script")
+    assert entry
+    assert entry.unique_id == "test_script"
 
 
 async def test_config_multiple_domains(hass):
@@ -911,3 +917,27 @@ async def test_recursive_script_indirect(hass, script_mode, warning_msg, caplog)
     await asyncio.wait_for(service_called.wait(), 1)
 
     assert warning_msg in caplog.text
+
+
+async def test_setup_with_duplicate_scripts(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test setup with duplicate configs."""
+    assert await async_setup_component(
+        hass,
+        "script",
+        {
+            "script one": {
+                "duplicate": {
+                    "sequence": [],
+                },
+            },
+            "script two": {
+                "duplicate": {
+                    "sequence": [],
+                },
+            },
+        },
+    )
+    assert "Duplicate script detected with name: 'duplicate'" in caplog.text
+    assert len(hass.states.async_entity_ids("script")) == 1

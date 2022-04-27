@@ -20,6 +20,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_ENTITY_ID,
     CONF_NAME,
@@ -92,7 +93,7 @@ DEPRECATION_WARNING_CHARACTERISTIC = (
 )
 
 # Statistics supported by a sensor source (numeric)
-STATS_NUMERIC_SUPPORT = (
+STATS_NUMERIC_SUPPORT = {
     STAT_AVERAGE_LINEAR,
     STAT_AVERAGE_STEP,
     STAT_AVERAGE_TIMELESS,
@@ -116,10 +117,10 @@ STATS_NUMERIC_SUPPORT = (
     STAT_VALUE_MAX,
     STAT_VALUE_MIN,
     STAT_VARIANCE,
-)
+}
 
 # Statistics supported by a binary_sensor source
-STATS_BINARY_SUPPORT = (
+STATS_BINARY_SUPPORT = {
     STAT_AVERAGE_STEP,
     STAT_AVERAGE_TIMELESS,
     STAT_COUNT,
@@ -128,22 +129,47 @@ STATS_BINARY_SUPPORT = (
     STAT_DATETIME_NEWEST,
     STAT_DATETIME_OLDEST,
     STAT_MEAN,
-)
+}
 
-STATS_NOT_A_NUMBER = (
+STATS_NOT_A_NUMBER = {
     STAT_DATETIME_NEWEST,
     STAT_DATETIME_OLDEST,
     STAT_DATETIME_VALUE_MAX,
     STAT_DATETIME_VALUE_MIN,
     STAT_QUANTILES,
-)
+}
 
-STATS_DATETIME = (
+STATS_DATETIME = {
     STAT_DATETIME_NEWEST,
     STAT_DATETIME_OLDEST,
     STAT_DATETIME_VALUE_MAX,
     STAT_DATETIME_VALUE_MIN,
-)
+}
+
+# Statistics which retain the unit of the source entity
+STAT_NUMERIC_RETAIN_UNIT = {
+    STAT_AVERAGE_LINEAR,
+    STAT_AVERAGE_STEP,
+    STAT_AVERAGE_TIMELESS,
+    STAT_CHANGE,
+    STAT_DISTANCE_95P,
+    STAT_DISTANCE_99P,
+    STAT_DISTANCE_ABSOLUTE,
+    STAT_MEAN,
+    STAT_MEDIAN,
+    STAT_NOISINESS,
+    STAT_STANDARD_DEVIATION,
+    STAT_TOTAL,
+    STAT_VALUE_MAX,
+    STAT_VALUE_MIN,
+}
+
+# Statistics which produce percentage ratio from binary_sensor source entity
+STAT_BINARY_PERCENTAGE = {
+    STAT_AVERAGE_STEP,
+    STAT_AVERAGE_TIMELESS,
+    STAT_MEAN,
+}
 
 CONF_STATE_CHARACTERISTIC = "state_characteristic"
 CONF_SAMPLES_MAX_BUFFER_SIZE = "sampling_size"
@@ -250,7 +276,7 @@ class StatisticsSensor(SensorEntity):
         samples_max_age: timedelta | None,
         precision: int,
         quantile_intervals: int,
-        quantile_method: str,
+        quantile_method: Literal["exclusive", "inclusive"],
     ) -> None:
         """Initialize the Statistics sensor."""
         self._attr_icon: str = ICON
@@ -266,7 +292,7 @@ class StatisticsSensor(SensorEntity):
         self._samples_max_age: timedelta | None = samples_max_age
         self._precision: int = precision
         self._quantile_intervals: int = quantile_intervals
-        self._quantile_method: str = quantile_method
+        self._quantile_method: Literal["exclusive", "inclusive"] = quantile_method
         self._value: StateType | datetime = None
         self._unit_of_measurement: str | None = None
         self._available: bool = False
@@ -350,30 +376,11 @@ class StatisticsSensor(SensorEntity):
     def _derive_unit_of_measurement(self, new_state: State) -> str | None:
         base_unit: str | None = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         unit: str | None
-        if self.is_binary and self._state_characteristic in (
-            STAT_AVERAGE_STEP,
-            STAT_AVERAGE_TIMELESS,
-            STAT_MEAN,
-        ):
+        if self.is_binary and self._state_characteristic in STAT_BINARY_PERCENTAGE:
             unit = "%"
         elif not base_unit:
             unit = None
-        elif self._state_characteristic in (
-            STAT_AVERAGE_LINEAR,
-            STAT_AVERAGE_STEP,
-            STAT_AVERAGE_TIMELESS,
-            STAT_CHANGE,
-            STAT_DISTANCE_95P,
-            STAT_DISTANCE_99P,
-            STAT_DISTANCE_ABSOLUTE,
-            STAT_MEAN,
-            STAT_MEDIAN,
-            STAT_NOISINESS,
-            STAT_STANDARD_DEVIATION,
-            STAT_TOTAL,
-            STAT_VALUE_MAX,
-            STAT_VALUE_MIN,
-        ):
+        elif self._state_characteristic in STAT_NUMERIC_RETAIN_UNIT:
             unit = base_unit
         elif self._state_characteristic in STATS_NOT_A_NUMBER:
             unit = None
@@ -392,8 +399,11 @@ class StatisticsSensor(SensorEntity):
         return unit
 
     @property
-    def device_class(self) -> Literal[SensorDeviceClass.TIMESTAMP] | None:
+    def device_class(self) -> SensorDeviceClass | None:
         """Return the class of this device."""
+        if self._state_characteristic in STAT_NUMERIC_RETAIN_UNIT:
+            _state = self.hass.states.get(self._source_entity_id)
+            return None if _state is None else _state.attributes.get(ATTR_DEVICE_CLASS)
         if self._state_characteristic in STATS_DATETIME:
             return SensorDeviceClass.TIMESTAMP
         return None

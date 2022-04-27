@@ -7,11 +7,10 @@ import re
 import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel import (
-    FORMAT_NUMBER,
-    FORMAT_TEXT,
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
+    CodeFormat,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -177,8 +176,8 @@ class IFTTTAlarmPanel(AlarmControlPanelEntity):
         if self._code is None:
             return None
         if isinstance(self._code, str) and re.search("^\\d+$", self._code):
-            return FORMAT_NUMBER
-        return FORMAT_TEXT
+            return CodeFormat.NUMBER
+        return CodeFormat.TEXT
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""

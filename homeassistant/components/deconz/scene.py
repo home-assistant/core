@@ -4,12 +4,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from pydeconz.group import Scene as PydeconzScene
+from pydeconz.models.event import EventType
 
 from homeassistant.components.scene import DOMAIN, Scene
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .deconz_device import DeconzSceneMixin
@@ -21,37 +20,25 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up scenes for deCONZ component."""
+    """Set up scenes for deCONZ integration."""
     gateway = get_gateway_from_config_entry(hass, config_entry)
     gateway.entities[DOMAIN] = set()
 
     @callback
-    def async_add_scene(scenes: list[PydeconzScene] | None = None) -> None:
+    def async_add_scene(_: EventType, scene_id: str) -> None:
         """Add scene from deCONZ."""
-        entities = []
-
-        if scenes is None:
-            scenes = list(gateway.api.scenes.values())
-
-        for scene in scenes:
-
-            known_entities = set(gateway.entities[DOMAIN])
-            new_entity = DeconzScene(scene, gateway)
-            if new_entity.unique_id not in known_entities:
-                entities.append(new_entity)
-
-        if entities:
-            async_add_entities(entities)
+        scene = gateway.api.scenes[scene_id]
+        async_add_entities([DeconzScene(scene, gateway)])
 
     config_entry.async_on_unload(
-        async_dispatcher_connect(
-            hass,
-            gateway.signal_new_scene,
+        gateway.api.scenes.subscribe(
             async_add_scene,
+            EventType.ADDED,
         )
     )
 
-    async_add_scene()
+    for scene_id in gateway.api.scenes:
+        async_add_scene(EventType.ADDED, scene_id)
 
 
 class DeconzScene(DeconzSceneMixin, Scene):
