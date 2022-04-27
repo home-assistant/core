@@ -51,7 +51,7 @@ async def async_get_config_entry_diagnostics(
             nest_device.get_diagnostics() for nest_device in nest_devices.values()
         ],
     }
-    camera_data = await camera_diagnostics.async_get_platform_diagnostics(
+    camera_data = await camera_diagnostics.async_get_config_entry_diagnostics(
         hass, config_entry
     )
     if camera_data:

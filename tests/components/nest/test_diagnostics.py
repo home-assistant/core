@@ -78,7 +78,6 @@ CAMERA_DIAGNOSTIC_DATA = {
         },
         "type": "sdm.devices.types.CAMERA",
     },
-    "camera": {"camera.camera": {}},
 }
 
 
@@ -191,5 +190,5 @@ async def test_camera_diagnostics(
     # Test that only non identifiable device information is returned
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
         "devices": [CAMERA_DIAGNOSTIC_DATA],
+        "camera": {"camera.camera": {}},
     }
-    assert False

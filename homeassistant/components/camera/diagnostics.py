@@ -11,7 +11,7 @@ from . import _get_camera_from_entity_id
 from .const import DOMAIN
 
 
-async def async_get_platform_diagnostics(
+async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
