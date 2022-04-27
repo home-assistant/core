@@ -25,6 +25,7 @@ homeassistant.helpers.translation
 homeassistant.util.async_
 homeassistant.util.color
 homeassistant.util.decorator
+homeassistant.util.location
 homeassistant.util.process
 homeassistant.util.unit_system
 
