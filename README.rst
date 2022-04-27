@@ -1,6 +1,9 @@
-.. image:: https://github.com/home-assistant/assets/raw/master/logo/logo-with-text.png
-   :width: 300 
+.. image:: https://github.com/home-assistant/assets/raw/master/logo/logo.png
+   :width: 100 
    :alt: Home Assistant
+*****
+Home Assistant
+*****   
 |Chat Status|
 =================================================================================
 
