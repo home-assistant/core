@@ -58,5 +58,6 @@ def generate(integrations: dict[str, Integration], config: Config):
     application_credentials_path = (
         config.root / "homeassistant/generated/application_credentials.py"
     )
-    with open(str(application_credentials_path), "w") as fp:
-        fp.write(f"{config.cache['application_credentials']}\n")
+    application_credentials_path.write_text(
+        f"{config.cache['application_credentials']}\n", encoding="utf-8"
+    )
