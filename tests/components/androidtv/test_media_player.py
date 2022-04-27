@@ -74,6 +74,8 @@ from tests.common import MockConfigEntry
 
 CONF_OPTIONS = "options"
 HOST = "127.0.0.1"
+
+ADB_PATCH_KEY = "patch_key"
 TEST_ENTITY_NAME = "entity_name"
 
 PATCH_ACCESS = patch("homeassistant.components.androidtv.os.access", return_value=True)
@@ -86,6 +88,7 @@ SHELL_RESPONSE_STANDBY = "1"
 
 # Android TV device with Python ADB implementation
 CONFIG_ANDROIDTV_PYTHON_ADB = {
+    ADB_PATCH_KEY: patchers.KEY_PYTHON,
     TEST_ENTITY_NAME: f"{PREFIX_ANDROIDTV} {HOST}",
     DOMAIN: {
         CONF_HOST: HOST,
@@ -96,6 +99,7 @@ CONFIG_ANDROIDTV_PYTHON_ADB = {
 
 # Android TV device with Python ADB implementation imported from YAML
 CONFIG_ANDROIDTV_PYTHON_ADB_YAML = {
+    ADB_PATCH_KEY: patchers.KEY_PYTHON,
     TEST_ENTITY_NAME: "ADB yaml import",
     DOMAIN: {
         CONF_NAME: "ADB yaml import",
@@ -105,6 +109,7 @@ CONFIG_ANDROIDTV_PYTHON_ADB_YAML = {
 
 # Android TV device with ADB server
 CONFIG_ANDROIDTV_ADB_SERVER = {
+    ADB_PATCH_KEY: patchers.KEY_SERVER,
     TEST_ENTITY_NAME: f"{PREFIX_ANDROIDTV} {HOST}",
     DOMAIN: {
         CONF_HOST: HOST,
@@ -117,6 +122,7 @@ CONFIG_ANDROIDTV_ADB_SERVER = {
 
 # Fire TV device with Python ADB implementation
 CONFIG_FIRETV_PYTHON_ADB = {
+    ADB_PATCH_KEY: patchers.KEY_PYTHON,
     TEST_ENTITY_NAME: f"{PREFIX_FIRETV} {HOST}",
     DOMAIN: {
         CONF_HOST: HOST,
@@ -127,6 +133,7 @@ CONFIG_FIRETV_PYTHON_ADB = {
 
 # Fire TV device with ADB server
 CONFIG_FIRETV_ADB_SERVER = {
+    ADB_PATCH_KEY: patchers.KEY_SERVER,
     TEST_ENTITY_NAME: f"{PREFIX_FIRETV} {HOST}",
     DOMAIN: {
         CONF_HOST: HOST,
@@ -140,7 +147,7 @@ CONFIG_FIRETV_ADB_SERVER = {
 
 def _setup(config):
     """Perform common setup tasks for the tests."""
-    patch_key = "server" if CONF_ADB_SERVER_IP in config[DOMAIN] else "python"
+    patch_key = config[ADB_PATCH_KEY]
     entity_id = f"{MP_DOMAIN}.{slugify(config[TEST_ENTITY_NAME])}"
     config_entry = MockConfigEntry(
         domain=DOMAIN,
