@@ -38,6 +38,7 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
+    EVENT_CAMERA_SOURCE_CHANGED,
     EXCEPTION_DETAILS,
     EXCEPTION_UNKNOWN,
     PLATFORMS,
@@ -128,6 +129,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             return None
 
         surveillance_station = api.surveillance_station
+        current_data: dict[str, SynoCamera] = {
+            camera.id: camera for camera in surveillance_station.get_all_cameras()
+        }
 
         try:
             async with async_timeout.timeout(30):
@@ -135,11 +139,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except SynologyDSMAPIErrorException as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
 
-        return {
-            "cameras": {
-                camera.id: camera for camera in surveillance_station.get_all_cameras()
-            }
+        new_data: dict[str, SynoCamera] = {
+            camera.id: camera for camera in surveillance_station.get_all_cameras()
         }
+
+        for cam_id, cam_data_new in new_data.items():
+            if (
+                (cam_data_current := current_data.get(cam_id)) is not None
+                and cam_data_current.live_view.rtsp != cam_data_new.live_view.rtsp
+            ):
+
+                hass.bus.async_fire(
+                    EVENT_CAMERA_SOURCE_CHANGED,
+                    {"camera_id": cam_id, "stream_source": cam_data_new.live_view.rtsp},
+                )
+
+        return {"cameras": new_data}
 
     async def async_coordinator_update_data_central() -> None:
         """Fetch all device and sensor data from api."""

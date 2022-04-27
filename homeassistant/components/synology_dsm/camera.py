@@ -1,6 +1,7 @@
 """Support for Synology DSM cameras."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 import logging
 
@@ -16,7 +17,7 @@ from homeassistant.components.camera import (
     CameraEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -27,6 +28,7 @@ from .const import (
     COORDINATOR_CAMERAS,
     DEFAULT_SNAPSHOT_QUALITY,
     DOMAIN,
+    EVENT_CAMERA_SOURCE_CHANGED,
     SYNO_API,
 )
 from .entity import SynologyDSMBaseEntity, SynologyDSMEntityDescription
@@ -89,6 +91,7 @@ class SynoDSMCamera(SynologyDSMBaseEntity, Camera):
         self.snapshot_quality = api._entry.options.get(
             CONF_SNAPSHOT_QUALITY, DEFAULT_SNAPSHOT_QUALITY
         )
+        self._stream_refresh_unsub: Callable[[], None] | None = None
         super().__init__(api, coordinator, description)
         Camera.__init__(self)
 
@@ -130,6 +133,23 @@ class SynoDSMCamera(SynologyDSMBaseEntity, Camera):
         """Return the camera motion detection status."""
         return self.camera_data.is_motion_detection_enabled  # type: ignore[no-any-return]
 
+    def _listen_source_updates(self) -> CALLBACK_TYPE:
+        """Listen for camera source changed events."""
+
+        @callback
+        def _handle_event(event: Event) -> None:
+            if self.stream:
+                _LOGGER.debug("Update stream URL for camera %s", self.camera_data.name)
+                self.stream.update_source(event.data["stream_source"])
+
+        @callback
+        def _filter_event(event: Event) -> bool:
+            return event.data["camera_id"] == self.camera_data.id  # type: ignore[no-any-return]
+
+        return self.hass.bus.async_listen(
+            EVENT_CAMERA_SOURCE_CHANGED, _handle_event, _filter_event
+        )
+
     def camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -162,6 +182,9 @@ class SynoDSMCamera(SynologyDSMBaseEntity, Camera):
         )
         if not self.available:
             return None
+
+        self._stream_refresh_unsub = self._listen_source_updates()
+
         return self.camera_data.live_view.rtsp  # type: ignore[no-any-return]
 
     def enable_motion_detection(self) -> None:
@@ -183,3 +206,8 @@ class SynoDSMCamera(SynologyDSMBaseEntity, Camera):
         self._api.surveillance_station.disable_motion_detection(
             self.entity_description.key
         )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Remove source update listener."""
+        if self._stream_refresh_unsub is not None:
+            self._stream_refresh_unsub()
