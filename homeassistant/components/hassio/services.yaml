@@ -84,7 +84,8 @@ backup_full:
         text:
     compressed:
       name: Compressed
-      description: Optionally use compressed archives (default = true)
+      description: Use compressed archives
+      default: true
       selector:
         boolean:
 
@@ -123,7 +124,8 @@ backup_partial:
         text:
     compressed:
       name: Compressed
-      description: Optionally use compressed archives (default = true)
+      description: Use compressed archives
+      default: true
       selector:
         boolean:
 
