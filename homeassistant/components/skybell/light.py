@@ -50,7 +50,7 @@ class SkybellLight(SkybellDevice, LightEntity):
     def __init__(self, device):
         """Initialize a light for a Skybell device."""
         super().__init__(device)
-        self._attr_name = self._device.name
+        self._attr_name = device.name
 
     def turn_on(self, **kwargs):
         """Turn on the light."""
