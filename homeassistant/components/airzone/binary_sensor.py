@@ -127,5 +127,4 @@ class AirzoneZoneBinarySensor(AirzoneZoneEntity, AirzoneBinarySensor):
         self._attr_unique_id = (
             f"{self._attr_unique_id}_{system_zone_id}_{description.key}"
         )
-        self.attributes = description.attributes
         self.entity_description = description
