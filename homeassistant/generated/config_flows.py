@@ -290,6 +290,7 @@ FLOWS = {
         "rpi_power",
         "rtsp_to_webrtc",
         "ruckus_unleashed",
+        "sabnzbd",
         "samsungtv",
         "screenlogic",
         "season",
