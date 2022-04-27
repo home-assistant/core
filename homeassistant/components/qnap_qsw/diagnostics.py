@@ -1,0 +1,36 @@
+"""Support for the QNAP QSW diagnostics."""
+from __future__ import annotations
+
+from typing import Any
+
+from aioqsw.const import QSD_MAC, QSD_SERIAL
+
+from homeassistant.components.diagnostics.util import async_redact_data
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
+
+from .const import DOMAIN
+from .coordinator import QswUpdateCoordinator
+
+TO_REDACT_CONFIG = [
+    CONF_USERNAME,
+    CONF_PASSWORD,
+]
+
+TO_REDACT_DATA = [
+    QSD_MAC,
+    QSD_SERIAL,
+]
+
+
+async def async_get_config_entry_diagnostics(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> dict[str, Any]:
+    """Return diagnostics for a config entry."""
+    coordinator: QswUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+
+    return {
+        "config": async_redact_data(config_entry.data, TO_REDACT_CONFIG),
+        "data": async_redact_data(coordinator.data, TO_REDACT_DATA),
+    }
