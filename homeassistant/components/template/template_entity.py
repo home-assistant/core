@@ -17,8 +17,9 @@ from homeassistant.const import (
     CONF_ICON_TEMPLATE,
     CONF_NAME,
     EVENT_HOMEASSISTANT_START,
+    STATE_UNKNOWN,
 )
-from homeassistant.core import CoreState, Event, callback
+from homeassistant.core import CoreState, Event, State, callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -251,13 +252,17 @@ class TemplateEntity(Entity):
             self._entity_picture_template = config.get(CONF_PICTURE)
             self._friendly_name_template = config.get(CONF_NAME)
 
+        variables = {
+            "this": State("unknown.unknown", STATE_UNKNOWN, validate_entity_id=False)
+        }
+
         # Try to render the name as it can influence the entity ID
         self._attr_name = fallback_name
         if self._friendly_name_template:
             self._friendly_name_template.hass = hass
             with contextlib.suppress(TemplateError):
                 self._attr_name = self._friendly_name_template.async_render(
-                    parse_result=False
+                    variables=variables, parse_result=False
                 )
 
         # Templates will not render while the entity is unavailable, try to render the
@@ -266,13 +271,15 @@ class TemplateEntity(Entity):
             self._entity_picture_template.hass = hass
             with contextlib.suppress(TemplateError):
                 self._attr_entity_picture = self._entity_picture_template.async_render(
-                    parse_result=False
+                    variables=variables, parse_result=False
                 )
 
         if self._icon_template:
             self._icon_template.hass = hass
             with contextlib.suppress(TemplateError):
-                self._attr_icon = self._icon_template.async_render(parse_result=False)
+                self._attr_icon = self._icon_template.async_render(
+                    variables=variables, parse_result=False
+                )
 
     @callback
     def _update_available(self, result):
@@ -373,10 +380,10 @@ class TemplateEntity(Entity):
         template_var_tups: list[TrackTemplate] = []
         has_availability_template = False
 
-        values = {"this": TemplateStateFromEntityId(self.hass, self.entity_id)}
+        variables = {"this": TemplateStateFromEntityId(self.hass, self.entity_id)}
 
         for template, attributes in self._template_attrs.items():
-            template_var_tup = TrackTemplate(template, values)
+            template_var_tup = TrackTemplate(template, variables)
             is_availability_template = False
             for attribute in attributes:
                 # pylint: disable-next=protected-access
