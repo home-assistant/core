@@ -137,6 +137,7 @@ DHCP: list[dict[str, str | bool]] = [
     {'domain': 'tplink', 'hostname': 'k[lp]*', 'macaddress': '60A4B7*'},
     {'domain': 'tplink', 'hostname': 'k[lp]*', 'macaddress': '005F67*'},
     {'domain': 'tplink', 'hostname': 'k[lp]*', 'macaddress': '1027F5*'},
+    {'domain': 'tplink', 'hostname': 'k[lp]*', 'macaddress': 'B0A7B9*'},
     {'domain': 'tplink', 'hostname': 'k[lp]*', 'macaddress': '403F8C*'},
     {'domain': 'tplink', 'hostname': 'k[lp]*', 'macaddress': 'C0C9E3*'},
     {'domain': 'tplink', 'hostname': 'k[lp]*', 'macaddress': '909A4A*'},
