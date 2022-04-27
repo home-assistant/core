@@ -17,7 +17,7 @@ APPLICATION_CREDENTIALS = {}
 """.strip()
 
 
-def generate_and_validate(integrations: dict[str, Integration], config: Config):
+def generate_and_validate(integrations: dict[str, Integration], config: Config) -> str:
     """Validate and generate config flow data."""
 
     match_list = []
