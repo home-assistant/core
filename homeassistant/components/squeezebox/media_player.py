@@ -52,7 +52,13 @@ from .browse_media import (
     library_payload,
     media_source_content_filter,
 )
-from .const import DISCOVERY_TASK, DOMAIN, KNOWN_PLAYERS, PLAYER_DISCOVERY_UNSUB
+from .const import (
+    DISCOVERY_TASK,
+    DOMAIN,
+    KNOWN_PLAYERS,
+    PLAYER_DISCOVERY_UNSUB,
+    SQUEEZEBOX_SOURCE_STRINGS,
+)
 
 SERVICE_CALL_METHOD = "call_method"
 SERVICE_CALL_QUERY = "call_query"
@@ -460,7 +466,9 @@ class SqueezeBoxEntity(MediaPlayerEntity):
             media_id = play_item.url
 
         if media_type in MEDIA_TYPE_MUSIC:
-            media_id = async_process_play_media_url(self.hass, media_id)
+            if not media_id.startswith(SQUEEZEBOX_SOURCE_STRINGS):
+                # do not process special squeezebox "source" media ids
+                media_id = async_process_play_media_url(self.hass, media_id)
 
             await self._player.async_load_url(media_id, cmd)
             return

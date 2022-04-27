@@ -25,27 +25,11 @@ async def test_get_triggers_module_device(hass, entry, lcn_connection):
         {
             CONF_PLATFORM: "device",
             CONF_DOMAIN: DOMAIN,
-            CONF_TYPE: "transmitter",
+            CONF_TYPE: trigger,
             CONF_DEVICE_ID: device.id,
-        },
-        {
-            CONF_PLATFORM: "device",
-            CONF_DOMAIN: DOMAIN,
-            CONF_TYPE: "transponder",
-            CONF_DEVICE_ID: device.id,
-        },
-        {
-            CONF_PLATFORM: "device",
-            CONF_DOMAIN: DOMAIN,
-            CONF_TYPE: "fingerprint",
-            CONF_DEVICE_ID: device.id,
-        },
-        {
-            CONF_PLATFORM: "device",
-            CONF_DOMAIN: DOMAIN,
-            CONF_TYPE: "send_keys",
-            CONF_DEVICE_ID: device.id,
-        },
+            "metadata": {},
+        }
+        for trigger in ["transmitter", "transponder", "fingerprint", "send_keys"]
     ]
 
     triggers = await async_get_device_automations(

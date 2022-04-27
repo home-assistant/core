@@ -291,6 +291,9 @@ class OnOffChannel(ZigbeeChannel):
 
     ON_OFF = 0
     REPORT_CONFIG = ({"attr": "on_off", "config": REPORT_CONFIG_IMMEDIATE},)
+    ZCL_INIT_ATTRS = {
+        "start_up_on_off": True,
+    }
 
     def __init__(
         self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType

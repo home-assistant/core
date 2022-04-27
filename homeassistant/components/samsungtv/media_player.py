@@ -214,9 +214,7 @@ class SamsungTVDevice(MediaPlayerEntity):
             startup_tasks.append(self._async_startup_app_list())
 
         if self._dmr_device and not self._dmr_device.is_subscribed:
-            startup_tasks.append(
-                self._dmr_device.async_subscribe_services(auto_resubscribe=True)
-            )
+            startup_tasks.append(self._async_resubscribe_dmr())
         if not self._dmr_device and self._ssdp_rendering_control_location:
             startup_tasks.append(self._async_startup_dmr())
 
@@ -260,9 +258,7 @@ class SamsungTVDevice(MediaPlayerEntity):
         except asyncio.TimeoutError as err:
             # No need to try again
             self._app_list_event.set()
-            LOGGER.debug(
-                "Failed to load app list from %s: %s", self._host, err.__repr__()
-            )
+            LOGGER.debug("Failed to load app list from %s: %r", self._host, err)
 
     async def _async_startup_dmr(self) -> None:
         assert self._ssdp_rendering_control_location is not None
@@ -274,7 +270,7 @@ class SamsungTVDevice(MediaPlayerEntity):
             # NETWORK,NONE
             upnp_factory = UpnpFactory(upnp_requester, non_strict=True)
             upnp_device: UpnpDevice | None = None
-            with contextlib.suppress(UpnpConnectionError):
+            with contextlib.suppress(UpnpConnectionError, UpnpResponseError):
                 upnp_device = await upnp_factory.async_create_device(
                     self._ssdp_rendering_control_location
                 )
@@ -308,6 +304,11 @@ class SamsungTVDevice(MediaPlayerEntity):
                 self._upnp_server = None
                 LOGGER.debug("Error while subscribing during device connect: %r", err)
                 raise
+
+    async def _async_resubscribe_dmr(self) -> None:
+        assert self._dmr_device
+        with contextlib.suppress(UpnpConnectionError):
+            await self._dmr_device.async_subscribe_services(auto_resubscribe=True)
 
     async def _async_shutdown_dmr(self) -> None:
         """Handle removal."""
@@ -375,9 +376,7 @@ class SamsungTVDevice(MediaPlayerEntity):
         try:
             await dmr_device.async_set_volume_level(volume)
         except UpnpActionResponseError as err:
-            LOGGER.warning(
-                "Unable to set volume level on %s: %s", self._host, err.__repr__()
-            )
+            LOGGER.warning("Unable to set volume level on %s: %r", self._host, err)
 
     async def async_volume_up(self) -> None:
         """Volume up the media player."""

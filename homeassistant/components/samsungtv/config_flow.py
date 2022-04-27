@@ -363,9 +363,8 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not entry:
             return None
         entry_kw_args: dict = {}
-        if (
-            self.unique_id
-            and entry.unique_id is None
+        if self.unique_id and (
+            entry.unique_id is None
             or (is_unique_match and self.unique_id != entry.unique_id)
         ):
             entry_kw_args["unique_id"] = self.unique_id

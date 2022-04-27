@@ -8,13 +8,13 @@ import io
 import logging
 from types import MappingProxyType
 from typing import Any
-from urllib.parse import urlparse, urlunparse
 
 import PIL
 from async_timeout import timeout
 import av
 from httpx import HTTPStatusError, RequestError, TimeoutException
 import voluptuous as vol
+import yarl
 
 from homeassistant.components.stream.const import SOURCE_TIMEOUT
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
@@ -94,7 +94,7 @@ def build_schema(
         vol.Required(
             CONF_FRAMERATE,
             description={"suggested_value": user_input.get(CONF_FRAMERATE, 2)},
-        ): int,
+        ): vol.All(vol.Range(min=0, min_included=False), cv.positive_float),
         vol.Required(
             CONF_VERIFY_SSL, default=user_input.get(CONF_VERIFY_SSL, True)
         ): bool,
@@ -107,20 +107,6 @@ def build_schema(
             )
         ] = bool
     return vol.Schema(spec)
-
-
-def build_schema_content_type(user_input: dict[str, Any] | MappingProxyType[str, Any]):
-    """Create schema for conditional 2nd page specifying stream content_type."""
-    return vol.Schema(
-        {
-            vol.Required(
-                CONF_CONTENT_TYPE,
-                description={
-                    "suggested_value": user_input.get(CONF_CONTENT_TYPE, "image/jpeg")
-                },
-            ): str,
-        }
-    )
 
 
 def get_image_type(image):
@@ -186,8 +172,7 @@ def slug_url(url) -> str | None:
     """Convert a camera url into a string suitable for a camera name."""
     if not url:
         return None
-    url_no_scheme = urlparse(url)._replace(scheme="")
-    return slugify(urlunparse(url_no_scheme).strip("/"))
+    return slugify(yarl.URL(url).host)
 
 
 async def async_test_stream(hass, info) -> dict[str, str]:
@@ -283,17 +268,16 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
                 if not errors:
                     user_input[CONF_CONTENT_TYPE] = still_format
                     user_input[CONF_LIMIT_REFETCH_TO_URL_CHANGE] = False
-                    if user_input.get(CONF_STILL_IMAGE_URL):
-                        await self.async_set_unique_id(self.flow_id)
-                        return self.async_create_entry(
-                            title=name, data={}, options=user_input
-                        )
-                    # If user didn't specify a still image URL,
-                    # we can't (yet) autodetect it from the stream.
-                    # Show a conditional 2nd page to ask them the content type.
-                    self.cached_user_input = user_input
-                    self.cached_title = name
-                    return await self.async_step_content_type()
+                    if still_url is None:
+                        # If user didn't specify a still image URL,
+                        # The automatically generated still image that stream generates
+                        # is always jpeg
+                        user_input[CONF_CONTENT_TYPE] = "image/jpeg"
+
+                    await self.async_set_unique_id(self.flow_id)
+                    return self.async_create_entry(
+                        title=name, data={}, options=user_input
+                    )
         else:
             user_input = DEFAULT_DATA.copy()
 
@@ -301,22 +285,6 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=build_schema(user_input),
             errors=errors,
-        )
-
-    async def async_step_content_type(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Handle the user's choice for stream content_type."""
-        if user_input is not None:
-            user_input = self.cached_user_input | user_input
-            await self.async_set_unique_id(self.flow_id)
-            return self.async_create_entry(
-                title=self.cached_title, data={}, options=user_input
-            )
-        return self.async_show_form(
-            step_id="content_type",
-            data_schema=build_schema_content_type({}),
-            errors={},
         )
 
     async def async_step_import(self, import_config) -> FlowResult:
@@ -362,6 +330,11 @@ class GenericOptionsFlowHandler(OptionsFlow):
             stream_url = user_input.get(CONF_STREAM_SOURCE)
             if not errors:
                 title = slug_url(still_url) or slug_url(stream_url) or DEFAULT_NAME
+                if still_url is None:
+                    # If user didn't specify a still image URL,
+                    # The automatically generated still image that stream generates
+                    # is always jpeg
+                    still_format = "image/jpeg"
                 data = {
                     CONF_AUTHENTICATION: user_input.get(CONF_AUTHENTICATION),
                     CONF_STREAM_SOURCE: user_input.get(CONF_STREAM_SOURCE),
@@ -376,30 +349,12 @@ class GenericOptionsFlowHandler(OptionsFlow):
                     CONF_FRAMERATE: user_input[CONF_FRAMERATE],
                     CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
                 }
-                if still_url:
-                    return self.async_create_entry(
-                        title=title,
-                        data=data,
-                    )
-                self.cached_title = title
-                self.cached_user_input = data
-                return await self.async_step_content_type()
-
+                return self.async_create_entry(
+                    title=title,
+                    data=data,
+                )
         return self.async_show_form(
             step_id="init",
             data_schema=build_schema(user_input or self.config_entry.options, True),
             errors=errors,
-        )
-
-    async def async_step_content_type(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Handle the user's choice for stream content_type."""
-        if user_input is not None:
-            user_input = self.cached_user_input | user_input
-            return self.async_create_entry(title=self.cached_title, data=user_input)
-        return self.async_show_form(
-            step_id="content_type",
-            data_schema=build_schema_content_type(self.cached_user_input),
-            errors={},
         )

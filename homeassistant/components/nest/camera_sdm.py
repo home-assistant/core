@@ -18,7 +18,7 @@ from google_nest_sdm.device import Device
 from google_nest_sdm.exceptions import ApiException
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
-from homeassistant.components.camera.const import STREAM_TYPE_WEB_RTC
+from homeassistant.components.camera.const import StreamType
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
@@ -114,13 +114,13 @@ class NestCamera(Camera):
         return supported_features
 
     @property
-    def frontend_stream_type(self) -> str | None:
+    def frontend_stream_type(self) -> StreamType | None:
         """Return the type of stream supported by this camera."""
         if CameraLiveStreamTrait.NAME not in self._device.traits:
             return None
         trait = self._device.traits[CameraLiveStreamTrait.NAME]
         if StreamingProtocol.WEB_RTC in trait.supported_protocols:
-            return STREAM_TYPE_WEB_RTC
+            return StreamType.WEB_RTC
         return super().frontend_stream_type
 
     @property

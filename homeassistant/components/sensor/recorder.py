@@ -387,14 +387,14 @@ def _last_reset_as_utc_isoformat(last_reset_s: Any, entity_id: str) -> str | Non
 
 def compile_statistics(
     hass: HomeAssistant, start: datetime.datetime, end: datetime.datetime
-) -> list[StatisticResult]:
+) -> statistics.PlatformCompiledStatistics:
     """Compile statistics for all entities during start-end.
 
     Note: This will query the database and must not be run in the event loop
     """
     with recorder_util.session_scope(hass=hass) as session:
-        result = _compile_statistics(hass, session, start, end)
-    return result
+        compiled = _compile_statistics(hass, session, start, end)
+    return compiled
 
 
 def _compile_statistics(  # noqa: C901
@@ -402,7 +402,7 @@ def _compile_statistics(  # noqa: C901
     session: Session,
     start: datetime.datetime,
     end: datetime.datetime,
-) -> list[StatisticResult]:
+) -> statistics.PlatformCompiledStatistics:
     """Compile statistics for all entities during start-end."""
     result: list[StatisticResult] = []
 
@@ -446,12 +446,13 @@ def _compile_statistics(  # noqa: C901
         if _state.entity_id not in history_list:
             history_list[_state.entity_id] = [_state]
 
-    for _state in sensor_states:  # pylint: disable=too-many-nested-blocks
+    to_process = []
+    to_query = []
+    for _state in sensor_states:
         entity_id = _state.entity_id
         if entity_id not in history_list:
             continue
 
-        state_class = _state.attributes[ATTR_STATE_CLASS]
         device_class = _state.attributes.get(ATTR_DEVICE_CLASS)
         entity_history = history_list[entity_id]
         unit, fstates = _normalize_states(
@@ -466,6 +467,21 @@ def _compile_statistics(  # noqa: C901
         if not fstates:
             continue
 
+        state_class = _state.attributes[ATTR_STATE_CLASS]
+
+        to_process.append((entity_id, unit, state_class, fstates))
+        if "sum" in wanted_statistics[entity_id]:
+            to_query.append(entity_id)
+
+    last_stats = statistics.get_latest_short_term_statistics(
+        hass, to_query, metadata=old_metadatas
+    )
+    for (  # pylint: disable=too-many-nested-blocks
+        entity_id,
+        unit,
+        state_class,
+        fstates,
+    ) in to_process:
         # Check metadata
         if old_metadata := old_metadatas.get(entity_id):
             if old_metadata[1]["unit_of_measurement"] != unit:
@@ -511,9 +527,6 @@ def _compile_statistics(  # noqa: C901
             last_reset = old_last_reset = None
             new_state = old_state = None
             _sum = 0.0
-            last_stats = statistics.get_last_short_term_statistics(
-                hass, 1, entity_id, False
-            )
             if entity_id in last_stats:
                 # We have compiled history for this sensor before, use that as a starting point
                 last_reset = old_last_reset = last_stats[entity_id][0]["last_reset"]
@@ -598,7 +611,7 @@ def _compile_statistics(  # noqa: C901
 
         result.append({"meta": meta, "stat": stat})
 
-    return result
+    return statistics.PlatformCompiledStatistics(result, old_metadatas)
 
 
 def list_statistic_ids(

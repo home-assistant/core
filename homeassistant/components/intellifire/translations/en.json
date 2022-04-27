@@ -2,26 +2,39 @@
     "config": {
         "abort": {
             "already_configured": "Device is already configured",
-            "not_intellifire_device": "Not an IntelliFire Device."
+            "not_intellifire_device": "Not an IntelliFire Device.",
+            "reauth_successful": "Re-authentication was successful"
         },
         "error": {
-            "cannot_connect": "Failed to connect"
+            "api_error": "Login failed",
+            "cannot_connect": "Could not connect to a fireplace endpoint at url: http://{host}/poll\nVerify IP address and try again",
+            "iftapi_connect": "Error conecting to iftapi.net"
         },
         "flow_title": "{serial} ({host})",
         "step": {
+            "api_config": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username (Email)"
+                },
+                "description": "IntelliFire will need to reach out to [iftapi.net](https://iftapi.net/webaccess/login.html) in order to obtain an API key. Once it has obtained this API key, the rest of its interactions will occur completely within the local network. If the API key were to expire it would again need to reach out to https://iftapi.net/webaccess/login.html\n\nUsername and Password are the same information used in your IntelliFire Android/iOS application. ",
+                "title": "IntelliFire - API Configuration"
+            },
             "dhcp_confirm": {
                 "description": "Do you want to setup {host}\nSerial: {serial}?"
             },
             "manual_device_entry": {
                 "data": {
-                    "host": "Host"
+                    "host": "Host (IP Address)"
                 },
                 "description": "Local Configuration"
             },
             "pick_device": {
                 "data": {
                     "host": "Host"
-                }
+                },
+                "description": "The following IntelliFire devices were discovered. Please select which you wish to configure.",
+                "title": "Device Selection"
             }
         }
     }

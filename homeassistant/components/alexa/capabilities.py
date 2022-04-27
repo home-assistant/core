@@ -13,8 +13,8 @@ from homeassistant.components import (
     vacuum,
 )
 from homeassistant.components.alarm_control_panel import (
-    FORMAT_NUMBER,
     AlarmControlPanelEntityFeature,
+    CodeFormat,
 )
 import homeassistant.components.climate.const as climate
 import homeassistant.components.media_player.const as media_player
@@ -72,8 +72,6 @@ class AlexaCapability:
 
     https://developer.amazon.com/docs/device-apis/message-guide.html
     """
-
-    # pylint: disable=no-self-use
 
     supported_locales = {"en-US"}
 
@@ -1226,7 +1224,7 @@ class AlexaSecurityPanelController(AlexaCapability):
 
         configuration["supportedArmStates"] = supported_arm_states
 
-        if code_format == FORMAT_NUMBER:
+        if code_format == CodeFormat.NUMBER:
             configuration["supportedAuthorizationTypes"] = [{"type": "FOUR_DIGIT_PIN"}]
 
         return configuration

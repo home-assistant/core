@@ -1,4 +1,6 @@
 """Viessmann ViCare climate device."""
+from __future__ import annotations
+
 from contextlib import suppress
 import logging
 
@@ -10,16 +12,14 @@ from PyViCare.PyViCareUtils import (
 import requests
 import voluptuous as vol
 
-from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
-    HVAC_MODE_AUTO,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
     PRESET_COMFORT,
     PRESET_ECO,
     PRESET_NONE,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -71,19 +71,19 @@ VICARE_TEMP_HEATING_MIN = 3
 VICARE_TEMP_HEATING_MAX = 37
 
 VICARE_TO_HA_HVAC_HEATING = {
-    VICARE_MODE_DHW: HVAC_MODE_OFF,
-    VICARE_MODE_HEATING: HVAC_MODE_HEAT,
-    VICARE_MODE_DHWANDHEATING: HVAC_MODE_AUTO,
-    VICARE_MODE_DHWANDHEATINGCOOLING: HVAC_MODE_AUTO,
-    VICARE_MODE_FORCEDREDUCED: HVAC_MODE_OFF,
-    VICARE_MODE_FORCEDNORMAL: HVAC_MODE_HEAT,
-    VICARE_MODE_OFF: HVAC_MODE_OFF,
+    VICARE_MODE_DHW: HVACMode.OFF,
+    VICARE_MODE_HEATING: HVACMode.HEAT,
+    VICARE_MODE_DHWANDHEATING: HVACMode.AUTO,
+    VICARE_MODE_DHWANDHEATINGCOOLING: HVACMode.AUTO,
+    VICARE_MODE_FORCEDREDUCED: HVACMode.OFF,
+    VICARE_MODE_FORCEDNORMAL: HVACMode.HEAT,
+    VICARE_MODE_OFF: HVACMode.OFF,
 }
 
 HA_TO_VICARE_HVAC_HEATING = {
-    HVAC_MODE_HEAT: VICARE_MODE_FORCEDNORMAL,
-    HVAC_MODE_OFF: VICARE_MODE_FORCEDREDUCED,
-    HVAC_MODE_AUTO: VICARE_MODE_DHWANDHEATING,
+    HVACMode.HEAT: VICARE_MODE_FORCEDNORMAL,
+    HVACMode.OFF: VICARE_MODE_FORCEDREDUCED,
+    HVACMode.AUTO: VICARE_MODE_DHWANDHEATING,
 }
 
 VICARE_TO_HA_PRESET_HEATING = {
@@ -270,11 +270,11 @@ class ViCareClimate(ClimateEntity):
         return self._target_temperature
 
     @property
-    def hvac_mode(self):
+    def hvac_mode(self) -> HVACMode | None:
         """Return current hvac mode."""
         return VICARE_TO_HA_HVAC_HEATING.get(self._current_mode)
 
-    def set_hvac_mode(self, hvac_mode):
+    def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set a new hvac mode on the ViCare API."""
         vicare_mode = HA_TO_VICARE_HVAC_HEATING.get(hvac_mode)
         if vicare_mode is None:
@@ -286,16 +286,16 @@ class ViCareClimate(ClimateEntity):
         self._circuit.setMode(vicare_mode)
 
     @property
-    def hvac_modes(self):
+    def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available hvac modes."""
         return list(HA_TO_VICARE_HVAC_HEATING)
 
     @property
-    def hvac_action(self):
+    def hvac_action(self) -> HVACAction:
         """Return the current hvac action."""
         if self._current_action:
-            return CURRENT_HVAC_HEAT
-        return CURRENT_HVAC_IDLE
+            return HVACAction.HEATING
+        return HVACAction.IDLE
 
     @property
     def min_temp(self):

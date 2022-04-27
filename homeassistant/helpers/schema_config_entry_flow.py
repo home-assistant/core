@@ -377,7 +377,7 @@ def entity_selector_without_own_entities(
     entity_registry = er.async_get(handler.hass)
     entities = er.async_entries_for_config_entry(
         entity_registry,
-        handler.config_entry.entry_id,  # pylint: disable=protected-access
+        handler.config_entry.entry_id,
     )
     entity_ids = [ent.entity_id for ent in entities]
 

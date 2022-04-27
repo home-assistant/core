@@ -11,6 +11,7 @@ from zigpy.const import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 import zigpy.device
 import zigpy.group
 import zigpy.profiles
+from zigpy.state import State
 import zigpy.types
 import zigpy.zdo.types as zdo_t
 
@@ -54,6 +55,7 @@ def zigpy_app_controller():
     app.ieee.return_value = zigpy.types.EUI64.convert("00:15:8d:00:02:32:4f:32")
     type(app).nwk = PropertyMock(return_value=zigpy.types.NWK(0x0000))
     type(app).devices = PropertyMock(return_value={})
+    type(app).state = PropertyMock(return_value=State())
     return app
 
 
