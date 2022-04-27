@@ -26,6 +26,7 @@ homeassistant.util.async_
 homeassistant.util.color
 homeassistant.util.decorator
 homeassistant.util.location
+homeassistant.util.logging
 homeassistant.util.process
 homeassistant.util.unit_system
 
