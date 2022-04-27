@@ -13,6 +13,7 @@ from aiolookin import (
     LookInHttpProtocol,
     LookinUDPSubscriptions,
     MeteoSensor,
+    NoUsableService,
     Remote,
     start_lookin_udp,
 )
@@ -94,7 +95,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         lookin_device = await lookin_protocol.get_info()
         devices = await lookin_protocol.get_devices()
-    except (asyncio.TimeoutError, aiohttp.ClientError) as ex:
+    except (asyncio.TimeoutError, aiohttp.ClientError, NoUsableService) as ex:
         raise ConfigEntryNotReady from ex
 
     push_coordinator = LookinPushCoordinator(entry.title)
