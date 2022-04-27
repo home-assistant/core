@@ -58,7 +58,6 @@ class ServiceDetails(NamedTuple):
 # These have no config flows
 SERVICE_HANDLERS = {
     SERVICE_ENIGMA2: ServiceDetails("media_player", "enigma2"),
-    SERVICE_SABNZBD: ServiceDetails("sabnzbd", None),
     "yamaha": ServiceDetails("media_player", "yamaha"),
     "frontier_silicon": ServiceDetails("media_player", "frontier_silicon"),
     "openhome": ServiceDetails("media_player", "openhome"),
@@ -97,6 +96,7 @@ MIGRATED_SERVICE_HANDLERS = [
     SERVICE_XIAOMI_GW,
     "volumio",
     SERVICE_YEELIGHT,
+    SERVICE_SABNZBD,
     "nanoleaf_aurora",
 ]
 

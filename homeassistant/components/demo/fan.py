@@ -254,7 +254,7 @@ class AsyncDemoPercentageFan(BaseDemoFan, FanEntity):
         """Set new preset mode."""
         if self.preset_modes is None or preset_mode not in self.preset_modes:
             raise ValueError(
-                "{preset_mode} is not a valid preset_mode: {self.preset_modes}"
+                f"{preset_mode} is not a valid preset_mode: {self.preset_modes}"
             )
         self._preset_mode = preset_mode
         self._percentage = None

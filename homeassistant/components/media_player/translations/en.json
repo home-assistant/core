@@ -18,6 +18,7 @@
     },
     "state": {
         "_": {
+            "buffering": "Buffering",
             "idle": "Idle",
             "off": "Off",
             "on": "On",

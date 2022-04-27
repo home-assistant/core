@@ -240,7 +240,6 @@ STATIC_VALIDATION_ACTION_TYPES = (
     cv.SCRIPT_ACTION_FIRE_EVENT,
     cv.SCRIPT_ACTION_ACTIVATE_SCENE,
     cv.SCRIPT_ACTION_VARIABLES,
-    cv.SCRIPT_ACTION_ERROR,
     cv.SCRIPT_ACTION_STOP,
 )
 
@@ -972,16 +971,13 @@ class _ScriptRun:
     async def _async_stop_step(self):
         """Stop script execution."""
         stop = self._action[CONF_STOP]
-        self._log("Stop script sequence: %s", stop)
-        trace_set_result(stop=stop)
-        raise _StopScript(stop)
-
-    async def _async_error_step(self):
-        """Abort and error script execution."""
         error = self._action[CONF_ERROR]
-        self._log("Error script sequence: %s", error)
-        trace_set_result(error=error)
-        raise _AbortScript(error)
+        trace_set_result(stop=stop, error=error)
+        if error:
+            self._log("Error script sequence: %s", stop)
+            raise _AbortScript(stop)
+        self._log("Stop script sequence: %s", stop)
+        raise _StopScript(stop)
 
     @async_trace_path("parallel")
     async def _async_parallel_step(self) -> None:

@@ -18,9 +18,6 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_WINDY,
 )
 
-# Attribute missing from homeassistant.components.weather
-ATTR_FORECAST_HUMIDITY = "humidity"
-
 CONF_TIMESTEP = "timestep"
 FORECAST_TYPES = [DAILY, HOURLY, NOWCAST]
 

@@ -875,7 +875,7 @@ async def test_event_media_render_invalid_event_id(hass, auth, hass_client):
     assert device.name == DEVICE_NAME
 
     client = await hass_client()
-    response = await client.get("/api/nest/event_media/{device.id}/invalid-event-id")
+    response = await client.get(f"/api/nest/event_media/{device.id}/invalid-event-id")
     assert response.status == HTTPStatus.NOT_FOUND, (
         "Response not matched: %s" % response
     )
@@ -886,7 +886,9 @@ async def test_event_media_failure(hass, auth, hass_client):
     subscriber = await async_setup_devices(
         hass, auth, CAMERA_DEVICE_TYPE, CAMERA_TRAITS
     )
+    received_events = async_capture_events(hass, NEST_EVENT)
 
+    # Failure from server when fetching media
     auth.responses = [
         aiohttp.web.Response(status=HTTPStatus.INTERNAL_SERVER_ERROR),
     ]
@@ -910,16 +912,24 @@ async def test_event_media_failure(hass, auth, hass_client):
     assert device
     assert device.name == DEVICE_NAME
 
+    # Verify events are published correctly
+    assert len(received_events) == 1
+    received_event = received_events[0]
+    assert received_event.data["device_id"] == device.id
+    assert received_event.data["type"] == "camera_person"
+    event_identifier = received_event.data["nest_event_id"]
+
     # Resolving the event links to the media
     media = await media_source.async_resolve_media(
-        hass, f"{const.URI_SCHEME}{DOMAIN}/{device.id}/{EVENT_SESSION_ID}"
+        hass, f"{const.URI_SCHEME}{DOMAIN}/{device.id}/{event_identifier}"
     )
-    assert media.url == f"/api/nest/event_media/{device.id}/{EVENT_SESSION_ID}"
+    assert media.url == f"/api/nest/event_media/{device.id}/{event_identifier}"
     assert media.mime_type == "image/jpeg"
 
+    # Media is not available to be fetched
     client = await hass_client()
     response = await client.get(media.url)
-    assert response.status == HTTPStatus.INTERNAL_SERVER_ERROR, (
+    assert response.status == HTTPStatus.NOT_FOUND, (
         "Response not matched: %s" % response
     )
 

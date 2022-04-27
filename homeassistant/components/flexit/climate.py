@@ -5,12 +5,8 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.climate import (
-    PLATFORM_SCHEMA,
-    ClimateEntity,
-    ClimateEntityFeature,
-)
-from homeassistant.components.climate.const import HVAC_MODE_COOL
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
+from homeassistant.components.climate.const import ClimateEntityFeature, HVACMode
 from homeassistant.components.modbus import get_hub
 from homeassistant.components.modbus.const import (
     CALL_TYPE_REGISTER_HOLDING,
@@ -187,7 +183,7 @@ class Flexit(ClimateEntity):
 
         Need to be a subset of HVAC_MODES.
         """
-        return [HVAC_MODE_COOL]
+        return [HVACMode.COOL]
 
     @property
     def fan_mode(self):

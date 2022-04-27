@@ -12,7 +12,7 @@ from pylutron_caseta.smartbridge import Smartbridge
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST, Platform
+from homeassistant.const import ATTR_SUGGESTED_AREA, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -41,6 +41,7 @@ from .const import (
     DOMAIN,
     LUTRON_CASETA_BUTTON_EVENT,
     MANUFACTURER,
+    UNASSIGNED_AREA,
 )
 from .device_trigger import (
     DEVICE_TYPE_SUBTYPE_MAP_TO_LIP,
@@ -195,20 +196,29 @@ def _async_register_button_devices(
         if "serial" not in device or device["serial"] in seen:
             continue
         seen.add(device["serial"])
+        device_args = {
+            "name": device["name"],
+            "manufacturer": MANUFACTURER,
+            "config_entry_id": config_entry_id,
+            "identifiers": {(DOMAIN, device["serial"])},
+            "model": f"{device['model']} ({device['type']})",
+            "via_device": (DOMAIN, bridge_device["serial"]),
+        }
+        area, _ = _area_and_name_from_name(device["name"])
+        if area != UNASSIGNED_AREA:
+            device_args["suggested_area"] = area
 
-        dr_device = device_registry.async_get_or_create(
-            name=device["name"],
-            suggested_area=device["name"].split("_")[0],
-            manufacturer=MANUFACTURER,
-            config_entry_id=config_entry_id,
-            identifiers={(DOMAIN, device["serial"])},
-            model=f"{device['model']} ({device['type']})",
-            via_device=(DOMAIN, bridge_device["serial"]),
-        )
-
+        dr_device = device_registry.async_get_or_create(**device_args)
         button_devices_by_dr_id[dr_device.id] = device
 
     return button_devices_by_dr_id
+
+
+def _area_and_name_from_name(device_name: str) -> tuple[str, str]:
+    """Return the area and name from the devices internal name."""
+    if "_" in device_name:
+        return device_name.split("_", 1)
+    return UNASSIGNED_AREA, device_name
 
 
 @callback
@@ -230,7 +240,7 @@ def _async_subscribe_pico_remote_events(
             action = ACTION_RELEASE
 
         type_ = device["type"]
-        area, name = device["name"].split("_", 1)
+        area, name = _area_and_name_from_name(device["name"])
         button_number = device["button_number"]
         # The original implementation used LIP instead of LEAP
         # so we need to convert the button number to maintain compat
@@ -322,15 +332,18 @@ class LutronCasetaDevice(Entity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        return DeviceInfo(
+        device = self._device
+        info = DeviceInfo(
             identifiers={(DOMAIN, self.serial)},
             manufacturer=MANUFACTURER,
-            model=f"{self._device['model']} ({self._device['type']})",
+            model=f"{device['model']} ({device['type']})",
             name=self.name,
-            suggested_area=self._device["name"].split("_")[0],
             via_device=(DOMAIN, self._bridge_device["serial"]),
             configuration_url="https://device-login.lutron.com",
         )
+        area, _ = _area_and_name_from_name(device["name"])
+        if area != UNASSIGNED_AREA:
+            info[ATTR_SUGGESTED_AREA] = area
 
     @property
     def extra_state_attributes(self):

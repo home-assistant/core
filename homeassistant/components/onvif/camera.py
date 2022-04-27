@@ -106,7 +106,7 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
     @property
     def name(self) -> str:
         """Return the name of this camera."""
-        return f"{self.device.name} - {self.profile.name}"
+        return f"{self.device.name} {self.profile.name}"
 
     @property
     def unique_id(self) -> str:

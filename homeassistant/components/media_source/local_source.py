@@ -301,9 +301,7 @@ class UploadMediaView(http.HomeAssistantView):
             {"media_content_id": f"{data['media_content_id']}/{uploaded_file.filename}"}
         )
 
-    def _move_file(  # pylint: disable=no-self-use
-        self, target_dir: Path, uploaded_file: FileField
-    ) -> None:
+    def _move_file(self, target_dir: Path, uploaded_file: FileField) -> None:
         """Move file to target."""
         if not target_dir.is_dir():
             raise ValueError("Target is not an existing directory")

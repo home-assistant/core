@@ -4164,7 +4164,6 @@ async def test_validate_action_config(hass):
         },
         cv.SCRIPT_ACTION_VARIABLES: {"variables": {"hello": "world"}},
         cv.SCRIPT_ACTION_STOP: {"stop": "Stop it right there buddy..."},
-        cv.SCRIPT_ACTION_ERROR: {"error": "Stand up, and try again!"},
         cv.SCRIPT_ACTION_IF: {
             "if": [
                 {
@@ -4481,12 +4480,12 @@ async def test_stop_action(hass, caplog):
     assert_action_trace(
         {
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
-            "1": [{"result": {"stop": "In the name of love"}}],
+            "1": [{"result": {"stop": "In the name of love", "error": False}}],
         }
     )
 
 
-async def test_error_action(hass, caplog):
+async def test_stop_action_with_error(hass, caplog):
     """Test if automation fails on calling the error action."""
     event = "test_event"
     events = async_capture_events(hass, event)
@@ -4497,7 +4496,8 @@ async def test_error_action(hass, caplog):
             {"event": event},
             {
                 "alias": alias,
-                "error": "Epic one...",
+                "stop": "Epic one...",
+                "error": True,
             },
             {"event": event},
         ]
@@ -4515,7 +4515,10 @@ async def test_error_action(hass, caplog):
         {
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
             "1": [
-                {"error_type": script._AbortScript, "result": {"error": "Epic one..."}}
+                {
+                    "error_type": script._AbortScript,
+                    "result": {"stop": "Epic one...", "error": True},
+                }
             ],
         },
         expected_script_execution="aborted",
@@ -4609,7 +4612,7 @@ async def test_continue_on_error_with_stop(hass: HomeAssistant) -> None:
 
     assert_action_trace(
         {
-            "0": [{"result": {"stop": "Stop it!"}}],
+            "0": [{"result": {"stop": "Stop it!", "error": False}}],
         },
         expected_script_execution="finished",
     )

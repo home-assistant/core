@@ -45,6 +45,8 @@ SENSOR_LIST: tuple[PECOSensorEntityDescription, ...] = (
         name="Customers Out",
         value_fn=lambda data: int(data.outages.customers_out),
         attribute_fn=lambda data: {},
+        icon="mdi:power-plug-off",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     PECOSensorEntityDescription(
         key="percent_customers_out",
@@ -52,24 +54,31 @@ SENSOR_LIST: tuple[PECOSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda data: int(data.outages.percent_customers_out),
         attribute_fn=lambda data: {},
+        icon="mdi:power-plug-off",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     PECOSensorEntityDescription(
         key="outage_count",
         name="Outage Count",
         value_fn=lambda data: int(data.outages.outage_count),
         attribute_fn=lambda data: {},
+        icon="mdi:power-plug-off",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     PECOSensorEntityDescription(
         key="customers_served",
         name="Customers Served",
         value_fn=lambda data: int(data.outages.customers_served),
         attribute_fn=lambda data: {},
+        icon="mdi:power-plug-off",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     PECOSensorEntityDescription(
         key="map_alert",
         name="Map Alert",
         value_fn=lambda data: str(data.alerts.alert_title),
         attribute_fn=lambda data: {ATTR_CONTENT: data.alerts.alert_content},
+        icon="mdi:alert",
     ),
 )
 
@@ -107,11 +116,6 @@ class PecoSensor(
         super().__init__(coordinator)
         self._attr_name = f"{county.capitalize()} {description.name}"
         self._attr_unique_id = f"{county}-{description.key}"
-        self._attr_icon = (
-            "mdi:alert" if description.key == "map_alert" else "mdi:power-plug-off"
-        )
-        if description.key != "map_alert":
-            self._attr_state_class = SensorStateClass.MEASUREMENT
         self.entity_description = description
 
     @property

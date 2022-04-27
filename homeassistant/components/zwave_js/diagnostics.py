@@ -15,13 +15,16 @@ from homeassistant.components.diagnostics.util import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import DeviceEntry
-from homeassistant.helpers.entity_registry import async_entries_for_device, async_get
 
 from .const import DATA_CLIENT, DOMAIN
-from .helpers import ZwaveValueID, get_home_and_node_id_from_device_entry
+from .helpers import (
+    ZwaveValueID,
+    get_home_and_node_id_from_device_entry,
+    get_state_key_from_unique_id,
+    get_value_id_from_unique_id,
+)
 
 KEYS_TO_REDACT = {"homeId", "location"}
 
@@ -36,7 +39,7 @@ def redact_value_of_zwave_value(zwave_value: ValueDataType) -> ValueDataType:
         zwave_value_id = ZwaveValueID(
             property_=zwave_value["property"],
             command_class=CommandClass(zwave_value["commandClass"]),
-            endpoint=zwave_value["endpoint"],
+            endpoint=zwave_value.get("endpoint"),
             property_key=zwave_value.get("propertyKey"),
         )
         if all(
@@ -61,28 +64,19 @@ def redact_node_state(node_state: NodeDataType) -> NodeDataType:
 
 
 def get_device_entities(
-    hass: HomeAssistant, node: Node, device: DeviceEntry
+    hass: HomeAssistant, node: Node, device: dr.DeviceEntry
 ) -> list[dict[str, Any]]:
     """Get entities for a device."""
-    entity_entries = async_entries_for_device(
-        async_get(hass), device.id, include_disabled_entities=True
+    entity_entries = er.async_entries_for_device(
+        er.async_get(hass), device.id, include_disabled_entities=True
     )
     entities = []
     for entry in entity_entries:
-        state_key = None
-        split_unique_id = entry.unique_id.split(".")
-        # If the unique ID has three parts, it's either one of the generic per node
-        # entities (node status sensor, ping button) or a binary sensor for a particular
-        # state. If we can get the state key, we will add it to the dictionary.
-        if len(split_unique_id) == 3:
-            try:
-                state_key = int(split_unique_id[-1])
-            # If the third part of the unique ID isn't a state key, the entity must be a
-            # generic entity. We won't add those since they won't help with
-            # troubleshooting.
-            except ValueError:
-                continue
-        value_id = split_unique_id[1]
+        # If the value ID returns as None, we don't need to include this entity
+        if (value_id := get_value_id_from_unique_id(entry.unique_id)) is None:
+            continue
+        state_key = get_state_key_from_unique_id(entry.unique_id)
+
         zwave_value = node.values[value_id]
         primary_value_data = {
             "command_class": zwave_value.command_class,
