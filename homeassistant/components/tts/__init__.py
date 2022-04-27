@@ -203,55 +203,28 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             language = service.data.get(ATTR_LANGUAGE)
             options = service.data.get(ATTR_OPTIONS)
 
-            if tts.base_url is None or tts.base_url == get_url(hass):
-                tts.process_options(p_type, language, options)
-                params = {
-                    "message": message,
-                }
-                if cache is not None:
-                    params["cache"] = "true" if cache else "false"
-                if language is not None:
-                    params["language"] = language
-                if options is not None:
-                    params.update(options)
-
-                await hass.services.async_call(
-                    DOMAIN_MP,
-                    SERVICE_PLAY_MEDIA,
-                    {
-                        ATTR_ENTITY_ID: entity_ids,
-                        ATTR_MEDIA_CONTENT_ID: generate_media_source_id(
-                            DOMAIN,
-                            str(yarl.URL.build(path=p_type, query=params)),
-                        ),
-                        ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC,
-                    },
-                    blocking=True,
-                    context=service.context,
-                )
-                return
-
-            try:
-                url = await tts.async_get_url_path(
-                    p_type, message, cache=cache, language=language, options=options
-                )
-            except HomeAssistantError as err:
-                _LOGGER.error("Error on init TTS: %s", err)
-                return
-
-            base = tts.base_url or get_url(hass)
-            url = base + url
-
-            data = {
-                ATTR_MEDIA_CONTENT_ID: url,
-                ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC,
-                ATTR_ENTITY_ID: entity_ids,
+            tts.process_options(p_type, language, options)
+            params = {
+                "message": message,
             }
+            if cache is not None:
+                params["cache"] = "true" if cache else "false"
+            if language is not None:
+                params["language"] = language
+            if options is not None:
+                params.update(options)
 
             await hass.services.async_call(
                 DOMAIN_MP,
                 SERVICE_PLAY_MEDIA,
-                data,
+                {
+                    ATTR_ENTITY_ID: entity_ids,
+                    ATTR_MEDIA_CONTENT_ID: generate_media_source_id(
+                        DOMAIN,
+                        str(yarl.URL.build(path=p_type, query=params)),
+                    ),
+                    ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC,
+                },
                 blocking=True,
                 context=service.context,
             )

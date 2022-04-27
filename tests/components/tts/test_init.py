@@ -366,7 +366,8 @@ async def test_setup_component_and_test_service_with_base_url_set(hass):
     assert len(calls) == 1
     assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_MUSIC
     assert (
-        calls[0].data[ATTR_MEDIA_CONTENT_ID] == "http://fnord"
+        await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+        == "http://fnord"
         "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491"
         "_en_-_demo.mp3"
     )
