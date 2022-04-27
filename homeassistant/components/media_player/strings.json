@@ -24,7 +24,8 @@
       "playing": "Playing",
       "paused": "[%key:common::state::paused%]",
       "idle": "[%key:common::state::idle%]",
-      "standby": "[%key:common::state::standby%]"
+      "standby": "[%key:common::state::standby%]",
+      "buffering": "Buffering"
     }
   }
 }
