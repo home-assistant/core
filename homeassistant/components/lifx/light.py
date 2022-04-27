@@ -27,12 +27,11 @@ from homeassistant.components.light import (
     COLOR_GROUP,
     DOMAIN,
     LIGHT_TURN_ON_SCHEMA,
-    SUPPORT_EFFECT,
-    SUPPORT_TRANSITION,
     VALID_BRIGHTNESS,
     VALID_BRIGHTNESS_PCT,
     ColorMode,
     LightEntity,
+    LightEntityFeature,
     preprocess_turn_on_alternatives,
 )
 from homeassistant.config_entries import ConfigEntry
