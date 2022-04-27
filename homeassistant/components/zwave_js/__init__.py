@@ -12,6 +12,7 @@ from zwave_js_server.exceptions import BaseZwaveJSServerError, InvalidServerVers
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.notification import (
     EntryControlNotification,
+    MultilevelSwitchNotification,
     NotificationNotification,
     PowerLevelNotification,
 )
@@ -47,6 +48,7 @@ from .const import (
     ATTR_COMMAND_CLASS,
     ATTR_COMMAND_CLASS_NAME,
     ATTR_DATA_TYPE,
+    ATTR_DIRECTION,
     ATTR_ENDPOINT,
     ATTR_EVENT,
     ATTR_EVENT_DATA,
@@ -403,7 +405,7 @@ async def async_setup_entry(  # noqa: C901
         if "notification" not in event:
             LOGGER.info("Unknown notification: %s", event)
             return
-        notification: EntryControlNotification | NotificationNotification | PowerLevelNotification = event[
+        notification: EntryControlNotification | NotificationNotification | PowerLevelNotification | MultilevelSwitchNotification = event[
             "notification"
         ]
         device = dev_reg.async_get_device({get_device_id(client, notification.node)})
@@ -444,6 +446,14 @@ async def async_setup_entry(  # noqa: C901
                     ATTR_TEST_NODE_ID: notification.test_node_id,
                     ATTR_STATUS: notification.status,
                     ATTR_ACKNOWLEDGED_FRAMES: notification.acknowledged_frames,
+                }
+            )
+        elif isinstance(notification, MultilevelSwitchNotification):
+            event_data.update(
+                {
+                    ATTR_COMMAND_CLASS_NAME: "Multilevel Switch",
+                    ATTR_EVENT_TYPE: notification.event_type,
+                    ATTR_DIRECTION: notification.direction,
                 }
             )
         else:
