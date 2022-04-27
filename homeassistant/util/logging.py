@@ -122,7 +122,7 @@ def catch_log_exception(
     format_err: Callable[..., Any],
     *args: Any,
 ) -> Callable[..., Coroutine[Any, Any, None]]:
-    """Overload for Callables that return an Coroutine."""
+    """Overload for Callables that return a Coroutine."""
 
 
 @overload
