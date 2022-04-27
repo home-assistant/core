@@ -8,7 +8,12 @@ import nikohomecontrol
 import voluptuous as vol
 
 # Import the device class from the component that you want to support
-from homeassistant.components.light import ATTR_BRIGHTNESS, PLATFORM_SCHEMA, LightEntity
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    PLATFORM_SCHEMA,
+    ColorMode,
+    LightEntity,
+)
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
@@ -50,6 +55,9 @@ async def async_setup_platform(
 
 class NikoHomeControlLight(LightEntity):
     """Representation of an Niko Light."""
+
+    _attr_color_mode = ColorMode.ONOFF
+    _attr_supported_color_modes = {ColorMode.ONOFF}
 
     def __init__(self, light, data):
         """Set up the Niko Home Control light platform."""
