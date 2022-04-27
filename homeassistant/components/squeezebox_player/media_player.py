@@ -175,21 +175,20 @@ class SqueezeboxPlayer(MediaPlayerEntity):
         """Turn off device."""
         await self.player.power(False)
 
-    async def async_play_media(
-        self, media_type: str | None, media_id: str, **kwargs
-    ) -> None:
+    async def async_play_media(self, media_type: str, media_id: str, **kwargs) -> None:
         """Send the play_media command to the media player."""
+        to_send_media_type: str | None = media_type
         # Handle media_source
         if media_source.is_media_source_id(media_id):
             sourced_media = await media_source.async_resolve_media(self.hass, media_id)
             media_id = sourced_media.url
-            media_type = sourced_media.mime_type
+            to_send_media_type = sourced_media.mime_type
 
-        if media_type and not media_type.startswith("audio/"):
-            media_type = None
+        if to_send_media_type and not to_send_media_type.startswith("audio/"):
+            to_send_media_type = None
         media_id = async_process_play_media_url(self.hass, media_id)
 
-        await self.player.play_url(media_id, mime_type=media_type)
+        await self.player.play_url(media_id, mime_type=to_send_media_type)
 
     async def async_browse_media(
         self, media_content_type=None, media_content_id=None
