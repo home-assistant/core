@@ -228,8 +228,8 @@ async def _get_platform(
 @websocket_api.websocket_command(
     {vol.Required("type"): "application_credentials/config"}
 )
-@websocket_api.async_response
-async def handle_integration_list(
+@callback
+def handle_integration_list(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle integrations command."""
