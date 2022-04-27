@@ -855,6 +855,8 @@ build.json @home-assistant/supervisor
 /tests/components/rtsp_to_webrtc/ @allenporter
 /homeassistant/components/ruckus_unleashed/ @gabe565
 /tests/components/ruckus_unleashed/ @gabe565
+/homeassistant/components/sabnzbd/ @shaiu
+/tests/components/sabnzbd/ @shaiu
 /homeassistant/components/safe_mode/ @home-assistant/core
 /tests/components/safe_mode/ @home-assistant/core
 /homeassistant/components/saj/ @fredericvl
@@ -915,6 +917,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/sleepiq/ @mfugate1 @kbickar
 /tests/components/sleepiq/ @mfugate1 @kbickar
 /homeassistant/components/slide/ @ualex73
+/homeassistant/components/slimproto/ @marcelveldt
+/tests/components/slimproto/ @marcelveldt
 /homeassistant/components/sma/ @kellerza @rklomp
 /tests/components/sma/ @kellerza @rklomp
 /homeassistant/components/smappee/ @bsmappee
@@ -965,6 +969,8 @@ build.json @home-assistant/supervisor
 /tests/components/starline/ @anonym-tsk
 /homeassistant/components/statistics/ @fabaff @ThomDietrich
 /tests/components/statistics/ @fabaff @ThomDietrich
+/homeassistant/components/steam_online/ @tkdrob
+/tests/components/steam_online/ @tkdrob
 /homeassistant/components/steamist/ @bdraco
 /tests/components/steamist/ @bdraco
 /homeassistant/components/stiebel_eltron/ @fucm
@@ -1048,6 +1054,8 @@ build.json @home-assistant/supervisor
 /tests/components/trace/ @home-assistant/core
 /homeassistant/components/tractive/ @Danielhiversen @zhulik @bieniu
 /tests/components/tractive/ @Danielhiversen @zhulik @bieniu
+/homeassistant/components/trafikverket_ferry/ @gjohansson-ST
+/tests/components/trafikverket_ferry/ @gjohansson-ST
 /homeassistant/components/trafikverket_train/ @endor-force @gjohansson-ST
 /tests/components/trafikverket_train/ @endor-force @gjohansson-ST
 /homeassistant/components/trafikverket_weatherstation/ @endor-force @gjohansson-ST
