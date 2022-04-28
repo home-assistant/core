@@ -46,6 +46,7 @@ async def test_knx_subscribe_telegrams_command(
     await knx.receive_read("1/2/3")
     await knx.receive_write("1/3/4", True)
     await knx.receive_write("1/3/4", False)
+    await knx.receive_individual_address_read()
     await knx.receive_write("1/3/8", (0x34, 0x45))
     # send outgoing events
     await hass.services.async_call(
@@ -92,6 +93,6 @@ async def test_knx_subscribe_telegrams_command(
     assert res["event"]["type"] == "GroupValueWrite"
     assert (
         res["event"]["source_address"] == "0.0.0"
-    )  # needs to be the currently connected IA connected to
+    )  # needs to be the IA currently connected to
     assert res["event"]["direction"] == "label.outgoing"
     assert res["event"]["timestamp"] is not None

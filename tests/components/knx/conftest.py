@@ -11,7 +11,13 @@ from xknx.dpt import DPTArray, DPTBinary
 from xknx.io import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 from xknx.telegram import Telegram, TelegramDirection
 from xknx.telegram.address import GroupAddress, IndividualAddress
-from xknx.telegram.apci import APCI, GroupValueRead, GroupValueResponse, GroupValueWrite
+from xknx.telegram.apci import (
+    APCI,
+    GroupValueRead,
+    GroupValueResponse,
+    GroupValueWrite,
+    IndividualAddressRead,
+)
 
 from homeassistant.components.knx.const import (
     CONF_KNX_AUTOMATIC,
@@ -179,6 +185,19 @@ class KNXTestKit:
                 direction=TelegramDirection.INCOMING,
                 payload=payload,
                 source_address=IndividualAddress(self.INDIVIDUAL_ADDRESS),
+            )
+        )
+        await self.xknx.telegrams.join()
+        await self.hass.async_block_till_done()
+
+    async def receive_individual_address_read(self):
+        """Inject incoming IndividualAddressRead telegram."""
+        self.xknx.telegrams.put_nowait(
+            Telegram(
+                destination_address=IndividualAddress(self.INDIVIDUAL_ADDRESS),
+                direction=TelegramDirection.INCOMING,
+                payload=IndividualAddressRead(),
+                source_address=IndividualAddress("1.3.5"),
             )
         )
         await self.xknx.telegrams.join()
