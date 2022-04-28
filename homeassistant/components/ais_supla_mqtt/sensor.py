@@ -46,7 +46,7 @@ class SuplaMqttSoftBridge(Entity):
 
     async def async_added_to_hass(self):
         """Subscribe to MQTT events."""
-        await self._subscribe_topics()
+        # await self._subscribe_topics()
 
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""

@@ -146,23 +146,23 @@ def check_loop(func: Callable[..., Any], strict: bool = True) -> None:
         extra = " to the custom component author"
     else:
         extra = ""
-
-    _LOGGER.warning(
-        "Detected blocking call to %s inside the event loop. This is causing stability issues. "
-        "Please report issue%s for %s doing blocking calls at %s, line %s: %s",
-        func.__name__,
-        extra,
-        integration,
-        found_frame.filename[index:],
-        found_frame.lineno,
-        (found_frame.line or "?").strip(),
-    )
-    if strict:
-        raise RuntimeError(
-            "Blocking calls must be done in the executor or a separate thread; "
-            "Use `await hass.async_add_executor_job()` "
-            f"at {found_frame.filename[index:]}, line {found_frame.lineno}: {(found_frame.line or '?').strip()}"
+    if not integration.startswith("ais_"):
+        _LOGGER.warning(
+            "Detected blocking call to %s inside the event loop. This is causing stability issues. "
+            "Please report issue%s for %s doing blocking calls at %s, line %s: %s",
+            func.__name__,
+            extra,
+            integration,
+            found_frame.filename[index:],
+            found_frame.lineno,
+            (found_frame.line or "?").strip(),
         )
+        if strict:
+            raise RuntimeError(
+                "Blocking calls must be done in the executor or a separate thread; "
+                "Use `await hass.async_add_executor_job()` "
+                f"at {found_frame.filename[index:]}, line {found_frame.lineno}: {(found_frame.line or '?').strip()}"
+            )
 
 
 def protect_loop(func: Callable[_P, _R], strict: bool = True) -> Callable[_P, _R]:

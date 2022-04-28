@@ -286,6 +286,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             ) as json_file:
                 ais_global.G_DB_SETTINGS_INFO = json.load(json_file)
         db_url = ais_global.G_DB_SETTINGS_INFO["dbUrl"]
+        if db_url == "":
+            return
         if db_url == "sqlite:///:memory:":
             keep_days = 5
         else:
