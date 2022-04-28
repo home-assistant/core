@@ -11,10 +11,7 @@ import voluptuous as vol
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.alarm_control_panel import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
-)
-from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_HOME,
+    AlarmControlPanelEntityFeature,
 )
 from homeassistant.const import (
     CONF_CODE,
@@ -75,6 +72,11 @@ def setup_platform(
 class Concord232Alarm(alarm.AlarmControlPanelEntity):
     """Representation of the Concord232-based alarm panel."""
 
+    _attr_supported_features = (
+        AlarmControlPanelEntityFeature.ARM_HOME
+        | AlarmControlPanelEntityFeature.ARM_AWAY
+    )
+
     def __init__(self, url, name, code, mode):
         """Initialize the Concord232 alarm panel."""
 
@@ -94,17 +96,12 @@ class Concord232Alarm(alarm.AlarmControlPanelEntity):
     @property
     def code_format(self):
         """Return the characters if code is defined."""
-        return alarm.FORMAT_NUMBER
+        return alarm.CodeFormat.NUMBER
 
     @property
     def state(self):
         """Return the state of the device."""
         return self._state
-
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
 
     def update(self):
         """Update values from API."""

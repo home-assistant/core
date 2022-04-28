@@ -8,7 +8,10 @@ from operator import ior
 from pyheos import HeosError, const as heos_const
 
 from homeassistant.components import media_source
-from homeassistant.components.media_player import MediaPlayerEntity
+from homeassistant.components.media_player import (
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
+)
 from homeassistant.components.media_player.browse_media import (
     async_process_play_media_url,
 )
@@ -18,20 +21,6 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_PLAYLIST,
     MEDIA_TYPE_URL,
-    SUPPORT_BROWSE_MEDIA,
-    SUPPORT_CLEAR_PLAYLIST,
-    SUPPORT_GROUPING,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_SHUFFLE_SET,
-    SUPPORT_STOP,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_IDLE, STATE_PAUSED, STATE_PLAYING
@@ -54,15 +43,15 @@ from .const import (
 )
 
 BASE_SUPPORTED_FEATURES = (
-    SUPPORT_VOLUME_MUTE
-    | SUPPORT_VOLUME_SET
-    | SUPPORT_VOLUME_STEP
-    | SUPPORT_CLEAR_PLAYLIST
-    | SUPPORT_SHUFFLE_SET
-    | SUPPORT_SELECT_SOURCE
-    | SUPPORT_PLAY_MEDIA
-    | SUPPORT_GROUPING
-    | SUPPORT_BROWSE_MEDIA
+    MediaPlayerEntityFeature.VOLUME_MUTE
+    | MediaPlayerEntityFeature.VOLUME_SET
+    | MediaPlayerEntityFeature.VOLUME_STEP
+    | MediaPlayerEntityFeature.CLEAR_PLAYLIST
+    | MediaPlayerEntityFeature.SHUFFLE_SET
+    | MediaPlayerEntityFeature.SELECT_SOURCE
+    | MediaPlayerEntityFeature.PLAY_MEDIA
+    | MediaPlayerEntityFeature.GROUPING
+    | MediaPlayerEntityFeature.BROWSE_MEDIA
 )
 
 PLAY_STATE_TO_STATE = {
@@ -72,11 +61,11 @@ PLAY_STATE_TO_STATE = {
 }
 
 CONTROL_TO_SUPPORT = {
-    heos_const.CONTROL_PLAY: SUPPORT_PLAY,
-    heos_const.CONTROL_PAUSE: SUPPORT_PAUSE,
-    heos_const.CONTROL_STOP: SUPPORT_STOP,
-    heos_const.CONTROL_PLAY_PREVIOUS: SUPPORT_PREVIOUS_TRACK,
-    heos_const.CONTROL_PLAY_NEXT: SUPPORT_NEXT_TRACK,
+    heos_const.CONTROL_PLAY: MediaPlayerEntityFeature.PLAY,
+    heos_const.CONTROL_PAUSE: MediaPlayerEntityFeature.PAUSE,
+    heos_const.CONTROL_STOP: MediaPlayerEntityFeature.STOP,
+    heos_const.CONTROL_PLAY_PREVIOUS: MediaPlayerEntityFeature.PREVIOUS_TRACK,
+    heos_const.CONTROL_PLAY_NEXT: MediaPlayerEntityFeature.NEXT_TRACK,
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -115,7 +104,7 @@ class HeosMediaPlayer(MediaPlayerEntity):
         self._media_position_updated_at = None
         self._player = player
         self._signals = []
-        self._supported_features = BASE_SUPPORTED_FEATURES
+        self._attr_supported_features = BASE_SUPPORTED_FEATURES
         self._source_manager = None
         self._group_manager = None
 
@@ -272,7 +261,9 @@ class HeosMediaPlayer(MediaPlayerEntity):
         """Update supported features of the player."""
         controls = self._player.now_playing_media.supported_controls
         current_support = [CONTROL_TO_SUPPORT[control] for control in controls]
-        self._supported_features = reduce(ior, current_support, BASE_SUPPORTED_FEATURES)
+        self._attr_supported_features = reduce(
+            ior, current_support, BASE_SUPPORTED_FEATURES
+        )
 
         if self._group_manager is None:
             self._group_manager = self.hass.data[HEOS_DOMAIN][DATA_GROUP_MANAGER]
@@ -418,11 +409,6 @@ class HeosMediaPlayer(MediaPlayerEntity):
     def state(self) -> str:
         """State of the player."""
         return PLAY_STATE_TO_STATE[self._player.state]
-
-    @property
-    def supported_features(self) -> int:
-        """Flag media player features that are supported."""
-        return self._supported_features
 
     @property
     def unique_id(self) -> str:

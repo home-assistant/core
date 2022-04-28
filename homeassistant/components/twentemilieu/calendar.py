@@ -2,9 +2,8 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any
 
-from homeassistant.components.calendar import CalendarEventDevice
+from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant, callback
@@ -26,7 +25,7 @@ async def async_setup_entry(
     async_add_entities([TwenteMilieuCalendar(coordinator, entry)])
 
 
-class TwenteMilieuCalendar(TwenteMilieuEntity, CalendarEventDevice):
+class TwenteMilieuCalendar(TwenteMilieuEntity, CalendarEntity):
     """Defines a Twente Milieu calendar."""
 
     _attr_name = "Twente Milieu"
@@ -40,26 +39,25 @@ class TwenteMilieuCalendar(TwenteMilieuEntity, CalendarEventDevice):
         """Initialize the Twente Milieu entity."""
         super().__init__(coordinator, entry)
         self._attr_unique_id = str(entry.data[CONF_ID])
-        self._event: dict[str, Any] | None = None
+        self._event: CalendarEvent | None = None
 
     @property
-    def event(self) -> dict[str, Any] | None:
+    def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
         return self._event
 
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
-    ) -> list[dict[str, Any]]:
+    ) -> list[CalendarEvent]:
         """Return calendar events within a datetime range."""
-        events: list[dict[str, Any]] = []
+        events: list[CalendarEvent] = []
         for waste_type, waste_dates in self.coordinator.data.items():
             events.extend(
-                {
-                    "all_day": True,
-                    "start": {"date": waste_date.isoformat()},
-                    "end": {"date": waste_date.isoformat()},
-                    "summary": WASTE_TYPE_TO_DESCRIPTION[waste_type],
-                }
+                CalendarEvent(
+                    summary=WASTE_TYPE_TO_DESCRIPTION[waste_type],
+                    start=waste_date,
+                    end=waste_date,
+                )
                 for waste_date in waste_dates
                 if start_date.date() <= waste_date <= end_date.date()
             )
@@ -86,12 +84,11 @@ class TwenteMilieuCalendar(TwenteMilieuEntity, CalendarEventDevice):
 
         self._event = None
         if next_waste_pickup_date is not None and next_waste_pickup_type is not None:
-            self._event = {
-                "all_day": True,
-                "start": {"date": next_waste_pickup_date.isoformat()},
-                "end": {"date": next_waste_pickup_date.isoformat()},
-                "summary": WASTE_TYPE_TO_DESCRIPTION[next_waste_pickup_type],
-            }
+            self._event = CalendarEvent(
+                summary=WASTE_TYPE_TO_DESCRIPTION[next_waste_pickup_type],
+                start=next_waste_pickup_date,
+                end=next_waste_pickup_date,
+            )
 
         super()._handle_coordinator_update()
 

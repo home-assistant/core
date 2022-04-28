@@ -2,14 +2,9 @@
 import logging
 
 from homeassistant.components.alarm_control_panel import (
-    FORMAT_NUMBER,
     AlarmControlPanelEntity,
-)
-from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_CUSTOM_BYPASS,
-    SUPPORT_ALARM_ARM_HOME,
-    SUPPORT_ALARM_ARM_NIGHT,
+    AlarmControlPanelEntityFeature,
+    CodeFormat,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -42,10 +37,10 @@ from .entity import RiscoEntity
 _LOGGER = logging.getLogger(__name__)
 
 STATES_TO_SUPPORTED_FEATURES = {
-    STATE_ALARM_ARMED_AWAY: SUPPORT_ALARM_ARM_AWAY,
-    STATE_ALARM_ARMED_CUSTOM_BYPASS: SUPPORT_ALARM_ARM_CUSTOM_BYPASS,
-    STATE_ALARM_ARMED_HOME: SUPPORT_ALARM_ARM_HOME,
-    STATE_ALARM_ARMED_NIGHT: SUPPORT_ALARM_ARM_NIGHT,
+    STATE_ALARM_ARMED_AWAY: AlarmControlPanelEntityFeature.ARM_AWAY,
+    STATE_ALARM_ARMED_CUSTOM_BYPASS: AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS,
+    STATE_ALARM_ARMED_HOME: AlarmControlPanelEntityFeature.ARM_HOME,
+    STATE_ALARM_ARMED_NIGHT: AlarmControlPanelEntityFeature.ARM_NIGHT,
 }
 
 
@@ -137,7 +132,7 @@ class RiscoAlarm(AlarmControlPanelEntity, RiscoEntity):
     @property
     def code_format(self):
         """Return one or more digits/characters."""
-        return FORMAT_NUMBER
+        return CodeFormat.NUMBER
 
     def _validate_code(self, code):
         """Validate given code."""

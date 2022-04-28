@@ -17,9 +17,7 @@ from homeassistant.components.fan import (
     SERVICE_SET_DIRECTION,
     SERVICE_SET_PERCENTAGE,
     SERVICE_SET_PRESET_MODE,
-    SUPPORT_DIRECTION,
-    SUPPORT_OSCILLATE,
-    SUPPORT_SET_SPEED,
+    FanEntityFeature,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -66,11 +64,11 @@ class Fan(HomeAccessory):
         percentage_step = state.attributes.get(ATTR_PERCENTAGE_STEP, 1)
         self.preset_modes = state.attributes.get(ATTR_PRESET_MODES)
 
-        if features & SUPPORT_DIRECTION:
+        if features & FanEntityFeature.DIRECTION:
             self.chars.append(CHAR_ROTATION_DIRECTION)
-        if features & SUPPORT_OSCILLATE:
+        if features & FanEntityFeature.OSCILLATE:
             self.chars.append(CHAR_SWING_MODE)
-        if features & SUPPORT_SET_SPEED:
+        if features & FanEntityFeature.SET_SPEED:
             self.chars.append(CHAR_ROTATION_SPEED)
         if self.preset_modes and len(self.preset_modes) == 1:
             self.chars.append(CHAR_TARGET_FAN_STATE)
@@ -138,7 +136,7 @@ class Fan(HomeAccessory):
                 # the fan to 100% than to the desired speed.
                 #
                 # Setting the speed will take care of turning
-                # on the fan if SUPPORT_SET_SPEED is set.
+                # on the fan if FanEntityFeature.SET_SPEED is set.
                 if not self.char_speed or CHAR_ROTATION_SPEED not in char_values:
                     self.set_state(1)
             else:

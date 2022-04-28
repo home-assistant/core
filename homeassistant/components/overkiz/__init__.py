@@ -123,7 +123,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             identifiers={(DOMAIN, gateway.id)},
             model=gateway.sub_type.beautify_name if gateway.sub_type else None,
             manufacturer=server.manufacturer,
-            name=gateway.type.beautify_name,
+            name=gateway.type.beautify_name if gateway.type else gateway.id,
             sw_version=gateway.connectivity.protocol_version,
             configuration_url=server.configuration_url,
         )

@@ -12,7 +12,7 @@ import logging
 import math
 import sys
 from timeit import default_timer as timer
-from typing import Any, Literal, TypedDict, final
+from typing import Any, Final, Literal, TypedDict, final
 
 import voluptuous as vol
 
@@ -28,7 +28,6 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     ATTR_UNIT_OF_MEASUREMENT,
     DEVICE_DEFAULT_NAME,
-    ENTITY_CATEGORIES,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -63,15 +62,6 @@ SOURCE_PLATFORM_CONFIG = "platform_config"
 # Used when converting float states to string: limit precision according to machine
 # epsilon to make the string representation readable
 FLOAT_PRECISION = abs(int(math.floor(math.log10(abs(sys.float_info.epsilon))))) - 1
-
-
-def validate_entity_category(value: Any | None) -> EntityCategory:
-    """Validate entity category configuration."""
-    value = vol.In(ENTITY_CATEGORIES)(value)
-    return EntityCategory(value)
-
-
-ENTITY_CATEGORIES_SCHEMA = validate_entity_category
 
 
 @callback
@@ -214,6 +204,9 @@ class EntityCategory(StrEnum):
     SYSTEM = "system"
 
 
+ENTITY_CATEGORIES_SCHEMA: Final = vol.Coerce(EntityCategory)
+
+
 class EntityPlatformState(Enum):
     """The platform state of an entity."""
 
@@ -237,6 +230,7 @@ class EntityDescription:
     device_class: str | None = None
     entity_category: EntityCategory | None = None
     entity_registry_enabled_default: bool = True
+    entity_registry_visible_default: bool = True
     force_update: bool = False
     icon: str | None = None
     name: str | None = None
@@ -300,6 +294,7 @@ class Entity(ABC):
     _attr_entity_category: EntityCategory | None
     _attr_entity_picture: str | None = None
     _attr_entity_registry_enabled_default: bool
+    _attr_entity_registry_visible_default: bool
     _attr_extra_state_attributes: MutableMapping[str, Any]
     _attr_force_update: bool
     _attr_icon: str | None
@@ -457,6 +452,15 @@ class Entity(ABC):
             return self._attr_entity_registry_enabled_default
         if hasattr(self, "entity_description"):
             return self.entity_description.entity_registry_enabled_default
+        return True
+
+    @property
+    def entity_registry_visible_default(self) -> bool:
+        """Return if the entity should be visible when first added to the entity registry."""
+        if hasattr(self, "_attr_entity_registry_visible_default"):
+            return self._attr_entity_registry_visible_default
+        if hasattr(self, "entity_description"):
+            return self.entity_description.entity_registry_visible_default
         return True
 
     @property
@@ -755,7 +759,7 @@ class Entity(ABC):
 
     @callback
     def async_on_remove(self, func: CALLBACK_TYPE) -> None:
-        """Add a function to call when entity removed."""
+        """Add a function to call when entity is removed or not added."""
         if self._on_remove is None:
             self._on_remove = []
         self._on_remove.append(func)
@@ -784,13 +788,23 @@ class Entity(ABC):
         self.parallel_updates = parallel_updates
         self._platform_state = EntityPlatformState.ADDED
 
+    def _call_on_remove_callbacks(self) -> None:
+        """Call callbacks registered by async_on_remove."""
+        if self._on_remove is None:
+            return
+        while self._on_remove:
+            self._on_remove.pop()()
+
     @callback
     def add_to_platform_abort(self) -> None:
         """Abort adding an entity to a platform."""
+
+        self._platform_state = EntityPlatformState.NOT_ADDED
+        self._call_on_remove_callbacks()
+
         self.hass = None  # type: ignore[assignment]
         self.platform = None
         self.parallel_updates = None
-        self._platform_state = EntityPlatformState.NOT_ADDED
 
     async def add_to_platform_finish(self) -> None:
         """Finish adding an entity to a platform."""
@@ -815,9 +829,7 @@ class Entity(ABC):
 
         self._platform_state = EntityPlatformState.REMOVED
 
-        if self._on_remove is not None:
-            while self._on_remove:
-                self._on_remove.pop()()
+        self._call_on_remove_callbacks()
 
         await self.async_internal_will_remove_from_hass()
         await self.async_will_remove_from_hass()

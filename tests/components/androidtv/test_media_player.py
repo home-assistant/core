@@ -18,11 +18,15 @@ from homeassistant.components.androidtv.const import (
     CONF_TURN_ON_COMMAND,
     DEFAULT_ADB_SERVER_PORT,
     DEFAULT_PORT,
+    DEVICE_ANDROIDTV,
+    DEVICE_FIRETV,
     DOMAIN,
 )
 from homeassistant.components.androidtv.media_player import (
     ATTR_DEVICE_PATH,
     ATTR_LOCAL_PATH,
+    PREFIX_ANDROIDTV,
+    PREFIX_FIRETV,
     SERVICE_ADB_COMMAND,
     SERVICE_DOWNLOAD,
     SERVICE_LEARN_SENDEVENT,
@@ -64,10 +68,13 @@ from homeassistant.const import (
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.util import slugify
 
+from . import patchers
+
 from tests.common import MockConfigEntry
-from tests.components.androidtv import patchers
 
 CONF_OPTIONS = "options"
+HOST = "127.0.0.1"
+TEST_ENTITY_NAME = "entity_name"
 
 PATCH_ACCESS = patch("homeassistant.components.androidtv.os.access", return_value=True)
 PATCH_ISFILE = patch(
@@ -79,72 +86,62 @@ SHELL_RESPONSE_STANDBY = "1"
 
 # Android TV device with Python ADB implementation
 CONFIG_ANDROIDTV_PYTHON_ADB = {
+    TEST_ENTITY_NAME: f"{PREFIX_ANDROIDTV} {HOST}",
     DOMAIN: {
-        CONF_HOST: "127.0.0.1",
+        CONF_HOST: HOST,
         CONF_PORT: DEFAULT_PORT,
-        CONF_DEVICE_CLASS: "androidtv",
-        CONF_ADB_SERVER_PORT: DEFAULT_ADB_SERVER_PORT,
-    }
+        CONF_DEVICE_CLASS: DEVICE_ANDROIDTV,
+    },
 }
 
 # Android TV device with Python ADB implementation imported from YAML
 CONFIG_ANDROIDTV_PYTHON_ADB_YAML = {
+    TEST_ENTITY_NAME: "ADB yaml import",
     DOMAIN: {
         CONF_NAME: "ADB yaml import",
         **CONFIG_ANDROIDTV_PYTHON_ADB[DOMAIN],
-    }
+    },
 }
 
 # Android TV device with ADB server
 CONFIG_ANDROIDTV_ADB_SERVER = {
+    TEST_ENTITY_NAME: f"{PREFIX_ANDROIDTV} {HOST}",
     DOMAIN: {
-        CONF_HOST: "127.0.0.1",
+        CONF_HOST: HOST,
         CONF_PORT: DEFAULT_PORT,
-        CONF_DEVICE_CLASS: "androidtv",
-        CONF_ADB_SERVER_IP: "127.0.0.1",
+        CONF_DEVICE_CLASS: DEVICE_ANDROIDTV,
+        CONF_ADB_SERVER_IP: HOST,
         CONF_ADB_SERVER_PORT: DEFAULT_ADB_SERVER_PORT,
-    }
+    },
 }
 
 # Fire TV device with Python ADB implementation
 CONFIG_FIRETV_PYTHON_ADB = {
+    TEST_ENTITY_NAME: f"{PREFIX_FIRETV} {HOST}",
     DOMAIN: {
-        CONF_HOST: "127.0.0.1",
+        CONF_HOST: HOST,
         CONF_PORT: DEFAULT_PORT,
-        CONF_DEVICE_CLASS: "firetv",
-        CONF_ADB_SERVER_PORT: DEFAULT_ADB_SERVER_PORT,
-    }
+        CONF_DEVICE_CLASS: DEVICE_FIRETV,
+    },
 }
 
 # Fire TV device with ADB server
 CONFIG_FIRETV_ADB_SERVER = {
+    TEST_ENTITY_NAME: f"{PREFIX_FIRETV} {HOST}",
     DOMAIN: {
-        CONF_HOST: "127.0.0.1",
+        CONF_HOST: HOST,
         CONF_PORT: DEFAULT_PORT,
-        CONF_DEVICE_CLASS: "firetv",
-        CONF_ADB_SERVER_IP: "127.0.0.1",
+        CONF_DEVICE_CLASS: DEVICE_FIRETV,
+        CONF_ADB_SERVER_IP: HOST,
         CONF_ADB_SERVER_PORT: DEFAULT_ADB_SERVER_PORT,
-    }
+    },
 }
 
 
 def _setup(config):
     """Perform common setup tasks for the tests."""
-    if CONF_ADB_SERVER_IP not in config[DOMAIN]:
-        patch_key = "python"
-    else:
-        patch_key = "server"
-
-    host = config[DOMAIN][CONF_HOST]
-    # CONF_NAME available for configuration imported from YAML
-    if conf_name := config[DOMAIN].get(CONF_NAME):
-        entity_id = slugify(conf_name)
-    elif config[DOMAIN].get(CONF_DEVICE_CLASS) != "firetv":
-        entity_id = slugify(f"Android TV {host}")
-    else:
-        entity_id = slugify(f"Fire TV {host}")
-    entity_id = f"{MP_DOMAIN}.{entity_id}"
-
+    patch_key = "server" if CONF_ADB_SERVER_IP in config[DOMAIN] else "python"
+    entity_id = f"{MP_DOMAIN}.{slugify(config[TEST_ENTITY_NAME])}"
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data=config[DOMAIN],
@@ -320,7 +317,7 @@ async def test_sources(hass, config0):
         assert state is not None
         assert state.state == STATE_OFF
 
-    if config[DOMAIN].get(CONF_DEVICE_CLASS) != "firetv":
+    if config[DOMAIN].get(CONF_DEVICE_CLASS) != DEVICE_FIRETV:
         patch_update = patchers.patch_androidtv_update(
             "playing",
             "com.app.test1",
@@ -346,7 +343,7 @@ async def test_sources(hass, config0):
         assert state.attributes["source"] == "TEST 1"
         assert sorted(state.attributes["source_list"]) == ["TEST 1", "com.app.test2"]
 
-    if config[DOMAIN].get(CONF_DEVICE_CLASS) != "firetv":
+    if config[DOMAIN].get(CONF_DEVICE_CLASS) != DEVICE_FIRETV:
         patch_update = patchers.patch_androidtv_update(
             "playing",
             "com.app.test2",
@@ -399,7 +396,7 @@ async def _test_exclude_sources(hass, config0, expected_sources):
         assert state is not None
         assert state.state == STATE_OFF
 
-    if config[DOMAIN].get(CONF_DEVICE_CLASS) != "firetv":
+    if config[DOMAIN].get(CONF_DEVICE_CLASS) != DEVICE_FIRETV:
         patch_update = patchers.patch_androidtv_update(
             "playing",
             "com.app.test1",
@@ -1189,7 +1186,7 @@ async def test_volume_mute(hass):
 
 async def test_connection_closed_on_ha_stop(hass):
     """Test that the ADB socket connection is closed when HA stops."""
-    patch_key, entity_id, config_entry = _setup(CONFIG_ANDROIDTV_ADB_SERVER)
+    patch_key, _, config_entry = _setup(CONFIG_ANDROIDTV_ADB_SERVER)
     config_entry.add_to_hass(hass)
 
     with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[

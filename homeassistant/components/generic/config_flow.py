@@ -94,7 +94,7 @@ def build_schema(
         vol.Required(
             CONF_FRAMERATE,
             description={"suggested_value": user_input.get(CONF_FRAMERATE, 2)},
-        ): int,
+        ): vol.All(vol.Range(min=0, min_included=False), cv.positive_float),
         vol.Required(
             CONF_VERIFY_SSL, default=user_input.get(CONF_VERIFY_SSL, True)
         ): bool,
@@ -274,7 +274,6 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
                         # is always jpeg
                         user_input[CONF_CONTENT_TYPE] = "image/jpeg"
 
-                    await self.async_set_unique_id(self.flow_id)
                     return self.async_create_entry(
                         title=name, data={}, options=user_input
                     )
@@ -302,7 +301,6 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
             import_config[CONF_LIMIT_REFETCH_TO_URL_CHANGE] = False
         still_format = import_config.get(CONF_CONTENT_TYPE, "image/jpeg")
         import_config[CONF_CONTENT_TYPE] = still_format
-        await self.async_set_unique_id(self.flow_id)
         return self.async_create_entry(title=name, data={}, options=import_config)
 
 

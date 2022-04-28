@@ -5,12 +5,10 @@ from pypjlink import MUTE_AUDIO, Projector
 from pypjlink.projector import ProjectorError
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
+from homeassistant.components.media_player import (
+    PLATFORM_SCHEMA,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -39,10 +37,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): cv.string,
         vol.Optional(CONF_PASSWORD): cv.string,
     }
-)
-
-SUPPORT_PJLINK = (
-    SUPPORT_VOLUME_MUTE | SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
 )
 
 
@@ -79,6 +73,13 @@ def format_input_source(input_source_name, input_source_number):
 
 class PjLinkDevice(MediaPlayerEntity):
     """Representation of a PJLink device."""
+
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.SELECT_SOURCE
+    )
 
     def __init__(self, host, port, name, encoding, password):
         """Iinitialize the PJLink device."""
@@ -159,11 +160,6 @@ class PjLinkDevice(MediaPlayerEntity):
     def source_list(self):
         """Return all available input sources."""
         return self._source_list
-
-    @property
-    def supported_features(self):
-        """Return projector supported features."""
-        return SUPPORT_PJLINK
 
     def turn_off(self):
         """Turn projector off."""

@@ -58,31 +58,40 @@ async def test_get_actions(hass, device_ias):
     )
 
     expected_actions = [
-        {"domain": DOMAIN, "type": "squawk", "device_id": reg_device.id},
-        {"domain": DOMAIN, "type": "warn", "device_id": reg_device.id},
+        {
+            "domain": DOMAIN,
+            "type": "squawk",
+            "device_id": reg_device.id,
+            "metadata": {},
+        },
+        {"domain": DOMAIN, "type": "warn", "device_id": reg_device.id, "metadata": {}},
         {
             "domain": Platform.SELECT,
             "type": "select_option",
             "device_id": reg_device.id,
             "entity_id": "select.fakemanufacturer_fakemodel_e769900a_ias_wd_warningmode",
+            "metadata": {"secondary": True},
         },
         {
             "domain": Platform.SELECT,
             "type": "select_option",
             "device_id": reg_device.id,
             "entity_id": "select.fakemanufacturer_fakemodel_e769900a_ias_wd_sirenlevel",
+            "metadata": {"secondary": True},
         },
         {
             "domain": Platform.SELECT,
             "type": "select_option",
             "device_id": reg_device.id,
             "entity_id": "select.fakemanufacturer_fakemodel_e769900a_ias_wd_strobelevel",
+            "metadata": {"secondary": True},
         },
         {
             "domain": Platform.SELECT,
             "type": "select_option",
             "device_id": reg_device.id,
             "entity_id": "select.fakemanufacturer_fakemodel_e769900a_ias_wd_strobe",
+            "metadata": {"secondary": True},
         },
     ]
 

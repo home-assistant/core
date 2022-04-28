@@ -66,6 +66,12 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
             or self.device.widget.value
         )
 
+        suggested_area = (
+            self.coordinator.areas[self.device.place_oid]
+            if self.coordinator.areas and self.device.place_oid
+            else None
+        )
+
         return DeviceInfo(
             identifiers={(DOMAIN, self.executor.base_device_url)},
             name=self.device.label,
@@ -76,7 +82,7 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
                 self.executor.select_attribute(OverkizAttribute.CORE_FIRMWARE_REVISION),
             ),
             hw_version=self.device.controllable_name,
-            suggested_area=self.coordinator.areas[self.device.place_oid],
+            suggested_area=suggested_area,
             via_device=(DOMAIN, self.executor.get_gateway_id()),
             configuration_url=self.coordinator.client.server.configuration_url,
         )

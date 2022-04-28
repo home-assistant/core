@@ -4,14 +4,10 @@ from __future__ import annotations
 from nad_receiver import NADReceiver, NADReceiverTCP, NADReceiverTelnet
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
+from homeassistant.components.media_player import (
+    PLATFORM_SCHEMA,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -35,12 +31,12 @@ DEFAULT_MAX_VOLUME = -20
 DEFAULT_VOLUME_STEP = 4
 
 SUPPORT_NAD = (
-    SUPPORT_VOLUME_SET
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-    | SUPPORT_VOLUME_STEP
-    | SUPPORT_SELECT_SOURCE
+    MediaPlayerEntityFeature.VOLUME_SET
+    | MediaPlayerEntityFeature.VOLUME_MUTE
+    | MediaPlayerEntityFeature.TURN_ON
+    | MediaPlayerEntityFeature.TURN_OFF
+    | MediaPlayerEntityFeature.VOLUME_STEP
+    | MediaPlayerEntityFeature.SELECT_SOURCE
 )
 
 CONF_SERIAL_PORT = "serial_port"  # for NADReceiver
@@ -90,6 +86,8 @@ def setup_platform(
 class NAD(MediaPlayerEntity):
     """Representation of a NAD Receiver."""
 
+    _attr_supported_features = SUPPORT_NAD
+
     def __init__(self, config):
         """Initialize the NAD Receiver device."""
         self.config = config
@@ -133,11 +131,6 @@ class NAD(MediaPlayerEntity):
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
         return self._mute
-
-    @property
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        return SUPPORT_NAD
 
     def turn_off(self):
         """Turn the media player off."""
@@ -227,6 +220,8 @@ class NAD(MediaPlayerEntity):
 class NADtcp(MediaPlayerEntity):
     """Representation of a NAD Digital amplifier."""
 
+    _attr_supported_features = SUPPORT_NAD
+
     def __init__(self, config):
         """Initialize the amplifier."""
         self._name = config[CONF_NAME]
@@ -260,11 +255,6 @@ class NADtcp(MediaPlayerEntity):
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
         return self._mute
-
-    @property
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        return SUPPORT_NAD
 
     def turn_off(self):
         """Turn the media player off."""

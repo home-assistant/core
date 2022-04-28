@@ -6,8 +6,6 @@ import pytest
 from homeassistant.components.energy import async_get_manager, validate
 from homeassistant.setup import async_setup_component
 
-from tests.common import async_init_recorder_component
-
 
 @pytest.fixture
 def mock_is_entity_recorded():
@@ -44,9 +42,8 @@ def mock_get_metadata():
 
 
 @pytest.fixture(autouse=True)
-async def mock_energy_manager(hass):
+async def mock_energy_manager(hass, recorder_mock):
     """Set up energy."""
-    await async_init_recorder_component(hass)
     assert await async_setup_component(hass, "energy", {"energy": {}})
     manager = await async_get_manager(hass)
     manager.data = manager.default_preferences()

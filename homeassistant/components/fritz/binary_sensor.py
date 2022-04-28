@@ -42,6 +42,8 @@ SENSOR_TYPES: tuple[FritzBinarySensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     FritzBinarySensorEntityDescription(
+        # Deprecated, scheduled to be removed in 2022.7 (#70096)
+        entity_registry_enabled_default=False,
         key="firmware_update",
         name="Firmware Update",
         device_class=BinarySensorDeviceClass.UPDATE,
