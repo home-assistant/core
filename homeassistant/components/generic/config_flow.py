@@ -274,7 +274,6 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
                         # is always jpeg
                         user_input[CONF_CONTENT_TYPE] = "image/jpeg"
 
-                    await self.async_set_unique_id(self.flow_id)
                     return self.async_create_entry(
                         title=name, data={}, options=user_input
                     )
@@ -302,7 +301,6 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
             import_config[CONF_LIMIT_REFETCH_TO_URL_CHANGE] = False
         still_format = import_config.get(CONF_CONTENT_TYPE, "image/jpeg")
         import_config[CONF_CONTENT_TYPE] = still_format
-        await self.async_set_unique_id(self.flow_id)
         return self.async_create_entry(title=name, data={}, options=import_config)
 
 

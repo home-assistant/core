@@ -15,8 +15,8 @@ _T = TypeVar("_T", bound=PlugwiseEntity)
 
 
 def plugwise_command(
-    func: Callable[Concatenate[_T, _P], Awaitable[_R]]  # type: ignore[misc]
-) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, _R]]:  # type: ignore[misc]
+    func: Callable[Concatenate[_T, _P], Awaitable[_R]]
+) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, _R]]:
     """Decorate Plugwise calls that send commands/make changes to the device.
 
     A decorator that wraps the passed in function, catches Plugwise errors,

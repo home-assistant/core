@@ -18,6 +18,7 @@ from homeassistant.const import (
     POWER_WATT,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -63,10 +64,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Fibaro controller devices."""
     entities: list[SensorEntity] = []
-    for device in hass.data[DOMAIN][entry.entry_id][FIBARO_DEVICES]["sensor"]:
+    for device in hass.data[DOMAIN][entry.entry_id][FIBARO_DEVICES][Platform.SENSOR]:
         entities.append(FibaroSensor(device))
-    for device_type in ("cover", "light", "switch"):
-        for device in hass.data[DOMAIN][entry.entry_id][FIBARO_DEVICES][device_type]:
+    for platform in (Platform.COVER, Platform.LIGHT, Platform.SWITCH):
+        for device in hass.data[DOMAIN][entry.entry_id][FIBARO_DEVICES][platform]:
             if "energy" in device.interfaces:
                 entities.append(FibaroEnergySensor(device))
             if "power" in device.interfaces:

@@ -3,12 +3,13 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any
+from typing import Any, cast
 
 import voluptuous as vol
 from zwave_js_server.client import Client as ZwaveClient
-from zwave_js_server.const import CommandStatus
-from zwave_js_server.exceptions import SetValueFailed
+from zwave_js_server.const import CommandClass, CommandStatus
+from zwave_js_server.exceptions import FailedCommand, SetValueFailed
+from zwave_js_server.model.endpoint import Endpoint
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.value import get_value_id
 from zwave_js_server.util.multicast import async_multicast_set_value
@@ -20,13 +21,20 @@ from zwave_js_server.util.node import (
 from homeassistant.components.group import expand_entity_ids
 from homeassistant.const import ATTR_AREA_ID, ATTR_DEVICE_ID, ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from . import const
 from .config_validation import BITMASK_SCHEMA, VALUE_SCHEMA
-from .helpers import async_get_nodes_from_targets
+from .helpers import (
+    async_get_node_from_device_id,
+    async_get_node_from_entity_id,
+    async_get_nodes_from_area_id,
+    async_get_nodes_from_targets,
+    get_value_id_from_unique_id,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,7 +86,7 @@ class ZWaveServices:
         def get_nodes_from_service_data(val: dict[str, Any]) -> dict[str, Any]:
             """Get nodes set from service data."""
             val[const.ATTR_NODES] = async_get_nodes_from_targets(
-                self._hass, val, self._ent_reg, self._dev_reg
+                self._hass, val, self._ent_reg, self._dev_reg, _LOGGER
             )
             return val
 
@@ -132,8 +140,8 @@ class ZWaveServices:
             for entity_id in val[ATTR_ENTITY_ID]:
                 entry = self._ent_reg.async_get(entity_id)
                 if entry is None or entry.platform != const.DOMAIN:
-                    const.LOGGER.info(
-                        "Entity %s is not a valid %s entity.", entity_id, const.DOMAIN
+                    _LOGGER.info(
+                        "Entity %s is not a valid %s entity", entity_id, const.DOMAIN
                     )
                     invalid_entities.append(entity_id)
 
@@ -326,6 +334,36 @@ class ZWaveServices:
             ),
         )
 
+        self._hass.services.async_register(
+            const.DOMAIN,
+            const.SERVICE_INVOKE_CC_API,
+            self.async_invoke_cc_api,
+            schema=vol.Schema(
+                vol.All(
+                    {
+                        vol.Optional(ATTR_AREA_ID): vol.All(
+                            cv.ensure_list, [cv.string]
+                        ),
+                        vol.Optional(ATTR_DEVICE_ID): vol.All(
+                            cv.ensure_list, [cv.string]
+                        ),
+                        vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+                        vol.Required(const.ATTR_COMMAND_CLASS): vol.All(
+                            vol.Coerce(int), vol.Coerce(CommandClass)
+                        ),
+                        vol.Optional(const.ATTR_ENDPOINT): vol.Coerce(int),
+                        vol.Required(const.ATTR_METHOD_NAME): cv.string,
+                        vol.Required(const.ATTR_PARAMETERS): list,
+                    },
+                    cv.has_at_least_one_key(
+                        ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID
+                    ),
+                    get_nodes_from_service_data,
+                    has_at_least_one_node,
+                ),
+            ),
+        )
+
     async def async_set_config_parameter(self, service: ServiceCall) -> None:
         """Set a config value on a node."""
         nodes = service.data[const.ATTR_NODES]
@@ -425,11 +463,11 @@ class ZWaveServices:
             )
 
             if success is False:
-                raise SetValueFailed(
+                raise HomeAssistantError(
                     "Unable to set value, refer to "
                     "https://zwave-js.github.io/node-zwave-js/#/api/node?id=setvalue "
                     "for possible reasons"
-                )
+                ) from SetValueFailed
 
     async def async_multicast_set_value(self, service: ServiceCall) -> None:
         """Set a value via multicast to multiple nodes."""
@@ -438,7 +476,7 @@ class ZWaveServices:
         options = service.data.get(const.ATTR_OPTIONS)
 
         if not broadcast and len(nodes) == 1:
-            const.LOGGER.info(
+            _LOGGER.info(
                 "Passing the zwave_js.multicast_set_value service call to the "
                 "zwave_js.set_value service since only one node was targeted"
             )
@@ -496,14 +534,96 @@ class ZWaveServices:
         )
 
         if success is False:
-            raise SetValueFailed("Unable to set value via multicast")
+            raise HomeAssistantError(
+                "Unable to set value via multicast"
+            ) from SetValueFailed
 
     async def async_ping(self, service: ServiceCall) -> None:
         """Ping node(s)."""
-        const.LOGGER.warning(
+        # pylint: disable=no-self-use
+        _LOGGER.warning(
             "This service is deprecated in favor of the ping button entity. Service "
             "calls will still work for now but the service will be removed in a "
             "future release"
         )
         nodes: set[ZwaveNode] = service.data[const.ATTR_NODES]
         await asyncio.gather(*(node.async_ping() for node in nodes))
+
+    async def async_invoke_cc_api(self, service: ServiceCall) -> None:
+        """Invoke a command class API."""
+        command_class: CommandClass = service.data[const.ATTR_COMMAND_CLASS]
+        method_name: str = service.data[const.ATTR_METHOD_NAME]
+        parameters: list[Any] = service.data[const.ATTR_PARAMETERS]
+
+        async def _async_invoke_cc_api(endpoints: set[Endpoint]) -> None:
+            """Invoke the CC API on a node endpoint."""
+            errors: list[str] = []
+            for endpoint in endpoints:
+                _LOGGER.info(
+                    "Invoking %s CC API method %s on endpoint %s",
+                    command_class.name,
+                    method_name,
+                    endpoint,
+                )
+                try:
+                    await endpoint.async_invoke_cc_api(
+                        command_class, method_name, *parameters
+                    )
+                except FailedCommand as err:
+                    errors.append(cast(str, err.args[0]))
+            if errors:
+                raise HomeAssistantError(
+                    "\n".join([f"{len(errors)} error(s):", *errors])
+                )
+
+        # If an endpoint is provided, we assume the user wants to call the CC API on
+        # that endpoint for all target nodes
+        if (endpoint := service.data.get(const.ATTR_ENDPOINT)) is not None:
+            await _async_invoke_cc_api(
+                {node.endpoints[endpoint] for node in service.data[const.ATTR_NODES]}
+            )
+            return
+
+        # If no endpoint is provided, we target endpoint 0 for all device and area
+        # nodes and we target the endpoint of the primary value for all entities
+        # specified.
+        endpoints: set[Endpoint] = set()
+        for area_id in service.data.get(ATTR_AREA_ID, []):
+            for node in async_get_nodes_from_area_id(
+                self._hass, area_id, self._ent_reg, self._dev_reg
+            ):
+                endpoints.add(node.endpoints[0])
+
+        for device_id in service.data.get(ATTR_DEVICE_ID, []):
+            try:
+                node = async_get_node_from_device_id(
+                    self._hass, device_id, self._dev_reg
+                )
+            except ValueError as err:
+                _LOGGER.warning(err.args[0])
+                continue
+            endpoints.add(node.endpoints[0])
+
+        for entity_id in service.data.get(ATTR_ENTITY_ID, []):
+            if (
+                not (entity_entry := self._ent_reg.async_get(entity_id))
+                or entity_entry.platform != const.DOMAIN
+            ):
+                _LOGGER.warning(
+                    "Skipping entity %s as it is not a valid %s entity",
+                    entity_id,
+                    const.DOMAIN,
+                )
+                continue
+            node = async_get_node_from_entity_id(
+                self._hass, entity_id, self._ent_reg, self._dev_reg
+            )
+            if (
+                value_id := get_value_id_from_unique_id(entity_entry.unique_id)
+            ) is None:
+                _LOGGER.warning("Skipping entity %s as it has no value ID", entity_id)
+                continue
+
+            endpoints.add(node.endpoints[node.values[value_id].endpoint])
+
+        await _async_invoke_cc_api(endpoints)

@@ -67,8 +67,8 @@ _P = ParamSpec("_P")
 
 
 def catch_request_errors(
-    func: Callable[Concatenate[_T, _P], Awaitable[_R]]  # type: ignore[misc]
-) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, _R | None]]:  # type: ignore[misc]
+    func: Callable[Concatenate[_T, _P], Awaitable[_R]]
+) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, _R | None]]:
     """Catch UpnpError errors."""
 
     @functools.wraps(func)
@@ -80,7 +80,7 @@ def catch_request_errors(
             )
             return None
         try:
-            return await func(self, *args, **kwargs)  # type: ignore[no-any-return]  # mypy can't yet infer 'func'
+            return await func(self, *args, **kwargs)
         except UpnpError as err:
             self.check_available = True
             _LOGGER.error("Error during call %s: %r", func.__name__, err)
