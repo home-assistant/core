@@ -36,7 +36,8 @@
                 "data": {
                     "account_balance_currencies": "Saldo dompet untuk dilaporkan.",
                     "exchange_base": "Mata uang dasar untuk sensor nilai tukar.",
-                    "exchange_rate_currencies": "Nilai tukar untuk dilaporkan."
+                    "exchange_rate_currencies": "Nilai tukar untuk dilaporkan.",
+                    "exchnage_rate_precision": "Jumlah digit desimal untuk nilai tukar."
                 },
                 "description": "Sesuaikan Opsi Coinbase"
             }

@@ -17,6 +17,9 @@
                 "data": {
                     "url": "URL"
                 }
+            },
+            "zeroconf_confirm": {
+                "title": "\u041e\u0442\u043a\u0440\u0438\u0442 Z-Wave JS \u0441\u044a\u0440\u0432\u044a\u0440"
             }
         }
     },

@@ -13,6 +13,7 @@
                 "data": {
                     "password": "Mot de passe"
                 },
+                "description": "L'int\u00e9gration SleepIQ doit r\u00e9-authentifier votre compte {username}.",
                 "title": "R\u00e9-authentifier l'int\u00e9gration"
             },
             "user": {

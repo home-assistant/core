@@ -2,13 +2,18 @@
     "config": {
         "abort": {
             "cannot_connect": "Kon niet verbinden",
+            "not_insteon_device": "Ontdekt apparaat is geen Insteon apparaat",
             "single_instance_allowed": "Al geconfigureerd. Slechts \u00e9\u00e9n configuratie mogelijk."
         },
         "error": {
             "cannot_connect": "Kon niet verbinden",
             "select_single": "Selecteer een optie."
         },
+        "flow_title": "{name}",
         "step": {
+            "confirm_usb": {
+                "description": "Wilt u {name} instellen?"
+            },
             "hubv1": {
                 "data": {
                     "host": "IP-adres",

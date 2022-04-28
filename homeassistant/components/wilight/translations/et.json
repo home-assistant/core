@@ -8,7 +8,7 @@
         "flow_title": "{name}",
         "step": {
             "confirm": {
-                "description": "Kas soovid seadistada WiLight'i {name} ?\n\n See toetab: {components}",
+                "description": "Toetatud on j\u00e4rgmised komponendid: {components}",
                 "title": ""
             }
         }
