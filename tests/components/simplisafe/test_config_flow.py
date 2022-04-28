@@ -62,9 +62,9 @@ async def test_step_reauth(
     hass, config, config_entry, reauth_config, setup_simplisafe, sms_config, unique_id
 ):
     """Test the re-auth step (testing both username and user ID as unique ID)."""
-    # Add a second config entry (tied to a random domain, but with the same unique ID as
-    # the SimpliSafe entry) to ensure that this reauth process only touches the
-    # SimpliSafe entry:
+    # Add a second config entry (tied to a random domain, but with the same unique ID
+    # that could exist in a SimpliSafe entry) to ensure that this reauth process only
+    # touches the SimpliSafe entry:
     entry = MockConfigEntry(domain="random", unique_id=USERNAME, data={"some": "data"})
     entry.add_to_hass(hass)
 
