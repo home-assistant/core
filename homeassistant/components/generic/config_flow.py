@@ -168,10 +168,15 @@ async def async_test_still(hass, info) -> tuple[dict[str, str], str | None]:
     return {}, f"image/{fmt}"
 
 
-def slug_url(url) -> str | None:
+def slug_url(hass, url) -> str | None:
     """Convert a camera url into a string suitable for a camera name."""
     if not url:
         return None
+    if not isinstance(url, template_helper.Template):
+        url = cv.template(url)
+        url.hass = hass
+    # We shouldn't have any exceptions here, because we verified the url earlier
+    url = url.async_render(parse_result=False)
     return slugify(yarl.URL(url).host)
 
 
@@ -263,7 +268,11 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors = errors | await async_test_stream(self.hass, user_input)
                 still_url = user_input.get(CONF_STILL_IMAGE_URL)
                 stream_url = user_input.get(CONF_STREAM_SOURCE)
-                name = slug_url(still_url) or slug_url(stream_url) or DEFAULT_NAME
+                name = (
+                    slug_url(self.hass, still_url)
+                    or slug_url(self.hass, stream_url)
+                    or DEFAULT_NAME
+                )
 
                 if not errors:
                     user_input[CONF_CONTENT_TYPE] = still_format
@@ -295,7 +304,10 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
         still_url = import_config.get(CONF_STILL_IMAGE_URL)
         stream_url = import_config.get(CONF_STREAM_SOURCE)
         name = import_config.get(
-            CONF_NAME, slug_url(still_url) or slug_url(stream_url) or DEFAULT_NAME
+            CONF_NAME,
+            slug_url(self.hass, still_url)
+            or slug_url(self.hass, stream_url)
+            or DEFAULT_NAME,
         )
         if CONF_LIMIT_REFETCH_TO_URL_CHANGE not in import_config:
             import_config[CONF_LIMIT_REFETCH_TO_URL_CHANGE] = False
@@ -327,7 +339,11 @@ class GenericOptionsFlowHandler(OptionsFlow):
             still_url = user_input.get(CONF_STILL_IMAGE_URL)
             stream_url = user_input.get(CONF_STREAM_SOURCE)
             if not errors:
-                title = slug_url(still_url) or slug_url(stream_url) or DEFAULT_NAME
+                title = (
+                    slug_url(self.hass, still_url)
+                    or slug_url(self.hass, stream_url)
+                    or DEFAULT_NAME
+                )
                 if still_url is None:
                     # If user didn't specify a still image URL,
                     # The automatically generated still image that stream generates
