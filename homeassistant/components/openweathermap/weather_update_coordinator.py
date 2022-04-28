@@ -73,6 +73,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         )
 
     async def _async_update_data(self):
+        """Update the data."""
         data = {}
         async with async_timeout.timeout(20):
             try:
@@ -144,6 +145,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         }
 
     def _get_forecast_from_weather_response(self, weather_response):
+        """Extract the forecast data from the weather response."""
         forecast_arg = "forecast"
         if self._forecast_mode == FORECAST_MODE_ONECALL_HOURLY:
             forecast_arg = "forecast_hourly"
@@ -154,6 +156,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         ]
 
     def _convert_forecast(self, entry):
+        """Convert the forecast data."""
         forecast = {
             ATTR_FORECAST_TIME: dt.utc_from_timestamp(
                 entry.reference_time("unix")
@@ -184,6 +187,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
 
     @staticmethod
     def _fmt_dewpoint(dewpoint):
+        """Format the dewpoint data."""
         if dewpoint is not None:
             return round(kelvin_to_celsius(dewpoint), 1)
         return None
