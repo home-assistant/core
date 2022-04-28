@@ -3,7 +3,12 @@ from unittest.mock import patch
 
 from homeassistant import config_entries
 from homeassistant.components.elro_connects.config_flow import CannotConnect
-from homeassistant.components.elro_connects.const import DOMAIN
+from homeassistant.components.elro_connects.const import (
+    CONF_CONNECTOR_ID,
+    CONF_UPDATE_INTERVAL,
+    DOMAIN,
+)
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
@@ -41,10 +46,10 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result2["title"] == "Elro Connects K1 Connector"
     assert result2["data"] == {
-        "host": "1.1.1.1",
-        "connector_id": "ST_deadbeef0000",
-        "port": 1025,
-        "interval": 15,
+        CONF_HOST: "1.1.1.1",
+        CONF_CONNECTOR_ID: "ST_deadbeef0000",
+        CONF_PORT: 1025,
+        CONF_UPDATE_INTERVAL: 15,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -62,8 +67,8 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
-                "connector_id": "ST_deadbeef0000",
+                CONF_HOST: "1.1.1.1",
+                CONF_CONNECTOR_ID: "ST_deadbeef0000",
             },
         )
 
@@ -94,10 +99,10 @@ async def test_already_setup(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.2",
-                "connector_id": "ST_deadbeef0000",
-                "port": 1024,
-                "interval": 10,
+                CONF_HOST: "1.1.1.2",
+                CONF_CONNECTOR_ID: "ST_deadbeef0000",
+                CONF_PORT: 1024,
+                CONF_UPDATE_INTERVAL: 10,
             },
         )
         await hass.async_block_till_done()
@@ -129,14 +134,14 @@ async def test_update_options(hass: HomeAssistant) -> None:
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={
-                "host": "1.1.1.2",
-                "port": 1024,
-                "interval": 10,
+                CONF_HOST: "1.1.1.2",
+                CONF_PORT: 1024,
+                CONF_UPDATE_INTERVAL: 10,
             },
         )
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
 
-    assert config_entry.data.get("host") == "1.1.1.2"
-    assert config_entry.data.get("connector_id") == "ST_deadbeef0000"
-    assert config_entry.data.get("port") == 1024
-    assert config_entry.data.get("interval") == 10
+    assert config_entry.data.get(CONF_HOST) == "1.1.1.2"
+    assert config_entry.data.get(CONF_CONNECTOR_ID) == "ST_deadbeef0000"
+    assert config_entry.data.get(CONF_PORT) == 1024
+    assert config_entry.data.get(CONF_UPDATE_INTERVAL) == 10

@@ -44,7 +44,7 @@ class ElroConnectsK1(K1):
         """Synchronize with the K1 connector."""
         await self.async_connect()
         update_status = await self.async_process_command(GET_ALL_EQUIPMENT_STATUS)
-        update_state_data(self._data, update_status)
+        self._data = update_status
         update_names = await self.async_process_command(GET_DEVICE_NAMES)
         update_state_data(self._data, update_names)
 
@@ -53,7 +53,7 @@ class ElroConnectsK1(K1):
     ) -> None:
         """Process updated settings."""
 
-        self.coordinator.update_interval = timedelta(
+        self._coordinator.update_interval = timedelta(
             seconds=entry.data[CONF_UPDATE_INTERVAL]
         )
         await self.async_configure(entry.data[CONF_HOST], entry.data[CONF_PORT])
@@ -96,9 +96,11 @@ class ElroConnectsEntity(CoordinatorEntity):
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return state attributes."""
-        if not self.data:
-            return None
-        return {key: val for key, val in self.data.items() if key in self._attributes}
+        return (
+            {key: val for key, val in self.data.items() if key in self._attributes}
+            if self.data
+            else None
+        )
 
     @property
     def name(self) -> str:
