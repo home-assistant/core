@@ -58,6 +58,7 @@ SUPPORTED_LANGUAGES = [
     "hr-hr",
     "hu-hu",
     "id-id",
+    "is-is",
     "it-it",
     "ja-jp",
     "ko-kr",

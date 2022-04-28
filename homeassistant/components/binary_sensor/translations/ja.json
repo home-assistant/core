@@ -134,6 +134,10 @@
             "off": "\u5145\u96fb\u3057\u3066\u3044\u306a\u3044",
             "on": "\u5145\u96fb"
         },
+        "carbon_monoxide": {
+            "off": "\u30af\u30ea\u30a2",
+            "on": "\u691c\u51fa"
+        },
         "co": {
             "off": "\u30af\u30ea\u30a2",
             "on": "\u691c\u51fa\u3055\u308c\u307e\u3057\u305f"
@@ -144,7 +148,7 @@
         },
         "connectivity": {
             "off": "\u5207\u65ad",
-            "on": "\u63a5\u7d9a\u6e08"
+            "on": "\u63a5\u7d9a\u6e08\u307f"
         },
         "door": {
             "off": "\u9589\u9396",

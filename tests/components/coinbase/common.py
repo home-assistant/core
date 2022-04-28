@@ -44,7 +44,7 @@ class MockGetAccounts:
 
 
 def mocked_get_accounts(_, **kwargs):
-    """Return simplied accounts using mock."""
+    """Return simplified accounts using mock."""
     return MockGetAccounts(**kwargs)
 
 
@@ -68,7 +68,7 @@ async def init_mock_coinbase(hass, currencies=None, rates=None):
     """Init Coinbase integration for testing."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="abcde12345",
+        unique_id=None,
         title="Test User",
         data={CONF_API_KEY: "123456", CONF_API_TOKEN: "AbCDeF"},
         options={

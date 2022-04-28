@@ -1,4 +1,6 @@
 """Support for Minut Point binary sensors."""
+from __future__ import annotations
+
 import logging
 
 from pypoint import EVENTS
@@ -74,7 +76,6 @@ class MinutPointBinarySensor(MinutPointEntity, BinarySensorEntity):
         self._device_name = device_name
         self._async_unsub_hook_dispatcher_connect = None
         self._events = EVENTS[device_name]
-        self._is_on = None
 
     async def async_added_to_hass(self):
         """Call when entity is added to HOme Assistant."""
@@ -93,10 +94,11 @@ class MinutPointBinarySensor(MinutPointEntity, BinarySensorEntity):
         """Update the value of the sensor."""
         if not self.is_updated:
             return
-        if self._events[0] in self.device.ongoing_events:
-            self._is_on = True
+        if self.device_class == BinarySensorDeviceClass.CONNECTIVITY:
+            # connectivity is the other way around.
+            self._attr_is_on = not (self._events[0] in self.device.ongoing_events)
         else:
-            self._is_on = None
+            self._attr_is_on = self._events[0] in self.device.ongoing_events
         self.async_write_ha_state()
 
     @callback
@@ -110,18 +112,18 @@ class MinutPointBinarySensor(MinutPointEntity, BinarySensorEntity):
             return
         _LOGGER.debug("Received webhook: %s", _type)
         if _type == self._events[0]:
-            self._is_on = True
-        if _type == self._events[1]:
-            self._is_on = None
-        self.async_write_ha_state()
+            _is_on = True
+        elif _type == self._events[1]:
+            _is_on = False
+        else:
+            return
 
-    @property
-    def is_on(self):
-        """Return the state of the binary sensor."""
         if self.device_class == BinarySensorDeviceClass.CONNECTIVITY:
             # connectivity is the other way around.
-            return not self._is_on
-        return self._is_on
+            self._attr_is_on = not _is_on
+        else:
+            self._attr_is_on = _is_on
+        self.async_write_ha_state()
 
     @property
     def name(self):

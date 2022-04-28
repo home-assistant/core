@@ -2,6 +2,7 @@
 import dataclasses
 from unittest import mock
 from unittest.mock import Mock, patch
+from urllib.parse import urlparse
 
 from pyfritzhome import LoginError
 import pytest
@@ -24,15 +25,35 @@ from .const import CONF_FAKE_NAME, MOCK_CONFIG
 from tests.common import MockConfigEntry
 
 MOCK_USER_DATA = MOCK_CONFIG[DOMAIN][CONF_DEVICES][0]
-MOCK_SSDP_DATA = ssdp.SsdpServiceInfo(
-    ssdp_usn="mock_usn",
-    ssdp_st="mock_st",
-    ssdp_location="https://fake_host:12345/test",
-    upnp={
-        ATTR_UPNP_FRIENDLY_NAME: CONF_FAKE_NAME,
-        ATTR_UPNP_UDN: "uuid:only-a-test",
-    },
-)
+MOCK_SSDP_DATA = {
+    "ip4_valid": ssdp.SsdpServiceInfo(
+        ssdp_usn="mock_usn",
+        ssdp_st="mock_st",
+        ssdp_location="https://10.0.0.1:12345/test",
+        upnp={
+            ATTR_UPNP_FRIENDLY_NAME: CONF_FAKE_NAME,
+            ATTR_UPNP_UDN: "uuid:only-a-test",
+        },
+    ),
+    "ip6_valid": ssdp.SsdpServiceInfo(
+        ssdp_usn="mock_usn",
+        ssdp_st="mock_st",
+        ssdp_location="https://[1234::1]:12345/test",
+        upnp={
+            ATTR_UPNP_FRIENDLY_NAME: CONF_FAKE_NAME,
+            ATTR_UPNP_UDN: "uuid:only-a-test",
+        },
+    ),
+    "ip6_invalid": ssdp.SsdpServiceInfo(
+        ssdp_usn="mock_usn",
+        ssdp_st="mock_st",
+        ssdp_location="https://[fe80::1%1]:12345/test",
+        upnp={
+            ATTR_UPNP_FRIENDLY_NAME: CONF_FAKE_NAME,
+            ATTR_UPNP_UDN: "uuid:only-a-test",
+        },
+    ),
+}
 
 
 @pytest.fixture(name="fritz")
@@ -56,8 +77,8 @@ async def test_user(hass: HomeAssistant, fritz: Mock):
         result["flow_id"], user_input=MOCK_USER_DATA
     )
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "fake_host"
-    assert result["data"][CONF_HOST] == "fake_host"
+    assert result["title"] == "10.0.0.1"
+    assert result["data"][CONF_HOST] == "10.0.0.1"
     assert result["data"][CONF_PASSWORD] == "fake_pass"
     assert result["data"][CONF_USERNAME] == "fake_user"
     assert not result["result"].unique_id
@@ -183,12 +204,29 @@ async def test_reauth_not_successful(hass: HomeAssistant, fritz: Mock):
     assert result["reason"] == "no_devices_found"
 
 
-async def test_ssdp(hass: HomeAssistant, fritz: Mock):
+@pytest.mark.parametrize(
+    "test_data,expected_result",
+    [
+        (MOCK_SSDP_DATA["ip4_valid"], RESULT_TYPE_FORM),
+        (MOCK_SSDP_DATA["ip6_valid"], RESULT_TYPE_FORM),
+        (MOCK_SSDP_DATA["ip6_invalid"], RESULT_TYPE_ABORT),
+    ],
+)
+async def test_ssdp(
+    hass: HomeAssistant,
+    fritz: Mock,
+    test_data: ssdp.SsdpServiceInfo,
+    expected_result: str,
+):
     """Test starting a flow from discovery."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_SSDP}, data=MOCK_SSDP_DATA
+        DOMAIN, context={"source": SOURCE_SSDP}, data=test_data
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == expected_result
+
+    if expected_result == RESULT_TYPE_ABORT:
+        return
+
     assert result["step_id"] == "confirm"
 
     result = await hass.config_entries.flow.async_configure(
@@ -197,7 +235,7 @@ async def test_ssdp(hass: HomeAssistant, fritz: Mock):
     )
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == CONF_FAKE_NAME
-    assert result["data"][CONF_HOST] == "fake_host"
+    assert result["data"][CONF_HOST] == urlparse(test_data.ssdp_location).hostname
     assert result["data"][CONF_PASSWORD] == "fake_pass"
     assert result["data"][CONF_USERNAME] == "fake_user"
     assert result["result"].unique_id == "only-a-test"
@@ -205,7 +243,7 @@ async def test_ssdp(hass: HomeAssistant, fritz: Mock):
 
 async def test_ssdp_no_friendly_name(hass: HomeAssistant, fritz: Mock):
     """Test starting a flow from discovery without friendly name."""
-    MOCK_NO_NAME = dataclasses.replace(MOCK_SSDP_DATA)
+    MOCK_NO_NAME = dataclasses.replace(MOCK_SSDP_DATA["ip4_valid"])
     MOCK_NO_NAME.upnp = MOCK_NO_NAME.upnp.copy()
     del MOCK_NO_NAME.upnp[ATTR_UPNP_FRIENDLY_NAME]
     result = await hass.config_entries.flow.async_init(
@@ -219,8 +257,8 @@ async def test_ssdp_no_friendly_name(hass: HomeAssistant, fritz: Mock):
         user_input={CONF_PASSWORD: "fake_pass", CONF_USERNAME: "fake_user"},
     )
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "fake_host"
-    assert result["data"][CONF_HOST] == "fake_host"
+    assert result["title"] == "10.0.0.1"
+    assert result["data"][CONF_HOST] == "10.0.0.1"
     assert result["data"][CONF_PASSWORD] == "fake_pass"
     assert result["data"][CONF_USERNAME] == "fake_user"
     assert result["result"].unique_id == "only-a-test"
@@ -231,7 +269,7 @@ async def test_ssdp_auth_failed(hass: HomeAssistant, fritz: Mock):
     fritz().login.side_effect = LoginError("Boom")
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_SSDP}, data=MOCK_SSDP_DATA
+        DOMAIN, context={"source": SOURCE_SSDP}, data=MOCK_SSDP_DATA["ip4_valid"]
     )
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "confirm"
@@ -251,7 +289,7 @@ async def test_ssdp_not_successful(hass: HomeAssistant, fritz: Mock):
     fritz().login.side_effect = OSError("Boom")
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_SSDP}, data=MOCK_SSDP_DATA
+        DOMAIN, context={"source": SOURCE_SSDP}, data=MOCK_SSDP_DATA["ip4_valid"]
     )
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "confirm"
@@ -269,7 +307,7 @@ async def test_ssdp_not_supported(hass: HomeAssistant, fritz: Mock):
     fritz().get_device_elements.side_effect = HTTPError("Boom")
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_SSDP}, data=MOCK_SSDP_DATA
+        DOMAIN, context={"source": SOURCE_SSDP}, data=MOCK_SSDP_DATA["ip4_valid"]
     )
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "confirm"
@@ -285,13 +323,13 @@ async def test_ssdp_not_supported(hass: HomeAssistant, fritz: Mock):
 async def test_ssdp_already_in_progress_unique_id(hass: HomeAssistant, fritz: Mock):
     """Test starting a flow from discovery twice."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_SSDP}, data=MOCK_SSDP_DATA
+        DOMAIN, context={"source": SOURCE_SSDP}, data=MOCK_SSDP_DATA["ip4_valid"]
     )
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "confirm"
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_SSDP}, data=MOCK_SSDP_DATA
+        DOMAIN, context={"source": SOURCE_SSDP}, data=MOCK_SSDP_DATA["ip4_valid"]
     )
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_in_progress"
@@ -300,12 +338,12 @@ async def test_ssdp_already_in_progress_unique_id(hass: HomeAssistant, fritz: Mo
 async def test_ssdp_already_in_progress_host(hass: HomeAssistant, fritz: Mock):
     """Test starting a flow from discovery twice."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_SSDP}, data=MOCK_SSDP_DATA
+        DOMAIN, context={"source": SOURCE_SSDP}, data=MOCK_SSDP_DATA["ip4_valid"]
     )
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "confirm"
 
-    MOCK_NO_UNIQUE_ID = dataclasses.replace(MOCK_SSDP_DATA)
+    MOCK_NO_UNIQUE_ID = dataclasses.replace(MOCK_SSDP_DATA["ip4_valid"])
     MOCK_NO_UNIQUE_ID.upnp = MOCK_NO_UNIQUE_ID.upnp.copy()
     del MOCK_NO_UNIQUE_ID.upnp[ATTR_UPNP_UDN]
     result = await hass.config_entries.flow.async_init(
@@ -324,7 +362,7 @@ async def test_ssdp_already_configured(hass: HomeAssistant, fritz: Mock):
     assert not result["result"].unique_id
 
     result2 = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_SSDP}, data=MOCK_SSDP_DATA
+        DOMAIN, context={"source": SOURCE_SSDP}, data=MOCK_SSDP_DATA["ip4_valid"]
     )
     assert result2["type"] == RESULT_TYPE_ABORT
     assert result2["reason"] == "already_configured"

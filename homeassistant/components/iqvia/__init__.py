@@ -5,7 +5,7 @@ import asyncio
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
 from functools import partial
-from typing import Any, Dict, cast
+from typing import Any, cast
 
 from pyiqvia import Client
 from pyiqvia.errors import IQVIAError
@@ -65,7 +65,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except IQVIAError as err:
             raise UpdateFailed from err
 
-        return cast(Dict[str, Any], data)
+        return cast(dict[str, Any], data)
 
     coordinators = {}
     init_data_update_tasks = []

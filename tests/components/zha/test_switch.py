@@ -6,6 +6,7 @@ import zigpy.profiles.zha as zha
 import zigpy.zcl.clusters.general as general
 import zigpy.zcl.foundation as zcl_f
 
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.zha.core.group import GroupMember
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
 
@@ -136,11 +137,17 @@ async def test_switch(hass, zha_device_joined_restored, zigpy_device):
     ):
         # turn on via UI
         await hass.services.async_call(
-            Platform.SWITCH, "turn_on", {"entity_id": entity_id}, blocking=True
+            SWITCH_DOMAIN, "turn_on", {"entity_id": entity_id}, blocking=True
         )
         assert len(cluster.request.mock_calls) == 1
         assert cluster.request.call_args == call(
-            False, ON, (), expect_reply=True, manufacturer=None, tries=1, tsn=None
+            False,
+            ON,
+            cluster.commands_by_name["on"].schema,
+            expect_reply=True,
+            manufacturer=None,
+            tries=1,
+            tsn=None,
         )
 
     # turn off from HA
@@ -150,11 +157,17 @@ async def test_switch(hass, zha_device_joined_restored, zigpy_device):
     ):
         # turn off via UI
         await hass.services.async_call(
-            Platform.SWITCH, "turn_off", {"entity_id": entity_id}, blocking=True
+            SWITCH_DOMAIN, "turn_off", {"entity_id": entity_id}, blocking=True
         )
         assert len(cluster.request.mock_calls) == 1
         assert cluster.request.call_args == call(
-            False, OFF, (), expect_reply=True, manufacturer=None, tries=1, tsn=None
+            False,
+            OFF,
+            cluster.commands_by_name["off"].schema,
+            expect_reply=True,
+            manufacturer=None,
+            tries=1,
+            tsn=None,
         )
 
     # test joining a new switch to the network and HA
@@ -219,11 +232,17 @@ async def test_zha_group_switch_entity(
     ):
         # turn on via UI
         await hass.services.async_call(
-            Platform.SWITCH, "turn_on", {"entity_id": entity_id}, blocking=True
+            SWITCH_DOMAIN, "turn_on", {"entity_id": entity_id}, blocking=True
         )
         assert len(group_cluster_on_off.request.mock_calls) == 1
         assert group_cluster_on_off.request.call_args == call(
-            False, ON, (), expect_reply=True, manufacturer=None, tries=1, tsn=None
+            False,
+            ON,
+            group_cluster_on_off.commands_by_name["on"].schema,
+            expect_reply=True,
+            manufacturer=None,
+            tries=1,
+            tsn=None,
         )
     assert hass.states.get(entity_id).state == STATE_ON
 
@@ -234,11 +253,17 @@ async def test_zha_group_switch_entity(
     ):
         # turn off via UI
         await hass.services.async_call(
-            Platform.SWITCH, "turn_off", {"entity_id": entity_id}, blocking=True
+            SWITCH_DOMAIN, "turn_off", {"entity_id": entity_id}, blocking=True
         )
         assert len(group_cluster_on_off.request.mock_calls) == 1
         assert group_cluster_on_off.request.call_args == call(
-            False, OFF, (), expect_reply=True, manufacturer=None, tries=1, tsn=None
+            False,
+            OFF,
+            group_cluster_on_off.commands_by_name["off"].schema,
+            expect_reply=True,
+            manufacturer=None,
+            tries=1,
+            tsn=None,
         )
     assert hass.states.get(entity_id).state == STATE_OFF
 

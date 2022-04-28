@@ -28,16 +28,12 @@ async def async_setup_entry(
 class MazdaLock(MazdaEntity, LockEntity):
     """Class for the lock."""
 
-    @property
-    def name(self):
-        """Return the name of the entity."""
-        vehicle_name = self.get_vehicle_name()
-        return f"{vehicle_name} Lock"
+    def __init__(self, client, coordinator, index) -> None:
+        """Initialize Mazda lock."""
+        super().__init__(client, coordinator, index)
 
-    @property
-    def unique_id(self):
-        """Return a unique identifier for this entity."""
-        return self.vin
+        self._attr_name = f"{self.vehicle_name} Lock"
+        self._attr_unique_id = self.vin
 
     @property
     def is_locked(self):

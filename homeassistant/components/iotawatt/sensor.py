@@ -24,10 +24,12 @@ from homeassistant.const import (
     POWER_WATT,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity, entity_registry, update_coordinator
+from homeassistant.helpers import entity, entity_registry
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt
 
 from .const import (
@@ -158,11 +160,10 @@ async def async_setup_entry(
     coordinator.async_add_listener(new_data_received)
 
 
-class IotaWattSensor(update_coordinator.CoordinatorEntity, SensorEntity):
+class IotaWattSensor(CoordinatorEntity[IotawattUpdater], SensorEntity):
     """Defines a IoTaWatt Energy Sensor."""
 
     entity_description: IotaWattSensorEntityDescription
-    coordinator: IotawattUpdater
 
     def __init__(
         self,
@@ -209,6 +210,12 @@ class IotaWattSensor(update_coordinator.CoordinatorEntity, SensorEntity):
             else:
                 self.hass.async_create_task(self.async_remove())
             return
+
+        if (begin := self._sensor_data.getBegin()) and (
+            last_reset := dt.parse_datetime(begin)
+        ):
+            self._attr_last_reset = last_reset
+
         super()._handle_coordinator_update()
 
     @property
@@ -218,10 +225,11 @@ class IotaWattSensor(update_coordinator.CoordinatorEntity, SensorEntity):
         attrs = {"type": data.getType()}
         if attrs["type"] == "Input":
             attrs["channel"] = data.getChannel()
+
         return attrs
 
     @property
-    def native_value(self) -> entity.StateType:
+    def native_value(self) -> StateType:
         """Return the state of the sensor."""
         if func := self.entity_description.value:
             return func(self._sensor_data.getValue())
@@ -258,7 +266,7 @@ class IotaWattAccumulatingSensor(IotaWattSensor, RestoreEntity):
         super()._handle_coordinator_update()
 
     @property
-    def native_value(self) -> entity.StateType:
+    def native_value(self) -> StateType:
         """Return the state of the sensor."""
         if self._accumulated_value is None:
             return None

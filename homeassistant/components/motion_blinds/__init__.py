@@ -1,12 +1,15 @@
 """The motion_blinds component."""
+import asyncio
 from datetime import timedelta
 import logging
 from socket import timeout
+from typing import TYPE_CHECKING
 
-from motionblinds import AsyncMotionMulticast, ParseException
+from motionblinds import DEVICE_TYPES_WIFI, AsyncMotionMulticast, ParseException
 
-from homeassistant import config_entries, core
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_HOST, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -18,9 +21,11 @@ from .const import (
     DEFAULT_INTERFACE,
     DEFAULT_WAIT_FOR_PUSH,
     DOMAIN,
+    KEY_API_LOCK,
     KEY_COORDINATOR,
     KEY_GATEWAY,
     KEY_MULTICAST_LISTENER,
+    KEY_VERSION,
     MANUFACTURER,
     PLATFORMS,
     UPDATE_INTERVAL,
@@ -53,6 +58,7 @@ class DataUpdateCoordinatorMotionBlinds(DataUpdateCoordinator):
             update_interval=update_interval,
         )
 
+        self.api_lock = coordinator_info[KEY_API_LOCK]
         self._gateway = coordinator_info[KEY_GATEWAY]
         self._wait_for_push = coordinator_info[CONF_WAIT_FOR_PUSH]
 
@@ -85,7 +91,8 @@ class DataUpdateCoordinatorMotionBlinds(DataUpdateCoordinator):
 
     async def _async_update_data(self):
         """Fetch the latest data from the gateway and blinds."""
-        data = await self.hass.async_add_executor_job(self.update_gateway)
+        async with self.api_lock:
+            data = await self.hass.async_add_executor_job(self.update_gateway)
 
         all_available = all(device[ATTR_AVAILABLE] for device in data.values())
         if all_available:
@@ -96,9 +103,7 @@ class DataUpdateCoordinatorMotionBlinds(DataUpdateCoordinator):
         return data
 
 
-async def async_setup_entry(
-    hass: core.HomeAssistant, entry: config_entries.ConfigEntry
-):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the motion_blinds components from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     host = entry.data[CONF_HOST]
@@ -108,9 +113,22 @@ async def async_setup_entry(
 
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
+    # check multicast interface
+    check_multicast_class = ConnectMotionGateway(hass, interface=multicast_interface)
+    working_interface = await check_multicast_class.async_check_interface(host, key)
+    if working_interface != multicast_interface:
+        data = {**entry.data, CONF_INTERFACE: working_interface}
+        hass.config_entries.async_update_entry(entry, data=data)
+        _LOGGER.debug(
+            "Motion Blinds interface updated from %s to %s, "
+            "this should only occur after a network change",
+            multicast_interface,
+            working_interface,
+        )
+
     # Create multicast Listener
     if KEY_MULTICAST_LISTENER not in hass.data[DOMAIN]:
-        multicast = AsyncMotionMulticast(interface=multicast_interface)
+        multicast = AsyncMotionMulticast(interface=working_interface)
         hass.data[DOMAIN][KEY_MULTICAST_LISTENER] = multicast
         # start listening for local pushes (only once)
         await multicast.Start_listen()
@@ -129,8 +147,10 @@ async def async_setup_entry(
     if not await connect_gateway_class.async_connect_gateway(host, key):
         raise ConfigEntryNotReady
     motion_gateway = connect_gateway_class.gateway_device
+    api_lock = asyncio.Lock()
     coordinator_info = {
         KEY_GATEWAY: motion_gateway,
+        KEY_API_LOCK: api_lock,
         CONF_WAIT_FOR_PUSH: wait_for_push,
     }
 
@@ -147,35 +167,38 @@ async def async_setup_entry(
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data[DOMAIN][entry.entry_id] = {
-        KEY_GATEWAY: motion_gateway,
-        KEY_COORDINATOR: coordinator,
-    }
-
     if motion_gateway.firmware is not None:
         version = f"{motion_gateway.firmware}, protocol: {motion_gateway.protocol}"
     else:
         version = f"Protocol: {motion_gateway.protocol}"
 
-    device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, motion_gateway.mac)},
-        identifiers={(DOMAIN, entry.unique_id)},
-        manufacturer=MANUFACTURER,
-        name=entry.title,
-        model="Wi-Fi bridge",
-        sw_version=version,
-    )
+    hass.data[DOMAIN][entry.entry_id] = {
+        KEY_GATEWAY: motion_gateway,
+        KEY_COORDINATOR: coordinator,
+        KEY_VERSION: version,
+    }
+
+    if TYPE_CHECKING:
+        assert entry.unique_id is not None
+
+    if motion_gateway.device_type not in DEVICE_TYPES_WIFI:
+        device_registry = dr.async_get(hass)
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            connections={(dr.CONNECTION_NETWORK_MAC, motion_gateway.mac)},
+            identifiers={(DOMAIN, motion_gateway.mac)},
+            manufacturer=MANUFACTURER,
+            name=entry.title,
+            model="Wi-Fi bridge",
+            sw_version=version,
+        )
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(
-    hass: core.HomeAssistant, config_entry: config_entries.ConfigEntry
-):
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS
@@ -193,8 +216,6 @@ async def async_unload_entry(
     return unload_ok
 
 
-async def update_listener(
-    hass: core.HomeAssistant, config_entry: config_entries.ConfigEntry
-) -> None:
+async def update_listener(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(config_entry.entry_id)

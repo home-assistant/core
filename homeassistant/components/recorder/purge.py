@@ -1,17 +1,26 @@
 """Purge old data helper."""
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from datetime import datetime
 import logging
 from typing import TYPE_CHECKING
 
-from sqlalchemy import func
+from sqlalchemy import column, func, select, union
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.expression import distinct
 
+from homeassistant.const import EVENT_STATE_CHANGED
+
 from .const import MAX_ROWS_TO_PURGE
-from .models import Events, RecorderRuns, States, StatisticsRuns, StatisticsShortTerm
+from .models import (
+    Events,
+    RecorderRuns,
+    StateAttributes,
+    States,
+    StatisticsRuns,
+    StatisticsShortTerm,
+)
 from .repack import repack_database
 from .util import retryable_database_job, session_scope
 
@@ -33,11 +42,15 @@ def purge_old_data(
         "Purging states and events before target %s",
         purge_before.isoformat(sep=" ", timespec="seconds"),
     )
+    using_sqlite = instance.using_sqlite()
 
-    with session_scope(session=instance.get_session()) as session:  # type: ignore
+    with session_scope(session=instance.get_session()) as session:  # type: ignore[misc]
         # Purge a max of MAX_ROWS_TO_PURGE, based on the oldest states or events record
-        event_ids = _select_event_ids_to_purge(session, purge_before)
-        state_ids = _select_state_ids_to_purge(session, purge_before, event_ids)
+        (
+            event_ids,
+            state_ids,
+            attributes_ids,
+        ) = _select_event_state_and_attributes_ids_to_purge(session, purge_before)
         statistics_runs = _select_statistics_runs_to_purge(session, purge_before)
         short_term_statistics = _select_short_term_statistics_to_purge(
             session, purge_before
@@ -45,6 +58,11 @@ def purge_old_data(
 
         if state_ids:
             _purge_state_ids(instance, session, state_ids)
+
+        if unused_attribute_ids_set := _select_unused_attributes_ids(
+            session, attributes_ids, using_sqlite
+        ):
+            _purge_attributes_ids(instance, session, unused_attribute_ids_set)
 
         if event_ids:
             _purge_event_ids(session, event_ids)
@@ -70,32 +88,85 @@ def purge_old_data(
     return True
 
 
-def _select_event_ids_to_purge(session: Session, purge_before: datetime) -> list[int]:
-    """Return a list of event ids to purge."""
+def _select_event_state_and_attributes_ids_to_purge(
+    session: Session, purge_before: datetime
+) -> tuple[set[int], set[int], set[int]]:
+    """Return a list of event, state, and attribute ids to purge."""
     events = (
-        session.query(Events.event_id)
+        session.query(Events.event_id, States.state_id, States.attributes_id)
+        .outerjoin(States, Events.event_id == States.event_id)
         .filter(Events.time_fired < purge_before)
         .limit(MAX_ROWS_TO_PURGE)
         .all()
     )
     _LOGGER.debug("Selected %s event ids to remove", len(events))
-    return [event.event_id for event in events]
+    event_ids = set()
+    state_ids = set()
+    attributes_ids = set()
+    for event in events:
+        event_ids.add(event.event_id)
+        if event.state_id:
+            state_ids.add(event.state_id)
+        if event.attributes_id:
+            attributes_ids.add(event.attributes_id)
+    return event_ids, state_ids, attributes_ids
 
 
-def _select_state_ids_to_purge(
-    session: Session, purge_before: datetime, event_ids: list[int]
+def _select_unused_attributes_ids(
+    session: Session, attributes_ids: set[int], using_sqlite: bool
 ) -> set[int]:
-    """Return a list of state ids to purge."""
-    if not event_ids:
+    """Return a set of attributes ids that are not used by any states in the database."""
+    if not attributes_ids:
         return set()
-    states = (
-        session.query(States.state_id)
-        .filter(States.last_updated < purge_before)
-        .filter(States.event_id.in_(event_ids))
-        .all()
+
+    if using_sqlite:
+        #
+        # SQLite has a superior query optimizer for the distinct query below as it uses the
+        # covering index without having to examine the rows directly for both of the queries
+        # below.
+        #
+        # We use the distinct query for SQLite since the query in the other branch can
+        # generate more than 500 unions which SQLite does not support.
+        #
+        # How MariaDB's query optimizer handles this query:
+        # > explain select distinct attributes_id from states where attributes_id in (136723);
+        # ...Using index
+        #
+        id_query = session.query(distinct(States.attributes_id)).filter(
+            States.attributes_id.in_(attributes_ids)
+        )
+    else:
+        #
+        # This branch is for DBMS that cannot optimize the distinct query well and has to examine
+        # all the rows that match.
+        #
+        # This branch uses a union of simple queries, as each query is optimized away as the answer
+        # to the query can be found in the index.
+        #
+        # The below query works for SQLite as long as there are no more than 500 attributes_id
+        # to be selected. We currently do not have MySQL or PostgreSQL servers running in the
+        # test suite; we test this path using SQLite when there are less than 500 attributes_id.
+        #
+        # How MariaDB's query optimizer handles this query:
+        # > explain select min(attributes_id) from states where attributes_id = 136723;
+        # ...Select tables optimized away
+        #
+        id_query = session.query(column("id")).from_statement(
+            union(
+                *[
+                    select(func.min(States.attributes_id).label("id")).where(
+                        States.attributes_id == attributes_id
+                    )
+                    for attributes_id in attributes_ids
+                ]
+            )
+        )
+    to_remove = attributes_ids - {state[0] for state in id_query.all()}
+    _LOGGER.debug(
+        "Selected %s shared attributes to remove",
+        len(to_remove),
     )
-    _LOGGER.debug("Selected %s state ids to remove", len(states))
-    return {state.state_id for state in states}
+    return to_remove
 
 
 def _select_statistics_runs_to_purge(
@@ -175,6 +246,44 @@ def _evict_purged_states_from_old_states_cache(
         old_states.pop(old_state_reversed[purged_state_id], None)
 
 
+def _evict_purged_attributes_from_attributes_cache(
+    instance: Recorder, purged_attributes_ids: set[int]
+) -> None:
+    """Evict purged attribute ids from the attribute ids cache."""
+    # Make a map from attributes_id to the attributes json
+    state_attributes_ids = (
+        instance._state_attributes_ids  # pylint: disable=protected-access
+    )
+    state_attributes_ids_reversed = {
+        attributes_id: attributes
+        for attributes, attributes_id in state_attributes_ids.items()
+    }
+
+    # Evict any purged attributes from the state_attributes_ids cache
+    for purged_attribute_id in purged_attributes_ids.intersection(
+        state_attributes_ids_reversed
+    ):
+        state_attributes_ids.pop(
+            state_attributes_ids_reversed[purged_attribute_id], None
+        )
+
+
+def _purge_attributes_ids(
+    instance: Recorder, session: Session, attributes_ids: set[int]
+) -> None:
+    """Delete old attributes ids."""
+
+    deleted_rows = (
+        session.query(StateAttributes)
+        .filter(StateAttributes.attributes_id.in_(attributes_ids))
+        .delete(synchronize_session=False)
+    )
+    _LOGGER.debug("Deleted %s attribute states", deleted_rows)
+
+    # Evict any entries in the state_attributes_ids cache referring to a purged state
+    _evict_purged_attributes_from_attributes_cache(instance, attributes_ids)
+
+
 def _purge_statistics_runs(session: Session, statistics_runs: list[int]) -> None:
     """Delete by run_id."""
     deleted_rows = (
@@ -197,7 +306,7 @@ def _purge_short_term_statistics(
     _LOGGER.debug("Deleted %s short term statistics", deleted_rows)
 
 
-def _purge_event_ids(session: Session, event_ids: list[int]) -> None:
+def _purge_event_ids(session: Session, event_ids: Iterable[int]) -> None:
     """Delete by event id."""
     deleted_rows = (
         session.query(Events)
@@ -215,7 +324,7 @@ def _purge_old_recorder_runs(
     deleted_rows = (
         session.query(RecorderRuns)
         .filter(RecorderRuns.start < purge_before)
-        .filter(RecorderRuns.run_id != instance.run_info.run_id)
+        .filter(RecorderRuns.run_id != instance.run_history.current.run_id)
         .delete(synchronize_session=False)
     )
     _LOGGER.debug("Deleted %s recorder_runs", deleted_rows)
@@ -224,6 +333,7 @@ def _purge_old_recorder_runs(
 def _purge_filtered_data(instance: Recorder, session: Session) -> bool:
     """Remove filtered states and events that shouldn't be in the database."""
     _LOGGER.debug("Cleanup filtered data")
+    using_sqlite = instance.using_sqlite()
 
     # Check if excluded entity_ids are in database
     excluded_entity_ids: list[str] = [
@@ -232,7 +342,7 @@ def _purge_filtered_data(instance: Recorder, session: Session) -> bool:
         if not instance.entity_filter(entity_id)
     ]
     if len(excluded_entity_ids) > 0:
-        _purge_filtered_states(instance, session, excluded_entity_ids)
+        _purge_filtered_states(instance, session, excluded_entity_ids, using_sqlite)
         return False
 
     # Check if excluded event_types are in database
@@ -249,14 +359,18 @@ def _purge_filtered_data(instance: Recorder, session: Session) -> bool:
 
 
 def _purge_filtered_states(
-    instance: Recorder, session: Session, excluded_entity_ids: list[str]
+    instance: Recorder,
+    session: Session,
+    excluded_entity_ids: list[str],
+    using_sqlite: bool,
 ) -> None:
     """Remove filtered states and linked events."""
     state_ids: list[int]
-    event_ids: list[int | None]
-    state_ids, event_ids = zip(
+    attributes_ids: list[int]
+    event_ids: list[int]
+    state_ids, attributes_ids, event_ids = zip(
         *(
-            session.query(States.state_id, States.event_id)
+            session.query(States.state_id, States.attributes_id, States.event_id)
             .filter(States.entity_id.in_(excluded_entity_ids))
             .limit(MAX_ROWS_TO_PURGE)
             .all()
@@ -267,7 +381,11 @@ def _purge_filtered_states(
         "Selected %s state_ids to remove that should be filtered", len(state_ids)
     )
     _purge_state_ids(instance, session, set(state_ids))
-    _purge_event_ids(session, event_ids)  # type: ignore  # type of event_ids already narrowed to 'list[int]'
+    _purge_event_ids(session, event_ids)
+    unused_attribute_ids_set = _select_unused_attributes_ids(
+        session, {id_ for id_ in attributes_ids if id_ is not None}, using_sqlite
+    )
+    _purge_attributes_ids(instance, session, unused_attribute_ids_set)
 
 
 def _purge_filtered_events(
@@ -280,7 +398,9 @@ def _purge_filtered_events(
         .limit(MAX_ROWS_TO_PURGE)
         .all()
     )
-    event_ids: list[int] = [event.event_id for event in events]
+    event_ids: list[int] = [
+        event.event_id for event in events if event.event_id is not None
+    ]
     _LOGGER.debug(
         "Selected %s event_ids to remove that should be filtered", len(event_ids)
     )
@@ -290,12 +410,16 @@ def _purge_filtered_events(
     state_ids: set[int] = {state.state_id for state in states}
     _purge_state_ids(instance, session, state_ids)
     _purge_event_ids(session, event_ids)
+    if EVENT_STATE_CHANGED in excluded_event_types:
+        session.query(StateAttributes).delete(synchronize_session=False)
+        instance._state_attributes_ids = {}  # pylint: disable=protected-access
 
 
 @retryable_database_job("purge")
 def purge_entity_data(instance: Recorder, entity_filter: Callable[[str], bool]) -> bool:
     """Purge states and events of specified entities."""
-    with session_scope(session=instance.get_session()) as session:  # type: ignore
+    using_sqlite = instance.using_sqlite()
+    with session_scope(session=instance.get_session()) as session:  # type: ignore[misc]
         selected_entity_ids: list[str] = [
             entity_id
             for (entity_id,) in session.query(distinct(States.entity_id)).all()
@@ -304,7 +428,7 @@ def purge_entity_data(instance: Recorder, entity_filter: Callable[[str], bool]) 
         _LOGGER.debug("Purging entity data for %s", selected_entity_ids)
         if len(selected_entity_ids) > 0:
             # Purge a max of MAX_ROWS_TO_PURGE, based on the oldest states or events record
-            _purge_filtered_states(instance, session, selected_entity_ids)
+            _purge_filtered_states(instance, session, selected_entity_ids, using_sqlite)
             _LOGGER.debug("Purging entity data hasn't fully completed yet")
             return False
 

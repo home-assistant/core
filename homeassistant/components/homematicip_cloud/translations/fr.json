@@ -15,7 +15,7 @@
             "init": {
                 "data": {
                     "hapid": "ID du point d'acc\u00e8s (SGTIN)",
-                    "name": "Nom (facultatif, utilis\u00e9 comme pr\u00e9fixe de nom pour tous les p\u00e9riph\u00e9riques)",
+                    "name": "Nom (facultatif, utilis\u00e9 comme pr\u00e9fixe de nom pour tous les appareils)",
                     "pin": "Code PIN"
                 },
                 "title": "Choisissez le point d'acc\u00e8s HomematicIP"

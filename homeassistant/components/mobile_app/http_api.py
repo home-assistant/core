@@ -6,10 +6,10 @@ from http import HTTPStatus
 import secrets
 
 from aiohttp.web import Request, Response
-import emoji
 from nacl.secret import SecretBox
 import voluptuous as vol
 
+from homeassistant.components import cloud
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.const import ATTR_DEVICE_ID, CONF_WEBHOOK_ID
@@ -68,10 +68,10 @@ class RegistrationsView(HomeAssistantView):
 
         webhook_id = secrets.token_hex()
 
-        if hass.components.cloud.async_active_subscription():
-            data[
-                CONF_CLOUDHOOK_URL
-            ] = await hass.components.cloud.async_create_cloudhook(webhook_id)
+        if cloud.async_active_subscription(hass):
+            data[CONF_CLOUDHOOK_URL] = await cloud.async_create_cloudhook(
+                hass, webhook_id
+            )
 
         data[CONF_WEBHOOK_ID] = webhook_id
 
@@ -80,18 +80,8 @@ class RegistrationsView(HomeAssistantView):
 
         data[CONF_USER_ID] = request["hass_user"].id
 
-        if slugify(data[ATTR_DEVICE_NAME], separator=""):
-            # if slug is not empty and would not only be underscores
-            # use DEVICE_NAME
-            pass
-        elif emoji.emoji_count(data[ATTR_DEVICE_NAME]):
-            # If otherwise empty string contains emoji
-            # use descriptive name of the first emoji
-            data[ATTR_DEVICE_NAME] = emoji.demojize(
-                emoji.emoji_lis(data[ATTR_DEVICE_NAME])[0]["emoji"]
-            ).replace(":", "")
-        else:
-            # Fallback to DEVICE_ID
+        # Fallback to DEVICE_ID if slug is empty.
+        if not slugify(data[ATTR_DEVICE_NAME], separator=""):
             data[ATTR_DEVICE_NAME] = data[ATTR_DEVICE_ID]
 
         await hass.async_create_task(
@@ -102,7 +92,7 @@ class RegistrationsView(HomeAssistantView):
 
         remote_ui_url = None
         with suppress(hass.components.cloud.CloudNotAvailable):
-            remote_ui_url = hass.components.cloud.async_remote_ui_url()
+            remote_ui_url = cloud.async_remote_ui_url(hass)
 
         return self.json(
             {

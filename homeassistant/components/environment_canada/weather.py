@@ -2,9 +2,6 @@
 from __future__ import annotations
 
 import datetime
-import re
-
-import voluptuous as vol
 
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
@@ -34,16 +31,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt
 
 from .const import DOMAIN
-
-
-def validate_station(station):
-    """Check that the station ID is well-formed."""
-    if station is None:
-        return None
-    if not re.fullmatch(r"[A-Z]{2}/s0000\d{3}", station):
-        raise vol.Invalid('Station ID must be of the form "XX/s0000###"')
-    return station
-
 
 # Icon codes from http://dd.weatheroffice.ec.gc.ca/citypage_weather/
 # docs/current_conditions_icon_code_descriptions_e.csv
@@ -87,17 +74,22 @@ class ECWeather(CoordinatorEntity, WeatherEntity):
         self._attr_unique_id = (
             f"{coordinator.config_entry.unique_id}{'-hourly' if hourly else '-daily'}"
         )
+        self._attr_entity_registry_enabled_default = not hourly
         self._hourly = hourly
 
     @property
     def temperature(self):
         """Return the temperature."""
-        if self.ec_data.conditions.get("temperature", {}).get("value"):
-            return float(self.ec_data.conditions["temperature"]["value"])
-        if self.ec_data.hourly_forecasts and self.ec_data.hourly_forecasts[0].get(
-            "temperature"
+        if (
+            temperature := self.ec_data.conditions.get("temperature", {}).get("value")
+        ) is not None:
+            return float(temperature)
+        if (
+            self.ec_data.hourly_forecasts
+            and (temperature := self.ec_data.hourly_forecasts[0].get("temperature"))
+            is not None
         ):
-            return float(self.ec_data.hourly_forecasts[0]["temperature"])
+            return float(temperature)
         return None
 
     @property
@@ -220,7 +212,7 @@ def get_forecast(ec_data, hourly):
         for hour in ec_data.hourly_forecasts:
             forecast_array.append(
                 {
-                    ATTR_FORECAST_TIME: hour["period"],
+                    ATTR_FORECAST_TIME: hour["period"].isoformat(),
                     ATTR_FORECAST_TEMP: int(hour["temperature"]),
                     ATTR_FORECAST_CONDITION: icon_code_to_condition(
                         int(hour["icon_code"])

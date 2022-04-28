@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from pydeconz.sensor import (
+from pydeconz.models.sensor.ancillary_control import (
     ANCILLARY_CONTROL_ARMED_AWAY,
     ANCILLARY_CONTROL_ARMED_NIGHT,
     ANCILLARY_CONTROL_ARMED_STAY,
@@ -34,6 +34,7 @@ from homeassistant.const import (
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 
 from .test_gateway import (
@@ -99,7 +100,7 @@ async def test_alarm_control_panel(hass, aioclient_mock, mock_deconz_websocket):
                     "action": "armed_stay",
                     "lastupdated": "2021-07-25T18:02:51.172",
                     "lowbattery": False,
-                    "panel": "exit_delay",
+                    "panel": "none",
                     "seconds_remaining": 55,
                     "tampered": False,
                 },
@@ -112,8 +113,8 @@ async def test_alarm_control_panel(hass, aioclient_mock, mock_deconz_websocket):
     with patch.dict(DECONZ_WEB_REQUEST, data):
         config_entry = await setup_deconz_integration(hass, aioclient_mock)
 
-    assert len(hass.states.async_all()) == 3
-    assert hass.states.get("alarm_control_panel.keypad").state == STATE_ALARM_PENDING
+    assert len(hass.states.async_all()) == 4
+    assert hass.states.get("alarm_control_panel.keypad").state == STATE_UNKNOWN
 
     # Event signals alarm control panel armed away
 
@@ -298,7 +299,7 @@ async def test_alarm_control_panel(hass, aioclient_mock, mock_deconz_websocket):
     await hass.config_entries.async_unload(config_entry.entry_id)
 
     states = hass.states.async_all()
-    assert len(states) == 3
+    assert len(states) == 4
     for state in states:
         assert state.state == STATE_UNAVAILABLE
 

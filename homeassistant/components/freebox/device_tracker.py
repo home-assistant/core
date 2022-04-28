@@ -8,27 +8,26 @@ from homeassistant.components.device_tracker import SOURCE_TYPE_ROUTER
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DEFAULT_DEVICE_NAME, DEVICE_ICONS, DOMAIN
 from .router import FreeboxRouter
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up device tracker for Freebox component."""
-    router = hass.data[DOMAIN][entry.unique_id]
-    tracked = set()
+    router: FreeboxRouter = hass.data[DOMAIN][entry.unique_id]
+    tracked: set[str] = set()
 
     @callback
-    def update_router():
+    def update_router() -> None:
         """Update the values of the router."""
         add_entities(router, async_add_entities, tracked)
 
-    router.listeners.append(
+    entry.async_on_unload(
         async_dispatcher_connect(hass, router.signal_device_new, update_router)
     )
 
@@ -36,7 +35,9 @@ async def async_setup_entry(
 
 
 @callback
-def add_entities(router, async_add_entities, tracked):
+def add_entities(
+    router: FreeboxRouter, async_add_entities: AddEntitiesCallback, tracked: set[str]
+) -> None:
     """Add new tracker entities from the router."""
     new_tracked = []
 
@@ -62,7 +63,7 @@ class FreeboxDevice(ScannerEntity):
         self._manufacturer = device["vendor_name"]
         self._icon = icon_for_freebox_device(device)
         self._active = False
-        self._attrs = {}
+        self._attrs: dict[str, Any] = {}
 
     @callback
     def async_update_state(self) -> None:
@@ -82,7 +83,7 @@ class FreeboxDevice(ScannerEntity):
             self._attrs = device["attrs"]
 
     @property
-    def unique_id(self) -> str:
+    def mac_address(self) -> str:
         """Return a unique ID."""
         return self._mac
 
@@ -110,16 +111,6 @@ class FreeboxDevice(ScannerEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the attributes."""
         return self._attrs
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device information."""
-        return DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, self._mac)},
-            identifiers={(DOMAIN, self.unique_id)},
-            manufacturer=self._manufacturer,
-            name=self.name,
-        )
 
     @property
     def should_poll(self) -> bool:

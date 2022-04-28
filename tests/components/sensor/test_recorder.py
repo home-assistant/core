@@ -1,6 +1,7 @@
 """The tests for sensor recorder platform."""
 # pylint: disable=protected-access,invalid-name
 from datetime import timedelta
+from functools import partial
 import math
 from statistics import mean
 from unittest.mock import patch
@@ -22,12 +23,15 @@ from homeassistant.components.recorder.statistics import (
 )
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import STATE_UNAVAILABLE
-from homeassistant.setup import setup_component
+from homeassistant.setup import async_setup_component, setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
 
-from tests.common import async_setup_component, init_recorder_component
-from tests.components.recorder.common import wait_recording_done
+from tests.components.recorder.common import (
+    async_recorder_block_till_done,
+    async_wait_recording_done,
+    wait_recording_done,
+)
 
 BATTERY_SENSOR_ATTRIBUTES = {
     "device_class": "battery",
@@ -36,7 +40,7 @@ BATTERY_SENSOR_ATTRIBUTES = {
 }
 ENERGY_SENSOR_ATTRIBUTES = {
     "device_class": "energy",
-    "state_class": "measurement",
+    "state_class": "total",
     "unit_of_measurement": "kWh",
 }
 NONE_SENSOR_ATTRIBUTES = {
@@ -59,7 +63,7 @@ TEMPERATURE_SENSOR_ATTRIBUTES = {
 }
 GAS_SENSOR_ATTRIBUTES = {
     "device_class": "gas",
-    "state_class": "measurement",
+    "state_class": "total",
     "unit_of_measurement": "m³",
 }
 
@@ -99,6 +103,7 @@ def test_compile_hourly_statistics(
     hass = hass_recorder()
     recorder = hass.data[DATA_INSTANCE]
     setup_component(hass, "sensor", {})
+    wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
     attributes = {
         "device_class": device_class,
         "state_class": "measurement",
@@ -114,6 +119,8 @@ def test_compile_hourly_statistics(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "has_mean": True,
+            "has_sum": False,
             "name": None,
             "source": "recorder",
             "unit_of_measurement": native_unit,
@@ -152,6 +159,7 @@ def test_compile_hourly_statistics_purged_state_changes(
     hass = hass_recorder()
     recorder = hass.data[DATA_INSTANCE]
     setup_component(hass, "sensor", {})
+    wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
     attributes = {
         "device_class": device_class,
         "state_class": "measurement",
@@ -177,6 +185,8 @@ def test_compile_hourly_statistics_purged_state_changes(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "has_mean": True,
+            "has_sum": False,
             "name": None,
             "source": "recorder",
             "unit_of_measurement": native_unit,
@@ -208,6 +218,7 @@ def test_compile_hourly_statistics_unsupported(hass_recorder, caplog, attributes
     hass = hass_recorder()
     recorder = hass.data[DATA_INSTANCE]
     setup_component(hass, "sensor", {})
+    wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
     four, states = record_states(hass, zero, "sensor.test1", attributes)
 
     attributes_tmp = dict(attributes)
@@ -243,18 +254,24 @@ def test_compile_hourly_statistics_unsupported(hass_recorder, caplog, attributes
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "has_mean": True,
+            "has_sum": False,
             "name": None,
             "source": "recorder",
             "unit_of_measurement": "°C",
         },
         {
             "statistic_id": "sensor.test6",
+            "has_mean": True,
+            "has_sum": False,
             "name": None,
             "source": "recorder",
             "unit_of_measurement": "°C",
         },
         {
             "statistic_id": "sensor.test7",
+            "has_mean": True,
+            "has_sum": False,
             "name": None,
             "source": "recorder",
             "unit_of_measurement": "°C",
@@ -305,7 +322,7 @@ def test_compile_hourly_statistics_unsupported(hass_recorder, caplog, attributes
     assert "Error while processing event StatisticsTask" not in caplog.text
 
 
-@pytest.mark.parametrize("state_class", ["measurement", "total"])
+@pytest.mark.parametrize("state_class", ["total"])
 @pytest.mark.parametrize(
     "units,device_class,unit,display_unit,factor",
     [
@@ -323,18 +340,29 @@ def test_compile_hourly_statistics_unsupported(hass_recorder, caplog, attributes
         (METRIC_SYSTEM, "gas", "ft³", "m³", 0.0283168466),
     ],
 )
-def test_compile_hourly_sum_statistics_amount(
-    hass_recorder, caplog, units, state_class, device_class, unit, display_unit, factor
+async def test_compile_hourly_sum_statistics_amount(
+    hass,
+    hass_ws_client,
+    recorder_mock,
+    caplog,
+    units,
+    state_class,
+    device_class,
+    unit,
+    display_unit,
+    factor,
 ):
     """Test compiling hourly statistics."""
     period0 = dt_util.utcnow()
     period0_end = period1 = period0 + timedelta(minutes=5)
     period1_end = period2 = period0 + timedelta(minutes=10)
     period2_end = period0 + timedelta(minutes=15)
-    hass = hass_recorder()
+    client = await hass_ws_client()
     hass.config.units = units
     recorder = hass.data[DATA_INSTANCE]
-    setup_component(hass, "sensor", {})
+    await async_setup_component(hass, "sensor", {})
+    # Wait for the sensor recorder platform to be added
+    await async_recorder_block_till_done(hass)
     attributes = {
         "device_class": device_class,
         "state_class": state_class,
@@ -343,24 +371,33 @@ def test_compile_hourly_sum_statistics_amount(
     }
     seq = [10, 15, 20, 10, 30, 40, 50, 60, 70]
 
-    four, eight, states = record_meter_states(
-        hass, period0, "sensor.test1", attributes, seq
+    four, eight, states = await hass.async_add_executor_job(
+        record_meter_states, hass, period0, "sensor.test1", attributes, seq
     )
+    await async_wait_recording_done(hass)
     hist = history.get_significant_states(
         hass, period0 - timedelta.resolution, eight + timedelta.resolution
     )
     assert dict(states)["sensor.test1"] == dict(hist)["sensor.test1"]
 
-    recorder.do_adhoc_statistics(start=period0)
-    wait_recording_done(hass)
-    recorder.do_adhoc_statistics(start=period1)
-    wait_recording_done(hass)
-    recorder.do_adhoc_statistics(start=period2)
-    wait_recording_done(hass)
-    statistic_ids = list_statistic_ids(hass)
+    await hass.async_add_executor_job(
+        partial(recorder.do_adhoc_statistics, start=period0)
+    )
+    await async_wait_recording_done(hass)
+    await hass.async_add_executor_job(
+        partial(recorder.do_adhoc_statistics, start=period1)
+    )
+    await async_wait_recording_done(hass)
+    await hass.async_add_executor_job(
+        partial(recorder.do_adhoc_statistics, start=period2)
+    )
+    await async_wait_recording_done(hass)
+    statistic_ids = await hass.async_add_executor_job(list_statistic_ids, hass)
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "has_mean": False,
+            "has_sum": True,
             "name": None,
             "source": "recorder",
             "unit_of_measurement": display_unit,
@@ -416,22 +453,59 @@ def test_compile_hourly_sum_statistics_amount(
     stats = statistics_during_period(
         hass, period0 + timedelta(minutes=5), period="5minute"
     )
-    expected_stats["sensor.test1"] = expected_stats["sensor.test1"][1:3]
-    assert stats == expected_stats
+    assert stats == {"sensor.test1": expected_stats["sensor.test1"][1:3]}
 
     # With an offset of 6 minutes, we expect to get the 2nd and 3rd periods
     stats = statistics_during_period(
         hass, period0 + timedelta(minutes=6), period="5minute"
     )
-    assert stats == expected_stats
+    assert stats == {"sensor.test1": expected_stats["sensor.test1"][1:3]}
 
     assert "Error while processing event StatisticsTask" not in caplog.text
     assert "Detected new cycle for sensor.test1, last_reset set to" in caplog.text
     assert "Compiling initial sum statistics for sensor.test1" in caplog.text
     assert "Detected new cycle for sensor.test1, value dropped" not in caplog.text
 
+    # Adjust the inserted statistics
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "recorder/adjust_sum_statistics",
+            "statistic_id": "sensor.test1",
+            "start_time": period1.isoformat(),
+            "adjustment": 100.0,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    await async_wait_recording_done(hass)
 
-@pytest.mark.parametrize("state_class", ["measurement"])
+    expected_stats["sensor.test1"][1]["sum"] = approx(factor * 40.0 + 100)
+    expected_stats["sensor.test1"][2]["sum"] = approx(factor * 70.0 + 100)
+    stats = statistics_during_period(hass, period0, period="5minute")
+    assert stats == expected_stats
+
+    # Adjust the inserted statistics
+    await client.send_json(
+        {
+            "id": 2,
+            "type": "recorder/adjust_sum_statistics",
+            "statistic_id": "sensor.test1",
+            "start_time": period2.isoformat(),
+            "adjustment": -400.0,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    await async_wait_recording_done(hass)
+
+    expected_stats["sensor.test1"][1]["sum"] = approx(factor * 40.0 + 100)
+    expected_stats["sensor.test1"][2]["sum"] = approx(factor * 70.0 - 300)
+    stats = statistics_during_period(hass, period0, period="5minute")
+    assert stats == expected_stats
+
+
+@pytest.mark.parametrize("state_class", ["total"])
 @pytest.mark.parametrize(
     "device_class,unit,native_unit,factor",
     [
@@ -451,6 +525,7 @@ def test_compile_hourly_sum_statistics_amount_reset_every_state_change(
     hass = hass_recorder()
     recorder = hass.data[DATA_INSTANCE]
     setup_component(hass, "sensor", {})
+    wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
     attributes = {
         "device_class": device_class,
         "state_class": state_class,
@@ -503,6 +578,8 @@ def test_compile_hourly_sum_statistics_amount_reset_every_state_change(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "has_mean": False,
+            "has_sum": True,
             "name": None,
             "source": "recorder",
             "unit_of_measurement": native_unit,
@@ -540,7 +617,7 @@ def test_compile_hourly_sum_statistics_amount_reset_every_state_change(
     assert "Error while processing event StatisticsTask" not in caplog.text
 
 
-@pytest.mark.parametrize("state_class", ["measurement"])
+@pytest.mark.parametrize("state_class", ["total"])
 @pytest.mark.parametrize(
     "device_class,unit,native_unit,factor",
     [
@@ -555,6 +632,7 @@ def test_compile_hourly_sum_statistics_amount_invalid_last_reset(
     hass = hass_recorder()
     recorder = hass.data[DATA_INSTANCE]
     setup_component(hass, "sensor", {})
+    wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
     attributes = {
         "device_class": device_class,
         "state_class": state_class,
@@ -592,6 +670,8 @@ def test_compile_hourly_sum_statistics_amount_invalid_last_reset(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "has_mean": False,
+            "has_sum": True,
             "name": None,
             "source": "recorder",
             "unit_of_measurement": native_unit,
@@ -617,7 +697,7 @@ def test_compile_hourly_sum_statistics_amount_invalid_last_reset(
     assert "Ignoring invalid last reset 'festivus' for sensor.test1" in caplog.text
 
 
-@pytest.mark.parametrize("state_class", ["measurement"])
+@pytest.mark.parametrize("state_class", ["total"])
 @pytest.mark.parametrize(
     "device_class,unit,native_unit,factor",
     [
@@ -632,6 +712,7 @@ def test_compile_hourly_sum_statistics_nan_inf_state(
     hass = hass_recorder()
     recorder = hass.data[DATA_INSTANCE]
     setup_component(hass, "sensor", {})
+    wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
     attributes = {
         "device_class": device_class,
         "state_class": state_class,
@@ -665,6 +746,8 @@ def test_compile_hourly_sum_statistics_nan_inf_state(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "has_mean": False,
+            "has_sum": True,
             "name": None,
             "source": "recorder",
             "unit_of_measurement": native_unit,
@@ -775,6 +858,8 @@ def test_compile_hourly_sum_statistics_negative_state(
     statistic_ids = list_statistic_ids(hass)
     assert {
         "name": None,
+        "has_mean": False,
+        "has_sum": True,
         "source": "recorder",
         "statistic_id": entity_id,
         "unit_of_measurement": native_unit,
@@ -826,6 +911,7 @@ def test_compile_hourly_sum_statistics_total_no_reset(
     hass = hass_recorder()
     recorder = hass.data[DATA_INSTANCE]
     setup_component(hass, "sensor", {})
+    wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
     attributes = {
         "device_class": device_class,
         "state_class": "total",
@@ -836,6 +922,7 @@ def test_compile_hourly_sum_statistics_total_no_reset(
     four, eight, states = record_meter_states(
         hass, period0, "sensor.test1", attributes, seq
     )
+    wait_recording_done(hass)
     hist = history.get_significant_states(
         hass, period0 - timedelta.resolution, eight + timedelta.resolution
     )
@@ -851,6 +938,8 @@ def test_compile_hourly_sum_statistics_total_no_reset(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "has_mean": False,
+            "has_sum": True,
             "name": None,
             "source": "recorder",
             "unit_of_measurement": native_unit,
@@ -917,6 +1006,7 @@ def test_compile_hourly_sum_statistics_total_increasing(
     hass = hass_recorder()
     recorder = hass.data[DATA_INSTANCE]
     setup_component(hass, "sensor", {})
+    wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
     attributes = {
         "device_class": device_class,
         "state_class": "total_increasing",
@@ -927,6 +1017,7 @@ def test_compile_hourly_sum_statistics_total_increasing(
     four, eight, states = record_meter_states(
         hass, period0, "sensor.test1", attributes, seq
     )
+    wait_recording_done(hass)
     hist = history.get_significant_states(
         hass, period0 - timedelta.resolution, eight + timedelta.resolution
     )
@@ -942,6 +1033,8 @@ def test_compile_hourly_sum_statistics_total_increasing(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "has_mean": False,
+            "has_sum": True,
             "name": None,
             "source": "recorder",
             "unit_of_measurement": native_unit,
@@ -1006,6 +1099,7 @@ def test_compile_hourly_sum_statistics_total_increasing_small_dip(
     hass = hass_recorder()
     recorder = hass.data[DATA_INSTANCE]
     setup_component(hass, "sensor", {})
+    wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
     attributes = {
         "device_class": device_class,
         "state_class": "total_increasing",
@@ -1016,6 +1110,7 @@ def test_compile_hourly_sum_statistics_total_increasing_small_dip(
     four, eight, states = record_meter_states(
         hass, period0, "sensor.test1", attributes, seq
     )
+    wait_recording_done(hass)
     hist = history.get_significant_states(
         hass, period0 - timedelta.resolution, eight + timedelta.resolution
     )
@@ -1044,6 +1139,8 @@ def test_compile_hourly_sum_statistics_total_increasing_small_dip(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "has_mean": False,
+            "has_sum": True,
             "name": None,
             "source": "recorder",
             "unit_of_measurement": native_unit,
@@ -1099,23 +1196,18 @@ def test_compile_hourly_energy_statistics_unsupported(hass_recorder, caplog):
     hass = hass_recorder()
     recorder = hass.data[DATA_INSTANCE]
     setup_component(hass, "sensor", {})
+    wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
     sns1_attr = {
         "device_class": "energy",
-        "state_class": "measurement",
+        "state_class": "total",
         "unit_of_measurement": "kWh",
         "last_reset": None,
     }
     sns2_attr = {"device_class": "energy"}
     sns3_attr = {}
-    sns4_attr = {
-        "device_class": "energy",
-        "state_class": "measurement",
-        "unit_of_measurement": "kWh",
-    }
     seq1 = [10, 15, 20, 10, 30, 40, 50, 60, 70]
     seq2 = [110, 120, 130, 0, 30, 45, 55, 65, 75]
     seq3 = [0, 0, 5, 10, 30, 50, 60, 80, 90]
-    seq4 = [0, 0, 5, 10, 30, 50, 60, 80, 90]
 
     four, eight, states = record_meter_states(
         hass, period0, "sensor.test1", sns1_attr, seq1
@@ -1124,8 +1216,7 @@ def test_compile_hourly_energy_statistics_unsupported(hass_recorder, caplog):
     states = {**states, **_states}
     _, _, _states = record_meter_states(hass, period0, "sensor.test3", sns3_attr, seq3)
     states = {**states, **_states}
-    _, _, _states = record_meter_states(hass, period0, "sensor.test4", sns4_attr, seq4)
-    states = {**states, **_states}
+    wait_recording_done(hass)
 
     hist = history.get_significant_states(
         hass, period0 - timedelta.resolution, eight + timedelta.resolution
@@ -1142,6 +1233,8 @@ def test_compile_hourly_energy_statistics_unsupported(hass_recorder, caplog):
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "has_mean": False,
+            "has_sum": True,
             "name": None,
             "source": "recorder",
             "unit_of_measurement": "kWh",
@@ -1197,6 +1290,7 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
     hass = hass_recorder()
     recorder = hass.data[DATA_INSTANCE]
     setup_component(hass, "sensor", {})
+    wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
     sns1_attr = {**ENERGY_SENSOR_ATTRIBUTES, "last_reset": None}
     sns2_attr = {**ENERGY_SENSOR_ATTRIBUTES, "last_reset": None}
     sns3_attr = {
@@ -1204,11 +1298,9 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
         "unit_of_measurement": "Wh",
         "last_reset": None,
     }
-    sns4_attr = {**ENERGY_SENSOR_ATTRIBUTES}
     seq1 = [10, 15, 20, 10, 30, 40, 50, 60, 70]
     seq2 = [110, 120, 130, 0, 30, 45, 55, 65, 75]
     seq3 = [0, 0, 5, 10, 30, 50, 60, 80, 90]
-    seq4 = [0, 0, 5, 10, 30, 50, 60, 80, 90]
 
     four, eight, states = record_meter_states(
         hass, period0, "sensor.test1", sns1_attr, seq1
@@ -1217,8 +1309,7 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
     states = {**states, **_states}
     _, _, _states = record_meter_states(hass, period0, "sensor.test3", sns3_attr, seq3)
     states = {**states, **_states}
-    _, _, _states = record_meter_states(hass, period0, "sensor.test4", sns4_attr, seq4)
-    states = {**states, **_states}
+    wait_recording_done(hass)
     hist = history.get_significant_states(
         hass, period0 - timedelta.resolution, eight + timedelta.resolution
     )
@@ -1234,18 +1325,24 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "has_mean": False,
+            "has_sum": True,
             "name": None,
             "source": "recorder",
             "unit_of_measurement": "kWh",
         },
         {
             "statistic_id": "sensor.test2",
+            "has_mean": False,
+            "has_sum": True,
             "name": None,
             "source": "recorder",
             "unit_of_measurement": "kWh",
         },
         {
             "statistic_id": "sensor.test3",
+            "has_mean": False,
+            "has_sum": True,
             "name": None,
             "source": "recorder",
             "unit_of_measurement": "kWh",
@@ -1386,6 +1483,7 @@ def test_compile_hourly_statistics_unchanged(
     hass = hass_recorder()
     recorder = hass.data[DATA_INSTANCE]
     setup_component(hass, "sensor", {})
+    wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
     attributes = {
         "device_class": device_class,
         "state_class": "measurement",
@@ -1422,6 +1520,7 @@ def test_compile_hourly_statistics_partially_unavailable(hass_recorder, caplog):
     hass = hass_recorder()
     recorder = hass.data[DATA_INSTANCE]
     setup_component(hass, "sensor", {})
+    wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
     four, states = record_states_partially_unavailable(
         hass, zero, "sensor.test1", TEMPERATURE_SENSOR_ATTRIBUTES
     )
@@ -1473,6 +1572,7 @@ def test_compile_hourly_statistics_unavailable(
     hass = hass_recorder()
     recorder = hass.data[DATA_INSTANCE]
     setup_component(hass, "sensor", {})
+    wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
     attributes = {
         "device_class": device_class,
         "state_class": "measurement",
@@ -1513,6 +1613,7 @@ def test_compile_hourly_statistics_fails(hass_recorder, caplog):
     hass = hass_recorder()
     recorder = hass.data[DATA_INSTANCE]
     setup_component(hass, "sensor", {})
+    wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
     with patch(
         "homeassistant.components.sensor.recorder.compile_statistics",
         side_effect=Exception,
@@ -1523,37 +1624,44 @@ def test_compile_hourly_statistics_fails(hass_recorder, caplog):
 
 
 @pytest.mark.parametrize(
-    "device_class,unit,native_unit,statistic_type",
+    "state_class,device_class,unit,native_unit,statistic_type",
     [
-        ("battery", "%", "%", "mean"),
-        ("battery", None, None, "mean"),
-        ("energy", "Wh", "kWh", "sum"),
-        ("energy", "kWh", "kWh", "sum"),
-        ("humidity", "%", "%", "mean"),
-        ("humidity", None, None, "mean"),
-        ("monetary", "USD", "USD", "sum"),
-        ("monetary", "None", "None", "sum"),
-        ("gas", "m³", "m³", "sum"),
-        ("gas", "ft³", "m³", "sum"),
-        ("pressure", "Pa", "Pa", "mean"),
-        ("pressure", "hPa", "Pa", "mean"),
-        ("pressure", "mbar", "Pa", "mean"),
-        ("pressure", "inHg", "Pa", "mean"),
-        ("pressure", "psi", "Pa", "mean"),
-        ("temperature", "°C", "°C", "mean"),
-        ("temperature", "°F", "°C", "mean"),
+        ("measurement", "battery", "%", "%", "mean"),
+        ("measurement", "battery", None, None, "mean"),
+        ("total", "energy", "Wh", "kWh", "sum"),
+        ("total", "energy", "kWh", "kWh", "sum"),
+        ("measurement", "energy", "Wh", "kWh", "mean"),
+        ("measurement", "energy", "kWh", "kWh", "mean"),
+        ("measurement", "humidity", "%", "%", "mean"),
+        ("measurement", "humidity", None, None, "mean"),
+        ("total", "monetary", "USD", "USD", "sum"),
+        ("total", "monetary", "None", "None", "sum"),
+        ("total", "gas", "m³", "m³", "sum"),
+        ("total", "gas", "ft³", "m³", "sum"),
+        ("measurement", "monetary", "USD", "USD", "mean"),
+        ("measurement", "monetary", "None", "None", "mean"),
+        ("measurement", "gas", "m³", "m³", "mean"),
+        ("measurement", "gas", "ft³", "m³", "mean"),
+        ("measurement", "pressure", "Pa", "Pa", "mean"),
+        ("measurement", "pressure", "hPa", "Pa", "mean"),
+        ("measurement", "pressure", "mbar", "Pa", "mean"),
+        ("measurement", "pressure", "inHg", "Pa", "mean"),
+        ("measurement", "pressure", "psi", "Pa", "mean"),
+        ("measurement", "temperature", "°C", "°C", "mean"),
+        ("measurement", "temperature", "°F", "°C", "mean"),
     ],
 )
 def test_list_statistic_ids(
-    hass_recorder, caplog, device_class, unit, native_unit, statistic_type
+    hass_recorder, caplog, state_class, device_class, unit, native_unit, statistic_type
 ):
     """Test listing future statistic ids."""
     hass = hass_recorder()
     setup_component(hass, "sensor", {})
+    wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
     attributes = {
         "device_class": device_class,
         "last_reset": 0,
-        "state_class": "measurement",
+        "state_class": state_class,
         "unit_of_measurement": unit,
     }
     hass.states.set("sensor.test1", 0, attributes=attributes)
@@ -1561,6 +1669,8 @@ def test_list_statistic_ids(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "has_mean": statistic_type == "mean",
+            "has_sum": statistic_type == "sum",
             "name": None,
             "source": "recorder",
             "unit_of_measurement": native_unit,
@@ -1572,6 +1682,8 @@ def test_list_statistic_ids(
             assert statistic_ids == [
                 {
                     "statistic_id": "sensor.test1",
+                    "has_mean": statistic_type == "mean",
+                    "has_sum": statistic_type == "sum",
                     "name": None,
                     "source": "recorder",
                     "unit_of_measurement": native_unit,
@@ -1589,6 +1701,7 @@ def test_list_statistic_ids_unsupported(hass_recorder, caplog, _attributes):
     """Test listing future statistic ids for unsupported sensor."""
     hass = hass_recorder()
     setup_component(hass, "sensor", {})
+    wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
     attributes = dict(_attributes)
     hass.states.set("sensor.test1", 0, attributes=attributes)
     if "last_reset" in attributes:
@@ -1624,6 +1737,7 @@ def test_compile_hourly_statistics_changing_units_1(
     hass = hass_recorder()
     recorder = hass.data[DATA_INSTANCE]
     setup_component(hass, "sensor", {})
+    wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
     attributes = {
         "device_class": device_class,
         "state_class": "measurement",
@@ -1649,6 +1763,8 @@ def test_compile_hourly_statistics_changing_units_1(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "has_mean": True,
+            "has_sum": False,
             "name": None,
             "source": "recorder",
             "unit_of_measurement": native_unit,
@@ -1681,6 +1797,8 @@ def test_compile_hourly_statistics_changing_units_1(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "has_mean": True,
+            "has_sum": False,
             "name": None,
             "source": "recorder",
             "unit_of_measurement": native_unit,
@@ -1722,6 +1840,7 @@ def test_compile_hourly_statistics_changing_units_2(
     hass = hass_recorder()
     recorder = hass.data[DATA_INSTANCE]
     setup_component(hass, "sensor", {})
+    wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
     attributes = {
         "device_class": device_class,
         "state_class": "measurement",
@@ -1744,6 +1863,8 @@ def test_compile_hourly_statistics_changing_units_2(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "has_mean": True,
+            "has_sum": False,
             "name": None,
             "source": "recorder",
             "unit_of_measurement": "cats",
@@ -1772,6 +1893,7 @@ def test_compile_hourly_statistics_changing_units_3(
     hass = hass_recorder()
     recorder = hass.data[DATA_INSTANCE]
     setup_component(hass, "sensor", {})
+    wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
     attributes = {
         "device_class": device_class,
         "state_class": "measurement",
@@ -1797,6 +1919,8 @@ def test_compile_hourly_statistics_changing_units_3(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "has_mean": True,
+            "has_sum": False,
             "name": None,
             "source": "recorder",
             "unit_of_measurement": native_unit,
@@ -1827,6 +1951,8 @@ def test_compile_hourly_statistics_changing_units_3(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "has_mean": True,
+            "has_sum": False,
             "name": None,
             "source": "recorder",
             "unit_of_measurement": native_unit,
@@ -1865,6 +1991,7 @@ def test_compile_hourly_statistics_changing_device_class_1(
     hass = hass_recorder()
     recorder = hass.data[DATA_INSTANCE]
     setup_component(hass, "sensor", {})
+    wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
 
     # Record some states for an initial period, the entity has no device class
     attributes = {
@@ -1880,6 +2007,8 @@ def test_compile_hourly_statistics_changing_device_class_1(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "has_mean": True,
+            "has_sum": False,
             "name": None,
             "source": "recorder",
             "unit_of_measurement": state_unit,
@@ -1926,6 +2055,8 @@ def test_compile_hourly_statistics_changing_device_class_1(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "has_mean": True,
+            "has_sum": False,
             "name": None,
             "source": "recorder",
             "unit_of_measurement": state_unit,
@@ -1964,6 +2095,7 @@ def test_compile_hourly_statistics_changing_device_class_2(
     hass = hass_recorder()
     recorder = hass.data[DATA_INSTANCE]
     setup_component(hass, "sensor", {})
+    wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
 
     # Record some states for an initial period, the entity has a device class
     attributes = {
@@ -1980,6 +2112,8 @@ def test_compile_hourly_statistics_changing_device_class_2(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "has_mean": True,
+            "has_sum": False,
             "name": None,
             "source": "recorder",
             "unit_of_measurement": statistic_unit,
@@ -2026,6 +2160,8 @@ def test_compile_hourly_statistics_changing_device_class_2(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "has_mean": True,
+            "has_sum": False,
             "name": None,
             "source": "recorder",
             "unit_of_measurement": statistic_unit,
@@ -2066,6 +2202,7 @@ def test_compile_hourly_statistics_changing_statistics(
     hass = hass_recorder()
     recorder = hass.data[DATA_INSTANCE]
     setup_component(hass, "sensor", {})
+    wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
     attributes_1 = {
         "device_class": device_class,
         "state_class": "measurement",
@@ -2083,6 +2220,8 @@ def test_compile_hourly_statistics_changing_statistics(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "has_mean": True,
+            "has_sum": False,
             "name": None,
             "source": "recorder",
             "unit_of_measurement": None,
@@ -2115,6 +2254,8 @@ def test_compile_hourly_statistics_changing_statistics(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "has_mean": False,
+            "has_sum": True,
             "name": None,
             "source": "recorder",
             "unit_of_measurement": None,
@@ -2182,9 +2323,12 @@ def test_compile_statistics_hourly_daily_monthly_summary(
         "homeassistant.components.recorder.models.dt_util.utcnow", return_value=zero
     ):
         hass = hass_recorder()
+        # Remove this after dropping the use of the hass_recorder fixture
+        hass.config.set_time_zone("America/Regina")
     recorder = hass.data[DATA_INSTANCE]
     recorder._db_supports_row_number = db_supports_row_number
     setup_component(hass, "sensor", {})
+    wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
     attributes = {
         "device_class": None,
         "state_class": "measurement",
@@ -2309,29 +2453,47 @@ def test_compile_statistics_hourly_daily_monthly_summary(
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
+            "has_mean": True,
+            "has_sum": False,
             "name": None,
             "source": "recorder",
             "unit_of_measurement": "%",
         },
         {
             "statistic_id": "sensor.test2",
+            "has_mean": True,
+            "has_sum": False,
             "name": None,
             "source": "recorder",
             "unit_of_measurement": "%",
         },
         {
             "statistic_id": "sensor.test3",
+            "has_mean": True,
+            "has_sum": False,
             "name": None,
             "source": "recorder",
             "unit_of_measurement": "%",
         },
         {
             "statistic_id": "sensor.test4",
+            "has_mean": False,
+            "has_sum": True,
             "name": None,
             "source": "recorder",
             "unit_of_measurement": "EUR",
         },
     ]
+
+    # Adjust the inserted statistics
+    sum_adjustment = -10
+    sum_adjustement_start = zero + timedelta(minutes=65)
+    for i in range(13, 24):
+        expected_sums["sensor.test4"][i] += sum_adjustment
+    recorder.async_adjust_statistics(
+        "sensor.test4", sum_adjustement_start, sum_adjustment
+    )
+    wait_recording_done(hass)
 
     stats = statistics_during_period(hass, zero, period="5minute")
     expected_stats = {
@@ -2615,7 +2777,7 @@ def record_states(hass, zero, entity_id, attributes, seq=None):
     ],
 )
 async def test_validate_statistics_supported_device_class(
-    hass, hass_ws_client, units, attributes, unit
+    hass, hass_ws_client, recorder_mock, units, attributes, unit
 ):
     """Test validate_statistics."""
     id = 1
@@ -2636,9 +2798,8 @@ async def test_validate_statistics_supported_device_class(
     now = dt_util.utcnow()
 
     hass.config.units = units
-    await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(hass, "sensor", {})
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await async_recorder_block_till_done(hass)
     client = await hass_ws_client()
 
     # No statistics, no state - empty response
@@ -2648,14 +2809,14 @@ async def test_validate_statistics_supported_device_class(
     hass.states.async_set(
         "sensor.test", 10, attributes={**attributes, **{"unit_of_measurement": unit}}
     )
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await async_recorder_block_till_done(hass)
     await assert_validation_result(client, {})
 
     # No statistics, invalid state - expect error
     hass.states.async_set(
         "sensor.test", 11, attributes={**attributes, **{"unit_of_measurement": "dogs"}}
     )
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await async_recorder_block_till_done(hass)
     expected = {
         "sensor.test": [
             {
@@ -2671,24 +2832,24 @@ async def test_validate_statistics_supported_device_class(
     await assert_validation_result(client, expected)
 
     # Statistics has run, invalid state - expect error
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await async_recorder_block_till_done(hass)
     hass.data[DATA_INSTANCE].do_adhoc_statistics(start=now)
     hass.states.async_set(
         "sensor.test", 12, attributes={**attributes, **{"unit_of_measurement": "dogs"}}
     )
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await async_recorder_block_till_done(hass)
     await assert_validation_result(client, expected)
 
     # Valid state - empty response
     hass.states.async_set(
         "sensor.test", 13, attributes={**attributes, **{"unit_of_measurement": unit}}
     )
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await async_recorder_block_till_done(hass)
     await assert_validation_result(client, {})
 
     # Valid state, statistic runs again - empty response
     hass.data[DATA_INSTANCE].do_adhoc_statistics(start=now)
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await async_recorder_block_till_done(hass)
     await assert_validation_result(client, {})
 
     # Remove the state - empty response
@@ -2711,7 +2872,7 @@ async def test_validate_statistics_supported_device_class(
     ],
 )
 async def test_validate_statistics_supported_device_class_2(
-    hass, hass_ws_client, units, attributes, unit
+    hass, hass_ws_client, recorder_mock, units, attributes, unit
 ):
     """Test validate_statistics."""
     id = 1
@@ -2732,9 +2893,8 @@ async def test_validate_statistics_supported_device_class_2(
     now = dt_util.utcnow()
 
     hass.config.units = units
-    await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(hass, "sensor", {})
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await async_recorder_block_till_done(hass)
     client = await hass_ws_client()
 
     # No statistics, no state - empty response
@@ -2748,7 +2908,7 @@ async def test_validate_statistics_supported_device_class_2(
 
     # Statistics has run, device class set - expect error
     hass.data[DATA_INSTANCE].do_adhoc_statistics(start=now)
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await async_recorder_block_till_done(hass)
     hass.states.async_set("sensor.test", 12, attributes=attributes)
     await hass.async_block_till_done()
     expected = {
@@ -2770,7 +2930,7 @@ async def test_validate_statistics_supported_device_class_2(
     hass.states.async_set(
         "sensor.test", 13, attributes={**attributes, **{"unit_of_measurement": "dogs"}}
     )
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await async_recorder_block_till_done(hass)
     expected = {
         "sensor.test": [
             {
@@ -2802,7 +2962,7 @@ async def test_validate_statistics_supported_device_class_2(
     ],
 )
 async def test_validate_statistics_unsupported_state_class(
-    hass, hass_ws_client, units, attributes, unit
+    hass, hass_ws_client, recorder_mock, units, attributes, unit
 ):
     """Test validate_statistics."""
     id = 1
@@ -2823,9 +2983,8 @@ async def test_validate_statistics_unsupported_state_class(
     now = dt_util.utcnow()
 
     hass.config.units = units
-    await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(hass, "sensor", {})
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await async_recorder_block_till_done(hass)
     client = await hass_ws_client()
 
     # No statistics, no state - empty response
@@ -2838,7 +2997,7 @@ async def test_validate_statistics_unsupported_state_class(
 
     # Statistics has run, empty response
     hass.data[DATA_INSTANCE].do_adhoc_statistics(start=now)
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await async_recorder_block_till_done(hass)
     await assert_validation_result(client, {})
 
     # State update with invalid state class, expect error
@@ -2867,7 +3026,7 @@ async def test_validate_statistics_unsupported_state_class(
     ],
 )
 async def test_validate_statistics_sensor_no_longer_recorded(
-    hass, hass_ws_client, units, attributes, unit
+    hass, hass_ws_client, recorder_mock, units, attributes, unit
 ):
     """Test validate_statistics."""
     id = 1
@@ -2888,9 +3047,8 @@ async def test_validate_statistics_sensor_no_longer_recorded(
     now = dt_util.utcnow()
 
     hass.config.units = units
-    await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(hass, "sensor", {})
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await async_recorder_block_till_done(hass)
     client = await hass_ws_client()
 
     # No statistics, no state - empty response
@@ -2903,7 +3061,7 @@ async def test_validate_statistics_sensor_no_longer_recorded(
 
     # Statistics has run, empty response
     hass.data[DATA_INSTANCE].do_adhoc_statistics(start=now)
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await async_recorder_block_till_done(hass)
     await assert_validation_result(client, {})
 
     # Sensor no longer recorded, expect error
@@ -2929,7 +3087,7 @@ async def test_validate_statistics_sensor_no_longer_recorded(
     ],
 )
 async def test_validate_statistics_sensor_not_recorded(
-    hass, hass_ws_client, units, attributes, unit
+    hass, hass_ws_client, recorder_mock, units, attributes, unit
 ):
     """Test validate_statistics."""
     id = 1
@@ -2950,9 +3108,8 @@ async def test_validate_statistics_sensor_not_recorded(
     now = dt_util.utcnow()
 
     hass.config.units = units
-    await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(hass, "sensor", {})
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await async_recorder_block_till_done(hass)
     client = await hass_ws_client()
 
     # No statistics, no state - empty response
@@ -2977,7 +3134,7 @@ async def test_validate_statistics_sensor_not_recorded(
 
         # Statistics has run, expect same error
         hass.data[DATA_INSTANCE].do_adhoc_statistics(start=now)
-        await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+        await async_recorder_block_till_done(hass)
         await assert_validation_result(client, expected)
 
 
@@ -2988,7 +3145,7 @@ async def test_validate_statistics_sensor_not_recorded(
     ],
 )
 async def test_validate_statistics_sensor_removed(
-    hass, hass_ws_client, units, attributes, unit
+    hass, hass_ws_client, recorder_mock, units, attributes, unit
 ):
     """Test validate_statistics."""
     id = 1
@@ -3009,9 +3166,8 @@ async def test_validate_statistics_sensor_removed(
     now = dt_util.utcnow()
 
     hass.config.units = units
-    await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(hass, "sensor", {})
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await async_recorder_block_till_done(hass)
     client = await hass_ws_client()
 
     # No statistics, no state - empty response
@@ -3024,7 +3180,7 @@ async def test_validate_statistics_sensor_removed(
 
     # Statistics has run, empty response
     hass.data[DATA_INSTANCE].do_adhoc_statistics(start=now)
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await async_recorder_block_till_done(hass)
     await assert_validation_result(client, {})
 
     # Sensor removed, expect error
@@ -3045,7 +3201,7 @@ async def test_validate_statistics_sensor_removed(
     [BATTERY_SENSOR_ATTRIBUTES, NONE_SENSOR_ATTRIBUTES],
 )
 async def test_validate_statistics_unsupported_device_class(
-    hass, hass_ws_client, attributes
+    hass, recorder_mock, hass_ws_client, attributes
 ):
     """Test validate_statistics."""
     id = 1
@@ -3076,9 +3232,8 @@ async def test_validate_statistics_unsupported_device_class(
 
     now = dt_util.utcnow()
 
-    await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(hass, "sensor", {})
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await async_recorder_block_till_done(hass)
     client = await hass_ws_client()
     rec = hass.data[DATA_INSTANCE]
 
@@ -3096,9 +3251,9 @@ async def test_validate_statistics_unsupported_device_class(
     await assert_validation_result(client, {})
 
     # Run statistics, no statistics will be generated because of conflicting units
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await async_recorder_block_till_done(hass)
     rec.do_adhoc_statistics(start=now)
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await async_recorder_block_till_done(hass)
     await assert_statistic_ids([])
 
     # No statistics, changed unit - empty response
@@ -3108,9 +3263,9 @@ async def test_validate_statistics_unsupported_device_class(
     await assert_validation_result(client, {})
 
     # Run statistics one hour later, only the "dogs" state will be considered
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await async_recorder_block_till_done(hass)
     rec.do_adhoc_statistics(start=now + timedelta(hours=1))
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await async_recorder_block_till_done(hass)
     await assert_statistic_ids(
         [{"statistic_id": "sensor.test", "unit_of_measurement": "dogs"}]
     )
@@ -3118,7 +3273,7 @@ async def test_validate_statistics_unsupported_device_class(
 
     # Change back to original unit - expect error
     hass.states.async_set("sensor.test", 13, attributes=attributes)
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await async_recorder_block_till_done(hass)
     expected = {
         "sensor.test": [
             {
@@ -3137,13 +3292,13 @@ async def test_validate_statistics_unsupported_device_class(
     hass.states.async_set(
         "sensor.test", 14, attributes={**attributes, **{"unit_of_measurement": "dogs"}}
     )
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await async_recorder_block_till_done(hass)
     await assert_validation_result(client, {})
 
     # Valid state, statistic runs again - empty response
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await async_recorder_block_till_done(hass)
     hass.data[DATA_INSTANCE].do_adhoc_statistics(start=now)
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await async_recorder_block_till_done(hass)
     await assert_validation_result(client, {})
 
     # Remove the state - empty response
@@ -3168,7 +3323,6 @@ def record_meter_states(hass, zero, entity_id, _attributes, seq):
     def set_state(entity_id, state, **kwargs):
         """Set the state."""
         hass.states.set(entity_id, state, **kwargs)
-        wait_recording_done(hass)
         return hass.states.get(entity_id)
 
     one = zero + timedelta(seconds=15 * 5)  # 00:01:15

@@ -484,8 +484,6 @@ async def test_ws_sign_path(hass, hass_ws_client, hass_access_token):
     assert await async_setup_component(hass, "auth", {"http": {}})
     ws_client = await hass_ws_client(hass, hass_access_token)
 
-    refresh_token = await hass.auth.async_validate_access_token(hass_access_token)
-
     with patch(
         "homeassistant.components.auth.async_sign_path", return_value="hello_world"
     ) as mock_sign:
@@ -502,7 +500,6 @@ async def test_ws_sign_path(hass, hass_ws_client, hass_access_token):
     assert result["success"], result
     assert result["result"] == {"path": "hello_world"}
     assert len(mock_sign.mock_calls) == 1
-    hass, p_refresh_token, path, expires = mock_sign.mock_calls[0][1]
-    assert p_refresh_token == refresh_token.id
+    hass, path, expires = mock_sign.mock_calls[0][1]
     assert path == "/api/hello"
     assert expires.total_seconds() == 20

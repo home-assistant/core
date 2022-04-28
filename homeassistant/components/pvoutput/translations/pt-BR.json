@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "reauth_successful": "A reautentica\u00e7\u00e3o foi bem-sucedida"
+        },
+        "error": {
+            "cannot_connect": "Falha ao conectar",
+            "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "Chave da API"
+                },
+                "description": "Para re-autenticar com PVOutput, voc\u00ea precisar\u00e1 obter a chave API em {account_url}."
+            },
+            "user": {
+                "data": {
+                    "api_key": "Chave da API",
+                    "system_id": "ID do sistema"
+                },
+                "description": "Para autenticar com PVOutput, voc\u00ea precisar\u00e1 obter a chave de API em {account_url} . \n\n Os IDs de sistema dos sistemas registrados s\u00e3o listados nessa mesma p\u00e1gina."
+            }
+        }
+    }
+}

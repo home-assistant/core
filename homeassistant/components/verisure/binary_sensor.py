@@ -33,10 +33,10 @@ async def async_setup_entry(
     async_add_entities(sensors)
 
 
-class VerisureDoorWindowSensor(CoordinatorEntity, BinarySensorEntity):
+class VerisureDoorWindowSensor(
+    CoordinatorEntity[VerisureDataUpdateCoordinator], BinarySensorEntity
+):
     """Representation of a Verisure door window sensor."""
-
-    coordinator: VerisureDataUpdateCoordinator
 
     _attr_device_class = BinarySensorDeviceClass.OPENING
 
@@ -79,10 +79,10 @@ class VerisureDoorWindowSensor(CoordinatorEntity, BinarySensorEntity):
         )
 
 
-class VerisureEthernetStatus(CoordinatorEntity, BinarySensorEntity):
+class VerisureEthernetStatus(
+    CoordinatorEntity[VerisureDataUpdateCoordinator], BinarySensorEntity
+):
     """Representation of a Verisure VBOX internet status."""
-
-    coordinator: VerisureDataUpdateCoordinator
 
     _attr_name = "Verisure Ethernet status"
     _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY

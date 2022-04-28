@@ -4,6 +4,7 @@ from unittest.mock import Mock, patch
 import aiohttp
 import pytest
 
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.util.location as location_util
 
 from tests.common import load_fixture
@@ -27,7 +28,7 @@ DISTANCE_MILES = 3632.78
 @pytest.fixture
 async def session(hass):
     """Return aioclient session."""
-    return hass.helpers.aiohttp_client.async_get_clientsession()
+    return async_get_clientsession(hass)
 
 
 @pytest.fixture
@@ -73,7 +74,7 @@ def test_get_miles():
 
 
 async def test_detect_location_info_whoami(aioclient_mock, session):
-    """Test detect location info using whoami.home-assistant.io."""
+    """Test detect location info using services.home-assistant.io/whoami."""
     aioclient_mock.get(location_util.WHOAMI_URL, text=load_fixture("whoami.json"))
 
     with patch("homeassistant.util.location.HA_VERSION", "1.0"):

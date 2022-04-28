@@ -6,8 +6,8 @@ from typing import Any
 
 from pycarwings2.pycarwings2 import Leaf
 
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -20,22 +20,22 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_devices: AddEntitiesCallback,
+    add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Nissan Leaf switch platform setup."""
     if discovery_info is None:
         return
 
-    devices = []
+    entities: list[LeafEntity] = []
     for vin, datastore in hass.data[DATA_LEAF].items():
         _LOGGER.debug("Adding switch for vin=%s", vin)
-        devices.append(LeafClimateSwitch(datastore))
+        entities.append(LeafClimateSwitch(datastore))
 
-    add_devices(devices, True)
+    add_entities(entities, True)
 
 
-class LeafClimateSwitch(LeafEntity, ToggleEntity):
+class LeafClimateSwitch(LeafEntity, SwitchEntity):
     """Nissan Leaf Climate Control switch."""
 
     def __init__(self, car: Leaf) -> None:

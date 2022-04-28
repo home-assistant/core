@@ -1,4 +1,4 @@
-"""Test the UniFi Protect number platform."""
+"""Test the UniFi Protect select platform."""
 # pylint: disable=protected-access
 from __future__ import annotations
 
@@ -23,12 +23,12 @@ from homeassistant.components.unifiprotect.const import (
     ATTR_DURATION,
     ATTR_MESSAGE,
     DEFAULT_ATTRIBUTION,
-    SERVICE_SET_DOORBELL_MESSAGE,
 )
 from homeassistant.components.unifiprotect.select import (
     CAMERA_SELECTS,
     LIGHT_MODE_OFF,
     LIGHT_SELECTS,
+    SERVICE_SET_DOORBELL_MESSAGE,
     VIEWER_SELECTS,
 )
 from homeassistant.const import ATTR_ATTRIBUTION, ATTR_ENTITY_ID, ATTR_OPTION, Platform
@@ -51,7 +51,7 @@ async def viewer_fixture(
     mock_viewer: Viewer,
     mock_liveview: Liveview,
 ):
-    """Fixture for a single viewport for testing the number platform."""
+    """Fixture for a single viewport for testing the select platform."""
 
     # disable pydantic validation so mocking can happen
     Viewer.__config__.validate_assignment = False
@@ -81,7 +81,7 @@ async def viewer_fixture(
 async def camera_fixture(
     hass: HomeAssistant, mock_entry: MockEntityFixture, mock_camera: Camera
 ):
-    """Fixture for a single camera for testing the switch platform."""
+    """Fixture for a single camera for testing the select platform."""
 
     # disable pydantic validation so mocking can happen
     Camera.__config__.validate_assignment = False
@@ -93,9 +93,11 @@ async def camera_fixture(
     camera_obj.channels[2]._api = mock_entry.api
     camera_obj.name = "Test Camera"
     camera_obj.feature_flags.has_lcd_screen = True
+    camera_obj.feature_flags.has_chime = True
     camera_obj.recording_settings.mode = RecordingMode.ALWAYS
     camera_obj.isp_settings.ir_led_mode = IRLEDMode.AUTO
     camera_obj.lcd_message = None
+    camera_obj.chime_duration = 0
 
     mock_entry.api.bootstrap.reset_objects()
     mock_entry.api.bootstrap.cameras = {
@@ -105,7 +107,7 @@ async def camera_fixture(
     await hass.config_entries.async_setup(mock_entry.entry.entry_id)
     await hass.async_block_till_done()
 
-    assert_entity_counts(hass, Platform.SELECT, 3, 3)
+    assert_entity_counts(hass, Platform.SELECT, 4, 4)
 
     yield camera_obj
 
@@ -119,7 +121,7 @@ async def light_fixture(
     mock_light: Light,
     camera: Camera,
 ):
-    """Fixture for a single light for testing the number platform."""
+    """Fixture for a single light for testing the select platform."""
 
     # disable pydantic validation so mocking can happen
     Light.__config__.validate_assignment = False
@@ -140,7 +142,7 @@ async def light_fixture(
     await hass.config_entries.async_reload(mock_entry.entry.entry_id)
     await hass.async_block_till_done()
 
-    assert_entity_counts(hass, Platform.SELECT, 5, 5)
+    assert_entity_counts(hass, Platform.SELECT, 6, 6)
 
     yield light_obj
 
@@ -151,7 +153,7 @@ async def light_fixture(
 async def camera_none_fixture(
     hass: HomeAssistant, mock_entry: MockEntityFixture, mock_camera: Camera
 ):
-    """Fixture for a single camera for testing the switch platform."""
+    """Fixture for a single camera for testing the select platform."""
 
     # disable pydantic validation so mocking can happen
     Camera.__config__.validate_assignment = False
@@ -163,6 +165,7 @@ async def camera_none_fixture(
     camera_obj.channels[2]._api = mock_entry.api
     camera_obj.name = "Test Camera"
     camera_obj.feature_flags.has_lcd_screen = False
+    camera_obj.feature_flags.has_chime = False
     camera_obj.recording_settings.mode = RecordingMode.ALWAYS
     camera_obj.isp_settings.ir_led_mode = IRLEDMode.AUTO
 
@@ -228,14 +231,14 @@ async def test_select_setup_viewer(
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
 
 
-async def test_number_setup_camera_all(
+async def test_select_setup_camera_all(
     hass: HomeAssistant,
     camera: Camera,
 ):
-    """Test number entity setup for camera devices (all features)."""
+    """Test select entity setup for camera devices (all features)."""
 
     entity_registry = er.async_get(hass)
-    expected_values = ("Always", "Auto", "Default Message (Welcome)")
+    expected_values = ("Always", "Auto", "Default Message (Welcome)", "None")
 
     for index, description in enumerate(CAMERA_SELECTS):
         unique_id, entity_id = ids_from_device_description(
@@ -252,11 +255,11 @@ async def test_number_setup_camera_all(
         assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
 
 
-async def test_number_setup_camera_none(
+async def test_select_setup_camera_none(
     hass: HomeAssistant,
     camera_none: Camera,
 ):
-    """Test number entity setup for camera devices (no features)."""
+    """Test select entity setup for camera devices (no features)."""
 
     entity_registry = er.async_get(hass)
     expected_values = ("Always", "Auto", "Default Message (Welcome)")
@@ -332,6 +335,9 @@ async def test_select_update_doorbell_settings(
 
     expected_length += 1
     new_nvr = copy(mock_entry.api.bootstrap.nvr)
+    new_nvr.__fields__["update_all_messages"] = Mock()
+    new_nvr.update_all_messages = Mock()
+
     new_nvr.doorbell_settings.all_messages = [
         *new_nvr.doorbell_settings.all_messages,
         DoorbellMessage(
@@ -506,6 +512,10 @@ async def test_select_set_option_camera_doorbell_custom(
         blocking=True,
     )
 
+    camera.set_lcd_text.assert_called_once_with(
+        DoorbellMessageType.CUSTOM_MESSAGE, text="Test"
+    )
+
 
 async def test_select_set_option_camera_doorbell_unifi(
     hass: HomeAssistant,
@@ -615,7 +625,7 @@ async def test_select_service_doorbell_invalid(
             blocking=True,
         )
 
-    camera.set_lcd_text.assert_not_called
+    assert not camera.set_lcd_text.called
 
 
 async def test_select_service_doorbell_success(

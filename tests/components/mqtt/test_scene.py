@@ -5,7 +5,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import scene
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON, STATE_UNKNOWN
 import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
 
@@ -19,6 +19,7 @@ from .test_common import (
     help_test_discovery_update,
     help_test_discovery_update_unchanged,
     help_test_reloadable,
+    help_test_reloadable_late,
     help_test_unique_id,
 )
 
@@ -34,7 +35,7 @@ DEFAULT_CONFIG = {
 
 async def test_sending_mqtt_commands(hass, mqtt_mock):
     """Test the sending MQTT commands."""
-    fake_state = ha.State("scene.test", scene.STATE)
+    fake_state = ha.State("scene.test", STATE_UNKNOWN)
 
     with patch(
         "homeassistant.helpers.restore_state.RestoreEntity.async_get_last_state",
@@ -55,7 +56,7 @@ async def test_sending_mqtt_commands(hass, mqtt_mock):
         await hass.async_block_till_done()
 
     state = hass.states.get("scene.test")
-    assert state.state == scene.STATE
+    assert state.state == STATE_UNKNOWN
 
     data = {ATTR_ENTITY_ID: "scene.test"}
     await hass.services.async_call(scene.DOMAIN, SERVICE_TURN_ON, data, blocking=True)
@@ -183,3 +184,10 @@ async def test_reloadable(hass, mqtt_mock, caplog, tmp_path):
     domain = scene.DOMAIN
     config = DEFAULT_CONFIG[domain]
     await help_test_reloadable(hass, mqtt_mock, caplog, tmp_path, domain, config)
+
+
+async def test_reloadable_late(hass, mqtt_client_mock, caplog, tmp_path):
+    """Test reloading the MQTT platform with late entry setup."""
+    domain = scene.DOMAIN
+    config = DEFAULT_CONFIG[domain]
+    await help_test_reloadable_late(hass, caplog, tmp_path, domain, config)

@@ -98,6 +98,10 @@ class HumidifierDehumidifier(HomeAccessory):
             serv_humidifier_dehumidifier.configure_char(
                 CHAR_TARGET_HUMIDIFIER_DEHUMIDIFIER,
                 value=self._hk_device_class,
+                properties={
+                    PROP_MIN_VALUE: self._hk_device_class,
+                    PROP_MAX_VALUE: self._hk_device_class,
+                },
                 valid_values={
                     HC_HASS_TO_HOMEKIT_DEVICE_CLASS_NAME[
                         device_class
@@ -186,7 +190,7 @@ class HumidifierDehumidifier(HomeAccessory):
                 )
                 self.char_current_humidity.set_value(current_humidity)
         except ValueError as ex:
-            _LOGGER.error(
+            _LOGGER.debug(
                 "%s: Unable to update from linked humidity sensor %s: %s",
                 self.entity_id,
                 self.linked_humidity_sensor,

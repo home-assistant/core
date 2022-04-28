@@ -3,11 +3,7 @@ from __future__ import annotations
 
 from fjaraskupan import COMMAND_LIGHT_ON_OFF, Device, State
 
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    COLOR_MODE_BRIGHTNESS,
-    LightEntity,
-)
+from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo, Entity
@@ -37,7 +33,7 @@ async def async_setup_entry(
     async_setup_entry_platform(hass, config_entry, async_add_entities, _constructor)
 
 
-class Light(CoordinatorEntity[State], LightEntity):
+class Light(CoordinatorEntity[DataUpdateCoordinator[State]], LightEntity):
     """Light device."""
 
     def __init__(
@@ -49,8 +45,8 @@ class Light(CoordinatorEntity[State], LightEntity):
         """Init light entity."""
         super().__init__(coordinator)
         self._device = device
-        self._attr_color_mode = COLOR_MODE_BRIGHTNESS
-        self._attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
+        self._attr_color_mode = ColorMode.BRIGHTNESS
+        self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
         self._attr_unique_id = device.address
         self._attr_device_info = device_info
         self._attr_name = device_info["name"]

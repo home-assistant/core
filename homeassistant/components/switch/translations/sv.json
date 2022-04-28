@@ -10,6 +10,7 @@
             "is_on": "{entity_name} \u00e4r p\u00e5"
         },
         "trigger_type": {
+            "toggled": "{entity_name} slogs p\u00e5 eller av",
             "turned_off": "{entity_name} st\u00e4ngdes av",
             "turned_on": "{entity_name} slogs p\u00e5"
         }

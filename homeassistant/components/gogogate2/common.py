@@ -66,7 +66,7 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator):
         self.api = api
 
 
-class GoGoGate2Entity(CoordinatorEntity):
+class GoGoGate2Entity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
     """Base class for gogogate2 entities."""
 
     def __init__(

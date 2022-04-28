@@ -8,7 +8,11 @@
             "cannot_connect": "Failed to connect",
             "select_single": "Select one option."
         },
+        "flow_title": "{name}",
         "step": {
+            "confirm_usb": {
+                "description": "Do you want to setup {name}?"
+            },
             "hubv1": {
                 "data": {
                     "host": "IP Address",

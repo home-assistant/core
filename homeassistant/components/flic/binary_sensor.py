@@ -4,14 +4,7 @@ from __future__ import annotations
 import logging
 import threading
 
-from pyflic import (
-    ButtonConnectionChannel,
-    ClickType,
-    ConnectionStatus,
-    FlicClient,
-    ScanWizard,
-    ScanWizardResult,
-)
+import pyflic
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
@@ -24,6 +17,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -75,7 +69,7 @@ def setup_platform(
     discovery = config.get(CONF_DISCOVERY)
 
     try:
-        client = FlicClient(host, port)
+        client = pyflic.FlicClient(host, port)
     except ConnectionRefusedError:
         _LOGGER.error("Failed to connect to flic server")
         return
@@ -105,13 +99,13 @@ def setup_platform(
 
 def start_scanning(config, add_entities, client):
     """Start a new flic client for scanning and connecting to new buttons."""
-    scan_wizard = ScanWizard()
+    scan_wizard = pyflic.ScanWizard()
 
     def scan_completed_callback(scan_wizard, result, address, name):
         """Restart scan wizard to constantly check for new buttons."""
-        if result == ScanWizardResult.WizardSuccess:
+        if result == pyflic.ScanWizardResult.WizardSuccess:
             _LOGGER.info("Found new button %s", address)
-        elif result != ScanWizardResult.WizardFailedTimeout:
+        elif result != pyflic.ScanWizardResult.WizardFailedTimeout:
             _LOGGER.warning(
                 "Failed to connect to button %s. Reason: %s", address, result
             )
@@ -139,16 +133,17 @@ class FlicButton(BinarySensorEntity):
     def __init__(self, hass, client, address, timeout, ignored_click_types):
         """Initialize the flic button."""
 
+        self._attr_unique_id = format_mac(address)
         self._hass = hass
         self._address = address
         self._timeout = timeout
         self._is_down = False
         self._ignored_click_types = ignored_click_types or []
         self._hass_click_types = {
-            ClickType.ButtonClick: CLICK_TYPE_SINGLE,
-            ClickType.ButtonSingleClick: CLICK_TYPE_SINGLE,
-            ClickType.ButtonDoubleClick: CLICK_TYPE_DOUBLE,
-            ClickType.ButtonHold: CLICK_TYPE_HOLD,
+            pyflic.ClickType.ButtonClick: CLICK_TYPE_SINGLE,
+            pyflic.ClickType.ButtonSingleClick: CLICK_TYPE_SINGLE,
+            pyflic.ClickType.ButtonDoubleClick: CLICK_TYPE_DOUBLE,
+            pyflic.ClickType.ButtonHold: CLICK_TYPE_HOLD,
         }
 
         self._channel = self._create_channel()
@@ -156,7 +151,7 @@ class FlicButton(BinarySensorEntity):
 
     def _create_channel(self):
         """Create a new connection channel to the button."""
-        channel = ButtonConnectionChannel(self._address)
+        channel = pyflic.ButtonConnectionChannel(self._address)
         channel.on_button_up_or_down = self._on_up_down
 
         # If all types of clicks should be ignored, skip registering callbacks
@@ -225,7 +220,7 @@ class FlicButton(BinarySensorEntity):
         if was_queued and self._queued_event_check(click_type, time_diff):
             return
 
-        self._is_down = click_type == ClickType.ButtonDown
+        self._is_down = click_type == pyflic.ClickType.ButtonDown
         self.schedule_update_ha_state()
 
     def _on_click(self, channel, click_type, was_queued, time_diff):
@@ -251,7 +246,7 @@ class FlicButton(BinarySensorEntity):
 
     def _connection_status_changed(self, channel, connection_status, disconnect_reason):
         """Remove device, if button disconnects."""
-        if connection_status == ConnectionStatus.Disconnected:
+        if connection_status == pyflic.ConnectionStatus.Disconnected:
             _LOGGER.warning(
                 "Button (%s) disconnected. Reason: %s", self.address, disconnect_reason
             )

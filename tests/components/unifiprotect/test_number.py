@@ -6,12 +6,12 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, Mock
 
 import pytest
-from pyunifiprotect.data import Camera, Light
+from pyunifiprotect.data import Camera, Doorlock, Light
 
 from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
 from homeassistant.components.unifiprotect.number import (
-    _KEY_DURATION,
     CAMERA_NUMBERS,
+    DOORLOCK_NUMBERS,
     LIGHT_NUMBERS,
     ProtectNumberEntityDescription,
 )
@@ -71,7 +71,6 @@ async def camera_fixture(
     camera_obj.channels[1]._api = mock_entry.api
     camera_obj.channels[2]._api = mock_entry.api
     camera_obj.name = "Test Camera"
-    camera_obj.feature_flags.has_chime = True
     camera_obj.feature_flags.can_optical_zoom = True
     camera_obj.feature_flags.has_mic = True
     # has_wdr is an the inverse of has HDR
@@ -79,7 +78,6 @@ async def camera_fixture(
     camera_obj.isp_settings.wdr = 0
     camera_obj.mic_volume = 0
     camera_obj.isp_settings.zoom_position = 0
-    camera_obj.chime_duration = timedelta(seconds=0)
 
     mock_entry.api.bootstrap.reset_objects()
     mock_entry.api.bootstrap.cameras = {
@@ -89,11 +87,40 @@ async def camera_fixture(
     await hass.config_entries.async_setup(mock_entry.entry.entry_id)
     await hass.async_block_till_done()
 
-    assert_entity_counts(hass, Platform.NUMBER, 4, 4)
+    assert_entity_counts(hass, Platform.NUMBER, 3, 3)
 
     yield camera_obj
 
     Camera.__config__.validate_assignment = True
+
+
+@pytest.fixture(name="doorlock")
+async def doorlock_fixture(
+    hass: HomeAssistant, mock_entry: MockEntityFixture, mock_doorlock: Doorlock
+):
+    """Fixture for a single doorlock for testing the number platform."""
+
+    # disable pydantic validation so mocking can happen
+    Doorlock.__config__.validate_assignment = False
+
+    lock_obj = mock_doorlock.copy(deep=True)
+    lock_obj._api = mock_entry.api
+    lock_obj.name = "Test Lock"
+    lock_obj.auto_close_time = timedelta(seconds=45)
+
+    mock_entry.api.bootstrap.reset_objects()
+    mock_entry.api.bootstrap.doorlocks = {
+        lock_obj.id: lock_obj,
+    }
+
+    await hass.config_entries.async_setup(mock_entry.entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert_entity_counts(hass, Platform.NUMBER, 1, 1)
+
+    yield lock_obj
+
+    Doorlock.__config__.validate_assignment = True
 
 
 async def test_number_setup_light(
@@ -153,7 +180,6 @@ async def test_number_setup_camera_none(
     camera_obj.channels[1]._api = mock_entry.api
     camera_obj.channels[2]._api = mock_entry.api
     camera_obj.name = "Test Camera"
-    camera_obj.feature_flags.has_chime = False
     camera_obj.feature_flags.can_optical_zoom = False
     camera_obj.feature_flags.has_mic = False
     # has_wdr is an the inverse of has HDR
@@ -199,17 +225,14 @@ async def test_number_setup_camera_missing_attr(
     assert_entity_counts(hass, Platform.NUMBER, 0, 0)
 
 
-@pytest.mark.parametrize("description", LIGHT_NUMBERS)
-async def test_switch_light_simple(
-    hass: HomeAssistant, light: Light, description: ProtectNumberEntityDescription
-):
-    """Tests all simple switches for lights."""
+async def test_number_light_sensitivity(hass: HomeAssistant, light: Light):
+    """Test sensitivity number entity for lights."""
 
-    assert description.ufp_set_function is not None
+    description = LIGHT_NUMBERS[0]
+    assert description.ufp_set_method is not None
 
-    light.__fields__[description.ufp_set_function] = Mock()
-    setattr(light, description.ufp_set_function, AsyncMock())
-    set_method = getattr(light, description.ufp_set_function)
+    light.__fields__["set_sensitivity"] = Mock()
+    light.set_sensitivity = AsyncMock()
 
     _, entity_id = ids_from_device_description(Platform.NUMBER, light, description)
 
@@ -217,23 +240,37 @@ async def test_switch_light_simple(
         "number", "set_value", {ATTR_ENTITY_ID: entity_id, "value": 15.0}, blocking=True
     )
 
-    if description.key == _KEY_DURATION:
-        set_method.assert_called_once_with(timedelta(seconds=15.0))
-    else:
-        set_method.assert_called_once_with(15.0)
+    light.set_sensitivity.assert_called_once_with(15.0)
+
+
+async def test_number_light_duration(hass: HomeAssistant, light: Light):
+    """Test auto-shutoff duration number entity for lights."""
+
+    description = LIGHT_NUMBERS[1]
+
+    light.__fields__["set_duration"] = Mock()
+    light.set_duration = AsyncMock()
+
+    _, entity_id = ids_from_device_description(Platform.NUMBER, light, description)
+
+    await hass.services.async_call(
+        "number", "set_value", {ATTR_ENTITY_ID: entity_id, "value": 15.0}, blocking=True
+    )
+
+    light.set_duration.assert_called_once_with(timedelta(seconds=15.0))
 
 
 @pytest.mark.parametrize("description", CAMERA_NUMBERS)
-async def test_switch_camera_simple(
+async def test_number_camera_simple(
     hass: HomeAssistant, camera: Camera, description: ProtectNumberEntityDescription
 ):
-    """Tests all simple switches for cameras."""
+    """Tests all simple numbers for cameras."""
 
-    assert description.ufp_set_function is not None
+    assert description.ufp_set_method is not None
 
-    camera.__fields__[description.ufp_set_function] = Mock()
-    setattr(camera, description.ufp_set_function, AsyncMock())
-    set_method = getattr(camera, description.ufp_set_function)
+    camera.__fields__[description.ufp_set_method] = Mock()
+    setattr(camera, description.ufp_set_method, AsyncMock())
+    set_method = getattr(camera, description.ufp_set_method)
 
     _, entity_id = ids_from_device_description(Platform.NUMBER, camera, description)
 
@@ -241,7 +278,21 @@ async def test_switch_camera_simple(
         "number", "set_value", {ATTR_ENTITY_ID: entity_id, "value": 1.0}, blocking=True
     )
 
-    if description.key == _KEY_DURATION:
-        set_method.assert_called_once_with(timedelta(seconds=1.0))
-    else:
-        set_method.assert_called_once_with(1.0)
+    set_method.assert_called_once_with(1.0)
+
+
+async def test_number_lock_auto_close(hass: HomeAssistant, doorlock: Doorlock):
+    """Test auto-lock timeout for locks."""
+
+    description = DOORLOCK_NUMBERS[0]
+
+    doorlock.__fields__["set_auto_close_time"] = Mock()
+    doorlock.set_auto_close_time = AsyncMock()
+
+    _, entity_id = ids_from_device_description(Platform.NUMBER, doorlock, description)
+
+    await hass.services.async_call(
+        "number", "set_value", {ATTR_ENTITY_ID: entity_id, "value": 15.0}, blocking=True
+    )
+
+    doorlock.set_auto_close_time.assert_called_once_with(timedelta(seconds=15.0))

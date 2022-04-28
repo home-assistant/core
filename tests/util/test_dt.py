@@ -9,8 +9,11 @@ DEFAULT_TIME_ZONE = dt_util.DEFAULT_TIME_ZONE
 TEST_TIME_ZONE = "America/Los_Angeles"
 
 
+@pytest.fixture(autouse=True)
 def teardown():
     """Stop everything that was started."""
+    yield
+
     dt_util.set_default_time_zone(DEFAULT_TIME_ZONE)
 
 

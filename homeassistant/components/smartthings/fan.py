@@ -6,7 +6,7 @@ import math
 
 from pysmartthings import Capability
 
-from homeassistant.components.fan import SUPPORT_SET_SPEED, FanEntity
+from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -44,12 +44,15 @@ def get_capabilities(capabilities: Sequence[str]) -> Sequence[str] | None:
     # Must have switch and fan_speed
     if all(capability in capabilities for capability in supported):
         return supported
+    return None
 
 
 class SmartThingsFan(SmartThingsEntity, FanEntity):
     """Define a SmartThings Fan."""
 
-    async def async_set_percentage(self, percentage: int) -> None:
+    _attr_supported_features = FanEntityFeature.SET_SPEED
+
+    async def async_set_percentage(self, percentage: int | None) -> None:
         """Set the speed percentage of the fan."""
         if percentage is None:
             await self._device.switch_on(set_status=True)
@@ -64,9 +67,8 @@ class SmartThingsFan(SmartThingsEntity, FanEntity):
 
     async def async_turn_on(
         self,
-        speed: str = None,
-        percentage: int = None,
-        preset_mode: str = None,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
         **kwargs,
     ) -> None:
         """Turn the fan on."""
@@ -93,8 +95,3 @@ class SmartThingsFan(SmartThingsEntity, FanEntity):
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
         return int_states_in_range(SPEED_RANGE)
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return SUPPORT_SET_SPEED

@@ -6,7 +6,7 @@
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
             "invalid_account": "L'ID de compte doit \u00eatre un num\u00e9ro \u00e0 9 chiffres",
-            "invalid_auth": "Authentification invalide",
+            "invalid_auth": "Authentification non valide",
             "unknown": "Erreur inattendue"
         },
         "step": {

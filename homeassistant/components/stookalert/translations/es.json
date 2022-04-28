@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El servicio ya est\u00e1 configurado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "province": "Provincia"
+                }
+            }
+        }
+    }
+}

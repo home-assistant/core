@@ -1,11 +1,10 @@
 """The iCloud component."""
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
 
 from .account import IcloudAccount
@@ -13,9 +12,6 @@ from .const import (
     CONF_GPS_ACCURACY_THRESHOLD,
     CONF_MAX_INTERVAL,
     CONF_WITH_FAMILY,
-    DEFAULT_GPS_ACCURACY_THRESHOLD,
-    DEFAULT_MAX_INTERVAL,
-    DEFAULT_WITH_FAMILY,
     DOMAIN,
     PLATFORMS,
     STORAGE_KEY,
@@ -67,37 +63,7 @@ SERVICE_SCHEMA_LOST_DEVICE = vol.Schema(
     }
 )
 
-ACCOUNT_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_WITH_FAMILY, default=DEFAULT_WITH_FAMILY): cv.boolean,
-        vol.Optional(CONF_MAX_INTERVAL, default=DEFAULT_MAX_INTERVAL): cv.positive_int,
-        vol.Optional(
-            CONF_GPS_ACCURACY_THRESHOLD, default=DEFAULT_GPS_ACCURACY_THRESHOLD
-        ): cv.positive_int,
-    }
-)
-
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema(vol.All(cv.ensure_list, [ACCOUNT_SCHEMA]))},
-    extra=vol.ALLOW_EXTRA,
-)
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up iCloud from legacy config file."""
-    if (conf := config.get(DOMAIN)) is None:
-        return True
-
-    for account_conf in conf:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=account_conf
-            )
-        )
-
-    return True
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

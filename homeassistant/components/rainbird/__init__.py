@@ -6,7 +6,6 @@ import logging
 from pyrainbird import RainbirdController
 import voluptuous as vol
 
-from homeassistant.components import binary_sensor, sensor, switch
 from homeassistant.components.binary_sensor import BinarySensorEntityDescription
 from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.const import (
@@ -14,6 +13,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
     CONF_TRIGGER_TIME,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
@@ -22,7 +22,7 @@ from homeassistant.helpers.typing import ConfigType
 
 CONF_ZONES = "zones"
 
-PLATFORMS = [switch.DOMAIN, sensor.DOMAIN, binary_sensor.DOMAIN]
+PLATFORMS = [Platform.SWITCH, Platform.SENSOR, Platform.BINARY_SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 

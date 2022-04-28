@@ -1,4 +1,6 @@
 """Support for Xiaomi Mi WiFi Repeater 2."""
+from __future__ import annotations
+
 import logging
 
 from miio import DeviceException, WifiRepeater
@@ -10,7 +12,9 @@ from homeassistant.components.device_tracker import (
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST, CONF_TOKEN
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,7 +26,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def get_scanner(hass, config):
+def get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner | None:
     """Return a Xiaomi MiIO device scanner."""
     scanner = None
     host = config[DOMAIN][CONF_HOST]

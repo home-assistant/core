@@ -6,7 +6,7 @@ import logging
 from pysmarty import Smarty
 import voluptuous as vol
 
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_HOST, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
@@ -54,9 +54,9 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     smarty.update()
 
     # Load platforms
-    discovery.load_platform(hass, "fan", DOMAIN, {}, config)
-    discovery.load_platform(hass, "sensor", DOMAIN, {}, config)
-    discovery.load_platform(hass, "binary_sensor", DOMAIN, {}, config)
+    discovery.load_platform(hass, Platform.FAN, DOMAIN, {}, config)
+    discovery.load_platform(hass, Platform.SENSOR, DOMAIN, {}, config)
+    discovery.load_platform(hass, Platform.BINARY_SENSOR, DOMAIN, {}, config)
 
     def poll_device_update(event_time):
         """Update Smarty device."""

@@ -69,7 +69,8 @@
                 "data": {
                     "allow_hue_groups": "Zezwalaj na grupowanie Hue",
                     "allow_hue_scenes": "Zezwalaj na sceny dla Hue",
-                    "allow_unreachable": "Zezwalaj nieosi\u0105galnym \u017car\u00f3wkom na poprawne raportowanie ich stanu"
+                    "allow_unreachable": "Zezwalaj nieosi\u0105galnym \u017car\u00f3wkom na poprawne raportowanie ich stanu",
+                    "ignore_availability": "Ignoruj stan po\u0142\u0105czenia dla danych urz\u0105dze\u0144"
                 }
             }
         }

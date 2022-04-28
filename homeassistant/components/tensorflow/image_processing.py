@@ -14,13 +14,16 @@ import voluptuous as vol
 
 from homeassistant.components.image_processing import (
     CONF_CONFIDENCE,
-    CONF_ENTITY_ID,
-    CONF_NAME,
-    CONF_SOURCE,
     PLATFORM_SCHEMA,
     ImageProcessingEntity,
 )
-from homeassistant.const import EVENT_HOMEASSISTANT_START
+from homeassistant.const import (
+    CONF_ENTITY_ID,
+    CONF_MODEL,
+    CONF_NAME,
+    CONF_SOURCE,
+    EVENT_HOMEASSISTANT_START,
+)
 from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
@@ -47,7 +50,6 @@ CONF_GRAPH = "graph"
 CONF_LABELS = "labels"
 CONF_LABEL_OFFSET = "label_offset"
 CONF_LEFT = "left"
-CONF_MODEL = "model"
 CONF_MODEL_DIR = "model_dir"
 CONF_RIGHT = "right"
 CONF_TOP = "top"

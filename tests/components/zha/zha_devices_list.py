@@ -181,6 +181,8 @@ DEVICES = [
             "sensor.centralite_3210_l_77665544_electrical_measurement_apparent_power",
             "sensor.centralite_3210_l_77665544_electrical_measurement_rms_current",
             "sensor.centralite_3210_l_77665544_electrical_measurement_rms_voltage",
+            "sensor.centralite_3210_l_77665544_electrical_measurement_ac_frequency",
+            "sensor.centralite_3210_l_77665544_electrical_measurement_power_factor",
             "sensor.centralite_3210_l_77665544_smartenergy_metering",
             "sensor.centralite_3210_l_77665544_smartenergy_metering_summation_delivered",
             "switch.centralite_3210_l_77665544_on_off",
@@ -217,6 +219,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSVoltage",
                 DEV_SIG_ENT_MAP_ID: "sensor.centralite_3210_l_77665544_electrical_measurement_rms_voltage",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-2820-ac_frequency"): {
+                DEV_SIG_CHANNELS: ["electrical_measurement"],
+                DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementFrequency",
+                DEV_SIG_ENT_MAP_ID: "sensor.centralite_3210_l_77665544_electrical_measurement_ac_frequency",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-2820-power_factor"): {
+                DEV_SIG_CHANNELS: ["electrical_measurement"],
+                DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementPowerFactor",
+                DEV_SIG_ENT_MAP_ID: "sensor.centralite_3210_l_77665544_electrical_measurement_power_factor",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1794"): {
                 DEV_SIG_CHANNELS: ["smartenergy_metering"],
@@ -2231,18 +2243,26 @@ DEVICES = [
             "sensor.lumi_lumi_plug_maus01_77665544_electrical_measurement_apparent_power",
             "sensor.lumi_lumi_plug_maus01_77665544_electrical_measurement_rms_current",
             "sensor.lumi_lumi_plug_maus01_77665544_electrical_measurement_rms_voltage",
+            "sensor.lumi_lumi_plug_maus01_77665544_electrical_measurement_ac_frequency",
+            "sensor.lumi_lumi_plug_maus01_77665544_electrical_measurement_power_factor",
             "sensor.lumi_lumi_plug_maus01_77665544_analog_input",
             "sensor.lumi_lumi_plug_maus01_77665544_analog_input_2",
             "binary_sensor.lumi_lumi_plug_maus01_77665544_binary_input",
             "switch.lumi_lumi_plug_maus01_77665544_on_off",
             "sensor.lumi_lumi_plug_maus01_77665544_basic_rssi",
             "sensor.lumi_lumi_plug_maus01_77665544_basic_lqi",
+            "sensor.lumi_lumi_plug_maus01_77665544_device_temperature",
         ],
         DEV_SIG_ENT_MAP: {
             ("switch", "00:11:22:33:44:55:66:77-1"): {
                 DEV_SIG_CHANNELS: ["on_off"],
                 DEV_SIG_ENT_MAP_CLASS: "Switch",
                 DEV_SIG_ENT_MAP_ID: "switch.lumi_lumi_plug_maus01_77665544_on_off",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-2"): {
+                DEV_SIG_CHANNELS: ["device_temperature"],
+                DEV_SIG_ENT_MAP_CLASS: "DeviceTemperature",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_plug_maus01_77665544_device_temperature",
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
@@ -2268,6 +2288,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSVoltage",
                 DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_plug_maus01_77665544_electrical_measurement_rms_voltage",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-2820-ac_frequency"): {
+                DEV_SIG_CHANNELS: ["electrical_measurement"],
+                DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementFrequency",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_plug_maus01_77665544_electrical_measurement_ac_frequency",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-2820-power_factor"): {
+                DEV_SIG_CHANNELS: ["electrical_measurement"],
+                DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementPowerFactor",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_plug_maus01_77665544_electrical_measurement_power_factor",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
@@ -2326,14 +2356,22 @@ DEVICES = [
             "sensor.lumi_lumi_relay_c2acn01_77665544_electrical_measurement_apparent_power",
             "sensor.lumi_lumi_relay_c2acn01_77665544_electrical_measurement_rms_current",
             "sensor.lumi_lumi_relay_c2acn01_77665544_electrical_measurement_rms_voltage",
+            "sensor.lumi_lumi_relay_c2acn01_77665544_electrical_measurement_ac_frequency",
+            "sensor.lumi_lumi_relay_c2acn01_77665544_electrical_measurement_power_factor",
             "sensor.lumi_lumi_relay_c2acn01_77665544_basic_rssi",
             "sensor.lumi_lumi_relay_c2acn01_77665544_basic_lqi",
+            "sensor.lumi_lumi_relay_c2acn01_77665544_device_temperature",
         ],
         DEV_SIG_ENT_MAP: {
             ("light", "00:11:22:33:44:55:66:77-1"): {
                 DEV_SIG_CHANNELS: ["on_off"],
                 DEV_SIG_ENT_MAP_CLASS: "Light",
                 DEV_SIG_ENT_MAP_ID: "light.lumi_lumi_relay_c2acn01_77665544_on_off",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-2"): {
+                DEV_SIG_CHANNELS: ["device_temperature"],
+                DEV_SIG_ENT_MAP_CLASS: "DeviceTemperature",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_relay_c2acn01_77665544_device_temperature",
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
@@ -2359,6 +2397,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSVoltage",
                 DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_relay_c2acn01_77665544_electrical_measurement_rms_voltage",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-2820-ac_frequency"): {
+                DEV_SIG_CHANNELS: ["electrical_measurement"],
+                DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementFrequency",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_relay_c2acn01_77665544_electrical_measurement_ac_frequency",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-2820-power_factor"): {
+                DEV_SIG_CHANNELS: ["electrical_measurement"],
+                DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementPowerFactor",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_relay_c2acn01_77665544_electrical_measurement_power_factor",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
@@ -3453,7 +3501,7 @@ DEVICES = [
             1: {
                 SIG_EP_TYPE: 1026,
                 DEV_SIG_EP_ID: 1,
-                SIG_EP_INPUT: [0, 1, 3, 1280],
+                SIG_EP_INPUT: [0, 1, 2, 3, 1280],
                 SIG_EP_OUTPUT: [25],
                 SIG_EP_PROFILE: 260,
             },
@@ -3465,12 +3513,18 @@ DEVICES = [
             "binary_sensor.lumi_lumi_sensor_wleak_aq1_77665544_ias_zone",
             "sensor.lumi_lumi_sensor_wleak_aq1_77665544_basic_rssi",
             "sensor.lumi_lumi_sensor_wleak_aq1_77665544_basic_lqi",
+            "sensor.lumi_lumi_sensor_wleak_aq1_77665544_device_temperature",
         ],
         DEV_SIG_ENT_MAP: {
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
                 DEV_SIG_CHANNELS: ["ias_zone"],
                 DEV_SIG_ENT_MAP_CLASS: "IASZone",
                 DEV_SIG_ENT_MAP_ID: "binary_sensor.lumi_lumi_sensor_wleak_aq1_77665544_ias_zone",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-2"): {
+                DEV_SIG_CHANNELS: ["device_temperature"],
+                DEV_SIG_ENT_MAP_CLASS: "DeviceTemperature",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_sensor_wleak_aq1_77665544_device_temperature",
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
@@ -3916,6 +3970,8 @@ DEVICES = [
             "sensor.osram_lightify_rt_tunable_white_77665544_electrical_measurement_apparent_power",
             "sensor.osram_lightify_rt_tunable_white_77665544_electrical_measurement_rms_current",
             "sensor.osram_lightify_rt_tunable_white_77665544_electrical_measurement_rms_voltage",
+            "sensor.osram_lightify_rt_tunable_white_77665544_electrical_measurement_ac_frequency",
+            "sensor.osram_lightify_rt_tunable_white_77665544_electrical_measurement_power_factor",
             "sensor.osram_lightify_rt_tunable_white_77665544_basic_rssi",
             "sensor.osram_lightify_rt_tunable_white_77665544_basic_lqi",
         ],
@@ -3950,6 +4006,16 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSVoltage",
                 DEV_SIG_ENT_MAP_ID: "sensor.osram_lightify_rt_tunable_white_77665544_electrical_measurement_rms_voltage",
             },
+            ("sensor", "00:11:22:33:44:55:66:77-3-2820-ac_frequency"): {
+                DEV_SIG_CHANNELS: ["electrical_measurement"],
+                DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementFrequency",
+                DEV_SIG_ENT_MAP_ID: "sensor.osram_lightify_rt_tunable_white_77665544_electrical_measurement_ac_frequency",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-3-2820-power_factor"): {
+                DEV_SIG_CHANNELS: ["electrical_measurement"],
+                DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementPowerFactor",
+                DEV_SIG_ENT_MAP_ID: "sensor.osram_lightify_rt_tunable_white_77665544_electrical_measurement_power_factor",
+            },
             ("sensor", "00:11:22:33:44:55:66:77-3-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
@@ -3983,6 +4049,8 @@ DEVICES = [
             "sensor.osram_plug_01_77665544_electrical_measurement_apparent_power",
             "sensor.osram_plug_01_77665544_electrical_measurement_rms_current",
             "sensor.osram_plug_01_77665544_electrical_measurement_rms_voltage",
+            "sensor.osram_plug_01_77665544_electrical_measurement_ac_frequency",
+            "sensor.osram_plug_01_77665544_electrical_measurement_power_factor",
             "switch.osram_plug_01_77665544_on_off",
             "sensor.osram_plug_01_77665544_basic_rssi",
             "sensor.osram_plug_01_77665544_basic_lqi",
@@ -4017,6 +4085,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSVoltage",
                 DEV_SIG_ENT_MAP_ID: "sensor.osram_plug_01_77665544_electrical_measurement_rms_voltage",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-3-2820-ac_frequency"): {
+                DEV_SIG_CHANNELS: ["electrical_measurement"],
+                DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementFrequency",
+                DEV_SIG_ENT_MAP_ID: "sensor.osram_plug_01_77665544_electrical_measurement_ac_frequency",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-3-2820-power_factor"): {
+                DEV_SIG_CHANNELS: ["electrical_measurement"],
+                DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementPowerFactor",
+                DEV_SIG_ENT_MAP_ID: "sensor.osram_plug_01_77665544_electrical_measurement_power_factor",
             },
             ("sensor", "00:11:22:33:44:55:66:77-3-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
@@ -4375,6 +4453,8 @@ DEVICES = [
             "sensor.securifi_ltd_unk_model_77665544_electrical_measurement_apparent_power",
             "sensor.securifi_ltd_unk_model_77665544_electrical_measurement_rms_current",
             "sensor.securifi_ltd_unk_model_77665544_electrical_measurement_rms_voltage",
+            "sensor.securifi_ltd_unk_model_77665544_electrical_measurement_ac_frequency",
+            "sensor.securifi_ltd_unk_model_77665544_electrical_measurement_power_factor",
             "switch.securifi_ltd_unk_model_77665544_on_off",
             "sensor.securifi_ltd_unk_model_77665544_basic_rssi",
             "sensor.securifi_ltd_unk_model_77665544_basic_lqi",
@@ -4404,6 +4484,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSVoltage",
                 DEV_SIG_ENT_MAP_ID: "sensor.securifi_ltd_unk_model_77665544_electrical_measurement_rms_voltage",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-2820-ac_frequency"): {
+                DEV_SIG_CHANNELS: ["electrical_measurement"],
+                DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementFrequency",
+                DEV_SIG_ENT_MAP_ID: "sensor.securifi_ltd_unk_model_77665544_electrical_measurement_ac_frequency",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-2820-power_factor"): {
+                DEV_SIG_CHANNELS: ["electrical_measurement"],
+                DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementPowerFactor",
+                DEV_SIG_ENT_MAP_ID: "sensor.securifi_ltd_unk_model_77665544_electrical_measurement_power_factor",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
@@ -4506,6 +4596,8 @@ DEVICES = [
             "sensor.sercomm_corp_sz_esw01_77665544_electrical_measurement_apparent_power",
             "sensor.sercomm_corp_sz_esw01_77665544_electrical_measurement_rms_current",
             "sensor.sercomm_corp_sz_esw01_77665544_electrical_measurement_rms_voltage",
+            "sensor.sercomm_corp_sz_esw01_77665544_electrical_measurement_ac_frequency",
+            "sensor.sercomm_corp_sz_esw01_77665544_electrical_measurement_power_factor",
             "sensor.sercomm_corp_sz_esw01_77665544_smartenergy_metering",
             "sensor.sercomm_corp_sz_esw01_77665544_smartenergy_metering_summation_delivered",
             "light.sercomm_corp_sz_esw01_77665544_on_off",
@@ -4542,6 +4634,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSVoltage",
                 DEV_SIG_ENT_MAP_ID: "sensor.sercomm_corp_sz_esw01_77665544_electrical_measurement_rms_voltage",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-2820-ac_frequency"): {
+                DEV_SIG_CHANNELS: ["electrical_measurement"],
+                DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementFrequency",
+                DEV_SIG_ENT_MAP_ID: "sensor.sercomm_corp_sz_esw01_77665544_electrical_measurement_ac_frequency",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-2820-power_factor"): {
+                DEV_SIG_CHANNELS: ["electrical_measurement"],
+                DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementPowerFactor",
+                DEV_SIG_ENT_MAP_ID: "sensor.sercomm_corp_sz_esw01_77665544_electrical_measurement_power_factor",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1794"): {
                 DEV_SIG_CHANNELS: ["smartenergy_metering"],
@@ -4648,6 +4750,8 @@ DEVICES = [
             "sensor.sinope_technologies_rm3250zb_77665544_electrical_measurement_apparent_power",
             "sensor.sinope_technologies_rm3250zb_77665544_electrical_measurement_rms_current",
             "sensor.sinope_technologies_rm3250zb_77665544_electrical_measurement_rms_voltage",
+            "sensor.sinope_technologies_rm3250zb_77665544_electrical_measurement_ac_frequency",
+            "sensor.sinope_technologies_rm3250zb_77665544_electrical_measurement_power_factor",
             "switch.sinope_technologies_rm3250zb_77665544_on_off",
             "sensor.sinope_technologies_rm3250zb_77665544_basic_rssi",
             "sensor.sinope_technologies_rm3250zb_77665544_basic_lqi",
@@ -4677,6 +4781,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSVoltage",
                 DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_rm3250zb_77665544_electrical_measurement_rms_voltage",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-2820-ac_frequency"): {
+                DEV_SIG_CHANNELS: ["electrical_measurement"],
+                DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementFrequency",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_rm3250zb_77665544_electrical_measurement_ac_frequency",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-2820-power_factor"): {
+                DEV_SIG_CHANNELS: ["electrical_measurement"],
+                DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementPowerFactor",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_rm3250zb_77665544_electrical_measurement_power_factor",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
@@ -4723,6 +4837,8 @@ DEVICES = [
             "sensor.sinope_technologies_th1123zb_77665544_electrical_measurement_apparent_power",
             "sensor.sinope_technologies_th1123zb_77665544_electrical_measurement_rms_current",
             "sensor.sinope_technologies_th1123zb_77665544_electrical_measurement_rms_voltage",
+            "sensor.sinope_technologies_th1123zb_77665544_electrical_measurement_ac_frequency",
+            "sensor.sinope_technologies_th1123zb_77665544_electrical_measurement_power_factor",
             "sensor.sinope_technologies_th1123zb_77665544_temperature",
             "sensor.sinope_technologies_th1123zb_77665544_thermostat_hvac_action",
             "climate.sinope_technologies_th1123zb_77665544_thermostat",
@@ -4759,6 +4875,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSVoltage",
                 DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1123zb_77665544_electrical_measurement_rms_voltage",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-2820-ac_frequency"): {
+                DEV_SIG_CHANNELS: ["electrical_measurement"],
+                DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementFrequency",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1123zb_77665544_electrical_measurement_ac_frequency",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-2820-power_factor"): {
+                DEV_SIG_CHANNELS: ["electrical_measurement"],
+                DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementPowerFactor",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1123zb_77665544_electrical_measurement_power_factor",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1026"): {
                 DEV_SIG_CHANNELS: ["temperature"],
@@ -4810,6 +4936,8 @@ DEVICES = [
             "sensor.sinope_technologies_th1124zb_77665544_electrical_measurement_apparent_power",
             "sensor.sinope_technologies_th1124zb_77665544_electrical_measurement_rms_current",
             "sensor.sinope_technologies_th1124zb_77665544_electrical_measurement_rms_voltage",
+            "sensor.sinope_technologies_th1124zb_77665544_electrical_measurement_ac_frequency",
+            "sensor.sinope_technologies_th1124zb_77665544_electrical_measurement_power_factor",
             "sensor.sinope_technologies_th1124zb_77665544_temperature",
             "sensor.sinope_technologies_th1124zb_77665544_thermostat_hvac_action",
             "climate.sinope_technologies_th1124zb_77665544_thermostat",
@@ -4846,6 +4974,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSVoltage",
                 DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1124zb_77665544_electrical_measurement_rms_voltage",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-2820-ac_frequency"): {
+                DEV_SIG_CHANNELS: ["electrical_measurement"],
+                DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementFrequency",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1124zb_77665544_electrical_measurement_ac_frequency",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-2820-power_factor"): {
+                DEV_SIG_CHANNELS: ["electrical_measurement"],
+                DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementPowerFactor",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1124zb_77665544_electrical_measurement_power_factor",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1026"): {
                 DEV_SIG_CHANNELS: ["temperature"],
@@ -4890,6 +5028,8 @@ DEVICES = [
             "sensor.smartthings_outletv4_77665544_electrical_measurement_apparent_power",
             "sensor.smartthings_outletv4_77665544_electrical_measurement_rms_current",
             "sensor.smartthings_outletv4_77665544_electrical_measurement_rms_voltage",
+            "sensor.smartthings_outletv4_77665544_electrical_measurement_ac_frequency",
+            "sensor.smartthings_outletv4_77665544_electrical_measurement_power_factor",
             "binary_sensor.smartthings_outletv4_77665544_binary_input",
             "switch.smartthings_outletv4_77665544_on_off",
             "sensor.smartthings_outletv4_77665544_basic_rssi",
@@ -4925,6 +5065,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSVoltage",
                 DEV_SIG_ENT_MAP_ID: "sensor.smartthings_outletv4_77665544_electrical_measurement_rms_voltage",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-2820-ac_frequency"): {
+                DEV_SIG_CHANNELS: ["electrical_measurement"],
+                DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementFrequency",
+                DEV_SIG_ENT_MAP_ID: "sensor.smartthings_outletv4_77665544_electrical_measurement_ac_frequency",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-2820-power_factor"): {
+                DEV_SIG_CHANNELS: ["electrical_measurement"],
+                DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementPowerFactor",
+                DEV_SIG_ENT_MAP_ID: "sensor.smartthings_outletv4_77665544_electrical_measurement_power_factor",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],

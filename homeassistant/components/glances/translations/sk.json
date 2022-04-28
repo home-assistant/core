@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "name": "N\u00e1zov",
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}

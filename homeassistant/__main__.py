@@ -4,14 +4,19 @@ from __future__ import annotations
 import argparse
 import faulthandler
 import os
-import platform
-import subprocess
 import sys
 import threading
 
 from .const import REQUIRED_PYTHON_VER, RESTART_EXIT_CODE, __version__
 
 FAULT_LOG_FILENAME = "home-assistant.log.fault"
+
+
+def validate_os() -> None:
+    """Validate that Home Assistant is running in a supported operating system."""
+    if not sys.platform.startswith(("darwin", "linux")):
+        print("Home Assistant only supports Linux, OSX and Windows using WSL")
+        sys.exit(1)
 
 
 def validate_python() -> None:
@@ -64,7 +69,8 @@ def get_arguments() -> argparse.Namespace:
     from . import config as config_util
 
     parser = argparse.ArgumentParser(
-        description="Home Assistant: Observe, Control, Automate."
+        description="Home Assistant: Observe, Control, Automate.",
+        epilog=f"If restart is requested, exits with code {RESTART_EXIT_CODE}",
     )
     parser.add_argument("--version", action="version", version=__version__)
     parser.add_argument(
@@ -92,12 +98,6 @@ def get_arguments() -> argparse.Namespace:
         "-v", "--verbose", action="store_true", help="Enable verbose logging to file."
     )
     parser.add_argument(
-        "--pid-file",
-        metavar="path_to_pid_file",
-        default=None,
-        help="Path to PID file useful for running as daemon",
-    )
-    parser.add_argument(
         "--log-rotate-days",
         type=int,
         default=None,
@@ -113,100 +113,17 @@ def get_arguments() -> argparse.Namespace:
         "--log-no-color", action="store_true", help="Disable color logs"
     )
     parser.add_argument(
-        "--runner",
-        action="store_true",
-        help=f"On restart exit with code {RESTART_EXIT_CODE}",
-    )
-    parser.add_argument(
         "--script", nargs=argparse.REMAINDER, help="Run one of the embedded scripts"
     )
-    if os.name == "posix":
-        parser.add_argument(
-            "--daemon", action="store_true", help="Run Home Assistant as daemon"
-        )
+    parser.add_argument(
+        "--ignore-os-check",
+        action="store_true",
+        help="Skips validation of operating system",
+    )
 
     arguments = parser.parse_args()
-    if os.name != "posix" or arguments.debug or arguments.runner:
-        setattr(arguments, "daemon", False)
 
     return arguments
-
-
-def daemonize() -> None:
-    """Move current process to daemon process."""
-    # Create first fork
-    if os.fork() > 0:
-        sys.exit(0)
-
-    # Decouple fork
-    os.setsid()
-
-    # Create second fork
-    if os.fork() > 0:
-        sys.exit(0)
-
-    # redirect standard file descriptors to devnull
-    # pylint: disable=consider-using-with
-    infd = open(os.devnull, encoding="utf8")
-    outfd = open(os.devnull, "a+", encoding="utf8")
-    sys.stdout.flush()
-    sys.stderr.flush()
-    os.dup2(infd.fileno(), sys.stdin.fileno())
-    os.dup2(outfd.fileno(), sys.stdout.fileno())
-    os.dup2(outfd.fileno(), sys.stderr.fileno())
-
-
-def check_pid(pid_file: str) -> None:
-    """Check that Home Assistant is not already running."""
-    # Check pid file
-    try:
-        with open(pid_file, encoding="utf8") as file:
-            pid = int(file.readline())
-    except OSError:
-        # PID File does not exist
-        return
-
-    # If we just restarted, we just found our own pidfile.
-    if pid == os.getpid():
-        return
-
-    try:
-        os.kill(pid, 0)
-    except OSError:
-        # PID does not exist
-        return
-    print("Fatal Error: Home Assistant is already running.")
-    sys.exit(1)
-
-
-def write_pid(pid_file: str) -> None:
-    """Create a PID File."""
-    pid = os.getpid()
-    try:
-        with open(pid_file, "w", encoding="utf8") as file:
-            file.write(str(pid))
-    except OSError:
-        print(f"Fatal Error: Unable to write pid file {pid_file}")
-        sys.exit(1)
-
-
-def closefds_osx(min_fd: int, max_fd: int) -> None:
-    """Make sure file descriptors get closed when we restart.
-
-    We cannot call close on guarded fds, and we cannot easily test which fds
-    are guarded. But we can set the close-on-exec flag on everything we want to
-    get rid of.
-    """
-    # pylint: disable=import-outside-toplevel
-    from fcntl import F_GETFD, F_SETFD, FD_CLOEXEC, fcntl
-
-    for _fd in range(min_fd, max_fd):
-        try:
-            val = fcntl(_fd, F_GETFD)
-            if not val & FD_CLOEXEC:
-                fcntl(_fd, F_SETFD, val | FD_CLOEXEC)
-        except OSError:
-            pass
 
 
 def cmdline() -> list[str]:
@@ -214,20 +131,13 @@ def cmdline() -> list[str]:
     if os.path.basename(sys.argv[0]) == "__main__.py":
         modulepath = os.path.dirname(sys.argv[0])
         os.environ["PYTHONPATH"] = os.path.dirname(modulepath)
-        return [sys.executable] + [arg for arg in sys.argv if arg != "--daemon"]
+        return [sys.executable, "-m", "homeassistant"] + list(sys.argv[1:])
 
-    return [arg for arg in sys.argv if arg != "--daemon"]
+    return sys.argv
 
 
-def try_to_restart() -> None:
-    """Attempt to clean up state and start a new Home Assistant instance."""
-    # Things should be mostly shut down already at this point, now just try
-    # to clean up things that may have been left behind.
-    sys.stderr.write("Home Assistant attempting to restart.\n")
-
-    # Count remaining threads, ideally there should only be one non-daemonized
-    # thread left (which is us). Nothing we really do with it, but it might be
-    # useful when debugging shutdown/restart issues.
+def check_threads() -> None:
+    """Check if there are any lingering threads."""
     try:
         nthreads = sum(
             thread.is_alive() and not thread.daemon for thread in threading.enumerate()
@@ -241,44 +151,15 @@ def try_to_restart() -> None:
     except AssertionError:
         sys.stderr.write("Failed to count non-daemonic threads.\n")
 
-    # Try to not leave behind open filedescriptors with the emphasis on try.
-    try:
-        max_fd = os.sysconf("SC_OPEN_MAX")
-    except ValueError:
-        max_fd = 256
-
-    if platform.system() == "Darwin":
-        closefds_osx(3, max_fd)
-    else:
-        os.closerange(3, max_fd)
-
-    # Now launch into a new instance of Home Assistant. If this fails we
-    # fall through and exit with error 100 (RESTART_EXIT_CODE) in which case
-    # systemd will restart us when RestartForceExitStatus=100 is set in the
-    # systemd.service file.
-    sys.stderr.write("Restarting Home Assistant\n")
-    args = cmdline()
-    os.execv(args[0], args)
-
 
 def main() -> int:
     """Start Home Assistant."""
     validate_python()
 
-    # Run a simple daemon runner process on Windows to handle restarts
-    if os.name == "nt" and "--runner" not in sys.argv:
-        nt_args = cmdline() + ["--runner"]
-        while True:
-            try:
-                subprocess.check_call(nt_args)
-                sys.exit(0)
-            except KeyboardInterrupt:
-                sys.exit(0)
-            except subprocess.CalledProcessError as exc:
-                if exc.returncode != RESTART_EXIT_CODE:
-                    sys.exit(exc.returncode)
-
     args = get_arguments()
+
+    if not args.ignore_os_check:
+        validate_os()
 
     if args.script is not None:
         # pylint: disable=import-outside-toplevel
@@ -288,14 +169,6 @@ def main() -> int:
 
     config_dir = os.path.abspath(os.path.join(os.getcwd(), args.config))
     ensure_config_path(config_dir)
-
-    # Daemon functions
-    if args.pid_file:
-        check_pid(args.pid_file)
-    if args.daemon:
-        daemonize()
-    if args.pid_file:
-        write_pid(args.pid_file)
 
     # pylint: disable=import-outside-toplevel
     from . import runner
@@ -321,8 +194,7 @@ def main() -> int:
     if os.path.getsize(fault_file_name) == 0:
         os.remove(fault_file_name)
 
-    if exit_code == RESTART_EXIT_CODE and not args.runner:
-        try_to_restart()
+    check_threads()
 
     return exit_code
 

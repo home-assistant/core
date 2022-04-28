@@ -1,18 +1,16 @@
 """ATAG water heater component."""
 from homeassistant.components.water_heater import (
-    ATTR_TEMPERATURE,
     STATE_ECO,
     STATE_PERFORMANCE,
     WaterHeaterEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_OFF, TEMP_CELSIUS, Platform
+from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, TEMP_CELSIUS, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN, AtagEntity
 
-SUPPORT_FLAGS_HEATER = 0
 OPERATION_LIST = [STATE_OFF, STATE_ECO, STATE_PERFORMANCE]
 
 
@@ -30,7 +28,7 @@ class AtagWaterHeater(AtagEntity, WaterHeaterEntity):
     """Representation of an ATAG water heater."""
 
     _attr_operation_list = OPERATION_LIST
-    _attr_supported_features = SUPPORT_FLAGS_HEATER
+    _attr_supported_features = 0
     _attr_temperature_unit = TEMP_CELSIUS
 
     @property

@@ -55,3 +55,4 @@ class PlaatoBinarySensor(PlaatoEntity, BinarySensorEntity):
             return BinarySensorDeviceClass.PROBLEM
         if self._sensor_type is PlaatoKeg.Pins.POURING:
             return BinarySensorDeviceClass.OPENING
+        return None

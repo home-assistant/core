@@ -53,6 +53,58 @@ def registries(hass):
     return ret
 
 
+async def test_async_handle_message(hass):
+    """Test the async handle message method."""
+    config = MockConfig(
+        should_expose=lambda state: state.entity_id != "light.not_expose",
+        entity_config={
+            "light.demo_light": {
+                const.CONF_ROOM_HINT: "Living Room",
+                const.CONF_ALIASES: ["Hello", "World"],
+            }
+        },
+    )
+
+    result = await sh.async_handle_message(
+        hass,
+        config,
+        "test-agent",
+        {
+            "requestId": REQ_ID,
+            "inputs": [
+                {"intent": "action.devices.SYNC"},
+                {"intent": "action.devices.SYNC"},
+            ],
+        },
+        const.SOURCE_CLOUD,
+    )
+    assert result == {
+        "requestId": REQ_ID,
+        "payload": {"errorCode": const.ERR_PROTOCOL_ERROR},
+    }
+
+    await hass.async_block_till_done()
+
+    result = await sh.async_handle_message(
+        hass,
+        config,
+        "test-agent",
+        {
+            "requestId": REQ_ID,
+            "inputs": [
+                {"intent": "action.devices.DOES_NOT_EXIST"},
+            ],
+        },
+        const.SOURCE_CLOUD,
+    )
+    assert result == {
+        "requestId": REQ_ID,
+        "payload": {"errorCode": const.ERR_PROTOCOL_ERROR},
+    }
+
+    await hass.async_block_till_done()
+
+
 async def test_sync_message(hass):
     """Test a sync message."""
     light = DemoLight(
@@ -823,7 +875,7 @@ async def test_serialize_input_boolean(hass):
     state = State("input_boolean.bla", "on")
     # pylint: disable=protected-access
     entity = sh.GoogleEntity(hass, BASIC_CONFIG, state)
-    result = await entity.sync_serialize(None)
+    result = entity.sync_serialize(None, "mock-uuid")
     assert result == {
         "id": "input_boolean.bla",
         "attributes": {},
@@ -1021,10 +1073,14 @@ async def test_device_class_binary_sensor(hass, device_class, google_type):
         ("non_existing_class", "action.devices.types.BLINDS"),
         ("door", "action.devices.types.DOOR"),
         ("garage", "action.devices.types.GARAGE"),
+        ("gate", "action.devices.types.GARAGE"),
+        ("awning", "action.devices.types.AWNING"),
+        ("shutter", "action.devices.types.SHUTTER"),
+        ("curtain", "action.devices.types.CURTAIN"),
     ],
 )
 async def test_device_class_cover(hass, device_class, google_type):
-    """Test that a binary entity syncs to the correct device type."""
+    """Test that a cover entity syncs to the correct device type."""
     sensor = DemoCover(None, hass, "Demo Sensor", device_class=device_class)
     sensor.hass = hass
     sensor.entity_id = "cover.demo_sensor"
@@ -1457,4 +1513,35 @@ async def test_query_recover(hass, caplog):
                 "light.good": {"on": True, "online": True, "brightness": 19},
             }
         },
+    }
+
+
+async def test_proxy_selected(hass, caplog):
+    """Test that we handle proxy selected."""
+
+    result = await sh.async_handle_message(
+        hass,
+        BASIC_CONFIG,
+        "test-agent",
+        {
+            "requestId": REQ_ID,
+            "inputs": [
+                {
+                    "intent": "action.devices.PROXY_SELECTED",
+                    "payload": {
+                        "device": {
+                            "id": "abcdefg",
+                            "customData": {},
+                        },
+                        "structureData": {},
+                    },
+                }
+            ],
+        },
+        const.SOURCE_LOCAL,
+    )
+
+    assert result == {
+        "requestId": REQ_ID,
+        "payload": {},
     }

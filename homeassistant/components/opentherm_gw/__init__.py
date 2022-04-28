@@ -83,7 +83,7 @@ CONFIG_SCHEMA = vol.Schema(
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.CLIMATE, Platform.SENSOR]
 
 
-async def options_updated(hass, entry):
+async def options_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     gateway = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][entry.data[CONF_ID]]
     async_dispatcher_send(hass, gateway.options_update_signal, entry)

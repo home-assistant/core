@@ -87,7 +87,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PLATFORMS = [Platform.SENSOR, Platform.SWITCH, Platform.BINARY_SENSOR]
+PLATFORMS = [Platform.SENSOR, Platform.SWITCH, Platform.BINARY_SENSOR, Platform.BUTTON]
 
 SIGNAL_UPDATE_LEAF = "nissan_leaf_update"
 
@@ -104,8 +104,6 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def async_handle_update(service: ServiceCall) -> None:
         """Handle service to update leaf data from Nissan servers."""
-        # It would be better if this was changed to use nickname, or
-        # an entity name rather than a vin.
         vin = service.data[ATTR_VIN]
 
         if vin in hass.data[DATA_LEAF]:
@@ -116,8 +114,11 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def async_handle_start_charge(service: ServiceCall) -> None:
         """Handle service to start charging."""
-        # It would be better if this was changed to use nickname, or
-        # an entity name rather than a vin.
+        _LOGGER.warning(
+            "The 'nissan_leaf.start_charge' service is deprecated and has been"
+            "replaced by a dedicated button entity: Please use that to start"
+            "the charge instead"
+        )
         vin = service.data[ATTR_VIN]
 
         if vin in hass.data[DATA_LEAF]:
@@ -475,6 +476,25 @@ class LeafDataStore:
 
         _LOGGER.debug("Climate result not returned by Nissan servers")
         return False
+
+    async def async_start_charging(self) -> None:
+        """Request to start charging the car. Used by the button platform."""
+        await self.hass.async_add_executor_job(self.leaf.start_charging)
+        self.schedule_update()
+
+    def schedule_update(self) -> None:
+        """Set the next update to be triggered in a minute."""
+
+        # Remove any future updates that may be scheduled
+        if self._remove_listener:
+            self._remove_listener()
+        # Schedule update for one minute in the future - so that previously sent
+        # requests can be processed by Nissan servers or the car.
+        update_at = utcnow() + timedelta(minutes=1)
+        self.next_update = update_at
+        self._remove_listener = async_track_point_in_utc_time(
+            self.hass, self.async_update_data, update_at
+        )
 
 
 class LeafEntity(Entity):

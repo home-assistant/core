@@ -29,25 +29,43 @@ from tests.common import (
 )
 
 
-async def test_get_triggers_block_device(hass, coap_wrapper):
+@pytest.mark.parametrize(
+    "button_type, is_valid",
+    [
+        ("momentary", True),
+        ("momentary_on_release", True),
+        ("detached", True),
+        ("toggle", False),
+    ],
+)
+async def test_get_triggers_block_device(
+    hass, coap_wrapper, monkeypatch, button_type, is_valid
+):
     """Test we get the expected triggers from a shelly block device."""
     assert coap_wrapper
-    expected_triggers = [
-        {
-            CONF_PLATFORM: "device",
-            CONF_DEVICE_ID: coap_wrapper.device_id,
-            CONF_DOMAIN: DOMAIN,
-            CONF_TYPE: "single",
-            CONF_SUBTYPE: "button1",
-        },
-        {
-            CONF_PLATFORM: "device",
-            CONF_DEVICE_ID: coap_wrapper.device_id,
-            CONF_DOMAIN: DOMAIN,
-            CONF_TYPE: "long",
-            CONF_SUBTYPE: "button1",
-        },
-    ]
+
+    monkeypatch.setitem(
+        coap_wrapper.device.settings,
+        "relays",
+        [
+            {"btn_type": button_type},
+            {"btn_type": "toggle"},
+        ],
+    )
+
+    expected_triggers = []
+    if is_valid:
+        expected_triggers = [
+            {
+                CONF_PLATFORM: "device",
+                CONF_DEVICE_ID: coap_wrapper.device_id,
+                CONF_DOMAIN: DOMAIN,
+                CONF_TYPE: type,
+                CONF_SUBTYPE: "button1",
+                "metadata": {},
+            }
+            for type in ["single", "long"]
+        ]
 
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, coap_wrapper.device_id
@@ -64,37 +82,11 @@ async def test_get_triggers_rpc_device(hass, rpc_wrapper):
             CONF_PLATFORM: "device",
             CONF_DEVICE_ID: rpc_wrapper.device_id,
             CONF_DOMAIN: DOMAIN,
-            CONF_TYPE: "btn_down",
+            CONF_TYPE: type,
             CONF_SUBTYPE: "button1",
-        },
-        {
-            CONF_PLATFORM: "device",
-            CONF_DEVICE_ID: rpc_wrapper.device_id,
-            CONF_DOMAIN: DOMAIN,
-            CONF_TYPE: "btn_up",
-            CONF_SUBTYPE: "button1",
-        },
-        {
-            CONF_PLATFORM: "device",
-            CONF_DEVICE_ID: rpc_wrapper.device_id,
-            CONF_DOMAIN: DOMAIN,
-            CONF_TYPE: "single_push",
-            CONF_SUBTYPE: "button1",
-        },
-        {
-            CONF_PLATFORM: "device",
-            CONF_DEVICE_ID: rpc_wrapper.device_id,
-            CONF_DOMAIN: DOMAIN,
-            CONF_TYPE: "double_push",
-            CONF_SUBTYPE: "button1",
-        },
-        {
-            CONF_PLATFORM: "device",
-            CONF_DEVICE_ID: rpc_wrapper.device_id,
-            CONF_DOMAIN: DOMAIN,
-            CONF_TYPE: "long_push",
-            CONF_SUBTYPE: "button1",
-        },
+            "metadata": {},
+        }
+        for type in ["btn_down", "btn_up", "single_push", "double_push", "long_push"]
     ]
 
     triggers = await async_get_device_automations(
@@ -136,30 +128,11 @@ async def test_get_triggers_button(hass):
             CONF_PLATFORM: "device",
             CONF_DEVICE_ID: coap_wrapper.device_id,
             CONF_DOMAIN: DOMAIN,
-            CONF_TYPE: "single",
+            CONF_TYPE: type,
             CONF_SUBTYPE: "button",
-        },
-        {
-            CONF_PLATFORM: "device",
-            CONF_DEVICE_ID: coap_wrapper.device_id,
-            CONF_DOMAIN: DOMAIN,
-            CONF_TYPE: "double",
-            CONF_SUBTYPE: "button",
-        },
-        {
-            CONF_PLATFORM: "device",
-            CONF_DEVICE_ID: coap_wrapper.device_id,
-            CONF_DOMAIN: DOMAIN,
-            CONF_TYPE: "triple",
-            CONF_SUBTYPE: "button",
-        },
-        {
-            CONF_PLATFORM: "device",
-            CONF_DEVICE_ID: coap_wrapper.device_id,
-            CONF_DOMAIN: DOMAIN,
-            CONF_TYPE: "long",
-            CONF_SUBTYPE: "button",
-        },
+            "metadata": {},
+        }
+        for type in ["single", "double", "triple", "long"]
     ]
 
     triggers = await async_get_device_automations(

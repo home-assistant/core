@@ -7,8 +7,9 @@ import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import CONF_ACCESS_TOKEN
-from homeassistant.core import ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,7 +49,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Foursquare component."""
     config = config[DOMAIN]
 
@@ -64,7 +65,7 @@ def setup(hass, config):
                 response.reason,
             )
 
-        hass.bus.fire(EVENT_CHECKIN, response.text)
+        hass.bus.fire(EVENT_CHECKIN, {"text": response.text})
 
     # Register our service with Home Assistant.
     hass.services.register(

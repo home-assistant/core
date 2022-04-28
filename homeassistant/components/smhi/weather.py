@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from datetime import datetime, timedelta
 import logging
-from typing import Final, TypedDict
+from typing import Final
 
 import aiohttp
 import async_timeout
@@ -35,9 +35,18 @@ from homeassistant.components.weather import (
     WeatherEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, TEMP_CELSIUS
+from homeassistant.const import (
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_NAME,
+    LENGTH_KILOMETERS,
+    LENGTH_MILLIMETERS,
+    TEMP_CELSIUS,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util import Throttle, slugify
@@ -46,6 +55,7 @@ from .const import (
     ATTR_SMHI_CLOUDINESS,
     ATTR_SMHI_THUNDER_PROBABILITY,
     ATTR_SMHI_WIND_GUST_SPEED,
+    DOMAIN,
     ENTITY_ID_SENSOR_FORMAT,
 )
 
@@ -69,6 +79,7 @@ CONDITION_CLASSES: Final[dict[str, list[int]]] = {
     ATTR_CONDITION_EXCEPTIONAL: [],
 }
 
+TIMEOUT = 10
 # 5 minutes between retrying connect to API again
 RETRY_TIMEOUT = 5 * 60
 
@@ -100,6 +111,11 @@ async def async_setup_entry(
 class SmhiWeather(WeatherEntity):
     """Representation of a weather entity."""
 
+    _attr_attribution = "Swedish weather institute (SMHI)"
+    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_visibility_unit = LENGTH_KILOMETERS
+    _attr_precipitation_unit = LENGTH_MILLIMETERS
+
     def __init__(
         self,
         name: str,
@@ -109,131 +125,64 @@ class SmhiWeather(WeatherEntity):
     ) -> None:
         """Initialize the SMHI weather entity."""
 
-        self._name = name
-        self._latitude = latitude
-        self._longitude = longitude
+        self._attr_name = name
+        self._attr_unique_id = f"{latitude}, {longitude}"
         self._forecasts: list[SmhiForecast] | None = None
         self._fail_count = 0
-        self._smhi_api = Smhi(self._longitude, self._latitude, session=session)
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique id."""
-        return f"{self._latitude}, {self._longitude}"
+        self._smhi_api = Smhi(longitude, latitude, session=session)
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, f"{latitude}, {longitude}")},
+            manufacturer="SMHI",
+            model="v2",
+            name=name,
+            configuration_url="http://opendata.smhi.se/apidocs/metfcst/parameters.html",
+        )
+        self._attr_condition = None
+        self._attr_temperature = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self) -> None:
         """Refresh the forecast data from SMHI weather API."""
         try:
-            async with async_timeout.timeout(10):
-                self._forecasts = await self.get_weather_forecast()
+            async with async_timeout.timeout(TIMEOUT):
+                self._forecasts = await self._smhi_api.async_get_forecast()
                 self._fail_count = 0
-
         except (asyncio.TimeoutError, SmhiForecastException):
             _LOGGER.error("Failed to connect to SMHI API, retry in 5 minutes")
             self._fail_count += 1
             if self._fail_count < 3:
                 async_call_later(self.hass, RETRY_TIMEOUT, self.retry_update)
+                return
+
+        if self._forecasts:
+            self._attr_temperature = self._forecasts[0].temperature
+            self._attr_humidity = self._forecasts[0].humidity
+            # Convert from m/s to km/h
+            self._attr_wind_speed = round(self._forecasts[0].wind_speed * 18 / 5)
+            self._attr_wind_bearing = self._forecasts[0].wind_direction
+            self._attr_visibility = self._forecasts[0].horizontal_visibility
+            self._attr_pressure = self._forecasts[0].pressure
+            self._attr_condition = next(
+                (
+                    k
+                    for k, v in CONDITION_CLASSES.items()
+                    if self._forecasts[0].symbol in v
+                ),
+                None,
+            )
+            self._attr_extra_state_attributes = {
+                ATTR_SMHI_CLOUDINESS: self._forecasts[0].cloudiness,
+                # Convert from m/s to km/h
+                ATTR_SMHI_WIND_GUST_SPEED: round(self._forecasts[0].wind_gust * 18 / 5),
+                ATTR_SMHI_THUNDER_PROBABILITY: self._forecasts[0].thunder,
+            }
 
     async def retry_update(self, _: datetime) -> None:
         """Retry refresh weather forecast."""
         await self.async_update(  # pylint: disable=unexpected-keyword-arg
             no_throttle=True
         )
-
-    async def get_weather_forecast(self) -> list[SmhiForecast]:
-        """Return the current forecasts from SMHI API."""
-        return await self._smhi_api.async_get_forecast()
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def temperature(self) -> int | None:
-        """Return the temperature."""
-        if self._forecasts is not None:
-            return self._forecasts[0].temperature
-        return None
-
-    @property
-    def temperature_unit(self) -> str:
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
-
-    @property
-    def humidity(self) -> int | None:
-        """Return the humidity."""
-        if self._forecasts is not None:
-            return self._forecasts[0].humidity
-        return None
-
-    @property
-    def wind_speed(self) -> float | None:
-        """Return the wind speed."""
-        if self._forecasts is not None:
-            # Convert from m/s to km/h
-            return round(self._forecasts[0].wind_speed * 18 / 5)
-        return None
-
-    @property
-    def wind_gust_speed(self) -> float | None:
-        """Return the wind gust speed."""
-        if self._forecasts is not None:
-            # Convert from m/s to km/h
-            return round(self._forecasts[0].wind_gust * 18 / 5)
-        return None
-
-    @property
-    def wind_bearing(self) -> int | None:
-        """Return the wind bearing."""
-        if self._forecasts is not None:
-            return self._forecasts[0].wind_direction
-        return None
-
-    @property
-    def visibility(self) -> float | None:
-        """Return the visibility."""
-        if self._forecasts is not None:
-            return self._forecasts[0].horizontal_visibility
-        return None
-
-    @property
-    def pressure(self) -> int | None:
-        """Return the pressure."""
-        if self._forecasts is not None:
-            return self._forecasts[0].pressure
-        return None
-
-    @property
-    def cloudiness(self) -> int | None:
-        """Return the cloudiness."""
-        if self._forecasts is not None:
-            return self._forecasts[0].cloudiness
-        return None
-
-    @property
-    def thunder_probability(self) -> int | None:
-        """Return the chance of thunder, unit Percent."""
-        if self._forecasts is not None:
-            return self._forecasts[0].thunder
-        return None
-
-    @property
-    def condition(self) -> str | None:
-        """Return the weather condition."""
-        if self._forecasts is None:
-            return None
-        return next(
-            (k for k, v in CONDITION_CLASSES.items() if self._forecasts[0].symbol in v),
-            None,
-        )
-
-    @property
-    def attribution(self) -> str:
-        """Return the attribution."""
-        return "Swedish weather institute (SMHI)"
 
     @property
     def forecast(self) -> list[Forecast] | None:
@@ -259,23 +208,3 @@ class SmhiWeather(WeatherEntity):
             )
 
         return data
-
-    @property
-    def extra_state_attributes(self) -> ExtraAttributes:
-        """Return SMHI specific attributes."""
-        extra_attributes: ExtraAttributes = {}
-        if self.cloudiness is not None:
-            extra_attributes[ATTR_SMHI_CLOUDINESS] = self.cloudiness
-        if self.wind_gust_speed is not None:
-            extra_attributes[ATTR_SMHI_WIND_GUST_SPEED] = self.wind_gust_speed
-        if self.thunder_probability is not None:
-            extra_attributes[ATTR_SMHI_THUNDER_PROBABILITY] = self.thunder_probability
-        return extra_attributes
-
-
-class ExtraAttributes(TypedDict, total=False):
-    """Represent the extra state attribute types."""
-
-    cloudiness: int
-    thunder_probability: int
-    wind_gust_speed: float

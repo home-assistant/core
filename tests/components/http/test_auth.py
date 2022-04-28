@@ -6,16 +6,29 @@ from unittest.mock import Mock, patch
 
 from aiohttp import BasicAuth, web
 from aiohttp.web_exceptions import HTTPUnauthorized
+import jwt
 import pytest
+import yarl
 
+from homeassistant.auth.const import GROUP_ID_READ_ONLY
+from homeassistant.auth.models import User
 from homeassistant.auth.providers import trusted_networks
+from homeassistant.components import websocket_api
 from homeassistant.components.http.auth import (
+    CONTENT_USER_NAME,
+    DATA_SIGN_SECRET,
+    STORAGE_KEY,
+    async_setup_auth,
     async_sign_path,
     async_user_not_allowed_do_auth,
-    setup_auth,
 )
 from homeassistant.components.http.const import KEY_AUTHENTICATED
 from homeassistant.components.http.forwarded import async_setup_forwarded
+from homeassistant.components.http.request_context import (
+    current_request,
+    setup_request_context,
+)
+from homeassistant.core import callback
 from homeassistant.setup import async_setup_component
 
 from . import HTTP_HEADER_HA_AUTH, mock_real_ip
@@ -86,7 +99,7 @@ def trusted_networks_auth(hass):
 
 async def test_auth_middleware_loaded_by_default(hass):
     """Test accessing to server from banned IP when feature is off."""
-    with patch("homeassistant.components.http.setup_auth") as mock_setup:
+    with patch("homeassistant.components.http.async_setup_auth") as mock_setup:
         await async_setup_component(hass, "http", {"http": {}})
 
     assert len(mock_setup.mock_calls) == 1
@@ -96,7 +109,7 @@ async def test_cant_access_with_password_in_header(
     app, aiohttp_client, legacy_auth, hass
 ):
     """Test access with password in header."""
-    setup_auth(hass, app)
+    await async_setup_auth(hass, app)
     client = await aiohttp_client(app)
 
     req = await client.get("/", headers={HTTP_HEADER_HA_AUTH: API_PASSWORD})
@@ -110,7 +123,7 @@ async def test_cant_access_with_password_in_query(
     app, aiohttp_client, legacy_auth, hass
 ):
     """Test access with password in URL."""
-    setup_auth(hass, app)
+    await async_setup_auth(hass, app)
     client = await aiohttp_client(app)
 
     resp = await client.get("/", params={"api_password": API_PASSWORD})
@@ -125,7 +138,7 @@ async def test_cant_access_with_password_in_query(
 
 async def test_basic_auth_does_not_work(app, aiohttp_client, hass, legacy_auth):
     """Test access with basic authentication."""
-    setup_auth(hass, app)
+    await async_setup_auth(hass, app)
     client = await aiohttp_client(app)
 
     req = await client.get("/", auth=BasicAuth("homeassistant", API_PASSWORD))
@@ -145,7 +158,7 @@ async def test_cannot_access_with_trusted_ip(
     hass, app2, trusted_networks_auth, aiohttp_client, hass_owner_user
 ):
     """Test access with an untrusted ip address."""
-    setup_auth(hass, app2)
+    await async_setup_auth(hass, app2)
 
     set_mock_ip = mock_real_ip(app2)
     client = await aiohttp_client(app2)
@@ -170,7 +183,7 @@ async def test_auth_active_access_with_access_token_in_header(
 ):
     """Test access with access token in header."""
     token = hass_access_token
-    setup_auth(hass, app)
+    await async_setup_auth(hass, app)
     client = await aiohttp_client(app)
     refresh_token = await hass.auth.async_validate_access_token(hass_access_token)
 
@@ -202,7 +215,7 @@ async def test_auth_active_access_with_trusted_ip(
     hass, app2, trusted_networks_auth, aiohttp_client, hass_owner_user
 ):
     """Test access with an untrusted ip address."""
-    setup_auth(hass, app2)
+    await async_setup_auth(hass, app2)
 
     set_mock_ip = mock_real_ip(app2)
     client = await aiohttp_client(app2)
@@ -226,7 +239,7 @@ async def test_auth_legacy_support_api_password_cannot_access(
     app, aiohttp_client, legacy_auth, hass
 ):
     """Test access using api_password if auth.support_legacy."""
-    setup_auth(hass, app)
+    await async_setup_auth(hass, app)
     client = await aiohttp_client(app)
 
     req = await client.get("/", headers={HTTP_HEADER_HA_AUTH: API_PASSWORD})
@@ -239,16 +252,20 @@ async def test_auth_legacy_support_api_password_cannot_access(
     assert req.status == HTTPStatus.UNAUTHORIZED
 
 
-async def test_auth_access_signed_path(hass, app, aiohttp_client, hass_access_token):
+async def test_auth_access_signed_path_with_refresh_token(
+    hass, app, aiohttp_client, hass_access_token
+):
     """Test access with signed url."""
     app.router.add_post("/", mock_handler)
     app.router.add_get("/another_path", mock_handler)
-    setup_auth(hass, app)
+    await async_setup_auth(hass, app)
     client = await aiohttp_client(app)
 
     refresh_token = await hass.auth.async_validate_access_token(hass_access_token)
 
-    signed_path = async_sign_path(hass, refresh_token.id, "/", timedelta(seconds=5))
+    signed_path = async_sign_path(
+        hass, "/", timedelta(seconds=5), refresh_token_id=refresh_token.id
+    )
 
     req = await client.get(signed_path)
     assert req.status == HTTPStatus.OK
@@ -265,7 +282,7 @@ async def test_auth_access_signed_path(hass, app, aiohttp_client, hass_access_to
 
     # Never valid as expired in the past.
     expired_signed_path = async_sign_path(
-        hass, refresh_token.id, "/", timedelta(seconds=-5)
+        hass, "/", timedelta(seconds=-5), refresh_token_id=refresh_token.id
     )
 
     req = await client.get(expired_signed_path)
@@ -277,10 +294,94 @@ async def test_auth_access_signed_path(hass, app, aiohttp_client, hass_access_to
     assert req.status == HTTPStatus.UNAUTHORIZED
 
 
+async def test_auth_access_signed_path_via_websocket(
+    hass, app, hass_ws_client, hass_read_only_access_token
+):
+    """Test signed url via websockets uses connection user."""
+
+    @websocket_api.websocket_command({"type": "diagnostics/list"})
+    @callback
+    def get_signed_path(hass, connection, msg):
+        connection.send_result(
+            msg["id"], {"path": async_sign_path(hass, "/", timedelta(seconds=5))}
+        )
+
+    websocket_api.async_register_command(hass, get_signed_path)
+
+    # We use hass_read_only_access_token to make sure the connection WS is used.
+    client = await hass_ws_client(access_token=hass_read_only_access_token)
+
+    await client.send_json({"id": 5, "type": "diagnostics/list"})
+
+    msg = await client.receive_json()
+
+    assert msg["id"] == 5
+    assert msg["success"]
+
+    refresh_token = await hass.auth.async_validate_access_token(
+        hass_read_only_access_token
+    )
+    signature = yarl.URL(msg["result"]["path"]).query["authSig"]
+    claims = jwt.decode(
+        signature,
+        hass.data[DATA_SIGN_SECRET],
+        algorithms=["HS256"],
+        options={"verify_signature": False},
+    )
+    assert claims["iss"] == refresh_token.id
+
+
+async def test_auth_access_signed_path_with_http(
+    hass, app, aiohttp_client, hass_access_token
+):
+    """Test signed url via HTTP uses HTTP user."""
+    setup_request_context(app, current_request)
+
+    async def mock_handler(request):
+        """Return signed path."""
+        return web.json_response(
+            data={"path": async_sign_path(hass, "/", timedelta(seconds=-5))}
+        )
+
+    app.router.add_get("/hello", mock_handler)
+    await async_setup_auth(hass, app)
+    client = await aiohttp_client(app)
+
+    refresh_token = await hass.auth.async_validate_access_token(hass_access_token)
+
+    req = await client.get(
+        "/hello", headers={"Authorization": f"Bearer {hass_access_token}"}
+    )
+    assert req.status == HTTPStatus.OK
+    data = await req.json()
+    signature = yarl.URL(data["path"]).query["authSig"]
+    claims = jwt.decode(
+        signature,
+        hass.data[DATA_SIGN_SECRET],
+        algorithms=["HS256"],
+        options={"verify_signature": False},
+    )
+    assert claims["iss"] == refresh_token.id
+
+
+async def test_auth_access_signed_path_with_content_user(hass, app, aiohttp_client):
+    """Test access signed url uses content user."""
+    await async_setup_auth(hass, app)
+    signed_path = async_sign_path(hass, "/", timedelta(seconds=5))
+    signature = yarl.URL(signed_path).query["authSig"]
+    claims = jwt.decode(
+        signature,
+        hass.data[DATA_SIGN_SECRET],
+        algorithms=["HS256"],
+        options={"verify_signature": False},
+    )
+    assert claims["iss"] == hass.data[STORAGE_KEY]
+
+
 async def test_local_only_user_rejected(hass, app, aiohttp_client, hass_access_token):
     """Test access with access token in header."""
     token = hass_access_token
-    setup_auth(hass, app)
+    await async_setup_auth(hass, app)
     set_mock_ip = mock_real_ip(app)
     client = await aiohttp_client(app)
     refresh_token = await hass.auth.async_validate_access_token(hass_access_token)
@@ -340,3 +441,25 @@ async def test_async_user_not_allowed_do_auth(hass, app):
             async_user_not_allowed_do_auth(hass, user, trusted_request)
             == "User is local only"
         )
+
+
+async def test_create_user_once(hass):
+    """Test that we reuse the user."""
+    cur_users = len(await hass.auth.async_get_users())
+    app = web.Application()
+    await async_setup_auth(hass, app)
+    users = await hass.auth.async_get_users()
+    assert len(users) == cur_users + 1
+
+    user: User = next((user for user in users if user.name == CONTENT_USER_NAME), None)
+    assert user is not None, users
+
+    assert len(user.groups) == 1
+    assert user.groups[0].id == GROUP_ID_READ_ONLY
+    assert len(user.refresh_tokens) == 1
+    assert user.system_generated
+
+    await async_setup_auth(hass, app)
+
+    # test it did not create a user
+    assert len(await hass.auth.async_get_users()) == cur_users + 1

@@ -25,7 +25,8 @@ NEST_EVENT = "nest_event"
 #       "device_id": "my-device-id",
 #       "type": "camera_motion",
 #       "timestamp": "2021-10-24T19:42:43.304000+00:00",
-#       "nest_event_id": "KcO1HIR9sPKQ2bqby_vTcCcEov..."
+#       "nest_event_id": "KcO1HIR9sPKQ2bqby_vTcCcEov...",
+#       "zones": ["Zone 1"],
 #   },
 #   ...
 # }

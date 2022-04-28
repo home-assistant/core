@@ -11,16 +11,11 @@ import signal
 import pexpect
 
 from homeassistant import util
-from homeassistant.components.media_player import MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_MUSIC,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
+from homeassistant.components.media_player import (
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
 )
+from homeassistant.components.media_player.const import MEDIA_TYPE_MUSIC
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     SERVICE_MEDIA_NEXT_TRACK,
@@ -39,16 +34,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
-# SUPPORT_VOLUME_SET is close to available but we need volume up/down
-# controls in the GUI.
-PANDORA_SUPPORT = (
-    SUPPORT_PAUSE
-    | SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_SELECT_SOURCE
-    | SUPPORT_PLAY
-)
 
 CMD_MAP = {
     SERVICE_MEDIA_NEXT_TRACK: "n",
@@ -84,6 +69,17 @@ def setup_platform(
 
 class PandoraMediaPlayer(MediaPlayerEntity):
     """A media player that uses the Pianobar interface to Pandora."""
+
+    # MediaPlayerEntityFeature.VOLUME_SET is close to available but we need volume up/down
+    # controls in the GUI.
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.SELECT_SOURCE
+        | MediaPlayerEntityFeature.PLAY
+    )
 
     def __init__(self, name):
         """Initialize the Pandora device."""
@@ -173,11 +169,6 @@ class PandoraMediaPlayer(MediaPlayerEntity):
         self.schedule_update_ha_state()
 
     @property
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        return PANDORA_SUPPORT
-
-    @property
     def source(self):
         """Name of the current input source."""
         return self._station
@@ -253,7 +244,7 @@ class PandoraMediaPlayer(MediaPlayerEntity):
         try:
             match_idx = self._pianobar.expect(
                 [
-                    br"(\d\d):(\d\d)/(\d\d):(\d\d)",
+                    rb"(\d\d):(\d\d)/(\d\d):(\d\d)",
                     "No song playing",
                     "Select station",
                     "Receiving new playlist",

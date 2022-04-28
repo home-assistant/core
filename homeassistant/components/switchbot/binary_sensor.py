@@ -54,8 +54,6 @@ async def async_setup_entry(
 class SwitchBotBinarySensor(SwitchbotEntity, BinarySensorEntity):
     """Representation of a Switchbot binary sensor."""
 
-    coordinator: SwitchbotDataUpdateCoordinator
-
     def __init__(
         self,
         coordinator: SwitchbotDataUpdateCoordinator,

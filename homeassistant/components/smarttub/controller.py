@@ -94,7 +94,6 @@ class SmartTubController:
         return data
 
     async def _get_spa_data(self, spa):
-        # pylint: disable=no-self-use
         full_status, reminders, errors = await asyncio.gather(
             spa.get_status_full(),
             spa.get_reminders(),

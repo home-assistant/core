@@ -15,7 +15,7 @@
                     "ssl": "SSL tan\u00fas\u00edtv\u00e1ny haszn\u00e1lata",
                     "username": "Felhaszn\u00e1l\u00f3n\u00e9v (nem k\u00f6telez\u0151)"
                 },
-                "description": "Alap\u00e9rtelmezett c\u00edm: {host}\nAlap\u00e9rtelmezett port: {port}\nAlap\u00e9rtelmezett felhaszn\u00e1l\u00f3n\u00e9v: {username}",
+                "description": "Alap\u00e9rtelmezett c\u00edm: {host}\nAlap\u00e9rtelmezett felhaszn\u00e1l\u00f3n\u00e9v: {username}",
                 "title": "Netgear"
             }
         }

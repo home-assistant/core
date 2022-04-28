@@ -21,7 +21,7 @@ RETYPE = type(re.compile(""))
 def mock_stream(data):
     """Mock a stream with data."""
     protocol = mock.Mock(_reading_paused=False)
-    stream = StreamReader(protocol, limit=2 ** 16)
+    stream = StreamReader(protocol, limit=2**16)
     stream.feed_data(data)
     stream.feed_eof()
     return stream
@@ -175,6 +175,7 @@ class AiohttpClientMockResponse:
         if response is None:
             response = b""
 
+        self.charset = "utf-8"
         self.method = method
         self._url = url
         self.status = status

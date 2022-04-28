@@ -52,9 +52,17 @@ async def mock_get_version_update(
         await hass.async_block_till_done()
 
 
-async def setup_version_integration(hass: HomeAssistant) -> MockConfigEntry:
+async def setup_version_integration(
+    hass: HomeAssistant,
+    entry_data: dict[str, Any] | None = None,
+) -> MockConfigEntry:
     """Set up the Version integration."""
-    mock_entry = MockConfigEntry(**MOCK_VERSION_CONFIG_ENTRY_DATA)
+    mock_entry = MockConfigEntry(
+        **{
+            **MOCK_VERSION_CONFIG_ENTRY_DATA,
+            "data": entry_data or MOCK_VERSION_CONFIG_ENTRY_DATA["data"],
+        }
+    )
     mock_entry.add_to_hass(hass)
 
     with patch(
@@ -65,7 +73,6 @@ async def setup_version_integration(hass: HomeAssistant) -> MockConfigEntry:
         assert await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.local_installation").state == MOCK_VERSION
     assert mock_entry.state == config_entries.ConfigEntryState.LOADED
 
     return mock_entry

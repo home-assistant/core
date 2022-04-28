@@ -7,12 +7,12 @@ from pvo import PVOutput, PVOutputAuthenticationError, PVOutputError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
-from homeassistant.const import CONF_API_KEY, CONF_NAME
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_SYSTEM_ID, DOMAIN
+from .const import CONF_SYSTEM_ID, DOMAIN, LOGGER
 
 
 async def validate_input(hass: HomeAssistant, *, api_key: str, system_id: int) -> None:
@@ -23,7 +23,7 @@ async def validate_input(hass: HomeAssistant, *, api_key: str, system_id: int) -
         api_key=api_key,
         system_id=system_id,
     )
-    await pvoutput.status()
+    await pvoutput.system()
 
 
 class PVOutputFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -50,6 +50,7 @@ class PVOutputFlowHandler(ConfigFlow, domain=DOMAIN):
             except PVOutputAuthenticationError:
                 errors["base"] = "invalid_auth"
             except PVOutputError:
+                LOGGER.exception("Cannot connect to PVOutput")
                 errors["base"] = "cannot_connect"
             else:
                 await self.async_set_unique_id(str(user_input[CONF_SYSTEM_ID]))
@@ -80,16 +81,6 @@ class PVOutputFlowHandler(ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
-        )
-
-    async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
-        """Handle a flow initialized by importing a config."""
-        self.imported_name = config[CONF_NAME]
-        return await self.async_step_user(
-            user_input={
-                CONF_SYSTEM_ID: config[CONF_SYSTEM_ID],
-                CONF_API_KEY: config[CONF_API_KEY],
-            }
         )
 
     async def async_step_reauth(self, data: dict[str, Any]) -> FlowResult:

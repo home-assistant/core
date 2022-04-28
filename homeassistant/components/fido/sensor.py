@@ -27,6 +27,7 @@ from homeassistant.const import (
     TIME_MINUTES,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -189,7 +190,7 @@ async def async_setup_platform(
     username = config[CONF_USERNAME]
     password = config[CONF_PASSWORD]
 
-    httpsession = hass.helpers.aiohttp_client.async_get_clientsession()
+    httpsession = async_get_clientsession(hass)
     fido_data = FidoData(username, password, httpsession)
     ret = await fido_data.async_update()
     if ret is False:

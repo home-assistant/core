@@ -2,12 +2,13 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from datetime import timedelta
 import logging
 from typing import Any
 
 from haphilipsjs import ConnectionFailure, PhilipsTV
+from haphilipsjs.typing import SystemType
 
 from homeassistant.components.automation import AutomationActionType
 from homeassistant.config_entries import ConfigEntry
@@ -18,13 +19,25 @@ from homeassistant.const import (
     CONF_USERNAME,
     Platform,
 )
-from homeassistant.core import CALLBACK_TYPE, Context, HassJob, HomeAssistant, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Context,
+    Event,
+    HassJob,
+    HomeAssistant,
+    callback,
+)
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import CONF_ALLOW_NOTIFY, DOMAIN
+from .const import CONF_ALLOW_NOTIFY, CONF_SYSTEM, DOMAIN
 
-PLATFORMS = [Platform.MEDIA_PLAYER, Platform.LIGHT, Platform.REMOTE]
+PLATFORMS = [
+    Platform.MEDIA_PLAYER,
+    Platform.LIGHT,
+    Platform.REMOTE,
+    Platform.SWITCH,
+]
 
 LOGGER = logging.getLogger(__name__)
 
@@ -71,7 +84,7 @@ class PluggableAction:
     def __init__(self, update: Callable[[], None]) -> None:
         """Initialize."""
         self._update = update
-        self._actions: dict[Any, AutomationActionType] = {}
+        self._actions: dict[Any, tuple[HassJob, dict[str, Any]]] = {}
 
     def __bool__(self):
         """Return if we have something attached."""
@@ -102,7 +115,7 @@ class PluggableAction:
 class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Coordinator to update data."""
 
-    def __init__(self, hass, api: PhilipsTV, options: dict) -> None:
+    def __init__(self, hass, api: PhilipsTV, options: Mapping) -> None:
         """Set up the coordinator."""
         self.api = api
         self.options = options
@@ -124,6 +137,23 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 hass, LOGGER, cooldown=2.0, immediate=False
             ),
         )
+
+    @property
+    def system(self) -> SystemType:
+        """Return the system descriptor."""
+        if self.api.system:
+            return self.api.system
+        return self.config_entry.data[CONF_SYSTEM]
+
+    @property
+    def unique_id(self) -> str:
+        """Return the system descriptor."""
+        entry: ConfigEntry = self.config_entry
+        assert entry
+        if entry.unique_id:
+            return entry.unique_id
+        assert entry.entry_id
+        return entry.entry_id
 
     @property
     def _notify_wanted(self):
@@ -170,7 +200,7 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
             self._async_notify_stop()
 
     @callback
-    def _async_stop_refresh(self, event: asyncio.Event) -> None:
+    def _async_stop_refresh(self, event: Event) -> None:
         super()._async_stop_refresh(event)
         self._async_notify_stop()
 

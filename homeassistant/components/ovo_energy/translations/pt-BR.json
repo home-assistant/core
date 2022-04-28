@@ -1,0 +1,27 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "A conta j\u00e1 foi configurada",
+            "cannot_connect": "Falha ao conectar",
+            "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida"
+        },
+        "flow_title": "{username}",
+        "step": {
+            "reauth": {
+                "data": {
+                    "password": "Senha"
+                },
+                "description": "Falha na autentica\u00e7\u00e3o para OVO Energy. Por favor, insira suas credenciais atuais.",
+                "title": "Reautentica\u00e7\u00e3o"
+            },
+            "user": {
+                "data": {
+                    "password": "Senha",
+                    "username": "Usu\u00e1rio"
+                },
+                "description": "Configure uma inst\u00e2ncia OVO Energy para acessar seu uso de energia.",
+                "title": "Adicionar conta OVO Energy"
+            }
+        }
+    }
+}

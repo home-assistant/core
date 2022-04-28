@@ -424,7 +424,14 @@ async def test_bridge_ssdp_missing_serial(hass):
     assert result["reason"] == "not_hue_bridge"
 
 
-async def test_bridge_ssdp_invalid_location(hass):
+@pytest.mark.parametrize(
+    "location,reason",
+    (
+        ("http:///", "not_hue_bridge"),
+        ("http://[fd00::eeb5:faff:fe84:b17d]/description.xml", "invalid_host"),
+    ),
+)
+async def test_bridge_ssdp_invalid_location(hass, location, reason):
     """Test if discovery info is a serial attribute."""
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
@@ -432,7 +439,7 @@ async def test_bridge_ssdp_invalid_location(hass):
         data=ssdp.SsdpServiceInfo(
             ssdp_usn="mock_usn",
             ssdp_st="mock_st",
-            ssdp_location="http:///",
+            ssdp_location=location,
             upnp={
                 ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL[0],
                 ssdp.ATTR_UPNP_SERIAL: "1234",
@@ -441,7 +448,7 @@ async def test_bridge_ssdp_invalid_location(hass):
     )
 
     assert result["type"] == "abort"
-    assert result["reason"] == "not_hue_bridge"
+    assert result["reason"] == reason
 
 
 async def test_bridge_ssdp_espalexa(hass):
@@ -566,6 +573,7 @@ async def test_bridge_homekit(hass, aioclient_mock):
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
             host="0.0.0.0",
+            addresses=["0.0.0.0"],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
@@ -613,6 +621,7 @@ async def test_bridge_homekit_already_configured(hass, aioclient_mock):
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
             host="0.0.0.0",
+            addresses=["0.0.0.0"],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
@@ -739,6 +748,7 @@ async def test_bridge_zeroconf(hass, aioclient_mock):
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="192.168.1.217",
+            addresses=["192.168.1.217"],
             port=443,
             hostname="Philips-hue.local",
             type="_hue._tcp.local.",
@@ -772,6 +782,7 @@ async def test_bridge_zeroconf_already_exists(hass, aioclient_mock):
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="192.168.1.217",
+            addresses=["192.168.1.217"],
             port=443,
             hostname="Philips-hue.local",
             type="_hue._tcp.local.",
@@ -787,3 +798,27 @@ async def test_bridge_zeroconf_already_exists(hass, aioclient_mock):
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
     assert entry.data["host"] == "192.168.1.217"
+
+
+async def test_bridge_zeroconf_ipv6(hass):
+    """Test a bridge being discovered by zeroconf and ipv6 address."""
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=zeroconf.ZeroconfServiceInfo(
+            host="fd00::eeb5:faff:fe84:b17d",
+            addresses=["fd00::eeb5:faff:fe84:b17d"],
+            port=443,
+            hostname="Philips-hue.local",
+            type="_hue._tcp.local.",
+            name="Philips Hue - ABCABC._hue._tcp.local.",
+            properties={
+                "_raw": {"bridgeid": b"ecb5faabcabc", "modelid": b"BSB002"},
+                "bridgeid": "ecb5faabcabc",
+                "modelid": "BSB002",
+            },
+        ),
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "invalid_host"

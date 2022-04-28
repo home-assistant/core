@@ -16,7 +16,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, TEMP_FAHRENHEIT, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
@@ -119,9 +119,7 @@ class EcoNetEntity(Entity):
         """Subscribe to device events."""
         await super().async_added_to_hass()
         self.async_on_remove(
-            self.hass.helpers.dispatcher.async_dispatcher_connect(
-                PUSH_UPDATE, self.on_update_received
-            )
+            async_dispatcher_connect(self.hass, PUSH_UPDATE, self.on_update_received)
         )
 
     @callback

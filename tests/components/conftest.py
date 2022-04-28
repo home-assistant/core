@@ -1,5 +1,6 @@
 """Fixtures for component testing."""
-from unittest.mock import patch
+from collections.abc import Generator
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -22,3 +23,13 @@ def prevent_io():
         return_value=[],
     ):
         yield
+
+
+@pytest.fixture
+def entity_registry_enabled_by_default() -> Generator[AsyncMock, None, None]:
+    """Test fixture that ensures all entities are enabled in the registry."""
+    with patch(
+        "homeassistant.helpers.entity.Entity.entity_registry_enabled_default",
+        return_value=True,
+    ) as mock_entity_registry_enabled_by_default:
+        yield mock_entity_registry_enabled_by_default

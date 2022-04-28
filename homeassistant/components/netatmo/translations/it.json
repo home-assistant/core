@@ -47,10 +47,10 @@
             "public_weather": {
                 "data": {
                     "area_name": "Nome dell'area",
-                    "lat_ne": "Latitudine angolo Nord-Est",
-                    "lat_sw": "Latitudine angolo Sud-Ovest",
-                    "lon_ne": "Logitudine angolo Nord-Est",
-                    "lon_sw": "Logitudine angolo Sud-Ovest",
+                    "lat_ne": "Latitudine angolo nord-est",
+                    "lat_sw": "Latitudine angolo sud-ovest",
+                    "lon_ne": "Logitudine angolo norde-st",
+                    "lon_sw": "Logitudine angolo sud-ovest",
                     "mode": "Calcolo",
                     "show_on_map": "Mostra sulla mappa"
                 },

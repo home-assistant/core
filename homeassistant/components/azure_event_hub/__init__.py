@@ -13,9 +13,10 @@ from azure.eventhub.aio import EventHubProducerClient
 from azure.eventhub.exceptions import EventHubError
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry, ConfigEntryNotReady
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import MATCH_ALL
 from homeassistant.core import Event, HomeAssistant, State
+from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import FILTER_SCHEMA
 from homeassistant.helpers.event import async_call_later
@@ -138,7 +139,7 @@ class AzureEventHub:
         self._max_delay = self._entry.options.get(CONF_MAX_DELAY, DEFAULT_MAX_DELAY)
 
         self._shutdown = False
-        self._queue: asyncio.PriorityQueue[  # pylint: disable=unsubscriptable-object
+        self._queue: asyncio.PriorityQueue[
             tuple[int, tuple[datetime, State | None]]
         ] = asyncio.PriorityQueue()
         self._listener_remover: Callable[[], None] | None = None

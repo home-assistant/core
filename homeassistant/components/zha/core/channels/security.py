@@ -12,7 +12,7 @@ from zigpy.exceptions import ZigbeeException
 from zigpy.zcl.clusters import security
 from zigpy.zcl.clusters.security import IasAce as AceCluster
 
-from homeassistant.core import CALLABLE_T, callback
+from homeassistant.core import callback
 
 from .. import registries, typing as zha_typing
 from ..const import (
@@ -23,6 +23,7 @@ from ..const import (
     WARNING_DEVICE_STROBE_HIGH,
     WARNING_DEVICE_STROBE_YES,
 )
+from ..typing import CALLABLE_T
 from .base import ChannelStatus, ZigbeeChannel
 
 IAS_ACE_ARM = 0x0000  # ("arm", (t.enum8, t.CharacterString, t.uint8_t), False),
@@ -84,7 +85,7 @@ class IasAce(ZigbeeChannel):
     def cluster_command(self, tsn, command_id, args) -> None:
         """Handle commands received to this cluster."""
         self.warning(
-            "received command %s", self._cluster.server_commands.get(command_id)[NAME]
+            "received command %s", self._cluster.server_commands[command_id].name
         )
         self.command_map[command_id](*args)
 
@@ -93,7 +94,7 @@ class IasAce(ZigbeeChannel):
         mode = AceCluster.ArmMode(arm_mode)
 
         self.zha_send_event(
-            self._cluster.server_commands.get(IAS_ACE_ARM)[NAME],
+            self._cluster.server_commands[IAS_ACE_ARM].name,
             {
                 "arm_mode": mode.value,
                 "arm_mode_description": mode.name,
@@ -189,7 +190,7 @@ class IasAce(ZigbeeChannel):
     def _bypass(self, zone_list, code) -> None:
         """Handle the IAS ACE bypass command."""
         self.zha_send_event(
-            self._cluster.server_commands.get(IAS_ACE_BYPASS)[NAME],
+            self._cluster.server_commands[IAS_ACE_BYPASS].name,
             {"zone_list": zone_list, "code": code},
         )
 

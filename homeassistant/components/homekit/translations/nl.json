@@ -12,13 +12,19 @@
                 "data": {
                     "include_domains": "Domeinen om op te nemen"
                 },
-                "description": "Kies de domeinen die moeten worden opgenomen. Alle ondersteunde entiteiten in het domein zullen worden opgenomen. Voor elke tv-mediaspeler, camera, activiteiten gebaseerde afstandsbediening en slot wordt een afzonderlijke HomeKit-instantie in accessoiremodus aangemaakt.",
+                "description": "Kies de domeinen die moeten worden opgenomen. Alle ondersteunde entiteiten in het domein zullen worden opgenomen, behalve de gecategoriseerde entiteiten. Voor elke tv-mediaspeler, camera, activiteiten gebaseerde afstandsbediening en slot wordt een afzonderlijke HomeKit-instantie in accessoiremodus aangemaakt.",
                 "title": "Selecteer domeinen die u wilt opnemen"
             }
         }
     },
     "options": {
         "step": {
+            "accessory": {
+                "data": {
+                    "entities": "Entiteit"
+                },
+                "title": "Selecteer de entiteit voor het accessoire"
+            },
             "advanced": {
                 "data": {
                     "auto_start": "Autostart (deactiveer als je de homekit.start service handmatig aanroept)",
@@ -35,6 +41,20 @@
                 "description": "Controleer alle camera's die native H.264-streams ondersteunen. Als de camera geen H.264-stream uitvoert, transcodeert het systeem de video naar H.264 voor HomeKit. Transcodering vereist een performante CPU en het is onwaarschijnlijk dat dit werkt op computers met \u00e9\u00e9n bord.",
                 "title": "Cameraconfiguratie"
             },
+            "exclude": {
+                "data": {
+                    "entities": "Entiteiten"
+                },
+                "description": "Alle \"{domains}\"-entiteiten zullen worden opgenomen, behalve de uitgesloten entiteiten en gecategoriseerde entiteiten.",
+                "title": "Selecteer de entiteiten die moeten worden uitgesloten"
+            },
+            "include": {
+                "data": {
+                    "entities": "Entiteiten"
+                },
+                "description": "Alle \" {domains} \"-entiteiten zullen worden opgenomen, tenzij specifieke entiteiten zijn geselecteerd.",
+                "title": "Selecteer de entiteiten die moeten worden opgenomen"
+            },
             "include_exclude": {
                 "data": {
                     "entities": "Entiteiten",
@@ -45,11 +65,13 @@
             },
             "init": {
                 "data": {
+                    "domains": "Domeinen om op te nemen",
                     "include_domains": "Domeinen om op te nemen",
-                    "mode": "modus"
+                    "include_exclude_mode": "Inclusiemodus",
+                    "mode": "HomeKit-modus"
                 },
                 "description": "HomeKit kan worden geconfigureerd om een brug of een enkel accessoire te tonen. In de accessoiremodus kan slechts \u00e9\u00e9n entiteit worden gebruikt. De accessoiremodus is vereist om mediaspelers met de tv-apparaatklasse correct te laten werken. Entiteiten in de \"Op te nemen domeinen\" zullen worden blootgesteld aan HomeKit. U kunt op het volgende scherm selecteren welke entiteiten u wilt opnemen of uitsluiten van deze lijst.",
-                "title": "Selecteer domeinen om zichtbaar te maken."
+                "title": "Selecteer modus en domeinen."
             },
             "yaml": {
                 "description": "Deze invoer wordt beheerd via YAML",

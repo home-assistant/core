@@ -4,11 +4,11 @@ from __future__ import annotations
 from concurrent.futures import ThreadPoolExecutor
 import contextlib
 import logging
-import queue
 import sys
 from threading import Thread
 import time
 import traceback
+from typing import Any
 
 from .thread import async_raise
 
@@ -62,29 +62,9 @@ def join_or_interrupt_threads(
 class InterruptibleThreadPoolExecutor(ThreadPoolExecutor):
     """A ThreadPoolExecutor instance that will not deadlock on shutdown."""
 
-    def shutdown(self, *args, **kwargs) -> None:  # type: ignore
-        """Shutdown backport from cpython 3.9 with interrupt support added."""
-        with self._shutdown_lock:
-            self._shutdown = True
-            # Drain all work items from the queue, and then cancel their
-            # associated futures.
-            while True:
-                try:
-                    work_item = self._work_queue.get_nowait()
-                except queue.Empty:
-                    break
-                if work_item is not None:
-                    work_item.future.cancel()
-            # Send a wake-up to prevent threads calling
-            # _work_queue.get(block=True) from permanently blocking.
-            self._work_queue.put(None)  # type: ignore[arg-type]
-
-        # The above code is backported from python 3.9
-        #
-        # For maintainability join_threads_or_timeout is
-        # a separate function since it is not a backport from
-        # cpython itself
-        #
+    def shutdown(self, *args: Any, **kwargs: Any) -> None:
+        """Shutdown with interrupt support added."""
+        super().shutdown(wait=False, cancel_futures=True)
         self.join_threads_or_timeout()
 
     def join_threads_or_timeout(self) -> None:

@@ -6,11 +6,7 @@ from typing import Any
 
 from pyunifiprotect.data import Light
 
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    SUPPORT_BRIGHTNESS,
-    LightEntity,
-)
+from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -56,17 +52,11 @@ def hass_to_unifi_brightness(value: int) -> int:
 class ProtectLight(ProtectDeviceEntity, LightEntity):
     """A Ubiquiti UniFi Protect Light Entity."""
 
-    _attr_icon = "mdi:spotlight-beam"
-    _attr_supported_features = SUPPORT_BRIGHTNESS
+    device: Light
 
-    def __init__(
-        self,
-        data: ProtectData,
-        device: Light,
-    ) -> None:
-        """Initialize an UniFi light."""
-        self.device: Light = device
-        super().__init__(data)
+    _attr_icon = "mdi:spotlight-beam"
+    _attr_color_mode = ColorMode.BRIGHTNESS
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
     @callback
     def _async_update_device_from_protect(self) -> None:

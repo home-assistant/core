@@ -23,6 +23,7 @@ from homeassistant.components.recorder.statistics import (
     delete_duplicates,
     get_last_short_term_statistics,
     get_last_statistics,
+    get_latest_short_term_statistics,
     get_metadata,
     list_statistic_ids,
     statistics_during_period,
@@ -34,8 +35,12 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import setup_component
 import homeassistant.util.dt as dt_util
 
+from .common import async_wait_recording_done
+
 from tests.common import get_test_home_assistant, mock_registry
 from tests.components.recorder.common import wait_recording_done
+
+ORIG_TZ = dt_util.DEFAULT_TIME_ZONE
 
 
 def test_compile_hourly_statistics(hass_recorder):
@@ -46,6 +51,10 @@ def test_compile_hourly_statistics(hass_recorder):
     zero, four, states = record_states(hass)
     hist = history.get_significant_states(hass, zero, four)
     assert dict(states) == dict(hist)
+
+    # Should not fail if there is nothing there yet
+    stats = get_latest_short_term_statistics(hass, ["sensor.test1"])
+    assert stats == {}
 
     for kwargs in ({}, {"statistic_ids": ["sensor.test1"]}):
         stats = statistics_during_period(hass, zero, period="5minute", **kwargs)
@@ -101,11 +110,19 @@ def test_compile_hourly_statistics(hass_recorder):
     )
     assert stats == {}
 
-    # Test get_last_short_term_statistics
+    # Test get_last_short_term_statistics and get_latest_short_term_statistics
     stats = get_last_short_term_statistics(hass, 0, "sensor.test1", True)
     assert stats == {}
 
     stats = get_last_short_term_statistics(hass, 1, "sensor.test1", True)
+    assert stats == {"sensor.test1": [{**expected_2, "statistic_id": "sensor.test1"}]}
+
+    stats = get_latest_short_term_statistics(hass, ["sensor.test1"])
+    assert stats == {"sensor.test1": [{**expected_2, "statistic_id": "sensor.test1"}]}
+
+    metadata = get_metadata(hass, statistic_ids=['sensor.test1"'])
+
+    stats = get_latest_short_term_statistics(hass, ["sensor.test1"], metadata=metadata)
     assert stats == {"sensor.test1": [{**expected_2, "statistic_id": "sensor.test1"}]}
 
     stats = get_last_short_term_statistics(hass, 2, "sensor.test1", True)
@@ -115,6 +132,11 @@ def test_compile_hourly_statistics(hass_recorder):
     assert stats == {"sensor.test1": expected_stats1[::-1]}
 
     stats = get_last_short_term_statistics(hass, 1, "sensor.test3", True)
+    assert stats == {}
+
+    recorder.get_session().query(StatisticsShortTerm).delete()
+    # Should not fail there is nothing in the table
+    stats = get_latest_short_term_statistics(hass, ["sensor.test1"])
     assert stats == {}
 
 
@@ -135,11 +157,16 @@ def mock_sensor_statistics():
         }
 
     def get_fake_stats(_hass, start, _end):
-        return [
-            sensor_stats("sensor.test1", start),
-            sensor_stats("sensor.test2", start),
-            sensor_stats("sensor.test3", start),
-        ]
+        return statistics.PlatformCompiledStatistics(
+            [
+                sensor_stats("sensor.test1", start),
+                sensor_stats("sensor.test2", start),
+                sensor_stats("sensor.test3", start),
+            ],
+            get_metadata(
+                _hass, statistic_ids=["sensor.test1", "sensor.test2", "sensor.test3"]
+            ),
+        )
 
     with patch(
         "homeassistant.components.sensor.recorder.compile_statistics",
@@ -306,7 +333,8 @@ def test_statistics_duplicated(hass_recorder, caplog):
     assert "Statistics already compiled" not in caplog.text
 
     with patch(
-        "homeassistant.components.sensor.recorder.compile_statistics"
+        "homeassistant.components.sensor.recorder.compile_statistics",
+        return_value=statistics.PlatformCompiledStatistics([], {}),
     ) as compile_statistics:
         recorder.do_adhoc_statistics(start=zero)
         wait_recording_done(hass)
@@ -325,10 +353,10 @@ def test_statistics_duplicated(hass_recorder, caplog):
         caplog.clear()
 
 
-def test_external_statistics(hass_recorder, caplog):
+async def test_external_statistics(hass, hass_ws_client, recorder_mock, caplog):
     """Test inserting external statistics."""
-    hass = hass_recorder()
-    wait_recording_done(hass)
+    client = await hass_ws_client()
+
     assert "Compiling statistics for" not in caplog.text
     assert "Statistics already compiled" not in caplog.text
 
@@ -361,7 +389,7 @@ def test_external_statistics(hass_recorder, caplog):
     async_add_external_statistics(
         hass, external_metadata, (external_statistics1, external_statistics2)
     )
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass)
     stats = statistics_during_period(hass, zero, period="hour")
     assert stats == {
         "test:total_energy_import": [
@@ -392,6 +420,8 @@ def test_external_statistics(hass_recorder, caplog):
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
         {
+            "has_mean": False,
+            "has_sum": True,
             "statistic_id": "test:total_energy_import",
             "name": "Total imported energy",
             "source": "test",
@@ -437,7 +467,7 @@ def test_external_statistics(hass_recorder, caplog):
         "sum": 6,
     }
     async_add_external_statistics(hass, external_metadata, (external_statistics,))
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass)
     stats = statistics_during_period(hass, zero, period="hour")
     assert stats == {
         "test:total_energy_import": [
@@ -477,7 +507,7 @@ def test_external_statistics(hass_recorder, caplog):
         "sum": 5,
     }
     async_add_external_statistics(hass, external_metadata, (external_statistics,))
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass)
     stats = statistics_during_period(hass, zero, period="hour")
     assert stats == {
         "test:total_energy_import": [
@@ -502,6 +532,47 @@ def test_external_statistics(hass_recorder, caplog):
                 "last_reset": None,
                 "state": approx(1.0),
                 "sum": approx(3.0),
+            },
+        ]
+    }
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "recorder/adjust_sum_statistics",
+            "statistic_id": "test:total_energy_import",
+            "start_time": period2.isoformat(),
+            "adjustment": 1000.0,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+
+    await async_wait_recording_done(hass)
+    stats = statistics_during_period(hass, zero, period="hour")
+    assert stats == {
+        "test:total_energy_import": [
+            {
+                "statistic_id": "test:total_energy_import",
+                "start": period1.isoformat(),
+                "end": (period1 + timedelta(hours=1)).isoformat(),
+                "max": approx(1.0),
+                "mean": approx(2.0),
+                "min": approx(3.0),
+                "last_reset": None,
+                "state": approx(4.0),
+                "sum": approx(5.0),
+            },
+            {
+                "statistic_id": "test:total_energy_import",
+                "start": period2.isoformat(),
+                "end": (period2 + timedelta(hours=1)).isoformat(),
+                "max": None,
+                "mean": None,
+                "min": None,
+                "last_reset": None,
+                "state": approx(1.0),
+                "sum": approx(1003.0),
             },
         ]
     }
@@ -841,6 +912,7 @@ def test_delete_duplicates(caplog, tmpdir):
                 session.add(recorder.models.Statistics.from_stats(3, stat))
 
         hass.stop()
+        dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
 
     # Test that the duplicates are removed during migration from schema 23
     hass = get_test_home_assistant()
@@ -849,10 +921,185 @@ def test_delete_duplicates(caplog, tmpdir):
     wait_recording_done(hass)
     wait_recording_done(hass)
     hass.stop()
+    dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
 
     assert "Deleted 2 duplicated statistics rows" in caplog.text
     assert "Found non identical" not in caplog.text
-    assert "Found more than" not in caplog.text
+    assert "Found duplicated" not in caplog.text
+
+
+def test_delete_duplicates_many(caplog, tmpdir):
+    """Test removal of duplicated statistics."""
+    test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
+    dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
+
+    module = "tests.components.recorder.models_schema_23"
+    importlib.import_module(module)
+    old_models = sys.modules[module]
+
+    period1 = dt_util.as_utc(dt_util.parse_datetime("2021-09-01 00:00:00"))
+    period2 = dt_util.as_utc(dt_util.parse_datetime("2021-09-30 23:00:00"))
+    period3 = dt_util.as_utc(dt_util.parse_datetime("2021-10-01 00:00:00"))
+    period4 = dt_util.as_utc(dt_util.parse_datetime("2021-10-31 23:00:00"))
+
+    external_energy_statistics_1 = (
+        {
+            "start": period1,
+            "last_reset": None,
+            "state": 0,
+            "sum": 2,
+        },
+        {
+            "start": period2,
+            "last_reset": None,
+            "state": 1,
+            "sum": 3,
+        },
+        {
+            "start": period3,
+            "last_reset": None,
+            "state": 2,
+            "sum": 4,
+        },
+        {
+            "start": period4,
+            "last_reset": None,
+            "state": 3,
+            "sum": 5,
+        },
+        {
+            "start": period4,
+            "last_reset": None,
+            "state": 3,
+            "sum": 5,
+        },
+    )
+    external_energy_metadata_1 = {
+        "has_mean": False,
+        "has_sum": True,
+        "name": "Total imported energy",
+        "source": "test",
+        "statistic_id": "test:total_energy_import_tariff_1",
+        "unit_of_measurement": "kWh",
+    }
+    external_energy_statistics_2 = (
+        {
+            "start": period1,
+            "last_reset": None,
+            "state": 0,
+            "sum": 20,
+        },
+        {
+            "start": period2,
+            "last_reset": None,
+            "state": 1,
+            "sum": 30,
+        },
+        {
+            "start": period3,
+            "last_reset": None,
+            "state": 2,
+            "sum": 40,
+        },
+        {
+            "start": period4,
+            "last_reset": None,
+            "state": 3,
+            "sum": 50,
+        },
+        {
+            "start": period4,
+            "last_reset": None,
+            "state": 3,
+            "sum": 50,
+        },
+    )
+    external_energy_metadata_2 = {
+        "has_mean": False,
+        "has_sum": True,
+        "name": "Total imported energy",
+        "source": "test",
+        "statistic_id": "test:total_energy_import_tariff_2",
+        "unit_of_measurement": "kWh",
+    }
+    external_co2_statistics = (
+        {
+            "start": period1,
+            "last_reset": None,
+            "mean": 10,
+        },
+        {
+            "start": period2,
+            "last_reset": None,
+            "mean": 30,
+        },
+        {
+            "start": period3,
+            "last_reset": None,
+            "mean": 60,
+        },
+        {
+            "start": period4,
+            "last_reset": None,
+            "mean": 90,
+        },
+    )
+    external_co2_metadata = {
+        "has_mean": True,
+        "has_sum": False,
+        "name": "Fossil percentage",
+        "source": "test",
+        "statistic_id": "test:fossil_percentage",
+        "unit_of_measurement": "%",
+    }
+
+    # Create some duplicated statistics with schema version 23
+    with patch.object(recorder, "models", old_models), patch.object(
+        recorder.migration, "SCHEMA_VERSION", old_models.SCHEMA_VERSION
+    ), patch(
+        "homeassistant.components.recorder.create_engine", new=_create_engine_test
+    ):
+        hass = get_test_home_assistant()
+        setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
+        wait_recording_done(hass)
+        wait_recording_done(hass)
+
+        with session_scope(hass=hass) as session:
+            session.add(
+                recorder.models.StatisticsMeta.from_meta(external_energy_metadata_1)
+            )
+            session.add(
+                recorder.models.StatisticsMeta.from_meta(external_energy_metadata_2)
+            )
+            session.add(recorder.models.StatisticsMeta.from_meta(external_co2_metadata))
+        with session_scope(hass=hass) as session:
+            for stat in external_energy_statistics_1:
+                session.add(recorder.models.Statistics.from_stats(1, stat))
+            for _ in range(3000):
+                session.add(
+                    recorder.models.Statistics.from_stats(
+                        1, external_energy_statistics_1[-1]
+                    )
+                )
+            for stat in external_energy_statistics_2:
+                session.add(recorder.models.Statistics.from_stats(2, stat))
+            for stat in external_co2_statistics:
+                session.add(recorder.models.Statistics.from_stats(3, stat))
+
+        hass.stop()
+        dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
+
+    # Test that the duplicates are removed during migration from schema 23
+    hass = get_test_home_assistant()
+    setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
+    hass.start()
+    wait_recording_done(hass)
+    wait_recording_done(hass)
+    hass.stop()
+    dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
+
+    assert "Deleted 3002 duplicated statistics rows" in caplog.text
+    assert "Found non identical" not in caplog.text
     assert "Found duplicated" not in caplog.text
 
 
@@ -977,6 +1224,7 @@ def test_delete_duplicates_non_identical(caplog, tmpdir):
                 session.add(recorder.models.Statistics.from_stats(2, stat))
 
         hass.stop()
+        dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
 
     # Test that the duplicates are removed during migration from schema 23
     hass = get_test_home_assistant()
@@ -986,10 +1234,10 @@ def test_delete_duplicates_non_identical(caplog, tmpdir):
     wait_recording_done(hass)
     wait_recording_done(hass)
     hass.stop()
+    dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
 
     assert "Deleted 2 duplicated statistics rows" in caplog.text
     assert "Deleted 1 non identical" in caplog.text
-    assert "Found more than" not in caplog.text
     assert "Found duplicated" not in caplog.text
 
     isotime = dt_util.utcnow().isoformat()
@@ -1028,144 +1276,6 @@ def test_delete_duplicates_non_identical(caplog, tmpdir):
     ]
 
 
-@patch.object(statistics, "MAX_DUPLICATES", 2)
-def test_delete_duplicates_too_many(caplog, tmpdir):
-    """Test removal of duplicated statistics."""
-    test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
-    dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
-
-    module = "tests.components.recorder.models_schema_23"
-    importlib.import_module(module)
-    old_models = sys.modules[module]
-
-    period1 = dt_util.as_utc(dt_util.parse_datetime("2021-09-01 00:00:00"))
-    period2 = dt_util.as_utc(dt_util.parse_datetime("2021-09-30 23:00:00"))
-    period3 = dt_util.as_utc(dt_util.parse_datetime("2021-10-01 00:00:00"))
-    period4 = dt_util.as_utc(dt_util.parse_datetime("2021-10-31 23:00:00"))
-
-    external_energy_statistics_1 = (
-        {
-            "start": period1,
-            "last_reset": None,
-            "state": 0,
-            "sum": 2,
-        },
-        {
-            "start": period2,
-            "last_reset": None,
-            "state": 1,
-            "sum": 3,
-        },
-        {
-            "start": period3,
-            "last_reset": None,
-            "state": 2,
-            "sum": 4,
-        },
-        {
-            "start": period4,
-            "last_reset": None,
-            "state": 3,
-            "sum": 5,
-        },
-        {
-            "start": period4,
-            "last_reset": None,
-            "state": 3,
-            "sum": 5,
-        },
-    )
-    external_energy_metadata_1 = {
-        "has_mean": False,
-        "has_sum": True,
-        "name": "Total imported energy",
-        "source": "test",
-        "statistic_id": "test:total_energy_import_tariff_1",
-        "unit_of_measurement": "kWh",
-    }
-    external_energy_statistics_2 = (
-        {
-            "start": period1,
-            "last_reset": None,
-            "state": 0,
-            "sum": 20,
-        },
-        {
-            "start": period2,
-            "last_reset": None,
-            "state": 1,
-            "sum": 30,
-        },
-        {
-            "start": period3,
-            "last_reset": None,
-            "state": 2,
-            "sum": 40,
-        },
-        {
-            "start": period4,
-            "last_reset": None,
-            "state": 3,
-            "sum": 50,
-        },
-        {
-            "start": period4,
-            "last_reset": None,
-            "state": 3,
-            "sum": 50,
-        },
-    )
-    external_energy_metadata_2 = {
-        "has_mean": False,
-        "has_sum": True,
-        "name": "Total imported energy",
-        "source": "test",
-        "statistic_id": "test:total_energy_import_tariff_2",
-        "unit_of_measurement": "kWh",
-    }
-
-    # Create some duplicated statistics with schema version 23
-    with patch.object(recorder, "models", old_models), patch.object(
-        recorder.migration, "SCHEMA_VERSION", old_models.SCHEMA_VERSION
-    ), patch(
-        "homeassistant.components.recorder.create_engine", new=_create_engine_test
-    ):
-        hass = get_test_home_assistant()
-        setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
-        wait_recording_done(hass)
-        wait_recording_done(hass)
-
-        with session_scope(hass=hass) as session:
-            session.add(
-                recorder.models.StatisticsMeta.from_meta(external_energy_metadata_1)
-            )
-            session.add(
-                recorder.models.StatisticsMeta.from_meta(external_energy_metadata_2)
-            )
-        with session_scope(hass=hass) as session:
-            for stat in external_energy_statistics_1:
-                session.add(recorder.models.Statistics.from_stats(1, stat))
-            for stat in external_energy_statistics_2:
-                session.add(recorder.models.Statistics.from_stats(2, stat))
-
-        hass.stop()
-
-    # Test that the duplicates are removed during migration from schema 23
-    hass = get_test_home_assistant()
-    hass.config.config_dir = tmpdir
-    setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
-    hass.start()
-    wait_recording_done(hass)
-    wait_recording_done(hass)
-    hass.stop()
-
-    assert "Deleted 2 duplicated statistics rows" in caplog.text
-    assert "Found non identical" not in caplog.text
-    assert "Found more than 1 duplicated statistic rows" in caplog.text
-    assert "Found duplicated" not in caplog.text
-
-
-@patch.object(statistics, "MAX_DUPLICATES", 2)
 def test_delete_duplicates_short_term(caplog, tmpdir):
     """Test removal of duplicated statistics."""
     test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
@@ -1216,6 +1326,7 @@ def test_delete_duplicates_short_term(caplog, tmpdir):
             )
 
         hass.stop()
+        dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
 
     # Test that the duplicates are removed during migration from schema 23
     hass = get_test_home_assistant()
@@ -1225,10 +1336,10 @@ def test_delete_duplicates_short_term(caplog, tmpdir):
     wait_recording_done(hass)
     wait_recording_done(hass)
     hass.stop()
+    dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
 
     assert "duplicated statistics rows" not in caplog.text
     assert "Found non identical" not in caplog.text
-    assert "Found more than" not in caplog.text
     assert "Deleted duplicated short term statistic" in caplog.text
 
 
@@ -1240,7 +1351,6 @@ def test_delete_duplicates_no_duplicates(hass_recorder, caplog):
         delete_duplicates(hass.data[DATA_INSTANCE], session)
     assert "duplicated statistics rows" not in caplog.text
     assert "Found non identical" not in caplog.text
-    assert "Found more than" not in caplog.text
     assert "Found duplicated" not in caplog.text
 
 

@@ -19,10 +19,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -111,7 +111,7 @@ class GlancesData:
     async def async_update(self):
         """Get the latest data from the Glances REST API."""
         try:
-            await self.api.get_data()
+            await self.api.get_data("all")
             self.available = True
         except exceptions.GlancesApiError:
             _LOGGER.error("Unable to fetch data from Glances")
@@ -123,7 +123,7 @@ class GlancesData:
         """Set up the Glances client."""
         try:
             self.api = get_api(self.hass, self.config_entry.data)
-            await self.api.get_data()
+            await self.api.get_data("all")
             self.available = True
             _LOGGER.debug("Successfully connected to Glances")
 
@@ -163,7 +163,7 @@ class GlancesData:
         )
 
     @staticmethod
-    async def async_options_updated(hass, entry):
+    async def async_options_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Triggered by config entry options updates."""
         hass.data[DOMAIN][entry.entry_id].set_scan_interval(
             entry.options[CONF_SCAN_INTERVAL]
@@ -174,6 +174,6 @@ def get_api(hass, entry):
     """Return the api from glances_api."""
     params = entry.copy()
     params.pop(CONF_NAME)
-    verify_ssl = params.pop(CONF_VERIFY_SSL)
-    session = async_get_clientsession(hass, verify_ssl)
-    return Glances(hass.loop, session, **params)
+    verify_ssl = params.pop(CONF_VERIFY_SSL, True)
+    httpx_client = get_async_client(hass, verify_ssl=verify_ssl)
+    return Glances(httpx_client=httpx_client, **params)

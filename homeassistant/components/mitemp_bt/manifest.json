@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/mitemp_bt",
   "requirements": ["mitemp_bt==0.0.5"],
   "codeowners": [],
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "loggers": ["btlewrap", "mitemp_bt"]
 }

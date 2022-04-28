@@ -33,7 +33,7 @@
     },
     "options": {
         "error": {
-            "code_format_mismatch": "El codi PIN predeterminat no coincideix amb el nombre de d\u00edgits correcte"
+            "code_format_mismatch": "El codi PIN predeterminat no cont\u00e9 el nombre de d\u00edgits adequat"
         },
         "step": {
             "init": {

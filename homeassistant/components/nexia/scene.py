@@ -31,7 +31,7 @@ async def async_setup_entry(
 
         entities.append(NexiaAutomationScene(coordinator, automation))
 
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
 class NexiaAutomationScene(NexiaEntity, Scene):

@@ -25,7 +25,9 @@
     },
     "options": {
         "error": {
+            "currency_unavailable": "\u0130stenen para birimi bakiyelerinden biri veya daha fazlas\u0131 Coinbase API'niz taraf\u0131ndan sa\u011flanm\u0131yor.",
             "currency_unavaliable": "\u0130stenen para birimi bakiyelerinden biri veya daha fazlas\u0131 Coinbase API'niz taraf\u0131ndan sa\u011flanm\u0131yor.",
+            "exchange_rate_unavailable": "\u0130stenen d\u00f6viz kurlar\u0131ndan biri veya daha fazlas\u0131 Coinbase taraf\u0131ndan sa\u011flanm\u0131yor.",
             "exchange_rate_unavaliable": "\u0130stenen d\u00f6viz kurlar\u0131ndan biri veya daha fazlas\u0131 Coinbase taraf\u0131ndan sa\u011flanm\u0131yor.",
             "unknown": "Beklenmeyen hata"
         },

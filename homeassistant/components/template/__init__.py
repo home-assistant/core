@@ -61,7 +61,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def _process_config(hass, hass_config):
+async def _process_config(hass: HomeAssistant, hass_config: ConfigType) -> None:
     """Process config."""
     coordinators: list[TriggerUpdateCoordinator] | None = hass.data.pop(DOMAIN, None)
 
@@ -126,7 +126,7 @@ class TriggerUpdateCoordinator(update_coordinator.DataUpdateCoordinator):
         if self._unsub_trigger:
             self._unsub_trigger()
 
-    async def async_setup(self: HomeAssistant, hass_config: ConfigType) -> bool:
+    async def async_setup(self, hass_config: ConfigType) -> None:
         """Set up the trigger and create entities."""
         if self.hass.state == CoreState.running:
             await self._attach_triggers()

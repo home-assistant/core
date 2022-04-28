@@ -6,6 +6,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_CONTROL
+from homeassistant.components import persistent_notification
 import homeassistant.config as conf_util
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -22,6 +23,7 @@ from homeassistant.const import (
 import homeassistant.core as ha
 from homeassistant.exceptions import HomeAssistantError, Unauthorized, UnknownUser
 from homeassistant.helpers import config_validation as cv, recorder, restore_state
+from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.helpers.service import (
     async_extract_config_entry_ids,
     async_extract_referenced_entity_ids,
@@ -162,7 +164,8 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
                 call.service,
                 errors,
             )
-            hass.components.persistent_notification.async_create(
+            persistent_notification.async_create(
+                hass,
                 "Config error. See [the logs](/config/logs) for details.",
                 "Config validating",
                 f"{ha.DOMAIN}.check_config",
@@ -197,8 +200,7 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
                     )
 
         tasks = [
-            hass.helpers.entity_component.async_update_entity(entity)
-            for entity in call.data[ATTR_ENTITY_ID]
+            async_update_entity(hass, entity) for entity in call.data[ATTR_ENTITY_ID]
         ]
 
         if tasks:

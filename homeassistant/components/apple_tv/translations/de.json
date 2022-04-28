@@ -4,7 +4,7 @@
             "already_configured": "Ger\u00e4t ist bereits konfiguriert",
             "already_configured_device": "Ger\u00e4t ist bereits konfiguriert",
             "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
-            "backoff": "Das Ger\u00e4t akzeptiert derzeit keine Kopplungsanfragen (M\u00f6glicherweise wurde zu oft ein ung\u00fcltiger PIN-Code eingegeben), versuche es sp\u00e4ter erneut.",
+            "backoff": "Das Ger\u00e4t akzeptiert zur Zeit keine Kopplungsanfragen (Du hast m\u00f6glicherweise zu oft einen ung\u00fcltigen PIN-Code eingegeben), versuche es sp\u00e4ter erneut.",
             "device_did_not_pair": "Es wurde kein Versuch unternommen, den Kopplungsvorgang vom Ger\u00e4t aus abzuschlie\u00dfen.",
             "device_not_found": "Das Ger\u00e4t wurde bei der Erkennung nicht gefunden. Bitte versuche es erneut hinzuzuf\u00fcgen.",
             "inconsistent_device": "Die erwarteten Protokolle wurden bei der Erkennung nicht gefunden. Dies deutet normalerweise auf ein Problem mit Multicast-DNS (Zeroconf) hin. Bitte versuche das Ger\u00e4t erneut hinzuzuf\u00fcgen.",

@@ -4,21 +4,16 @@ from __future__ import annotations
 from typing import Any
 
 from aiopvapi.resources.scene import Scene as PvScene
-import voluptuous as vol
 
 from homeassistant.components.scene import Scene
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PLATFORM
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     COORDINATOR,
     DEVICE_INFO,
     DOMAIN,
-    HUB_ADDRESS,
     PV_API,
     PV_ROOM_DATA,
     PV_SCENE_DATA,
@@ -26,27 +21,6 @@ from .const import (
     STATE_ATTRIBUTE_ROOM_NAME,
 )
 from .entity import HDEntity
-
-PLATFORM_SCHEMA = vol.Schema(
-    {vol.Required(CONF_PLATFORM): DOMAIN, vol.Required(HUB_ADDRESS): cv.string}
-)
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Import platform from yaml."""
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={CONF_HOST: config[HUB_ADDRESS]},
-        )
-    )
 
 
 async def async_setup_entry(

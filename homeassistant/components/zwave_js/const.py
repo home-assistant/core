@@ -1,10 +1,6 @@
 """Constants for the Z-Wave JS integration."""
 import logging
 
-import voluptuous as vol
-
-import homeassistant.helpers.config_validation as cv
-
 CONF_ADDON_DEVICE = "device"
 CONF_ADDON_EMULATE_HARDWARE = "emulate_hardware"
 CONF_ADDON_LOG_LEVEL = "log_level"
@@ -49,6 +45,7 @@ ATTR_PROPERTY_KEY_NAME = "property_key_name"
 ATTR_PROPERTY = "property"
 ATTR_PROPERTY_KEY = "property_key"
 ATTR_PARAMETERS = "parameters"
+ATTR_DIRECTION = "direction"
 ATTR_EVENT = "event"
 ATTR_EVENT_LABEL = "event_label"
 ATTR_EVENT_TYPE = "event_type"
@@ -56,6 +53,9 @@ ATTR_EVENT_DATA = "event_data"
 ATTR_DATA_TYPE = "data_type"
 ATTR_WAIT_FOR_RESULT = "wait_for_result"
 ATTR_OPTIONS = "options"
+ATTR_TEST_NODE_ID = "test_node_id"
+ATTR_STATUS = "status"
+ATTR_ACKNOWLEDGED_FRAMES = "acknowledged_frames"
 
 ATTR_NODE = "node"
 ATTR_ZWAVE_VALUE = "zwave_value"
@@ -66,17 +66,21 @@ ATTR_PREVIOUS_VALUE_RAW = "previous_value_raw"
 ATTR_CURRENT_VALUE = "current_value"
 ATTR_CURRENT_VALUE_RAW = "current_value_raw"
 ATTR_DESCRIPTION = "description"
+ATTR_EVENT_SOURCE = "event_source"
+ATTR_CONFIG_ENTRY_ID = "config_entry_id"
+ATTR_PARTIAL_DICT_MATCH = "partial_dict_match"
 
 # service constants
-SERVICE_SET_LOCK_USERCODE = "set_lock_usercode"
+SERVICE_BULK_SET_PARTIAL_CONFIG_PARAMETERS = "bulk_set_partial_config_parameters"
 SERVICE_CLEAR_LOCK_USERCODE = "clear_lock_usercode"
-SERVICE_SET_VALUE = "set_value"
-SERVICE_RESET_METER = "reset_meter"
+SERVICE_INVOKE_CC_API = "invoke_cc_api"
 SERVICE_MULTICAST_SET_VALUE = "multicast_set_value"
 SERVICE_PING = "ping"
 SERVICE_REFRESH_VALUE = "refresh_value"
+SERVICE_RESET_METER = "reset_meter"
 SERVICE_SET_CONFIG_PARAMETER = "set_config_parameter"
-SERVICE_BULK_SET_PARTIAL_CONFIG_PARAMETERS = "bulk_set_partial_config_parameters"
+SERVICE_SET_LOCK_USERCODE = "set_lock_usercode"
+SERVICE_SET_VALUE = "set_value"
 
 ATTR_NODES = "nodes"
 # config parameter
@@ -90,6 +94,9 @@ ATTR_BROADCAST = "broadcast"
 # meter reset
 ATTR_METER_TYPE = "meter_type"
 ATTR_METER_TYPE_NAME = "meter_type_name"
+# invoke CC API
+ATTR_METHOD_NAME = "method_name"
+ATTR_PARAMETERS = "parameters"
 
 ADDON_SLUG = "core_zwave_js"
 
@@ -111,26 +118,3 @@ ENTITY_DESC_KEY_TEMPERATURE = "temperature"
 ENTITY_DESC_KEY_TARGET_TEMPERATURE = "target_temperature"
 ENTITY_DESC_KEY_MEASUREMENT = "measurement"
 ENTITY_DESC_KEY_TOTAL_INCREASING = "total_increasing"
-
-# Schema Constants
-
-# Validates that a bitmask is provided in hex form and converts it to decimal
-# int equivalent since that's what the library uses
-BITMASK_SCHEMA = vol.All(
-    cv.string,
-    vol.Lower,
-    vol.Match(
-        r"^(0x)?[0-9a-f]+$",
-        msg="Must provide an integer (e.g. 255) or a bitmask in hex form (e.g. 0xff)",
-    ),
-    lambda value: int(value, 16),
-)
-
-VALUE_SCHEMA = vol.Any(
-    bool,
-    vol.Coerce(int),
-    vol.Coerce(float),
-    BITMASK_SCHEMA,
-    cv.string,
-    dict,
-)

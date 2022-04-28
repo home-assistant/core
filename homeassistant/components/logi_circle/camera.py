@@ -4,13 +4,14 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from homeassistant.components.camera import ATTR_ENTITY_ID, SUPPORT_ON_OFF, Camera
+from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.components.ffmpeg import get_ffmpeg_manager
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_BATTERY_CHARGING,
     ATTR_BATTERY_LEVEL,
+    ATTR_ENTITY_ID,
     STATE_OFF,
     STATE_ON,
 )
@@ -60,6 +61,8 @@ async def async_setup_entry(
 
 class LogiCam(Camera):
     """An implementation of a Logi Circle camera."""
+
+    _attr_supported_features = CameraEntityFeature.ON_OFF
 
     def __init__(self, camera, device_info, ffmpeg):
         """Initialize Logi Circle camera."""
@@ -121,11 +124,6 @@ class LogiCam(Camera):
     def name(self):
         """Return the name of this camera."""
         return self._name
-
-    @property
-    def supported_features(self):
-        """Logi Circle camera's support turning on and off ("soft" switch)."""
-        return SUPPORT_ON_OFF
 
     @property
     def device_info(self) -> DeviceInfo:

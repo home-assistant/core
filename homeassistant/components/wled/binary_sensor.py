@@ -35,6 +35,9 @@ class WLEDUpdateBinarySensor(WLEDEntity, BinarySensorEntity):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_device_class = BinarySensorDeviceClass.UPDATE
 
+    # Disabled by default, as this entity is deprecated.
+    _attr_entity_registry_enabled_default = False
+
     def __init__(self, coordinator: WLEDDataUpdateCoordinator) -> None:
         """Initialize the button entity."""
         super().__init__(coordinator=coordinator)

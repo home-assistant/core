@@ -3,8 +3,8 @@ from __future__ import annotations
 
 from xs1_api_client.api_constants import ActuatorType
 
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -30,7 +30,7 @@ def setup_platform(
     add_entities(switch_entities)
 
 
-class XS1SwitchEntity(XS1DeviceEntity, ToggleEntity):
+class XS1SwitchEntity(XS1DeviceEntity, SwitchEntity):
     """Representation of a XS1 switch actuator."""
 
     @property

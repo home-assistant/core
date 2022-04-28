@@ -37,7 +37,7 @@ async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: entity_platform.AddEntitiesCallback,
-):
+) -> None:
     """Set up the Zigbee Home Automation Door Lock from config entry."""
     entities_to_create = hass.data[DATA_ZHA][Platform.LOCK]
 
@@ -122,7 +122,7 @@ class ZhaDoorLock(ZhaEntity, LockEntity):
     async def async_lock(self, **kwargs):
         """Lock the lock."""
         result = await self._doorlock_channel.lock_door()
-        if not isinstance(result, list) or result[0] is not Status.SUCCESS:
+        if isinstance(result, Exception) or result[0] is not Status.SUCCESS:
             self.error("Error with lock_door: %s", result)
             return
         self.async_write_ha_state()
@@ -130,7 +130,7 @@ class ZhaDoorLock(ZhaEntity, LockEntity):
     async def async_unlock(self, **kwargs):
         """Unlock the lock."""
         result = await self._doorlock_channel.unlock_door()
-        if not isinstance(result, list) or result[0] is not Status.SUCCESS:
+        if isinstance(result, Exception) or result[0] is not Status.SUCCESS:
             self.error("Error with unlock_door: %s", result)
             return
         self.async_write_ha_state()

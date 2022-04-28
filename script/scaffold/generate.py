@@ -150,8 +150,30 @@ def _custom_tasks(template, info: Info) -> None:
             },
         )
 
+    elif template == "config_flow_helper":
+        info.update_manifest(config_flow=True)
+        info.update_strings(
+            config={
+                "step": {
+                    "user": {
+                        "description": "New NEW_NAME Sensor",
+                        "data": {"entity": "Input sensor", "name": "Name"},
+                    },
+                },
+            },
+            options={
+                "step": {
+                    "init": {
+                        "data": {
+                            "entity": "[%key:component::NEW_DOMAIN::config::step::user::description%]"
+                        },
+                    },
+                },
+            },
+        )
+
     elif template == "config_flow_oauth2":
-        info.update_manifest(config_flow=True, dependencies=["http"])
+        info.update_manifest(config_flow=True, dependencies=["auth"])
         info.update_strings(
             config={
                 "step": {

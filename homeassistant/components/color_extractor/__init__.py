@@ -13,8 +13,8 @@ from homeassistant.components.light import (
     ATTR_RGB_COLOR,
     DOMAIN as LIGHT_DOMAIN,
     LIGHT_TURN_ON_SCHEMA,
-    SERVICE_TURN_ON as LIGHT_SERVICE_TURN_ON,
 )
+from homeassistant.const import SERVICE_TURN_ON as LIGHT_SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import aiohttp_client
 import homeassistant.helpers.config_validation as cv
@@ -80,7 +80,7 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
         except UnidentifiedImageError as ex:
             _LOGGER.error(
                 "Bad image from %s '%s' provided, are you sure it's an image? %s",
-                image_type,
+                image_type,  # pylint: disable=used-before-assignment
                 image_reference,
                 ex,
             )

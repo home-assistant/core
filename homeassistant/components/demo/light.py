@@ -11,13 +11,9 @@ from homeassistant.components.light import (
     ATTR_RGBW_COLOR,
     ATTR_RGBWW_COLOR,
     ATTR_WHITE,
-    COLOR_MODE_COLOR_TEMP,
-    COLOR_MODE_HS,
-    COLOR_MODE_RGBW,
-    COLOR_MODE_RGBWW,
-    COLOR_MODE_WHITE,
-    SUPPORT_EFFECT,
+    ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -33,8 +29,8 @@ LIGHT_EFFECT_LIST = ["rainbow", "none"]
 
 LIGHT_TEMPS = [240, 380]
 
-SUPPORT_DEMO = {COLOR_MODE_HS, COLOR_MODE_COLOR_TEMP}
-SUPPORT_DEMO_HS_WHITE = {COLOR_MODE_HS, COLOR_MODE_WHITE}
+SUPPORT_DEMO = {ColorMode.HS, ColorMode.COLOR_TEMP}
+SUPPORT_DEMO_HS_WHITE = {ColorMode.HS, ColorMode.WHITE}
 
 
 async def async_setup_platform(
@@ -74,7 +70,7 @@ async def async_setup_platform(
                 name="Office RGBW Lights",
                 rgbw_color=(255, 0, 0, 255),
                 state=True,
-                supported_color_modes={COLOR_MODE_RGBW},
+                supported_color_modes={ColorMode.RGBW},
                 unique_id="light_4",
             ),
             DemoLight(
@@ -82,7 +78,7 @@ async def async_setup_platform(
                 name="Living Room RGBWW Lights",
                 rgbww_color=(255, 0, 0, 255, 0),
                 state=True,
-                supported_color_modes={COLOR_MODE_RGBWW},
+                supported_color_modes={ColorMode.RGBWW},
                 unique_id="light_5",
             ),
             DemoLight(
@@ -138,18 +134,18 @@ class DemoLight(LightEntity):
         self._state = state
         self._unique_id = unique_id
         if hs_color:
-            self._color_mode = COLOR_MODE_HS
+            self._color_mode = ColorMode.HS
         elif rgbw_color:
-            self._color_mode = COLOR_MODE_RGBW
+            self._color_mode = ColorMode.RGBW
         elif rgbww_color:
-            self._color_mode = COLOR_MODE_RGBWW
+            self._color_mode = ColorMode.RGBWW
         else:
-            self._color_mode = COLOR_MODE_COLOR_TEMP
+            self._color_mode = ColorMode.COLOR_TEMP
         if not supported_color_modes:
             supported_color_modes = SUPPORT_DEMO
         self._color_modes = supported_color_modes
         if self._effect_list is not None:
-            self._features |= SUPPORT_EFFECT
+            self._features |= LightEntityFeature.EFFECT
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -195,17 +191,17 @@ class DemoLight(LightEntity):
         return self._color_mode
 
     @property
-    def hs_color(self) -> tuple:
+    def hs_color(self) -> tuple[float, float]:
         """Return the hs color value."""
         return self._hs_color
 
     @property
-    def rgbw_color(self) -> tuple:
+    def rgbw_color(self) -> tuple[int, int, int, int]:
         """Return the rgbw color value."""
         return self._rgbw_color
 
     @property
-    def rgbww_color(self) -> tuple:
+    def rgbww_color(self) -> tuple[int, int, int, int, int]:
         """Return the rgbww color value."""
         return self._rgbww_color
 
@@ -247,26 +243,26 @@ class DemoLight(LightEntity):
             self._brightness = kwargs[ATTR_BRIGHTNESS]
 
         if ATTR_COLOR_TEMP in kwargs:
-            self._color_mode = COLOR_MODE_COLOR_TEMP
+            self._color_mode = ColorMode.COLOR_TEMP
             self._ct = kwargs[ATTR_COLOR_TEMP]
 
         if ATTR_EFFECT in kwargs:
             self._effect = kwargs[ATTR_EFFECT]
 
         if ATTR_HS_COLOR in kwargs:
-            self._color_mode = COLOR_MODE_HS
+            self._color_mode = ColorMode.HS
             self._hs_color = kwargs[ATTR_HS_COLOR]
 
         if ATTR_RGBW_COLOR in kwargs:
-            self._color_mode = COLOR_MODE_RGBW
+            self._color_mode = ColorMode.RGBW
             self._rgbw_color = kwargs[ATTR_RGBW_COLOR]
 
         if ATTR_RGBWW_COLOR in kwargs:
-            self._color_mode = COLOR_MODE_RGBWW
+            self._color_mode = ColorMode.RGBWW
             self._rgbww_color = kwargs[ATTR_RGBWW_COLOR]
 
         if ATTR_WHITE in kwargs:
-            self._color_mode = COLOR_MODE_WHITE
+            self._color_mode = ColorMode.WHITE
             self._brightness = kwargs[ATTR_WHITE]
 
         # As we have disabled polling, we need to inform

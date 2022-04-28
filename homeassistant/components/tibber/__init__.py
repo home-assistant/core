@@ -68,18 +68,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # have to use discovery to load platform.
     hass.async_create_task(
         discovery.async_load_platform(
-            hass, "notify", DOMAIN, {CONF_NAME: DOMAIN}, hass.data[DATA_HASS_CONFIG]
+            hass,
+            Platform.NOTIFY,
+            DOMAIN,
+            {CONF_NAME: DOMAIN},
+            hass.data[DATA_HASS_CONFIG],
         )
     )
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS
     )
     if unload_ok:
-        tibber_connection = hass.data.get(DOMAIN)
+        tibber_connection = hass.data[DOMAIN]
         await tibber_connection.rt_disconnect()
     return unload_ok

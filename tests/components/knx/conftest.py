@@ -13,11 +13,16 @@ from xknx.telegram import Telegram, TelegramDirection
 from xknx.telegram.address import GroupAddress, IndividualAddress
 from xknx.telegram.apci import APCI, GroupValueRead, GroupValueResponse, GroupValueWrite
 
-from homeassistant.components.knx import ConnectionSchema
 from homeassistant.components.knx.const import (
     CONF_KNX_AUTOMATIC,
     CONF_KNX_CONNECTION_TYPE,
+    CONF_KNX_DEFAULT_RATE_LIMIT,
+    CONF_KNX_DEFAULT_STATE_UPDATER,
     CONF_KNX_INDIVIDUAL_ADDRESS,
+    CONF_KNX_MCAST_GRP,
+    CONF_KNX_MCAST_PORT,
+    CONF_KNX_RATE_LIMIT,
+    CONF_KNX_STATE_UPDATER,
     DOMAIN as KNX_DOMAIN,
 )
 from homeassistant.core import HomeAssistant
@@ -60,13 +65,13 @@ class KNXTestKit:
 
         def fish_xknx(*args, **kwargs):
             """Get the XKNX object from the constructor call."""
-            self.xknx = args[0]
+            self.xknx = kwargs["xknx"]
             # disable rate limiter for tests (before StateUpdater starts)
             self.xknx.rate_limit = 0
             return DEFAULT
 
         with patch(
-            "xknx.xknx.KNXIPInterface",
+            "xknx.xknx.knx_interface_factory",
             return_value=knx_ip_interface_mock(),
             side_effect=fish_xknx,
         ):
@@ -208,10 +213,12 @@ def mock_config_entry() -> MockConfigEntry:
         title="KNX",
         domain=KNX_DOMAIN,
         data={
-            CONF_KNX_INDIVIDUAL_ADDRESS: XKNX.DEFAULT_ADDRESS,
-            ConnectionSchema.CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
-            ConnectionSchema.CONF_KNX_MCAST_PORT: DEFAULT_MCAST_PORT,
             CONF_KNX_CONNECTION_TYPE: CONF_KNX_AUTOMATIC,
+            CONF_KNX_RATE_LIMIT: CONF_KNX_DEFAULT_RATE_LIMIT,
+            CONF_KNX_STATE_UPDATER: CONF_KNX_DEFAULT_STATE_UPDATER,
+            CONF_KNX_MCAST_PORT: DEFAULT_MCAST_PORT,
+            CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
+            CONF_KNX_INDIVIDUAL_ADDRESS: XKNX.DEFAULT_ADDRESS,
         },
     )
 

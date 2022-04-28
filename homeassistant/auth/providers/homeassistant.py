@@ -18,8 +18,6 @@ from homeassistant.exceptions import HomeAssistantError
 from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
 from ..models import Credentials, UserMeta
 
-# mypy: disallow-any-generics
-
 STORAGE_VERSION = 1
 STORAGE_KEY = "auth_provider.homeassistant"
 
@@ -122,7 +120,7 @@ class Data:
     @property
     def users(self) -> list[dict[str, str]]:
         """Return users."""
-        return self._data["users"]  # type: ignore
+        return self._data["users"]  # type: ignore[index,no-any-return]
 
     def validate_login(self, username: str, password: str) -> None:
         """Validate a username and password.
@@ -149,9 +147,7 @@ class Data:
         if not bcrypt.checkpw(password.encode(), user_hash):
             raise InvalidAuth
 
-    def hash_password(  # pylint: disable=no-self-use
-        self, password: str, for_storage: bool = False
-    ) -> bytes:
+    def hash_password(self, password: str, for_storage: bool = False) -> bytes:
         """Encode a password."""
         hashed: bytes = bcrypt.hashpw(password.encode(), bcrypt.gensalt(rounds=12))
 

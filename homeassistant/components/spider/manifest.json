@@ -5,5 +5,6 @@
   "requirements": ["spiderpy==1.6.1"],
   "codeowners": ["@peternijssen"],
   "config_flow": true,
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "loggers": ["spiderpy"]
 }

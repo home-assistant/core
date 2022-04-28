@@ -113,6 +113,12 @@ Result will be a long-lived access token:
     "result": "ABCDEFGH"
 }
 
+
+# POST /auth/external/callback
+
+This is an endpoint for OAuth2 Authorization callbacks used by integrations
+that link accounts with other cloud providers using LocalOAuth2Implementation
+as part of a config flow.
 """
 from __future__ import annotations
 
@@ -134,6 +140,7 @@ from homeassistant.components.http.ban import log_invalid_auth
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.config_entry_oauth2_flow import OAuth2AuthorizeCallbackView
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
@@ -195,25 +202,28 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.http.register_view(TokenView(retrieve_result))
     hass.http.register_view(LinkUserView(retrieve_result))
+    hass.http.register_view(OAuth2AuthorizeCallbackView())
 
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_CURRENT_USER, websocket_current_user, SCHEMA_WS_CURRENT_USER
+    websocket_api.async_register_command(
+        hass, WS_TYPE_CURRENT_USER, websocket_current_user, SCHEMA_WS_CURRENT_USER
     )
-    hass.components.websocket_api.async_register_command(
+    websocket_api.async_register_command(
+        hass,
         WS_TYPE_LONG_LIVED_ACCESS_TOKEN,
         websocket_create_long_lived_access_token,
         SCHEMA_WS_LONG_LIVED_ACCESS_TOKEN,
     )
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_REFRESH_TOKENS, websocket_refresh_tokens, SCHEMA_WS_REFRESH_TOKENS
+    websocket_api.async_register_command(
+        hass, WS_TYPE_REFRESH_TOKENS, websocket_refresh_tokens, SCHEMA_WS_REFRESH_TOKENS
     )
-    hass.components.websocket_api.async_register_command(
+    websocket_api.async_register_command(
+        hass,
         WS_TYPE_DELETE_REFRESH_TOKEN,
         websocket_delete_refresh_token,
         SCHEMA_WS_DELETE_REFRESH_TOKEN,
     )
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_SIGN_PATH, websocket_sign_path, SCHEMA_WS_SIGN_PATH
+    websocket_api.async_register_command(
+        hass, WS_TYPE_SIGN_PATH, websocket_sign_path, SCHEMA_WS_SIGN_PATH
     )
 
     await login_flow.async_setup(hass, store_result)
@@ -261,7 +271,6 @@ class TokenView(HomeAssistantView):
 
     async def _async_handle_revoke_token(self, hass, data):
         """Handle revoke token request."""
-        # pylint: disable=no-self-use
 
         # OAuth 2.0 Token Revocation [RFC7009]
         # 2.2 The authorization server responds with HTTP status code 200
@@ -586,7 +595,6 @@ def websocket_sign_path(
             {
                 "path": async_sign_path(
                     hass,
-                    connection.refresh_token_id,
                     msg["path"],
                     timedelta(seconds=msg["expires"]),
                 )

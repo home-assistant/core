@@ -2,7 +2,7 @@
     "config": {
         "error": {
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
-            "no_units": "Nem tal\u00e1lhat\u00f3 HVAC egys\u00e9g a CoolMasterNet gazdag\u00e9pben."
+            "no_units": "Nem tal\u00e1lhat\u00f3 HVAC egys\u00e9g a CoolMasterNet g\u00e9pen."
         },
         "step": {
             "user": {

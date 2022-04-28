@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Any
 
 from awesomeversion import AwesomeVersion
-from pyhaversion import HaVersion
+from pyhaversion import HaVersion, HaVersionSource
 from pyhaversion.exceptions import HaVersionException
 
 from homeassistant.config_entries import ConfigEntry
@@ -41,8 +41,10 @@ class VersionDataUpdateCoordinator(DataUpdateCoordinator):
         return str(self._version) if self._version else None
 
     @property
-    def version_data(self) -> dict[str, Any]:
+    def version_data(self) -> dict[str, Any] | None:
         """Return the version data."""
+        if self._api.source == HaVersionSource.LOCAL:
+            return None
         return self._version_data or {}
 
     async def _async_update_data(self) -> None:

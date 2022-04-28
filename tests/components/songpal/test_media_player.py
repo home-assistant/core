@@ -12,8 +12,8 @@ from songpal import (
 )
 
 from homeassistant.components import media_player, songpal
+from homeassistant.components.media_player import MediaPlayerEntityFeature
 from homeassistant.components.songpal.const import SET_SOUND_SETTING
-from homeassistant.components.songpal.media_player import SUPPORT_SONGPAL
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -29,11 +29,21 @@ from . import (
     MAC,
     MODEL,
     SW_VERSION,
+    WIRELESS_MAC,
     _create_mocked_device,
     _patch_media_player_device,
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+
+SUPPORT_SONGPAL = (
+    MediaPlayerEntityFeature.VOLUME_SET
+    | MediaPlayerEntityFeature.VOLUME_STEP
+    | MediaPlayerEntityFeature.VOLUME_MUTE
+    | MediaPlayerEntityFeature.SELECT_SOURCE
+    | MediaPlayerEntityFeature.TURN_ON
+    | MediaPlayerEntityFeature.TURN_OFF
+)
 
 
 def _get_attributes(hass):
@@ -126,6 +136,78 @@ async def test_state(hass):
     assert entity.unique_id == MAC
 
 
+async def test_state_wireless(hass):
+    """Test state of the entity with only Wireless MAC."""
+    mocked_device = _create_mocked_device(wired_mac=None, wireless_mac=WIRELESS_MAC)
+    entry = MockConfigEntry(domain=songpal.DOMAIN, data=CONF_DATA)
+    entry.add_to_hass(hass)
+
+    with _patch_media_player_device(mocked_device):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.name == FRIENDLY_NAME
+    assert state.state == STATE_ON
+    attributes = state.as_dict()["attributes"]
+    assert attributes["volume_level"] == 0.5
+    assert attributes["is_volume_muted"] is False
+    assert attributes["source_list"] == ["title1", "title2"]
+    assert attributes["source"] == "title2"
+    assert attributes["supported_features"] == SUPPORT_SONGPAL
+
+    device_registry = dr.async_get(hass)
+    device = device_registry.async_get_device(
+        identifiers={(songpal.DOMAIN, WIRELESS_MAC)}
+    )
+    assert device.connections == {(dr.CONNECTION_NETWORK_MAC, WIRELESS_MAC)}
+    assert device.manufacturer == "Sony Corporation"
+    assert device.name == FRIENDLY_NAME
+    assert device.sw_version == SW_VERSION
+    assert device.model == MODEL
+
+    entity_registry = er.async_get(hass)
+    entity = entity_registry.async_get(ENTITY_ID)
+    assert entity.unique_id == WIRELESS_MAC
+
+
+async def test_state_both(hass):
+    """Test state of the entity with both Wired and Wireless MAC."""
+    mocked_device = _create_mocked_device(wired_mac=MAC, wireless_mac=WIRELESS_MAC)
+    entry = MockConfigEntry(domain=songpal.DOMAIN, data=CONF_DATA)
+    entry.add_to_hass(hass)
+
+    with _patch_media_player_device(mocked_device):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.name == FRIENDLY_NAME
+    assert state.state == STATE_ON
+    attributes = state.as_dict()["attributes"]
+    assert attributes["volume_level"] == 0.5
+    assert attributes["is_volume_muted"] is False
+    assert attributes["source_list"] == ["title1", "title2"]
+    assert attributes["source"] == "title2"
+    assert attributes["supported_features"] == SUPPORT_SONGPAL
+
+    device_registry = dr.async_get(hass)
+    device = device_registry.async_get_device(identifiers={(songpal.DOMAIN, MAC)})
+    assert device.connections == {
+        (dr.CONNECTION_NETWORK_MAC, MAC),
+        (dr.CONNECTION_NETWORK_MAC, WIRELESS_MAC),
+    }
+    assert device.manufacturer == "Sony Corporation"
+    assert device.name == FRIENDLY_NAME
+    assert device.sw_version == SW_VERSION
+    assert device.model == MODEL
+
+    entity_registry = er.async_get(hass)
+    entity = entity_registry.async_get(ENTITY_ID)
+    # We prefer the wired mac if present.
+    assert entity.unique_id == MAC
+
+
 async def test_services(hass):
     """Test services."""
     mocked_device = _create_mocked_device()
@@ -173,11 +255,7 @@ async def test_services(hass):
     mocked_device.set_sound_settings.assert_called_once_with("name", "value")
     mocked_device.set_sound_settings.reset_mock()
 
-    mocked_device2 = _create_mocked_device()
-    sys_info = MagicMock()
-    sys_info.macAddr = "mac2"
-    sys_info.version = SW_VERSION
-    type(mocked_device2).get_system_info = AsyncMock(return_value=sys_info)
+    mocked_device2 = _create_mocked_device(wired_mac="mac2")
     entry2 = MockConfigEntry(
         domain=songpal.DOMAIN, data={CONF_NAME: "d2", CONF_ENDPOINT: ENDPOINT}
     )
@@ -194,6 +272,27 @@ async def test_services(hass):
     )
     mocked_device.set_sound_settings.assert_called_once_with("name", "value")
     mocked_device2.set_sound_settings.assert_called_once_with("name", "value")
+    mocked_device.set_sound_settings.reset_mock()
+    mocked_device2.set_sound_settings.reset_mock()
+
+    mocked_device3 = _create_mocked_device(wired_mac=None, wireless_mac=WIRELESS_MAC)
+    entry3 = MockConfigEntry(
+        domain=songpal.DOMAIN, data={CONF_NAME: "d2", CONF_ENDPOINT: ENDPOINT}
+    )
+    entry3.add_to_hass(hass)
+    with _patch_media_player_device(mocked_device3):
+        await hass.config_entries.async_setup(entry3.entry_id)
+        await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        songpal.DOMAIN,
+        SET_SOUND_SETTING,
+        {"entity_id": "all", "name": "name", "value": "value"},
+        blocking=True,
+    )
+    mocked_device.set_sound_settings.assert_called_once_with("name", "value")
+    mocked_device2.set_sound_settings.assert_called_once_with("name", "value")
+    mocked_device3.set_sound_settings.assert_called_once_with("name", "value")
 
 
 async def test_websocket_events(hass):

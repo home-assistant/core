@@ -6,13 +6,27 @@ from screenlogicpy.const import (
     EQUIPMENT,
 )
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ScreenlogicEntity
 from .const import DOMAIN
+
+SUPPORTED_BASIC_SENSORS = (
+    "air_temperature",
+    "saturation",
+)
+
+SUPPORTED_BASIC_CHEM_SENSORS = (
+    "orp",
+    "ph",
+)
 
 SUPPORTED_CHEM_SENSORS = (
     "calcium_harness",
@@ -23,11 +37,13 @@ SUPPORTED_CHEM_SENSORS = (
     "orp_last_dose_time",
     "orp_last_dose_volume",
     "orp_setpoint",
+    "orp_supply_level",
     "ph_dosing_state",
     "ph_last_dose_time",
     "ph_last_dose_volume",
     "ph_probe_water_temp",
     "ph_setpoint",
+    "ph_supply_level",
     "salt_tds_ppm",
     "total_alkalinity",
 )
@@ -56,10 +72,17 @@ async def async_setup_entry(
     equipment_flags = coordinator.data[SL_DATA.KEY_CONFIG]["equipment_flags"]
 
     # Generic sensors
-    for sensor_name, sensor_data in coordinator.data[SL_DATA.KEY_SENSORS].items():
-        if sensor_name in ("chem_alarm", "salt_ppm"):
-            continue
-        if sensor_data["value"] != 0:
+    for sensor_name in coordinator.data[SL_DATA.KEY_SENSORS]:
+        if sensor_name in SUPPORTED_BASIC_SENSORS:
+            entities.append(ScreenLogicSensor(coordinator, sensor_name))
+
+        # While these values exist in the chemistry data, their last value doesn't
+        # persist there when the pump is off/there is no flow. Pulling them from
+        # the basic sensors keeps the 'last' value and is better for graphs.
+        if (
+            equipment_flags & EQUIPMENT.FLAG_INTELLICHEM
+            and sensor_name in SUPPORTED_BASIC_CHEM_SENSORS
+        ):
             entities.append(ScreenLogicSensor(coordinator, sensor_name))
 
     # Pump sensors
@@ -123,10 +146,16 @@ class ScreenLogicSensor(ScreenlogicEntity, SensorEntity):
         return SL_DEVICE_TYPE_TO_HA_DEVICE_CLASS.get(device_type)
 
     @property
+    def state_class(self):
+        """Return the state class of the sensor."""
+        if self._data_key == "scg_super_chlor_timer":
+            return None
+        return SensorStateClass.MEASUREMENT
+
+    @property
     def native_value(self):
         """State of the sensor."""
-        value = self.sensor["value"]
-        return (value - 1) if "supply" in self._data_key else value
+        return self.sensor["value"]
 
     @property
     def sensor(self):
@@ -163,7 +192,7 @@ class ScreenLogicChemistrySensor(ScreenLogicSensor):
         value = self.sensor["value"]
         if "dosing_state" in self._key:
             return CHEM_DOSING_STATE.NAME_FOR_NUM[value]
-        return value
+        return (value - 1) if "supply" in self._data_key else value
 
     @property
     def sensor(self):

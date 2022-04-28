@@ -336,6 +336,7 @@ def get_influx_connection(conf, test_write=False, test_read=False):  # noqa: C90
     precision = conf.get(CONF_PRECISION)
 
     if conf[CONF_API_VERSION] == API_VERSION_2:
+        kwargs[CONF_TIMEOUT] = TIMEOUT * 1000
         kwargs[CONF_URL] = conf[CONF_URL]
         kwargs[CONF_TOKEN] = conf[CONF_TOKEN]
         kwargs[INFLUX_CONF_ORG] = conf[CONF_ORG]

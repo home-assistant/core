@@ -12,19 +12,17 @@ from homeassistant.const import CONF_ICON, CONF_NAME, CONF_PAYLOAD_ON, CONF_UNIQ
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import PLATFORMS
 from .. import mqtt
-from .const import CONF_COMMAND_TOPIC, CONF_ENCODING, CONF_QOS, CONF_RETAIN, DOMAIN
+from .const import CONF_COMMAND_TOPIC, CONF_ENCODING, CONF_QOS, CONF_RETAIN
 from .mixins import (
+    CONF_ENABLED_BY_DEFAULT,
     CONF_OBJECT_ID,
     MQTT_AVAILABILITY_SCHEMA,
-    MqttAvailability,
-    MqttDiscoveryUpdate,
+    MqttEntity,
     async_setup_entry_helper,
-    init_entity_id_from_config,
+    async_setup_platform_helper,
 )
 
 DEFAULT_NAME = "MQTT Scene"
@@ -39,6 +37,8 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
         vol.Optional(CONF_OBJECT_ID): cv.string,
+        # CONF_ENABLED_BY_DEFAULT is not added by default because we are not using the common schema here
+        vol.Optional(CONF_ENABLED_BY_DEFAULT, default=True): cv.boolean,
     }
 ).extend(MQTT_AVAILABILITY_SCHEMA.schema)
 
@@ -52,8 +52,9 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up MQTT scene through configuration.yaml."""
-    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
-    await _async_setup_entity(hass, async_add_entities, config)
+    await async_setup_platform_helper(
+        hass, scene.DOMAIN, config, async_add_entities, _async_setup_entity
+    )
 
 
 async def async_setup_entry(
@@ -76,8 +77,7 @@ async def _async_setup_entity(
 
 
 class MqttScene(
-    MqttAvailability,
-    MqttDiscoveryUpdate,
+    MqttEntity,
     Scene,
 ):
     """Representation of a scene that can be activated using MQTT."""
@@ -86,61 +86,22 @@ class MqttScene(
 
     def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the MQTT scene."""
-        self.hass = hass
-        self._state = False
-        self._sub_state = None
+        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
-        self._unique_id = config.get(CONF_UNIQUE_ID)
-
-        # Load config
-        self._setup_from_config(config)
-
-        # Initialize entity_id from config
-        self._init_entity_id()
-
-        MqttAvailability.__init__(self, config)
-        MqttDiscoveryUpdate.__init__(self, discovery_data, self.discovery_update)
-
-    def _init_entity_id(self):
-        """Set entity_id from object_id if defined in config."""
-        init_entity_id_from_config(
-            self.hass, self, self._config, self._entity_id_format
-        )
-
-    async def async_added_to_hass(self):
-        """Subscribe to MQTT events."""
-        await super().async_added_to_hass()
-
-    async def discovery_update(self, discovery_payload):
-        """Handle updated discovery message."""
-        config = DISCOVERY_SCHEMA(discovery_payload)
-        self._setup_from_config(config)
-        await self.availability_discovery_update(config)
-        self.async_write_ha_state()
+    @staticmethod
+    def config_schema():
+        """Return the config schema."""
+        return DISCOVERY_SCHEMA
 
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""
         self._config = config
 
-    async def async_will_remove_from_hass(self):
-        """Unsubscribe when removed."""
-        await MqttAvailability.async_will_remove_from_hass(self)
-        await MqttDiscoveryUpdate.async_will_remove_from_hass(self)
+    def _prepare_subscribe_topics(self):
+        """(Re)Subscribe to topics."""
 
-    @property
-    def name(self):
-        """Return the name of the scene."""
-        return self._config[CONF_NAME]
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return self._unique_id
-
-    @property
-    def icon(self):
-        """Return the icon."""
-        return self._config.get(CONF_ICON)
+    async def _subscribe_topics(self):
+        """(Re)Subscribe to topics."""
 
     async def async_activate(self, **kwargs):
         """Activate the scene.

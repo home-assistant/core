@@ -16,6 +16,7 @@ from homeassistant.components.websocket_api.const import (
     URL,
 )
 from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_coro
@@ -30,18 +31,14 @@ def track_connected(hass):
     def track_connected():
         connected_evt.append(1)
 
-    hass.helpers.dispatcher.async_dispatcher_connect(
-        SIGNAL_WEBSOCKET_CONNECTED, track_connected
-    )
+    async_dispatcher_connect(hass, SIGNAL_WEBSOCKET_CONNECTED, track_connected)
     disconnected_evt = []
 
     @callback
     def track_disconnected():
         disconnected_evt.append(1)
 
-    hass.helpers.dispatcher.async_dispatcher_connect(
-        SIGNAL_WEBSOCKET_DISCONNECTED, track_disconnected
-    )
+    async_dispatcher_connect(hass, SIGNAL_WEBSOCKET_DISCONNECTED, track_disconnected)
 
     return {"connected": connected_evt, "disconnected": disconnected_evt}
 

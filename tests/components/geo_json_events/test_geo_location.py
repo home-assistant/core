@@ -1,5 +1,8 @@
 """The tests for the geojson platform."""
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import ANY, MagicMock, call, patch
+
+from aio_geojson_generic_client import GenericFeed
+from freezegun import freeze_time
 
 from homeassistant.components import geo_location
 from homeassistant.components.geo_json_events.geo_location import (
@@ -55,7 +58,7 @@ def _generate_mock_feed_entry(external_id, title, distance_to_home, coordinates)
     return feed_entry
 
 
-async def test_setup(hass, legacy_patchable_time):
+async def test_setup(hass):
     """Test the general setup of the platform."""
     # Set up some mock feed entries for this test.
     mock_entry_1 = _generate_mock_feed_entry("1234", "Title 1", 15.5, (-31.0, 150.0))
@@ -65,10 +68,10 @@ async def test_setup(hass, legacy_patchable_time):
 
     # Patching 'utcnow' to gain more control over the timed update.
     utcnow = dt_util.utcnow()
-    with patch("homeassistant.util.dt.utcnow", return_value=utcnow), patch(
-        "geojson_client.generic_feed.GenericFeed"
-    ) as mock_feed:
-        mock_feed.return_value.update.return_value = (
+    with freeze_time(utcnow), patch(
+        "aio_geojson_client.feed.GeoJsonFeed.update"
+    ) as mock_feed_update:
+        mock_feed_update.return_value = (
             "OK",
             [mock_entry_1, mock_entry_2, mock_entry_3],
         )
@@ -124,7 +127,7 @@ async def test_setup(hass, legacy_patchable_time):
 
             # Simulate an update - one existing, one new entry,
             # one outdated entry
-            mock_feed.return_value.update.return_value = (
+            mock_feed_update.return_value = (
                 "OK",
                 [mock_entry_1, mock_entry_4, mock_entry_3],
             )
@@ -136,7 +139,7 @@ async def test_setup(hass, legacy_patchable_time):
 
             # Simulate an update - empty data, but successful update,
             # so no changes to entities.
-            mock_feed.return_value.update.return_value = "OK_NO_DATA", None
+            mock_feed_update.return_value = "OK_NO_DATA", None
             async_fire_time_changed(hass, utcnow + 2 * SCAN_INTERVAL)
             await hass.async_block_till_done()
 
@@ -144,7 +147,7 @@ async def test_setup(hass, legacy_patchable_time):
             assert len(all_states) == 3
 
             # Simulate an update - empty data, removes all entities
-            mock_feed.return_value.update.return_value = "ERROR", None
+            mock_feed_update.return_value = "ERROR", None
             async_fire_time_changed(hass, utcnow + 3 * SCAN_INTERVAL)
             await hass.async_block_till_done()
 
@@ -157,8 +160,13 @@ async def test_setup_with_custom_location(hass):
     # Set up some mock feed entries for this test.
     mock_entry_1 = _generate_mock_feed_entry("1234", "Title 1", 2000.5, (-31.1, 150.1))
 
-    with patch("geojson_client.generic_feed.GenericFeed") as mock_feed:
-        mock_feed.return_value.update.return_value = "OK", [mock_entry_1]
+    with patch(
+        "aio_geojson_generic_client.feed_manager.GenericFeed",
+        wraps=GenericFeed,
+    ) as mock_feed, patch(
+        "aio_geojson_client.feed.GeoJsonFeed.update"
+    ) as mock_feed_update:
+        mock_feed_update.return_value = "OK", [mock_entry_1]
 
         with assert_setup_component(1, geo_location.DOMAIN):
             assert await async_setup_component(
@@ -174,10 +182,12 @@ async def test_setup_with_custom_location(hass):
             all_states = hass.states.async_all()
             assert len(all_states) == 1
 
-            assert mock_feed.call_args == call((15.1, 25.2), URL, filter_radius=200.0)
+            assert mock_feed.call_args == call(
+                ANY, (15.1, 25.2), URL, filter_radius=200.0
+            )
 
 
-async def test_setup_race_condition(hass, legacy_patchable_time):
+async def test_setup_race_condition(hass):
     """Test a particular race condition experienced."""
     # 1. Feed returns 1 entry -> Feed manager creates 1 entity.
     # 2. Feed returns error -> Feed manager removes 1 entity.
@@ -196,13 +206,13 @@ async def test_setup_race_condition(hass, legacy_patchable_time):
 
     # Patching 'utcnow' to gain more control over the timed update.
     utcnow = dt_util.utcnow()
-    with patch("homeassistant.util.dt.utcnow", return_value=utcnow), patch(
-        "geojson_client.generic_feed.GenericFeed"
-    ) as mock_feed, assert_setup_component(1, geo_location.DOMAIN):
+    with freeze_time(utcnow), patch(
+        "aio_geojson_client.feed.GeoJsonFeed.update"
+    ) as mock_feed_update, assert_setup_component(1, geo_location.DOMAIN):
         assert await async_setup_component(hass, geo_location.DOMAIN, CONFIG)
         await hass.async_block_till_done()
 
-        mock_feed.return_value.update.return_value = "OK", [mock_entry_1]
+        mock_feed_update.return_value = "OK", [mock_entry_1]
 
         # Artificially trigger update.
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -215,7 +225,7 @@ async def test_setup_race_condition(hass, legacy_patchable_time):
         assert len(hass.data[DATA_DISPATCHER][update_signal]) == 1
 
         # Simulate an update - empty data, removes all entities
-        mock_feed.return_value.update.return_value = "ERROR", None
+        mock_feed_update.return_value = "ERROR", None
         async_fire_time_changed(hass, utcnow + SCAN_INTERVAL)
         await hass.async_block_till_done()
 
@@ -225,7 +235,7 @@ async def test_setup_race_condition(hass, legacy_patchable_time):
         assert len(hass.data[DATA_DISPATCHER][update_signal]) == 0
 
         # Simulate an update - 1 entry
-        mock_feed.return_value.update.return_value = "OK", [mock_entry_1]
+        mock_feed_update.return_value = "OK", [mock_entry_1]
         async_fire_time_changed(hass, utcnow + 2 * SCAN_INTERVAL)
         await hass.async_block_till_done()
 
@@ -235,7 +245,7 @@ async def test_setup_race_condition(hass, legacy_patchable_time):
         assert len(hass.data[DATA_DISPATCHER][update_signal]) == 1
 
         # Simulate an update - 1 entry
-        mock_feed.return_value.update.return_value = "OK", [mock_entry_1]
+        mock_feed_update.return_value = "OK", [mock_entry_1]
         async_fire_time_changed(hass, utcnow + 3 * SCAN_INTERVAL)
         await hass.async_block_till_done()
 
@@ -245,7 +255,7 @@ async def test_setup_race_condition(hass, legacy_patchable_time):
         assert len(hass.data[DATA_DISPATCHER][update_signal]) == 1
 
         # Simulate an update - empty data, removes all entities
-        mock_feed.return_value.update.return_value = "ERROR", None
+        mock_feed_update.return_value = "ERROR", None
         async_fire_time_changed(hass, utcnow + 4 * SCAN_INTERVAL)
         await hass.async_block_till_done()
 

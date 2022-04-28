@@ -9,12 +9,12 @@
                     "version_source": "\u7248\u672c\u4f86\u6e90"
                 },
                 "description": "\u8ffd\u8e64\u7248\u672c\u4f86\u6e90",
-                "title": "\u9078\u64c7\u5b89\u88dd\u985e\u578b"
+                "title": "\u9078\u64c7\u5b89\u88dd\u985e\u5225"
             },
             "version_source": {
                 "data": {
                     "beta": "\u5305\u542b\u6e2c\u8a66\u7248\u672c",
-                    "board": "\u6240\u8981\u8ffd\u8e64\u7684\u786c\u9ad4\u985e\u578b",
+                    "board": "\u6240\u8981\u8ffd\u8e64\u7684\u786c\u9ad4\u985e\u5225",
                     "channel": "\u6240\u8981\u8ffd\u8e64\u7684\u7248\u6b21",
                     "image": "\u6240\u8981\u8ffd\u8e64\u7684\u6620\u50cf\u6a94\u7248\u672c"
                 },

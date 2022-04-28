@@ -24,19 +24,11 @@ from pycec.const import (
     TYPE_TUNER,
 )
 
-from homeassistant.components.media_player import MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    DOMAIN,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_STOP,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_STEP,
+from homeassistant.components.media_player import (
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
 )
+from homeassistant.components.media_player.const import DOMAIN as MP_DOMAIN
 from homeassistant.const import (
     STATE_IDLE,
     STATE_OFF,
@@ -44,21 +36,29 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_PLAYING,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import ATTR_NEW, CecEntity
+from . import ATTR_NEW, DOMAIN, CecEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-ENTITY_ID_FORMAT = DOMAIN + ".{}"
+ENTITY_ID_FORMAT = MP_DOMAIN + ".{}"
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Find and return HDMI devices as +switches."""
-    if ATTR_NEW in discovery_info:
+    if discovery_info and ATTR_NEW in discovery_info:
         _LOGGER.debug("Setting up HDMI devices %s", discovery_info[ATTR_NEW])
         entities = []
         for device in discovery_info[ATTR_NEW]:
-            hdmi_device = hass.data.get(device)
+            hdmi_device = hass.data[DOMAIN][device]
             entities.append(CecPlayerEntity(hdmi_device, hdmi_device.logical_address))
         add_entities(entities, True)
 
@@ -69,7 +69,7 @@ class CecPlayerEntity(CecEntity, MediaPlayerEntity):
     def __init__(self, device, logical) -> None:
         """Initialize the HDMI device."""
         CecEntity.__init__(self, device, logical)
-        self.entity_id = f"{DOMAIN}.hdmi_{hex(self._logical_address)[2:]}"
+        self.entity_id = f"{MP_DOMAIN}.hdmi_{hex(self._logical_address)[2:]}"
 
     def send_keypress(self, key):
         """Send keypress to CEC adapter."""
@@ -177,27 +177,27 @@ class CecPlayerEntity(CecEntity, MediaPlayerEntity):
         """Flag media player features that are supported."""
         if self.type_id == TYPE_RECORDER or self.type == TYPE_PLAYBACK:
             return (
-                SUPPORT_TURN_ON
-                | SUPPORT_TURN_OFF
-                | SUPPORT_PLAY_MEDIA
-                | SUPPORT_PAUSE
-                | SUPPORT_STOP
-                | SUPPORT_PREVIOUS_TRACK
-                | SUPPORT_NEXT_TRACK
+                MediaPlayerEntityFeature.TURN_ON
+                | MediaPlayerEntityFeature.TURN_OFF
+                | MediaPlayerEntityFeature.PLAY_MEDIA
+                | MediaPlayerEntityFeature.PAUSE
+                | MediaPlayerEntityFeature.STOP
+                | MediaPlayerEntityFeature.PREVIOUS_TRACK
+                | MediaPlayerEntityFeature.NEXT_TRACK
             )
         if self.type == TYPE_TUNER:
             return (
-                SUPPORT_TURN_ON
-                | SUPPORT_TURN_OFF
-                | SUPPORT_PLAY_MEDIA
-                | SUPPORT_PAUSE
-                | SUPPORT_STOP
+                MediaPlayerEntityFeature.TURN_ON
+                | MediaPlayerEntityFeature.TURN_OFF
+                | MediaPlayerEntityFeature.PLAY_MEDIA
+                | MediaPlayerEntityFeature.PAUSE
+                | MediaPlayerEntityFeature.STOP
             )
         if self.type_id == TYPE_AUDIO:
             return (
-                SUPPORT_TURN_ON
-                | SUPPORT_TURN_OFF
-                | SUPPORT_VOLUME_STEP
-                | SUPPORT_VOLUME_MUTE
+                MediaPlayerEntityFeature.TURN_ON
+                | MediaPlayerEntityFeature.TURN_OFF
+                | MediaPlayerEntityFeature.VOLUME_STEP
+                | MediaPlayerEntityFeature.VOLUME_MUTE
             )
-        return SUPPORT_TURN_ON | SUPPORT_TURN_OFF
+        return MediaPlayerEntityFeature.TURN_ON | MediaPlayerEntityFeature.TURN_OFF

@@ -1,9 +1,14 @@
 """Support for monitoring a Smappee appliance binary sensor."""
+from __future__ import annotations
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 
@@ -11,11 +16,15 @@ BINARY_SENSOR_PREFIX = "Appliance"
 PRESENCE_PREFIX = "Presence"
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Smappee binary sensor."""
     smappee_base = hass.data[DOMAIN][config_entry.entry_id]
 
-    entities = []
+    entities: list[BinarySensorEntity] = []
     for service_location in smappee_base.smappee.service_locations.values():
         for appliance_id, appliance in service_location.appliances.items():
             if appliance.type != "Find me" and appliance.source_type == "NILM":

@@ -5,13 +5,8 @@ import io
 
 import face_recognition  # pylint: disable=import-error
 
-from homeassistant.components.image_processing import (
-    CONF_ENTITY_ID,
-    CONF_NAME,
-    CONF_SOURCE,
-    ImageProcessingFaceEntity,
-)
-from homeassistant.const import ATTR_LOCATION
+from homeassistant.components.image_processing import ImageProcessingFaceEntity
+from homeassistant.const import ATTR_LOCATION, CONF_ENTITY_ID, CONF_NAME, CONF_SOURCE
 from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType

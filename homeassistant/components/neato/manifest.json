@@ -3,8 +3,9 @@
   "name": "Neato Botvac",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/neato",
-  "requirements": ["pybotvac==0.0.22"],
+  "requirements": ["pybotvac==0.0.23"],
   "codeowners": ["@dshokouhi", "@Santobert"],
-  "dependencies": ["http"],
-  "iot_class": "cloud_polling"
+  "dependencies": ["auth"],
+  "iot_class": "cloud_polling",
+  "loggers": ["pybotvac"]
 }

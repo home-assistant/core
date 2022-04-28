@@ -54,9 +54,9 @@
                 "data": {
                     "address": "Adresse de l'appareil (par exemple 1a2b3c)",
                     "cat": "Cat\u00e9gorie d'appareil (c.-\u00e0-d. 0x10)",
-                    "subcat": "Sous-cat\u00e9gorie de p\u00e9riph\u00e9rique (par exemple 0x0a)"
+                    "subcat": "Sous-cat\u00e9gorie d'appareil (par exemple 0x0a)"
                 },
-                "description": "Ajoutez un remplacement de p\u00e9riph\u00e9rique.",
+                "description": "Ajouter un remplacement d'appareil.",
                 "title": "Insteon"
             },
             "add_x10": {
@@ -81,27 +81,27 @@
             },
             "init": {
                 "data": {
-                    "add_override": "Ajoutez un remplacement de p\u00e9riph\u00e9rique.",
+                    "add_override": "Ajouter un remplacement d'appareil.",
                     "add_x10": "Ajouter un appareil X10.",
                     "change_hub_config": "Modifier la configuration du Hub.",
                     "remove_override": "Supprimer un remplacement d'appareil",
-                    "remove_x10": "Retirez un p\u00e9riph\u00e9rique X10."
+                    "remove_x10": "Retirer un appareil X10."
                 },
                 "description": "S\u00e9lectionnez une option \u00e0 configurer.",
                 "title": "Insteon"
             },
             "remove_override": {
                 "data": {
-                    "address": "S\u00e9lectionner une adresse de p\u00e9riph\u00e9rique \u00e0 retirer"
+                    "address": "S\u00e9lectionnez l'adresse d'un appareil \u00e0 retirer"
                 },
                 "description": "Supprimer un remplacement d'appareil",
                 "title": "Insteon"
             },
             "remove_x10": {
                 "data": {
-                    "address": "S\u00e9lectionner une adresse de p\u00e9riph\u00e9rique \u00e0 retirer"
+                    "address": "S\u00e9lectionnez l'adresse d'un appareil \u00e0 retirer"
                 },
-                "description": "Retirer un p\u00e9riph\u00e9rique X10",
+                "description": "Retirer un appareil X10",
                 "title": "Insteon"
             }
         }
