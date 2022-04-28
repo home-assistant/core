@@ -374,7 +374,7 @@ def _select_unused_attributes_ids(
         # We used to generate a query based on how many attribute_ids to find but
         # that meant sqlalchemy Transparent SQL Compilation Caching was working against
         # us by cached up to MAX_ROWS_TO_PURGE different statements which could be
-        # up to 800MB for large database due to the complexity of the ORM objects.
+        # up to 500MB for large database due to the complexity of the ORM objects.
         #
         # We now break the query into groups of 100 and use a lambda_stmt to ensure
         # that the query is only cached once.
