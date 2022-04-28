@@ -5,8 +5,10 @@ import sqlite3
 from unittest.mock import MagicMock, patch
 
 import pytest
+from sqlalchemy import bindparam, func, lambda_stmt, select, union_all
 from sqlalchemy.exc import DatabaseError, OperationalError
 from sqlalchemy.orm.session import Session
+from sqlalchemy.sql.lambdas import StatementLambdaElement
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder import PurgeTask
@@ -19,10 +21,7 @@ from homeassistant.components.recorder.models import (
     StatisticsRuns,
     StatisticsShortTerm,
 )
-from homeassistant.components.recorder.purge import (
-    _generate_find_attr_select,
-    purge_old_data,
-)
+from homeassistant.components.recorder.purge import purge_old_data
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import EVENT_STATE_CHANGED, STATE_ON
 from homeassistant.core import HomeAssistant
@@ -37,7 +36,21 @@ from .common import (
 
 from tests.common import SetupRecorderInstanceT
 
-SQLITE_MAX_UNIONS = 500
+
+def _generate_sqlite_compatible_find_attr_lambda() -> StatementLambdaElement:
+    """Generate the find attributes select only once."""
+    return lambda_stmt(
+        lambda: union_all(
+            *[
+                select(func.min(States.attributes_id).label("id")).where(
+                    States.attributes_id == bindparam(f"a{idx}", required=False)
+                )
+                for idx in range(
+                    500
+                )  # 500 inlined to avoid TypeError: 'PyWrapper' object cannot be interpreted as an integer
+            ]
+        )
+    )
 
 
 @pytest.fixture(name="use_sqlite")
@@ -47,10 +60,8 @@ def mock_use_sqlite(request):
         "homeassistant.components.recorder.Recorder.using_sqlite",
         return_value=request.param,
     ), patch(
-        "homeassistant.components.recorder.purge.MAX_ROWS_TO_PURGE", SQLITE_MAX_UNIONS
-    ), patch(
-        "homeassistant.components.recorder.purge.FIND_ATTRS_SELECT",
-        _generate_find_attr_select(SQLITE_MAX_UNIONS),
+        "homeassistant.components.recorder.purge.FIND_ATTRS_LAMBDA",
+        _generate_sqlite_compatible_find_attr_lambda(),
     ):
         yield
 
@@ -179,10 +190,8 @@ async def test_purge_old_states_encounters_temporary_mysql_error(
     ), patch.object(
         instance.engine.dialect, "name", "mysql"
     ), patch(
-        "homeassistant.components.recorder.purge.MAX_ROWS_TO_PURGE", SQLITE_MAX_UNIONS
-    ), patch(
-        "homeassistant.components.recorder.purge.FIND_ATTRS_SELECT",
-        _generate_find_attr_select(SQLITE_MAX_UNIONS),
+        "homeassistant.components.recorder.purge.FIND_ATTRS_LAMBDA",
+        _generate_sqlite_compatible_find_attr_lambda(),
     ):
         await hass.services.async_call(
             recorder.DOMAIN, recorder.SERVICE_PURGE, {"keep_days": 0}
