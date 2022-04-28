@@ -8,12 +8,7 @@ import nikohomecontrol
 import voluptuous as vol
 
 # Import the device class from the component that you want to support
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    PLATFORM_SCHEMA,
-    ColorMode,
-    LightEntity,
-)
+from homeassistant.components.light import PLATFORM_SCHEMA, ColorMode, LightEntity
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
@@ -66,7 +61,6 @@ class NikoHomeControlLight(LightEntity):
         self._unique_id = f"light-{light.id}"
         self._name = light.name
         self._state = light.is_on
-        self._brightness = None
 
     @property
     def unique_id(self):
@@ -79,18 +73,12 @@ class NikoHomeControlLight(LightEntity):
         return self._name
 
     @property
-    def brightness(self):
-        """Return the brightness of the light."""
-        return self._brightness
-
-    @property
     def is_on(self):
         """Return true if light is on."""
         return self._state
 
     def turn_on(self, **kwargs):
         """Instruct the light to turn on."""
-        self._light.brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
         _LOGGER.debug("Turn on: %s", self.name)
         self._light.turn_on()
 
