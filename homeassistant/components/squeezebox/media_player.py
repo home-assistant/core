@@ -66,7 +66,6 @@ SERVICE_SYNC = "sync"
 SERVICE_UNSYNC = "unsync"
 
 ATTR_QUERY_RESULT = "query_result"
-ATTR_SYNC_GROUP = "sync_group"
 
 SIGNAL_PLAYER_REDISCOVERED = "squeezebox_player_rediscovered"
 
@@ -81,7 +80,6 @@ ATTR_OTHER_PLAYER = "other_player"
 
 ATTR_TO_PROPERTY = [
     ATTR_QUERY_RESULT,
-    ATTR_SYNC_GROUP,
 ]
 
 SQUEEZEBOX_MODE = {
@@ -201,7 +199,7 @@ async def async_setup_entry(
         {vol.Required(ATTR_OTHER_PLAYER): cv.string},
         "async_sync",
     )
-    platform.async_register_entity_service(SERVICE_UNSYNC, None, "async_unsync")
+    platform.async_register_entity_service(SERVICE_UNSYNC, None, "async_unjoin")
 
     # Start server discovery task if not already running
     if hass.is_running:
@@ -234,6 +232,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         | MediaPlayerEntityFeature.SHUFFLE_SET
         | MediaPlayerEntityFeature.CLEAR_PLAYLIST
         | MediaPlayerEntityFeature.STOP
+        | MediaPlayerEntityFeature.GROUPING
     )
 
     def __init__(self, player):
@@ -379,7 +378,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         return self._player.shuffle
 
     @property
-    def sync_group(self):
+    def group_members(self):
         """List players we are synced with."""
         player_ids = {
             p.unique_id: p.entity_id for p in self.hass.data[DOMAIN][KNOWN_PLAYERS]
@@ -550,7 +549,12 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         else:
             _LOGGER.info("Could not find player_id for %s. Not syncing", other_player)
 
-    async def async_unsync(self):
+    async def async_join_players(self, group_members):
+        """Join `group_members` as a player group with the current player."""
+        for entity_id in group_members:
+            await self.async_sync(entity_id)
+
+    async def async_unjoin_player(self):
         """Unsync this Squeezebox player."""
         await self._player.async_unsync()
 
