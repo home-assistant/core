@@ -79,7 +79,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             ),
         }
 
-    sentry_sdk.init(  # pylint: disable=abstract-class-instantiated
+    # pylint: disable-next=abstract-class-instantiated
+    sentry_sdk.init(  # type: ignore[abstract]
         dsn=entry.data[CONF_DSN],
         environment=entry.options.get(CONF_ENVIRONMENT),
         integrations=[sentry_logging, AioHttpIntegration(), SqlalchemyIntegration()],
