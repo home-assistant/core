@@ -5,7 +5,7 @@ from collections.abc import Callable, Iterable
 from datetime import datetime
 from itertools import zip_longest
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 from sqlalchemy import func, lambda_stmt, select, union_all
 from sqlalchemy.orm.session import Session
@@ -114,194 +114,214 @@ def _select_event_state_and_attributes_ids_to_purge(
     return event_ids, state_ids, attributes_ids
 
 
-def _generate_find_attr_lambda(attribute_ids: list[int]) -> StatementLambdaElement:
+STATE_ATTRS_ID: Final = States.attributes_id
+
+
+def _generate_find_attr_lambda(
+    attr1: int,
+    attr2: int,
+    attr3: int,
+    attr4: int,
+    attr5: int,
+    attr6: int,
+    attr7: int,
+    attr8: int,
+    attr9: int,
+    attr10: int,
+    attr11: int,
+    attr12: int,
+    attr13: int,
+    attr14: int,
+    attr15: int,
+    attr16: int,
+    attr17: int,
+    attr18: int,
+    attr19: int,
+    attr20: int,
+    attr21: int,
+    attr22: int,
+    attr23: int,
+    attr24: int,
+    attr25: int,
+    attr26: int,
+    attr27: int,
+    attr28: int,
+    attr29: int,
+    attr30: int,
+    attr31: int,
+    attr32: int,
+    attr33: int,
+    attr34: int,
+    attr35: int,
+    attr36: int,
+    attr37: int,
+    attr38: int,
+    attr39: int,
+    attr40: int,
+    attr41: int,
+    attr42: int,
+    attr43: int,
+    attr44: int,
+    attr45: int,
+    attr46: int,
+    attr47: int,
+    attr48: int,
+    attr49: int,
+    attr50: int,
+    attr51: int,
+    attr52: int,
+    attr53: int,
+    attr54: int,
+    attr55: int,
+    attr56: int,
+    attr57: int,
+    attr58: int,
+    attr59: int,
+    attr60: int,
+    attr61: int,
+    attr62: int,
+    attr63: int,
+    attr64: int,
+    attr65: int,
+    attr66: int,
+    attr67: int,
+    attr68: int,
+    attr69: int,
+    attr70: int,
+    attr71: int,
+    attr72: int,
+    attr73: int,
+    attr74: int,
+    attr75: int,
+    attr76: int,
+    attr77: int,
+    attr78: int,
+    attr79: int,
+    attr80: int,
+    attr81: int,
+    attr82: int,
+    attr83: int,
+    attr84: int,
+    attr85: int,
+    attr86: int,
+    attr87: int,
+    attr88: int,
+    attr89: int,
+    attr90: int,
+    attr91: int,
+    attr92: int,
+    attr93: int,
+    attr94: int,
+    attr95: int,
+    attr96: int,
+    attr97: int,
+    attr98: int,
+    attr99: int,
+    attr100: int,
+) -> StatementLambdaElement:
     """Generate the find attributes select only once."""
-    (
-        attr1,
-        attr2,
-        attr3,
-        attr4,
-        attr5,
-        attr6,
-        attr7,
-        attr8,
-        attr9,
-        attr10,
-        attr11,
-        attr12,
-        attr13,
-        attr14,
-        attr15,
-        attr16,
-        attr17,
-        attr18,
-        attr19,
-        attr20,
-        attr21,
-        attr22,
-        attr23,
-        attr24,
-        attr25,
-        attr26,
-        attr27,
-        attr28,
-        attr29,
-        attr30,
-        attr31,
-        attr32,
-        attr33,
-        attr34,
-        attr35,
-        attr36,
-        attr37,
-        attr38,
-        attr39,
-        attr40,
-        attr41,
-        attr42,
-        attr43,
-        attr44,
-        attr45,
-        attr46,
-        attr47,
-        attr48,
-        attr49,
-        attr50,
-    ) = attribute_ids
     return lambda_stmt(
         lambda: union_all(
-            select(func.min(States.attributes_id)).where(States.attributes_id == attr1),
-            select(func.min(States.attributes_id)).where(States.attributes_id == attr2),
-            select(func.min(States.attributes_id)).where(States.attributes_id == attr3),
-            select(func.min(States.attributes_id)).where(States.attributes_id == attr4),
-            select(func.min(States.attributes_id)).where(States.attributes_id == attr5),
-            select(func.min(States.attributes_id)).where(States.attributes_id == attr6),
-            select(func.min(States.attributes_id)).where(States.attributes_id == attr7),
-            select(func.min(States.attributes_id)).where(States.attributes_id == attr8),
-            select(func.min(States.attributes_id)).where(States.attributes_id == attr9),
-            select(func.min(States.attributes_id)).where(
-                States.attributes_id == attr10
-            ),
-            select(func.min(States.attributes_id)).where(
-                States.attributes_id == attr11
-            ),
-            select(func.min(States.attributes_id)).where(
-                States.attributes_id == attr12
-            ),
-            select(func.min(States.attributes_id)).where(
-                States.attributes_id == attr13
-            ),
-            select(func.min(States.attributes_id)).where(
-                States.attributes_id == attr14
-            ),
-            select(func.min(States.attributes_id)).where(
-                States.attributes_id == attr15
-            ),
-            select(func.min(States.attributes_id)).where(
-                States.attributes_id == attr16
-            ),
-            select(func.min(States.attributes_id)).where(
-                States.attributes_id == attr17
-            ),
-            select(func.min(States.attributes_id)).where(
-                States.attributes_id == attr18
-            ),
-            select(func.min(States.attributes_id)).where(
-                States.attributes_id == attr19
-            ),
-            select(func.min(States.attributes_id)).where(
-                States.attributes_id == attr20
-            ),
-            select(func.min(States.attributes_id)).where(
-                States.attributes_id == attr21
-            ),
-            select(func.min(States.attributes_id)).where(
-                States.attributes_id == attr22
-            ),
-            select(func.min(States.attributes_id)).where(
-                States.attributes_id == attr23
-            ),
-            select(func.min(States.attributes_id)).where(
-                States.attributes_id == attr24
-            ),
-            select(func.min(States.attributes_id)).where(
-                States.attributes_id == attr25
-            ),
-            select(func.min(States.attributes_id)).where(
-                States.attributes_id == attr26
-            ),
-            select(func.min(States.attributes_id)).where(
-                States.attributes_id == attr27
-            ),
-            select(func.min(States.attributes_id)).where(
-                States.attributes_id == attr28
-            ),
-            select(func.min(States.attributes_id)).where(
-                States.attributes_id == attr29
-            ),
-            select(func.min(States.attributes_id)).where(
-                States.attributes_id == attr30
-            ),
-            select(func.min(States.attributes_id)).where(
-                States.attributes_id == attr31
-            ),
-            select(func.min(States.attributes_id)).where(
-                States.attributes_id == attr32
-            ),
-            select(func.min(States.attributes_id)).where(
-                States.attributes_id == attr33
-            ),
-            select(func.min(States.attributes_id)).where(
-                States.attributes_id == attr34
-            ),
-            select(func.min(States.attributes_id)).where(
-                States.attributes_id == attr35
-            ),
-            select(func.min(States.attributes_id)).where(
-                States.attributes_id == attr36
-            ),
-            select(func.min(States.attributes_id)).where(
-                States.attributes_id == attr37
-            ),
-            select(func.min(States.attributes_id)).where(
-                States.attributes_id == attr38
-            ),
-            select(func.min(States.attributes_id)).where(
-                States.attributes_id == attr39
-            ),
-            select(func.min(States.attributes_id)).where(
-                States.attributes_id == attr40
-            ),
-            select(func.min(States.attributes_id)).where(
-                States.attributes_id == attr41
-            ),
-            select(func.min(States.attributes_id)).where(
-                States.attributes_id == attr42
-            ),
-            select(func.min(States.attributes_id)).where(
-                States.attributes_id == attr43
-            ),
-            select(func.min(States.attributes_id)).where(
-                States.attributes_id == attr44
-            ),
-            select(func.min(States.attributes_id)).where(
-                States.attributes_id == attr45
-            ),
-            select(func.min(States.attributes_id)).where(
-                States.attributes_id == attr46
-            ),
-            select(func.min(States.attributes_id)).where(
-                States.attributes_id == attr47
-            ),
-            select(func.min(States.attributes_id)).where(
-                States.attributes_id == attr48
-            ),
-            select(func.min(States.attributes_id)).where(
-                States.attributes_id == attr49
-            ),
-            select(func.min(States.attributes_id)).where(
-                States.attributes_id == attr50
-            ),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr1),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr2),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr3),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr4),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr5),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr6),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr7),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr8),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr9),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr10),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr11),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr12),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr13),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr14),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr15),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr16),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr17),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr18),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr19),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr20),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr21),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr22),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr23),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr24),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr25),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr26),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr27),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr28),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr29),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr30),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr31),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr32),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr33),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr34),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr35),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr36),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr37),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr38),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr39),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr40),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr41),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr42),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr43),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr44),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr45),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr46),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr47),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr48),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr49),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr50),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr51),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr52),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr53),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr54),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr55),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr56),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr57),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr58),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr59),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr60),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr61),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr62),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr63),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr64),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr65),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr66),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr67),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr68),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr69),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr70),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr71),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr72),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr73),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr74),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr75),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr76),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr77),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr78),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr79),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr80),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr81),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr82),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr83),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr84),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr85),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr86),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr87),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr88),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr89),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr90),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr91),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr92),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr93),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr94),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr95),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr96),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr97),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr98),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr99),
+            select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr100),
         )
     )
 
@@ -357,11 +377,13 @@ def _select_unused_attributes_ids(
         # different queries in the cache.
         #
         seen_ids = set()
-        groups = [iter(attributes_ids)] * 50
+        groups = [iter(attributes_ids)] * 100
         for attr_ids in zip_longest(*groups, fillvalue=None):
             seen_ids |= {
                 state[0]
-                for state in session.execute(_generate_find_attr_lambda(attr_ids)).all()
+                for state in session.execute(
+                    _generate_find_attr_lambda(*attr_ids)
+                ).all()
                 if state[0] is not None
             }
     to_remove = attributes_ids - seen_ids
