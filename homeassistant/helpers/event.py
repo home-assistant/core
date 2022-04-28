@@ -111,8 +111,8 @@ class TrackTemplateResult:
 
 
 def threaded_listener_factory(
-    async_factory: Callable[Concatenate[HomeAssistant, _P], Any]  # type: ignore[misc]
-) -> Callable[Concatenate[HomeAssistant, _P], CALLBACK_TYPE]:  # type: ignore[misc]
+    async_factory: Callable[Concatenate[HomeAssistant, _P], Any]
+) -> Callable[Concatenate[HomeAssistant, _P], CALLBACK_TYPE]:
     """Convert an async event helper to a threaded one."""
 
     @ft.wraps(async_factory)
