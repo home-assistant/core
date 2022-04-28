@@ -20,6 +20,9 @@ from homeassistant.components.media_player.const import (
     ATTR_MEDIA_ENQUEUE,
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_PLAYLIST,
+    REPEAT_MODE_ALL,
+    REPEAT_MODE_OFF,
+    REPEAT_MODE_ONE,
 )
 from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY, ConfigEntry
 from homeassistant.const import (
@@ -231,6 +234,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         | MediaPlayerEntityFeature.TURN_OFF
         | MediaPlayerEntityFeature.PLAY_MEDIA
         | MediaPlayerEntityFeature.PLAY
+        | MediaPlayerEntityFeature.REPEAT_SET
         | MediaPlayerEntityFeature.SHUFFLE_SET
         | MediaPlayerEntityFeature.CLEAR_PLAYLIST
         | MediaPlayerEntityFeature.STOP
@@ -375,9 +379,19 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         return self._player.album
 
     @property
+    def repeat(self):
+        """Repeat setting."""
+        if self._player.repeat == "song":
+            return REPEAT_MODE_ONE
+        if self._player.repeat == "playlist":
+            return REPEAT_MODE_ALL
+        return REPEAT_MODE_OFF
+
+    @property
     def shuffle(self):
         """Boolean if shuffle is enabled."""
-        return self._player.shuffle
+        # Squeezebox has a third shuffle mode (album) not recognized by Home Assistant
+        return self._player.shuffle == "song"
 
     @property
     def group_members(self):
@@ -504,6 +518,17 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         await self._player.async_load_playlist(playlist, cmd)
         if index is not None:
             await self._player.async_index(index)
+
+    async def async_set_repeat(self, repeat):
+        """Set the repeat mode."""
+        if repeat == REPEAT_MODE_ALL:
+            repeat_mode = "playlist"
+        elif repeat == REPEAT_MODE_ONE:
+            repeat_mode = "song"
+        else:
+            repeat_mode = "none"
+
+        await self._player.async_set_repeat(repeat_mode)
 
     async def async_set_shuffle(self, shuffle):
         """Enable/disable shuffle mode."""
