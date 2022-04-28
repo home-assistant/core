@@ -48,11 +48,12 @@ class OverkizLight(OverkizEntity, LightEntity):
         self._attr_supported_color_modes: set[ColorMode] = set()
 
         if self.executor.has_command(OverkizCommand.SET_RGB):
-            self._attr_supported_color_modes.add(ColorMode.RGB)
-        if self.executor.has_command(OverkizCommand.SET_INTENSITY):
-            self._attr_supported_color_modes.add(ColorMode.BRIGHTNESS)
-        if not self.supported_color_modes:
-            self._attr_supported_color_modes = {ColorMode.ONOFF}
+            self._attr_color_mode = ColorMode.RGB
+        elif self.executor.has_command(OverkizCommand.SET_INTENSITY):
+            self._attr_color_mode = ColorMode.BRIGHTNESS
+        else:
+            self._attr_color_mode = ColorMode.ONOFF
+        self._attr_supported_color_modes = {self._attr_color_mode}
 
     @property
     def is_on(self) -> bool:
