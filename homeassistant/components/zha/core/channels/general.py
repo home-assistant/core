@@ -291,6 +291,9 @@ class OnOffChannel(ZigbeeChannel):
 
     ON_OFF = 0
     REPORT_CONFIG = ({"attr": "on_off", "config": REPORT_CONFIG_IMMEDIATE},)
+    ZCL_INIT_ATTRS = {
+        "start_up_on_off": True,
+    }
 
     def __init__(
         self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType
@@ -460,7 +463,9 @@ class PowerConfigurationChannel(ZigbeeChannel):
             "battery_size",
             "battery_quantity",
         ]
-        return self.get_attributes(attributes, from_cache=from_cache)
+        return self.get_attributes(
+            attributes, from_cache=from_cache, only_cache=from_cache
+        )
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.PowerProfile.cluster_id)

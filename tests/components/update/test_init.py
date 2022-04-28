@@ -202,6 +202,21 @@ async def test_entity_with_no_install(
     assert state.attributes[ATTR_LATEST_VERSION] == "1.0.1"
     assert state.attributes[ATTR_SKIPPED_VERSION] == "1.0.1"
 
+    # We can clear the skipped marker again
+    await hass.services.async_call(
+        DOMAIN,
+        "clear_skipped",
+        {ATTR_ENTITY_ID: "update.update_no_install"},
+        blocking=True,
+    )
+
+    state = hass.states.get("update.update_no_install")
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "1.0.0"
+    assert state.attributes[ATTR_LATEST_VERSION] == "1.0.1"
+    assert state.attributes[ATTR_SKIPPED_VERSION] is None
+
 
 async def test_entity_with_no_updates(
     hass: HomeAssistant,
@@ -279,7 +294,7 @@ async def test_entity_with_auto_update(
         blocking=True,
     )
 
-    # Should not be to skip the update
+    # Should not be able to skip the update
     with pytest.raises(
         HomeAssistantError,
         match="Skipping update is not supported for Update with auto update",
@@ -287,6 +302,18 @@ async def test_entity_with_auto_update(
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SKIP,
+            {ATTR_ENTITY_ID: "update.update_with_auto_update"},
+            blocking=True,
+        )
+
+    # Should not be able to clear a skipped the update
+    with pytest.raises(
+        HomeAssistantError,
+        match="Clearing skipped update is not supported for Update with auto update",
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            "clear_skipped",
             {ATTR_ENTITY_ID: "update.update_with_auto_update"},
             blocking=True,
         )

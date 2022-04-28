@@ -259,6 +259,10 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.hass.config_entries.async_reload(self.entry.entry_id)
                 return self.async_abort(reason="reauth_successful")
 
+        self.context["title_placeholders"] = {
+            "name": self.entry.title,
+            "ip_address": self.entry.data[CONF_HOST],
+        }
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=vol.Schema(

@@ -9,8 +9,8 @@ import voluptuous as vol
 from homeassistant.components.camera import (
     DEFAULT_CONTENT_TYPE,
     PLATFORM_SCHEMA,
-    SUPPORT_STREAM,
     Camera,
+    CameraEntityFeature,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
@@ -109,7 +109,7 @@ async def async_setup_entry(
     """Set up a generic IP Camera."""
 
     async_add_entities(
-        [GenericCamera(hass, entry.options, entry.unique_id, entry.title)]
+        [GenericCamera(hass, entry.options, entry.entry_id, entry.title)]
     )
 
 
@@ -150,7 +150,9 @@ class GenericCamera(Camera):
             self._stream_source.hass = hass
         self._limit_refetch = device_info[CONF_LIMIT_REFETCH_TO_URL_CHANGE]
         self._attr_frame_interval = 1 / device_info[CONF_FRAMERATE]
-        self._supported_features = SUPPORT_STREAM if self._stream_source else 0
+        self._attr_supported_features = (
+            CameraEntityFeature.STREAM if self._stream_source else 0
+        )
         self.content_type = device_info[CONF_CONTENT_TYPE]
         self.verify_ssl = device_info[CONF_VERIFY_SSL]
         if device_info.get(CONF_RTSP_TRANSPORT):
@@ -161,11 +163,6 @@ class GenericCamera(Camera):
 
         self._last_url = None
         self._last_image = None
-
-    @property
-    def supported_features(self):
-        """Return supported features for this camera."""
-        return self._supported_features
 
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None

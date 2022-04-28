@@ -34,6 +34,28 @@ async def siren(hass, zigpy_device_mock, zha_device_joined_restored):
 
 
 @pytest.fixture
+async def light(hass, zigpy_device_mock):
+    """Siren fixture."""
+
+    zigpy_device = zigpy_device_mock(
+        {
+            1: {
+                SIG_EP_PROFILE: zha.PROFILE_ID,
+                SIG_EP_TYPE: zha.DeviceType.ON_OFF_LIGHT,
+                SIG_EP_INPUT: [
+                    general.Basic.cluster_id,
+                    general.Identify.cluster_id,
+                    general.OnOff.cluster_id,
+                ],
+                SIG_EP_OUTPUT: [general.Ota.cluster_id],
+            }
+        },
+    )
+
+    return zigpy_device
+
+
+@pytest.fixture
 def core_rs(hass_storage):
     """Core.restore_state fixture."""
 
@@ -149,3 +171,71 @@ async def test_select_restore_state(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == security.IasWd.Warning.WarningMode.Burglar.name
+
+
+async def test_on_off_select(hass, light, zha_device_joined_restored):
+    """Test zha on off select."""
+
+    entity_registry = er.async_get(hass)
+    on_off_cluster = light.endpoints[1].on_off
+    on_off_cluster.PLUGGED_ATTR_READS = {
+        "start_up_on_off": general.OnOff.StartUpOnOff.On
+    }
+    zha_device = await zha_device_joined_restored(light)
+    select_name = general.OnOff.StartUpOnOff.__name__
+    entity_id = await find_entity_id(
+        Platform.SELECT,
+        zha_device,
+        hass,
+        qualifier=select_name.lower(),
+    )
+    assert entity_id is not None
+
+    state = hass.states.get(entity_id)
+    assert state
+    if zha_device_joined_restored.name == "zha_device_joined":
+        assert state.state == general.OnOff.StartUpOnOff.On.name
+    else:
+        assert state.state == STATE_UNKNOWN
+
+    assert state.attributes["options"] == ["Off", "On", "Toggle", "PreviousValue"]
+
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    assert entity_entry.entity_category == ENTITY_CATEGORY_CONFIG
+
+    # Test select option with string value
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {
+            "entity_id": entity_id,
+            "option": general.OnOff.StartUpOnOff.Off.name,
+        },
+        blocking=True,
+    )
+
+    assert on_off_cluster.write_attributes.call_count == 1
+    assert on_off_cluster.write_attributes.call_args[0][0] == {
+        "start_up_on_off": general.OnOff.StartUpOnOff.Off
+    }
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == general.OnOff.StartUpOnOff.Off.name
+
+
+async def test_on_off_select_unsupported(hass, light, zha_device_joined_restored):
+    """Test zha on off select unsupported."""
+
+    on_off_cluster = light.endpoints[1].on_off
+    on_off_cluster.add_unsupported_attribute("start_up_on_off")
+    zha_device = await zha_device_joined_restored(light)
+    select_name = general.OnOff.StartUpOnOff.__name__
+    entity_id = await find_entity_id(
+        Platform.SELECT,
+        zha_device,
+        hass,
+        qualifier=select_name.lower(),
+    )
+    assert entity_id is None

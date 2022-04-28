@@ -11,26 +11,14 @@ from openhomedevice.device import Device
 import voluptuous as vol
 
 from homeassistant.components import media_source
-from homeassistant.components.media_player import MediaPlayerEntity
+from homeassistant.components.media_player import (
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
+)
 from homeassistant.components.media_player.browse_media import (
     async_process_play_media_url,
 )
-from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_MUSIC,
-    SUPPORT_BROWSE_MEDIA,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_STOP,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
-)
+from homeassistant.components.media_player.const import MEDIA_TYPE_MUSIC
 from homeassistant.const import STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
@@ -39,7 +27,11 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import ATTR_PIN_INDEX, DATA_OPENHOME, SERVICE_INVOKE_PIN
 
-SUPPORT_OPENHOME = SUPPORT_SELECT_SOURCE | SUPPORT_TURN_OFF | SUPPORT_TURN_ON
+SUPPORT_OPENHOME = (
+    MediaPlayerEntityFeature.SELECT_SOURCE
+    | MediaPlayerEntityFeature.TURN_OFF
+    | MediaPlayerEntityFeature.TURN_ON
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -113,7 +105,7 @@ class OpenhomeDevice(MediaPlayerEntity):
         self._transport_state = None
         self._volume_level = None
         self._volume_muted = None
-        self._supported_features = SUPPORT_OPENHOME
+        self._attr_supported_features = SUPPORT_OPENHOME
         self._source_names = []
         self._source_index = {}
         self._source = {}
@@ -134,13 +126,15 @@ class OpenhomeDevice(MediaPlayerEntity):
             self._track_information = await self._device.track_info()
             self._source = await self._device.source()
             self._name = await self._device.room()
-            self._supported_features = SUPPORT_OPENHOME
+            self._attr_supported_features = SUPPORT_OPENHOME
             source_index = {}
             source_names = []
 
             if self._device.volume_enabled:
-                self._supported_features |= (
-                    SUPPORT_VOLUME_STEP | SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET
+                self._attr_supported_features |= (
+                    MediaPlayerEntityFeature.VOLUME_STEP
+                    | MediaPlayerEntityFeature.VOLUME_MUTE
+                    | MediaPlayerEntityFeature.VOLUME_SET
                 )
                 self._volume_level = await self._device.volume() / 100.0
                 self._volume_muted = await self._device.is_muted()
@@ -153,20 +147,20 @@ class OpenhomeDevice(MediaPlayerEntity):
             self._source_names = source_names
 
             if self._source["type"] == "Radio":
-                self._supported_features |= (
-                    SUPPORT_STOP
-                    | SUPPORT_PLAY
-                    | SUPPORT_PLAY_MEDIA
-                    | SUPPORT_BROWSE_MEDIA
+                self._attr_supported_features |= (
+                    MediaPlayerEntityFeature.STOP
+                    | MediaPlayerEntityFeature.PLAY
+                    | MediaPlayerEntityFeature.PLAY_MEDIA
+                    | MediaPlayerEntityFeature.BROWSE_MEDIA
                 )
             if self._source["type"] in ("Playlist", "Spotify"):
-                self._supported_features |= (
-                    SUPPORT_PREVIOUS_TRACK
-                    | SUPPORT_NEXT_TRACK
-                    | SUPPORT_PAUSE
-                    | SUPPORT_PLAY
-                    | SUPPORT_PLAY_MEDIA
-                    | SUPPORT_BROWSE_MEDIA
+                self._attr_supported_features |= (
+                    MediaPlayerEntityFeature.PREVIOUS_TRACK
+                    | MediaPlayerEntityFeature.NEXT_TRACK
+                    | MediaPlayerEntityFeature.PAUSE
+                    | MediaPlayerEntityFeature.PLAY
+                    | MediaPlayerEntityFeature.PLAY_MEDIA
+                    | MediaPlayerEntityFeature.BROWSE_MEDIA
                 )
 
             if self._in_standby:
@@ -261,11 +255,6 @@ class OpenhomeDevice(MediaPlayerEntity):
     def name(self):
         """Return the name of the device."""
         return self._name
-
-    @property
-    def supported_features(self):
-        """Flag of features commands that are supported."""
-        return self._supported_features
 
     @property
     def unique_id(self):

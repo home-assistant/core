@@ -1,6 +1,7 @@
 """Test the entity helper."""
 # pylint: disable=protected-access
 import asyncio
+import dataclasses
 from datetime import timedelta
 import threading
 from unittest.mock import MagicMock, PropertyMock, patch
@@ -927,5 +928,21 @@ def test_entity_category_schema(value, expected):
 def test_entity_category_schema_error(value):
     """Test entity category schema."""
     schema = vol.Schema(entity.ENTITY_CATEGORIES_SCHEMA)
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(
+        vol.Invalid,
+        match=r"expected EntityCategory or one of 'config', 'diagnostic', 'system'",
+    ):
         schema(value)
+
+
+async def test_entity_description_fallback():
+    """Test entity description has same defaults as entity."""
+    ent = entity.Entity()
+    ent_with_description = entity.Entity()
+    ent_with_description.entity_description = entity.EntityDescription(key="test")
+
+    for field in dataclasses.fields(entity.EntityDescription):
+        if field.name == "key":
+            continue
+
+        assert getattr(ent, field.name) == getattr(ent_with_description, field.name)

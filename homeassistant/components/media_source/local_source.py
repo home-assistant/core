@@ -200,13 +200,11 @@ class LocalSource(MediaSource):
 
         # Append first level children
         media.children = []
-        # AIS sort by date
-        import os
-
-        for child_path in sorted(path.iterdir(), key=os.path.getmtime, reverse=True):
-            child = self._build_item_response(source_dir_id, child_path, True)
-            if child:
-                media.children.append(child)
+        for child_path in path.iterdir():
+            if child_path.name[0] != ".":
+                child = self._build_item_response(source_dir_id, child_path, True)
+                if child:
+                    media.children.append(child)
 
         # Sort children showing directories first, then by name
         # AIS do not sort!!!
@@ -325,9 +323,7 @@ class UploadMediaView(http.HomeAssistantView):
             {"media_content_id": f"{data['media_content_id']}/{uploaded_file.filename}"}
         )
 
-    def _move_file(  # pylint: disable=no-self-use
-        self, target_dir: Path, uploaded_file: FileField
-    ) -> None:
+    def _move_file(self, target_dir: Path, uploaded_file: FileField) -> None:
         """Move file to target."""
         if not target_dir.is_dir():
             raise ValueError("Target is not an existing directory")

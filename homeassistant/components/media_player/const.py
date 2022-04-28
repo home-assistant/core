@@ -118,6 +118,8 @@ class MediaPlayerEntityFeature(IntEnum):
     GROUPING = 524288
 
 
+# These SUPPORT_* constants are deprecated as of Home Assistant 2022.5.
+# Please use the MediaPlayerEntityFeature enum instead.
 SUPPORT_PAUSE = 1
 SUPPORT_SEEK = 2
 SUPPORT_VOLUME_SET = 4

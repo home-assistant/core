@@ -531,6 +531,7 @@ class IndexView(web_urldispatcher.AbstractResource):
         """
         if (
             request.path != "/"
+            and len(request.url.parts) > 1
             and request.url.parts[1] not in self.hass.data[DATA_PANELS]
         ):
             return None, set()
@@ -608,7 +609,7 @@ class ManifestJSONView(HomeAssistantView):
     name = "manifestjson"
 
     @callback
-    def get(self, request: web.Request) -> web.Response:  # pylint: disable=no-self-use
+    def get(self, request: web.Request) -> web.Response:
         """Return the manifest.json."""
         return web.Response(
             text=MANIFEST_JSON.json, content_type="application/manifest+json"

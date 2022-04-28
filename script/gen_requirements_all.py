@@ -119,9 +119,9 @@ multidict>=6.0.2
 # https://github.com/home-assistant/core/pull/68176
 authlib<1.0
 
-# Required for compatibility with typer, used by pyunifiprotect integration
-# https://github.com/tiangolo/typer/pull/375
-click<=8.0.4
+# Pin backoff for compatibility until most libraries have been updated
+# https://github.com/home-assistant/core/pull/70817
+backoff<2.0
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (

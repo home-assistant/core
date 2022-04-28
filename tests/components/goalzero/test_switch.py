@@ -10,7 +10,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from . import async_setup_platform
+from . import async_init_integration
 
 from tests.common import load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -20,7 +20,7 @@ async def test_switches_states(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ):
     """Test we get sensor data."""
-    await async_setup_platform(hass, aioclient_mock, DOMAIN)
+    await async_init_integration(hass, aioclient_mock)
 
     assert hass.states.get(f"switch.{DEFAULT_NAME}_usb_port_status").state == STATE_OFF
     assert hass.states.get(f"switch.{DEFAULT_NAME}_ac_port_status").state == STATE_ON

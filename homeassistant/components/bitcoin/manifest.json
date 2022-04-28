@@ -3,7 +3,7 @@
   "name": "Bitcoin",
   "documentation": "https://www.home-assistant.io/integrations/bitcoin",
   "requirements": ["blockchain==1.4.4"],
-  "codeowners": ["@fabaff"],
+  "codeowners": [],
   "iot_class": "cloud_polling",
   "loggers": ["blockchain"]
 }
