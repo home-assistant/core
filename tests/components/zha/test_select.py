@@ -193,7 +193,11 @@ async def test_on_off_select(hass, light, zha_device_joined_restored):
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_UNKNOWN
+    if zha_device_joined_restored.name == "zha_device_joined":
+        assert state.state == general.OnOff.StartUpOnOff.On.name
+    else:
+        assert state.state == STATE_UNKNOWN
+
     assert state.attributes["options"] == ["Off", "On", "Toggle", "PreviousValue"]
 
     entity_entry = entity_registry.async_get(entity_id)
