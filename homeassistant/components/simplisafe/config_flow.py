@@ -20,7 +20,7 @@ from homeassistant.helpers import aiohttp_client, config_validation as cv
 from .const import DOMAIN, LOGGER
 
 DEFAULT_EMAIL_2FA_SLEEP = 3
-DEFAULT_EMAIL_2FA_TIMEOUT = 5
+DEFAULT_EMAIL_2FA_TIMEOUT = 300
 
 STEP_REAUTH_SCHEMA = vol.Schema(
     {
@@ -49,7 +49,6 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self._email_2fa_error: str | None = None
         self._email_2fa_task: asyncio.Task | None = None
         self._password: str | None = None
         self._reauth: bool = False
@@ -112,21 +111,15 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Define a task to wait for email-based 2FA."""
         assert self._simplisafe
 
-        try:
-            async with async_timeout.timeout(DEFAULT_EMAIL_2FA_TIMEOUT):
-                while True:
-                    try:
-                        await self._simplisafe.async_verify_2fa_email()
-                    except Verify2FAPending:
-                        LOGGER.info("Email-based 2FA pending; trying again")
-                        await asyncio.sleep(DEFAULT_EMAIL_2FA_SLEEP)
-                    else:
-                        break
-        except asyncio.TimeoutError:
-            self._email_2fa_error = "email_2fa_timed_out"
-
-        if self._simplisafe.auth_state != AuthStates.AUTHENTICATED:
-            self._email_2fa_error = "email_2fa_unknown"
+        async with async_timeout.timeout(DEFAULT_EMAIL_2FA_TIMEOUT):
+            while True:
+                try:
+                    await self._simplisafe.async_verify_2fa_email()
+                except Verify2FAPending:
+                    LOGGER.info("Email-based 2FA pending; trying again")
+                    await asyncio.sleep(DEFAULT_EMAIL_2FA_SLEEP)
+                else:
+                    break
 
         self.hass.async_create_task(
             self.hass.config_entries.flow.async_configure(flow_id=self.flow_id)
@@ -144,7 +137,9 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="email_2fa", progress_action="email_2fa"
             )
 
-        if self._email_2fa_error:
+        try:
+            await self._email_2fa_task
+        except asyncio.TimeoutError:
             return self.async_show_progress_done(next_step_id="email_2fa_error")
         return self.async_show_progress_done(next_step_id="finish")
 
@@ -152,7 +147,7 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle an error during email-based two-factor authentication."""
-        return self.async_abort(reason=self._email_2fa_error)
+        return self.async_abort(reason="email_2fa_timed_out")
 
     async def async_step_finish(
         self, user_input: dict[str, Any] | None = None
