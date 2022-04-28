@@ -90,6 +90,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
+    if "phone_number" in config_entry.data:
+        return
     county: str = config_entry.data[CONF_COUNTY]
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
 

@@ -2,7 +2,7 @@
 import asyncio
 from unittest.mock import patch
 
-from peco import AlertResults, BadJSONError, HttpError, OutageResults
+from peco import AlertResults, BadJSONError, HttpError, OutageResults, UnresponsiveMeterError
 import pytest
 
 from homeassistant.components.peco.const import DOMAIN
@@ -14,6 +14,7 @@ from tests.common import MockConfigEntry
 MOCK_ENTRY_DATA = {"county": "TOTAL"}
 COUNTY_ENTRY_DATA = {"county": "BUCKS"}
 INVALID_COUNTY_DATA = {"county": "INVALID"}
+METER_DATA = {"phone_number": "1234567890"}
 
 
 async def test_unload_entry(hass: HomeAssistant) -> None:
@@ -149,3 +150,89 @@ async def test_bad_json(hass: HomeAssistant, sensor: str) -> None:
 
     assert hass.states.get(f"sensor.{sensor}") is None
     assert config_entry.state == ConfigEntryState.SETUP_RETRY
+
+
+async def test_unresponsive_meter_error(hass: HomeAssistant):
+    """Test if it raises an error when the meter will not respond."""
+
+    config_entry = MockConfigEntry(domain=DOMAIN, data=METER_DATA)
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "peco.PecoOutageApi.meter_check",
+        side_effect=UnresponsiveMeterError(),
+    ):
+        assert not await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert hass.states.get("binary_sensor.meter_status") is None
+    assert config_entry.state == ConfigEntryState.SETUP_RETRY
+
+
+async def test_meter_http_error(hass: HomeAssistant):
+    """Test if it raises an error when there is an HTTP error."""
+
+    config_entry = MockConfigEntry(domain=DOMAIN, data=METER_DATA)
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "peco.PecoOutageApi.meter_check",
+        side_effect=HttpError(),
+    ):
+        assert not await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert hass.states.get("binary_sensor.meter_status") is None
+    assert config_entry.state == ConfigEntryState.SETUP_RETRY
+
+
+async def test_meter_bad_json(hass: HomeAssistant):
+    """Test if it raises an error when there is bad JSON."""
+
+    config_entry = MockConfigEntry(domain=DOMAIN, data=METER_DATA)
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "peco.PecoOutageApi.meter_check",
+        side_effect=BadJSONError(),
+    ):
+        assert not await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert hass.states.get("binary_sensor.meter_status") is None
+    assert config_entry.state == ConfigEntryState.SETUP_RETRY
+
+
+async def test_meter_timeout(hass: HomeAssistant):
+    """Test if it raises an error when there is a timeout."""
+
+    config_entry = MockConfigEntry(domain=DOMAIN, data=METER_DATA)
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "peco.PecoOutageApi.meter_check",
+        side_effect=asyncio.TimeoutError(),
+    ):
+        assert not await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert hass.states.get("binary_sensor.meter_status") is None
+    assert config_entry.state == ConfigEntryState.SETUP_RETRY
+
+
+async def test_meter_data(hass: HomeAssistant):
+    """Test if the meter returns the value successfully."""
+
+    config_entry = MockConfigEntry(domain=DOMAIN, data=METER_DATA)
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "peco.PecoOutageApi.meter_check",
+        return_value=True,
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert hass.states.get("binary_sensor.meter_status") is not None
+    assert hass.states.get("binary_sensor.meter_status") == "on"
+    assert config_entry.state == ConfigEntryState.LOADED

@@ -5,7 +5,14 @@ from dataclasses import dataclass
 from datetime import timedelta
 from typing import Final
 
-from peco import AlertResults, BadJSONError, HttpError, OutageResults, PecoOutageApi
+from peco import (
+    AlertResults,
+    BadJSONError,
+    HttpError,
+    OutageResults,
+    PecoOutageApi,
+    UnresponsiveMeterError,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -13,9 +20,16 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_COUNTY, DOMAIN, LOGGER, SCAN_INTERVAL
+from .const import (
+    CONF_COUNTY,
+    CONF_PHONE_NUMBER,
+    DOMAIN,
+    LOGGER,
+    OUTAGE_SCAN_INTERVAL,
+    SMART_METER_SCAN_INTERVAL,
+)
 
-PLATFORMS: Final = [Platform.SENSOR]
+PLATFORMS: Final = [Platform.SENSOR, Platform.BINARY_SENSOR]
 
 
 @dataclass
