@@ -26,6 +26,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
+    STATE_BUFFERING,
     STATE_IDLE,
     STATE_OFF,
     STATE_ON,
@@ -45,6 +46,7 @@ ENTITY_2 = "media_player.test2"
     [
         (SERVICE_TURN_ON, STATE_ON, MediaPlayerEntityFeature.TURN_ON),
         (SERVICE_TURN_OFF, STATE_OFF, MediaPlayerEntityFeature.TURN_OFF),
+        (SERVICE_MEDIA_PLAY, STATE_BUFFERING, MediaPlayerEntityFeature.PLAY),
         (SERVICE_MEDIA_PLAY, STATE_PLAYING, MediaPlayerEntityFeature.PLAY),
         (SERVICE_MEDIA_STOP, STATE_IDLE, MediaPlayerEntityFeature.STOP),
         (SERVICE_MEDIA_PAUSE, STATE_PAUSED, MediaPlayerEntityFeature.PAUSE),

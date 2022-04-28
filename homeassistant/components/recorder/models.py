@@ -44,7 +44,7 @@ from .const import ALL_DOMAIN_EXCLUDE_ATTRS, JSON_DUMP
 # pylint: disable=invalid-name
 Base = declarative_base()
 
-SCHEMA_VERSION = 25
+SCHEMA_VERSION = 26
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -484,7 +484,7 @@ class StatisticsRuns(Base):  # type: ignore[misc,valid-type]
 
     __tablename__ = TABLE_STATISTICS_RUNS
     run_id = Column(Integer, Identity(), primary_key=True)
-    start = Column(DateTime(timezone=True))
+    start = Column(DateTime(timezone=True), index=True)
 
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
@@ -619,7 +619,10 @@ class LazyState(State):
     def last_updated(self) -> datetime:  # type: ignore[override]
         """Last updated datetime."""
         if self._last_updated is None:
-            self._last_updated = process_timestamp(self._row.last_updated)
+            if (last_updated := self._row.last_updated) is not None:
+                self._last_updated = process_timestamp(last_updated)
+            else:
+                self._last_updated = self.last_changed
         return self._last_updated
 
     @last_updated.setter
@@ -638,7 +641,10 @@ class LazyState(State):
             last_changed_isoformat = process_timestamp_to_utc_isoformat(
                 self._row.last_changed
             )
-            if self._row.last_changed == self._row.last_updated:
+            if (
+                self._row.last_updated is None
+                or self._row.last_changed == self._row.last_updated
+            ):
                 last_updated_isoformat = last_changed_isoformat
             else:
                 last_updated_isoformat = process_timestamp_to_utc_isoformat(

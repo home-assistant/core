@@ -83,11 +83,6 @@ class LitterRobotCleaner(LitterRobotControlEntity, StateVacuumEntity):
     )
 
     @property
-    def supported_features(self) -> int:
-        """Flag cleaner robot features that are supported."""
-        return self._attr_supported_features
-
-    @property
     def state(self) -> str:
         """Return the state of the cleaner."""
         switcher = {

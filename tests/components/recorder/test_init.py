@@ -1,4 +1,6 @@
 """The tests for the Recorder component."""
+from __future__ import annotations
+
 # pylint: disable=protected-access
 import asyncio
 from datetime import datetime, timedelta
@@ -8,6 +10,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 from sqlalchemy.exc import DatabaseError, OperationalError, SQLAlchemyError
+from sqlalchemy.ext import baked
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder import (
@@ -25,9 +28,6 @@ from homeassistant.components.recorder import (
     SQLITE_URL_PREFIX,
     Recorder,
     get_instance,
-    run_information,
-    run_information_from_instance,
-    run_information_with_session,
 )
 from homeassistant.components.recorder.const import DATA_INSTANCE
 from homeassistant.components.recorder.models import (
@@ -51,7 +51,12 @@ from homeassistant.core import Context, CoreState, HomeAssistant, callback
 from homeassistant.setup import async_setup_component, setup_component
 from homeassistant.util import dt as dt_util
 
-from .common import async_wait_recording_done, corrupt_db_file, wait_recording_done
+from .common import (
+    async_wait_recording_done,
+    corrupt_db_file,
+    run_information_with_session,
+    wait_recording_done,
+)
 
 from tests.common import (
     SetupRecorderInstanceT,
@@ -75,6 +80,7 @@ def _default_recorder(hass):
         entity_filter=CONFIG_SCHEMA({DOMAIN: {}}),
         exclude_t=[],
         exclude_attributes_by_domain={},
+        bakery=baked.bakery(),
     )
 
 
@@ -1008,37 +1014,6 @@ def test_saving_state_with_serializable_data(hass_recorder, caplog):
     assert "State is not JSON serializable" in caplog.text
 
 
-def test_run_information(hass_recorder):
-    """Ensure run_information returns expected data."""
-    before_start_recording = dt_util.utcnow()
-    hass = hass_recorder()
-    run_info = run_information_from_instance(hass)
-    assert isinstance(run_info, RecorderRuns)
-    assert run_info.closed_incorrect is False
-
-    with session_scope(hass=hass) as session:
-        run_info = run_information_with_session(session)
-        assert isinstance(run_info, RecorderRuns)
-        assert run_info.closed_incorrect is False
-
-    run_info = run_information(hass)
-    assert isinstance(run_info, RecorderRuns)
-    assert run_info.closed_incorrect is False
-
-    hass.states.set("test.two", "on", {})
-    wait_recording_done(hass)
-    run_info = run_information(hass)
-    assert isinstance(run_info, RecorderRuns)
-    assert run_info.closed_incorrect is False
-
-    run_info = run_information(hass, before_start_recording)
-    assert run_info is None
-
-    run_info = run_information(hass, dt_util.utcnow())
-    assert isinstance(run_info, RecorderRuns)
-    assert run_info.closed_incorrect is False
-
-
 def test_has_services(hass_recorder):
     """Test the services exist."""
     hass = hass_recorder()
@@ -1208,6 +1183,8 @@ async def test_database_corruption_while_running(hass, tmpdir, caplog):
     await hass.async_block_till_done()
     caplog.clear()
 
+    original_start_time = get_instance(hass).run_history.recording_start
+
     hass.states.async_set("test.lost", "on", {})
 
     sqlite3_exception = DatabaseError("statement", {}, [])
@@ -1251,6 +1228,9 @@ async def test_database_corruption_while_running(hass, tmpdir, caplog):
     state = await hass.async_add_executor_job(_get_last_state)
     assert state.entity_id == "test.two"
     assert state.state == "on"
+
+    new_start_time = get_instance(hass).run_history.recording_start
+    assert original_start_time < new_start_time
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
@@ -1415,7 +1395,7 @@ async def test_database_connection_keep_alive(
 ):
     """Test we keep alive socket based dialects."""
     with patch(
-        "homeassistant.components.recorder.Recorder._using_sqlite", return_value=False
+        "homeassistant.components.recorder.Recorder.using_sqlite", return_value=False
     ):
         instance = await async_setup_recorder_instance(hass)
         # We have to mock this since we don't have a mock
