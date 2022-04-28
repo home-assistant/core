@@ -166,6 +166,23 @@ async def test_form_only_still_sample(hass, user_flow, image_file):
 
 
 @respx.mock
+async def test_template_immediately_following_port(
+    hass, user_flow, fakeimgbytes_png
+) -> None:
+    """Test we can handle templates in strange parts of the url, #70961."""
+    url = "http://localhost:812{{3}}/static/icons/favicon-apple-180x180.png"
+    respx.get(url).respond(stream=fakeimgbytes_png)
+    data = TESTDATA.copy()
+    data.pop(CONF_STREAM_SOURCE)
+    data[CONF_STILL_IMAGE_URL] = url
+    result2 = await hass.config_entries.flow.async_configure(
+        user_flow["flow_id"],
+        data,
+    )
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+
+@respx.mock
 async def test_form_rtsp_mode(hass, fakeimg_png, mock_av_open, user_flow):
     """Test we complete ok if the user enters a stream url."""
     with mock_av_open as mock_setup:
