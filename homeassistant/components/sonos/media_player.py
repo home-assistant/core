@@ -263,7 +263,11 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     @property
     def available(self) -> bool:
         """Return if the media_player is available."""
-        return self.speaker.available and self.speaker.sonos_group_entities
+        return (
+            self.speaker.available
+            and self.speaker.sonos_group_entities
+            and self.media.playback_status
+        )
 
     @property
     def coordinator(self) -> SonosSpeaker:
