@@ -186,10 +186,8 @@ async def async_attach_trigger(
         **automation_info["trigger_data"],
         "platform": DOMAIN,
         "event": event_type,
+        "offset": offset,
     }
-    if offset:
-        trigger_data["offset"] = offset
-
     listener = CalendarEventListener(
         hass, HassJob(action), trigger_data, entity, event_type, offset
     )
