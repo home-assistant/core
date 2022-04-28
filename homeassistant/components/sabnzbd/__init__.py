@@ -59,12 +59,10 @@ SERVICE_BASE_SCHEMA = vol.Schema(
     }
 )
 
-SERVICE_SPEED_SCHEMA = vol.Schema(
-    SERVICE_BASE_SCHEMA.extend(
-        {
-            vol.Optional(ATTR_SPEED, default=DEFAULT_SPEED_LIMIT): cv.string,
-        }
-    )
+SERVICE_SPEED_SCHEMA = SERVICE_BASE_SCHEMA.extend(
+    {
+        vol.Optional(ATTR_SPEED, default=DEFAULT_SPEED_LIMIT): cv.string,
+    }
 )
 
 CONFIG_SCHEMA = vol.Schema(
