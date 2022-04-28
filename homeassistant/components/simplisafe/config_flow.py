@@ -109,21 +109,22 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_get_email_2fa(self) -> None:
         """Define a task to wait for email-based 2FA."""
-        assert self._simplisafe
+        # assert self._simplisafe
 
-        async with async_timeout.timeout(DEFAULT_EMAIL_2FA_TIMEOUT):
-            while True:
-                try:
-                    await self._simplisafe.async_verify_2fa_email()
-                except Verify2FAPending:
-                    LOGGER.info("Email-based 2FA pending; trying again")
-                    await asyncio.sleep(DEFAULT_EMAIL_2FA_SLEEP)
-                else:
-                    break
-
-        self.hass.async_create_task(
-            self.hass.config_entries.flow.async_configure(flow_id=self.flow_id)
-        )
+        try:
+            async with async_timeout.timeout(DEFAULT_EMAIL_2FA_TIMEOUT):
+                while True:
+                    try:
+                        await self._simplisafe.async_verify_2fa_email()
+                    except Verify2FAPending:
+                        LOGGER.info("Email-based 2FA pending; trying again")
+                        await asyncio.sleep(DEFAULT_EMAIL_2FA_SLEEP)
+                    else:
+                        break
+        finally:
+            self.hass.async_create_task(
+                self.hass.config_entries.flow.async_configure(flow_id=self.flow_id)
+            )
 
     async def async_step_email_2fa(
         self, user_input: dict[str, Any] | None = None
