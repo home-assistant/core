@@ -15,8 +15,8 @@ _P = ParamSpec("_P")
 
 
 def update_when_done(
-    func: Callable[Concatenate[_T, _P], Awaitable[_R]]  # type: ignore[misc]
-) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, _R]]:  # type: ignore[misc]
+    func: Callable[Concatenate[_T, _P], Awaitable[_R]]
+) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, _R]]:
     """Decorate function to trigger update when function is done."""
 
     @wraps(func)
@@ -24,6 +24,6 @@ def update_when_done(
         """Wrap function."""
         result = await func(self, *args, **kwargs)
         await self.coordinator.async_request_refresh()
-        return result  # type: ignore[no-any-return]  # mypy can't yet infer 'func'
+        return result
 
     return wrapper

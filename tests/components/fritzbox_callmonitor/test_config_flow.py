@@ -13,7 +13,7 @@ from homeassistant.components.fritzbox_callmonitor.const import (
     FRITZ_ATTR_SERIAL_NUMBER,
     SERIAL_NUMBER,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -51,7 +51,6 @@ MOCK_CONFIG_ENTRY = {
     CONF_PORT: MOCK_PORT,
     CONF_PASSWORD: MOCK_PASSWORD,
     CONF_USERNAME: MOCK_USERNAME,
-    CONF_PREFIXES: None,
     CONF_PHONEBOOK: MOCK_PHONEBOOK_ID,
     SERIAL_NUMBER: MOCK_SERIAL_NUMBER,
 }
@@ -67,44 +66,6 @@ MOCK_DEVICE_INFO = {FRITZ_ATTR_SERIAL_NUMBER: MOCK_SERIAL_NUMBER}
 MOCK_PHONEBOOK_INFO_1 = {FRITZ_ATTR_NAME: MOCK_PHONEBOOK_NAME_1}
 MOCK_PHONEBOOK_INFO_2 = {FRITZ_ATTR_NAME: MOCK_PHONEBOOK_NAME_2}
 MOCK_UNIQUE_ID = f"{MOCK_SERIAL_NUMBER}-{MOCK_PHONEBOOK_ID}"
-
-
-async def test_yaml_import(hass: HomeAssistant) -> None:
-    """Test configuration.yaml import."""
-
-    with patch(
-        "homeassistant.components.fritzbox_callmonitor.base.FritzPhonebook.__init__",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.fritzbox_callmonitor.base.FritzPhonebook.phonebook_ids",
-        new_callable=PropertyMock,
-        return_value=[0],
-    ), patch(
-        "homeassistant.components.fritzbox_callmonitor.base.FritzPhonebook.phonebook_info",
-        return_value=MOCK_PHONEBOOK_INFO_1,
-    ), patch(
-        "homeassistant.components.fritzbox_callmonitor.base.FritzPhonebook.modelname",
-        return_value=MOCK_PHONEBOOK_NAME_1,
-    ), patch(
-        "homeassistant.components.fritzbox_callmonitor.config_flow.FritzConnection.__init__",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.fritzbox_callmonitor.config_flow.FritzConnection.call_action",
-        return_value=MOCK_DEVICE_INFO,
-    ), patch(
-        "homeassistant.components.fritzbox_callmonitor.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=MOCK_YAML_CONFIG,
-        )
-
-        assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == MOCK_NAME
-        assert result["data"] == MOCK_CONFIG_ENTRY
-        assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_setup_one_phonebook(hass: HomeAssistant) -> None:
@@ -202,7 +163,6 @@ async def test_setup_multiple_phonebooks(hass: HomeAssistant) -> None:
         CONF_PORT: MOCK_PORT,
         CONF_PASSWORD: MOCK_PASSWORD,
         CONF_USERNAME: MOCK_USERNAME,
-        CONF_PREFIXES: None,
         CONF_PHONEBOOK: 1,
         SERIAL_NUMBER: MOCK_SERIAL_NUMBER,
     }
