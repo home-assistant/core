@@ -580,7 +580,7 @@ hole==0.7.0
 holidays==0.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220427.0
+home-assistant-frontend==20220428.0
 
 # homeassistant.components.home_connect
 homeconnect==0.7.0
@@ -617,6 +617,9 @@ influxdb-client==1.24.0
 
 # homeassistant.components.influxdb
 influxdb==5.3.1
+
+# homeassistant.components.insteon
+insteon-frontend-home-assistant==0.1.0
 
 # homeassistant.components.intellifire
 intellifire4py==1.0.2
@@ -950,7 +953,7 @@ pycoolmasternet-async==0.1.2
 pydaikin==2.7.0
 
 # homeassistant.components.deconz
-pydeconz==90
+pydeconz==91
 
 # homeassistant.components.dexcom
 pydexcom==0.2.3
@@ -1026,7 +1029,7 @@ pyialarm==1.9.0
 pyicloud==1.0.0
 
 # homeassistant.components.insteon
-pyinsteon==1.0.13
+pyinsteon==1.1.0b1
 
 # homeassistant.components.ipma
 pyipma==2.0.5
