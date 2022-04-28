@@ -83,6 +83,8 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 description_placeholders={CONF_USERNAME: self._username},
             )
 
+        assert self._simplisafe
+
         if self._simplisafe.auth_state == AuthStates.PENDING_2FA_SMS:
             return await self.async_step_sms_2fa()
         return await self.async_step_email_2fa()
