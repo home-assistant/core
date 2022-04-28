@@ -139,7 +139,7 @@ class WemoLight(WemoEntity, LightEntity):
         return cast(Optional[int], self.light.state.get("temperature_mireds"))
 
     @property
-    def color_mode(self) -> ColorMode | str | None:
+    def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
         if self.hs_color:
             return ColorMode.HS
