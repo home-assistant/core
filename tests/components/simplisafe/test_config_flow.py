@@ -10,6 +10,8 @@ from homeassistant.components.simplisafe import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_CODE, CONF_TOKEN, CONF_USERNAME
 
+from tests.common import MockConfigEntry
+
 from .common import REFRESH_TOKEN, USER_ID, USERNAME
 
 CONF_USER_ID = "user_id"
@@ -57,9 +59,15 @@ async def test_options_flow(hass, config_entry):
 
 @pytest.mark.parametrize("unique_id", [USERNAME, USER_ID])
 async def test_step_reauth(
-    hass, config, config_entry, reauth_config, setup_simplisafe, sms_config
+    hass, config, config_entry, reauth_config, setup_simplisafe, sms_config, unique_id
 ):
     """Test the re-auth step (testing both username and user ID as unique ID)."""
+    # Add a second config entry (tied to a random domain, but with the same unique ID as
+    # the SimpliSafe entry) to ensure that this reauth process only touches the
+    # SimpliSafe entry:
+    entry = MockConfigEntry(domain="random", unique_id=USERNAME, data={"some": "data"})
+    entry.add_to_hass(hass)
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_REAUTH}, data=config
     )
@@ -78,10 +86,17 @@ async def test_step_reauth(
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "reauth_successful"
 
-    assert len(hass.config_entries.async_entries()) == 1
+    assert len(hass.config_entries.async_entries()) == 2
+
+    # Test that the SimpliSafe config flow is updated:
     [config_entry] = hass.config_entries.async_entries(DOMAIN)
     assert config_entry.unique_id == USER_ID
     assert config_entry.data == config
+
+    # Test that the non-SimpliSafe config flow remains the same:
+    [config_entry] = hass.config_entries.async_entries("random")
+    assert config_entry.unique_id == USERNAME
+    assert config_entry.data == {"some": "data"}
 
 
 @pytest.mark.parametrize(
