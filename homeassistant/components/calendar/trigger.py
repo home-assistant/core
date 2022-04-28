@@ -36,7 +36,7 @@ TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
         vol.Required(CONF_PLATFORM): DOMAIN,
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Optional(CONF_EVENT, default=EVENT_START): vol.In({EVENT_START, EVENT_END}),
-        vol.Required(CONF_OFFSET, default=datetime.timedelta(0)): cv.time_period,
+        vol.Optional(CONF_OFFSET, default=datetime.timedelta(0)): cv.time_period,
     }
 )
 
