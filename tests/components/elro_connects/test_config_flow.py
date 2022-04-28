@@ -17,7 +17,7 @@ from homeassistant.data_entry_flow import (
 )
 
 
-async def test_form(hass: HomeAssistant) -> None:
+async def test_form(hass: HomeAssistant, mock_k1_api) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -26,9 +26,6 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["errors"] is None
 
     with patch(
-        "homeassistant.components.elro_connects.config_flow.K1ConnectionTest.async_try_connection",
-        return_value=True,
-    ), patch(
         "homeassistant.components.elro_connects.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -76,10 +73,10 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_already_setup(hass: HomeAssistant) -> None:
+async def test_already_setup(hass: HomeAssistant, mock_k1_api) -> None:
     """Test we cannot create a duplicate setup."""
     # Setup the existing config entry
-    await test_form(hass)
+    await test_form(hass, mock_k1_api)
 
     # Now assert the entry creation is aborted if we try
     # to create an entry with the same unique device_id
@@ -90,9 +87,6 @@ async def test_already_setup(hass: HomeAssistant) -> None:
     assert result["errors"] is None
 
     with patch(
-        "homeassistant.components.elro_connects.config_flow.K1ConnectionTest.async_try_connection",
-        return_value=True,
-    ), patch(
         "homeassistant.components.elro_connects.async_setup_entry",
         return_value=True,
     ):
@@ -110,10 +104,10 @@ async def test_already_setup(hass: HomeAssistant) -> None:
     assert result2["type"] == RESULT_TYPE_ABORT
 
 
-async def test_update_options(hass: HomeAssistant) -> None:
+async def test_update_options(hass: HomeAssistant, mock_k1_api) -> None:
     """Test we can update the configuration."""
     # Setup the existing config entry
-    await test_form(hass)
+    await test_form(hass, mock_k1_api)
 
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
 
@@ -125,9 +119,6 @@ async def test_update_options(hass: HomeAssistant) -> None:
 
     # Change interval, IP address and port
     with patch(
-        "homeassistant.components.elro_connects.config_flow.K1ConnectionTest.async_try_connection",
-        return_value=True,
-    ), patch(
         "homeassistant.components.elro_connects.async_setup_entry",
         return_value=True,
     ):
