@@ -60,8 +60,8 @@ def mock_use_sqlite(request):
         "homeassistant.components.recorder.Recorder.using_sqlite",
         return_value=request.param,
     ), patch(
-        "homeassistant.components.recorder.purge.FIND_ATTRS_LAMBDA",
-        _generate_sqlite_compatible_find_attr_lambda(),
+        "homeassistant.components.recorder.purge._generate_find_attr_lambda",
+        _generate_sqlite_compatible_find_attr_lambda,
     ):
         yield
 
@@ -190,8 +190,8 @@ async def test_purge_old_states_encounters_temporary_mysql_error(
     ), patch.object(
         instance.engine.dialect, "name", "mysql"
     ), patch(
-        "homeassistant.components.recorder.purge.FIND_ATTRS_LAMBDA",
-        _generate_sqlite_compatible_find_attr_lambda(),
+        "homeassistant.components.recorder.purge._generate_find_attr_lambda",
+        _generate_sqlite_compatible_find_attr_lambda,
     ):
         await hass.services.async_call(
             recorder.DOMAIN, recorder.SERVICE_PURGE, {"keep_days": 0}

@@ -31,25 +31,6 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 
-def _generate_find_attr_lambda() -> StatementLambdaElement:
-    """Generate the find attributes select only once."""
-    return lambda_stmt(
-        lambda: union_all(
-            *[
-                select(func.min(States.attributes_id)).where(
-                    States.attributes_id == bindparam(f"a{idx}", required=False)
-                )
-                for idx in range(
-                    998
-                )  # MAX_ROWS_TO_PURGE inlined to avoid TypeError: 'PyWrapper' object cannot be interpreted as an integer
-            ]
-        )
-    )
-
-
-FIND_ATTRS_LAMBDA = _generate_find_attr_lambda()
-
-
 @retryable_database_job("purge")
 def purge_old_data(
     instance: Recorder, purge_before: datetime, repack: bool, apply_filter: bool = False
@@ -132,6 +113,22 @@ def _select_event_state_and_attributes_ids_to_purge(
     return event_ids, state_ids, attributes_ids
 
 
+def _generate_find_attr_lambda() -> StatementLambdaElement:
+    """Generate the find attributes select only once."""
+    return lambda_stmt(
+        lambda: union_all(
+            *[
+                select(func.min(States.attributes_id)).where(
+                    States.attributes_id == bindparam(f"a{idx}", required=False)
+                )
+                for idx in range(
+                    998
+                )  # MAX_ROWS_TO_PURGE inlined to avoid TypeError: 'PyWrapper' object cannot be interpreted as an integer
+            ]
+        )
+    )
+
+
 def _select_unused_attributes_ids(
     session: Session, attributes_ids: set[int], using_sqlite: bool
 ) -> set[int]:
@@ -180,7 +177,7 @@ def _select_unused_attributes_ids(
         # different queries in the cache.
         #
         id_query = session.execute(
-            FIND_ATTRS_LAMBDA.params(
+            _generate_find_attr_lambda().params(
                 {
                     f"a{idx}": attributes_id
                     for idx, attributes_id in enumerate(attributes_ids)
