@@ -1,9 +1,10 @@
 """Test the device level APIs."""
+import asyncio
 from unittest.mock import patch
 
-from pyinsteon import pub
 from pyinsteon.constants import DeviceAction
 from pyinsteon.topics import DEVICE_LIST_CHANGED
+from pyinsteon.utils import publish_topic
 
 from homeassistant.components import insteon
 from homeassistant.components.insteon.api import async_load_api
@@ -148,36 +149,24 @@ async def test_add_device_api(hass, hass_ws_client):
 
     ws_client, devices, _, _ = await _async_setup(hass, hass_ws_client)
     with patch.object(insteon.api.device, "devices", devices):
-        await ws_client.send_json({ID: 2, TYPE: "insteon/device/add", MULTIPLE: False})
-        await ws_client.receive_json()
-        assert devices.async_add_device_called_with["address"] is None
-        assert devices.async_add_device_called_with["multiple"] is False
+        await ws_client.send_json({ID: 2, TYPE: "insteon/device/add", MULTIPLE: True})
 
+        await asyncio.sleep(0.01)
+        assert devices.async_add_device_called_with.get("address") is None
+        assert devices.async_add_device_called_with["multiple"] is True
 
-async def test_notify_on_device_added(hass, hass_ws_client):
-    """Test receiving notifications of a new device added."""
-
-    ws_client, devices, _, _ = await _async_setup(hass, hass_ws_client)
-
-    with patch.object(insteon.api.aldb, "devices", devices):
-        await ws_client.send_json(
-            {
-                ID: 2,
-                TYPE: "insteon/device/adding",
-            }
-        )
-        msg = await ws_client.receive_json()
-        assert msg["success"]
-
-        pub.sendMessage(
-            DEVICE_LIST_CHANGED, address="11.22.33", action=DeviceAction.ADDED
-        )
         msg = await ws_client.receive_json()
         assert msg["event"]["type"] == "device_added"
-        assert msg["event"]["address"] == "11.22.33"
+        assert msg["event"]["address"] == "aa.bb.cc"
 
-        pub.sendMessage(
-            DEVICE_LIST_CHANGED, address=None, action=DeviceAction.COMPLETED
+        msg = await ws_client.receive_json()
+        assert msg["event"]["type"] == "device_added"
+        assert msg["event"]["address"] == "bb.cc.dd"
+
+        publish_topic(
+            DEVICE_LIST_CHANGED,
+            address=None,
+            action=DeviceAction.COMPLETED,
         )
         msg = await ws_client.receive_json()
         assert msg["event"]["type"] == "linking_stopped"

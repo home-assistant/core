@@ -13,6 +13,8 @@ from pyinsteon.device_types import (
     SwitchedLightingControl_SwitchLinc,
 )
 from pyinsteon.managers.saved_devices_manager import dict_to_aldb_record
+from pyinsteon.topics import DEVICE_LIST_CHANGED
+from pyinsteon.utils import subscribe_topic
 
 
 class MockSwitchLinc(SwitchedLightingControl_SwitchLinc):
@@ -143,11 +145,14 @@ class MockDevices:
     async def async_add_device(self, address=None, multiple=False):
         """Mock the async_add_device method."""
         self.async_add_device_called_with = {"address": address, "multiple": multiple}
-        await asyncio.sleep(0.1)
         if multiple:
             yield "aa.bb.cc"
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.01)
             yield "bb.cc.dd"
-            return
         if address:
             yield address
+        await asyncio.sleep(0.01)
+
+    def subscribe(self, listener):
+        """Mock the subscribe function."""
+        subscribe_topic(listener, DEVICE_LIST_CHANGED)
