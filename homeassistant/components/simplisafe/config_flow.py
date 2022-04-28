@@ -126,7 +126,8 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if existing_entries := [
                 entry
                 for entry in self.hass.config_entries.async_entries()
-                if entry.unique_id in (self._username, user_id)
+                if entry.domain == DOMAIN
+                and entry.unique_id in (self._username, user_id)
             ]:
                 existing_entry = existing_entries[0]
                 self.hass.config_entries.async_update_entry(
