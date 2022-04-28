@@ -1,3 +1,17 @@
 create:
   name: Create backup
   description: Create a new backup.
+
+purge:
+  name: Purge old backups
+  description: Purge old backups, keeping the given number of recent backups.
+  fields:
+    keep_recent:
+      name: Keep recent
+      description: Number of recent backups to keep
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 1000
+          mode: box

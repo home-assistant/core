@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.backup.const import DOMAIN
+from homeassistant.components.backup.const import ATTR_KEEP_RECENT, DOMAIN
 from homeassistant.core import HomeAssistant
 
 from .common import setup_backup_integration
@@ -37,3 +37,24 @@ async def test_create_service(
         )
 
     assert generate_backup.called
+
+
+async def test_purge_service(
+    hass: HomeAssistant,
+) -> None:
+    """Test purge backups."""
+    await setup_backup_integration(hass)
+
+    data = {ATTR_KEEP_RECENT: 3}
+
+    with patch(
+        "homeassistant.components.backup.websocket.BackupManager.purge_backups",
+    ) as purge_backups:
+        await hass.services.async_call(
+            DOMAIN,
+            "purge",
+            service_data=data,
+            blocking=True,
+        )
+
+    assert purge_backups.called

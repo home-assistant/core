@@ -2,12 +2,13 @@
 from __future__ import annotations
 
 from pathlib import Path
+import random
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 
 from homeassistant.components.backup import BackupManager
-from homeassistant.components.backup.manager import BackupPlatformProtocol
+from homeassistant.components.backup.manager import Backup, BackupPlatformProtocol
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
@@ -267,3 +268,94 @@ async def test_exception_plaform_post(hass: HomeAssistant) -> None:
 
     with pytest.raises(HomeAssistantError):
         await _mock_backup_generation(manager)
+
+
+async def test_purge_backups_no_backups_exist(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test purging backups when no backups exist."""
+    manager = BackupManager(hass)
+    manager.backups = {}
+    manager.loaded_backups = True
+
+    await manager.purge_backups(keep_recent=1)
+    assert "No backups to purge" in caplog.text
+
+
+async def test_purge_backups_fewer_backups_than_to_keep(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test purging backups when fewer backups exist than asked to be kept."""
+    manager = BackupManager(hass)
+    manager.backups = {TEST_BACKUP.slug: TEST_BACKUP}
+    manager.loaded_backups = True
+
+    await manager.purge_backups(keep_recent=2)
+    assert "Removed backup located at" not in caplog.text
+
+
+async def test_purge_backups_keep_equal_number_of_backups(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test purging backups when fewer backups exist than asked to be kept."""
+    manager = BackupManager(hass)
+    manager.backups = {TEST_BACKUP.slug: TEST_BACKUP}
+    manager.loaded_backups = True
+
+    await manager.purge_backups(keep_recent=1)
+    assert "Removed backup located at" not in caplog.text
+
+
+async def test_purge_backups_keep_2_of_3(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test purging backups."""
+    backup_1 = Backup(
+        slug="aefg19",
+        name="Test 1",
+        date="2022-04-26T03:00:00.000Z",
+        path=Path("aefg19.tar"),
+        size=0.0,
+    )
+
+    backup_2 = Backup(
+        slug="b3149f",
+        name="Test 1",
+        date="2022-04-27T03:00:00.000Z",
+        path=Path("b3149f.tar"),
+        size=0.0,
+    )
+
+    backup_3 = Backup(
+        slug="74bbc1",
+        name="Test 1",
+        date="2022-04-28T03:00:00.000Z",
+        path=Path("74bbc1.tar"),
+        size=0.0,
+    )
+
+    backups = {
+        backup_1.slug: backup_1,
+        backup_2.slug: backup_2,
+        backup_3.slug: backup_3,
+    }
+
+    manager = BackupManager(hass)
+    manager.backups = _shuffle_backups(backups)
+    manager.loaded_backups = True
+
+    await manager.purge_backups(keep_recent=2)
+
+    assert len(manager.backups) == 2
+    assert manager.backups[backup_2.slug] is not None
+    assert manager.backups[backup_3.slug] is not None
+
+
+def _shuffle_backups(backups: dict[str, Backup]) -> dict[str, Backup]:
+    shuffled_backups = list(backups.items())
+    random.shuffle(shuffled_backups)
+    return dict(shuffled_backups)

@@ -138,6 +138,33 @@ class BackupManager:
 
         return backup
 
+    async def purge_backups(self, keep_recent: int) -> None:
+        """Purges backups and keeps the given number of most recent backups."""
+        if self.backing_up:
+            raise HomeAssistantError("Backup currently in progress")
+
+        if not self.loaded_platforms:
+            await self.load_platforms()
+
+        if not self.loaded_backups:
+            await self.load_backups()
+
+        if keep_recent >= len(self.backups):
+            LOGGER.debug(
+                "No backups to purge, %d left and asked to keep %d",
+                len(self.backups),
+                keep_recent,
+            )
+            return
+
+        backups_latest_first = sorted(
+            self.backups.values(), key=lambda b: b.date, reverse=True
+        )
+
+        while len(backups_latest_first) > keep_recent:
+            backup_to_remove = backups_latest_first.pop()
+            await self.remove_backup(backup_to_remove.slug)
+
     async def remove_backup(self, slug: str) -> None:
         """Remove a backup."""
         if (backup := await self.get_backup(slug)) is None:
