@@ -61,18 +61,20 @@ from .data import EventListenAddr, get_domain_data
 
 PARALLEL_UPDATES = 0
 
-_T = TypeVar("_T", bound="DlnaDmrEntity")
+_DlnaDmrEntityT = TypeVar("_DlnaDmrEntityT", bound="DlnaDmrEntity")
 _R = TypeVar("_R")
 _P = ParamSpec("_P")
 
 
 def catch_request_errors(
-    func: Callable[Concatenate[_T, _P], Awaitable[_R]]
-) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, _R | None]]:
+    func: Callable[Concatenate[_DlnaDmrEntityT, _P], Awaitable[_R]]
+) -> Callable[Concatenate[_DlnaDmrEntityT, _P], Coroutine[Any, Any, _R | None]]:
     """Catch UpnpError errors."""
 
     @functools.wraps(func)
-    async def wrapper(self: _T, *args: _P.args, **kwargs: _P.kwargs) -> _R | None:
+    async def wrapper(
+        self: _DlnaDmrEntityT, *args: _P.args, **kwargs: _P.kwargs
+    ) -> _R | None:
         """Catch UpnpError errors and check availability before and after request."""
         if not self.available:
             _LOGGER.warning(
