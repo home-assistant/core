@@ -109,13 +109,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 @callback
 def async_get_entry_id_for_service_call(hass: HomeAssistant, call: ServiceCall) -> str:
     """Get the entry ID related to a service call (by device ID)."""
-    api_key = call.data[ATTR_API_KEY]
+    call_data_api_key = call.data[ATTR_API_KEY]
 
     for entry in hass.config_entries.async_entries(DOMAIN):
-        if entry.title == api_key:
+        if entry.data[ATTR_API_KEY] == call_data_api_key:
             return entry.entry_id
 
-    raise ValueError(f"No api for API key: {api_key}")
+    raise ValueError(f"No api for API key: {call_data_api_key}")
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

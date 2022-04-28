@@ -3,8 +3,8 @@ pause:
   description: Pauses downloads.
   fields:
     api_key:
-      name: Sabnzbd API
-      description: The Sabnzbd API to pause downloads
+      name: Sabnzbd API key
+      description: The Sabnzbd API key to pause downloads
       required: true
       selector:
         text:
@@ -13,8 +13,8 @@ resume:
   description: Resumes downloads.
   fields:
     api_key:
-      name: Sabnzbd API
-      description: The Sabnzbd API to resume downloads
+      name: Sabnzbd API key
+      description: The Sabnzbd API key to resume downloads
       required: true
       selector:
         text:
@@ -23,8 +23,8 @@ set_speed:
   description: Sets the download speed limit.
   fields:
     api_key:
-      name: Sabnzbd API
-      description: The Sabnzbd API to set speed limit
+      name: Sabnzbd API key
+      description: The Sabnzbd API key to set speed limit
       required: true
       selector:
         text:
