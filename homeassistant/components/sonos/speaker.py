@@ -192,6 +192,8 @@ class SonosSpeaker:
         self.media.play_mode = self.soco.play_mode
         self.update_volume()
         self.update_groups()
+        if self.is_coordinator:
+            self.media.poll_media()
 
         future = asyncio.run_coroutine_threadsafe(
             self.async_setup_dispatchers(entry), self.hass.loop
