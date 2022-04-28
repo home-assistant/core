@@ -147,6 +147,26 @@ def _generate_find_attr_lambda(attribute_ids: list[int]) -> StatementLambdaEleme
         attr28,
         attr29,
         attr30,
+        attr31,
+        attr32,
+        attr33,
+        attr34,
+        attr35,
+        attr36,
+        attr37,
+        attr38,
+        attr39,
+        attr40,
+        attr41,
+        attr42,
+        attr43,
+        attr44,
+        attr45,
+        attr46,
+        attr47,
+        attr48,
+        attr49,
+        attr50,
     ) = attribute_ids
     return lambda_stmt(
         lambda: union_all(
@@ -222,6 +242,66 @@ def _generate_find_attr_lambda(attribute_ids: list[int]) -> StatementLambdaEleme
             select(func.min(States.attributes_id)).where(
                 States.attributes_id == attr30
             ),
+            select(func.min(States.attributes_id)).where(
+                States.attributes_id == attr31
+            ),
+            select(func.min(States.attributes_id)).where(
+                States.attributes_id == attr32
+            ),
+            select(func.min(States.attributes_id)).where(
+                States.attributes_id == attr33
+            ),
+            select(func.min(States.attributes_id)).where(
+                States.attributes_id == attr34
+            ),
+            select(func.min(States.attributes_id)).where(
+                States.attributes_id == attr35
+            ),
+            select(func.min(States.attributes_id)).where(
+                States.attributes_id == attr36
+            ),
+            select(func.min(States.attributes_id)).where(
+                States.attributes_id == attr37
+            ),
+            select(func.min(States.attributes_id)).where(
+                States.attributes_id == attr38
+            ),
+            select(func.min(States.attributes_id)).where(
+                States.attributes_id == attr39
+            ),
+            select(func.min(States.attributes_id)).where(
+                States.attributes_id == attr40
+            ),
+            select(func.min(States.attributes_id)).where(
+                States.attributes_id == attr41
+            ),
+            select(func.min(States.attributes_id)).where(
+                States.attributes_id == attr42
+            ),
+            select(func.min(States.attributes_id)).where(
+                States.attributes_id == attr43
+            ),
+            select(func.min(States.attributes_id)).where(
+                States.attributes_id == attr44
+            ),
+            select(func.min(States.attributes_id)).where(
+                States.attributes_id == attr45
+            ),
+            select(func.min(States.attributes_id)).where(
+                States.attributes_id == attr46
+            ),
+            select(func.min(States.attributes_id)).where(
+                States.attributes_id == attr47
+            ),
+            select(func.min(States.attributes_id)).where(
+                States.attributes_id == attr48
+            ),
+            select(func.min(States.attributes_id)).where(
+                States.attributes_id == attr49
+            ),
+            select(func.min(States.attributes_id)).where(
+                States.attributes_id == attr50
+            ),
         )
     )
 
@@ -277,7 +357,7 @@ def _select_unused_attributes_ids(
         # different queries in the cache.
         #
         seen_ids = set()
-        groups = [iter(attributes_ids)] * 30
+        groups = [iter(attributes_ids)] * 50
         for attr_ids in zip_longest(*groups, fillvalue=None):
             seen_ids |= {
                 state[0]
