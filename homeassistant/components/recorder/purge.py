@@ -171,7 +171,8 @@ def _select_unused_attributes_ids(
         short_params = MAX_ROWS_TO_PURGE - attrs_count
         #
         # We used to generate a query based on how many attribute_ids to find but
-        # that meant sqlalchemy cached up to MAX_ROWS_TO_PURGE different statements.
+        # that meant sqlalchemy Transparent SQL Compilation Caching was working against
+        # us by cached up to MAX_ROWS_TO_PURGE different statements.
         #
         # We now generate a single query and fill the attributes ids we do not need
         # with NULL values so sqlalchemy does not end up with MAX_ROWS_TO_PURGE
