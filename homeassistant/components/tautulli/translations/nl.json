@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "reauth_successful": "Herauthenticatie was succesvol",
+            "single_instance_allowed": "Al geconfigureerd. Slechts een enkele configuratie mogelijk."
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_auth": "Ongeldige authenticatie",
+            "unknown": "Onverwachte fout"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API-sleutel"
+                },
+                "title": "Herauthenticeer Tautulli"
+            },
+            "user": {
+                "data": {
+                    "api_key": "API-sleutel",
+                    "url": "URL",
+                    "verify_ssl": "SSL-certificaat verifi\u00ebren"
+                }
+            }
+        }
+    }
+}

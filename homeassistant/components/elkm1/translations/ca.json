@@ -4,7 +4,9 @@
             "address_already_configured": "Ja hi ha un Elk-M1 configurat amb aquesta adre\u00e7a",
             "already_configured": "Ja hi ha un Elk-M1 configurat amb aquest prefix",
             "already_in_progress": "El flux de configuraci\u00f3 ja est\u00e0 en curs",
-            "cannot_connect": "Ha fallat la connexi\u00f3"
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
+            "unknown": "Error inesperat"
         },
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3",
@@ -37,13 +39,7 @@
             },
             "user": {
                 "data": {
-                    "address": "Adre\u00e7a IP, domini o port s\u00e8rie (en cas d'una connexi\u00f3 s\u00e8rie).",
-                    "device": "Dispositiu",
-                    "password": "Contrasenya",
-                    "prefix": "Prefix \u00fanic (deixa-ho en blanc si nom\u00e9s tens un \u00fanic controlador Elk-M1).",
-                    "protocol": "Protocol",
-                    "temperature_unit": "Unitats de temperatura que utilitza l'Elk-M1.",
-                    "username": "Nom d'usuari"
+                    "device": "Dispositiu"
                 },
                 "description": "Selecciona un sistema descobert o 'entrada manual' si no s'han descobert dispositius.",
                 "title": "Connexi\u00f3 amb el controlador Elk-M1"

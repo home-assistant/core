@@ -36,7 +36,8 @@
                 "data": {
                     "account_balance_currencies": "Jelentend\u0151 p\u00e9nzt\u00e1rca egyenlegek.",
                     "exchange_base": "Az \u00e1rfolyam-\u00e9rz\u00e9kel\u0151k alapvalut\u00e1ja.",
-                    "exchange_rate_currencies": "Jelentend\u0151 \u00e1rfolyamok."
+                    "exchange_rate_currencies": "Jelentend\u0151 \u00e1rfolyamok.",
+                    "exchnage_rate_precision": "A tizedesjegyek sz\u00e1ma az \u00e1tv\u00e1lt\u00e1si \u00e1rfolyamokn\u00e1l."
                 },
                 "description": "\u00c1ll\u00edtsa be a Coinbase opci\u00f3kat"
             }

@@ -5,18 +5,21 @@
                 "data": {
                     "all": "Totes les entitats",
                     "entities": "Membres",
+                    "hide_members": "Amaga membres",
                     "name": "Nom"
                 },
                 "description": "Si \"totes les entitats\" est\u00e0 activat, l'estat del grup estar\u00e0 activat (ON) si tots els membres estan activats. Si \"totes les entitats\" est\u00e0 desactivat, l'estat del grup s'activar\u00e0 si hi ha activat qualsevol membre.",
-                "title": "Nou grup"
+                "title": "Afegeix grup"
             },
             "cover": {
                 "data": {
                     "entities": "Membres",
+                    "hide_members": "Amaga membres",
                     "name": "Nom",
-                    "title": "Nou grup"
+                    "title": "Afegeix grup"
                 },
-                "description": "Selecciona les opcions del grup"
+                "description": "Selecciona les opcions del grup",
+                "title": "Afegeix grup"
             },
             "cover_options": {
                 "data": {
@@ -27,10 +30,12 @@
             "fan": {
                 "data": {
                     "entities": "Membres",
+                    "hide_members": "Amaga membres",
                     "name": "Nom",
-                    "title": "Nou grup"
+                    "title": "Afegeix grup"
                 },
-                "description": "Selecciona les opcions del grup"
+                "description": "Selecciona les opcions del grup",
+                "title": "Afegeix grup"
             },
             "fan_options": {
                 "data": {
@@ -46,11 +51,14 @@
             },
             "light": {
                 "data": {
+                    "all": "Totes les entitats",
                     "entities": "Membres",
+                    "hide_members": "Amaga membres",
                     "name": "Nom",
-                    "title": "Nou grup"
+                    "title": "Afegeix grup"
                 },
-                "description": "Selecciona les opcions del grup"
+                "description": "Si \"totes les entitats\" est\u00e0 activat, l'estat del grup estar\u00e0 activat (ON) si tots els membres estan activats. Si \"totes les entitats\" est\u00e0 desactivat, l'estat del grup s'activar\u00e0 si hi ha activat qualsevol membre.",
+                "title": "Afegeix grup"
             },
             "light_options": {
                 "data": {
@@ -58,13 +66,23 @@
                 },
                 "description": "Selecciona les opcions del grup"
             },
+            "lock": {
+                "data": {
+                    "entities": "Membres",
+                    "hide_members": "Amaga membres",
+                    "name": "Nom"
+                },
+                "title": "Afegeix grup"
+            },
             "media_player": {
                 "data": {
                     "entities": "Membres",
+                    "hide_members": "Amaga membres",
                     "name": "Nom",
-                    "title": "Nou grup"
+                    "title": "Afegeix grup"
                 },
-                "description": "Selecciona les opcions del grup"
+                "description": "Selecciona les opcions del grup",
+                "title": "Afegeix grup"
             },
             "media_player_options": {
                 "data": {
@@ -72,20 +90,52 @@
                 },
                 "description": "Selecciona les opcions del grup"
             },
+            "switch": {
+                "data": {
+                    "entities": "Membres",
+                    "hide_members": "Amaga membres",
+                    "name": "Nom"
+                },
+                "title": "Afegeix grup"
+            },
             "user": {
                 "data": {
                     "group_type": "Tipus de grup"
                 },
-                "title": "Nou grup"
+                "description": "Els grups et permeten crear una nova entitat que representa m\u00faltiples entitats del mateix tipus.",
+                "menu_options": {
+                    "binary_sensor": "Grup de sensors binaris",
+                    "cover": "Grup de cobertes",
+                    "fan": "Grup de ventiladors",
+                    "light": "Grup de llums",
+                    "lock": "Grup de panys",
+                    "media_player": "Grup de reproductors multim\u00e8dia",
+                    "switch": "Grup de commutadors"
+                },
+                "title": "Afegeix grup"
             }
         }
     },
     "options": {
         "step": {
+            "binary_sensor": {
+                "data": {
+                    "all": "Totes les entitats",
+                    "entities": "Membres",
+                    "hide_members": "Amaga membres"
+                },
+                "description": "Si \"totes les entitats\" est\u00e0 activat, l'estat del grup estar\u00e0 activat (ON) si tots els membres estan activats. Si \"totes les entitats\" est\u00e0 desactivat, l'estat del grup s'activar\u00e0 si hi ha activat qualsevol membre."
+            },
             "binary_sensor_options": {
                 "data": {
                     "all": "Totes les entitats",
                     "entities": "Membres"
+                }
+            },
+            "cover": {
+                "data": {
+                    "entities": "Membres",
+                    "hide_members": "Amaga membres"
                 }
             },
             "cover_options": {
@@ -93,20 +143,55 @@
                     "entities": "Membres"
                 }
             },
+            "fan": {
+                "data": {
+                    "entities": "Membres",
+                    "hide_members": "Amaga membres"
+                }
+            },
             "fan_options": {
                 "data": {
                     "entities": "Membres"
                 }
             },
+            "light": {
+                "data": {
+                    "all": "Totes les entitats",
+                    "entities": "Membres",
+                    "hide_members": "Amaga membres"
+                },
+                "description": "Si \"totes les entitats\" est\u00e0 activat, l'estat del grup estar\u00e0 activat (ON) si tots els membres estan activats. Si \"totes les entitats\" est\u00e0 desactivat, l'estat del grup s'activar\u00e0 si hi ha activat qualsevol membre."
+            },
             "light_options": {
                 "data": {
+                    "all": "Totes les entitats",
                     "entities": "Membres"
+                }
+            },
+            "lock": {
+                "data": {
+                    "entities": "Membres",
+                    "hide_members": "Amaga membres"
+                }
+            },
+            "media_player": {
+                "data": {
+                    "entities": "Membres",
+                    "hide_members": "Amaga membres"
                 }
             },
             "media_player_options": {
                 "data": {
                     "entities": "Membres"
                 }
+            },
+            "switch": {
+                "data": {
+                    "all": "Totes les entitats",
+                    "entities": "Membres",
+                    "hide_members": "Amaga membres"
+                },
+                "description": "Si \"totes les entitats\" est\u00e0 activat, l'estat del grup estar\u00e0 activat (ON) si tots els membres estan activats. Si \"totes les entitats\" est\u00e0 desactivat, l'estat del grup s'activar\u00e0 si hi ha activat qualsevol membre."
             }
         }
     },

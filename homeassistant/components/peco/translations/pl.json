@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Us\u0142uga jest ju\u017c skonfigurowana"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "county": "Hrabstwo"
+                },
+                "description": "Wybierz swoje hrabstwo poni\u017cej.",
+                "title": "Licznik awarii PECO"
+            }
+        }
+    }
+}
