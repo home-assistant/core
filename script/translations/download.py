@@ -100,7 +100,7 @@ def save_language_translations(lang, translations):
         if base_translations:
             if (path := get_component_path(lang, component)) is None:
                 print(
-                    f"Skipping {lang} for {component}, as the integration doesn't seem to exists."
+                    f"Skipping {lang} for {component}, as the integration doesn't seem to exist."
                 )
                 continue
             os.makedirs(os.path.dirname(path), exist_ok=True)
