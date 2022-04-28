@@ -56,5 +56,8 @@
     }
   ],
   "iot_class": "local_polling",
-  "loggers": ["denonavr"]
+  "loggers": ["denonavr"],
+  "supported_brands": {
+    "marantz": "Marantz"
+  }
 }
