@@ -108,7 +108,7 @@ async def async_handle_webhook(
 
     if webhook["local_only"]:
         try:
-            remote = ip_address(request.remote)
+            remote = ip_address(request.remote)  # type: ignore[arg-type]
         except ValueError:
             _LOGGER.debug("Unable to parse remote ip %s", request.remote)
             return Response(status=HTTPStatus.OK)
