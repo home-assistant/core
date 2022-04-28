@@ -109,7 +109,7 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_get_email_2fa(self) -> None:
         """Define a task to wait for email-based 2FA."""
-        # assert self._simplisafe
+        assert self._simplisafe
 
         try:
             async with async_timeout.timeout(DEFAULT_EMAIL_2FA_TIMEOUT):
