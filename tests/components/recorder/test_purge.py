@@ -42,7 +42,7 @@ def _generate_sqlite_compatible_find_attr_lambda() -> StatementLambdaElement:
     return lambda_stmt(
         lambda: union_all(
             *[
-                select(func.min(States.attributes_id).label("id")).where(
+                select(func.min(States.attributes_id)).where(
                     States.attributes_id == bindparam(f"a{idx}", required=False)
                 )
                 for idx in range(
