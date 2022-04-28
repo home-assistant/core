@@ -20,11 +20,9 @@ from homeassistant.components.light import (
     EFFECT_RANDOM,
     FLASH_LONG,
     FLASH_SHORT,
-    SUPPORT_EFFECT,
-    SUPPORT_FLASH,
-    SUPPORT_TRANSITION,
     ColorMode,
     LightEntity,
+    LightEntityFeature,
     filter_supported_color_modes,
 )
 from homeassistant.core import callback
@@ -73,10 +71,10 @@ COLOR_MODES_HUE = {
     "Color temperature light": COLOR_MODES_HUE_COLOR_TEMP,
 }
 
-SUPPORT_HUE_ON_OFF = SUPPORT_FLASH | SUPPORT_TRANSITION
+SUPPORT_HUE_ON_OFF = LightEntityFeature.FLASH | LightEntityFeature.TRANSITION
 SUPPORT_HUE_DIMMABLE = SUPPORT_HUE_ON_OFF
 SUPPORT_HUE_COLOR_TEMP = SUPPORT_HUE_DIMMABLE
-SUPPORT_HUE_COLOR = SUPPORT_HUE_DIMMABLE | SUPPORT_EFFECT
+SUPPORT_HUE_COLOR = SUPPORT_HUE_DIMMABLE | LightEntityFeature.EFFECT
 SUPPORT_HUE_EXTENDED = SUPPORT_HUE_COLOR_TEMP | SUPPORT_HUE_COLOR
 
 SUPPORT_HUE = {
