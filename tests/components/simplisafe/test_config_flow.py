@@ -118,6 +118,7 @@ async def test_step_reauth_errors(hass, config, error_string, exc, reauth_config
             result["flow_id"], user_input=reauth_config
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "reauth_confirm"
         assert result["errors"] == {"base": error_string}
 
 
@@ -191,12 +192,13 @@ async def test_step_user_errors(hass, credentials_config, error_string, exc):
             result["flow_id"], user_input=credentials_config
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "user"
         assert result["errors"] == {"base": error_string}
 
 
 @pytest.mark.parametrize("api_auth_state", [AuthStates.PENDING_2FA_EMAIL])
 async def test_step_user_email_2fa(
-    api, hass, config, credentials_config, setup_simplisafe
+    api, api_auth_state, hass, config, credentials_config, setup_simplisafe
 ):
     """Test the user step with email-based 2FA."""
     result = await hass.config_entries.flow.async_init(
@@ -208,14 +210,15 @@ async def test_step_user_email_2fa(
     # Patch API.async_verify_2fa_email to first return pending, then return all done:
     api.async_verify_2fa_email.side_effect = [Verify2FAPending, None]
 
-    # Patch the amount of time slept between calls so to not slow down this test:
-    with patch(
-        "homeassistant.components.simplisafe.config_flow.DEFAULT_EMAIL_2FA_SLEEP", 0
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=credentials_config
-        )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=credentials_config
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_SHOW_PROGRESS
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] == data_entry_flow.RESULT_TYPE_SHOW_PROGRESS_DONE
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert len(hass.config_entries.async_entries()) == 1
     [config_entry] = hass.config_entries.async_entries(DOMAIN)
@@ -223,6 +226,7 @@ async def test_step_user_email_2fa(
     assert config_entry.data == config
 
 
+@patch("homeassistant.components.simplisafe.config_flow.DEFAULT_EMAIL_2FA_TIMEOUT", 0)
 @pytest.mark.parametrize("api_auth_state", [AuthStates.PENDING_2FA_EMAIL])
 async def test_step_user_email_2fa_timeout(
     api, hass, config, credentials_config, setup_simplisafe
@@ -237,18 +241,18 @@ async def test_step_user_email_2fa_timeout(
     # Patch API.async_verify_2fa_email to return pending:
     api.async_verify_2fa_email.side_effect = Verify2FAPending
 
-    # Patch the amount of time slept between calls and the timeout duration so to not
-    # slow down this test:
-    with patch(
-        "homeassistant.components.simplisafe.config_flow.DEFAULT_EMAIL_2FA_SLEEP", 0
-    ), patch(
-        "homeassistant.components.simplisafe.config_flow.DEFAULT_EMAIL_2FA_TIMEOUT", 0
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=credentials_config
-        )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"] == {"base": "2fa_timed_out"}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=credentials_config
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_SHOW_PROGRESS
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] == data_entry_flow.RESULT_TYPE_SHOW_PROGRESS_DONE
+    assert result["step_id"] == "email_2fa_error"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "email_2fa_timed_out"
 
 
 async def test_step_user_sms_2fa(
