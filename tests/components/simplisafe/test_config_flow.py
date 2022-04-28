@@ -10,9 +10,9 @@ from homeassistant.components.simplisafe import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_CODE, CONF_TOKEN, CONF_USERNAME
 
-from tests.common import MockConfigEntry
-
 from .common import REFRESH_TOKEN, USER_ID, USERNAME
+
+from tests.common import MockConfigEntry
 
 CONF_USER_ID = "user_id"
 
