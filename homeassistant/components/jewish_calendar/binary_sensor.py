@@ -34,6 +34,9 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Jewish Calendar binary sensor devices."""
+    if discovery_info is None:
+        return
+
     async_add_entities([JewishCalendarBinarySensor(hass.data[DOMAIN], BINARY_SENSORS)])
 
 

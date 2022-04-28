@@ -68,6 +68,9 @@ def get_unique_prefix(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Jewish Calendar component."""
+    if DOMAIN not in config:
+        return True
+
     name = config[DOMAIN][CONF_NAME]
     language = config[DOMAIN][CONF_LANGUAGE]
 
