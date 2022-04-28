@@ -53,11 +53,18 @@ SERVICES = (
     SERVICE_SET_SPEED,
 )
 
-SCHEMA_SERVICE = vol.Schema(
+SERVICE_BASE_SCHEMA = vol.Schema(
     {
-        vol.Optional(ATTR_SPEED, default=DEFAULT_SPEED_LIMIT): cv.string,
         vol.Required(ATTR_API_KEY): cv.string,
     }
+)
+
+SERVICE_SPEED_SCHEMA = vol.All(
+    SERVICE_BASE_SCHEMA.extend(
+        {
+            vol.Optional(ATTR_SPEED, default=DEFAULT_SPEED_LIMIT): cv.string,
+        }
+    )
 )
 
 CONFIG_SCHEMA = vol.Schema(
@@ -163,16 +170,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         speed = call.data.get(ATTR_SPEED)
         await api.async_set_queue_speed(speed)
 
-    for service, method in (
-        (SERVICE_PAUSE, async_pause_queue),
-        (SERVICE_RESUME, async_resume_queue),
-        (SERVICE_SET_SPEED, async_set_queue_speed),
+    for service, method, schema in (
+        (SERVICE_PAUSE, async_pause_queue, SERVICE_BASE_SCHEMA),
+        (SERVICE_RESUME, async_resume_queue, SERVICE_BASE_SCHEMA),
+        (SERVICE_SET_SPEED, async_set_queue_speed, SERVICE_SPEED_SCHEMA),
     ):
 
         if hass.services.has_service(DOMAIN, service):
             continue
 
-        hass.services.async_register(DOMAIN, service, method, schema=SCHEMA_SERVICE)
+        hass.services.async_register(DOMAIN, service, method, schema=schema)
 
     async def async_update_sabnzbd(now):
         """Refresh SABnzbd queue data."""
