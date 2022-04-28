@@ -84,6 +84,7 @@ from .schema import (
     ga_validator,
     sensor_type_validator,
 )
+from .websocket import register_websocket_api
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -214,6 +215,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     conf = dict(conf)
     hass.data[DATA_KNX_CONFIG] = conf
+
+    register_websocket_api(hass)
+
     return True
 
 

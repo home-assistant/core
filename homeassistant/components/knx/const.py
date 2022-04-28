@@ -1,8 +1,11 @@
 """Constants for the KNX integration."""
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
 from enum import Enum
 from typing import Final, TypedDict
+
+from xknx.telegram import Telegram
 
 from homeassistant.components.climate.const import (
     PRESET_AWAY,
@@ -69,6 +72,9 @@ DATA_HASS_CONFIG: Final = "knx_hass_config"
 
 ATTR_COUNTER: Final = "counter"
 ATTR_SOURCE: Final = "source"
+
+AsyncMessageCallbackType = Callable[[Telegram], Awaitable[None]]
+MessageCallbackType = Callable[[Telegram], None]
 
 
 class KNXConfigEntryData(TypedDict, total=False):
