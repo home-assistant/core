@@ -174,10 +174,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         hass.services.async_register(DOMAIN, service, method, schema=SCHEMA_SERVICE)
 
-        hass.services.async_register(DOMAIN, service, method, schema=SCHEMA_SERVICE)
-
-        hass.services.async_register(DOMAIN, service, method, schema=SCHEMA_SERVICE)
-
     async def async_update_sabnzbd(now):
         """Refresh SABnzbd queue data."""
         try:
