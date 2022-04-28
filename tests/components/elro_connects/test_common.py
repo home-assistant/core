@@ -40,4 +40,17 @@ MOCK_DEVICE_STATUS_DATA = {
         },
         "name": "Zolder",
     },
+    5: {
+        "device_type": "CO_ALARM",
+        "signal": 255,
+        "battery": 255,
+        "device_state": "OFFLINE",
+        "device_status_data": {
+            "cmdId": 19,
+            "device_ID": 5,
+            "device_name": "2008",
+            "device_status": "FFFFFFFF",
+        },
+        "name": "Corner",
+    },
 }
