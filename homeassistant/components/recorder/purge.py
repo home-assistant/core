@@ -219,7 +219,10 @@ def _generate_find_attr_lambda(
     attr99: int | None,
     attr100: int | None,
 ) -> StatementLambdaElement:
-    """Generate the find attributes select only once."""
+    """Generate the find attributes select only once.
+
+    https://docs.sqlalchemy.org/en/14/core/connections.html#quick-guidelines-for-lambdas
+    """
     return lambda_stmt(
         lambda: union_all(
             select(func.min(STATE_ATTRS_ID)).where(STATE_ATTRS_ID == attr1),
@@ -370,11 +373,11 @@ def _select_unused_attributes_ids(
         #
         # We used to generate a query based on how many attribute_ids to find but
         # that meant sqlalchemy Transparent SQL Compilation Caching was working against
-        # us by cached up to MAX_ROWS_TO_PURGE different statements.
+        # us by cached up to MAX_ROWS_TO_PURGE different statements which could be
+        # up to 800MB for large database due to the complexity of the ORM objects.
         #
-        # We now generate a single query and fill the attributes ids we do not need
-        # with NULL values so sqlalchemy does not end up with MAX_ROWS_TO_PURGE
-        # different queries in the cache.
+        # We now break the query into groups of 100 and use a lambda_stmt to ensure
+        # that the query is only cached once.
         #
         seen_ids = set()
         groups = [iter(attributes_ids)] * 100
