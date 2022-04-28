@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterable
 from datetime import datetime
-from itertools import zip_longest
 import logging
 from typing import TYPE_CHECKING
 
@@ -122,7 +121,9 @@ def _generate_find_attr_lambda() -> StatementLambdaElement:
                 select(func.min(States.attributes_id)).where(
                     States.attributes_id == bindparam(f"a{idx}", required=False)
                 )
-                for idx in range(100)
+                for idx in range(
+                    998
+                )  # MAX_ROWS_TO_PURGE inlined to avoid TypeError: 'PyWrapper' object cannot be interpreted as an integer
             ]
         )
     )
@@ -148,12 +149,9 @@ def _select_unused_attributes_ids(
         # > explain select distinct attributes_id from states where attributes_id in (136723);
         # ...Using index
         #
-        seen_ids = {
-            state[0]
-            for state in session.query(distinct(States.attributes_id))
-            .filter(States.attributes_id.in_(attributes_ids))
-            .all()
-        }
+        id_query = session.query(distinct(States.attributes_id)).filter(
+            States.attributes_id.in_(attributes_ids)
+        )
     else:
         #
         # This branch is for DBMS that cannot optimize the distinct query well and has to examine
@@ -178,22 +176,17 @@ def _select_unused_attributes_ids(
         # with NULL values so sqlalchemy does not end up with MAX_ROWS_TO_PURGE
         # different queries in the cache.
         #
-        seen_ids = set()
-        groups = [iter(attributes_ids)] * 100
-        for attr_ids in zip_longest(*groups, fillvalue=None):
-            seen_ids |= {
-                state[0]
-                for state in session.execute(
-                    _generate_find_attr_lambda().params(
-                        {
-                            f"a{idx}": attributes_id
-                            for idx, attributes_id in enumerate(attr_ids)
-                        }
-                    )
-                ).all()
-                if state[0] is not None
-            }
-    to_remove = attributes_ids - seen_ids
+        id_query = session.execute(
+            _generate_find_attr_lambda().params(
+                {
+                    f"a{idx}": attributes_id
+                    for idx, attributes_id in enumerate(attributes_ids)
+                }
+            )
+        )
+    to_remove = attributes_ids - {
+        state[0] for state in id_query.all() if state[0] is not None
+    }
     _LOGGER.debug(
         "Selected %s shared attributes to remove",
         len(to_remove),
