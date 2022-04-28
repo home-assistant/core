@@ -11,8 +11,8 @@
         "step": {
             "ssdp_confirm": {
                 "data": {
-                    "one": "Pi\u00f9",
-                    "other": "Altri"
+                    "one": "Vuoto",
+                    "other": "Vuoti"
                 },
                 "description": "Vuoi impostare {name} ?"
             },

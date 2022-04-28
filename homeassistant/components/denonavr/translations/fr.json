@@ -27,6 +27,9 @@
                 "data": {
                     "host": "Adresse IP"
                 },
+                "data_description": {
+                    "host": "Laissez le champ vide pour utiliser la d\u00e9couverte automatique"
+                },
                 "description": "Connectez-vous \u00e0 votre r\u00e9cepteur, si l'adresse IP n'est pas d\u00e9finie, la d\u00e9tection automatique est utilis\u00e9e",
                 "title": "R\u00e9cepteurs r\u00e9seaux Denon AVR"
             }

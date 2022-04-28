@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119",
+            "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "invalid_auth": "Niepoprawne uwierzytelnienie",
+            "unknown": "Nieoczekiwany b\u0142\u0105d"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "Klucz API"
+                },
+                "description": "Aby znale\u017a\u0107 klucz API, otw\u00f3rz stron\u0119 Tautulli i przejd\u017a do \"Settings\", a nast\u0119pnie do \"Web interface\". Klucz API b\u0119dzie znajdowa\u0107 si\u0119 na dole tej strony.",
+                "title": "Ponowne uwierzytelnienie Tautulli"
+            },
+            "user": {
+                "data": {
+                    "api_key": "Klucz API",
+                    "url": "URL",
+                    "verify_ssl": "Weryfikacja certyfikatu SSL"
+                },
+                "description": "Aby znale\u017a\u0107 klucz API, otw\u00f3rz stron\u0119 Tautulli i przejd\u017a do \"Settings\", a nast\u0119pnie do \"Web interface\". Klucz API b\u0119dzie znajdowa\u0107 si\u0119 na dole tej strony. \n\nPrzyk\u0142ad adresu URL: \"http://192.168.0.10:8181\" z portem domy\u015blnym 8181."
+            }
+        }
+    }
+}

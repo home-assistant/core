@@ -6,6 +6,7 @@
             "already_in_progress": "Configuration flow is already in progress",
             "cannot_connect": "Failed to connect",
             "discover_timeout": "Unable to discover Hue bridges",
+            "invalid_host": "Invalid host",
             "no_bridges": "No Philips Hue bridges discovered",
             "not_hue_bridge": "Not a Hue bridge",
             "unknown": "Unexpected error"

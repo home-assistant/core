@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto jest ju\u017c skonfigurowane",
+            "already_in_progress": "Konfiguracja jest ju\u017c w toku",
+            "code_expired": "Kod uwierzytelniaj\u0105cy wygas\u0142 lub konfiguracja po\u015bwiadcze\u0144 jest nieprawid\u0142owa, spr\u00f3buj ponownie.",
+            "invalid_access_token": "Niepoprawny token dost\u0119pu",
+            "missing_configuration": "Komponent nie jest skonfigurowany. Post\u0119puj zgodnie z dokumentacj\u0105.",
+            "oauth_error": "Otrzymano nieprawid\u0142owe dane tokena.",
+            "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119"
+        },
+        "create_entry": {
+            "default": "Pomy\u015blnie uwierzytelniono"
+        },
+        "progress": {
+            "exchange": "Aby po\u0142\u0105czy\u0107 swoje konto Google, odwied\u017a [{url}]({url}) i wpisz kod: \n\n{user_code}"
+        },
+        "step": {
+            "auth": {
+                "title": "Po\u0142\u0105czenie z kontem Google"
+            },
+            "pick_implementation": {
+                "title": "Wybierz metod\u0119 uwierzytelniania"
+            },
+            "reauth_confirm": {
+                "description": "Integracja Kalendarz Google wymaga ponownego uwierzytelnienia Twojego konta",
+                "title": "Ponownie uwierzytelnij integracj\u0119"
+            }
+        }
+    }
+}

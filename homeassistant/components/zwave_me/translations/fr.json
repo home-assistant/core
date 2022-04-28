@@ -10,10 +10,10 @@
         "step": {
             "user": {
                 "data": {
-                    "token": "Jeton",
+                    "token": "Jeton d'API",
                     "url": "URL"
                 },
-                "description": "Entrez l'adresse IP du serveur Z-Way et le jeton d'acc\u00e8s Z-Way. L'adresse IP peut \u00eatre pr\u00e9c\u00e9d\u00e9e de wss:// si HTTPS doit \u00eatre utilis\u00e9 \u00e0 la place de HTTP. Pour obtenir le jeton, acc\u00e9dez \u00e0 l'interface utilisateur Z-Way > Menu > Param\u00e8tres > Utilisateur > Jeton API. Il est sugg\u00e9r\u00e9 de cr\u00e9er un nouvel utilisateur pour Home Assistant et d'accorder l'acc\u00e8s aux appareils que vous devez contr\u00f4ler \u00e0 partir de Home Assistant. Il est \u00e9galement possible d'utiliser l'acc\u00e8s \u00e0 distance via find.z-wave.me pour connecter un Z-Way distant. Entrez wss://find.z-wave.me dans le champ IP et copiez le jeton avec la port\u00e9e globale (connectez-vous \u00e0 Z-Way via find.z-wave.me pour cela)."
+                "description": "Saisissez l'adresse IP avec le port ainsi que le jeton d'acc\u00e8s au serveur Z-Way. Pour obtenir le jeton, acc\u00e9dez \u00e0 l'interface utilisateur Z-Way Smart Home UI > Menu > Param\u00e8tres > Utilisateurs > Administrateur > jeton d'API.\n\nExemple de connexion \u00e0 Z-Way sur le r\u00e9seau local\u00a0:\nURL\u00a0: {local_url}\nJeton\u00a0: {local_token}\n\nExemple de connexion \u00e0 Z-Way via l'acc\u00e8s \u00e0 distance find.z-wave.me\u00a0:\nURL\u00a0: {find_url}\nJeton\u00a0: {find_token}\n\nExemple de connexion \u00e0 Z-Way avec une adresse IP publique statique\u00a0:\nURL\u00a0: {remote_url}\nJeton\u00a0: {local_token}\n\nLorsque vous vous connectez via find.z-wave.me, vous devez utiliser un jeton avec une port\u00e9e globale (pour cela, connectez-vous \u00e0 Z-Way via find.z-wave.me)."
             }
         }
     }
