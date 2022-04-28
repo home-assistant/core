@@ -10,12 +10,12 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import DOMAIN, SIGNAL_SABNZBD_UPDATED, SabnzbdApiData
+from . import DOMAIN, SIGNAL_SABNZBD_UPDATED
 from ...config_entries import ConfigEntry
 from ...const import DATA_GIGABYTES, DATA_MEGABYTES, DATA_RATE_MEGABYTES_PER_SECOND
 from ...core import HomeAssistant
 from ...helpers.entity_platform import AddEntitiesCallback
-from .const import KEY_API, KEY_NAME
+from .const import KEY_API_DATA, KEY_NAME
 
 
 @dataclass
@@ -109,9 +109,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up a Sabnzbd sensor entry."""
 
-    sab_api = hass.data[DOMAIN][config_entry.entry_id][KEY_API]
+    sab_api_data = hass.data[DOMAIN][config_entry.entry_id][KEY_API_DATA]
     client_name = hass.data[DOMAIN][config_entry.entry_id][KEY_NAME]
-    sab_api_data = SabnzbdApiData(sab_api)
 
     async_add_entities(
         [SabnzbdSensor(sab_api_data, client_name, sensor) for sensor in SENSOR_TYPES]

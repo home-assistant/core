@@ -26,8 +26,11 @@ from homeassistant.helpers.typing import ConfigType
 from .const import (
     ATTR_API_KEY,
     ATTR_SPEED,
+    DEFAULT_HOST,
     DEFAULT_NAME,
+    DEFAULT_PORT,
     DEFAULT_SPEED_LIMIT,
+    DEFAULT_SSL,
     DOMAIN,
     KEY_API,
     KEY_API_DATA,
@@ -39,6 +42,7 @@ from .const import (
     UPDATE_INTERVAL,
 )
 from .sab import get_client
+from .sensor import SENSOR_KEYS
 
 PLATFORMS = ["sensor"]
 _LOGGER = logging.getLogger(__name__)
@@ -69,6 +73,12 @@ CONFIG_SCHEMA = vol.Schema(
                     vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
                     vol.Required(CONF_URL): str,
                     vol.Optional(CONF_PATH): str,
+                    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+                    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+                    vol.Optional(CONF_SENSORS): vol.All(
+                        cv.ensure_list, [vol.In(SENSOR_KEYS)]
+                    ),
+                    vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
                 },
             )
         )
@@ -113,8 +123,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     sab_api = await get_client(hass, entry.data)
     if not sab_api:
         raise ConfigEntryNotReady
-
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     sab_api_data = SabnzbdApiData(sab_api)
 
@@ -179,6 +187,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             _LOGGER.error(err)
 
     async_track_time_interval(hass, async_update_sabnzbd, UPDATE_INTERVAL)
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
