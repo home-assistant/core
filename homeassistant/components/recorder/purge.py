@@ -6,9 +6,10 @@ from datetime import datetime
 import logging
 from typing import TYPE_CHECKING
 
-from sqlalchemy import bindparam, func, select, union_all
+from sqlalchemy import bindparam, func, lambda_stmt, select, union_all
 from sqlalchemy.orm.session import Session
-from sqlalchemy.sql.expression import CompoundSelect, distinct
+from sqlalchemy.sql.expression import distinct
+from sqlalchemy.sql.lambdas import StatementLambdaElement
 
 from homeassistant.const import EVENT_STATE_CHANGED
 
@@ -30,19 +31,23 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 
-def _generate_find_attr_select(max_rows_to_purge: int) -> CompoundSelect:
+def _generate_find_attr_lambda() -> StatementLambdaElement:
     """Generate the find attributes select only once."""
-    return union_all(
-        *[
-            select(func.min(States.attributes_id).label("id")).where(
-                States.attributes_id == bindparam(f"a{idx}", required=False)
-            )
-            for idx in range(max_rows_to_purge)
-        ]
+    return lambda_stmt(
+        lambda: union_all(
+            *[
+                select(func.min(States.attributes_id).label("id")).where(
+                    States.attributes_id == bindparam(f"a{idx}", required=False)
+                )
+                for idx in range(
+                    998
+                )  # MAX_ROWS_TO_PURGE inlined to avoid TypeError: 'PyWrapper' object cannot be interpreted as an integer
+            ]
+        )
     )
 
 
-FIND_ATTRS_SELECT = _generate_find_attr_select(MAX_ROWS_TO_PURGE)
+FIND_ATTRS_LAMBDA = _generate_find_attr_lambda()
 
 
 @retryable_database_job("purge")
@@ -175,7 +180,7 @@ def _select_unused_attributes_ids(
         # different queries in the cache.
         #
         id_query = session.execute(
-            FIND_ATTRS_SELECT.params(
+            FIND_ATTRS_LAMBDA.params(
                 {
                     f"a{idx}": attributes_id
                     for idx, attributes_id in enumerate(attributes_ids)
