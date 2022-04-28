@@ -29,7 +29,7 @@ from .properties import (
     websocket_write_properties,
 )
 
-URL_BASE = "/insteonfiles"
+URL_BASE = "/insteon_static"
 
 
 @callback
