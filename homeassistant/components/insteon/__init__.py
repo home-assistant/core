@@ -76,11 +76,11 @@ async def close_insteon_connection(*args):
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Insteon platform."""
+    hass.data[DOMAIN] = {}
     if DOMAIN not in config:
         return True
 
-    conf = config[DOMAIN]
-    hass.data[DOMAIN] = {}
+    conf = dict(config[DOMAIN])
     hass.data[DOMAIN][CONF_DEV_PATH] = conf.pop(CONF_DEV_PATH, None)
 
     if not conf:
@@ -89,7 +89,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     data, options = convert_yaml_to_config_flow(conf)
 
     if options:
-        hass.data[DOMAIN] = {}
         hass.data[DOMAIN][OPTIONS] = options
     # Create a config entry with the connection data
     hass.async_create_task(
