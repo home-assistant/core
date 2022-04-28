@@ -3,12 +3,13 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterable
 from datetime import datetime
+import itertools
 import logging
 from typing import TYPE_CHECKING
 
-from sqlalchemy import column, func, select, union
+from sqlalchemy import bindparam, func, select, union_all
 from sqlalchemy.orm.session import Session
-from sqlalchemy.sql.expression import distinct
+from sqlalchemy.sql.expression import CompoundSelect, distinct
 
 from homeassistant.const import EVENT_STATE_CHANGED
 
@@ -28,6 +29,21 @@ if TYPE_CHECKING:
     from . import Recorder
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _generate_find_attr_select(max_rows_to_purge: int) -> CompoundSelect:
+    """Generate the find attributes select only once."""
+    return union_all(
+        *[
+            select(func.min(States.attributes_id).label("id")).where(
+                States.attributes_id == bindparam(f"a{idx}")
+            )
+            for idx in range(MAX_ROWS_TO_PURGE)
+        ]
+    )
+
+
+FIND_ATTRS_SELECT = _generate_find_attr_select(MAX_ROWS_TO_PURGE)
 
 
 @retryable_database_job("purge")
@@ -151,17 +167,34 @@ def _select_unused_attributes_ids(
         # > explain select min(attributes_id) from states where attributes_id = 136723;
         # ...Select tables optimized away
         #
-        id_query = session.query(column("id")).from_statement(
-            union(
-                *[
-                    select(func.min(States.attributes_id).label("id")).where(
-                        States.attributes_id == attributes_id
+        attrs_count = len(attributes_ids)
+        short_params = MAX_ROWS_TO_PURGE - attrs_count
+        #
+        # We used to generate a query based on how many attribute_ids to find but
+        # that meant sqlalchemy Transparent SQL Compilation Caching was working against
+        # us by cached up to MAX_ROWS_TO_PURGE different statements.
+        #
+        # We now generate a single query and fill the attributes ids we do not need
+        # with NULL values so sqlalchemy does not end up with MAX_ROWS_TO_PURGE
+        # different queries in the cache.
+        #
+        id_query = session.execute(
+            FIND_ATTRS_SELECT.params(
+                **{
+                    f"a{idx}": attributes_id
+                    for idx, attributes_id in itertools.chain(
+                        enumerate(attributes_ids),
+                        (
+                            (idx, None)
+                            for idx in range(attrs_count, short_params + attrs_count)
+                        ),
                     )
-                    for attributes_id in attributes_ids
-                ]
+                }
             )
         )
-    to_remove = attributes_ids - {state[0] for state in id_query.all()}
+    to_remove = attributes_ids - {
+        state[0] for state in id_query.all() if state[0] is not None
+    }
     _LOGGER.debug(
         "Selected %s shared attributes to remove",
         len(to_remove),
