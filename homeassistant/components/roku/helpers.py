@@ -29,8 +29,8 @@ def roku_exception_handler(ignore_timeout: bool = False) -> Callable[..., Callab
     """Decorate Roku calls to handle Roku exceptions."""
 
     def decorator(
-        func: Callable[Concatenate[_T, _P], Awaitable[None]],  # type: ignore[misc]
-    ) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, None]]:  # type: ignore[misc]
+        func: Callable[Concatenate[_T, _P], Awaitable[None]],
+    ) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, None]]:
         @wraps(func)
         async def wrapper(self: _T, *args: _P.args, **kwargs: _P.kwargs) -> None:
             try:
