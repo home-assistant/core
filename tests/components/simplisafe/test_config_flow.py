@@ -95,8 +95,7 @@ async def test_step_reauth(
 
     # Test that the non-SimpliSafe config flow remains the same:
     [config_entry] = hass.config_entries.async_entries("random")
-    assert config_entry.unique_id == USERNAME
-    assert config_entry.data == {"some": "data"}
+    assert config_entry == entry
 
 
 @pytest.mark.parametrize(
