@@ -3,11 +3,10 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterable
 from datetime import datetime
-from itertools import zip_longest
 import logging
 from typing import TYPE_CHECKING
 
-from sqlalchemy import func, lambda_stmt, select, union_all
+from sqlalchemy import bindparam, func, lambda_stmt, select, union_all
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.expression import distinct
 from sqlalchemy.sql.lambdas import StatementLambdaElement
@@ -114,114 +113,18 @@ def _select_event_state_and_attributes_ids_to_purge(
     return event_ids, state_ids, attributes_ids
 
 
-def _generate_find_attr_lambda(attribute_ids: list[int]) -> StatementLambdaElement:
+def _generate_find_attr_lambda() -> StatementLambdaElement:
     """Generate the find attributes select only once."""
-    (
-        attr1,
-        attr2,
-        attr3,
-        attr4,
-        attr5,
-        attr6,
-        attr7,
-        attr8,
-        attr9,
-        attr10,
-        attr11,
-        attr12,
-        attr13,
-        attr14,
-        attr15,
-        attr16,
-        attr17,
-        attr18,
-        attr19,
-        attr20,
-        attr21,
-        attr22,
-        attr23,
-        attr24,
-        attr25,
-        attr26,
-        attr27,
-        attr28,
-        attr29,
-        attr30,
-    ) = attribute_ids
     return lambda_stmt(
         lambda: union_all(
-            select(func.min(States.attributes_id)).where(States.attributes_id == attr1),
-            select(func.min(States.attributes_id)).where(States.attributes_id == attr2),
-            select(func.min(States.attributes_id)).where(States.attributes_id == attr3),
-            select(func.min(States.attributes_id)).where(States.attributes_id == attr4),
-            select(func.min(States.attributes_id)).where(States.attributes_id == attr5),
-            select(func.min(States.attributes_id)).where(States.attributes_id == attr6),
-            select(func.min(States.attributes_id)).where(States.attributes_id == attr7),
-            select(func.min(States.attributes_id)).where(States.attributes_id == attr8),
-            select(func.min(States.attributes_id)).where(States.attributes_id == attr9),
-            select(func.min(States.attributes_id)).where(
-                States.attributes_id == attr10
-            ),
-            select(func.min(States.attributes_id)).where(
-                States.attributes_id == attr11
-            ),
-            select(func.min(States.attributes_id)).where(
-                States.attributes_id == attr12
-            ),
-            select(func.min(States.attributes_id)).where(
-                States.attributes_id == attr13
-            ),
-            select(func.min(States.attributes_id)).where(
-                States.attributes_id == attr14
-            ),
-            select(func.min(States.attributes_id)).where(
-                States.attributes_id == attr15
-            ),
-            select(func.min(States.attributes_id)).where(
-                States.attributes_id == attr16
-            ),
-            select(func.min(States.attributes_id)).where(
-                States.attributes_id == attr17
-            ),
-            select(func.min(States.attributes_id)).where(
-                States.attributes_id == attr18
-            ),
-            select(func.min(States.attributes_id)).where(
-                States.attributes_id == attr19
-            ),
-            select(func.min(States.attributes_id)).where(
-                States.attributes_id == attr20
-            ),
-            select(func.min(States.attributes_id)).where(
-                States.attributes_id == attr21
-            ),
-            select(func.min(States.attributes_id)).where(
-                States.attributes_id == attr22
-            ),
-            select(func.min(States.attributes_id)).where(
-                States.attributes_id == attr23
-            ),
-            select(func.min(States.attributes_id)).where(
-                States.attributes_id == attr24
-            ),
-            select(func.min(States.attributes_id)).where(
-                States.attributes_id == attr25
-            ),
-            select(func.min(States.attributes_id)).where(
-                States.attributes_id == attr26
-            ),
-            select(func.min(States.attributes_id)).where(
-                States.attributes_id == attr27
-            ),
-            select(func.min(States.attributes_id)).where(
-                States.attributes_id == attr28
-            ),
-            select(func.min(States.attributes_id)).where(
-                States.attributes_id == attr29
-            ),
-            select(func.min(States.attributes_id)).where(
-                States.attributes_id == attr30
-            ),
+            *[
+                select(func.min(States.attributes_id)).where(
+                    States.attributes_id == bindparam(f"a{idx}", required=False)
+                )
+                for idx in range(
+                    998
+                )  # MAX_ROWS_TO_PURGE inlined to avoid TypeError: 'PyWrapper' object cannot be interpreted as an integer
+            ]
         )
     )
 
@@ -246,12 +149,9 @@ def _select_unused_attributes_ids(
         # > explain select distinct attributes_id from states where attributes_id in (136723);
         # ...Using index
         #
-        seen_ids = {
-            state[0]
-            for state in session.query(distinct(States.attributes_id))
-            .filter(States.attributes_id.in_(attributes_ids))
-            .all()
-        }
+        id_query = session.query(distinct(States.attributes_id)).filter(
+            States.attributes_id.in_(attributes_ids)
+        )
     else:
         #
         # This branch is for DBMS that cannot optimize the distinct query well and has to examine
@@ -276,15 +176,17 @@ def _select_unused_attributes_ids(
         # with NULL values so sqlalchemy does not end up with MAX_ROWS_TO_PURGE
         # different queries in the cache.
         #
-        seen_ids = set()
-        groups = [iter(attributes_ids)] * 30
-        for attr_ids in zip_longest(*groups, fillvalue=None):
-            seen_ids |= {
-                state[0]
-                for state in session.execute(_generate_find_attr_lambda(attr_ids)).all()
-                if state[0] is not None
-            }
-    to_remove = attributes_ids - seen_ids
+        id_query = session.execute(
+            _generate_find_attr_lambda().params(
+                {
+                    f"a{idx}": attributes_id
+                    for idx, attributes_id in enumerate(attributes_ids)
+                }
+            )
+        )
+    to_remove = attributes_ids - {
+        state[0] for state in id_query.all() if state[0] is not None
+    }
     _LOGGER.debug(
         "Selected %s shared attributes to remove",
         len(to_remove),
