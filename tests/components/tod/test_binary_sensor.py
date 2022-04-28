@@ -7,7 +7,7 @@ import pytest
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.entity_registry as er
-from homeassistant.helpers.sun import get_astral_event_date, get_astral_event_next
+from homeassistant.helpers.sun import get_astral_event_next, get_astral_event_previous
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -156,6 +156,21 @@ async def test_after_happens_tomorrow(hass):
 
     state = hass.states.get("binary_sensor.night")
     assert state.state == STATE_ON
+
+
+# @freeze_time("2022-05-10 01:00:00-08:00")
+# async def test_start_after_midnight_sunset_sunrise(hass):
+#    """Test when both before and after are in the future, after midnight and before sunrise."""
+#    config = {
+#        "binary_sensor": [
+#            {"platform": "tod", "name": "Night", "after": "sunset", "before": "sunrise"}
+#        ]
+#    }
+#    await async_setup_component(hass, "binary_sensor", config)
+#    await hass.async_block_till_done()
+#
+#    state = hass.states.get("binary_sensor.night")
+#    assert state.state == STATE_ON
 
 
 async def test_midnight_turnover_after_midnight_outside_period(

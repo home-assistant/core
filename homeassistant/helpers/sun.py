@@ -82,6 +82,8 @@ def get_location_astral_event_next(
         kwargs["observer_elevation"] = elevation
 
     mod = -1
+    print(utc_point_in_time)
+    print(dt_util.as_local(utc_point_in_time).date())
     while True:
         try:
             next_dt = (
@@ -93,10 +95,68 @@ def get_location_astral_event_next(
                 + offset
             )
             if next_dt > utc_point_in_time:
+                print(next_dt)
                 return next_dt
         except ValueError:
             pass
         mod += 1
+
+
+@callback
+@bind_hass
+def get_astral_event_previous(
+    hass: HomeAssistant,
+    event: str,
+    utc_point_in_time: datetime.datetime | None = None,
+    offset: datetime.timedelta | None = None,
+) -> datetime.datetime:
+    """Calculate the previous specified solar event."""
+    location, elevation = get_astral_location(hass)
+    return get_location_astral_event_previous(
+        location, elevation, event, utc_point_in_time, offset
+    )
+
+
+@callback
+def get_location_astral_event_previous(
+    location: astral.location.Location,
+    elevation: astral.Elevation,
+    event: str,
+    utc_point_in_time: datetime.datetime | None = None,
+    offset: datetime.timedelta | None = None,
+) -> datetime.datetime:
+    """Calculate the previous specified solar event."""
+
+    if offset is None:
+        offset = datetime.timedelta()
+
+    if utc_point_in_time is None:
+        utc_point_in_time = dt_util.utcnow()
+
+    kwargs = {"local": False}
+    if event not in ELEVATION_AGNOSTIC_EVENTS:
+        kwargs["observer_elevation"] = elevation
+
+    mod = 0
+    print(utc_point_in_time)
+    print(dt_util.as_local(utc_point_in_time).date())
+    while mod > -50:
+        print(f"mod = {mod}")
+        try:
+            prev_dt: datetime.datetime = (
+                getattr(location, event)(
+                    dt_util.as_local(utc_point_in_time).date()
+                    + datetime.timedelta(days=mod),
+                    **kwargs,
+                )
+                + offset
+            )
+            if prev_dt < utc_point_in_time:
+                print(prev_dt)
+                return prev_dt
+        except ValueError:
+            pass
+        mod -= 1
 
 
 @callback
