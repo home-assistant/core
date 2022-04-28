@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterable
 from datetime import datetime
-import itertools
 import logging
 from typing import TYPE_CHECKING
 
@@ -36,9 +35,9 @@ def _generate_find_attr_select(max_rows_to_purge: int) -> CompoundSelect:
     return union_all(
         *[
             select(func.min(States.attributes_id).label("id")).where(
-                States.attributes_id == bindparam(f"a{idx}")
+                States.attributes_id == bindparam(f"a{idx}", required=False)
             )
-            for idx in range(MAX_ROWS_TO_PURGE)
+            for idx in range(max_rows_to_purge)
         ]
     )
 
@@ -167,9 +166,6 @@ def _select_unused_attributes_ids(
         # > explain select min(attributes_id) from states where attributes_id = 136723;
         # ...Select tables optimized away
         #
-        attrs_count = len(attributes_ids)
-        short_params = MAX_ROWS_TO_PURGE - attrs_count
-        #
         # We used to generate a query based on how many attribute_ids to find but
         # that meant sqlalchemy Transparent SQL Compilation Caching was working against
         # us by cached up to MAX_ROWS_TO_PURGE different statements.
@@ -180,15 +176,9 @@ def _select_unused_attributes_ids(
         #
         id_query = session.execute(
             FIND_ATTRS_SELECT.params(
-                **{
+                {
                     f"a{idx}": attributes_id
-                    for idx, attributes_id in itertools.chain(
-                        enumerate(attributes_ids),
-                        (
-                            (idx, None)
-                            for idx in range(attrs_count, short_params + attrs_count)
-                        ),
-                    )
+                    for idx, attributes_id in enumerate(attributes_ids)
                 }
             )
         )
