@@ -9,7 +9,7 @@ from hass_nabucasa.google_report_state import ErrorResponse
 from homeassistant.components.google_assistant.const import DOMAIN as GOOGLE_DOMAIN
 from homeassistant.components.google_assistant.helpers import AbstractConfig
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
-from homeassistant.core import CoreState, callback, split_entity_id
+from homeassistant.core import CoreState, Event, callback, split_entity_id
 from homeassistant.helpers import device_registry as dr, entity_registry as er, start
 from homeassistant.setup import async_setup_component
 
@@ -222,7 +222,7 @@ class CloudGoogleConfig(AbstractConfig):
         self._cur_default_expose = prefs.google_default_expose
 
     @callback
-    def _handle_entity_registry_updated(self, event):
+    def _handle_entity_registry_updated(self, event: Event) -> None:
         """Handle when entity registry updated."""
         if (
             not self.enabled
@@ -245,7 +245,7 @@ class CloudGoogleConfig(AbstractConfig):
         self.async_schedule_google_sync_all()
 
     @callback
-    def _handle_device_registry_updated(self, event):
+    def _handle_device_registry_updated(self, event: Event) -> None:
         """Handle when device registry updated."""
         if (
             not self.enabled
