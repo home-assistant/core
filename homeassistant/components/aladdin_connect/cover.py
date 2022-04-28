@@ -44,7 +44,7 @@ async def async_setup_platform(
 ) -> None:
     """Set up Aladdin Connect devices yaml depreciated."""
     _LOGGER.warning(
-        "Loading aladdin_connect via platform setup is deprecated; Please remove it from your configuration"
+        "Configuring aladdin_connect through yaml is deprecated; Please remove it from your configuration, it has already been impoted to a config entry"
     )
     await hass.async_create_task(
         hass.config_entries.flow.async_init(
