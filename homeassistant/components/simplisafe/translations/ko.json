@@ -12,7 +12,6 @@
         },
         "step": {
             "mfa": {
-                "description": "\uc774\uba54\uc77c\uc5d0\uc11c SimpliSafe\uc758 \ub9c1\ud06c\ub97c \ud655\uc778\ud574\uc8fc\uc138\uc694. \ub9c1\ud06c\ub97c \ud655\uc778\ud55c \ud6c4 \uc5ec\uae30\ub85c \ub3cc\uc544\uc640 \ud1b5\ud569 \uad6c\uc131\uc694\uc18c\uc758 \uc124\uce58\ub97c \uc644\ub8cc\ud574\uc8fc\uc138\uc694.",
                 "title": "SimpliSafe \ub2e4\ub2e8\uacc4 \uc778\uc99d"
             },
             "reauth_confirm": {
