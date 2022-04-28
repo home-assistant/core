@@ -39,6 +39,9 @@
       "hostname": "lwip*"
     },
     {
+      "hostname": "hf-lpb100-zj*"
+    },
+    {
       "hostname": "zengge_[0-9a-f][0-9a-f]_*"
     },
     {
