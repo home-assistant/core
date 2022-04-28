@@ -62,8 +62,6 @@ from .const import (
 
 SERVICE_CALL_METHOD = "call_method"
 SERVICE_CALL_QUERY = "call_query"
-SERVICE_SYNC = "sync"
-SERVICE_UNSYNC = "unsync"
 
 ATTR_QUERY_RESULT = "query_result"
 
@@ -194,12 +192,6 @@ async def async_setup_entry(
         },
         "async_call_query",
     )
-    platform.async_register_entity_service(
-        SERVICE_SYNC,
-        {vol.Required(ATTR_OTHER_PLAYER): cv.string},
-        "async_sync",
-    )
-    platform.async_register_entity_service(SERVICE_UNSYNC, None, "async_unjoin")
 
     # Start server discovery task if not already running
     if hass.is_running:
@@ -534,9 +526,9 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         self._query_result = await self._player.async_query(*all_params)
         _LOGGER.debug("call_query got result %s", self._query_result)
 
-    async def async_sync(self, other_player):
+    async def async_join_players(self, group_members):
         """
-        Add another Squeezebox player to this player's sync group.
+        Add other Squeezebox players to this player's sync group.
 
         If the other player is a member of a sync group, it will leave the current sync group
         without asking.
@@ -544,15 +536,14 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         player_ids = {
             p.entity_id: p.unique_id for p in self.hass.data[DOMAIN][KNOWN_PLAYERS]
         }
-        if other_player_id := player_ids.get(other_player):
-            await self._player.async_sync(other_player_id)
-        else:
-            _LOGGER.info("Could not find player_id for %s. Not syncing", other_player)
 
-    async def async_join_players(self, group_members):
-        """Join `group_members` as a player group with the current player."""
-        for entity_id in group_members:
-            await self.async_sync(entity_id)
+        for other_player in group_members:
+            if other_player_id := player_ids.get(other_player):
+                await self._player.async_sync(other_player_id)
+            else:
+                _LOGGER.info(
+                    "Could not find player_id for %s. Not syncing", other_player
+                )
 
     async def async_unjoin_player(self):
         """Unsync this Squeezebox player."""
