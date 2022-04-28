@@ -1,8 +1,9 @@
 """Insteon API interface for the frontend."""
-from insteon_frontend import locate_dir
+
+from insteon_frontend import get_build_id, locate_dir
 
 from homeassistant.components import panel_custom, websocket_api
-from homeassistant.components.insteon.const import CONF_DEV_URL, DOMAIN
+from homeassistant.components.insteon.const import CONF_DEV_PATH, DOMAIN
 from homeassistant.core import HomeAssistant, callback
 
 from .aldb import (
@@ -19,9 +20,7 @@ from .device import (
     websocket_add_device,
     websocket_cancel_add_device,
     websocket_get_device,
-    websocket_notify_on_device_added,
 )
-from .insteon_dev_view import InsteonFrontendDev
 from .properties import (
     websocket_change_properties_record,
     websocket_get_properties,
@@ -38,7 +37,6 @@ def async_load_api(hass):
     """Set up the web socket API."""
     websocket_api.async_register_command(hass, websocket_get_device)
     websocket_api.async_register_command(hass, websocket_add_device)
-    websocket_api.async_register_command(hass, websocket_notify_on_device_added)
     websocket_api.async_register_command(hass, websocket_cancel_add_device)
 
     websocket_api.async_register_command(hass, websocket_get_aldb)
@@ -57,22 +55,29 @@ def async_load_api(hass):
     websocket_api.async_register_command(hass, websocket_reset_properties)
 
 
+def get_entrypoint(is_dev):
+    """Get the entry point for the frontend."""
+    if is_dev:
+        return "entrypoint.js"
+
+
 async def async_register_insteon_frontend(hass: HomeAssistant):
     """Register the Insteon frontend configuration panel."""
-    dev_url = hass.data.get(DOMAIN, {}).get(CONF_DEV_URL)
-    if dev_url:
-        hass.http.register_view(InsteonFrontendDev(hass, dev_url))
-    else:
-        hass.http.register_static_path(URL_BASE, locate_dir(), cache_headers=False)
     # Add to sidepanel if needed
     if DOMAIN not in hass.data.get("frontend_panels", {}):
+        dev_path = hass.data.get(DOMAIN, {}).get(CONF_DEV_PATH)
+        is_dev = dev_path is not None
+        path = dev_path if dev_path else locate_dir()
+        build_id = get_build_id(is_dev)
+        hass.http.register_static_path(URL_BASE, path, cache_headers=not is_dev)
+
         await panel_custom.async_register_panel(
             hass=hass,
             frontend_url_path=DOMAIN,
             webcomponent_name="insteon-frontend",
             sidebar_title=DOMAIN.capitalize(),
             sidebar_icon="mdi:power",
-            module_url=f"{URL_BASE}/entrypoint.js",
+            module_url=f"{URL_BASE}/entrypoint-{build_id}.js",
             embed_iframe=True,
             require_admin=True,
         )

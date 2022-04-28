@@ -100,28 +100,11 @@ async def websocket_add_device(
     msg: dict,
 ) -> None:
     """Add one or more Insteon devices."""
-    hass.async_create_task(
-        async_add_devices(address=msg.get(DEVICE_ADDRESS), multiple=msg[MULTIPLE])
-    )
-    connection.send_result(msg[ID])
-
-
-@websocket_api.websocket_command({vol.Required(TYPE): "insteon/device/adding"})
-@websocket_api.require_admin
-@websocket_api.async_response
-async def websocket_notify_on_device_added(
-    hass: HomeAssistant,
-    connection: websocket_api.connection.ActiveConnection,
-    msg: dict,
-) -> None:
-    """Tell Insteon a new device was added."""
 
     @callback
-    def device_added(address: str, action: DeviceAction):
+    def linking_complete(address: str, action: DeviceAction):
         """Forward device events to websocket."""
-        if action == DeviceAction.ADDED:
-            forward_data = {"type": "device_added", "address": address}
-        elif action == DeviceAction.COMPLETED:
+        if action == DeviceAction.COMPLETED:
             forward_data = {"type": "linking_stopped", "address": ""}
         else:
             return
@@ -130,12 +113,17 @@ async def websocket_notify_on_device_added(
     @callback
     def async_cleanup() -> None:
         """Remove signal listeners."""
-        devices.unsubscribe(device_added)
-        forward_data = {"type": "unsubscribed"}
-        connection.send_message(websocket_api.event_message(msg["id"], forward_data))
+        devices.unsubscribe(linking_complete)
 
     connection.subscriptions[msg["id"]] = async_cleanup
-    devices.subscribe(device_added)
+    devices.subscribe(linking_complete)
+
+    async for address in devices.async_add_device(
+        address=msg.get(DEVICE_ADDRESS), multiple=msg[MULTIPLE]
+    ):
+        forward_data = {"type": "device_added", "address": str(address)}
+        connection.send_message(websocket_api.event_message(msg["id"], forward_data))
+
     connection.send_result(msg[ID])
 
 

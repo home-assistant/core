@@ -15,7 +15,7 @@ from homeassistant.helpers.typing import ConfigType
 from . import api
 from .const import (
     CONF_CAT,
-    CONF_DEV_URL,
+    CONF_DEV_PATH,
     CONF_DIM_STEPS,
     CONF_HOUSECODE,
     CONF_OVERRIDE,
@@ -26,7 +26,6 @@ from .const import (
     INSTEON_PLATFORMS,
     ON_OFF_EVENTS,
 )
-from .schemas import convert_yaml_to_config_flow
 from .utils import (
     add_on_off_event_device,
     async_register_services,
@@ -81,20 +80,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     conf = config[DOMAIN]
     hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][CONF_DEV_URL] = conf.pop(CONF_DEV_URL, None)
+    hass.data[DOMAIN][CONF_DEV_PATH] = conf.pop(CONF_DEV_PATH, None)
 
-    if hass.data[DOMAIN][CONF_DEV_URL] is None:
-        return True
-    data, options = convert_yaml_to_config_flow(conf)
-    if options:
-        hass.data[DOMAIN] = {}
-        hass.data[DOMAIN][OPTIONS] = options
-    # Create a config entry with the connection data
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=data
-        )
-    )
     return True
 
 

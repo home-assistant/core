@@ -7,7 +7,7 @@ from pyinsteon.address import Address
 from homeassistant.components import insteon
 from homeassistant.components.insteon.const import (
     CONF_CAT,
-    CONF_DEV_URL,
+    CONF_DEV_PATH,
     CONF_OVERRIDE,
     CONF_SUBCAT,
     CONF_X10,
@@ -228,7 +228,7 @@ async def test_setup_entry_failed_connection(hass: HomeAssistant, caplog):
 async def test_import_frontend_dev_url(hass: HomeAssistant):
     """Test importing a dev_url config entry."""
     config = {}
-    config[DOMAIN] = {CONF_DEV_URL: "http://192.168.1.100:1234"}
+    config[DOMAIN] = {CONF_DEV_PATH: "/some/path"}
 
     with patch.object(
         insteon, "async_connect", new=mock_successful_connection

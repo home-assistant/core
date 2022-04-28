@@ -22,7 +22,7 @@ import homeassistant.helpers.config_validation as cv
 
 from .const import (
     CONF_CAT,
-    CONF_DEV_URL,
+    CONF_DEV_PATH,
     CONF_DIM_STEPS,
     CONF_FIRMWARE,
     CONF_HOUSECODE,
@@ -122,7 +122,7 @@ CONFIG_SCHEMA = vol.Schema(
                     vol.Optional(CONF_X10): vol.All(
                         cv.ensure_list_csv, [CONF_X10_SCHEMA]
                     ),
-                    vol.Optional(CONF_DEV_URL): cv.string,
+                    vol.Optional(CONF_DEV_PATH): cv.string,
                 },
                 extra=vol.ALLOW_EXTRA,
                 required=True,
@@ -314,32 +314,3 @@ def build_remove_x10_schema(data):
         unitcode = device[CONF_UNITCODE]
         selection.append(f"Housecode: {housecode}, Unitcode: {unitcode}")
     return vol.Schema({vol.Required(CONF_DEVICE): vol.In(selection)})
-
-
-def convert_yaml_to_config_flow(yaml_config):
-    """Convert the YAML based configuration to a config flow configuration."""
-    config = {}
-    if yaml_config.get(CONF_HOST):
-        hub_version = yaml_config.get(CONF_HUB_VERSION, 2)
-        default_port = PORT_HUB_V2 if hub_version == 2 else PORT_HUB_V1
-        config[CONF_HOST] = yaml_config.get(CONF_HOST)
-        config[CONF_PORT] = yaml_config.get(CONF_PORT, default_port)
-        config[CONF_HUB_VERSION] = hub_version
-        if hub_version == 2:
-            config[CONF_USERNAME] = yaml_config[CONF_USERNAME]
-            config[CONF_PASSWORD] = yaml_config[CONF_PASSWORD]
-    else:
-        config[CONF_DEVICE] = yaml_config[CONF_PORT]
-
-    options = {}
-    for old_override in yaml_config.get(CONF_OVERRIDE, []):
-        override = {}
-        override[CONF_ADDRESS] = str(Address(old_override[CONF_ADDRESS]))
-        override[CONF_CAT] = normalize_byte_entry_to_int(old_override[CONF_CAT])
-        override[CONF_SUBCAT] = normalize_byte_entry_to_int(old_override[CONF_SUBCAT])
-        options = add_device_override(options, override)
-
-    for x10_device in yaml_config.get(CONF_X10, []):
-        options = add_x10_device(options, x10_device)
-
-    return config, options
