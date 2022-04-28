@@ -1,13 +1,16 @@
 """Test the Elro Connects config flow."""
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
+
+from elro.api import K1
+import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.elro_connects.config_flow import CannotConnect
 from homeassistant.components.elro_connects.const import (
     CONF_CONNECTOR_ID,
     CONF_UPDATE_INTERVAL,
     DOMAIN,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import (
@@ -15,9 +18,10 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_CREATE_ENTRY,
     RESULT_TYPE_FORM,
 )
+from homeassistant.setup import async_setup_component
 
 
-async def test_form(hass: HomeAssistant, mock_k1_api) -> None:
+async def test_form(hass: HomeAssistant, mock_k1_api: dict[AsyncMock]) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -51,31 +55,40 @@ async def test_form(hass: HomeAssistant, mock_k1_api) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_cannot_connect(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "side_effect, error",
+    [
+        (K1.K1ConnectionError, "cannot_connect"),
+        (Exception("Some unhandled error"), "unknown"),
+    ],
+)
+async def test_form_cannot_connect(
+    hass: HomeAssistant,
+    mock_k1_api: dict[AsyncMock],
+    side_effect: Exception,
+    error: str,
+) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.elro_connects.config_flow.K1ConnectionTest.async_try_connection",
-        side_effect=CannotConnect,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_CONNECTOR_ID: "ST_deadbeef0000",
-            },
-        )
+    mock_k1_api["connect"].side_effect = side_effect
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "1.1.1.1",
+            CONF_CONNECTOR_ID: "ST_deadbeef0000",
+        },
+    )
 
     assert result2["type"] == RESULT_TYPE_FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result2["errors"] == {"base": error}
 
 
-async def test_already_setup(hass: HomeAssistant, mock_k1_api) -> None:
+async def test_already_setup(hass: HomeAssistant, mock_k1_api: dict[AsyncMock]) -> None:
     """Test we cannot create a duplicate setup."""
-    # Setup the existing config entry
+    # Setup the existing unique config entry
     await test_form(hass, mock_k1_api)
 
     # Now assert the entry creation is aborted if we try
@@ -104,10 +117,16 @@ async def test_already_setup(hass: HomeAssistant, mock_k1_api) -> None:
     assert result2["type"] == RESULT_TYPE_ABORT
 
 
-async def test_update_options(hass: HomeAssistant, mock_k1_api) -> None:
+async def test_update_options(
+    hass: HomeAssistant,
+    mock_k1_connector: dict[AsyncMock],
+    mock_k1_api: dict[AsyncMock],
+    mock_entry: ConfigEntry,
+) -> None:
     """Test we can update the configuration."""
     # Setup the existing config entry
-    await test_form(hass, mock_k1_api)
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
 
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
 
@@ -136,3 +155,42 @@ async def test_update_options(hass: HomeAssistant, mock_k1_api) -> None:
     assert config_entry.data.get(CONF_CONNECTOR_ID) == "ST_deadbeef0000"
     assert config_entry.data.get(CONF_PORT) == 1024
     assert config_entry.data.get(CONF_UPDATE_INTERVAL) == 10
+
+
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        (K1.K1ConnectionError,),
+        (Exception("Some unhandled error"),),
+    ],
+)
+async def test_update_options_cannot_connect_handling(
+    hass: HomeAssistant, mock_k1_api: dict[AsyncMock], side_effect: Exception
+) -> None:
+    """Test cannot connect when updating the configuration."""
+    # Setup the existing config entry
+    await test_form(hass, mock_k1_api)
+
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+
+    # Start config flow
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+
+    # Change interval, IP address and port
+    mock_k1_api["connect"].side_effect = side_effect
+    with patch(
+        "homeassistant.components.elro_connects.async_setup_entry",
+        return_value=True,
+    ):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_HOST: "1.1.1.2",
+                CONF_PORT: 1024,
+                CONF_UPDATE_INTERVAL: 10,
+            },
+        )
+    assert result["type"] == RESULT_TYPE_FORM

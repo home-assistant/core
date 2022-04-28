@@ -46,7 +46,7 @@ async def test_setup_integration_update_fail(
 
 async def test_setup_integration_exception(
     hass: HomeAssistant,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
     mock_k1_connector: dict[AsyncMock],
     mock_entry: ConfigEntry,
 ) -> None:
