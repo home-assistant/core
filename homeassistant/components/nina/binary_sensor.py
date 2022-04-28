@@ -14,7 +14,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import NINADataUpdateCoordinator
 from .const import (
-    ATTR_ATTRIBUTION,
     ATTR_DESCRIPTION,
     ATTR_EXPIRES,
     ATTR_HEADLINE,
@@ -126,6 +125,7 @@ class NINASingleRegion(
         self._region: str = region
         self._attr_name: str = f"All warnings: {region_name}"
         self._attr_unique_id: str = f"{region}-warnings"
+        self._attr_attribution: str = ATTRIBUTION
         self._attr_device_class: str = BinarySensorDeviceClass.SAFETY
 
     @property
@@ -138,7 +138,7 @@ class NINASingleRegion(
         """Return extra attributes of the sensor."""
         warnings = self.coordinator.data[self._region]
 
-        data = {ATTR_ATTRIBUTION: ATTRIBUTION, ATTR_WARNING_COUNT: len(warnings)}
+        data = {ATTR_WARNING_COUNT: len(warnings)}
 
         for i, warning in enumerate(warnings, 1):
             data[f"warning_{i}_headline"] = warning[ATTR_HEADLINE]
