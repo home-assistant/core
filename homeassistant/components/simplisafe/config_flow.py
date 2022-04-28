@@ -52,7 +52,7 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._email_2fa_task: asyncio.Task | None = None
         self._password: str | None = None
         self._reauth: bool = False
-        self._simplisafe: API = None
+        self._simplisafe: API | None = None
         self._username: str | None = None
 
     async def _async_authenticate(
