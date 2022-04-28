@@ -6,7 +6,7 @@ from datetime import datetime
 import logging
 from typing import TYPE_CHECKING
 
-from sqlalchemy import bindparam, column, func, select, union_all
+from sqlalchemy import bindparam, func, select, union_all
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.expression import CompoundSelect, distinct
 
@@ -182,11 +182,7 @@ def _select_unused_attributes_ids(
         # so we now generate a single one and fill ones we do not want
         # with null values so sqlalchemy does not end up with MAX_ROWS_TO_PURGE
         # different ones in the cache.
-        id_query = (
-            session.query(column("id"))
-            .from_statement(FIND_ATTRS_SELECT)
-            .params(**params)
-        )
+        id_query = session.execute(FIND_ATTRS_SELECT.params(**params))
     to_remove = attributes_ids - {
         state[0] for state in id_query.all() if state[0] is not None
     }
