@@ -1,5 +1,5 @@
 """Support for Insteon lights via PowerLinc Modem."""
-from pyinsteon.extended_property import ON_LEVEL
+from pyinsteon.config import ON_LEVEL
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
