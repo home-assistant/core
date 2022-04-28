@@ -5,7 +5,7 @@
   "dependencies": ["http", "websocket_api"],
   "requirements": [
     "pyinsteon==1.1.0b1",
-    "insteon-frontend-home-assistant==0.0.1b3"
+    "insteon-frontend-home-assistant==0.1.0"
   ],
   "codeowners": ["@teharris1"],
   "dhcp": [{ "macaddress": "000EF3*" }, { "registered_devices": true }],
