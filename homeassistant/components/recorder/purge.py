@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterable
 from datetime import datetime
+import itertools
 import logging
 from typing import TYPE_CHECKING
 
@@ -166,23 +167,27 @@ def _select_unused_attributes_ids(
         # > explain select min(attributes_id) from states where attributes_id = 136723;
         # ...Select tables optimized away
         #
-        params: dict[str, int | None] = {
-            f"a{idx}": attributes_id for idx, attributes_id in enumerate(attributes_ids)
-        }
-        params_count = len(params)
-        if short_params := MAX_ROWS_TO_PURGE - params_count:
-            params.update(
-                {
-                    f"a{idx}": None
-                    for idx in range(params_count, short_params + params_count)
-                }
-            )
+        attrs_count = len(attributes_ids)
+        short_params = MAX_ROWS_TO_PURGE - attrs_count
         # We used to generate a query based on how many attributes but
         # that meant sqlalchemy cached up to MAX_ROWS_TO_PURGE different statements
         # so we now generate a single one and fill ones we do not want
         # with null values so sqlalchemy does not end up with MAX_ROWS_TO_PURGE
         # different ones in the cache.
-        id_query = session.execute(FIND_ATTRS_SELECT.params(**params))
+        id_query = session.execute(
+            FIND_ATTRS_SELECT.params(
+                **{
+                    f"a{idx}": attributes_id
+                    for idx, attributes_id in itertools.chain(
+                        enumerate(attributes_ids),
+                        (
+                            (idx, None)
+                            for idx in range(attrs_count, short_params + attrs_count)
+                        ),
+                    )
+                }
+            )
+        )
     to_remove = attributes_ids - {
         state[0] for state in id_query.all() if state[0] is not None
     }
