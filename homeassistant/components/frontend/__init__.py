@@ -365,7 +365,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async_register_built_in_panel(hass, "profile")
 
     # Can be removed in 2023
-    hass.http.register_redirect("/config/server-control", "/developer-tools/yaml")
+    hass.http.register_redirect("/config/server_control", "/developer-tools/yaml")
 
     async_register_built_in_panel(
         hass,
