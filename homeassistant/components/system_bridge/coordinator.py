@@ -17,7 +17,6 @@ from systembridgeconnector.const import (
     TYPE_ERROR,
 )
 from systembridgeconnector.exceptions import (
-    BadMessageException,
     ConnectionClosedException,
     ConnectionErrorException,
 )
@@ -103,15 +102,15 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[dict]):
         except ConnectionClosedException as exception:
             self.last_update_success = False
             self.logger.info(
-                "Websocket Connection Closed for %s. Will retry: %s",
+                "Websocket connection closed for %s. Will retry: %s",
                 self.title,
                 exception,
             )
-        except BadMessageException as exception:
+        except ConnectionErrorException as exception:
             self.last_update_success = False
             self.update_listeners()
             self.logger.warning(
-                "Exception occurred for %s. Will retry: %s",
+                "Connection error occurred for %s. Will retry: %s",
                 self.title,
                 exception,
             )

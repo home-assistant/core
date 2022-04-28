@@ -53,7 +53,7 @@ async def validate_input(data: dict[str, Any]) -> dict[str, str]:
     await websocket_client.get_data(["system"])
     try:
         while True:
-            result = await websocket_client.listen_for_message()
+            result = await websocket_client.receive_message()
             if result[EVENT_TYPE] == TYPE_DATA_UPDATE:
                 break
             _LOGGER.info("Message: %s", result)

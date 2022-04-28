@@ -5,10 +5,7 @@ import asyncio
 import logging
 
 import async_timeout
-from systembridgeconnector.exceptions import (
-    BadMessageException,
-    ConnectionErrorException,
-)
+from systembridgeconnector.exceptions import ConnectionErrorException
 from systembridgeconnector.websocket_client import WebSocketClient
 import voluptuous as vol
 
@@ -22,7 +19,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -37,17 +34,14 @@ PLATFORMS = [
     Platform.SENSOR,
 ]
 
-# CONF_ARGUMENTS = "arguments"
 CONF_BRIDGE = "bridge"
-# CONF_KEY = "key"
-# CONF_MODIFIERS = "modifiers"
-# CONF_TEXT = "text"
-# CONF_WAIT = "wait"
+CONF_KEY = "key"
+CONF_TEXT = "text"
 
 SERVICE_OPEN_PATH = "open_path"
 SERVICE_OPEN_URL = "open_url"
-# SERVICE_SEND_KEYPRESS = "send_keypress"
-# SERVICE_SEND_TEXT = "send_text"
+SERVICE_SEND_KEYPRESS = "send_keypress"
+SERVICE_SEND_TEXT = "send_text"
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -78,8 +72,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 coordinator.data is None
                 or coordinator.data == {}
                 or all(module not in coordinator.data for module in MODULES)
-                # or coordinator.data["battery"] is None
-                # or coordinator.data["system"] is None
             ):
                 _LOGGER.debug(
                     "Waiting for initial data from %s (%s): %s",
@@ -122,11 +114,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
             call.data[CONF_BRIDGE]
         ]
-
-        try:
-            await coordinator.websocket_client.open_path(call.data[CONF_PATH])
-        except BadMessageException as exception:
-            raise HomeAssistantError("Error sending") from exception
+        await coordinator.websocket_client.open_path(call.data[CONF_PATH])
 
     async def handle_open_url(call: ServiceCall) -> None:
         """Handle the open url service call."""
@@ -134,46 +122,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
             call.data[CONF_BRIDGE]
         ]
+        await coordinator.websocket_client.open_url(call.data[CONF_URL])
 
-        try:
-            await coordinator.websocket_client.open_url(call.data[CONF_URL])
-        except BadMessageException as exception:
-            raise HomeAssistantError("Error sending") from exception
+    async def handle_send_keypress(call: ServiceCall) -> None:
+        """Handle the send_keypress service call."""
+        coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
+            call.data[CONF_BRIDGE]
+        ]
+        await coordinator.websocket_client.keyboard_keypress(call.data[CONF_KEY])
 
-    # async def handle_send_keypress(call: ServiceCall) -> None:
-    #     """Handle the send_keypress service call."""
-    #     coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
-    #         call.data[CONF_BRIDGE]
-    #     ]
-    #     bridge: Bridge = coordinator.data
-
-    #     keyboard_payload: KeyboardPayload = {
-    #         CONF_KEY: call.data[CONF_KEY],
-    #         CONF_MODIFIERS: shlex.split(call.data.get(CONF_MODIFIERS, "")),
-    #     }
-
-    #     _LOGGER.debug("Keypress payload: %s", keyboard_payload)
-    #     try:
-    #         await bridge.async_send_keypress(keyboard_payload)
-    #     except (BridgeAuthenticationException, *BRIDGE_CONNECTION_ERRORS) as exception:
-    #         raise HomeAssistantError("Error sending") from exception
-    #     _LOGGER.debug("Sent keypress request")
-
-    # async def handle_send_text(call: ServiceCall) -> None:
-    #     """Handle the send_keypress service call."""
-    #     coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
-    #         call.data[CONF_BRIDGE]
-    #     ]
-    #     bridge: Bridge = coordinator.data
-
-    #     keyboard_payload: KeyboardPayload = {CONF_TEXT: call.data[CONF_TEXT]}
-
-    #     _LOGGER.debug("Text payload: %s", keyboard_payload)
-    #     try:
-    #         await bridge.async_send_keypress(keyboard_payload)
-    #     except (BridgeAuthenticationException, *BRIDGE_CONNECTION_ERRORS) as exception:
-    #         raise HomeAssistantError("Error sending") from exception
-    #     _LOGGER.debug("Sent text request")
+    async def handle_send_text(call: ServiceCall) -> None:
+        """Handle the send_keypress service call."""
+        coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
+            call.data[CONF_BRIDGE]
+        ]
+        await coordinator.websocket_client.keyboard_text(call.data[CONF_TEXT])
 
     hass.services.async_register(
         DOMAIN,
@@ -199,30 +162,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ),
     )
 
-    # hass.services.async_register(
-    #     DOMAIN,
-    #     SERVICE_SEND_KEYPRESS,
-    #     handle_send_keypress,
-    #     schema=vol.Schema(
-    #         {
-    #             vol.Required(CONF_BRIDGE): valid_device,
-    #             vol.Required(CONF_KEY): cv.string,
-    #             vol.Optional(CONF_MODIFIERS): cv.string,
-    #         },
-    #     ),
-    # )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SEND_KEYPRESS,
+        handle_send_keypress,
+        schema=vol.Schema(
+            {
+                vol.Required(CONF_BRIDGE): valid_device,
+                vol.Required(CONF_KEY): cv.string,
+            },
+        ),
+    )
 
-    # hass.services.async_register(
-    #     DOMAIN,
-    #     SERVICE_SEND_TEXT,
-    #     handle_send_text,
-    #     schema=vol.Schema(
-    #         {
-    #             vol.Required(CONF_BRIDGE): valid_device,
-    #             vol.Required(CONF_TEXT): cv.string,
-    #         },
-    #     ),
-    # )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SEND_TEXT,
+        handle_send_text,
+        schema=vol.Schema(
+            {
+                vol.Required(CONF_BRIDGE): valid_device,
+                vol.Required(CONF_TEXT): cv.string,
+            },
+        ),
+    )
 
     # Reload entry when its updated.
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
@@ -248,8 +210,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not hass.data[DOMAIN]:
         hass.services.async_remove(DOMAIN, SERVICE_OPEN_PATH)
         hass.services.async_remove(DOMAIN, SERVICE_OPEN_URL)
-        # hass.services.async_remove(DOMAIN, SERVICE_SEND_KEYPRESS)
-        # hass.services.async_remove(DOMAIN, SERVICE_SEND_TEXT)
+        hass.services.async_remove(DOMAIN, SERVICE_SEND_KEYPRESS)
+        hass.services.async_remove(DOMAIN, SERVICE_SEND_TEXT)
 
     return unload_ok
 
