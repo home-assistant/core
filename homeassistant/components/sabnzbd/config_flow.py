@@ -73,5 +73,5 @@ class SABnzbdConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         protocol = "https://" if import_data[CONF_SSL] else "http://"
         import_data[
             CONF_URL
-        ] = f"{protocol}{import_data[CONF_HOST]}:{str(import_data[CONF_PORT])}"
+        ] = f"{protocol}{import_data[CONF_HOST]}:{import_data[CONF_PORT]}"
         return await self.async_step_user(import_data)
