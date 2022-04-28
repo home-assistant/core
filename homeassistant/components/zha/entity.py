@@ -291,6 +291,7 @@ class ZhaGroupEntity(BaseZhaEntity):
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await super().async_added_to_hass()
+        await self.async_update()
 
         self.async_accept_signal(
             None,
