@@ -83,6 +83,8 @@ from .models import (
     Events,
     StateAttributes,
     States,
+    StatisticData,
+    StatisticMetaData,
     StatisticsRuns,
     process_timestamp,
 )
@@ -460,8 +462,8 @@ class StatisticsTask(RecorderTask):
 class ExternalStatisticsTask(RecorderTask):
     """An object to insert into the recorder queue to run an external statistics task."""
 
-    metadata: dict
-    statistics: Iterable[dict]
+    metadata: StatisticMetaData
+    statistics: Iterable[StatisticData]
 
     def run(self, instance: Recorder) -> None:
         """Run statistics task."""
@@ -916,7 +918,9 @@ class Recorder(threading.Thread):
         self.queue.put(UpdateStatisticsMetadataTask(statistic_id, unit_of_measurement))
 
     @callback
-    def async_external_statistics(self, metadata: dict, stats: Iterable[dict]) -> None:
+    def async_external_statistics(
+        self, metadata: StatisticMetaData, stats: Iterable[StatisticData]
+    ) -> None:
         """Schedule external statistics."""
         self.queue.put(ExternalStatisticsTask(metadata, stats))
 
