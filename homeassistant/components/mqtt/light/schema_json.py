@@ -149,11 +149,15 @@ _PLATFORM_SCHEMA_BASE = (
 )
 
 PLATFORM_SCHEMA_JSON = vol.All(
+    # CONF_WHITE_VALUE is deprecated, support will be removed in release 2022.9
+    cv.deprecated(CONF_WHITE_VALUE),
     _PLATFORM_SCHEMA_BASE,
     valid_color_configuration,
 )
 
 DISCOVERY_SCHEMA_JSON = vol.All(
+    # CONF_WHITE_VALUE is deprecated, support will be removed in release 2022.9
+    cv.deprecated(CONF_WHITE_VALUE),
     _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
     valid_color_configuration,
 )

@@ -68,7 +68,7 @@ CONF_MIN_MIREDS = "min_mireds"
 CONF_RED_TEMPLATE = "red_template"
 CONF_WHITE_VALUE_TEMPLATE = "white_value_template"
 
-PLATFORM_SCHEMA_TEMPLATE = (
+_PLATFORM_SCHEMA_BASE = (
     mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
         {
             vol.Optional(CONF_BLUE_TEMPLATE): cv.template,
@@ -92,7 +92,17 @@ PLATFORM_SCHEMA_TEMPLATE = (
     .extend(MQTT_LIGHT_SCHEMA_SCHEMA.schema)
 )
 
-DISCOVERY_SCHEMA_TEMPLATE = PLATFORM_SCHEMA_TEMPLATE.extend({}, extra=vol.REMOVE_EXTRA)
+PLATFORM_SCHEMA_TEMPLATE = vol.All(
+    # CONF_WHITE_VALUE_TEMPLATE is deprecated, support will be removed in release 2022.9
+    cv.deprecated(CONF_WHITE_VALUE_TEMPLATE),
+    _PLATFORM_SCHEMA_BASE,
+)
+
+DISCOVERY_SCHEMA_TEMPLATE = vol.All(
+    # CONF_WHITE_VALUE_TEMPLATE is deprecated, support will be removed in release 2022.9
+    cv.deprecated(CONF_WHITE_VALUE_TEMPLATE),
+    _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
+)
 
 
 async def async_setup_entity_template(
