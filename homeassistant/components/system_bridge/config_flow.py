@@ -4,7 +4,14 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from systembridgeconnector.const import EVENT_TYPE, TYPE_DATA_UPDATE
+from systembridgeconnector.const import (
+    EVENT_MESSAGE,
+    EVENT_SUBTYPE,
+    EVENT_TYPE,
+    SUBTYPE_BAD_API_KEY,
+    TYPE_DATA_UPDATE,
+    TYPE_ERROR,
+)
 from systembridgeconnector.exceptions import (
     ConnectionClosedException,
     ConnectionErrorException,
@@ -53,22 +60,27 @@ async def validate_input(data: dict[str, Any]) -> dict[str, str]:
     await websocket_client.get_data(["system"])
     try:
         while True:
-            result = await websocket_client.receive_message()
-            if result[EVENT_TYPE] == TYPE_DATA_UPDATE:
+            message = await websocket_client.receive_message()
+            if message[EVENT_TYPE] == TYPE_DATA_UPDATE:
                 break
-            _LOGGER.info("Message: %s", result)
+            _LOGGER.info("Message: %s", message)
+            if (
+                message[EVENT_TYPE] == TYPE_ERROR
+                and message[EVENT_SUBTYPE] == SUBTYPE_BAD_API_KEY
+            ):
+                raise InvalidAuth(message[EVENT_MESSAGE])
     except ConnectionClosedException as exception:
         _LOGGER.info(exception)
         raise CannotConnect from exception
 
-    _LOGGER.info("%s Message: %s", TYPE_DATA_UPDATE, result)
+    _LOGGER.info("%s Message: %s", TYPE_DATA_UPDATE, message)
 
-    if "uuid" not in result["data"]:
+    if "uuid" not in message["data"]:
         error = "No UUID in result!"
         _LOGGER.info(error)
         raise Exception(error)
 
-    return {"hostname": host, "uuid": result["data"]["uuid"]}
+    return {"hostname": host, "uuid": message["data"]["uuid"]}
 
 
 async def _async_get_info(
