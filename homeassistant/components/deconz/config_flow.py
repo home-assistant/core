@@ -31,12 +31,15 @@ from .const import (
     CONF_ALLOW_CLIP_SENSOR,
     CONF_ALLOW_DECONZ_GROUPS,
     CONF_ALLOW_NEW_DEVICES,
+    DEFAULT_ALLOW_CLIP_SENSOR,
+    DEFAULT_ALLOW_DECONZ_GROUPS,
+    DEFAULT_ALLOW_NEW_DEVICES,
     DEFAULT_PORT,
     DOMAIN,
     HASSIO_CONFIGURATION_URL,
     LOGGER,
 )
-from .gateway import DeconzGateway, get_gateway_from_config_entry
+from .gateway import DeconzGateway
 
 DECONZ_MANUFACTURERURL = "http://www.dresden-elektronik.de"
 CONF_SERIAL = "serial"
@@ -298,7 +301,6 @@ class DeconzOptionsFlowHandler(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Manage the deCONZ options."""
-        self.gateway = get_gateway_from_config_entry(self.hass, self.config_entry)
         return await self.async_step_deconz_devices()
 
     async def async_step_deconz_devices(
@@ -309,22 +311,20 @@ class DeconzOptionsFlowHandler(OptionsFlow):
             self.options.update(user_input)
             return self.async_create_entry(title="", data=self.options)
 
+        schema_options = {}
+        for option, default in (
+            (CONF_ALLOW_CLIP_SENSOR, DEFAULT_ALLOW_CLIP_SENSOR),
+            (CONF_ALLOW_DECONZ_GROUPS, DEFAULT_ALLOW_DECONZ_GROUPS),
+            (CONF_ALLOW_NEW_DEVICES, DEFAULT_ALLOW_NEW_DEVICES),
+        ):
+            schema_options[
+                vol.Optional(
+                    option,
+                    default=self.config_entry.options.get(option, default),
+                )
+            ] = bool
+
         return self.async_show_form(
             step_id="deconz_devices",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(
-                        CONF_ALLOW_CLIP_SENSOR,
-                        default=self.gateway.option_allow_clip_sensor,
-                    ): bool,
-                    vol.Optional(
-                        CONF_ALLOW_DECONZ_GROUPS,
-                        default=self.gateway.option_allow_deconz_groups,
-                    ): bool,
-                    vol.Optional(
-                        CONF_ALLOW_NEW_DEVICES,
-                        default=self.gateway.option_allow_new_devices,
-                    ): bool,
-                }
-            ),
+            data_schema=vol.Schema(schema_options),
         )
