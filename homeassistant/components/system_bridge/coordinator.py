@@ -39,8 +39,8 @@ MODULES = [
     "battery",
     "cpu",
     "disk",
+    "gpu",
     "memory",
-    "sensors",
     "system",
 ]
 
