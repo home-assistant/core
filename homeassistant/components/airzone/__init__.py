@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from aioairzone.common import ConnectionOptions
 from aioairzone.const import (
     AZD_ID,
     AZD_NAME,
@@ -11,11 +10,12 @@ from aioairzone.const import (
     AZD_THERMOSTAT_FW,
     AZD_THERMOSTAT_MODEL,
     AZD_ZONES,
+    DEFAULT_SYSTEM_ID,
 )
-from aioairzone.localapi import AirzoneLocalApi
+from aioairzone.localapi import AirzoneLocalApi, ConnectionOptions
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT, Platform
+from homeassistant.const import CONF_HOST, CONF_ID, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.entity import DeviceInfo
@@ -29,6 +29,14 @@ PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.CLIMATE, Platform.
 
 class AirzoneEntity(CoordinatorEntity[AirzoneUpdateCoordinator]):
     """Define an Airzone entity."""
+
+    def get_airzone_value(self, key) -> Any:
+        """Return Airzone entity value by key."""
+        raise NotImplementedError()
+
+
+class AirzoneZoneEntity(AirzoneEntity):
+    """Define an Airzone Zone entity."""
 
     def __init__(
         self,
@@ -47,12 +55,12 @@ class AirzoneEntity(CoordinatorEntity[AirzoneUpdateCoordinator]):
         self._attr_device_info: DeviceInfo = {
             "identifiers": {(DOMAIN, f"{entry.entry_id}_{system_zone_id}")},
             "manufacturer": MANUFACTURER,
-            "model": self.get_zone_value(AZD_THERMOSTAT_MODEL),
+            "model": self.get_airzone_value(AZD_THERMOSTAT_MODEL),
             "name": f"Airzone [{system_zone_id}] {zone_data[AZD_NAME]}",
-            "sw_version": self.get_zone_value(AZD_THERMOSTAT_FW),
+            "sw_version": self.get_airzone_value(AZD_THERMOSTAT_FW),
         }
 
-    def get_zone_value(self, key):
+    def get_airzone_value(self, key) -> Any:
         """Return zone value by key."""
         value = None
         if self.system_zone_id in self.coordinator.data[AZD_ZONES]:
@@ -67,6 +75,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     options = ConnectionOptions(
         entry.data[CONF_HOST],
         entry.data[CONF_PORT],
+        entry.data.get(CONF_ID, DEFAULT_SYSTEM_ID),
     )
 
     airzone = AirzoneLocalApi(aiohttp_client.async_get_clientsession(hass), options)

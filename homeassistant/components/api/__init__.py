@@ -14,7 +14,6 @@ from homeassistant.bootstrap import DATA_LOGGING
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
-    EVENT_TIME_CHANGED,
     MATCH_ALL,
     URL_API,
     URL_API_COMPONENTS,
@@ -102,9 +101,6 @@ class APIEventStream(HomeAssistantView):
 
         async def forward_events(event):
             """Forward events to the open request."""
-            if event.event_type == EVENT_TIME_CHANGED:
-                return
-
             if restrict and event.event_type not in restrict:
                 return
 

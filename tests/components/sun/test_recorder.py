@@ -22,13 +22,12 @@ from homeassistant.core import State
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import async_fire_time_changed, async_init_recorder_component
+from tests.common import async_fire_time_changed
 from tests.components.recorder.common import async_wait_recording_done_without_instance
 
 
-async def test_exclude_attributes(hass):
+async def test_exclude_attributes(hass, recorder_mock):
     """Test sun attributes to be excluded."""
-    await async_init_recorder_component(hass)
     await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))

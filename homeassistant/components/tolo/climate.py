@@ -1,5 +1,4 @@
 """TOLO Sauna climate controls (main sauna control)."""
-
 from __future__ import annotations
 
 from typing import Any
@@ -10,6 +9,7 @@ from homeassistant.components.climate import (
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
     ClimateEntity,
+    ClimateEntityFeature,
 )
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_DRY,
@@ -19,9 +19,6 @@ from homeassistant.components.climate.const import (
     FAN_OFF,
     FAN_ON,
     HVAC_MODE_DRY,
-    SUPPORT_FAN_MODE,
-    SUPPORT_TARGET_HUMIDITY,
-    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, TEMP_CELSIUS
@@ -60,7 +57,9 @@ class SaunaClimate(ToloSaunaCoordinatorEntity, ClimateEntity):
     _attr_name = "Sauna Climate"
     _attr_precision = PRECISION_WHOLE
     _attr_supported_features = (
-        SUPPORT_TARGET_TEMPERATURE | SUPPORT_TARGET_HUMIDITY | SUPPORT_FAN_MODE
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TARGET_HUMIDITY
+        | ClimateEntityFeature.FAN_MODE
     )
     _attr_target_temperature_step = 1
     _attr_temperature_unit = TEMP_CELSIUS

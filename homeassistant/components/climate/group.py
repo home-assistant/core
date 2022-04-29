@@ -5,7 +5,7 @@ from homeassistant.components.group import GroupIntegrationRegistry
 from homeassistant.const import STATE_OFF
 from homeassistant.core import HomeAssistant, callback
 
-from .const import HVAC_MODE_OFF, HVAC_MODES
+from .const import HVAC_MODES, HVACMode
 
 
 @callback
@@ -14,6 +14,6 @@ def async_describe_on_off_states(
 ) -> None:
     """Describe group on off states."""
     registry.on_off_states(
-        set(HVAC_MODES) - {HVAC_MODE_OFF},
+        set(HVAC_MODES) - {HVACMode.OFF},
         STATE_OFF,
     )

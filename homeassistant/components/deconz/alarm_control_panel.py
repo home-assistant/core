@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from pydeconz.alarm_system import AlarmSystem
-from pydeconz.sensor import (
+from pydeconz.models.sensor.ancillary_control import (
     ANCILLARY_CONTROL_ARMED_AWAY,
     ANCILLARY_CONTROL_ARMED_NIGHT,
     ANCILLARY_CONTROL_ARMED_STAY,
@@ -18,9 +18,9 @@ from pydeconz.sensor import (
 
 from homeassistant.components.alarm_control_panel import (
     DOMAIN,
-    FORMAT_NUMBER,
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
+    CodeFormat,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -120,7 +120,7 @@ class DeconzAlarmControlPanel(DeconzDevice, AlarmControlPanelEntity):
     TYPE = DOMAIN
     _device: AncillaryControl
 
-    _attr_code_format = FORMAT_NUMBER
+    _attr_code_format = CodeFormat.NUMBER
     _attr_supported_features = (
         AlarmControlPanelEntityFeature.ARM_AWAY
         | AlarmControlPanelEntityFeature.ARM_HOME
@@ -150,20 +150,26 @@ class DeconzAlarmControlPanel(DeconzDevice, AlarmControlPanelEntity):
     @property
     def state(self) -> str | None:
         """Return the state of the control panel."""
-        return DECONZ_TO_ALARM_STATE.get(self._device.panel)
+        if self._device.panel in DECONZ_TO_ALARM_STATE:
+            return DECONZ_TO_ALARM_STATE[self._device.panel]
+        return None
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
-        await self.alarm_system.arm_away(code)
+        if code:
+            await self.alarm_system.arm_away(code)
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
-        await self.alarm_system.arm_stay(code)
+        if code:
+            await self.alarm_system.arm_stay(code)
 
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
-        await self.alarm_system.arm_night(code)
+        if code:
+            await self.alarm_system.arm_night(code)
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
-        await self.alarm_system.disarm(code)
+        if code:
+            await self.alarm_system.disarm(code)

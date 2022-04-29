@@ -33,14 +33,13 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
 )
 import homeassistant.core as ha
 from homeassistant.core import DOMAIN as HASS_DOMAIN, CoreState, State, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-from homeassistant.util.unit_system import METRIC_SYSTEM
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
 
 from tests.common import (
     assert_setup_component,
@@ -62,6 +61,7 @@ MAX_TEMP = 65.0
 TARGET_TEMP = 42.0
 COLD_TOLERANCE = 0.5
 HOT_TOLERANCE = 0.5
+TARGET_TEMP_STEP = 0.5
 
 
 async def test_setup_missing_conf(hass):
@@ -276,6 +276,7 @@ async def test_default_setup_params(hass, setup_comp_2):
     assert state.attributes.get("min_temp") == 7
     assert state.attributes.get("max_temp") == 35
     assert state.attributes.get("temperature") == 7
+    assert state.attributes.get("target_temp_step") == 0.1
 
 
 async def test_get_hvac_modes(hass, setup_comp_2):
@@ -1179,7 +1180,6 @@ async def test_temp_change_heater_trigger_off_long_enough_2(hass, setup_comp_8):
 @pytest.fixture
 async def setup_comp_9(hass):
     """Initialize components."""
-    hass.config.temperature_unit = TEMP_FAHRENHEIT
     assert await async_setup_component(
         hass,
         DOMAIN,
@@ -1203,9 +1203,12 @@ async def setup_comp_9(hass):
 
 async def test_precision(hass, setup_comp_9):
     """Test that setting precision to tenths works as intended."""
+    hass.config.units = IMPERIAL_SYSTEM
     await common.async_set_temperature(hass, 23.27)
     state = hass.states.get(ENTITY)
     assert state.attributes.get("temperature") == 23.3
+    # check that target_temp_step defaults to precision
+    assert state.attributes.get("target_temp_step") == 0.1
 
 
 async def test_custom_setup_params(hass):
@@ -1222,6 +1225,7 @@ async def test_custom_setup_params(hass):
                 "min_temp": MIN_TEMP,
                 "max_temp": MAX_TEMP,
                 "target_temp": TARGET_TEMP,
+                "target_temp_step": 0.5,
             }
         },
     )
@@ -1231,6 +1235,7 @@ async def test_custom_setup_params(hass):
     assert state.attributes.get("min_temp") == MIN_TEMP
     assert state.attributes.get("max_temp") == MAX_TEMP
     assert state.attributes.get("temperature") == TARGET_TEMP
+    assert state.attributes.get("target_temp_step") == TARGET_TEMP_STEP
 
 
 @pytest.mark.parametrize("hvac_mode", [HVAC_MODE_OFF, HVAC_MODE_HEAT, HVAC_MODE_COOL])

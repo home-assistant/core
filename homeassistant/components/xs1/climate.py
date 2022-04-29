@@ -3,11 +3,8 @@ from __future__ import annotations
 
 from xs1_api_client.api_constants import ActuatorType
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
-    HVAC_MODE_HEAT,
-    SUPPORT_TARGET_TEMPERATURE,
-)
+from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
+from homeassistant.components.climate.const import HVAC_MODE_HEAT
 from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -51,6 +48,8 @@ def setup_platform(
 class XS1ThermostatEntity(XS1DeviceEntity, ClimateEntity):
     """Representation of a XS1 thermostat."""
 
+    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+
     def __init__(self, device, sensor):
         """Initialize the actuator."""
         super().__init__(device)
@@ -60,11 +59,6 @@ class XS1ThermostatEntity(XS1DeviceEntity, ClimateEntity):
     def name(self):
         """Return the name of the device if any."""
         return self.device.name()
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_TARGET_TEMPERATURE
 
     @property
     def hvac_mode(self):

@@ -43,12 +43,12 @@ async def test_fetching_url(hass, hass_client, fakeimgbytes_png, mock_av_open):
     resp = await client.get("/api/camera_proxy/camera.config_test")
 
     assert resp.status == HTTPStatus.OK
-    assert respx.calls.call_count == 2
+    assert respx.calls.call_count == 1
     body = await resp.read()
     assert body == fakeimgbytes_png
 
     resp = await client.get("/api/camera_proxy/camera.config_test")
-    assert respx.calls.call_count == 3
+    assert respx.calls.call_count == 2
 
 
 @respx.mock
@@ -143,19 +143,19 @@ async def test_limit_refetch(hass, hass_client, fakeimgbytes_png, fakeimgbytes_j
     ):
         resp = await client.get("/api/camera_proxy/camera.config_test")
 
-    assert respx.calls.call_count == 2
+    assert respx.calls.call_count == 1
     assert resp.status == HTTPStatus.OK
 
     hass.states.async_set("sensor.temp", "10")
 
     resp = await client.get("/api/camera_proxy/camera.config_test")
-    assert respx.calls.call_count == 3
+    assert respx.calls.call_count == 2
     assert resp.status == HTTPStatus.OK
     body = await resp.read()
     assert body == fakeimgbytes_png
 
     resp = await client.get("/api/camera_proxy/camera.config_test")
-    assert respx.calls.call_count == 3
+    assert respx.calls.call_count == 2
     assert resp.status == HTTPStatus.OK
     body = await resp.read()
     assert body == fakeimgbytes_png
@@ -164,7 +164,7 @@ async def test_limit_refetch(hass, hass_client, fakeimgbytes_png, fakeimgbytes_j
 
     # Url change = fetch new image
     resp = await client.get("/api/camera_proxy/camera.config_test")
-    assert respx.calls.call_count == 4
+    assert respx.calls.call_count == 3
     assert resp.status == HTTPStatus.OK
     body = await resp.read()
     assert body == fakeimgbytes_jpg
@@ -172,7 +172,7 @@ async def test_limit_refetch(hass, hass_client, fakeimgbytes_png, fakeimgbytes_j
     # Cause a template render error
     hass.states.async_remove("sensor.temp")
     resp = await client.get("/api/camera_proxy/camera.config_test")
-    assert respx.calls.call_count == 4
+    assert respx.calls.call_count == 3
     assert resp.status == HTTPStatus.OK
     body = await resp.read()
     assert body == fakeimgbytes_jpg
@@ -392,14 +392,14 @@ async def test_camera_content_type(
     client = await hass_client()
 
     resp_1 = await client.get("/api/camera_proxy/camera.config_test_svg")
-    assert respx.calls.call_count == 3
+    assert respx.calls.call_count == 1
     assert resp_1.status == HTTPStatus.OK
     assert resp_1.content_type == "image/svg+xml"
     body = await resp_1.read()
     assert body == fakeimgbytes_svg
 
     resp_2 = await client.get("/api/camera_proxy/camera.config_test_jpg")
-    assert respx.calls.call_count == 4
+    assert respx.calls.call_count == 2
     assert resp_2.status == HTTPStatus.OK
     assert resp_2.content_type == "image/jpeg"
     body = await resp_2.read()
@@ -432,7 +432,7 @@ async def test_timeout_cancelled(hass, hass_client, fakeimgbytes_png, fakeimgbyt
     resp = await client.get("/api/camera_proxy/camera.config_test")
 
     assert resp.status == HTTPStatus.OK
-    assert respx.calls.call_count == 2
+    assert respx.calls.call_count == 1
     assert await resp.read() == fakeimgbytes_png
 
     respx.get("http://example.com").respond(stream=fakeimgbytes_jpg)
@@ -442,7 +442,7 @@ async def test_timeout_cancelled(hass, hass_client, fakeimgbytes_png, fakeimgbyt
         side_effect=asyncio.CancelledError(),
     ):
         resp = await client.get("/api/camera_proxy/camera.config_test")
-        assert respx.calls.call_count == 2
+        assert respx.calls.call_count == 1
         assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
 
     respx.get("http://example.com").side_effect = [
@@ -450,7 +450,7 @@ async def test_timeout_cancelled(hass, hass_client, fakeimgbytes_png, fakeimgbyt
         httpx.TimeoutException,
     ]
 
-    for total_calls in range(3, 5):
+    for total_calls in range(2, 4):
         resp = await client.get("/api/camera_proxy/camera.config_test")
         assert respx.calls.call_count == total_calls
         assert resp.status == HTTPStatus.OK

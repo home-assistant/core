@@ -1,15 +1,13 @@
 """Platform for climate integration."""
 from smarttub import Spa
 
-from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
     HVAC_MODE_HEAT,
     PRESET_ECO,
     PRESET_NONE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
@@ -52,6 +50,11 @@ async def async_setup_entry(
 
 class SmartTubThermostat(SmartTubEntity, ClimateEntity):
     """The target water temperature for the spa."""
+
+    # Only target temperature is supported.
+    _attr_supported_features = (
+        ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
+    )
 
     def __init__(self, coordinator, spa):
         """Initialize the entity."""
@@ -101,14 +104,6 @@ class SmartTubThermostat(SmartTubEntity, ClimateEntity):
         """Return the maximum temperature."""
         max_temp = DEFAULT_MAX_TEMP
         return convert_temperature(max_temp, TEMP_CELSIUS, self.temperature_unit)
-
-    @property
-    def supported_features(self):
-        """Return the set of supported features.
-
-        Only target temperature is supported.
-        """
-        return SUPPORT_PRESET_MODE | SUPPORT_TARGET_TEMPERATURE
 
     @property
     def preset_mode(self):

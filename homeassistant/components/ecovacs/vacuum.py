@@ -112,6 +112,11 @@ class EcovacsVacuum(VacuumEntity):
         return self._name
 
     @property
+    def supported_features(self) -> int:
+        """Flag vacuum cleaner features that are supported."""
+        return self._attr_supported_features
+
+    @property
     def status(self):
         """Return the status of the vacuum cleaner."""
         return self.device.vacuum_status

@@ -204,9 +204,9 @@ async def test_climate_device_without_cooling_support(
     climate_thermostat = hass.states.get("climate.thermostat")
     assert climate_thermostat.state == HVAC_MODE_AUTO
     assert climate_thermostat.attributes["hvac_modes"] == [
-        HVAC_MODE_AUTO,
         HVAC_MODE_HEAT,
         HVAC_MODE_OFF,
+        HVAC_MODE_AUTO,
     ]
     assert climate_thermostat.attributes["current_temperature"] == 22.6
     assert climate_thermostat.attributes["temperature"] == 22.0
@@ -378,10 +378,10 @@ async def test_climate_device_with_cooling_support(
     climate_thermostat = hass.states.get("climate.zen_01")
     assert climate_thermostat.state == HVAC_MODE_HEAT
     assert climate_thermostat.attributes["hvac_modes"] == [
-        HVAC_MODE_AUTO,
-        HVAC_MODE_COOL,
         HVAC_MODE_HEAT,
         HVAC_MODE_OFF,
+        HVAC_MODE_AUTO,
+        HVAC_MODE_COOL,
     ]
     assert climate_thermostat.attributes["current_temperature"] == 23.2
     assert climate_thermostat.attributes["temperature"] == 22.2
@@ -788,3 +788,25 @@ async def test_add_new_climate_device(hass, aioclient_mock, mock_deconz_websocke
     assert len(hass.states.async_all()) == 2
     assert hass.states.get("climate.thermostat").state == HVAC_MODE_AUTO
     assert hass.states.get("sensor.thermostat_battery").state == "100"
+
+
+async def test_not_allow_clip_thermostat(hass, aioclient_mock):
+    """Test that CLIP thermostats are not allowed."""
+    data = {
+        "sensors": {
+            "1": {
+                "name": "CLIP thermostat sensor",
+                "type": "CLIPThermostat",
+                "state": {},
+                "config": {},
+                "uniqueid": "00:00:00:00:00:00:00:00-00",
+            },
+        }
+    }
+
+    with patch.dict(DECONZ_WEB_REQUEST, data):
+        await setup_deconz_integration(
+            hass, aioclient_mock, options={CONF_ALLOW_CLIP_SENSOR: False}
+        )
+
+    assert len(hass.states.async_all()) == 0

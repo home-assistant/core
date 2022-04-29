@@ -251,6 +251,9 @@ class ADBDevice(MediaPlayerEntity):
             ATTR_HDMI_INPUT: None,
         }
 
+        # The number of consecutive failed connect attempts
+        self._failed_connect_count = 0
+
     def _process_config(self):
         """Load the config options."""
         _LOGGER.debug("Loading configuration options")
@@ -450,9 +453,13 @@ class AndroidTVDevice(ADBDevice):
     async def async_update(self):
         """Update the device state and, if necessary, re-connect."""
         # Check if device is disconnected.
-        if not self.available:
+        if not self._attr_available:
             # Try to connect
-            self._attr_available = await self.aftv.adb_connect(always_log_errors=False)
+            if await self.aftv.adb_connect(log_errors=self._failed_connect_count == 0):
+                self._failed_connect_count = 0
+                self._attr_available = True
+            else:
+                self._failed_connect_count += 1
 
         # If the ADB connection is not intact, don't update.
         if not self.available:
@@ -535,9 +542,13 @@ class FireTVDevice(ADBDevice):
     async def async_update(self):
         """Update the device state and, if necessary, re-connect."""
         # Check if device is disconnected.
-        if not self.available:
+        if not self._attr_available:
             # Try to connect
-            self._attr_available = await self.aftv.adb_connect(always_log_errors=False)
+            if await self.aftv.adb_connect(log_errors=self._failed_connect_count == 0):
+                self._failed_connect_count = 0
+                self._attr_available = True
+            else:
+                self._failed_connect_count += 1
 
         # If the ADB connection is not intact, don't update.
         if not self.available:

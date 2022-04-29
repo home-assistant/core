@@ -1,11 +1,9 @@
 """Support for Spider thermostats."""
-from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
 from homeassistant.components.climate.const import (
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
-    SUPPORT_FAN_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
@@ -66,8 +64,10 @@ class SpiderThermostat(ClimateEntity):
     def supported_features(self):
         """Return the list of supported features."""
         if self.thermostat.has_fan_mode:
-            return SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
-        return SUPPORT_TARGET_TEMPERATURE
+            return (
+                ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
+            )
+        return ClimateEntityFeature.TARGET_TEMPERATURE
 
     @property
     def unique_id(self):

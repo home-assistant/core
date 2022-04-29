@@ -230,7 +230,7 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
         return features
 
     @esphome_state_property
-    def hvac_mode(self) -> str | None:  # type: ignore[override]
+    def hvac_mode(self) -> str | None:
         """Return current operation ie. heat, cool, idle."""
         return _CLIMATE_MODES.from_esphome(self._state.mode)
 

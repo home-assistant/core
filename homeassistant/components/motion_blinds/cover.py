@@ -155,7 +155,7 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         SERVICE_SET_ABSOLUTE_POSITION,
         SET_ABSOLUTE_POSITION_SCHEMA,
-        SERVICE_SET_ABSOLUTE_POSITION,
+        "async_set_absolute_position",
     )
 
 

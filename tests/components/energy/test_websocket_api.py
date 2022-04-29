@@ -18,11 +18,9 @@ from tests.components.recorder.common import async_wait_recording_done_without_i
 
 
 @pytest.fixture(autouse=True)
-async def setup_integration(hass):
+async def setup_integration(hass, recorder_mock):
     """Set up the integration."""
-    assert await async_setup_component(
-        hass, "energy", {"recorder": {"db_url": "sqlite://"}}
-    )
+    assert await async_setup_component(hass, "energy", {})
 
 
 @pytest.fixture

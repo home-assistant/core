@@ -12,13 +12,9 @@ from homeassistant.components.light import (
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
     ATTR_TRANSITION,
-    COLOR_MODE_BRIGHTNESS,
-    COLOR_MODE_COLOR_TEMP,
-    COLOR_MODE_ONOFF,
-    COLOR_MODE_RGB,
-    COLOR_MODE_RGBW,
     SUPPORT_EFFECT,
     SUPPORT_TRANSITION,
+    ColorMode,
     LightEntity,
     brightness_supported,
 )
@@ -148,18 +144,18 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
             self._attr_max_mireds = MIRED_MAX_VALUE_COLOR
             self._min_kelvin = KELVIN_MIN_VALUE_COLOR
             if wrapper.model in RGBW_MODELS:
-                self._attr_supported_color_modes.add(COLOR_MODE_RGBW)
+                self._attr_supported_color_modes.add(ColorMode.RGBW)
             else:
-                self._attr_supported_color_modes.add(COLOR_MODE_RGB)
+                self._attr_supported_color_modes.add(ColorMode.RGB)
 
         if hasattr(block, "colorTemp"):
-            self._attr_supported_color_modes.add(COLOR_MODE_COLOR_TEMP)
+            self._attr_supported_color_modes.add(ColorMode.COLOR_TEMP)
 
         if not self._attr_supported_color_modes:
             if hasattr(block, "brightness") or hasattr(block, "gain"):
-                self._attr_supported_color_modes.add(COLOR_MODE_BRIGHTNESS)
+                self._attr_supported_color_modes.add(ColorMode.BRIGHTNESS)
             else:
-                self._attr_supported_color_modes.add(COLOR_MODE_ONOFF)
+                self._attr_supported_color_modes.add(ColorMode.ONOFF)
 
         if hasattr(block, "effect"):
             self._attr_supported_features |= SUPPORT_EFFECT
@@ -215,20 +211,20 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
         return round(255 * brightness_pct / 100)
 
     @property
-    def color_mode(self) -> str:
+    def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
         if self.mode == "color":
             if hasattr(self.block, "white"):
-                return COLOR_MODE_RGBW
-            return COLOR_MODE_RGB
+                return ColorMode.RGBW
+            return ColorMode.RGB
 
         if hasattr(self.block, "colorTemp"):
-            return COLOR_MODE_COLOR_TEMP
+            return ColorMode.COLOR_TEMP
 
         if hasattr(self.block, "brightness") or hasattr(self.block, "gain"):
-            return COLOR_MODE_BRIGHTNESS
+            return ColorMode.BRIGHTNESS
 
-        return COLOR_MODE_ONOFF
+        return ColorMode.ONOFF
 
     @property
     def rgb_color(self) -> tuple[int, int, int]:
@@ -315,19 +311,19 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
             if hasattr(self.block, "brightness"):
                 params["brightness"] = brightness_pct
 
-        if ATTR_COLOR_TEMP in kwargs and COLOR_MODE_COLOR_TEMP in supported_color_modes:
+        if ATTR_COLOR_TEMP in kwargs and ColorMode.COLOR_TEMP in supported_color_modes:
             color_temp = color_temperature_mired_to_kelvin(kwargs[ATTR_COLOR_TEMP])
             color_temp = min(self._max_kelvin, max(self._min_kelvin, color_temp))
             # Color temperature change - used only in white mode, switch device mode to white
             set_mode = "white"
             params["temp"] = int(color_temp)
 
-        if ATTR_RGB_COLOR in kwargs and COLOR_MODE_RGB in supported_color_modes:
+        if ATTR_RGB_COLOR in kwargs and ColorMode.RGB in supported_color_modes:
             # Color channels change - used only in color mode, switch device mode to color
             set_mode = "color"
             (params["red"], params["green"], params["blue"]) = kwargs[ATTR_RGB_COLOR]
 
-        if ATTR_RGBW_COLOR in kwargs and COLOR_MODE_RGBW in supported_color_modes:
+        if ATTR_RGBW_COLOR in kwargs and ColorMode.RGBW in supported_color_modes:
             # Color channels change - used only in color mode, switch device mode to color
             set_mode = "color"
             (params["red"], params["green"], params["blue"], params["white"]) = kwargs[

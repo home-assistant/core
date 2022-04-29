@@ -6,9 +6,9 @@ import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_DEVICE
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import selector
 
-from .const import CONF_BAUD_SPEED, DEFAULT_BAUD_SPEED, DOMAIN
+from .const import CONF_BAUD_SPEED, DEFAULT_BAUD_SPEED, DEFAULT_BAUD_SPEEDS, DOMAIN
 from .gateway import create_sms_gateway
 
 _LOGGER = logging.getLogger(__name__)
@@ -16,7 +16,9 @@ _LOGGER = logging.getLogger(__name__)
 DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_DEVICE): str,
-        vol.Optional(CONF_BAUD_SPEED, default=DEFAULT_BAUD_SPEED): cv.positive_int,
+        vol.Optional(CONF_BAUD_SPEED, default=DEFAULT_BAUD_SPEED): selector.selector(
+            {"select": {"options": DEFAULT_BAUD_SPEEDS}}
+        ),
     }
 )
 
@@ -27,10 +29,10 @@ async def get_imei_from_config(hass: core.HomeAssistant, data):
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
     device = data[CONF_DEVICE]
-    baud_speed = data[CONF_BAUD_SPEED]
     connection_mode = "at"
-    if baud_speed is not DEFAULT_BAUD_SPEED:
-        connection_mode += str(baud_speed)
+    baud_speed = data.get(CONF_BAUD_SPEED, DEFAULT_BAUD_SPEED)
+    if baud_speed != DEFAULT_BAUD_SPEED:
+        connection_mode += baud_speed
     config = {"Device": device, "Connection": connection_mode}
     gateway = await create_sms_gateway(config, hass)
     if not gateway:

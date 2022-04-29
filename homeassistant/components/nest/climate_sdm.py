@@ -14,7 +14,7 @@ from google_nest_sdm.thermostat_traits import (
     ThermostatTemperatureSetpointTrait,
 )
 
-from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
@@ -33,10 +33,6 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_OFF,
     PRESET_ECO,
     PRESET_NONE,
-    SUPPORT_FAN_MODE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
@@ -219,7 +215,7 @@ class ThermostatEntity(ClimateEntity):
         for mode in self._get_device_hvac_modes:
             if mode in THERMOSTAT_MODE_MAP:
                 supported_modes.append(THERMOSTAT_MODE_MAP[mode])
-        if self.supported_features & SUPPORT_FAN_MODE:
+        if self.supported_features & ClimateEntityFeature.FAN_MODE:
             supported_modes.append(HVAC_MODE_FAN_ONLY)
         return supported_modes
 
@@ -286,16 +282,16 @@ class ThermostatEntity(ClimateEntity):
         """Compute the bitmap of supported features from the current state."""
         features = 0
         if HVAC_MODE_HEAT_COOL in self.hvac_modes:
-            features |= SUPPORT_TARGET_TEMPERATURE_RANGE
+            features |= ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         if HVAC_MODE_HEAT in self.hvac_modes or HVAC_MODE_COOL in self.hvac_modes:
-            features |= SUPPORT_TARGET_TEMPERATURE
+            features |= ClimateEntityFeature.TARGET_TEMPERATURE
         if ThermostatEcoTrait.NAME in self._device.traits:
-            features |= SUPPORT_PRESET_MODE
+            features |= ClimateEntityFeature.PRESET_MODE
         if FanTrait.NAME in self._device.traits:
             # Fan trait may be present without actually support fan mode
             fan_trait = self._device.traits[FanTrait.NAME]
             if fan_trait.timer_mode is not None:
-                features |= SUPPORT_FAN_MODE
+                features |= ClimateEntityFeature.FAN_MODE
         return features
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:

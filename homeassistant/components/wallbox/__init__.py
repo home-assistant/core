@@ -20,17 +20,17 @@ from homeassistant.helpers.update_coordinator import (
 
 from ...helpers.entity import DeviceInfo
 from .const import (
-    CONF_CURRENT_VERSION_KEY,
-    CONF_DATA_KEY,
-    CONF_LOCKED_UNLOCKED_KEY,
-    CONF_MAX_CHARGING_CURRENT_KEY,
-    CONF_NAME_KEY,
-    CONF_PART_NUMBER_KEY,
-    CONF_SERIAL_NUMBER_KEY,
-    CONF_SOFTWARE_KEY,
+    CHARGER_CURRENT_VERSION_KEY,
+    CHARGER_DATA_KEY,
+    CHARGER_LOCKED_UNLOCKED_KEY,
+    CHARGER_MAX_CHARGING_CURRENT_KEY,
+    CHARGER_NAME_KEY,
+    CHARGER_PART_NUMBER_KEY,
+    CHARGER_SERIAL_NUMBER_KEY,
+    CHARGER_SOFTWARE_KEY,
+    CHARGER_STATUS_DESCRIPTION_KEY,
+    CHARGER_STATUS_ID_KEY,
     CONF_STATION,
-    CONF_STATUS_DESCRIPTION_KEY,
-    CONF_STATUS_ID_KEY,
     DOMAIN,
 )
 
@@ -115,14 +115,14 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             self._authenticate()
             data: dict[str, Any] = self._wallbox.getChargerStatus(self._station)
-            data[CONF_MAX_CHARGING_CURRENT_KEY] = data[CONF_DATA_KEY][
-                CONF_MAX_CHARGING_CURRENT_KEY
+            data[CHARGER_MAX_CHARGING_CURRENT_KEY] = data[CHARGER_DATA_KEY][
+                CHARGER_MAX_CHARGING_CURRENT_KEY
             ]
-            data[CONF_LOCKED_UNLOCKED_KEY] = data[CONF_DATA_KEY][
-                CONF_LOCKED_UNLOCKED_KEY
+            data[CHARGER_LOCKED_UNLOCKED_KEY] = data[CHARGER_DATA_KEY][
+                CHARGER_LOCKED_UNLOCKED_KEY
             ]
-            data[CONF_STATUS_DESCRIPTION_KEY] = CHARGER_STATUS.get(
-                data[CONF_STATUS_ID_KEY], "Unknown"
+            data[CHARGER_STATUS_DESCRIPTION_KEY] = CHARGER_STATUS.get(
+                data[CHARGER_STATUS_ID_KEY], "Unknown"
             )
 
             return data
@@ -215,12 +215,15 @@ class WallboxEntity(CoordinatorEntity[WallboxCoordinator]):
         """Return device information about this Wallbox device."""
         return DeviceInfo(
             identifiers={
-                (DOMAIN, self.coordinator.data[CONF_DATA_KEY][CONF_SERIAL_NUMBER_KEY])
+                (
+                    DOMAIN,
+                    self.coordinator.data[CHARGER_DATA_KEY][CHARGER_SERIAL_NUMBER_KEY],
+                )
             },
-            name=f"Wallbox - {self.coordinator.data[CONF_NAME_KEY]}",
+            name=f"Wallbox - {self.coordinator.data[CHARGER_NAME_KEY]}",
             manufacturer="Wallbox",
-            model=self.coordinator.data[CONF_DATA_KEY][CONF_PART_NUMBER_KEY],
-            sw_version=self.coordinator.data[CONF_DATA_KEY][CONF_SOFTWARE_KEY][
-                CONF_CURRENT_VERSION_KEY
+            model=self.coordinator.data[CHARGER_DATA_KEY][CHARGER_PART_NUMBER_KEY],
+            sw_version=self.coordinator.data[CHARGER_DATA_KEY][CHARGER_SOFTWARE_KEY][
+                CHARGER_CURRENT_VERSION_KEY
             ],
         )

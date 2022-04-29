@@ -96,6 +96,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         {},
         async_skip,
     )
+    component.async_register_entity_service(
+        "clear_skipped",
+        {},
+        async_clear_skipped,
+    )
+
     websocket_api.async_register_command(hass, websocket_release_notes)
 
     return True
@@ -151,6 +157,15 @@ async def async_skip(entity: UpdateEntity, service_call: ServiceCall) -> None:
     if entity.auto_update:
         raise HomeAssistantError(f"Skipping update is not supported for {entity.name}")
     await entity.async_skip()
+
+
+async def async_clear_skipped(entity: UpdateEntity, service_call: ServiceCall) -> None:
+    """Service call wrapper to validate the call."""
+    if entity.auto_update:
+        raise HomeAssistantError(
+            f"Clearing skipped update is not supported for {entity.name}"
+        )
+    await entity.async_clear_skipped()
 
 
 @dataclass
@@ -274,6 +289,12 @@ class UpdateEntity(RestoreEntity):
         if self.installed_version == latest_version:
             raise HomeAssistantError(f"No update available to skip for {self.name}")
         self.__skipped_version = latest_version
+        self.async_write_ha_state()
+
+    @final
+    async def async_clear_skipped(self) -> None:
+        """Clear the skipped version."""
+        self.__skipped_version = None
         self.async_write_ha_state()
 
     async def async_install(

@@ -75,6 +75,7 @@ CONF_HOT_TOLERANCE = "hot_tolerance"
 CONF_KEEP_ALIVE = "keep_alive"
 CONF_INITIAL_HVAC_MODE = "initial_hvac_mode"
 CONF_PRECISION = "precision"
+CONF_TEMP_STEP = "target_temp_step"
 
 CONF_PRESETS = {
     p: f"{p}_temp"
@@ -104,6 +105,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             [HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_OFF]
         ),
         vol.Optional(CONF_PRECISION): vol.In(
+            [PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE]
+        ),
+        vol.Optional(CONF_TEMP_STEP): vol.In(
             [PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE]
         ),
         vol.Optional(CONF_UNIQUE_ID): cv.string,
@@ -137,6 +141,7 @@ async def async_setup_platform(
         key: config[value] for key, value in CONF_PRESETS.items() if value in config
     }
     precision = config.get(CONF_PRECISION)
+    target_temperature_step = config.get(CONF_TEMP_STEP)
     unit = hass.config.units.temperature_unit
     unique_id = config.get(CONF_UNIQUE_ID)
 
@@ -157,6 +162,7 @@ async def async_setup_platform(
                 initial_hvac_mode,
                 presets,
                 precision,
+                target_temperature_step,
                 unit,
                 unique_id,
             )
@@ -183,6 +189,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         initial_hvac_mode,
         presets,
         precision,
+        target_temperature_step,
         unit,
         unique_id,
     ):
@@ -198,6 +205,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         self._hvac_mode = initial_hvac_mode
         self._saved_target_temp = target_temp or next(iter(presets.values()), None)
         self._temp_precision = precision
+        self._temp_target_temperature_step = target_temperature_step
         if self.ac_mode:
             self._hvac_list = [HVAC_MODE_COOL, HVAC_MODE_OFF]
         else:
@@ -325,8 +333,9 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
     @property
     def target_temperature_step(self):
         """Return the supported step of target temperature."""
-        # Since this integration does not yet have a step size parameter
-        # we have to re-use the precision as the step size for now.
+        if self._temp_target_temperature_step is not None:
+            return self._temp_target_temperature_step
+        # if a target_temperature_step is not defined, fallback to equal the precision
         return self.precision
 
     @property

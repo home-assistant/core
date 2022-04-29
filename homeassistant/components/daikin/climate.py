@@ -117,6 +117,11 @@ async def async_setup_entry(
     async_add_entities([DaikinClimate(daikin_api)], update_before_add=True)
 
 
+def format_target_temperature(target_temperature):
+    """Format target temperature to be sent to the Daikin unit, taking care of keeping at most 1 decimal digit."""
+    return str(round(float(target_temperature), 1)).rstrip("0").rstrip(".")
+
+
 class DaikinClimate(ClimateEntity):
     """Representation of a Daikin HVAC."""
 
@@ -163,9 +168,9 @@ class DaikinClimate(ClimateEntity):
             # temperature
             elif attr == ATTR_TEMPERATURE:
                 try:
-                    values[HA_ATTR_TO_DAIKIN[ATTR_TARGET_TEMPERATURE]] = str(
-                        round(float(value), 1)
-                    )
+                    values[
+                        HA_ATTR_TO_DAIKIN[ATTR_TARGET_TEMPERATURE]
+                    ] = format_target_temperature(value)
                 except ValueError:
                     _LOGGER.error("Invalid temperature %s", value)
 

@@ -80,7 +80,7 @@ class DeconzPowerPlug(DeconzDevice, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return true if switch is on."""
-        return self._device.state  # type: ignore[no-any-return]
+        return self._device.on
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""

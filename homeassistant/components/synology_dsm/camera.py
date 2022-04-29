@@ -11,9 +11,9 @@ from synology_dsm.exceptions import (
 )
 
 from homeassistant.components.camera import (
-    SUPPORT_STREAM,
     Camera,
     CameraEntityDescription,
+    CameraEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -67,6 +67,7 @@ async def async_setup_entry(
 class SynoDSMCamera(SynologyDSMBaseEntity, Camera):
     """Representation a Synology camera."""
 
+    _attr_supported_features = CameraEntityFeature.STREAM
     coordinator: DataUpdateCoordinator[dict[str, dict[str, SynoCamera]]]
     entity_description: SynologyDSMCameraEntityDescription
 
@@ -118,11 +119,6 @@ class SynoDSMCamera(SynologyDSMBaseEntity, Camera):
     def available(self) -> bool:
         """Return the availability of the camera."""
         return self.camera_data.is_enabled and self.coordinator.last_update_success
-
-    @property
-    def supported_features(self) -> int:
-        """Return supported features of this camera."""
-        return SUPPORT_STREAM
 
     @property
     def is_recording(self) -> bool:

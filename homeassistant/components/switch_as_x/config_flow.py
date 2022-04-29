@@ -17,25 +17,23 @@ from homeassistant.helpers.schema_config_entry_flow import (
 
 from .const import CONF_TARGET_DOMAIN, DOMAIN
 
+TARGET_DOMAIN_OPTIONS = [
+    selector.SelectOptionDict(value=Platform.COVER, label="Cover"),
+    selector.SelectOptionDict(value=Platform.FAN, label="Fan"),
+    selector.SelectOptionDict(value=Platform.LIGHT, label="Light"),
+    selector.SelectOptionDict(value=Platform.LOCK, label="Lock"),
+    selector.SelectOptionDict(value=Platform.SIREN, label="Siren"),
+]
+
 CONFIG_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
     "user": SchemaFlowFormStep(
         vol.Schema(
             {
-                vol.Required(CONF_ENTITY_ID): selector.selector(
-                    {"entity": {"domain": Platform.SWITCH}}
+                vol.Required(CONF_ENTITY_ID): selector.EntitySelector(
+                    selector.EntitySelectorConfig(domain=Platform.SWITCH),
                 ),
-                vol.Required(CONF_TARGET_DOMAIN): selector.selector(
-                    {
-                        "select": {
-                            "options": [
-                                {"value": Platform.COVER, "label": "Cover"},
-                                {"value": Platform.FAN, "label": "Fan"},
-                                {"value": Platform.LIGHT, "label": "Light"},
-                                {"value": Platform.LOCK, "label": "Lock"},
-                                {"value": Platform.SIREN, "label": "Siren"},
-                            ]
-                        }
-                    }
+                vol.Required(CONF_TARGET_DOMAIN): selector.SelectSelector(
+                    selector.SelectSelectorConfig(options=TARGET_DOMAIN_OPTIONS),
                 ),
             }
         )

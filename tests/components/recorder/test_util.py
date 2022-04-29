@@ -17,11 +17,12 @@ from homeassistant.components.recorder.util import (
     is_second_sunday,
     session_scope,
 )
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.util import dt as dt_util
 
 from .common import corrupt_db_file
 
-from tests.common import async_init_recorder_component
+from tests.common import async_init_recorder_component, async_test_home_assistant
 
 
 def test_session_scope_not_setup(hass_recorder):
@@ -95,36 +96,66 @@ def test_validate_or_move_away_sqlite_database(hass, tmpdir, caplog):
     assert util.validate_or_move_away_sqlite_database(dburl) is True
 
 
-async def test_last_run_was_recently_clean(hass):
+async def test_last_run_was_recently_clean(hass, tmp_path):
     """Test we can check if the last recorder run was recently clean."""
-    await async_init_recorder_component(hass, {recorder.CONF_COMMIT_INTERVAL: 1})
+    config = {
+        recorder.CONF_DB_URL: "sqlite:///" + str(tmp_path / "pytest.db"),
+        recorder.CONF_COMMIT_INTERVAL: 1,
+    }
+    hass = await async_test_home_assistant(None)
+
+    return_values = []
+    real_last_run_was_recently_clean = util.last_run_was_recently_clean
+
+    def _last_run_was_recently_clean(cursor):
+        return_values.append(real_last_run_was_recently_clean(cursor))
+        return return_values[-1]
+
+    # Test last_run_was_recently_clean is not called on new DB
+    with patch(
+        "homeassistant.components.recorder.util.last_run_was_recently_clean",
+        wraps=_last_run_was_recently_clean,
+    ) as last_run_was_recently_clean_mock:
+        await async_init_recorder_component(hass, config)
+        await hass.async_block_till_done()
+        last_run_was_recently_clean_mock.assert_not_called()
+
+    # Restart HA, last_run_was_recently_clean should return True
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
+    await hass.async_stop()
 
-    cursor = hass.data[DATA_INSTANCE].engine.raw_connection().cursor()
+    with patch(
+        "homeassistant.components.recorder.util.last_run_was_recently_clean",
+        wraps=_last_run_was_recently_clean,
+    ) as last_run_was_recently_clean_mock:
+        hass = await async_test_home_assistant(None)
+        await async_init_recorder_component(hass, config)
+        last_run_was_recently_clean_mock.assert_called_once()
+        assert return_values[-1] is True
 
-    assert (
-        await hass.async_add_executor_job(util.last_run_was_recently_clean, cursor)
-        is False
-    )
-
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE]._end_session)
+    # Restart HA with a long downtime, last_run_was_recently_clean should return False
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
-
-    assert (
-        await hass.async_add_executor_job(util.last_run_was_recently_clean, cursor)
-        is True
-    )
+    await hass.async_stop()
 
     thirty_min_future_time = dt_util.utcnow() + timedelta(minutes=30)
 
     with patch(
+        "homeassistant.components.recorder.util.last_run_was_recently_clean",
+        wraps=_last_run_was_recently_clean,
+    ) as last_run_was_recently_clean_mock, patch(
         "homeassistant.components.recorder.dt_util.utcnow",
         return_value=thirty_min_future_time,
     ):
-        assert (
-            await hass.async_add_executor_job(util.last_run_was_recently_clean, cursor)
-            is False
-        )
+        hass = await async_test_home_assistant(None)
+        await async_init_recorder_component(hass, config)
+        last_run_was_recently_clean_mock.assert_called_once()
+        assert return_values[-1] is False
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    await hass.async_stop()
 
 
 @pytest.mark.parametrize(
@@ -550,11 +581,11 @@ def test_end_incomplete_runs(hass_recorder, caplog):
     assert "Ended unfinished session" in caplog.text
 
 
-def test_perodic_db_cleanups(hass_recorder):
-    """Test perodic db cleanups."""
+def test_periodic_db_cleanups(hass_recorder):
+    """Test periodic db cleanups."""
     hass = hass_recorder()
     with patch.object(hass.data[DATA_INSTANCE].engine, "connect") as connect_mock:
-        util.perodic_db_cleanups(hass.data[DATA_INSTANCE])
+        util.periodic_db_cleanups(hass.data[DATA_INSTANCE])
 
     text_obj = connect_mock.return_value.__enter__.return_value.execute.mock_calls[0][
         1
@@ -568,7 +599,9 @@ async def test_write_lock_db(hass, tmp_path):
     from sqlalchemy.exc import OperationalError
 
     # Use file DB, in memory DB cannot do write locks.
-    config = {recorder.CONF_DB_URL: "sqlite:///" + str(tmp_path / "pytest.db")}
+    config = {
+        recorder.CONF_DB_URL: "sqlite:///" + str(tmp_path / "pytest.db?timeout=0.1")
+    }
     await async_init_recorder_component(hass, config)
     await hass.async_block_till_done()
 

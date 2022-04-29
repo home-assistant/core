@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections import defaultdict
 from collections.abc import Callable
+from typing import Any
 
 from async_timeout import timeout
 from zwave_js_server.client import Client as ZwaveClient
@@ -289,12 +290,7 @@ async def async_setup_entry(  # noqa: C901
             )
         )
         # add listener for stateless node notification events
-        entry.async_on_unload(
-            node.on(
-                "notification",
-                lambda event: async_on_notification(event["notification"]),
-            )
-        )
+        entry.async_on_unload(node.on("notification", async_on_notification))
 
     async def async_on_node_added(node: ZwaveNode) -> None:
         """Handle node added event."""
@@ -402,12 +398,14 @@ async def async_setup_entry(  # noqa: C901
         )
 
     @callback
-    def async_on_notification(
-        notification: EntryControlNotification
-        | NotificationNotification
-        | PowerLevelNotification,
-    ) -> None:
+    def async_on_notification(event: dict[str, Any]) -> None:
         """Relay stateless notification events from Z-Wave nodes to hass."""
+        if "notification" not in event:
+            LOGGER.info("Unknown notification: %s", event)
+            return
+        notification: EntryControlNotification | NotificationNotification | PowerLevelNotification = event[
+            "notification"
+        ]
         device = dev_reg.async_get_device({get_device_id(client, notification.node)})
         # We assert because we know the device exists
         assert device

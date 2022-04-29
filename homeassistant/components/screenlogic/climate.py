@@ -3,7 +3,7 @@ import logging
 
 from screenlogicpy.const import DATA as SL_DATA, EQUIPMENT, HEAT_MODE
 
-from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
 from homeassistant.components.climate.const import (
     ATTR_PRESET_MODE,
     CURRENT_HVAC_HEAT,
@@ -11,8 +11,6 @@ from homeassistant.components.climate.const import (
     CURRENT_HVAC_OFF,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
@@ -26,7 +24,6 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORTED_FEATURES = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
 SUPPORTED_MODES = [HVAC_MODE_OFF, HVAC_MODE_HEAT]
 
@@ -54,6 +51,10 @@ async def async_setup_entry(
 
 class ScreenLogicClimate(ScreenlogicEntity, ClimateEntity, RestoreEntity):
     """Represents a ScreenLogic climate entity."""
+
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+    )
 
     def __init__(self, coordinator, body):
         """Initialize a ScreenLogic climate entity."""
@@ -134,11 +135,6 @@ class ScreenLogicClimate(ScreenlogicEntity, ClimateEntity, RestoreEntity):
         return [
             HEAT_MODE.NAME_FOR_NUM[mode_num] for mode_num in self._configured_heat_modes
         ]
-
-    @property
-    def supported_features(self):
-        """Supported features of the heater."""
-        return SUPPORTED_FEATURES
 
     async def async_set_temperature(self, **kwargs) -> None:
         """Change the setpoint of the heater."""

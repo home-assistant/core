@@ -13,7 +13,6 @@ from homeassistant.const import (
 from homeassistant.core import State
 from homeassistant.setup import async_setup_component
 
-from tests.common import async_init_recorder_component
 from tests.components.recorder.common import async_wait_recording_done_without_instance
 
 GOOD_DATA = {
@@ -145,13 +144,12 @@ async def test_state_problem_if_unavailable(hass):
     assert state.attributes[plant.READING_MOISTURE] == STATE_UNAVAILABLE
 
 
-async def test_load_from_db(hass):
+async def test_load_from_db(hass, recorder_mock):
     """Test bootstrapping the brightness history from the database.
 
     This test can should only be executed if the loading of the history
     is enabled via plant.ENABLE_LOAD_HISTORY.
     """
-    await async_init_recorder_component(hass)
     plant_name = "wise_plant"
     for value in [20, 30, 10]:
 

@@ -2,6 +2,8 @@
 
 from unittest.mock import patch
 
+from aioairzone.exceptions import InvalidMethod, SystemOutOfRange
+
 from homeassistant.components.airzone.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -22,6 +24,12 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.airzone.AirzoneLocalApi.get_hvac",
         return_value=HVAC_MOCK,
+    ), patch(
+        "homeassistant.components.airzone.AirzoneLocalApi.get_hvac_systems",
+        side_effect=SystemOutOfRange,
+    ), patch(
+        "homeassistant.components.airzone.AirzoneLocalApi.get_webserver",
+        side_effect=InvalidMethod,
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()

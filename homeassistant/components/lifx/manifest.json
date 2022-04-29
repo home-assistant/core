@@ -5,7 +5,21 @@
   "documentation": "https://www.home-assistant.io/integrations/lifx",
   "requirements": ["aiolifx==0.7.1", "aiolifx_effects==0.2.2"],
   "homekit": {
-    "models": ["LIFX"]
+    "models": [
+      "LIFX A19",
+      "LIFX Beam",
+      "LIFX BR30",
+      "LIFX Candle",
+      "LIFX Clean",
+      "LIFX Color",
+      "LIFX Dlight",
+      "LIFX Filament",
+      "LIFX GU10",
+      "LIFX Mini",
+      "LIFX Nightvision",
+      "LIFX White",
+      "LIFX Z"
+    ]
   },
   "codeowners": [],
   "iot_class": "local_polling",

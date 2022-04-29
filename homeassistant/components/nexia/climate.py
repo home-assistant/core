@@ -18,7 +18,7 @@ from nexia.util import find_humidity_setpoint
 from nexia.zone import NexiaThermostatZone
 import voluptuous as vol
 
-from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
 from homeassistant.components.climate.const import (
     ATTR_HUMIDITY,
     ATTR_HVAC_MODE,
@@ -33,12 +33,6 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
-    SUPPORT_AUX_HEAT,
-    SUPPORT_FAN_MODE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_HUMIDITY,
-    SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
@@ -116,10 +110,10 @@ HVAC_MODES = [
 ]
 
 NEXIA_SUPPORTED = (
-    SUPPORT_TARGET_TEMPERATURE_RANGE
-    | SUPPORT_TARGET_TEMPERATURE
-    | SUPPORT_FAN_MODE
-    | SUPPORT_PRESET_MODE
+    ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+    | ClimateEntityFeature.TARGET_TEMPERATURE
+    | ClimateEntityFeature.FAN_MODE
+    | ClimateEntityFeature.PRESET_MODE
 )
 
 
@@ -177,9 +171,9 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
         self._has_dehumidify_support = self._thermostat.has_dehumidify_support()
         supported = NEXIA_SUPPORTED
         if self._has_humidify_support or self._has_dehumidify_support:
-            supported |= SUPPORT_TARGET_HUMIDITY
+            supported |= ClimateEntityFeature.TARGET_HUMIDITY
         if self._has_emergency_heat:
-            supported |= SUPPORT_AUX_HEAT
+            supported |= ClimateEntityFeature.AUX_HEAT
         self._attr_supported_features = supported
         self._attr_preset_modes = self._zone.get_presets()
         self._attr_fan_modes = self._thermostat.get_fan_modes()

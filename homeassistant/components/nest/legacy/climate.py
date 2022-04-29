@@ -6,7 +6,11 @@ import logging
 from nest.nest import APIError
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
+from homeassistant.components.climate import (
+    PLATFORM_SCHEMA,
+    ClimateEntity,
+    ClimateEntityFeature,
+)
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
@@ -22,10 +26,6 @@ from homeassistant.components.climate.const import (
     PRESET_AWAY,
     PRESET_ECO,
     PRESET_NONE,
-    SUPPORT_FAN_MODE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
@@ -102,14 +102,16 @@ class NestThermostat(ClimateEntity):
         self._fan_modes = [FAN_ON, FAN_AUTO]
 
         # Set the default supported features
-        self._support_flags = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
+        self._support_flags = (
+            ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+        )
 
         # Not all nest devices support cooling and heating remove unused
         self._operation_list = []
 
         if self.device.can_heat and self.device.can_cool:
             self._operation_list.append(HVAC_MODE_AUTO)
-            self._support_flags |= SUPPORT_TARGET_TEMPERATURE_RANGE
+            self._support_flags |= ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
 
         # Add supported nest thermostat features
         if self.device.can_heat:
@@ -123,7 +125,7 @@ class NestThermostat(ClimateEntity):
         # feature of device
         self._has_fan = self.device.has_fan
         if self._has_fan:
-            self._support_flags |= SUPPORT_FAN_MODE
+            self._support_flags |= ClimateEntityFeature.FAN_MODE
 
         # data attributes
         self._away = None

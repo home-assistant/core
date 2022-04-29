@@ -8,7 +8,11 @@ import logging
 from pytfiac import Tfiac
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
+from homeassistant.components.climate import (
+    PLATFORM_SCHEMA,
+    ClimateEntity,
+    ClimateEntityFeature,
+)
 from homeassistant.components.climate.const import (
     FAN_AUTO,
     FAN_HIGH,
@@ -20,9 +24,6 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_FAN_ONLY,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
-    SUPPORT_FAN_MODE,
-    SUPPORT_SWING_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
     SWING_BOTH,
     SWING_HORIZONTAL,
     SWING_OFF,
@@ -57,8 +58,6 @@ HVAC_MAP_REV = {v: k for k, v in HVAC_MAP.items()}
 SUPPORT_FAN = [FAN_AUTO, FAN_HIGH, FAN_MEDIUM, FAN_LOW]
 SUPPORT_SWING = [SWING_OFF, SWING_HORIZONTAL, SWING_VERTICAL, SWING_BOTH]
 
-SUPPORT_FLAGS = SUPPORT_FAN_MODE | SUPPORT_SWING_MODE | SUPPORT_TARGET_TEMPERATURE
-
 CURR_TEMP = "current_temp"
 TARGET_TEMP = "target_temp"
 OPERATION_MODE = "operation"
@@ -86,6 +85,12 @@ async def async_setup_platform(
 class TfiacClimate(ClimateEntity):
     """TFIAC class."""
 
+    _attr_supported_features = (
+        ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.SWING_MODE
+        | ClimateEntityFeature.TARGET_TEMPERATURE
+    )
+
     def __init__(self, hass, client):
         """Init class."""
         self._client = client
@@ -103,11 +108,6 @@ class TfiacClimate(ClimateEntity):
             self._available = True
         except futures.TimeoutError:
             self._available = False
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_FLAGS
 
     @property
     def min_temp(self):

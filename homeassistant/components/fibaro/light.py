@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from contextlib import suppress
 from functools import partial
 
 from homeassistant.components.light import (
@@ -198,16 +199,21 @@ class FibaroLight(FibaroDevice, LightEntity):
 
         Dimmable and RGB lights can be on based on different
         properties, so we need to check here several values.
+
+        JSON for HC2 uses always string, HC3 uses int for integers.
         """
         props = self.fibaro_device.properties
         if self.current_binary_state:
             return True
-        if "brightness" in props and props.brightness != "0":
-            return True
-        if "currentProgram" in props and props.currentProgram != "0":
-            return True
-        if "currentProgramID" in props and props.currentProgramID != "0":
-            return True
+        with suppress(ValueError, TypeError):
+            if "brightness" in props and int(props.brightness) != 0:
+                return True
+        with suppress(ValueError, TypeError):
+            if "currentProgram" in props and int(props.currentProgram) != 0:
+                return True
+        with suppress(ValueError, TypeError):
+            if "currentProgramID" in props and int(props.currentProgramID) != 0:
+                return True
 
         return False
 

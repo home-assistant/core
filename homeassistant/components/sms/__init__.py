@@ -16,8 +16,17 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.SENSOR]
 
+SMS_CONFIG_SCHEMA = {vol.Required(CONF_DEVICE): cv.isdevice}
+
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema({vol.Required(CONF_DEVICE): cv.isdevice})},
+    {
+        DOMAIN: vol.Schema(
+            vol.All(
+                cv.deprecated(CONF_DEVICE),
+                SMS_CONFIG_SCHEMA,
+            ),
+        )
+    },
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -43,10 +52,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Configure Gammu state machine."""
 
     device = entry.data[CONF_DEVICE]
-    baud_speed = entry.data[CONF_BAUD_SPEED]
     connection_mode = "at"
-    if baud_speed is not DEFAULT_BAUD_SPEED:
-        connection_mode += str(baud_speed)
+    baud_speed = entry.data.get(CONF_BAUD_SPEED, DEFAULT_BAUD_SPEED)
+    if baud_speed != DEFAULT_BAUD_SPEED:
+        connection_mode += baud_speed
     config = {"Device": device, "Connection": connection_mode}
     _LOGGER.debug("Connecting mode:%s", connection_mode)
     gateway = await create_sms_gateway(config, hass)

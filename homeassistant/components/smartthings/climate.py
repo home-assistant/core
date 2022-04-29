@@ -7,7 +7,11 @@ import logging
 
 from pysmartthings import Attribute, Capability
 
-from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN, ClimateEntity
+from homeassistant.components.climate import (
+    DOMAIN as CLIMATE_DOMAIN,
+    ClimateEntity,
+    ClimateEntityFeature,
+)
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
@@ -23,9 +27,6 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
-    SUPPORT_FAN_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
@@ -159,16 +160,19 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
     def __init__(self, device):
         """Init the class."""
         super().__init__(device)
-        self._supported_features = self._determine_features()
+        self._attr_supported_features = self._determine_features()
         self._hvac_mode = None
         self._hvac_modes = None
 
     def _determine_features(self):
-        flags = SUPPORT_TARGET_TEMPERATURE | SUPPORT_TARGET_TEMPERATURE_RANGE
+        flags = (
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+        )
         if self._device.get_capability(
             Capability.thermostat_fan_mode, Capability.thermostat
         ):
-            flags |= SUPPORT_FAN_MODE
+            flags |= ClimateEntityFeature.FAN_MODE
         return flags
 
     async def async_set_fan_mode(self, fan_mode):
@@ -297,11 +301,6 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
         return self._hvac_modes
 
     @property
-    def supported_features(self):
-        """Return the supported features."""
-        return self._supported_features
-
-    @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
         if self.hvac_mode == HVAC_MODE_COOL:
@@ -332,6 +331,10 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
 
 class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
     """Define a SmartThings Air Conditioner."""
+
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
+    )
 
     def __init__(self, device):
         """Init the class."""
@@ -464,11 +467,6 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
     def hvac_modes(self):
         """Return the list of available operation modes."""
         return self._hvac_modes
-
-    @property
-    def supported_features(self):
-        """Return the supported features."""
-        return SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
 
     @property
     def target_temperature(self):

@@ -1,4 +1,6 @@
 """Constants for the KNX integration."""
+from __future__ import annotations
+
 from enum import Enum
 from typing import Final, TypedDict
 
@@ -68,7 +70,6 @@ CONF_RESET_AFTER: Final = "reset_after"
 CONF_RESPOND_TO_READ: Final = "respond_to_read"
 CONF_STATE_ADDRESS: Final = "state_address"
 CONF_SYNC_STATE: Final = "sync_state"
-CONF_KNX_INITIAL_CONNECTION_TYPES: Final = [CONF_KNX_TUNNELING, CONF_KNX_ROUTING]
 
 # yaml config merged with config entry data
 DATA_KNX_CONFIG: Final = "knx_config"
@@ -84,7 +85,7 @@ class KNXConfigEntryData(TypedDict, total=False):
 
     connection_type: str
     individual_address: str
-    local_ip: str
+    local_ip: str | None
     multicast_group: str
     multicast_port: int
     route_back: bool

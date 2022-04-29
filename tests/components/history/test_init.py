@@ -17,7 +17,7 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
 
-from tests.common import async_init_recorder_component, init_recorder_component
+from tests.common import init_recorder_component
 from tests.components.recorder.common import (
     async_wait_recording_done_without_instance,
     trigger_db_commit,
@@ -606,9 +606,8 @@ async def test_fetch_period_api_with_use_include_order(hass, hass_client):
     assert response.status == HTTPStatus.OK
 
 
-async def test_fetch_period_api_with_minimal_response(hass, hass_client):
+async def test_fetch_period_api_with_minimal_response(hass, recorder_mock, hass_client):
     """Test the fetch period view for history with minimal_response."""
-    await async_init_recorder_component(hass)
     now = dt_util.utcnow()
     await async_setup_component(hass, "history", {})
 

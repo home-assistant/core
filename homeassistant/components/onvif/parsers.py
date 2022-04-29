@@ -1,13 +1,27 @@
 """ONVIF event parsers."""
 from collections.abc import Callable, Coroutine
+import datetime
 from typing import Any
 
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.util import dt as dt_util
 from homeassistant.util.decorator import Registry
 
 from .models import Event
 
 PARSERS: Registry[str, Callable[[str, Any], Coroutine[Any, Any, Event]]] = Registry()
+
+
+def datetime_or_zero(value: str) -> datetime:
+    """Convert strings to datetimes, if invalid, return datetime.min."""
+    # To handle cameras that return times like '0000-00-00T00:00:00Z' (e.g. hikvision)
+    try:
+        ret = dt_util.parse_datetime(value)
+    except ValueError:
+        return datetime.datetime.min
+    if ret is None:
+        return datetime.datetime.min
+    return ret
 
 
 @PARSERS.register("tns1:VideoSource/MotionAlarm")
@@ -49,6 +63,7 @@ async def async_parse_image_too_blurry(uid: str, msg) -> Event:
             "problem",
             None,
             msg.Message._value_1.Data.SimpleItem[0].Value == "true",
+            EntityCategory.DIAGNOSTIC,
         )
     except (AttributeError, KeyError):
         return None
@@ -72,6 +87,7 @@ async def async_parse_image_too_dark(uid: str, msg) -> Event:
             "problem",
             None,
             msg.Message._value_1.Data.SimpleItem[0].Value == "true",
+            EntityCategory.DIAGNOSTIC,
         )
     except (AttributeError, KeyError):
         return None
@@ -95,6 +111,7 @@ async def async_parse_image_too_bright(uid: str, msg) -> Event:
             "problem",
             None,
             msg.Message._value_1.Data.SimpleItem[0].Value == "true",
+            EntityCategory.DIAGNOSTIC,
         )
     except (AttributeError, KeyError):
         return None
@@ -242,7 +259,7 @@ async def async_parse_motion_region_detector(uid: str, msg) -> Event:
             "binary_sensor",
             "motion",
             None,
-            msg.Message._value_1.Data.SimpleItem[0].Value == "true",
+            msg.Message._value_1.Data.SimpleItem[0].Value in ["1", "true"],
         )
     except (AttributeError, KeyError):
         return None
@@ -274,6 +291,7 @@ async def async_parse_tamper_detector(uid: str, msg) -> Event:
             "problem",
             None,
             msg.Message._value_1.Data.SimpleItem[0].Value == "true",
+            EntityCategory.DIAGNOSTIC,
         )
     except (AttributeError, KeyError):
         return None
@@ -295,6 +313,7 @@ async def async_parse_storage_failure(uid: str, msg) -> Event:
             "problem",
             None,
             msg.Message._value_1.Data.SimpleItem[0].Value == "true",
+            EntityCategory.DIAGNOSTIC,
         )
     except (AttributeError, KeyError):
         return None
@@ -319,6 +338,7 @@ async def async_parse_processor_usage(uid: str, msg) -> Event:
             None,
             "percent",
             int(usage),
+            EntityCategory.DIAGNOSTIC,
         )
     except (AttributeError, KeyError):
         return None
@@ -332,17 +352,17 @@ async def async_parse_last_reboot(uid: str, msg) -> Event:
     Topic: tns1:Monitoring/OperatingTime/LastReboot
     """
     try:
+        date_time = datetime_or_zero(msg.Message._value_1.Data.SimpleItem[0].Value)
         return Event(
             f"{uid}_{msg.Topic._value_1}",
             "Last Reboot",
             "sensor",
             "timestamp",
             None,
-            dt_util.as_local(
-                dt_util.parse_datetime(msg.Message._value_1.Data.SimpleItem[0].Value)
-            ),
+            dt_util.as_local(date_time),
+            EntityCategory.DIAGNOSTIC,
         )
-    except (AttributeError, KeyError, ValueError):
+    except (AttributeError, KeyError):
         return None
 
 
@@ -354,18 +374,42 @@ async def async_parse_last_reset(uid: str, msg) -> Event:
     Topic: tns1:Monitoring/OperatingTime/LastReset
     """
     try:
+        date_time = datetime_or_zero(msg.Message._value_1.Data.SimpleItem[0].Value)
         return Event(
             f"{uid}_{msg.Topic._value_1}",
             "Last Reset",
             "sensor",
             "timestamp",
             None,
-            dt_util.as_local(
-                dt_util.parse_datetime(msg.Message._value_1.Data.SimpleItem[0].Value)
-            ),
+            dt_util.as_local(date_time),
+            EntityCategory.DIAGNOSTIC,
             entity_enabled=False,
         )
-    except (AttributeError, KeyError, ValueError):
+    except (AttributeError, KeyError):
+        return None
+
+
+@PARSERS.register("tns1:Monitoring/Backup/Last")
+# pylint: disable=protected-access
+async def async_parse_backup_last(uid: str, msg) -> Event:
+    """Handle parsing event message.
+
+    Topic: tns1:Monitoring/Backup/Last
+    """
+
+    try:
+        date_time = datetime_or_zero(msg.Message._value_1.Data.SimpleItem[0].Value)
+        return Event(
+            f"{uid}_{msg.Topic._value_1}",
+            "Last Backup",
+            "sensor",
+            "timestamp",
+            None,
+            dt_util.as_local(date_time),
+            EntityCategory.DIAGNOSTIC,
+            entity_enabled=False,
+        )
+    except (AttributeError, KeyError):
         return None
 
 
@@ -377,18 +421,18 @@ async def async_parse_last_clock_sync(uid: str, msg) -> Event:
     Topic: tns1:Monitoring/OperatingTime/LastClockSynchronization
     """
     try:
+        date_time = datetime_or_zero(msg.Message._value_1.Data.SimpleItem[0].Value)
         return Event(
             f"{uid}_{msg.Topic._value_1}",
             "Last Clock Synchronization",
             "sensor",
             "timestamp",
             None,
-            dt_util.as_local(
-                dt_util.parse_datetime(msg.Message._value_1.Data.SimpleItem[0].Value)
-            ),
+            dt_util.as_local(date_time),
+            EntityCategory.DIAGNOSTIC,
             entity_enabled=False,
         )
-    except (AttributeError, KeyError, ValueError):
+    except (AttributeError, KeyError):
         return None
 
 
@@ -409,6 +453,7 @@ async def async_parse_jobstate(uid: str, msg) -> Event:
             None,
             None,
             msg.Message._value_1.Data.SimpleItem[0].Value == "Active",
+            EntityCategory.DIAGNOSTIC,
         )
     except (AttributeError, KeyError):
         return None

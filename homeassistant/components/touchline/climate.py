@@ -6,12 +6,12 @@ from typing import NamedTuple
 from pytouchline import PyTouchline
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
-from homeassistant.components.climate.const import (
-    HVAC_MODE_HEAT,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
+from homeassistant.components.climate import (
+    PLATFORM_SCHEMA,
+    ClimateEntity,
+    ClimateEntityFeature,
 )
+from homeassistant.components.climate.const import HVAC_MODE_HEAT
 from homeassistant.const import ATTR_TEMPERATURE, CONF_HOST, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -40,8 +40,6 @@ TOUCHLINE_HA_PRESETS = {
     for preset, settings in PRESET_MODES.items()
 }
 
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_HOST): cv.string})
 
 
@@ -65,6 +63,10 @@ def setup_platform(
 class Touchline(ClimateEntity):
     """Representation of a Touchline device."""
 
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+    )
+
     def __init__(self, touchline_thermostat):
         """Initialize the Touchline device."""
         self.unit = touchline_thermostat
@@ -73,11 +75,6 @@ class Touchline(ClimateEntity):
         self._target_temperature = None
         self._current_operation_mode = None
         self._preset_mode = None
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_FLAGS
 
     def update(self):
         """Update thermostat attributes."""

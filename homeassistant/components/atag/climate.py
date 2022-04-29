@@ -51,7 +51,7 @@ class AtagThermostat(AtagEntity, ClimateEntity):
         self._attr_temperature_unit = coordinator.data.climate.temp_unit
 
     @property
-    def hvac_mode(self) -> str | None:  # type: ignore[override]
+    def hvac_mode(self) -> str | None:
         """Return hvac operation ie. heat, cool mode."""
         if self.coordinator.data.climate.hvac_mode in HVAC_MODES:
             return self.coordinator.data.climate.hvac_mode

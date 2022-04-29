@@ -173,7 +173,9 @@ def process_plex_payload(
     media = plex_server.lookup_media(content_type, **search_query)
 
     if supports_playqueues and (isinstance(media, list) or shuffle):
-        playqueue = plex_server.create_playqueue(media, shuffle=shuffle)
+        playqueue = plex_server.create_playqueue(
+            media, includeRelated=0, shuffle=shuffle
+        )
         return PlexMediaSearchResult(playqueue, content)
 
     return PlexMediaSearchResult(media, content)
