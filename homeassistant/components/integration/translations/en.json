@@ -29,6 +29,12 @@
                 "data_description": {
                     "round": "Controls the number of decimal digits in the output."
                 }
+            },
+            "options": {
+                "data": {
+                    "round": "Precision"
+                },
+                "description": "Precision controls the number of decimal digits in the output."
             }
         }
     },

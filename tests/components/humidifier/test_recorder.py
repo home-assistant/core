@@ -17,7 +17,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed
-from tests.components.recorder.common import async_wait_recording_done_without_instance
+from tests.components.recorder.common import async_wait_recording_done
 
 
 async def test_exclude_attributes(hass, recorder_mock):
@@ -28,7 +28,7 @@ async def test_exclude_attributes(hass, recorder_mock):
     await hass.async_block_till_done()
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
     await hass.async_block_till_done()
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
 
     def _fetch_states() -> list[State]:
         with session_scope(hass=hass) as session:

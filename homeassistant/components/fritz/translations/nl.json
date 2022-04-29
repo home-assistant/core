@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "Apparaat is al geconfigureerd",
             "already_in_progress": "De configuratiestroom is al aan de gang",
+            "ignore_ip6_link_local": "Lokaal IPv6-linkadres wordt niet ondersteund.",
             "reauth_successful": "Herauthenticatie was succesvol"
         },
         "error": {

@@ -35,7 +35,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import setup_component
 import homeassistant.util.dt as dt_util
 
-from .common import async_wait_recording_done_without_instance
+from .common import async_wait_recording_done
 
 from tests.common import get_test_home_assistant, mock_registry
 from tests.components.recorder.common import wait_recording_done
@@ -389,7 +389,7 @@ async def test_external_statistics(hass, hass_ws_client, recorder_mock, caplog):
     async_add_external_statistics(
         hass, external_metadata, (external_statistics1, external_statistics2)
     )
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
     stats = statistics_during_period(hass, zero, period="hour")
     assert stats == {
         "test:total_energy_import": [
@@ -467,7 +467,7 @@ async def test_external_statistics(hass, hass_ws_client, recorder_mock, caplog):
         "sum": 6,
     }
     async_add_external_statistics(hass, external_metadata, (external_statistics,))
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
     stats = statistics_during_period(hass, zero, period="hour")
     assert stats == {
         "test:total_energy_import": [
@@ -507,7 +507,7 @@ async def test_external_statistics(hass, hass_ws_client, recorder_mock, caplog):
         "sum": 5,
     }
     async_add_external_statistics(hass, external_metadata, (external_statistics,))
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
     stats = statistics_during_period(hass, zero, period="hour")
     assert stats == {
         "test:total_energy_import": [
@@ -548,7 +548,7 @@ async def test_external_statistics(hass, hass_ws_client, recorder_mock, caplog):
     response = await client.receive_json()
     assert response["success"]
 
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
     stats = statistics_during_period(hass, zero, period="hour")
     assert stats == {
         "test:total_energy_import": [

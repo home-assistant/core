@@ -18,7 +18,7 @@ from homeassistant.core import State
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_service
-from tests.components.recorder.common import async_wait_recording_done_without_instance
+from tests.components.recorder.common import async_wait_recording_done
 
 
 @pytest.fixture
@@ -44,7 +44,7 @@ async def test_exclude_attributes(hass, recorder_mock, calls):
     await hass.async_block_till_done()
     assert len(calls) == 1
     assert ["hello.world"] == calls[0].data.get(ATTR_ENTITY_ID)
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
 
     def _fetch_states() -> list[State]:
         with session_scope(hass=hass) as session:

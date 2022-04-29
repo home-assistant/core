@@ -10,10 +10,10 @@
         "step": {
             "user": {
                 "data": {
-                    "token": "Token",
+                    "token": "Token da API",
                     "url": "URL"
                 },
-                "description": "Insira o endere\u00e7o IP do servidor Z-Way e o token de acesso Z-Way. O endere\u00e7o IP pode ser prefixado com wss:// e o HTTPS deve ser usado em vez de HTTP. Para obter o token, v\u00e1 para a interface do usu\u00e1rio Z-Way > Menu > Configura\u00e7\u00f5es > Usu\u00e1rio > Token de API. Sugere-se criar um novo usu\u00e1rio para o Home Assistant e conceder acesso aos dispositivos que voc\u00ea quer controlar no Home Assistant. Tamb\u00e9m \u00e9 poss\u00edvel usar o acesso remoto via find.z-wave.me para conectar um Z-Way remoto. Insira wss://find.z-wave.me no campo IP e copie o token com escopo Global (fa\u00e7a login no Z-Way via find.z-wave.me para isso)."
+                "description": "Insira o endere\u00e7o IP com porta e token de acesso do servidor Z-Way. Para obter o token, v\u00e1 para a interface de usu\u00e1rio Z-Way Smart Home UI > Menu > Settings > Users > Administrator > API token. \n\n Exemplo de conex\u00e3o ao Z-Way na rede local:\n URL: {local_url}\n Token: {local_token} \n\n Exemplo de conex\u00e3o ao Z-Way via acesso remoto find.z-wave.me:\n URL: {find_url}\n Token: {find_token} \n\n Exemplo de conex\u00e3o ao Z-Way com um endere\u00e7o IP p\u00fablico est\u00e1tico:\n URL: {remote_url}\n Token: {local_token} \n\n Ao conectar via find.z-wave.me, voc\u00ea precisa usar um token com escopo global (fa\u00e7a login no Z-Way via find.z-wave.me para isso)."
             }
         }
     }

@@ -27,6 +27,9 @@
                 "data": {
                     "host": "IP aadress"
                 },
+                "data_description": {
+                    "host": "Automaatse avastamise kasutamiseks j\u00e4ta v\u00e4li t\u00fchjaks."
+                },
                 "description": "Kui IP-aadressi pole m\u00e4\u00e4ratud, kasutatakse automaatset avastamist",
                 "title": ""
             }

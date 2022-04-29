@@ -22,10 +22,9 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
     ATTR_WHITE,
-    SUPPORT_EFFECT,
-    SUPPORT_TRANSITION,
     ColorMode,
     LightEntity,
+    LightEntityFeature,
     brightness_supported,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -95,7 +94,6 @@ class TasmotaLight(
     def __init__(self, **kwds: Any) -> None:
         """Initialize Tasmota light."""
         self._supported_color_modes: set[str] | None = None
-        self._supported_features = 0
 
         self._brightness: int | None = None
         self._color_mode: str | None = None
@@ -147,12 +145,12 @@ class TasmotaLight(
             self._color_mode = ColorMode.ONOFF
 
         if light_type in [LIGHT_TYPE_RGB, LIGHT_TYPE_RGBW, LIGHT_TYPE_RGBCW]:
-            supported_features |= SUPPORT_EFFECT
+            supported_features |= LightEntityFeature.EFFECT
 
         if self._tasmota_entity.supports_transition:
-            supported_features |= SUPPORT_TRANSITION
+            supported_features |= LightEntityFeature.TRANSITION
 
-        self._supported_features = supported_features
+        self._attr_supported_features = supported_features
 
     @callback
     def state_updated(self, state: bool, **kwargs: Any) -> None:
@@ -240,11 +238,6 @@ class TasmotaLight(
     def supported_color_modes(self) -> set[str] | None:
         """Flag supported color modes."""
         return self._supported_color_modes
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return self._supported_features
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""

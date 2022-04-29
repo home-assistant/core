@@ -18,8 +18,12 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 async def test_coordinator_client_connector_error(hass: HomeAssistant) -> None:
     """Test ClientConnectorError on coordinator update."""
 
-    entry = MockConfigEntry(domain=DOMAIN, data=CONFIG)
-    entry.add_to_hass(hass)
+    config_entry = MockConfigEntry(
+        data=CONFIG,
+        domain=DOMAIN,
+        unique_id="airzone_unique_id",
+    )
+    config_entry.add_to_hass(hass)
 
     with patch(
         "homeassistant.components.airzone.AirzoneLocalApi.get_hvac",
@@ -31,7 +35,7 @@ async def test_coordinator_client_connector_error(hass: HomeAssistant) -> None:
         "homeassistant.components.airzone.AirzoneLocalApi.get_webserver",
         side_effect=InvalidMethod,
     ):
-        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         mock_hvac.assert_called_once()
         mock_hvac.reset_mock()

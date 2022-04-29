@@ -12,10 +12,9 @@ from homeassistant.components.light import (
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
     ATTR_TRANSITION,
-    SUPPORT_EFFECT,
-    SUPPORT_TRANSITION,
     ColorMode,
     LightEntity,
+    LightEntityFeature,
     brightness_supported,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -158,7 +157,7 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
                 self._attr_supported_color_modes.add(ColorMode.ONOFF)
 
         if hasattr(block, "effect"):
-            self._attr_supported_features |= SUPPORT_EFFECT
+            self._attr_supported_features |= LightEntityFeature.EFFECT
 
         if wrapper.model in MODELS_SUPPORTING_LIGHT_TRANSITION:
             match = FIRMWARE_PATTERN.search(wrapper.device.settings.get("fw", ""))
@@ -166,7 +165,7 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
                 match is not None
                 and int(match[0]) >= LIGHT_TRANSITION_MIN_FIRMWARE_DATE
             ):
-                self._attr_supported_features |= SUPPORT_TRANSITION
+                self._attr_supported_features |= LightEntityFeature.TRANSITION
 
     @property
     def is_on(self) -> bool:
@@ -264,7 +263,7 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
     @property
     def effect_list(self) -> list[str] | None:
         """Return the list of supported effects."""
-        if not self.supported_features & SUPPORT_EFFECT:
+        if not self.supported_features & LightEntityFeature.EFFECT:
             return None
 
         if self.wrapper.model == "SHBLB-1":
@@ -275,7 +274,7 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
     @property
     def effect(self) -> str | None:
         """Return the current effect."""
-        if not self.supported_features & SUPPORT_EFFECT:
+        if not self.supported_features & LightEntityFeature.EFFECT:
             return None
 
         if self.control_result:
@@ -380,6 +379,9 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
 
 class RpcShellyLight(ShellyRpcEntity, LightEntity):
     """Entity that controls a light on RPC based Shelly devices."""
+
+    _attr_color_mode = ColorMode.ONOFF
+    _attr_supported_color_modes = {ColorMode.ONOFF}
 
     def __init__(self, wrapper: RpcDeviceWrapper, id_: int) -> None:
         """Initialize light."""

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from pydeconz.light import Lock
+from pydeconz.models.light.lock import Lock
 from pydeconz.models.sensor.door_lock import DoorLock
 
 from homeassistant.components.lock import DOMAIN, LockEntity
