@@ -404,4 +404,4 @@ def _create_state_changed_event_from_old_new(
     # pylint: disable=import-outside-toplevel
     from homeassistant.components import logbook
 
-    return logbook.LazyEventPartialState(row)
+    return logbook.LazyEventPartialState(row, {})
