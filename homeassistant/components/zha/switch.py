@@ -112,9 +112,7 @@ class SwitchGroup(ZhaGroupEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return if the switch is on based on the statemachine."""
-        if self._state is None:
-            return False
-        return self._state
+        return bool(self._state)
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn the entity on."""
