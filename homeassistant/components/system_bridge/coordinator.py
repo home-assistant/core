@@ -39,6 +39,7 @@ MODULES = [
     "battery",
     "cpu",
     "disk",
+    "display",
     "gpu",
     "memory",
     "system",
@@ -85,6 +86,9 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[dict]):
         elif message[EVENT_TYPE] == TYPE_ERROR:
             if message[EVENT_SUBTYPE] == SUBTYPE_BAD_API_KEY:
                 self.logger.error(message[EVENT_MESSAGE])
+                if self.unsub:
+                    self.unsub()
+                    self.unsub = None
                 raise ConfigEntryAuthFailed(message[EVENT_MESSAGE])
             self.logger.warning(
                 "Error message from %s: %s", self.title, message[EVENT_DATA]
