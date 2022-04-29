@@ -16,10 +16,9 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
-    SUPPORT_EFFECT,
-    SUPPORT_TRANSITION,
     SUPPORT_WHITE_VALUE,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.const import (
     CONF_ENTITY_ID,
@@ -249,9 +248,9 @@ class LightTemplate(TemplateEntity, LightEntity):
         if self._white_value_script is not None:
             supported_features |= SUPPORT_WHITE_VALUE
         if self._effect_script is not None:
-            supported_features |= SUPPORT_EFFECT
+            supported_features |= LightEntityFeature.EFFECT
         if self._supports_transition is True:
-            supported_features |= SUPPORT_TRANSITION
+            supported_features |= LightEntityFeature.TRANSITION
         return supported_features
 
     @property
