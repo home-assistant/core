@@ -24,13 +24,11 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
-    SUPPORT_EFFECT,
-    SUPPORT_FLASH,
-    SUPPORT_TRANSITION,
     SUPPORT_WHITE_VALUE,
     VALID_COLOR_MODES,
     ColorMode,
     LightEntity,
+    LightEntityFeature,
     legacy_supported_features,
     valid_supported_color_modes,
 )
@@ -215,8 +213,10 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             for key in (CONF_FLASH_TIME_SHORT, CONF_FLASH_TIME_LONG)
         }
 
-        self._supported_features = SUPPORT_TRANSITION | SUPPORT_FLASH
-        self._supported_features |= config[CONF_EFFECT] and SUPPORT_EFFECT
+        self._supported_features = (
+            LightEntityFeature.TRANSITION | LightEntityFeature.FLASH
+        )
+        self._supported_features |= config[CONF_EFFECT] and LightEntityFeature.EFFECT
         if not self._config[CONF_COLOR_MODE]:
             self._supported_features |= config[CONF_BRIGHTNESS] and SUPPORT_BRIGHTNESS
             self._supported_features |= config[CONF_COLOR_TEMP] and SUPPORT_COLOR_TEMP
@@ -355,7 +355,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                 except ValueError:
                     _LOGGER.warning("Invalid color temp value received")
 
-            if self._supported_features and SUPPORT_EFFECT:
+            if self._supported_features and LightEntityFeature.EFFECT:
                 with suppress(KeyError):
                     self._effect = values["effect"]
 
