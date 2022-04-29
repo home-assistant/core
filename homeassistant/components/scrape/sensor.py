@@ -4,9 +4,8 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, FeatureNotFound
 import httpx
-import lxml  # noqa: F401 # pylint: disable=unused-import
 import voluptuous as vol
 
 from homeassistant.components.rest.data import RestData
@@ -155,7 +154,10 @@ class ScrapeSensor(SensorEntity):
 
     def _extract_value(self) -> Any:
         """Parse the html extraction in the executor."""
-        raw_data = BeautifulSoup(self.rest.data, "lxml")
+        try:
+            raw_data = BeautifulSoup(self.rest.data, "lxml")
+        except FeatureNotFound:
+            raw_data = BeautifulSoup(self.rest.data, "lxml")
         _LOGGER.debug(raw_data)
 
         try:
