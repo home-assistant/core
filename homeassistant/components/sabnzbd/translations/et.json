@@ -1,0 +1,18 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_api_key": "Kehtetu API v\u00f5ti"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API v\u00f5ti",
+                    "name": "Nimi",
+                    "path": "Rada",
+                    "url": "URL"
+                }
+            }
+        }
+    }
+}

@@ -31,7 +31,7 @@ from .const import DATA_AVAILABLE, DATA_VLC, DEFAULT_NAME, DOMAIN, LOGGER
 
 MAX_VOLUME = 500
 
-_T = TypeVar("_T", bound="VlcDevice")
+_VlcDeviceT = TypeVar("_VlcDeviceT", bound="VlcDevice")
 _P = ParamSpec("_P")
 
 
@@ -48,12 +48,12 @@ async def async_setup_entry(
 
 
 def catch_vlc_errors(
-    func: Callable[Concatenate[_T, _P], Awaitable[None]]
-) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, None]]:
+    func: Callable[Concatenate[_VlcDeviceT, _P], Awaitable[None]]
+) -> Callable[Concatenate[_VlcDeviceT, _P], Coroutine[Any, Any, None]]:
     """Catch VLC errors."""
 
     @wraps(func)
-    async def wrapper(self: _T, *args: _P.args, **kwargs: _P.kwargs) -> None:
+    async def wrapper(self: _VlcDeviceT, *args: _P.args, **kwargs: _P.kwargs) -> None:
         """Catch VLC errors and modify availability."""
         try:
             await func(self, *args, **kwargs)

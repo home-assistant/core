@@ -25,6 +25,9 @@
                     "name": "Naam",
                     "region": "Regio"
                 },
+                "data_description": {
+                    "code": "Navigeer naar 'Instellingen' op je PlayStation 4-systeem. Navigeer vervolgens naar 'Instellingen mobiele app-verbinding' en selecteer 'Apparaat toevoegen' om de pin te krijgen."
+                },
                 "description": "Voer je PlayStation 4-informatie in. Voor PIN-code navigeer je naar 'Instellingen' op je PlayStation 4-console. Ga vervolgens naar 'Verbindingsinstellingen mobiele app' en selecteer 'Apparaat toevoegen'. Voer de PIN-code in die wordt weergegeven. Raadpleeg de [documentatie](https://www.home-assistant.io/components/ps4/) voor meer informatie.",
                 "title": "PlayStation 4"
             },
@@ -32,6 +35,9 @@
                 "data": {
                     "ip_address": "IP-adres (leeg laten indien Auto Discovery wordt gebruikt).",
                     "mode": "Configuratiemodus"
+                },
+                "data_description": {
+                    "ip_address": "Leeg laten indien u auto-discovery selecteert."
                 },
                 "description": "Selecteer modus voor configuratie. Het veld IP-adres kan leeg worden gelaten als Auto Discovery wordt geselecteerd, omdat apparaten dan automatisch worden ontdekt.",
                 "title": "PlayStation 4"
