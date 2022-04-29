@@ -295,7 +295,7 @@ def create_state_changed_event_from_old_new(
     row.context_parent_id = None
     row.old_state_id = old_state and 1
     row.state_id = new_state and 1
-    return logbook.LazyEventPartialState(row, {}, {})
+    return logbook.LazyEventPartialState(row, {})
 
 
 async def test_logbook_view(hass, hass_client, recorder_mock):
@@ -305,6 +305,26 @@ async def test_logbook_view(hass, hass_client, recorder_mock):
     client = await hass_client()
     response = await client.get(f"/api/logbook/{dt_util.utcnow().isoformat()}")
     assert response.status == HTTPStatus.OK
+
+
+async def test_logbook_view_invalid_start_date_time(hass, hass_client, recorder_mock):
+    """Test the logbook view with an invalid date time."""
+    await async_setup_component(hass, "logbook", {})
+    await async_recorder_block_till_done(hass)
+    client = await hass_client()
+    response = await client.get("/api/logbook/INVALID")
+    assert response.status == HTTPStatus.BAD_REQUEST
+
+
+async def test_logbook_view_invalid_end_date_time(hass, hass_client, recorder_mock):
+    """Test the logbook view."""
+    await async_setup_component(hass, "logbook", {})
+    await async_recorder_block_till_done(hass)
+    client = await hass_client()
+    response = await client.get(
+        f"/api/logbook/{dt_util.utcnow().isoformat()}?end_time=INVALID"
+    )
+    assert response.status == HTTPStatus.BAD_REQUEST
 
 
 async def test_logbook_view_period_entity(hass, hass_client, recorder_mock, set_utc):

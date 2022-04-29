@@ -814,7 +814,6 @@ class LazyEventPartialState:
         self._row = row
         self._event_data: dict[str, Any] | None = None
         self._time_fired_isoformat: dt | None = None
-        self._attributes: dict[str, Any] | None = None
         self._domain: str | None = None
         self.event_type: str = self._row.event_type
         self.entity_id: str | None = self._row.entity_id
@@ -836,8 +835,6 @@ class LazyEventPartialState:
     @property
     def attributes_icon(self) -> str | None:
         """Extract the icon from the decoded attributes or json."""
-        if self._attributes:
-            return self._attributes.get(ATTR_ICON)
         result = ICON_JSON_EXTRACT.search(
             self._row.shared_attrs or self._row.attributes or ""
         )
@@ -855,8 +852,6 @@ class LazyEventPartialState:
     @property
     def attributes_friendly_name(self) -> str | None:
         """Extract the friendly name from the decoded attributes or json."""
-        if self._attributes:
-            return self._attributes.get(ATTR_FRIENDLY_NAME)
         result = FRIENDLY_NAME_JSON_EXTRACT.search(
             self._row.shared_attrs or self._row.attributes or ""
         )
