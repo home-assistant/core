@@ -663,6 +663,9 @@ lru-dict==1.1.7
 # homeassistant.components.luftdaten
 luftdaten==0.7.2
 
+# homeassistant.components.scrape
+lxml==4.8.0
+
 # homeassistant.components.nmap_tracker
 mac-vendor-lookup==0.1.11
 
