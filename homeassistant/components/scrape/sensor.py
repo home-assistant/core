@@ -6,6 +6,7 @@ from typing import Any
 
 from bs4 import BeautifulSoup
 import httpx
+import lxml  # noqa: F401 # pylint: disable=unused-import
 import voluptuous as vol
 
 from homeassistant.components.rest.data import RestData
