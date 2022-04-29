@@ -23,6 +23,9 @@ _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
     {
+        vol.Required(CONF_NAME, default="Select SQL Query"): selector.TextSelector(
+            selector.TextSelectorConfig()
+        ),
         vol.Optional(CONF_DB_URL): selector.TextSelector(selector.TextSelectorConfig()),
         vol.Required(CONF_COLUMN_NAME): selector.TextSelector(
             selector.TextSelectorConfig()
@@ -109,8 +112,7 @@ class SQLConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             column = user_input[CONF_COLUMN_NAME]
             uom = user_input.get(CONF_UNIT_OF_MEASUREMENT)
             value_template = user_input.get(CONF_VALUE_TEMPLATE)
-
-            name = f"Select {column} SQL query"
+            name = user_input[CONF_NAME]
 
             try:
                 validate_sql_select(query)
