@@ -293,7 +293,7 @@ async def async_setup_entry(
                     native_unit_of_measurement=FREQUENCY_MEGAHERTZ,
                     icon="mdi:speedometer",
                     value=lambda data, k=gpu["key"]: round(
-                        data["gpu"][f"{k}_core_clock"], 2
+                        data["gpu"][f"{k}_core_clock"]
                     ),
                 ),
                 entry.data[CONF_PORT],
@@ -308,7 +308,7 @@ async def async_setup_entry(
                     native_unit_of_measurement=FREQUENCY_MEGAHERTZ,
                     icon="mdi:speedometer",
                     value=lambda data, k=gpu["key"]: round(
-                        data["gpu"][f"{k}_memory_clock"], 2
+                        data["gpu"][f"{k}_memory_clock"]
                     ),
                 ),
                 entry.data[CONF_PORT],
