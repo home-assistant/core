@@ -2,7 +2,7 @@
 from pyeconet.equipment import EquipmentType
 from pyeconet.equipment.thermostat import ThermostatFanMode, ThermostatOperationMode
 
-from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
@@ -15,11 +15,6 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
-    SUPPORT_AUX_HEAT,
-    SUPPORT_FAN_MODE,
-    SUPPORT_TARGET_HUMIDITY,
-    SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE
@@ -47,10 +42,10 @@ ECONET_FAN_STATE_TO_HA = {
 HA_FAN_STATE_TO_ECONET = {value: key for key, value in ECONET_FAN_STATE_TO_HA.items()}
 
 SUPPORT_FLAGS_THERMOSTAT = (
-    SUPPORT_TARGET_TEMPERATURE
-    | SUPPORT_TARGET_TEMPERATURE_RANGE
-    | SUPPORT_FAN_MODE
-    | SUPPORT_AUX_HEAT
+    ClimateEntityFeature.TARGET_TEMPERATURE
+    | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+    | ClimateEntityFeature.FAN_MODE
+    | ClimateEntityFeature.AUX_HEAT
 )
 
 
@@ -90,7 +85,7 @@ class EcoNetThermostat(EcoNetEntity, ClimateEntity):
     def supported_features(self):
         """Return the list of supported features."""
         if self._econet.supports_humidifier:
-            return SUPPORT_FLAGS_THERMOSTAT | SUPPORT_TARGET_HUMIDITY
+            return SUPPORT_FLAGS_THERMOSTAT | ClimateEntityFeature.TARGET_HUMIDITY
         return SUPPORT_FLAGS_THERMOSTAT
 
     @property

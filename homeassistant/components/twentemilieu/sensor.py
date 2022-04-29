@@ -14,15 +14,11 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN
+from .const import DOMAIN, WASTE_TYPE_TO_DESCRIPTION
+from .entity import TwenteMilieuEntity
 
 
 @dataclass
@@ -43,35 +39,35 @@ SENSORS: tuple[TwenteMilieuSensorDescription, ...] = (
     TwenteMilieuSensorDescription(
         key="tree",
         waste_type=WasteType.TREE,
-        name="Christmas Tree Pickup",
+        name=WASTE_TYPE_TO_DESCRIPTION[WasteType.TREE],
         icon="mdi:pine-tree",
         device_class=SensorDeviceClass.DATE,
     ),
     TwenteMilieuSensorDescription(
         key="Non-recyclable",
         waste_type=WasteType.NON_RECYCLABLE,
-        name="Non-recyclable Waste Pickup",
+        name=WASTE_TYPE_TO_DESCRIPTION[WasteType.NON_RECYCLABLE],
         icon="mdi:delete-empty",
         device_class=SensorDeviceClass.DATE,
     ),
     TwenteMilieuSensorDescription(
         key="Organic",
         waste_type=WasteType.ORGANIC,
-        name="Organic Waste Pickup",
+        name=WASTE_TYPE_TO_DESCRIPTION[WasteType.ORGANIC],
         icon="mdi:delete-empty",
         device_class=SensorDeviceClass.DATE,
     ),
     TwenteMilieuSensorDescription(
         key="Paper",
         waste_type=WasteType.PAPER,
-        name="Paper Waste Pickup",
+        name=WASTE_TYPE_TO_DESCRIPTION[WasteType.PAPER],
         icon="mdi:delete-empty",
         device_class=SensorDeviceClass.DATE,
     ),
     TwenteMilieuSensorDescription(
         key="Plastic",
         waste_type=WasteType.PACKAGES,
-        name="Packages Waste Pickup",
+        name=WASTE_TYPE_TO_DESCRIPTION[WasteType.PACKAGES],
         icon="mdi:delete-empty",
         device_class=SensorDeviceClass.DATE,
     ),
@@ -90,7 +86,7 @@ async def async_setup_entry(
     )
 
 
-class TwenteMilieuSensor(CoordinatorEntity[dict[WasteType, list[date]]], SensorEntity):
+class TwenteMilieuSensor(TwenteMilieuEntity, SensorEntity):
     """Defines a Twente Milieu sensor."""
 
     entity_description: TwenteMilieuSensorDescription
@@ -102,16 +98,9 @@ class TwenteMilieuSensor(CoordinatorEntity[dict[WasteType, list[date]]], SensorE
         entry: ConfigEntry,
     ) -> None:
         """Initialize the Twente Milieu entity."""
-        super().__init__(coordinator=coordinator)
+        super().__init__(coordinator, entry)
         self.entity_description = description
         self._attr_unique_id = f"{DOMAIN}_{entry.data[CONF_ID]}_{description.key}"
-        self._attr_device_info = DeviceInfo(
-            configuration_url="https://www.twentemilieu.nl",
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, str(entry.data[CONF_ID]))},
-            manufacturer="Twente Milieu",
-            name="Twente Milieu",
-        )
 
     @property
     def native_value(self) -> date | None:

@@ -377,6 +377,11 @@ ZEROCONF = {
         {
             "domain": "kodi"
         }
+    ],
+    "_zwave-js-server._tcp.local.": [
+        {
+            "domain": "zwave_js"
+        }
     ]
 }
 

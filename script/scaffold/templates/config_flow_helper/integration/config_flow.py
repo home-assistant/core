@@ -8,9 +8,10 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_ENTITY_ID
 from homeassistant.helpers import selector
-from homeassistant.helpers.helper_config_entry_flow import (
-    HelperConfigFlowHandler,
-    HelperFlowStep,
+from homeassistant.helpers.schema_config_entry_flow import (
+    SchemaConfigFlowHandler,
+    SchemaFlowFormStep,
+    SchemaFlowMenuStep,
 )
 
 from .const import DOMAIN
@@ -29,12 +30,16 @@ CONFIG_SCHEMA = vol.Schema(
     }
 ).extend(OPTIONS_SCHEMA.schema)
 
-CONFIG_FLOW = {"user": HelperFlowStep(CONFIG_SCHEMA)}
+CONFIG_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
+    "user": SchemaFlowFormStep(CONFIG_SCHEMA)
+}
 
-OPTIONS_FLOW = {"init": HelperFlowStep(OPTIONS_SCHEMA)}
+OPTIONS_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
+    "init": SchemaFlowFormStep(OPTIONS_SCHEMA)
+}
 
 
-class ConfigFlowHandler(HelperConfigFlowHandler, domain=DOMAIN):
+class ConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     """Handle a config or options flow for NEW_NAME."""
 
     config_flow = CONFIG_FLOW

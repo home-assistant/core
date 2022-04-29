@@ -27,6 +27,20 @@ FIXTURE_GRP_ID = 0x1001
 FIXTURE_GRP_NAME = "fixture group"
 
 
+@pytest.fixture(scope="session", autouse=True)
+def globally_load_quirks():
+    """Load quirks automatically so that ZHA tests run deterministically in isolation.
+
+    If portions of the ZHA test suite that do not happen to load quirks are run
+    independently, bugs can emerge that will show up only when more of the test suite is
+    run.
+    """
+
+    import zhaquirks
+
+    zhaquirks.setup()
+
+
 @pytest.fixture
 def zigpy_app_controller():
     """Zigpy ApplicationController fixture."""

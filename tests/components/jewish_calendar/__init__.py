@@ -13,13 +13,6 @@ HDATE_DEFAULT_ALTITUDE = 754
 NYC_LATLNG = _LatLng(40.7128, -74.0060)
 JERUSALEM_LATLNG = _LatLng(31.778, 35.235)
 
-ORIG_TIME_ZONE = dt_util.DEFAULT_TIME_ZONE
-
-
-def teardown_module():
-    """Reset time zone."""
-    dt_util.set_default_time_zone(ORIG_TIME_ZONE)
-
 
 def make_nyc_test_params(dtime, results, havdalah_offset=0):
     """Make test params for NYC."""

@@ -8,7 +8,7 @@ import logging
 from typing import Any
 
 import zigpy.exceptions
-from zigpy.zcl.foundation import Status
+from zigpy.zcl.foundation import ConfigureReportingResponseRecord, Status
 
 from homeassistant.const import ATTR_COMMAND
 from homeassistant.core import callback
@@ -111,7 +111,7 @@ class ZigbeeChannel(LogMixin):
         if not hasattr(self, "_value_attribute") and self.REPORT_CONFIG:
             attr = self.REPORT_CONFIG[0].get("attr")
             if isinstance(attr, str):
-                self.value_attribute = self.cluster.attridx.get(attr)
+                self.value_attribute = self.cluster.attributes_by_name.get(attr)
             else:
                 self.value_attribute = attr
         self._status = ChannelStatus.CREATED
@@ -260,7 +260,7 @@ class ZigbeeChannel(LogMixin):
         self, attrs: dict[int | str, tuple], res: list | tuple
     ) -> None:
         """Parse configure reporting result."""
-        if not isinstance(res, list):
+        if isinstance(res, (Exception, ConfigureReportingResponseRecord)):
             # assume default response
             self.debug(
                 "attr reporting for '%s' on '%s': %s",
@@ -345,7 +345,7 @@ class ZigbeeChannel(LogMixin):
         self.async_send_signal(
             f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}",
             attrid,
-            self.cluster.attributes.get(attrid, [attrid])[0],
+            self._get_attribute_name(attrid),
             value,
         )
 
@@ -367,6 +367,12 @@ class ZigbeeChannel(LogMixin):
 
     async def async_update(self):
         """Retrieve latest state from cluster."""
+
+    def _get_attribute_name(self, attrid: int) -> str | int:
+        if attrid not in self.cluster.attributes:
+            return attrid
+
+        return self.cluster.attributes[attrid].name
 
     async def get_attribute_value(self, attribute, from_cache=True):
         """Get the value for an attribute."""
@@ -421,11 +427,11 @@ class ZigbeeChannel(LogMixin):
 
     get_attributes = partialmethod(_get_attributes, False)
 
-    def log(self, level, msg, *args):
+    def log(self, level, msg, *args, **kwargs):
         """Log a message."""
         msg = f"[%s:%s]: {msg}"
         args = (self._ch_pool.nwk, self._id) + args
-        _LOGGER.log(level, msg, *args)
+        _LOGGER.log(level, msg, *args, **kwargs)
 
     def __getattr__(self, name):
         """Get attribute or a decorated cluster command."""
@@ -479,11 +485,11 @@ class ZDOChannel(LogMixin):
         """Configure channel."""
         self._status = ChannelStatus.CONFIGURED
 
-    def log(self, level, msg, *args):
+    def log(self, level, msg, *args, **kwargs):
         """Log a message."""
         msg = f"[%s:ZDO](%s): {msg}"
         args = (self._zha_device.nwk, self._zha_device.model) + args
-        _LOGGER.log(level, msg, *args)
+        _LOGGER.log(level, msg, *args, **kwargs)
 
 
 class ClientChannel(ZigbeeChannel):
@@ -492,13 +498,17 @@ class ClientChannel(ZigbeeChannel):
     @callback
     def attribute_updated(self, attrid, value):
         """Handle an attribute updated on this cluster."""
+
+        try:
+            attr_name = self._cluster.attributes[attrid].name
+        except KeyError:
+            attr_name = "Unknown"
+
         self.zha_send_event(
             SIGNAL_ATTR_UPDATED,
             {
                 ATTR_ATTRIBUTE_ID: attrid,
-                ATTR_ATTRIBUTE_NAME: self._cluster.attributes.get(attrid, ["Unknown"])[
-                    0
-                ],
+                ATTR_ATTRIBUTE_NAME: attr_name,
                 ATTR_VALUE: value,
             },
         )
@@ -510,4 +520,4 @@ class ClientChannel(ZigbeeChannel):
             self._cluster.server_commands is not None
             and self._cluster.server_commands.get(command_id) is not None
         ):
-            self.zha_send_event(self._cluster.server_commands.get(command_id)[0], args)
+            self.zha_send_event(self._cluster.server_commands[command_id].name, args)

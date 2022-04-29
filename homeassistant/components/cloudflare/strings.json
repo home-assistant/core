@@ -18,7 +18,7 @@
       "records": {
         "title": "Choose the Records to Update",
         "data": {
-           "records": "Records"
+          "records": "Records"
         }
       },
       "reauth_confirm": {

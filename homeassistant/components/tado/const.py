@@ -95,6 +95,17 @@ CONST_OVERLAY_TADO_MODE = (
 )
 CONST_OVERLAY_MANUAL = "MANUAL"  # the user has change the temperature or mode manually
 CONST_OVERLAY_TIMER = "TIMER"  # the temperature will be reset after a timespan
+CONST_OVERLAY_TADO_DEFAULT = (
+    "TADO_DEFAULT"  # use the setting from tado zone itself (set in Tado app or webapp)
+)
+CONST_OVERLAY_TADO_OPTIONS = [
+    CONST_OVERLAY_TADO_MODE,
+    CONST_OVERLAY_MANUAL,
+    CONST_OVERLAY_TADO_DEFAULT,
+]
+CONST_EXCLUSIVE_OVERLAY_GROUP = (
+    "overlay_group"  # Overlay group for set_climate_timer service
+)
 
 
 # Heat always comes first since we get the
@@ -180,3 +191,7 @@ TADO_TO_HA_OFFSET_MAP = {
     TADO_OFFSET_CELSIUS: HA_OFFSET_CELSIUS,
     TADO_OFFSET_FAHRENHEIT: HA_OFFSET_FAHRENHEIT,
 }
+
+# Constants for Overlay Default settings
+HA_TERMINATION_TYPE = "default_overlay_type"
+HA_TERMINATION_DURATION = "default_overlay_seconds"

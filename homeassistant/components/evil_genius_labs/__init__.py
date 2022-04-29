@@ -11,12 +11,12 @@ import pyevilgenius
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import (
-    aiohttp_client,
-    device_registry as dr,
-    update_coordinator,
-)
+from homeassistant.helpers import aiohttp_client, device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from .const import DOMAIN
 
@@ -49,7 +49,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class EvilGeniusUpdateCoordinator(update_coordinator.DataUpdateCoordinator[dict]):
+class EvilGeniusUpdateCoordinator(DataUpdateCoordinator[dict]):
     """Update coordinator for Evil Genius data."""
 
     info: dict
@@ -81,10 +81,8 @@ class EvilGeniusUpdateCoordinator(update_coordinator.DataUpdateCoordinator[dict]
             return cast(dict, await self.client.get_data())
 
 
-class EvilGeniusEntity(update_coordinator.CoordinatorEntity):
+class EvilGeniusEntity(CoordinatorEntity[EvilGeniusUpdateCoordinator]):
     """Base entity for Evil Genius."""
-
-    coordinator: EvilGeniusUpdateCoordinator
 
     @property
     def device_info(self) -> DeviceInfo:

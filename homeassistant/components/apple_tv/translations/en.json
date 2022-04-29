@@ -2,13 +2,12 @@
     "config": {
         "abort": {
             "already_configured": "Device is already configured",
-            "already_configured_device": "Device is already configured",
             "already_in_progress": "Configuration flow is already in progress",
             "backoff": "Device does not accept pairing requests at this time (you might have entered an invalid PIN code too many times), try again later.",
             "device_did_not_pair": "No attempt to finish pairing process was made from the device.",
             "device_not_found": "Device was not found during discovery, please try adding it again.",
             "inconsistent_device": "Expected protocols were not found during discovery. This normally indicates a problem with multicast DNS (Zeroconf). Please try adding the device again.",
-            "invalid_config": "The configuration for this device is incomplete. Please try adding it again.",
+            "ipv6_not_supported": "IPv6 is not supported.",
             "no_devices_found": "No devices found on the network",
             "reauth_successful": "Re-authentication was successful",
             "setup_failed": "Failed to set up device.",
@@ -18,7 +17,6 @@
             "already_configured": "Device is already configured",
             "invalid_auth": "Invalid authentication",
             "no_devices_found": "No devices found on the network",
-            "no_usable_service": "A device was found but could not identify any way to establish a connection to it. If you keep seeing this message, try specifying its IP address or restarting your Apple TV.",
             "unknown": "Unexpected error"
         },
         "flow_title": "{name} ({type})",
@@ -72,6 +70,5 @@
                 "description": "Configure general device settings"
             }
         }
-    },
-    "title": "Apple TV"
+    }
 }

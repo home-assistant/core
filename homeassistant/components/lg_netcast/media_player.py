@@ -1,13 +1,12 @@
 """Support for LG TV running on NetCast 3 or 4."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from pylgnetcast import LgNetCastClient, LgNetCastError
 from requests import RequestException
 import voluptuous as vol
 
-from homeassistant import util
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA,
     MediaPlayerDeviceClass,
@@ -46,9 +45,6 @@ from .const import DOMAIN
 DEFAULT_NAME = "LG TV Remote"
 
 CONF_ON_ACTION = "turn_on_action"
-
-MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 SUPPORT_LGTV = (
     SUPPORT_PAUSE
@@ -122,7 +118,6 @@ class LgTVDevice(MediaPlayerEntity):
         except (LgNetCastError, RequestException):
             self._state = STATE_OFF
 
-    @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update(self):
         """Retrieve the latest data from the LG TV."""
 

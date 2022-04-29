@@ -4,8 +4,15 @@ from __future__ import annotations
 from typing import Any
 
 from aioairzone.common import ConnectionOptions
-from aioairzone.const import AZD_ID, AZD_NAME, AZD_SYSTEM, AZD_ZONES
-from aioairzone.localapi_device import AirzoneLocalApi
+from aioairzone.const import (
+    AZD_ID,
+    AZD_NAME,
+    AZD_SYSTEM,
+    AZD_THERMOSTAT_FW,
+    AZD_THERMOSTAT_MODEL,
+    AZD_ZONES,
+)
+from aioairzone.localapi import AirzoneLocalApi
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
@@ -17,10 +24,10 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN, MANUFACTURER
 from .coordinator import AirzoneUpdateCoordinator
 
-PLATFORMS: list[Platform] = [Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.CLIMATE, Platform.SENSOR]
 
 
-class AirzoneEntity(CoordinatorEntity):
+class AirzoneEntity(CoordinatorEntity[AirzoneUpdateCoordinator]):
     """Define an Airzone entity."""
 
     def __init__(
@@ -33,14 +40,17 @@ class AirzoneEntity(CoordinatorEntity):
         """Initialize."""
         super().__init__(coordinator)
 
-        self._attr_device_info: DeviceInfo = {
-            "identifiers": {(DOMAIN, f"{entry.entry_id}_{system_zone_id}")},
-            "manufacturer": MANUFACTURER,
-            "name": f"Airzone [{system_zone_id}] {zone_data[AZD_NAME]}",
-        }
         self.system_id = zone_data[AZD_SYSTEM]
         self.system_zone_id = system_zone_id
         self.zone_id = zone_data[AZD_ID]
+
+        self._attr_device_info: DeviceInfo = {
+            "identifiers": {(DOMAIN, f"{entry.entry_id}_{system_zone_id}")},
+            "manufacturer": MANUFACTURER,
+            "model": self.get_zone_value(AZD_THERMOSTAT_MODEL),
+            "name": f"Airzone [{system_zone_id}] {zone_data[AZD_NAME]}",
+            "sw_version": self.get_zone_value(AZD_THERMOSTAT_FW),
+        }
 
     def get_zone_value(self, key):
         """Return zone value by key."""

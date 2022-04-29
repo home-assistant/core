@@ -9,7 +9,6 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -26,7 +25,6 @@ async def test_adam_climate_entity_attributes(
     assert state
     assert state.attributes["hvac_modes"] == [
         HVAC_MODE_HEAT,
-        HVAC_MODE_OFF,
         HVAC_MODE_AUTO,
     ]
 
@@ -47,7 +45,6 @@ async def test_adam_climate_entity_attributes(
 
     assert state.attributes["hvac_modes"] == [
         HVAC_MODE_HEAT,
-        HVAC_MODE_OFF,
         HVAC_MODE_AUTO,
     ]
 
@@ -161,7 +158,6 @@ async def test_anna_climate_entity_attributes(
     assert state.state == HVAC_MODE_HEAT
     assert state.attributes["hvac_modes"] == [
         HVAC_MODE_HEAT,
-        HVAC_MODE_OFF,
         HVAC_MODE_COOL,
     ]
     assert "no_frost" in state.attributes["preset_modes"]

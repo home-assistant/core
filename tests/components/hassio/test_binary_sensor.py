@@ -69,6 +69,7 @@ def mock_all(aioclient_mock, request):
             "result": "ok",
             "data": {
                 "result": "ok",
+                "version": "1.0.0",
                 "version_latest": "1.0.0",
                 "addons": [
                     {
@@ -113,9 +114,20 @@ def mock_all(aioclient_mock, request):
             },
         },
     )
+    aioclient_mock.get("http://127.0.0.1/addons/test/changelog", text="")
+    aioclient_mock.get(
+        "http://127.0.0.1/addons/test/info",
+        json={"result": "ok", "data": {"auto_update": True}},
+    )
+    aioclient_mock.get("http://127.0.0.1/addons/test2/changelog", text="")
+    aioclient_mock.get(
+        "http://127.0.0.1/addons/test2/info",
+        json={"result": "ok", "data": {"auto_update": False}},
+    )
     aioclient_mock.get(
         "http://127.0.0.1/ingress/panels", json={"result": "ok", "data": {"panels": {}}}
     )
+    aioclient_mock.post("http://127.0.0.1/refresh_updates", json={"result": "ok"})
 
 
 @pytest.mark.parametrize(

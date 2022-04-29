@@ -61,14 +61,14 @@ async def async_setup_entry(
     )
 
 
-class ElgatoLight(ElgatoEntity, CoordinatorEntity, LightEntity):
+class ElgatoLight(
+    ElgatoEntity, CoordinatorEntity[DataUpdateCoordinator[State]], LightEntity
+):
     """Defines an Elgato Light."""
-
-    coordinator: DataUpdateCoordinator[State]
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[State],
         client: Elgato,
         info: Info,
         mac: str | None,

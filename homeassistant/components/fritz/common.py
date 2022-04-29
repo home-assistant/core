@@ -91,6 +91,11 @@ def _cleanup_entity_filter(device: er.RegistryEntry) -> bool:
     )
 
 
+def _ha_is_stopping(activity: str) -> None:
+    """Inform that HA is stopping."""
+    _LOGGER.info("Cannot execute %s: HomeAssistant is shutting down", activity)
+
+
 class ClassSetupMissing(Exception):
     """Raised when a Class func is called before setup."""
 
@@ -351,6 +356,10 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
     def scan_devices(self, now: datetime | None = None) -> None:
         """Scan for new devices and return a list of found device ids."""
 
+        if self.hass.is_stopping:
+            _ha_is_stopping("scan devices")
+            return
+
         _LOGGER.debug("Checking host info for FRITZ!Box device %s", self.host)
         self._update_available, self._latest_firmware = self._update_device_info()
 
@@ -603,6 +612,10 @@ class AvmWrapper(FritzBoxTools):
     ) -> dict:
         """Return service details."""
 
+        if self.hass.is_stopping:
+            _ha_is_stopping(f"{service_name}/{action_name}")
+            return {}
+
         if f"{service_name}{service_suffix}" not in self.connection.services:
             return {}
 
@@ -817,7 +830,7 @@ class FritzData:
     profile_switches: dict = field(default_factory=dict)
 
 
-class FritzDeviceBase(update_coordinator.CoordinatorEntity):
+class FritzDeviceBase(update_coordinator.CoordinatorEntity[AvmWrapper]):
     """Entity base class for a device connected to a FRITZ!Box device."""
 
     def __init__(self, avm_wrapper: AvmWrapper, device: FritzDevice) -> None:

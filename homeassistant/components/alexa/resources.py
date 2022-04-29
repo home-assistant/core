@@ -200,6 +200,8 @@ class AlexaCapabilityResource:
     https://developer.amazon.com/docs/device-apis/resources-and-assets.html#capability-resources
     """
 
+    # pylint: disable=no-self-use
+
     def __init__(self, labels):
         """Initialize an Alexa resource."""
         self._resource_labels = []
@@ -210,13 +212,11 @@ class AlexaCapabilityResource:
         """Return capabilityResources object serialized for an API response."""
         return self.serialize_labels(self._resource_labels)
 
-    @staticmethod
-    def serialize_configuration():
+    def serialize_configuration(self):
         """Return ModeResources, PresetResources friendlyNames serialized for an API response."""
         return []
 
-    @staticmethod
-    def serialize_labels(resources):
+    def serialize_labels(self, resources):
         """Return resource label objects for friendlyNames serialized for an API response."""
         labels = []
         for label in resources:

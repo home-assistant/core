@@ -404,13 +404,6 @@ async def test_async_get_device_automations_single_device_trigger(
     assert device_entry.id in result
     assert len(result[device_entry.id]) == 3
 
-    # Test deprecated str automation_type works, to be removed in 2022.4
-    result = await device_automation.async_get_device_automations(
-        hass, "trigger", [device_entry.id]
-    )
-    assert device_entry.id in result
-    assert len(result[device_entry.id]) == 3  # toggled, turned_on, turned_off
-
 
 async def test_async_get_device_automations_all_devices_trigger(
     hass, device_reg, entity_reg

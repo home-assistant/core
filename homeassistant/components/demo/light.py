@@ -16,8 +16,8 @@ from homeassistant.components.light import (
     COLOR_MODE_RGBW,
     COLOR_MODE_RGBWW,
     COLOR_MODE_WHITE,
-    SUPPORT_EFFECT,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -149,7 +149,7 @@ class DemoLight(LightEntity):
             supported_color_modes = SUPPORT_DEMO
         self._color_modes = supported_color_modes
         if self._effect_list is not None:
-            self._features |= SUPPORT_EFFECT
+            self._features |= LightEntityFeature.EFFECT
 
     @property
     def device_info(self) -> DeviceInfo:

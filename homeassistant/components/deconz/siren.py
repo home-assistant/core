@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import ValuesView
 from typing import Any
 
 from pydeconz.light import Siren
@@ -34,11 +33,12 @@ async def async_setup_entry(
     gateway.entities[DOMAIN] = set()
 
     @callback
-    def async_add_siren(
-        lights: list[Siren] | ValuesView[Siren] = gateway.api.lights.values(),
-    ) -> None:
+    def async_add_siren(lights: list[Siren] | None = None) -> None:
         """Add siren from deCONZ."""
         entities = []
+
+        if lights is None:
+            lights = list(gateway.api.lights.sirens.values())
 
         for light in lights:
 

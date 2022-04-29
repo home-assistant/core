@@ -6,6 +6,7 @@ from typing import Any, cast
 from async_timeout import timeout
 
 from homeassistant.components import light
+from homeassistant.components.light import LightEntity, LightEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -28,12 +29,10 @@ async def async_setup_entry(
     async_add_entities([EvilGeniusLight(coordinator)])
 
 
-class EvilGeniusLight(EvilGeniusEntity, light.LightEntity):
+class EvilGeniusLight(EvilGeniusEntity, LightEntity):
     """Evil Genius Labs light."""
 
-    _attr_supported_features = (
-        light.SUPPORT_BRIGHTNESS | light.SUPPORT_EFFECT | light.SUPPORT_COLOR
-    )
+    _attr_supported_features = LightEntityFeature.EFFECT
     _attr_supported_color_modes = {light.COLOR_MODE_RGB}
     _attr_color_mode = light.COLOR_MODE_RGB
 

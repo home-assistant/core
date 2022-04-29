@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from aioairzone.localapi_device import AirzoneLocalApi
+from aioairzone.localapi import AirzoneLocalApi
 from aiohttp.client_exceptions import ClientConnectorError
 import async_timeout
 

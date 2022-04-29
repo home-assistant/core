@@ -8,6 +8,7 @@ from collections.abc import Awaitable, Callable, Iterable
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from enum import IntEnum
 from functools import partial
 import hashlib
 import logging
@@ -88,7 +89,16 @@ STATE_RECORDING: Final = "recording"
 STATE_STREAMING: Final = "streaming"
 STATE_IDLE: Final = "idle"
 
-# Bitfield of features supported by the camera entity
+
+class CameraEntityFeature(IntEnum):
+    """Supported features of the camera entity."""
+
+    ON_OFF = 1
+    STREAM = 2
+
+
+# These SUPPORT_* constants are deprecated as of Home Assistant 2022.5.
+# Pleease use the CameraEntityFeature enum instead.
 SUPPORT_ON_OFF: Final = 1
 SUPPORT_STREAM: Final = 2
 
@@ -499,7 +509,7 @@ class Camera(Entity):
         """
         if hasattr(self, "_attr_frontend_stream_type"):
             return self._attr_frontend_stream_type
-        if not self.supported_features & SUPPORT_STREAM:
+        if not self.supported_features & CameraEntityFeature.STREAM:
             return None
         if self._rtsp_to_webrtc:
             return STREAM_TYPE_WEB_RTC
@@ -535,7 +545,8 @@ class Camera(Entity):
     async def stream_source(self) -> str | None:
         """Return the source of the stream.
 
-        This is used by cameras with SUPPORT_STREAM and STREAM_TYPE_HLS.
+        This is used by cameras with CameraEntityFeature.STREAM
+        and STREAM_TYPE_HLS.
         """
         # pylint: disable=no-self-use
         return None
@@ -543,7 +554,8 @@ class Camera(Entity):
     async def async_handle_web_rtc_offer(self, offer_sdp: str) -> str | None:
         """Handle the WebRTC offer and return an answer.
 
-        This is used by cameras with SUPPORT_STREAM and STREAM_TYPE_WEB_RTC.
+        This is used by cameras with CameraEntityFeature.STREAM
+        and STREAM_TYPE_WEB_RTC.
 
         Integrations can override with a native WebRTC implementation.
         """
@@ -682,7 +694,7 @@ class Camera(Entity):
 
     async def _async_use_rtsp_to_webrtc(self) -> bool:
         """Determine if a WebRTC provider can be used for the camera."""
-        if not self.supported_features & SUPPORT_STREAM:
+        if not self.supported_features & CameraEntityFeature.STREAM:
             return False
         if DATA_RTSP_TO_WEB_RTC not in self.hass.data:
             return False

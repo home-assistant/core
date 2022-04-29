@@ -9,6 +9,7 @@ from pytest import approx
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder.const import DATA_INSTANCE
+from homeassistant.components.recorder.statistics import async_add_external_statistics
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
@@ -34,6 +35,16 @@ TEMPERATURE_SENSOR_ATTRIBUTES = {
     "device_class": "temperature",
     "state_class": "measurement",
     "unit_of_measurement": "°C",
+}
+ENERGY_SENSOR_ATTRIBUTES = {
+    "device_class": "energy",
+    "state_class": "total",
+    "unit_of_measurement": "kWh",
+}
+GAS_SENSOR_ATTRIBUTES = {
+    "device_class": "gas",
+    "state_class": "total",
+    "unit_of_measurement": "m³",
 }
 
 
@@ -219,6 +230,8 @@ async def test_update_statistics_metadata(hass, hass_ws_client, new_unit):
     assert response["result"] == [
         {
             "statistic_id": "sensor.test",
+            "has_mean": True,
+            "has_sum": False,
             "name": None,
             "source": "recorder",
             "unit_of_measurement": "W",
@@ -243,6 +256,8 @@ async def test_update_statistics_metadata(hass, hass_ws_client, new_unit):
     assert response["result"] == [
         {
             "statistic_id": "sensor.test",
+            "has_mean": True,
+            "has_sum": False,
             "name": None,
             "source": "recorder",
             "unit_of_measurement": new_unit,
@@ -421,3 +436,129 @@ async def test_backup_end_without_start(
     response = await client.receive_json()
     assert not response["success"]
     assert response["error"]["code"] == "database_unlock_failed"
+
+
+@pytest.mark.parametrize(
+    "units, attributes, unit",
+    [
+        (METRIC_SYSTEM, GAS_SENSOR_ATTRIBUTES, "m³"),
+        (METRIC_SYSTEM, ENERGY_SENSOR_ATTRIBUTES, "kWh"),
+    ],
+)
+async def test_get_statistics_metadata(hass, hass_ws_client, units, attributes, unit):
+    """Test get_statistics_metadata."""
+    now = dt_util.utcnow()
+
+    hass.config.units = units
+    await hass.async_add_executor_job(init_recorder_component, hass)
+    await async_setup_component(hass, "history", {"history": {}})
+    await async_setup_component(hass, "sensor", {})
+    await async_init_recorder_component(hass)
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+
+    client = await hass_ws_client()
+    await client.send_json({"id": 1, "type": "recorder/get_statistics_metadata"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == []
+
+    period1 = dt_util.as_utc(dt_util.parse_datetime("2021-09-01 00:00:00"))
+    period2 = dt_util.as_utc(dt_util.parse_datetime("2021-09-30 23:00:00"))
+    period3 = dt_util.as_utc(dt_util.parse_datetime("2021-10-01 00:00:00"))
+    period4 = dt_util.as_utc(dt_util.parse_datetime("2021-10-31 23:00:00"))
+    external_energy_statistics_1 = (
+        {
+            "start": period1,
+            "last_reset": None,
+            "state": 0,
+            "sum": 2,
+        },
+        {
+            "start": period2,
+            "last_reset": None,
+            "state": 1,
+            "sum": 3,
+        },
+        {
+            "start": period3,
+            "last_reset": None,
+            "state": 2,
+            "sum": 5,
+        },
+        {
+            "start": period4,
+            "last_reset": None,
+            "state": 3,
+            "sum": 8,
+        },
+    )
+    external_energy_metadata_1 = {
+        "has_mean": False,
+        "has_sum": True,
+        "name": "Total imported energy",
+        "source": "test",
+        "statistic_id": "test:total_gas",
+        "unit_of_measurement": unit,
+    }
+
+    async_add_external_statistics(
+        hass, external_energy_metadata_1, external_energy_statistics_1
+    )
+
+    hass.states.async_set("sensor.test", 10, attributes=attributes)
+    await hass.async_block_till_done()
+
+    await hass.async_add_executor_job(trigger_db_commit, hass)
+    await hass.async_block_till_done()
+
+    hass.states.async_set("sensor.test2", 10, attributes=attributes)
+    await hass.async_block_till_done()
+
+    await hass.async_add_executor_job(trigger_db_commit, hass)
+    await hass.async_block_till_done()
+
+    await client.send_json(
+        {
+            "id": 2,
+            "type": "recorder/get_statistics_metadata",
+            "statistic_ids": ["sensor.test"],
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == [
+        {
+            "statistic_id": "sensor.test",
+            "has_mean": False,
+            "has_sum": True,
+            "name": None,
+            "source": "recorder",
+            "unit_of_measurement": unit,
+        }
+    ]
+
+    hass.data[recorder.DATA_INSTANCE].do_adhoc_statistics(start=now)
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    # Remove the state, statistics will now be fetched from the database
+    hass.states.async_remove("sensor.test")
+    await hass.async_block_till_done()
+
+    await client.send_json(
+        {
+            "id": 3,
+            "type": "recorder/get_statistics_metadata",
+            "statistic_ids": ["sensor.test"],
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == [
+        {
+            "statistic_id": "sensor.test",
+            "has_mean": False,
+            "has_sum": True,
+            "name": None,
+            "source": "recorder",
+            "unit_of_measurement": unit,
+        }
+    ]

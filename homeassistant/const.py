@@ -6,7 +6,7 @@ from typing import Final
 from .backports.enum import StrEnum
 
 MAJOR_VERSION: Final = 2022
-MINOR_VERSION: Final = 4
+MINOR_VERSION: Final = 5
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -50,6 +50,7 @@ class Platform(StrEnum):
     SWITCH = "switch"
     TTS = "tts"
     VACUUM = "vacuum"
+    UPDATE = "update"
     WATER_HEATER = "water_heater"
     WEATHER = "weather"
 
@@ -168,6 +169,7 @@ CONF_IP_ADDRESS: Final = "ip_address"
 CONF_LATITUDE: Final = "latitude"
 CONF_LEGACY_TEMPLATES: Final = "legacy_templates"
 CONF_LIGHTS: Final = "lights"
+CONF_LOCATION: Final = "location"
 CONF_LONGITUDE: Final = "longitude"
 CONF_MAC: Final = "mac"
 CONF_MAXIMUM: Final = "maximum"
@@ -175,6 +177,7 @@ CONF_MEDIA_DIRS: Final = "media_dirs"
 CONF_METHOD: Final = "method"
 CONF_MINIMUM: Final = "minimum"
 CONF_MODE: Final = "mode"
+CONF_MODEL: Final = "model"
 CONF_MONITORED_CONDITIONS: Final = "monitored_conditions"
 CONF_MONITORED_VARIABLES: Final = "monitored_variables"
 CONF_NAME: Final = "name"

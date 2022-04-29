@@ -19,6 +19,7 @@ LEVEL_TYPES = {
     "audio_delay": (0, 5),
     "bass": (-10, 10),
     "treble": (-10, 10),
+    "sub_gain": (-15, 15),
 }
 
 _LOGGER = logging.getLogger(__name__)

@@ -1,17 +1,17 @@
 """Support for deCONZ binary sensors."""
 from __future__ import annotations
 
-from collections.abc import Callable, ValuesView
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from pydeconz.sensor import (
     Alarm,
     CarbonMonoxide,
-    DeconzSensor as PydeconzSensor,
     Fire,
     GenericFlag,
     OpenClose,
     Presence,
+    SensorBase as PydeconzSensor,
     Vibration,
     Water,
 )
@@ -178,12 +178,12 @@ async def async_setup_entry(
     gateway.entities[DOMAIN] = set()
 
     @callback
-    def async_add_sensor(
-        sensors: list[PydeconzSensor]
-        | ValuesView[PydeconzSensor] = gateway.api.sensors.values(),
-    ) -> None:
+    def async_add_sensor(sensors: list[PydeconzSensor] | None = None) -> None:
         """Add binary sensor from deCONZ."""
         entities: list[DeconzBinarySensor] = []
+
+        if sensors is None:
+            sensors = gateway.api.sensors.values()
 
         for sensor in sensors:
 

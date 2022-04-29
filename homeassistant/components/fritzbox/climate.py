@@ -3,15 +3,13 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
     PRESET_COMFORT,
     PRESET_ECO,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -33,8 +31,6 @@ from .const import (
     DOMAIN as FRITZBOX_DOMAIN,
 )
 from .model import ClimateExtraAttributes
-
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
 OPERATION_LIST = [HVAC_MODE_HEAT, HVAC_MODE_OFF]
 
@@ -68,10 +64,9 @@ async def async_setup_entry(
 class FritzboxThermostat(FritzBoxEntity, ClimateEntity):
     """The thermostat class for FRITZ!SmartHome thermostats."""
 
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_FLAGS
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+    )
 
     @property
     def temperature_unit(self) -> str:

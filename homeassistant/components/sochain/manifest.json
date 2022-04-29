@@ -1,4 +1,5 @@
 {
+  "disabled": "Integration library depends on async_timeout==3.x.x",
   "domain": "sochain",
   "name": "SoChain",
   "documentation": "https://www.home-assistant.io/integrations/sochain",

@@ -8,12 +8,8 @@ from typing import Any
 import ambiclimate
 import voluptuous as vol
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
-    SUPPORT_TARGET_TEMPERATURE,
-)
+from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
+from homeassistant.components.climate.const import HVAC_MODE_HEAT, HVAC_MODE_OFF
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_NAME,
@@ -40,8 +36,6 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE
 
 SEND_COMFORT_FEEDBACK_SCHEMA = vol.Schema(
     {vol.Required(ATTR_NAME): cv.string, vol.Required(ATTR_VALUE): cv.string}
@@ -154,7 +148,7 @@ class AmbiclimateEntity(ClimateEntity):
 
     _attr_temperature_unit = TEMP_CELSIUS
     _attr_target_temperature_step = 1
-    _attr_supported_features = SUPPORT_FLAGS
+    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
     _attr_hvac_modes = [HVAC_MODE_HEAT, HVAC_MODE_OFF]
 
     def __init__(self, heater, store):

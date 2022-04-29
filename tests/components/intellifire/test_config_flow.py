@@ -2,6 +2,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from homeassistant import config_entries
+from homeassistant.components import dhcp
 from homeassistant.components.intellifire.config_flow import MANUAL_ENTRY_STRING
 from homeassistant.components.intellifire.const import DOMAIN
 from homeassistant.const import CONF_HOST
@@ -203,3 +204,53 @@ async def test_picker_already_discovered(
     assert result2["title"] == "Fireplace 12345"
     assert result2["data"] == {CONF_HOST: "192.168.1.4"}
     assert len(mock_setup_entry.mock_calls) == 2
+
+
+async def test_dhcp_discovery_intellifire_device(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_intellifire_config_flow: MagicMock,
+) -> None:
+    """Test successful DHCP Discovery."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=dhcp.DhcpServiceInfo(
+            ip="1.1.1.1",
+            macaddress="AA:BB:CC:DD:EE:FF",
+            hostname="zentrios-Test",
+        ),
+    )
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "dhcp_confirm"
+    result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["step_id"] == "dhcp_confirm"
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"], user_input={}
+    )
+    assert result3["title"] == "Fireplace 12345"
+    assert result3["data"] == {"host": "1.1.1.1"}
+
+
+async def test_dhcp_discovery_non_intellifire_device(
+    hass: HomeAssistant,
+    mock_intellifire_config_flow: MagicMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test failed DHCP Discovery."""
+
+    mock_intellifire_config_flow.poll.side_effect = ConnectionError
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=dhcp.DhcpServiceInfo(
+            ip="1.1.1.1",
+            macaddress="AA:BB:CC:DD:EE:FF",
+            hostname="zentrios-Evil",
+        ),
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "not_intellifire_device"

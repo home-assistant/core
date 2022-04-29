@@ -20,6 +20,7 @@ from homeassistant.components.climate import (
     DEFAULT_MAX_TEMP,
     DEFAULT_MIN_TEMP,
     ClimateEntity,
+    ClimateEntityFeature,
 )
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
@@ -33,10 +34,6 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
-    SUPPORT_SWING_MODE,
-    SUPPORT_TARGET_HUMIDITY,
-    SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_RANGE,
     SWING_OFF,
     SWING_VERTICAL,
 )
@@ -304,7 +301,7 @@ class HomeKitHeaterCoolerEntity(HomeKitEntity, ClimateEntity):
     def swing_mode(self) -> str:
         """Return the swing setting.
 
-        Requires SUPPORT_SWING_MODE.
+        Requires ClimateEntityFeature.SWING_MODE.
         """
         value = self.service.value(CharacteristicsTypes.SWING_MODE)
         return SWING_MODE_HOMEKIT_TO_HASS[value]
@@ -313,7 +310,7 @@ class HomeKitHeaterCoolerEntity(HomeKitEntity, ClimateEntity):
     def swing_modes(self) -> list[str]:
         """Return the list of available swing modes.
 
-        Requires SUPPORT_SWING_MODE.
+        Requires ClimateEntityFeature.SWING_MODE.
         """
         valid_values = clamp_enum_to_char(
             SwingModeValues,
@@ -333,13 +330,13 @@ class HomeKitHeaterCoolerEntity(HomeKitEntity, ClimateEntity):
         features = 0
 
         if self.service.has(CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD):
-            features |= SUPPORT_TARGET_TEMPERATURE
+            features |= ClimateEntityFeature.TARGET_TEMPERATURE
 
         if self.service.has(CharacteristicsTypes.TEMPERATURE_HEATING_THRESHOLD):
-            features |= SUPPORT_TARGET_TEMPERATURE
+            features |= ClimateEntityFeature.TARGET_TEMPERATURE
 
         if self.service.has(CharacteristicsTypes.SWING_MODE):
-            features |= SUPPORT_SWING_MODE
+            features |= ClimateEntityFeature.SWING_MODE
 
         return features
 
@@ -384,7 +381,9 @@ class HomeKitClimateEntity(HomeKitEntity, ClimateEntity):
 
         if (
             (mode == HVAC_MODE_HEAT_COOL)
-            and (SUPPORT_TARGET_TEMPERATURE_RANGE & self.supported_features)
+            and (
+                ClimateEntityFeature.TARGET_TEMPERATURE_RANGE & self.supported_features
+            )
             and heat_temp
             and cool_temp
         ):
@@ -429,7 +428,9 @@ class HomeKitClimateEntity(HomeKitEntity, ClimateEntity):
         value = self.service.value(CharacteristicsTypes.HEATING_COOLING_TARGET)
         if (MODE_HOMEKIT_TO_HASS.get(value) in {HVAC_MODE_HEAT, HVAC_MODE_COOL}) or (
             (MODE_HOMEKIT_TO_HASS.get(value) in {HVAC_MODE_HEAT_COOL})
-            and not (SUPPORT_TARGET_TEMPERATURE_RANGE & self.supported_features)
+            and not (
+                ClimateEntityFeature.TARGET_TEMPERATURE_RANGE & self.supported_features
+            )
         ):
             return self.service.value(CharacteristicsTypes.TEMPERATURE_TARGET)
         return None
@@ -439,7 +440,7 @@ class HomeKitClimateEntity(HomeKitEntity, ClimateEntity):
         """Return the highbound target temperature we try to reach."""
         value = self.service.value(CharacteristicsTypes.HEATING_COOLING_TARGET)
         if (MODE_HOMEKIT_TO_HASS.get(value) in {HVAC_MODE_HEAT_COOL}) and (
-            SUPPORT_TARGET_TEMPERATURE_RANGE & self.supported_features
+            ClimateEntityFeature.TARGET_TEMPERATURE_RANGE & self.supported_features
         ):
             return self.service.value(
                 CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD
@@ -451,7 +452,7 @@ class HomeKitClimateEntity(HomeKitEntity, ClimateEntity):
         """Return the lowbound target temperature we try to reach."""
         value = self.service.value(CharacteristicsTypes.HEATING_COOLING_TARGET)
         if (MODE_HOMEKIT_TO_HASS.get(value) in {HVAC_MODE_HEAT_COOL}) and (
-            SUPPORT_TARGET_TEMPERATURE_RANGE & self.supported_features
+            ClimateEntityFeature.TARGET_TEMPERATURE_RANGE & self.supported_features
         ):
             return self.service.value(
                 CharacteristicsTypes.TEMPERATURE_HEATING_THRESHOLD
@@ -463,7 +464,7 @@ class HomeKitClimateEntity(HomeKitEntity, ClimateEntity):
         """Return the minimum target temp."""
         value = self.service.value(CharacteristicsTypes.HEATING_COOLING_TARGET)
         if (MODE_HOMEKIT_TO_HASS.get(value) in {HVAC_MODE_HEAT_COOL}) and (
-            SUPPORT_TARGET_TEMPERATURE_RANGE & self.supported_features
+            ClimateEntityFeature.TARGET_TEMPERATURE_RANGE & self.supported_features
         ):
             min_temp = self.service[
                 CharacteristicsTypes.TEMPERATURE_HEATING_THRESHOLD
@@ -485,7 +486,7 @@ class HomeKitClimateEntity(HomeKitEntity, ClimateEntity):
         """Return the maximum target temp."""
         value = self.service.value(CharacteristicsTypes.HEATING_COOLING_TARGET)
         if (MODE_HOMEKIT_TO_HASS.get(value) in {HVAC_MODE_HEAT_COOL}) and (
-            SUPPORT_TARGET_TEMPERATURE_RANGE & self.supported_features
+            ClimateEntityFeature.TARGET_TEMPERATURE_RANGE & self.supported_features
         ):
             max_temp = self.service[
                 CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD
@@ -566,15 +567,15 @@ class HomeKitClimateEntity(HomeKitEntity, ClimateEntity):
         features = 0
 
         if self.service.has(CharacteristicsTypes.TEMPERATURE_TARGET):
-            features |= SUPPORT_TARGET_TEMPERATURE
+            features |= ClimateEntityFeature.TARGET_TEMPERATURE
 
         if self.service.has(
             CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD
         ) and self.service.has(CharacteristicsTypes.TEMPERATURE_HEATING_THRESHOLD):
-            features |= SUPPORT_TARGET_TEMPERATURE_RANGE
+            features |= ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
 
         if self.service.has(CharacteristicsTypes.RELATIVE_HUMIDITY_TARGET):
-            features |= SUPPORT_TARGET_HUMIDITY
+            features |= ClimateEntityFeature.TARGET_HUMIDITY
 
         return features
 

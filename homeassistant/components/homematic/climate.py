@@ -1,7 +1,7 @@
 """Support for Homematic thermostats."""
 from __future__ import annotations
 
-from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
 from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO,
     HVAC_MODE_HEAT,
@@ -10,8 +10,6 @@ from homeassistant.components.climate.const import (
     PRESET_COMFORT,
     PRESET_ECO,
     PRESET_NONE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
@@ -33,8 +31,6 @@ HM_PRESET_MAP = {
 
 HM_CONTROL_MODE = "CONTROL_MODE"
 HMIP_CONTROL_MODE = "SET_POINT_MODE"
-
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
 
 def setup_platform(
@@ -58,10 +54,9 @@ def setup_platform(
 class HMThermostat(HMDevice, ClimateEntity):
     """Representation of a Homematic thermostat."""
 
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_FLAGS
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+    )
 
     @property
     def temperature_unit(self):

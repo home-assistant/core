@@ -16,14 +16,10 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import (
-    CONF_GATEWAY_ID,
-    CONF_IDENTITY,
-    CONF_IMPORT_GROUPS,
-    CONF_KEY,
-    DOMAIN,
-    KEY_SECURITY_CODE,
-)
+from .const import CONF_GATEWAY_ID, CONF_IDENTITY, CONF_KEY, DOMAIN
+
+CONF_IMPORT_GROUPS = "import_groups"
+KEY_SECURITY_CODE = "security_code"
 
 
 class AuthError(Exception):

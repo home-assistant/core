@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
 from homeassistant.components.climate.const import (
     FAN_AUTO,
     FAN_HIGH,
@@ -16,8 +16,6 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
-    SUPPORT_FAN_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, TEMP_CELSIUS
@@ -108,7 +106,9 @@ class AdvantageAirAC(AdvantageAirClimateEntity):
 
     _attr_fan_modes = [FAN_AUTO, FAN_LOW, FAN_MEDIUM, FAN_HIGH]
     _attr_hvac_modes = AC_HVAC_MODES
-    _attr_supported_features = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
+    )
 
     def __init__(self, instance, ac_key):
         """Initialize an AdvantageAir AC unit."""
@@ -169,7 +169,7 @@ class AdvantageAirZone(AdvantageAirClimateEntity):
     """AdvantageAir Zone control."""
 
     _attr_hvac_modes = ZONE_HVAC_MODES
-    _attr_supported_features = SUPPORT_TARGET_TEMPERATURE
+    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
 
     def __init__(self, instance, ac_key, zone_key):
         """Initialize an AdvantageAir Zone control."""

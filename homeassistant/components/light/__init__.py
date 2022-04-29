@@ -5,6 +5,7 @@ from collections.abc import Iterable
 import csv
 import dataclasses
 from datetime import timedelta
+from enum import IntEnum
 import logging
 import os
 from typing import cast, final
@@ -40,7 +41,17 @@ DATA_PROFILES = "light_profiles"
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
-# Bitfield of features supported by the light entity
+
+class LightEntityFeature(IntEnum):
+    """Supported features of the light entity."""
+
+    EFFECT = 4
+    FLASH = 8
+    TRANSITION = 32
+
+
+# These SUPPORT_* constants are deprecated as of Home Assistant 2022.5.
+# Please use the LightEntityFeature enum instead.
 SUPPORT_BRIGHTNESS = 1  # Deprecated, replaced by color modes
 SUPPORT_COLOR_TEMP = 2  # Deprecated, replaced by color modes
 SUPPORT_EFFECT = 4
@@ -274,9 +285,9 @@ def filter_turn_off_params(light, params):
     """Filter out params not used in turn off or not supported by the light."""
     supported_features = light.supported_features
 
-    if not supported_features & SUPPORT_FLASH:
+    if not supported_features & LightEntityFeature.FLASH:
         params.pop(ATTR_FLASH, None)
-    if not supported_features & SUPPORT_TRANSITION:
+    if not supported_features & LightEntityFeature.TRANSITION:
         params.pop(ATTR_TRANSITION, None)
 
     return {k: v for k, v in params.items() if k in (ATTR_TRANSITION, ATTR_FLASH)}
@@ -286,11 +297,11 @@ def filter_turn_on_params(light, params):
     """Filter out params not supported by the light."""
     supported_features = light.supported_features
 
-    if not supported_features & SUPPORT_EFFECT:
+    if not supported_features & LightEntityFeature.EFFECT:
         params.pop(ATTR_EFFECT, None)
-    if not supported_features & SUPPORT_FLASH:
+    if not supported_features & LightEntityFeature.FLASH:
         params.pop(ATTR_FLASH, None)
-    if not supported_features & SUPPORT_TRANSITION:
+    if not supported_features & LightEntityFeature.TRANSITION:
         params.pop(ATTR_TRANSITION, None)
     if not supported_features & SUPPORT_WHITE_VALUE:
         params.pop(ATTR_WHITE_VALUE, None)
@@ -831,7 +842,7 @@ class LightEntity(ToggleEntity):
             data[ATTR_MIN_MIREDS] = self.min_mireds
             data[ATTR_MAX_MIREDS] = self.max_mireds
 
-        if supported_features & SUPPORT_EFFECT:
+        if supported_features & LightEntityFeature.EFFECT:
             data[ATTR_EFFECT_LIST] = self.effect_list
 
         data[ATTR_SUPPORTED_COLOR_MODES] = sorted(supported_color_modes)
@@ -927,7 +938,7 @@ class LightEntity(ToggleEntity):
             if self.hs_color is not None:
                 data.update(self._light_internal_convert_color(COLOR_MODE_HS))
 
-        if supported_features & SUPPORT_EFFECT:
+        if supported_features & LightEntityFeature.EFFECT:
             data[ATTR_EFFECT] = self.effect
 
         return {key: val for key, val in data.items() if val is not None}

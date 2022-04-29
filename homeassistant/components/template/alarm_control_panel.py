@@ -220,7 +220,7 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity):
             )
         await super().async_added_to_hass()
 
-    async def _async_alarm_arm(self, state, script=None, code=None):
+    async def _async_alarm_arm(self, state, script, code):
         """Arm the panel to specified state with supplied script."""
         optimistic_set = False
 
@@ -228,10 +228,7 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity):
             self._state = state
             optimistic_set = True
 
-        if script is not None:
-            await script.async_run({ATTR_CODE: code}, context=self._context)
-        else:
-            _LOGGER.error("No script action defined for %s", state)
+        await script.async_run({ATTR_CODE: code}, context=self._context)
 
         if optimistic_set:
             self.async_write_ha_state()

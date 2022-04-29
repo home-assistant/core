@@ -1,7 +1,7 @@
 """CoolMasterNet platform to control of CoolMasterNet Climate Devices."""
 import logging
 
-from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
 from homeassistant.components.climate.const import (
     HVAC_MODE_COOL,
     HVAC_MODE_DRY,
@@ -9,8 +9,6 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
-    SUPPORT_FAN_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
@@ -20,8 +18,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_SUPPORTED_MODES, DATA_COORDINATOR, DATA_INFO, DOMAIN
-
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
 
 CM_TO_HA_STATE = {
     "heat": HVAC_MODE_HEAT,
@@ -65,6 +61,10 @@ async def async_setup_entry(
 class CoolmasterClimate(CoordinatorEntity, ClimateEntity):
     """Representation of a coolmaster climate device."""
 
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
+    )
+
     def __init__(self, coordinator, unit_id, unit, supported_modes, info):
         """Initialize the climate device."""
         super().__init__(coordinator)
@@ -93,11 +93,6 @@ class CoolmasterClimate(CoordinatorEntity, ClimateEntity):
     def unique_id(self):
         """Return unique ID for this device."""
         return self._unit_id
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_FLAGS
 
     @property
     def name(self):

@@ -10,12 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components import mqtt
 import homeassistant.components.alarm_control_panel as alarm
-from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_HOME,
-    SUPPORT_ALARM_ARM_NIGHT,
-    SUPPORT_ALARM_TRIGGER,
-)
+from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
 from homeassistant.const import (
     CONF_CODE,
     CONF_DELAY_TIME,
@@ -209,6 +204,13 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
     A trigger_time of zero disables the alarm_trigger service.
     """
 
+    _attr_supported_features = (
+        AlarmControlPanelEntityFeature.ARM_HOME
+        | AlarmControlPanelEntityFeature.ARM_AWAY
+        | AlarmControlPanelEntityFeature.ARM_NIGHT
+        | AlarmControlPanelEntityFeature.TRIGGER
+    )
+
     def __init__(
         self,
         hass,
@@ -292,16 +294,6 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
             return STATE_ALARM_PENDING
 
         return self._state
-
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return (
-            SUPPORT_ALARM_ARM_HOME
-            | SUPPORT_ALARM_ARM_AWAY
-            | SUPPORT_ALARM_ARM_NIGHT
-            | SUPPORT_ALARM_TRIGGER
-        )
 
     @property
     def _active_state(self):

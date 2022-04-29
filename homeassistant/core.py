@@ -101,7 +101,7 @@ block_async_io.enable()
 
 _T = TypeVar("_T")
 _R = TypeVar("_R")
-_R_co = TypeVar("_R_co", covariant=True)  # pylint: disable=invalid-name
+_R_co = TypeVar("_R_co", covariant=True)
 # Internal; not helpers.typing.UNDEFINED due to circular dependency
 _UNDEF: dict[Any, Any] = {}
 _CallableT = TypeVar("_CallableT", bound=Callable[..., Any])

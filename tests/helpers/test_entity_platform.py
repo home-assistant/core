@@ -14,7 +14,11 @@ from homeassistant.helpers import (
     entity_platform,
     entity_registry as er,
 )
-from homeassistant.helpers.entity import DeviceInfo, async_generate_entity_id
+from homeassistant.helpers.entity import (
+    DeviceInfo,
+    EntityCategory,
+    async_generate_entity_id,
+)
 from homeassistant.helpers.entity_component import (
     DEFAULT_SCAN_INTERVAL,
     EntityComponent,
@@ -1151,7 +1155,7 @@ async def test_entity_info_added_to_entity_registry(hass):
     entity_default = MockEntity(
         capability_attributes={"max": 100},
         device_class="mock-device-class",
-        entity_category="config",
+        entity_category=EntityCategory.CONFIG,
         icon="nice:icon",
         name="best name",
         supported_features=5,
@@ -1170,7 +1174,7 @@ async def test_entity_info_added_to_entity_registry(hass):
         "test_domain",
         capabilities={"max": 100},
         device_class=None,
-        entity_category="config",
+        entity_category=EntityCategory.CONFIG,
         icon=None,
         id=ANY,
         name=None,

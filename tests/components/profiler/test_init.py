@@ -94,10 +94,11 @@ async def test_object_growth_logging(hass, caplog):
     assert hass.services.has_service(DOMAIN, SERVICE_START_LOG_OBJECTS)
     assert hass.services.has_service(DOMAIN, SERVICE_STOP_LOG_OBJECTS)
 
-    await hass.services.async_call(
-        DOMAIN, SERVICE_START_LOG_OBJECTS, {CONF_SCAN_INTERVAL: 10}
-    )
-    await hass.async_block_till_done()
+    with patch("homeassistant.components.profiler.objgraph.growth"):
+        await hass.services.async_call(
+            DOMAIN, SERVICE_START_LOG_OBJECTS, {CONF_SCAN_INTERVAL: 10}
+        )
+        await hass.async_block_till_done()
 
     assert "Growth" in caplog.text
     caplog.clear()

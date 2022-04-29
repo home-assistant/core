@@ -11,7 +11,7 @@ from maxcube.device import (
     MAX_DEVICE_MODE_VACATION,
 )
 
-from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
@@ -24,8 +24,6 @@ from homeassistant.components.climate.const import (
     PRESET_COMFORT,
     PRESET_ECO,
     PRESET_NONE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
@@ -50,8 +48,6 @@ MIN_TEMPERATURE = 5.0
 # Largest Value without fully opening
 MAX_TEMPERATURE = 30.0
 
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
-
 
 def setup_platform(
     hass: HomeAssistant,
@@ -73,13 +69,16 @@ def setup_platform(
 class MaxCubeClimate(ClimateEntity):
     """MAX! Cube ClimateEntity."""
 
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+    )
+
     def __init__(self, handler, device):
         """Initialize MAX! Cube ClimateEntity."""
         room = handler.cube.room_by_id(device.room_id)
         self._attr_name = f"{room.name} {device.name}"
         self._cubehandle = handler
         self._device = device
-        self._attr_supported_features = SUPPORT_FLAGS
         self._attr_should_poll = True
         self._attr_unique_id = self._device.serial
         self._attr_temperature_unit = TEMP_CELSIUS

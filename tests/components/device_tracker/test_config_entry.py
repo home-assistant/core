@@ -137,6 +137,39 @@ async def test_register_mac(hass):
     assert entity_entry_1.disabled_by is None
 
 
+async def test_register_mac_ignored(hass):
+    """Test ignoring registering a mac."""
+    dev_reg = dr.async_get(hass)
+    ent_reg = er.async_get(hass)
+
+    config_entry = MockConfigEntry(domain="test", pref_disable_new_entities=True)
+    config_entry.add_to_hass(hass)
+
+    mac1 = "12:34:56:AB:CD:EF"
+
+    entity_entry_1 = ent_reg.async_get_or_create(
+        "device_tracker",
+        "test",
+        mac1 + "yo1",
+        original_name="name 1",
+        config_entry=config_entry,
+        disabled_by=er.RegistryEntryDisabler.INTEGRATION,
+    )
+
+    ce._async_register_mac(hass, "test", mac1, mac1 + "yo1")
+
+    dev_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, mac1)},
+    )
+
+    await hass.async_block_till_done()
+
+    entity_entry_1 = ent_reg.async_get(entity_entry_1.entity_id)
+
+    assert entity_entry_1.disabled_by == er.RegistryEntryDisabler.INTEGRATION
+
+
 async def test_connected_device_registered(hass):
     """Test dispatch on connected device being registered."""
 

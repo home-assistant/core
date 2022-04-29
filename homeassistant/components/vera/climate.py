@@ -25,7 +25,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import convert
 
 from . import VeraDevice
 from .common import ControllerData, get_controller_data
@@ -110,13 +109,6 @@ class VeraThermostat(VeraDevice[veraApi.VeraThermostat], ClimateEntity):
             self.vera_device.fan_auto()
 
         self.schedule_update_ha_state()
-
-    @property
-    def current_power_w(self) -> float | None:
-        """Return the current power usage in W."""
-        if power := self.vera_device.power:
-            return convert(power, float, 0.0)
-        return None
 
     @property
     def temperature_unit(self) -> str:

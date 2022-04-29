@@ -1,10 +1,12 @@
 """Test the Z-Wave JS fan platform."""
+import copy
 import math
 
 import pytest
 from voluptuous.error import MultipleInvalid
 from zwave_js_server.const import CommandClass
 from zwave_js_server.event import Event
+from zwave_js_server.model.node import Node
 
 from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
@@ -14,6 +16,7 @@ from homeassistant.components.fan import (
     DOMAIN as FAN_DOMAIN,
     SERVICE_SET_PRESET_MODE,
     SUPPORT_PRESET_MODE,
+    NotValidPresetModeError,
 )
 from homeassistant.components.zwave_js.fan import ATTR_FAN_STATE
 from homeassistant.const import (
@@ -23,6 +26,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
 from homeassistant.exceptions import HomeAssistantError
@@ -63,7 +67,6 @@ async def test_generic_fan(hass, client, fan_generic, integration):
             "type": "number",
             "readable": True,
             "writeable": True,
-            "label": "Target value",
         },
     }
     assert args["value"] == 66
@@ -106,7 +109,6 @@ async def test_generic_fan(hass, client, fan_generic, integration):
             "type": "number",
             "readable": True,
             "writeable": True,
-            "label": "Target value",
         },
     }
     assert args["value"] == 255
@@ -138,7 +140,6 @@ async def test_generic_fan(hass, client, fan_generic, integration):
             "type": "number",
             "readable": True,
             "writeable": True,
-            "label": "Target value",
         },
     }
     assert args["value"] == 0
@@ -259,6 +260,65 @@ async def test_configurable_speeds_fan(hass, client, hs_fc200, integration):
 
     state = hass.states.get(entity_id)
     assert math.isclose(state.attributes[ATTR_PERCENTAGE_STEP], 33.3333, rel_tol=1e-3)
+    assert state.attributes[ATTR_PRESET_MODES] == []
+
+
+async def test_configurable_speeds_fan_with_missing_config_value(
+    hass, client, hs_fc200_state, integration
+):
+    """Test a fan entity with configurable speeds."""
+    entity_id = "fan.scene_capable_fan_control_switch"
+
+    # Attach a modified version of the node with a bad config
+    bad_node_data = copy.deepcopy(hs_fc200_state)
+    fan_type_value = next(
+        (
+            v
+            for v in bad_node_data["values"]
+            if v["endpoint"] == 0 and v["commandClass"] == 112 and v["property"] == 5
+        ),
+        None,
+    )
+    assert fan_type_value is not None
+    bad_node_data["values"].remove(fan_type_value)
+
+    node = Node(client, bad_node_data)
+    event = {"node": node}
+    client.driver.controller.emit("node added", event)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_configurable_speeds_fan_with_bad_config_value(
+    hass, client, hs_fc200_state, integration
+):
+    """Test a fan entity with configurable speeds."""
+    entity_id = "fan.scene_capable_fan_control_switch"
+
+    # Attach a modified version of the node with a bad config
+    bad_node_data = copy.deepcopy(hs_fc200_state)
+    fan_type_value = next(
+        (
+            v
+            for v in bad_node_data["values"]
+            if v["endpoint"] == 0 and v["commandClass"] == 112 and v["property"] == 5
+        ),
+        None,
+    )
+    assert fan_type_value is not None
+
+    # 42 is not a valid configuration option with this device
+    fan_type_value["value"] = 42
+
+    node = Node(client, bad_node_data)
+    event = {"node": node}
+    client.driver.controller.emit("node added", event)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_fixed_speeds_fan(hass, client, ge_12730, integration):
@@ -325,6 +385,110 @@ async def test_fixed_speeds_fan(hass, client, ge_12730, integration):
 
     state = hass.states.get(entity_id)
     assert math.isclose(state.attributes[ATTR_PERCENTAGE_STEP], 33.3333, rel_tol=1e-3)
+    assert state.attributes[ATTR_PRESET_MODES] == []
+
+
+async def test_inovelli_lzw36(hass, client, inovelli_lzw36, integration):
+    """Test an LZW36."""
+    node = inovelli_lzw36
+    node_id = 19
+    entity_id = "fan.family_room_combo_2"
+
+    async def get_zwave_speed_from_percentage(percentage):
+        """Set the fan to a particular percentage and get the resulting Zwave speed."""
+        client.async_send_command.reset_mock()
+        await hass.services.async_call(
+            "fan",
+            "turn_on",
+            {"entity_id": entity_id, "percentage": percentage},
+            blocking=True,
+        )
+
+        assert len(client.async_send_command.call_args_list) == 1
+        args = client.async_send_command.call_args[0][0]
+        assert args["command"] == "node.set_value"
+        assert args["nodeId"] == node_id
+        return args["value"]
+
+    async def set_zwave_speed(zwave_speed):
+        """Set the underlying device speed."""
+        event = Event(
+            type="value updated",
+            data={
+                "source": "node",
+                "event": "value updated",
+                "nodeId": node_id,
+                "args": {
+                    "commandClassName": "Multilevel Switch",
+                    "commandClass": 38,
+                    "endpoint": 2,
+                    "property": "currentValue",
+                    "newValue": zwave_speed,
+                    "prevValue": 0,
+                    "propertyName": "currentValue",
+                },
+            },
+        )
+        node.receive_event(event)
+
+    async def get_percentage_from_zwave_speed(zwave_speed):
+        """Set the underlying device speed and get the resulting percentage."""
+        await set_zwave_speed(zwave_speed)
+        state = hass.states.get(entity_id)
+        return state.attributes[ATTR_PERCENTAGE]
+
+    # This device has the speeds:
+    # low = 2-33, med = 34-66, high = 67-99
+    percentages_to_zwave_speeds = [
+        [[0], [0]],
+        [range(1, 34), range(2, 34)],
+        [range(34, 68), range(34, 67)],
+        [range(68, 101), range(67, 100)],
+    ]
+
+    for percentages, zwave_speeds in percentages_to_zwave_speeds:
+        for percentage in percentages:
+            actual_zwave_speed = await get_zwave_speed_from_percentage(percentage)
+            assert actual_zwave_speed in zwave_speeds
+        for zwave_speed in zwave_speeds:
+            actual_percentage = await get_percentage_from_zwave_speed(zwave_speed)
+            assert actual_percentage in percentages
+
+    # Check static entity properties
+    state = hass.states.get(entity_id)
+    assert math.isclose(state.attributes[ATTR_PERCENTAGE_STEP], 33.3333, rel_tol=1e-3)
+    assert state.attributes[ATTR_PRESET_MODES] == ["breeze"]
+
+    # This device has one preset, where a device level of "1" is the
+    # "breeze" mode
+    await set_zwave_speed(1)
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_PRESET_MODE] == "breeze"
+    assert state.attributes[ATTR_PERCENTAGE] is None
+
+    client.async_send_command.reset_mock()
+    await hass.services.async_call(
+        "fan",
+        "turn_on",
+        {"entity_id": entity_id, "preset_mode": "breeze"},
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == node_id
+    assert args["value"] == 1
+
+    client.async_send_command.reset_mock()
+    with pytest.raises(NotValidPresetModeError):
+        await hass.services.async_call(
+            "fan",
+            "turn_on",
+            {"entity_id": entity_id, "preset_mode": "wheeze"},
+            blocking=True,
+        )
+    assert len(client.async_send_command.call_args_list) == 0
 
 
 async def test_thermostat_fan(hass, client, climate_adc_t3000, integration):

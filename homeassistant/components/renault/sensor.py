@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Any, Generic, cast
 
 from renault_api.kamereon.enums import ChargeState, PlugState
 from renault_api.kamereon.models import (
@@ -45,18 +45,18 @@ from .renault_vehicle import RenaultVehicleProxy
 
 
 @dataclass
-class RenaultSensorRequiredKeysMixin:
+class RenaultSensorRequiredKeysMixin(Generic[T]):
     """Mixin for required keys."""
 
     data_key: str
-    entity_class: type[RenaultSensor]
+    entity_class: type[RenaultSensor[T]]
 
 
 @dataclass
 class RenaultSensorEntityDescription(
     SensorEntityDescription,
     RenaultDataEntityDescription,
-    RenaultSensorRequiredKeysMixin,
+    RenaultSensorRequiredKeysMixin[T],
 ):
     """Class describing Renault sensor entities."""
 
@@ -73,7 +73,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Renault entities from config entry."""
     proxy: RenaultHub = hass.data[DOMAIN][config_entry.entry_id]
-    entities: list[RenaultSensor] = [
+    entities: list[RenaultSensor[Any]] = [
         description.entity_class(vehicle, description)
         for vehicle in proxy.vehicles.values()
         for description in SENSOR_TYPES
@@ -87,7 +87,7 @@ async def async_setup_entry(
 class RenaultSensor(RenaultDataEntity[T], SensorEntity):
     """Mixin for sensor specific attributes."""
 
-    entity_description: RenaultSensorEntityDescription
+    entity_description: RenaultSensorEntityDescription[T]
 
     @property
     def data(self) -> StateType:
@@ -157,7 +157,7 @@ def _get_utc_value(entity: RenaultSensor[T]) -> datetime:
     return as_utc(original_dt)
 
 
-SENSOR_TYPES: tuple[RenaultSensorEntityDescription, ...] = (
+SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
     RenaultSensorEntityDescription(
         key="battery_level",
         coordinator="battery",

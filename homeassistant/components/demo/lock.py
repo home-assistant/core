@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 
-from homeassistant.components.lock import SUPPORT_OPEN, LockEntity
+from homeassistant.components.lock import LockEntity, LockEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     STATE_JAMMED,
@@ -60,7 +60,7 @@ class DemoLock(LockEntity):
         """Initialize the lock."""
         self._attr_name = name
         if openable:
-            self._attr_supported_features = SUPPORT_OPEN
+            self._attr_supported_features = LockEntityFeature.OPEN
         self._state = state
         self._openable = openable
         self._jam_on_operation = jam_on_operation
@@ -113,5 +113,5 @@ class DemoLock(LockEntity):
     def supported_features(self):
         """Flag supported features."""
         if self._openable:
-            return SUPPORT_OPEN
+            return LockEntityFeature.OPEN
         return 0

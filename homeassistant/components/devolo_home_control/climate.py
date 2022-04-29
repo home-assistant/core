@@ -9,9 +9,9 @@ from devolo_home_control_api.homecontrol import HomeControl
 from homeassistant.components.climate import (
     ATTR_TEMPERATURE,
     HVAC_MODE_HEAT,
-    SUPPORT_TARGET_TEMPERATURE,
     TEMP_CELSIUS,
     ClimateEntity,
+    ClimateEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PRECISION_HALVES, PRECISION_TENTHS
@@ -65,7 +65,7 @@ class DevoloClimateDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, ClimateEntit
         self._attr_min_temp = self._multi_level_switch_property.min
         self._attr_max_temp = self._multi_level_switch_property.max
         self._attr_precision = PRECISION_TENTHS
-        self._attr_supported_features = SUPPORT_TARGET_TEMPERATURE
+        self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
         self._attr_target_temperature_step = PRECISION_HALVES
         self._attr_temperature_unit = TEMP_CELSIUS
 

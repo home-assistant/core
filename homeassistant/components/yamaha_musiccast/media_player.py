@@ -6,14 +6,9 @@ import logging
 
 from aiomusiccast import MusicCastGroupException, MusicCastMediaContent
 from aiomusiccast.features import ZoneFeature
-import voluptuous as vol
 
 from homeassistant.components import media_source
-from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA,
-    BrowseMedia,
-    MediaPlayerEntity,
-)
+from homeassistant.components.media_player import BrowseMedia, MediaPlayerEntity
 from homeassistant.components.media_player.browse_media import (
     async_process_play_media_url,
 )
@@ -40,21 +35,12 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PORT,
-    STATE_IDLE,
-    STATE_OFF,
-    STATE_PAUSED,
-    STATE_PLAYING,
-)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import uuid
 
 from . import MusicCastDataUpdateCoordinator, MusicCastDeviceEntity
@@ -64,7 +50,6 @@ from .const import (
     DEFAULT_ZONE,
     DOMAIN,
     HA_REPEAT_MODE_TO_MC_MAPPING,
-    INTERVAL_SECONDS,
     MC_REPEAT_MODE_TO_HA_MAPPING,
     MEDIA_CLASS_MAPPING,
     NULL_GROUP,
@@ -80,42 +65,6 @@ MUSIC_PLAYER_BASE_SUPPORT = (
     | SUPPORT_GROUPING
     | SUPPORT_PLAY_MEDIA
 )
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=5000): cv.port,
-        vol.Optional(INTERVAL_SECONDS, default=0): cv.positive_int,
-    }
-)
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_devices: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Import legacy configurations."""
-
-    if hass.config_entries.async_entries(DOMAIN) and config[CONF_HOST] not in [
-        entry.data[CONF_HOST] for entry in hass.config_entries.async_entries(DOMAIN)
-    ]:
-        _LOGGER.error(
-            "Configuration in configuration.yaml is not supported anymore. "
-            "Please add this device using the config flow: %s",
-            config[CONF_HOST],
-        )
-    else:
-        _LOGGER.warning(
-            "Configuration in configuration.yaml is deprecated. Use the config flow instead"
-        )
-
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-            )
-        )
 
 
 async def async_setup_entry(

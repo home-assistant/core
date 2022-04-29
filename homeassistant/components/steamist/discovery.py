@@ -9,12 +9,12 @@ from discovery30303 import AIODiscovery30303, Device30303
 
 from homeassistant import config_entries
 from homeassistant.components import network
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_MODEL, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.util.network import is_ip_address
 
-from .const import CONF_MODEL, DISCOVER_SCAN_TIMEOUT, DISCOVERY, DOMAIN
+from .const import DISCOVER_SCAN_TIMEOUT, DISCOVERY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

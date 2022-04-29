@@ -29,6 +29,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
+from homeassistant.helpers.entity_component import async_update_entity
 import homeassistant.util.dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -102,7 +103,7 @@ async def test_update_exception(hass, mock_light):
     """Test platform setup."""
 
     mock_light.get_color.side_effect = pykulersky.PykulerskyException
-    await hass.helpers.entity_component.async_update_entity("light.bedroom")
+    await async_update_entity(hass, "light.bedroom")
     state = hass.states.get("light.bedroom")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE

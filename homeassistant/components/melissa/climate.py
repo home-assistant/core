@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
 from homeassistant.components.climate.const import (
     FAN_AUTO,
     FAN_HIGH,
@@ -15,8 +15,6 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_FAN_ONLY,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
-    SUPPORT_FAN_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
@@ -26,8 +24,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from . import DATA_MELISSA
 
 _LOGGER = logging.getLogger(__name__)
-
-SUPPORT_FLAGS = SUPPORT_FAN_MODE | SUPPORT_TARGET_TEMPERATURE
 
 OP_MODES = [
     HVAC_MODE_HEAT,
@@ -61,6 +57,10 @@ async def async_setup_platform(
 
 class MelissaClimate(ClimateEntity):
     """Representation of a Melissa Climate device."""
+
+    _attr_supported_features = (
+        ClimateEntityFeature.FAN_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
+    )
 
     def __init__(self, api, serial_number, init_data):
         """Initialize the climate device."""
@@ -146,11 +146,6 @@ class MelissaClimate(ClimateEntity):
     def max_temp(self):
         """Return the maximum supported temperature for the thermostat."""
         return 30
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_FLAGS
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""

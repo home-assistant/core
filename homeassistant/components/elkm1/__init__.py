@@ -363,6 +363,9 @@ async def async_wait_for_elk_to_sync(
     # VN is the first command sent for panel, when we get
     # it back we now we are logged in either with or without a password
     elk.add_handler("VN", first_response)
+    # Some panels do not respond to the vn request so we
+    # check for lw as well
+    elk.add_handler("LW", first_response)
     elk.add_handler("sync_complete", sync_complete)
     for name, event, timeout in (
         ("login", login_event, login_timeout),

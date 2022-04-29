@@ -278,14 +278,20 @@ def cmd(func):
         """Wrap all command methods."""
         try:
             await func(obj, *args, **kwargs)
-        except jsonrpc_base.jsonrpc.TransportError as exc:
+        except (
+            jsonrpc_base.jsonrpc.TransportError,
+            jsonrpc_base.jsonrpc.ProtocolError,
+        ) as exc:
             # If Kodi is off, we expect calls to fail.
             if obj.state == STATE_OFF:
-                log_function = _LOGGER.info
+                log_function = _LOGGER.debug
             else:
                 log_function = _LOGGER.error
             log_function(
-                "Error calling %s on entity %s: %r", func.__name__, obj.entity_id, exc
+                "Error calling %s on entity %s: %r",
+                func.__name__,
+                obj.entity_id,
+                exc,
             )
 
     return wrapper
@@ -306,6 +312,7 @@ class KodiEntity(MediaPlayerEntity):
         self._app_properties = {}
         self._media_position_updated_at = None
         self._media_position = None
+        self._connect_error = False
 
     def _reset_state(self, players=None):
         self._players = players
@@ -420,6 +427,7 @@ class KodiEntity(MediaPlayerEntity):
 
     async def _on_ws_connected(self):
         """Call after ws is connected."""
+        self._connect_error = False
         self._register_ws_callbacks()
 
         version = (await self._kodi.get_application_properties(["version"]))["version"]
@@ -436,15 +444,23 @@ class KodiEntity(MediaPlayerEntity):
             await self._connection.connect()
             await self._on_ws_connected()
         except (jsonrpc_base.jsonrpc.TransportError, CannotConnectError):
-            _LOGGER.debug("Unable to connect to Kodi via websocket", exc_info=True)
+            if not self._connect_error:
+                self._connect_error = True
+                _LOGGER.warning("Unable to connect to Kodi via websocket")
             await self._clear_connection(False)
+        else:
+            self._connect_error = False
 
     async def _ping(self):
         try:
             await self._kodi.ping()
         except (jsonrpc_base.jsonrpc.TransportError, CannotConnectError):
-            _LOGGER.debug("Unable to ping Kodi via websocket", exc_info=True)
+            if not self._connect_error:
+                self._connect_error = True
+                _LOGGER.warning("Unable to ping Kodi via websocket")
             await self._clear_connection()
+        else:
+            self._connect_error = False
 
     async def _async_connect_websocket_if_disconnected(self, *_):
         """Reconnect the websocket if it fails."""

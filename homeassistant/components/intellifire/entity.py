@@ -7,10 +7,9 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from . import IntellifireDataUpdateCoordinator
 
 
-class IntellifireEntity(CoordinatorEntity):
+class IntellifireEntity(CoordinatorEntity[IntellifireDataUpdateCoordinator]):
     """Define a generic class for Intellifire entities."""
 
-    coordinator: IntellifireDataUpdateCoordinator
     _attr_attribution = "Data provided by unpublished Intellifire API"
 
     def __init__(

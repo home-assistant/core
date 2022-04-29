@@ -29,7 +29,7 @@ from homeassistant.components.websocket_api.http import URL
 from homeassistant.const import ATTR_NOW, EVENT_TIME_CHANGED, HASSIO_USER_NAME
 from homeassistant.helpers import config_entry_oauth2_flow, event
 from homeassistant.setup import async_setup_component
-from homeassistant.util import location
+from homeassistant.util import dt as dt_util, location
 
 from tests.ignore_uncaught_exceptions import IGNORE_UNCAUGHT_EXCEPTIONS
 
@@ -41,6 +41,7 @@ from tests.common import (  # noqa: E402, isort:skip
     MockConfigEntry,
     MockUser,
     async_fire_mqtt_message,
+    async_init_recorder_component,
     async_test_home_assistant,
     get_test_home_assistant,
     init_recorder_component,
@@ -249,6 +250,8 @@ def load_registries():
 def hass(loop, load_registries, hass_storage, request):
     """Fixture to provide a test instance of Home Assistant."""
 
+    orig_tz = dt_util.DEFAULT_TIME_ZONE
+
     def exc_handle(loop, context):
         """Handle exceptions by rethrowing them, which will fail the test."""
         # Most of these contexts will contain an exception, but not all.
@@ -273,6 +276,10 @@ def hass(loop, load_registries, hass_storage, request):
     yield hass
 
     loop.run_until_complete(hass.async_stop(force=True))
+
+    # Restore timezone, it is set when creating the hass object
+    dt_util.DEFAULT_TIME_ZONE = orig_tz
+
     for ex in exceptions:
         if (
             request.module.__name__,
@@ -611,6 +618,8 @@ async def mqtt_mock(hass, mqtt_client_mock, mqtt_config):
     )
     mqtt_component_mock.conf = hass.data["mqtt"].conf  # For diagnostics
     mqtt_component_mock._mqttc = mqtt_client_mock
+    # connected set to True to get a more realistics behavior when subscribing
+    hass.data["mqtt"].connected = True
 
     hass.data["mqtt"] = mqtt_component_mock
     component = hass.data["mqtt"]
@@ -790,6 +799,8 @@ def enable_nightly_purge():
 @pytest.fixture
 def hass_recorder(enable_nightly_purge, enable_statistics, hass_storage):
     """Home Assistant fixture with in-memory recorder."""
+    original_tz = dt_util.DEFAULT_TIME_ZONE
+
     hass = get_test_home_assistant()
     stats = recorder.Recorder.async_periodic_statistics if enable_statistics else None
     nightly = recorder.Recorder.async_nightly_tasks if enable_nightly_purge else None
@@ -813,6 +824,31 @@ def hass_recorder(enable_nightly_purge, enable_statistics, hass_storage):
 
         yield setup_recorder
         hass.stop()
+
+    # Restore timezone, it is set when creating the hass object
+    dt_util.DEFAULT_TIME_ZONE = original_tz
+
+
+@pytest.fixture
+async def recorder_mock(enable_nightly_purge, enable_statistics, hass):
+    """Fixture with in-memory recorder."""
+    stats = recorder.Recorder.async_periodic_statistics if enable_statistics else None
+    nightly = recorder.Recorder.async_nightly_tasks if enable_nightly_purge else None
+    with patch(
+        "homeassistant.components.recorder.Recorder.async_periodic_statistics",
+        side_effect=stats,
+        autospec=True,
+    ), patch(
+        "homeassistant.components.recorder.Recorder.async_nightly_tasks",
+        side_effect=nightly,
+        autospec=True,
+    ):
+        await async_init_recorder_component(hass)
+        await hass.async_start()
+        await hass.async_block_till_done()
+        await hass.async_add_executor_job(
+            hass.data[recorder.DATA_INSTANCE].block_till_done
+        )
 
 
 @pytest.fixture

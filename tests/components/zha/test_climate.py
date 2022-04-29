@@ -6,6 +6,7 @@ import pytest
 import zhaquirks.sinope.thermostat
 import zhaquirks.tuya.ts0601_trv
 import zigpy.profiles
+import zigpy.types
 import zigpy.zcl.clusters
 from zigpy.zcl.clusters.hvac import Thermostat
 import zigpy.zcl.foundation as zcl_f
@@ -162,8 +163,8 @@ ZCL_ATTR_PLUG = {
     "abs_max_heat_setpoint_limit": 3000,
     "abs_min_cool_setpoint_limit": 2000,
     "abs_max_cool_setpoint_limit": 4000,
-    "ctrl_seqe_of_oper": Thermostat.ControlSequenceOfOperation.Cooling_and_Heating,
-    "local_temp": None,
+    "ctrl_sequence_of_oper": Thermostat.ControlSequenceOfOperation.Cooling_and_Heating,
+    "local_temperature": None,
     "max_cool_setpoint_limit": 3900,
     "max_heat_setpoint_limit": 2900,
     "min_cool_setpoint_limit": 2100,
@@ -268,7 +269,7 @@ def test_sequence_mappings():
             assert Thermostat.SystemMode(HVAC_MODE_2_SYSTEM[hvac_mode]) is not None
 
 
-async def test_climate_local_temp(hass, device_climate):
+async def test_climate_local_temperature(hass, device_climate):
     """Test local temperature."""
 
     thrm_cluster = device_climate.device.endpoints[1].thermostat
@@ -517,7 +518,7 @@ async def test_hvac_modes(hass, device_climate_mock, seq_of_op, modes):
     """Test HVAC modes from sequence of operations."""
 
     device_climate = await device_climate_mock(
-        CLIMATE, {"ctrl_seqe_of_oper": seq_of_op}
+        CLIMATE, {"ctrl_sequence_of_oper": seq_of_op}
     )
     entity_id = await find_entity_id(Platform.CLIMATE, device_climate, hass)
     state = hass.states.get(entity_id)
@@ -1119,7 +1120,7 @@ async def test_occupancy_reset(hass, device_climate_sinope):
     assert state.attributes[ATTR_PRESET_MODE] == PRESET_AWAY
 
     await send_attributes_report(
-        hass, thrm_cluster, {"occupied_heating_setpoint": 1950}
+        hass, thrm_cluster, {"occupied_heating_setpoint": zigpy.types.uint16_t(1950)}
     )
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_PRESET_MODE] == PRESET_NONE

@@ -67,7 +67,6 @@ async def async_setup_entry(
 class SystemBridgeBinarySensor(SystemBridgeDeviceEntity, BinarySensorEntity):
     """Define a System Bridge binary sensor."""
 
-    coordinator: SystemBridgeDataUpdateCoordinator
     entity_description: SystemBridgeBinarySensorEntityDescription
 
     def __init__(

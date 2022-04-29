@@ -11,7 +11,6 @@ from homeassistant.components.pvpc_hourly_pricing import (
     TARIFFS,
 )
 from homeassistant.const import CONF_NAME
-from homeassistant.util import dt as dt_util
 
 from .conftest import check_valid_state
 
@@ -29,7 +28,7 @@ async def test_multi_sensor_migration(
 ):
     """Test tariff migration when there are >1 old sensors."""
     entity_reg = mock_registry(hass)
-    hass.config.time_zone = dt_util.get_time_zone("Europe/Madrid")
+    hass.config.set_time_zone("Europe/Madrid")
     uid_1 = "discrimination"
     uid_2 = "normal"
     old_conf_1 = {CONF_NAME: "test_pvpc_1", ATTR_TARIFF: uid_1}

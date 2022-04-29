@@ -120,14 +120,16 @@ async def test_services(hass, mock_light_profiles, enable_custom_integrations):
     ent1, ent2, ent3 = platform.ENTITIES
     ent1.supported_color_modes = [light.COLOR_MODE_HS]
     ent3.supported_color_modes = [light.COLOR_MODE_HS]
-    ent1.supported_features = light.SUPPORT_TRANSITION
+    ent1.supported_features = light.LightEntityFeature.TRANSITION
     ent2.supported_features = (
         light.SUPPORT_COLOR
-        | light.SUPPORT_EFFECT
-        | light.SUPPORT_TRANSITION
+        | light.LightEntityFeature.EFFECT
+        | light.LightEntityFeature.TRANSITION
         | light.SUPPORT_WHITE_VALUE
     )
-    ent3.supported_features = light.SUPPORT_FLASH | light.SUPPORT_TRANSITION
+    ent3.supported_features = (
+        light.LightEntityFeature.FLASH | light.LightEntityFeature.TRANSITION
+    )
 
     # Test init
     assert light.is_on(hass, ent1.entity_id)
@@ -539,7 +541,7 @@ async def test_light_profiles(
 
     ent1, _, _ = platform.ENTITIES
     ent1.supported_color_modes = [light.COLOR_MODE_HS]
-    ent1.supported_features = light.SUPPORT_TRANSITION
+    ent1.supported_features = light.LightEntityFeature.TRANSITION
 
     await hass.services.async_call(
         light.DOMAIN,
@@ -576,7 +578,7 @@ async def test_default_profiles_group(
 
     ent, _, _ = platform.ENTITIES
     ent.supported_color_modes = [light.COLOR_MODE_HS]
-    ent.supported_features = light.SUPPORT_TRANSITION
+    ent.supported_features = light.LightEntityFeature.TRANSITION
     await hass.services.async_call(
         light.DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ent.entity_id}, blocking=True
     )
@@ -683,7 +685,7 @@ async def test_default_profiles_light(
 
     dev = next(filter(lambda x: x.entity_id == "light.ceiling_2", platform.ENTITIES))
     dev.supported_color_modes = [light.COLOR_MODE_HS]
-    dev.supported_features = light.SUPPORT_TRANSITION
+    dev.supported_features = light.LightEntityFeature.TRANSITION
     await hass.services.async_call(
         light.DOMAIN,
         SERVICE_TURN_ON,

@@ -2,6 +2,7 @@
 import pytest
 
 from homeassistant.components import automation
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
@@ -31,7 +32,9 @@ async def test_get_triggers(hass, client):
         "device_id": device.id,
     }
 
-    triggers = await async_get_device_automations(hass, "trigger", device.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device.id
+    )
     assert turn_on_trigger in triggers
 
 

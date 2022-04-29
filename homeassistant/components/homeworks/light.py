@@ -7,7 +7,7 @@ from pyhomeworks.pyhomeworks import HW_LIGHT_CHANGED
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    SUPPORT_BRIGHTNESS,
+    COLOR_MODE_BRIGHTNESS,
     LightEntity,
 )
 from homeassistant.const import CONF_NAME
@@ -44,6 +44,9 @@ def setup_platform(
 class HomeworksLight(HomeworksDevice, LightEntity):
     """Homeworks Light."""
 
+    _attr_color_mode = COLOR_MODE_BRIGHTNESS
+    _attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
+
     def __init__(self, controller, addr, name, rate):
         """Create device with Addr, name, and rate."""
         super().__init__(controller, addr, name)
@@ -59,11 +62,6 @@ class HomeworksLight(HomeworksDevice, LightEntity):
             async_dispatcher_connect(self.hass, signal, self._update_callback)
         )
         self._controller.request_dimmer_level(self._addr)
-
-    @property
-    def supported_features(self):
-        """Supported features."""
-        return SUPPORT_BRIGHTNESS
 
     def turn_on(self, **kwargs):
         """Turn on the light."""

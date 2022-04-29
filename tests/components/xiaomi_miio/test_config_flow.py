@@ -9,7 +9,7 @@ import pytest
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import zeroconf
 from homeassistant.components.xiaomi_miio import const
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
+from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_NAME, CONF_TOKEN
 
 from . import TEST_MAC
 
@@ -169,7 +169,7 @@ async def test_config_flow_gateway_success(hass):
         const.CONF_CLOUD_COUNTRY: None,
         CONF_HOST: TEST_HOST,
         CONF_TOKEN: TEST_TOKEN,
-        const.CONF_MODEL: TEST_MODEL,
+        CONF_MODEL: TEST_MODEL,
         const.CONF_MAC: TEST_MAC,
     }
 
@@ -202,7 +202,7 @@ async def test_config_flow_gateway_cloud_success(hass):
         const.CONF_CLOUD_COUNTRY: TEST_CLOUD_COUNTRY,
         CONF_HOST: TEST_HOST,
         CONF_TOKEN: TEST_TOKEN,
-        const.CONF_MODEL: TEST_MODEL,
+        CONF_MODEL: TEST_MODEL,
         const.CONF_MAC: TEST_MAC,
     }
 
@@ -248,7 +248,7 @@ async def test_config_flow_gateway_cloud_multiple_success(hass):
         const.CONF_CLOUD_COUNTRY: TEST_CLOUD_COUNTRY,
         CONF_HOST: TEST_HOST2,
         CONF_TOKEN: TEST_TOKEN,
-        const.CONF_MODEL: TEST_MODEL,
+        CONF_MODEL: TEST_MODEL,
         const.CONF_MAC: TEST_MAC2,
     }
 
@@ -425,7 +425,7 @@ async def test_zeroconf_gateway_success(hass):
         const.CONF_CLOUD_COUNTRY: TEST_CLOUD_COUNTRY,
         CONF_HOST: TEST_HOST,
         CONF_TOKEN: TEST_TOKEN,
-        const.CONF_MODEL: TEST_MODEL,
+        CONF_MODEL: TEST_MODEL,
         const.CONF_MAC: TEST_MAC,
     }
 
@@ -581,7 +581,7 @@ async def test_import_flow_success(hass):
         const.CONF_CLOUD_COUNTRY: None,
         CONF_HOST: TEST_HOST,
         CONF_TOKEN: TEST_TOKEN,
-        const.CONF_MODEL: const.MODELS_SWITCH[0],
+        CONF_MODEL: const.MODELS_SWITCH[0],
         const.CONF_MAC: TEST_MAC,
     }
 
@@ -661,7 +661,7 @@ async def test_config_flow_step_device_manual_model_succes(hass):
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {const.CONF_MODEL: overwrite_model},
+            {CONF_MODEL: overwrite_model},
         )
 
     assert result["type"] == "create_entry"
@@ -673,7 +673,7 @@ async def test_config_flow_step_device_manual_model_succes(hass):
         const.CONF_CLOUD_COUNTRY: None,
         CONF_HOST: TEST_HOST,
         CONF_TOKEN: TEST_TOKEN,
-        const.CONF_MODEL: overwrite_model,
+        CONF_MODEL: overwrite_model,
         const.CONF_MAC: None,
     }
 
@@ -717,7 +717,7 @@ async def config_flow_device_success(hass, model_to_test):
         const.CONF_CLOUD_COUNTRY: None,
         CONF_HOST: TEST_HOST,
         CONF_TOKEN: TEST_TOKEN,
-        const.CONF_MODEL: model_to_test,
+        CONF_MODEL: model_to_test,
         const.CONF_MAC: TEST_MAC,
     }
 
@@ -763,7 +763,7 @@ async def config_flow_generic_roborock(hass):
         const.CONF_CLOUD_COUNTRY: None,
         CONF_HOST: TEST_HOST,
         CONF_TOKEN: TEST_TOKEN,
-        const.CONF_MODEL: DUMMY_MODEL,
+        CONF_MODEL: DUMMY_MODEL,
         const.CONF_MAC: TEST_MAC,
     }
 
@@ -817,7 +817,7 @@ async def zeroconf_device_success(hass, zeroconf_name_to_test, model_to_test):
         const.CONF_CLOUD_COUNTRY: None,
         CONF_HOST: TEST_HOST,
         CONF_TOKEN: TEST_TOKEN,
-        const.CONF_MODEL: model_to_test,
+        CONF_MODEL: model_to_test,
         const.CONF_MAC: TEST_MAC,
     }
 
@@ -860,7 +860,7 @@ async def test_options_flow(hass):
             const.CONF_FLOW_TYPE: const.CONF_GATEWAY,
             CONF_HOST: TEST_HOST,
             CONF_TOKEN: TEST_TOKEN,
-            const.CONF_MODEL: TEST_MODEL,
+            CONF_MODEL: TEST_MODEL,
             const.CONF_MAC: TEST_MAC,
         },
         title=TEST_NAME,
@@ -900,7 +900,7 @@ async def test_options_flow_incomplete(hass):
             const.CONF_FLOW_TYPE: const.CONF_GATEWAY,
             CONF_HOST: TEST_HOST,
             CONF_TOKEN: TEST_TOKEN,
-            const.CONF_MODEL: TEST_MODEL,
+            CONF_MODEL: TEST_MODEL,
             const.CONF_MAC: TEST_MAC,
         },
         title=TEST_NAME,
@@ -938,7 +938,7 @@ async def test_reauth(hass):
             const.CONF_FLOW_TYPE: const.CONF_GATEWAY,
             CONF_HOST: TEST_HOST,
             CONF_TOKEN: TEST_TOKEN,
-            const.CONF_MODEL: TEST_MODEL,
+            CONF_MODEL: TEST_MODEL,
             const.CONF_MAC: TEST_MAC,
         },
         title=TEST_NAME,
@@ -986,6 +986,6 @@ async def test_reauth(hass):
         const.CONF_CLOUD_COUNTRY: TEST_CLOUD_COUNTRY,
         CONF_HOST: TEST_HOST,
         CONF_TOKEN: TEST_TOKEN,
-        const.CONF_MODEL: TEST_MODEL,
+        CONF_MODEL: TEST_MODEL,
         const.CONF_MAC: TEST_MAC,
     }

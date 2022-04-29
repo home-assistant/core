@@ -61,8 +61,7 @@ class XiaomiGatewayLight(XiaomiDevice, LightEntity):
             return False
 
         if value == 0:
-            if self._state:
-                self._state = False
+            self._state = False
             return True
 
         rgbhexstr = f"{value:x}"

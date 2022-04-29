@@ -45,7 +45,7 @@ async def async_setup_entry(
     )
 
 
-class XboxRemote(CoordinatorEntity, RemoteEntity):
+class XboxRemote(CoordinatorEntity[XboxUpdateCoordinator], RemoteEntity):
     """Representation of an Xbox remote."""
 
     def __init__(

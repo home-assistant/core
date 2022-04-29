@@ -112,6 +112,11 @@ class Integration:
         """List of dependencies."""
         return self.manifest.get("dependencies", [])
 
+    @property
+    def integration_type(self) -> str:
+        """Get integration_type."""
+        return self.manifest.get("integration_type", "integration")
+
     def add_error(self, *args: Any, **kwargs: Any) -> None:
         """Add an error."""
         self.errors.append(Error(*args, **kwargs))

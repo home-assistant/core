@@ -95,7 +95,7 @@ def async_listen_platform(
     hass: core.HomeAssistant,
     component: str,
     callback: Callable[[str, dict[str, Any] | None], Any],
-) -> None:
+) -> Callable[[], None]:
     """Register a platform loader listener.
 
     This method must be run in the event loop.
@@ -112,7 +112,7 @@ def async_listen_platform(
         if task:
             await task
 
-    async_dispatcher_connect(
+    return async_dispatcher_connect(
         hass, SIGNAL_PLATFORM_DISCOVERED.format(service), discovery_platform_listener
     )
 

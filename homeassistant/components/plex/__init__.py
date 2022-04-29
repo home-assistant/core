@@ -69,7 +69,7 @@ async def async_browse_media(hass, media_content_type, media_content_id, platfor
     return await hass.async_add_executor_job(
         partial(
             browse_media,
-            plex_server,
+            hass,
             is_internal,
             media_content_type,
             media_content_id,

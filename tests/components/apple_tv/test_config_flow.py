@@ -1066,3 +1066,22 @@ async def test_option_start_off(hass):
     assert result2["type"] == "create_entry"
 
     assert config_entry.options[CONF_START_OFF]
+
+
+async def test_zeroconf_rejects_ipv6(hass):
+    """Test zeroconf discovery rejects ipv6."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=zeroconf.ZeroconfServiceInfo(
+            host="fd00::b27c:63bb:cc85:4ea0",
+            addresses=["fd00::b27c:63bb:cc85:4ea0"],
+            hostname="mock_hostname",
+            port=None,
+            type="_touch-able._tcp.local.",
+            name="dmapid._touch-able._tcp.local.",
+            properties={"CtlN": "Apple TV"},
+        ),
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "ipv6_not_supported"

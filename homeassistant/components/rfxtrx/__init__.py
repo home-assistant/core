@@ -30,6 +30,7 @@ from homeassistant.helpers.device_registry import (
     DeviceEntry,
     DeviceRegistry,
 )
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -334,7 +335,7 @@ async def async_setup_platform_entry(
             async_add_entities(constructor(event, event, device_id, {}))
 
         config_entry.async_on_unload(
-            hass.helpers.dispatcher.async_dispatcher_connect(SIGNAL_EVENT, _update)
+            async_dispatcher_connect(hass, SIGNAL_EVENT, _update)
         )
 
 
@@ -484,9 +485,7 @@ class RfxtrxEntity(RestoreEntity):
             self._apply_event(self._event)
 
         self.async_on_remove(
-            self.hass.helpers.dispatcher.async_dispatcher_connect(
-                SIGNAL_EVENT, self._handle_event
-            )
+            async_dispatcher_connect(self.hass, SIGNAL_EVENT, self._handle_event)
         )
 
     @property

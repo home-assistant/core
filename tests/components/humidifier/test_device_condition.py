@@ -42,9 +42,9 @@ def calls(hass):
     "set_state,features_reg,features_state,expected_condition_types",
     [
         (False, 0, 0, []),
-        (False, const.SUPPORT_MODES, 0, ["is_mode"]),
+        (False, const.HumidifierEntityFeature.MODES, 0, ["is_mode"]),
         (True, 0, 0, []),
-        (True, 0, const.SUPPORT_MODES, ["is_mode"]),
+        (True, 0, const.HumidifierEntityFeature.MODES, ["is_mode"]),
     ],
 )
 async def test_get_conditions(

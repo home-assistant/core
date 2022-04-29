@@ -27,10 +27,8 @@ async def async_setup_entry(
     )
 
 
-class VerisureSmartplug(CoordinatorEntity, SwitchEntity):
+class VerisureSmartplug(CoordinatorEntity[VerisureDataUpdateCoordinator], SwitchEntity):
     """Representation of a Verisure smartplug."""
-
-    coordinator: VerisureDataUpdateCoordinator
 
     def __init__(
         self, coordinator: VerisureDataUpdateCoordinator, serial_number: str

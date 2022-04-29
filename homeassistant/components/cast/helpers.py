@@ -39,9 +39,17 @@ class ChromecastInfo:
 
         Uses blocking HTTP / HTTPS.
         """
+        cast_info = self.cast_info
+        if self.cast_info.cast_type is None or self.cast_info.manufacturer is None:
+            # Manufacturer and cast type is not available in mDNS data, get it over http
+            cast_info = dial.get_cast_type(
+                cast_info,
+                zconf=ChromeCastZeroconf.get_zeroconf(),
+            )
+
         if not self.is_audio_group or self.is_dynamic_group is not None:
             # We have all information, no need to check HTTP API.
-            return self
+            return ChromecastInfo(cast_info=cast_info)
 
         # Fill out missing group information via HTTP API.
         is_dynamic_group = False
@@ -57,7 +65,7 @@ class ChromecastInfo:
             )
 
         return ChromecastInfo(
-            cast_info=self.cast_info,
+            cast_info=cast_info,
             is_dynamic_group=is_dynamic_group,
         )
 
