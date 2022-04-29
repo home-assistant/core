@@ -278,8 +278,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await validate_input(self.hass, new_data)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except InvalidHost:
-                errors["base"] = "invalid_host"
             except InvalidAuth:
                 errors[CONF_PASSWORD] = "invalid_auth"
             else:
