@@ -36,7 +36,8 @@
                 "data": {
                     "account_balance_currencies": "Saldos da carteira a relatar.",
                     "exchange_base": "Moeda base para sensores de taxa de c\u00e2mbio.",
-                    "exchange_rate_currencies": "Taxas de c\u00e2mbio a informar."
+                    "exchange_rate_currencies": "Taxas de c\u00e2mbio a informar.",
+                    "exchnage_rate_precision": "N\u00famero de casas decimais para taxas de c\u00e2mbio."
                 },
                 "description": "Ajustar as op\u00e7\u00f5es da Coinbase"
             }
