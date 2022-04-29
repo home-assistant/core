@@ -4,7 +4,7 @@ from functools import partial
 import json
 from typing import Final
 
-from homeassistant.const import ATTR_ATTRIBUTION, ATTR_SUPPORTED_FEATURES
+from homeassistant.const import ATTR_ATTRIBUTION, ATTR_RESTORED, ATTR_SUPPORTED_FEATURES
 from homeassistant.helpers.json import JSONEncoder
 
 DATA_INSTANCE = "recorder_instance"
@@ -27,4 +27,4 @@ DB_WORKER_PREFIX = "DbWorker"
 
 JSON_DUMP: Final = partial(json.dumps, cls=JSONEncoder, separators=(",", ":"))
 
-ALL_DOMAIN_EXCLUDE_ATTRS = {ATTR_ATTRIBUTION, ATTR_SUPPORTED_FEATURES}
+ALL_DOMAIN_EXCLUDE_ATTRS = {ATTR_ATTRIBUTION, ATTR_RESTORED, ATTR_SUPPORTED_FEATURES}

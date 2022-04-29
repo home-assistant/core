@@ -29,7 +29,7 @@ from homeassistant.core import (
     split_entity_id,
     valid_entity_id,
 )
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -210,7 +210,7 @@ class EnergyCostSensor(SensorEntity):
     utility.
     """
 
-    _attr_entity_category = EntityCategory.SYSTEM
+    _attr_entity_registry_visible_default = False
     _wrong_state_class_reported = False
     _wrong_unit_reported = False
 
@@ -416,3 +416,16 @@ class EnergyCostSensor(SensorEntity):
     def native_unit_of_measurement(self) -> str | None:
         """Return the units of measurement."""
         return self.hass.config.currency
+
+    @property
+    def unique_id(self) -> str | None:
+        """Return the unique ID of the sensor."""
+        entity_registry = er.async_get(self.hass)
+        if registry_entry := entity_registry.async_get(
+            self._config[self._adapter.entity_energy_key]
+        ):
+            prefix = registry_entry.id
+        else:
+            prefix = self._config[self._adapter.entity_energy_key]
+
+        return f"{prefix}_{self._adapter.source_type}_{self._adapter.entity_id_suffix}"

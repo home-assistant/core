@@ -14,10 +14,19 @@ import time
 from typing import Any, TypeVar, cast
 
 from lru import LRU  # pylint: disable=no-name-in-module
-from sqlalchemy import create_engine, event as sqlalchemy_event, exc, func, select
+from sqlalchemy import (
+    bindparam,
+    create_engine,
+    event as sqlalchemy_event,
+    exc,
+    func,
+    select,
+)
 from sqlalchemy.engine import Engine
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.ext import baked
 from sqlalchemy.orm import scoped_session, sessionmaker
+from sqlalchemy.orm.query import Query
 from sqlalchemy.orm.session import Session
 import voluptuous as vol
 
@@ -72,13 +81,15 @@ from .executor import DBInterruptibleThreadPoolExecutor
 from .models import (
     Base,
     Events,
-    RecorderRuns,
     StateAttributes,
     States,
+    StatisticData,
+    StatisticMetaData,
     StatisticsRuns,
     process_timestamp,
 )
 from .pool import POOL_SIZE, MutexPool, RecorderPool
+from .run_history import RunHistory
 from .util import (
     dburl_to_path,
     end_incomplete_runs,
@@ -244,51 +255,6 @@ def is_entity_recorded(hass: HomeAssistant, entity_id: str) -> bool:
     return instance.entity_filter(entity_id)
 
 
-def run_information(
-    hass: HomeAssistant, point_in_time: datetime | None = None
-) -> RecorderRuns | None:
-    """Return information about current run.
-
-    There is also the run that covers point_in_time.
-    """
-    if run_info := run_information_from_instance(hass, point_in_time):
-        return run_info
-
-    with session_scope(hass=hass) as session:
-        return run_information_with_session(session, point_in_time)
-
-
-def run_information_from_instance(
-    hass: HomeAssistant, point_in_time: datetime | None = None
-) -> RecorderRuns | None:
-    """Return information about current run from the existing instance.
-
-    Does not query the database for older runs.
-    """
-    ins = get_instance(hass)
-    if point_in_time is None or point_in_time > ins.recording_start:
-        return ins.run_info
-    return None
-
-
-def run_information_with_session(
-    session: Session, point_in_time: datetime | None = None
-) -> RecorderRuns | None:
-    """Return information about current run from the database."""
-    recorder_runs = RecorderRuns
-
-    query = session.query(recorder_runs)
-    if point_in_time:
-        query = query.filter(
-            (recorder_runs.start < point_in_time) & (recorder_runs.end > point_in_time)
-        )
-
-    if (res := query.first()) is not None:
-        session.expunge(res)
-        return cast(RecorderRuns, res)
-    return res
-
-
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the recorder."""
     hass.data[DOMAIN] = {}
@@ -324,6 +290,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         entity_filter=entity_filter,
         exclude_t=exclude_t,
         exclude_attributes_by_domain=exclude_attributes_by_domain,
+        bakery=baked.bakery(),
     )
     instance.async_initialize()
     instance.async_register()
@@ -341,10 +308,8 @@ async def _process_recorder_platform(
     hass: HomeAssistant, domain: str, platform: Any
 ) -> None:
     """Process a recorder platform."""
-    platforms: dict[str, Any] = hass.data[DOMAIN]
-    platforms[domain] = platform
-    if hasattr(platform, "exclude_attributes"):
-        hass.data[EXCLUDE_ATTRIBUTES][domain] = platform.exclude_attributes(hass)
+    instance: Recorder = hass.data[DATA_INSTANCE]
+    instance.queue.put(AddRecorderPlatformTask(domain, platform))
 
 
 @callback
@@ -440,9 +405,13 @@ class PurgeTask(RecorderTask):
 
     def run(self, instance: Recorder) -> None:
         """Purge the database."""
+        assert instance.get_session is not None
+
         if purge.purge_old_data(
             instance, self.purge_before, self.repack, self.apply_filter
         ):
+            with instance.get_session() as session:
+                instance.run_history.load_from_db(session)
             # We always need to do the db cleanups after a purge
             # is finished to ensure the WAL checkpoint and other
             # tasks happen after a vacuum.
@@ -493,8 +462,8 @@ class StatisticsTask(RecorderTask):
 class ExternalStatisticsTask(RecorderTask):
     """An object to insert into the recorder queue to run an external statistics task."""
 
-    metadata: dict
-    statistics: Iterable[dict]
+    metadata: StatisticMetaData
+    statistics: Iterable[StatisticData]
 
     def run(self, instance: Recorder) -> None:
         """Run statistics task."""
@@ -601,6 +570,26 @@ class CommitTask(RecorderTask):
         instance._commit_event_session_or_retry()
 
 
+@dataclass
+class AddRecorderPlatformTask(RecorderTask):
+    """Add a recorder platform."""
+
+    domain: str
+    platform: Any
+    commit_before = False
+
+    def run(self, instance: Recorder) -> None:
+        """Handle the task."""
+        hass = instance.hass
+        domain = self.domain
+        platform = self.platform
+
+        platforms: dict[str, Any] = hass.data[DOMAIN]
+        platforms[domain] = platform
+        if hasattr(self.platform, "exclude_attributes"):
+            hass.data[EXCLUDE_ATTRIBUTES][domain] = platform.exclude_attributes(hass)
+
+
 COMMIT_TASK = CommitTask()
 KEEP_ALIVE_TASK = KeepAliveTask()
 
@@ -623,6 +612,7 @@ class Recorder(threading.Thread):
         entity_filter: Callable[[str], bool],
         exclude_t: list[str],
         exclude_attributes_by_domain: dict[str, set[str]],
+        bakery: baked.bakery,
     ) -> None:
         """Initialize the recorder."""
         threading.Thread.__init__(self, name="Recorder")
@@ -634,7 +624,6 @@ class Recorder(threading.Thread):
         self._hass_started: asyncio.Future[object] = asyncio.Future()
         self.commit_interval = commit_interval
         self.queue: queue.SimpleQueue[RecorderTask] = queue.SimpleQueue()
-        self.recording_start = dt_util.utcnow()
         self.db_url = uri
         self.db_max_retries = db_max_retries
         self.db_retry_wait = db_retry_wait
@@ -642,7 +631,7 @@ class Recorder(threading.Thread):
         self.async_recorder_ready = asyncio.Event()
         self._queue_watch = threading.Event()
         self.engine: Engine | None = None
-        self.run_info: RecorderRuns | None = None
+        self.run_history = RunHistory()
 
         self.entity_filter = entity_filter
         self.exclude_t = exclude_t
@@ -652,6 +641,8 @@ class Recorder(threading.Thread):
         self._state_attributes_ids: LRU = LRU(STATE_ATTRIBUTES_ID_CACHE_SIZE)
         self._pending_state_attributes: dict[str, StateAttributes] = {}
         self._pending_expunge: list[States] = []
+        self._bakery = bakery
+        self._find_shared_attr_query: Query | None = None
         self.event_session: Session | None = None
         self.get_session: Callable[[], Session] | None = None
         self._completed_first_database_setup: bool | None = None
@@ -900,7 +891,10 @@ class Recorder(threading.Thread):
 
     @callback
     def async_periodic_statistics(self, now: datetime) -> None:
-        """Trigger the hourly statistics run."""
+        """Trigger the statistics run.
+
+        Short term statistics run every 5 minutes
+        """
         start = statistics.get_start_time()
         self.queue.put(StatisticsTask(start))
 
@@ -924,12 +918,15 @@ class Recorder(threading.Thread):
         self.queue.put(UpdateStatisticsMetadataTask(statistic_id, unit_of_measurement))
 
     @callback
-    def async_external_statistics(self, metadata: dict, stats: Iterable[dict]) -> None:
+    def async_external_statistics(
+        self, metadata: StatisticMetaData, stats: Iterable[StatisticData]
+    ) -> None:
         """Schedule external statistics."""
         self.queue.put(ExternalStatisticsTask(metadata, stats))
 
     @callback
-    def _using_sqlite(self) -> bool:
+    def using_sqlite(self) -> bool:
+        """Return if recorder uses sqlite as the engine."""
         return bool(self.engine and self.engine.dialect.name == "sqlite")
 
     @callback
@@ -941,7 +938,7 @@ class Recorder(threading.Thread):
 
         # If the db is using a socket connection, we need to keep alive
         # to prevent errors from unexpected disconnects
-        if not self._using_sqlite():
+        if not self.using_sqlite():
             self._keep_alive_listener = async_track_time_interval(
                 self.hass, self._async_keep_alive, timedelta(seconds=KEEPALIVE_TIME)
             )
@@ -1139,6 +1136,32 @@ class Recorder(threading.Thread):
         if not self.commit_interval:
             self._commit_event_session_or_retry()
 
+    def _find_shared_attr_in_db(self, attr_hash: int, shared_attrs: str) -> int | None:
+        """Find shared attributes in the db from the hash and shared_attrs."""
+        #
+        # Avoid the event session being flushed since it will
+        # commit all the pending events and states to the database.
+        #
+        # The lookup has already have checked to see if the data is cached
+        # or going to be written in the next commit so there is no
+        # need to flush before checking the database.
+        #
+        assert self.event_session is not None
+        if self._find_shared_attr_query is None:
+            self._find_shared_attr_query = self._bakery(
+                lambda session: session.query(StateAttributes.attributes_id)
+                .filter(StateAttributes.hash == bindparam("attr_hash"))
+                .filter(StateAttributes.shared_attrs == bindparam("shared_attrs"))
+            )
+        with self.event_session.no_autoflush:
+            if (
+                attributes := self._find_shared_attr_query(self.event_session)
+                .params(attr_hash=attr_hash, shared_attrs=shared_attrs)
+                .first()
+            ):
+                return cast(int, attributes[0])
+        return None
+
     def _process_event_into_session(self, event: Event) -> None:
         assert self.event_session is not None
 
@@ -1178,14 +1201,9 @@ class Recorder(threading.Thread):
         else:
             attr_hash = StateAttributes.hash_shared_attrs(shared_attrs)
             # Matching attributes found in the database
-            if (
-                attributes := self.event_session.query(StateAttributes.attributes_id)
-                .filter(StateAttributes.hash == attr_hash)
-                .filter(StateAttributes.shared_attrs == shared_attrs)
-                .first()
-            ):
-                dbstate.attributes_id = attributes[0]
-                self._state_attributes_ids[shared_attrs] = attributes[0]
+            if attributes_id := self._find_shared_attr_in_db(attr_hash, shared_attrs):
+                dbstate.attributes_id = attributes_id
+                self._state_attributes_ids[shared_attrs] = attributes_id
             # No matching attributes found, save them in the DB
             else:
                 dbstate_attributes = StateAttributes(
@@ -1281,6 +1299,7 @@ class Recorder(threading.Thread):
         self._close_event_session()
         self._close_connection()
         move_away_broken_database(dburl_to_path(self.db_url))
+        self.run_history.reset()
         self._setup_recorder()
         self._setup_run()
 
@@ -1341,7 +1360,7 @@ class Recorder(threading.Thread):
 
     async def lock_database(self) -> bool:
         """Lock database so it can be backed up safely."""
-        if not self._using_sqlite():
+        if not self.using_sqlite():
             _LOGGER.debug(
                 "Not a SQLite database or not connected, locking not necessary"
             )
@@ -1370,7 +1389,7 @@ class Recorder(threading.Thread):
 
         Returns true if database lock has been held throughout the process.
         """
-        if not self._using_sqlite():
+        if not self.using_sqlite():
             _LOGGER.debug(
                 "Not a SQLite database or not connected, unlocking not necessary"
             )
@@ -1418,12 +1437,12 @@ class Recorder(threading.Thread):
         if self._using_file_sqlite:
             validate_or_move_away_sqlite_database(self.db_url)
 
-        self.engine = create_engine(self.db_url, **kwargs)
+        self.engine = create_engine(self.db_url, **kwargs, future=True)
 
         sqlalchemy_event.listen(self.engine, "connect", setup_recorder_connection)
 
         Base.metadata.create_all(self.engine)
-        self.get_session = scoped_session(sessionmaker(bind=self.engine))
+        self.get_session = scoped_session(sessionmaker(bind=self.engine, future=True))
         _LOGGER.debug("Connected to recorder database")
 
     @property
@@ -1444,12 +1463,8 @@ class Recorder(threading.Thread):
         """Log the start of the current run and schedule any needed jobs."""
         assert self.get_session is not None
         with session_scope(session=self.get_session()) as session:
-            start = self.recording_start
-            end_incomplete_runs(session, start)
-            self.run_info = RecorderRuns(start=start, created=dt_util.utcnow())
-            session.add(self.run_info)
-            session.flush()
-            session.expunge(self.run_info)
+            end_incomplete_runs(session, self.run_history.recording_start)
+            self.run_history.start(session)
             self._schedule_compile_missing_statistics(session)
 
         self._open_event_session()
@@ -1477,16 +1492,14 @@ class Recorder(threading.Thread):
         """End the recorder session."""
         if self.event_session is None:
             return
-        assert self.run_info is not None
         try:
-            self.run_info.end = dt_util.utcnow()
-            self.event_session.add(self.run_info)
+            self.run_history.end(self.event_session)
             self._commit_event_session_or_retry()
             self.event_session.close()
         except Exception as err:  # pylint: disable=broad-except
             _LOGGER.exception("Error saving the event session during shutdown: %s", err)
 
-        self.run_info = None
+        self.run_history.clear()
 
     def _shutdown(self) -> None:
         """Save end time for current run."""

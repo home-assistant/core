@@ -10,7 +10,7 @@
             "already_in_progress": "Alur konfigurasi sedang berlangsung",
             "cannot_connect": "Gagal terhubung",
             "discovery_requires_supervisor": "Fitur penemuan membutuhkan supervisor.",
-            "not_zwave_device": "Perangkat yang ditemukan bukanperangkat Z-Wave."
+            "not_zwave_device": "Perangkat yang ditemukan bukan perangkat Z-Wave."
         },
         "error": {
             "addon_start_failed": "Gagal memulai add-on Z-Wave JS. Periksa konfigurasi.",
@@ -59,6 +59,10 @@
             },
             "usb_confirm": {
                 "description": "Ingin menyiapkan {name} dengan add-on Z-Wave JS?"
+            },
+            "zeroconf_confirm": {
+                "description": "Apakah Anda ingin menambahkan Server Z-Wave JS dengan ID rumah {home_id} di {url} ke Home Assistant?",
+                "title": "Server Z-Wave JS yang Ditemukan"
             }
         }
     },

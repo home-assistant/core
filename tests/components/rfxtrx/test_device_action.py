@@ -105,7 +105,7 @@ async def test_get_actions(hass, device_reg: DeviceRegistry, device, expected):
     actions = [action for action in actions if action["domain"] == DOMAIN]
 
     expected_actions = [
-        {"domain": DOMAIN, "device_id": device_entry.id, **action_type}
+        {"domain": DOMAIN, "device_id": device_entry.id, "metadata": {}, **action_type}
         for action_type in expected
     ]
 

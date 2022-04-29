@@ -157,6 +157,14 @@ DISPLAY_UNIT_TO_STATISTIC_UNIT_CONVERSIONS: dict[
 _LOGGER = logging.getLogger(__name__)
 
 
+@dataclasses.dataclass
+class PlatformCompiledStatistics:
+    """Compiled Statistics from a platform."""
+
+    platform_stats: list[StatisticResult]
+    current_metadata: dict[str, tuple[int, StatisticMetaData]]
+
+
 def split_statistic_id(entity_id: str) -> list[str]:
     """Split a state entity ID into domain and object ID."""
     return entity_id.split(":", 1)
@@ -236,9 +244,9 @@ def get_start_time() -> datetime:
 
 
 def _update_or_add_metadata(
-    hass: HomeAssistant,
     session: Session,
     new_metadata: StatisticMetaData,
+    old_metadata_dict: dict[str, tuple[int, StatisticMetaData]],
 ) -> int:
     """Get metadata_id for a statistic_id.
 
@@ -248,10 +256,7 @@ def _update_or_add_metadata(
     Updating metadata source is not possible.
     """
     statistic_id = new_metadata["statistic_id"]
-    old_metadata_dict = get_metadata_with_session(
-        hass, session, statistic_ids=[statistic_id]
-    )
-    if not old_metadata_dict:
+    if statistic_id not in old_metadata_dict:
         meta = StatisticsMeta.from_meta(new_metadata)
         session.add(meta)
         session.flush()  # Flush to get the metadata id assigned
@@ -553,15 +558,23 @@ def compile_statistics(instance: Recorder, start: datetime) -> bool:
 
     _LOGGER.debug("Compiling statistics for %s-%s", start, end)
     platform_stats: list[StatisticResult] = []
+    current_metadata: dict[str, tuple[int, StatisticMetaData]] = {}
     # Collect statistics from all platforms implementing support
     for domain, platform in instance.hass.data[DOMAIN].items():
         if not hasattr(platform, "compile_statistics"):
             continue
-        platform_stat = platform.compile_statistics(instance.hass, start, end)
-        _LOGGER.debug(
-            "Statistics for %s during %s-%s: %s", domain, start, end, platform_stat
+        compiled: PlatformCompiledStatistics = platform.compile_statistics(
+            instance.hass, start, end
         )
-        platform_stats.extend(platform_stat)
+        _LOGGER.debug(
+            "Statistics for %s during %s-%s: %s",
+            domain,
+            start,
+            end,
+            compiled.platform_stats,
+        )
+        platform_stats.extend(compiled.platform_stats)
+        current_metadata.update(compiled.current_metadata)
 
     # Insert collected statistics in the database
     with session_scope(
@@ -569,7 +582,9 @@ def compile_statistics(instance: Recorder, start: datetime) -> bool:
         exception_filter=_filter_unique_constraint_integrity_error(instance),
     ) as session:
         for stats in platform_stats:
-            metadata_id = _update_or_add_metadata(instance.hass, session, stats["meta"])
+            metadata_id = _update_or_add_metadata(
+                session, stats["meta"], current_metadata
+            )
             _insert_statistics(
                 session,
                 StatisticsShortTerm,
@@ -1098,6 +1113,61 @@ def get_last_short_term_statistics(
     )
 
 
+def get_latest_short_term_statistics(
+    hass: HomeAssistant,
+    statistic_ids: list[str],
+    metadata: dict[str, tuple[int, StatisticMetaData]] | None = None,
+) -> dict[str, list[dict]]:
+    """Return the latest short term statistics for a list of statistic_ids."""
+    # This function doesn't use a baked query, we instead rely on the
+    # "Transparent SQL Compilation Caching" feature introduced in SQLAlchemy 1.4
+    with session_scope(hass=hass) as session:
+        # Fetch metadata for the given statistic_ids
+        if not metadata:
+            metadata = get_metadata_with_session(
+                hass, session, statistic_ids=statistic_ids
+            )
+        if not metadata:
+            return {}
+        metadata_ids = [
+            metadata[statistic_id][0]
+            for statistic_id in statistic_ids
+            if statistic_id in metadata
+        ]
+        most_recent_statistic_row = (
+            session.query(
+                StatisticsShortTerm.metadata_id,
+                func.max(StatisticsShortTerm.start).label("start_max"),
+            )
+            .filter(StatisticsShortTerm.metadata_id.in_(metadata_ids))
+            .group_by(StatisticsShortTerm.metadata_id)
+        ).subquery()
+        stats = execute(
+            session.query(*QUERY_STATISTICS_SHORT_TERM).join(
+                most_recent_statistic_row,
+                (
+                    StatisticsShortTerm.metadata_id  # pylint: disable=comparison-with-callable
+                    == most_recent_statistic_row.c.metadata_id
+                )
+                & (StatisticsShortTerm.start == most_recent_statistic_row.c.start_max),
+            )
+        )
+        if not stats:
+            return {}
+
+        # Return statistics combined with metadata
+        return _sorted_statistics_to_dict(
+            hass,
+            session,
+            stats,
+            statistic_ids,
+            metadata,
+            False,
+            StatisticsShortTerm,
+            None,
+        )
+
+
 def _statistics_at_time(
     session: Session,
     metadata_ids: set[int],
@@ -1309,7 +1379,10 @@ def add_external_statistics(
         session=instance.get_session(),  # type: ignore[misc]
         exception_filter=_filter_unique_constraint_integrity_error(instance),
     ) as session:
-        metadata_id = _update_or_add_metadata(instance.hass, session, metadata)
+        old_metadata_dict = get_metadata_with_session(
+            instance.hass, session, statistic_ids=[metadata["statistic_id"]]
+        )
+        metadata_id = _update_or_add_metadata(session, metadata, old_metadata_dict)
         for stat in statistics:
             if stat_id := _statistics_exists(
                 session, Statistics, metadata_id, stat["start"]

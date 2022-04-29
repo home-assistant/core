@@ -27,6 +27,7 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     SERVICE_PLAY_MEDIA,
 )
+from homeassistant.components.media_source import generate_media_source_id
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DESCRIPTION,
@@ -141,6 +142,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         cache_dir = conf.get(CONF_CACHE_DIR, DEFAULT_CACHE_DIR)
         time_memory = conf.get(CONF_TIME_MEMORY, DEFAULT_TIME_MEMORY)
         base_url = conf.get(CONF_BASE_URL)
+        if base_url is not None:
+            _LOGGER.warning(
+                "TTS base_url option is deprecated. Configure internal/external URL instead"
+            )
         hass.data[BASE_URL_KEY] = base_url
 
         await tts.async_init_cache(use_cache, cache_dir, time_memory, base_url)
@@ -198,27 +203,28 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             language = service.data.get(ATTR_LANGUAGE)
             options = service.data.get(ATTR_OPTIONS)
 
-            try:
-                url = await tts.async_get_url_path(
-                    p_type, message, cache=cache, language=language, options=options
-                )
-            except HomeAssistantError as err:
-                _LOGGER.error("Error on init TTS: %s", err)
-                return
-
-            base = tts.base_url or get_url(hass)
-            url = base + url
-
-            data = {
-                ATTR_MEDIA_CONTENT_ID: url,
-                ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC,
-                ATTR_ENTITY_ID: entity_ids,
+            tts.process_options(p_type, language, options)
+            params = {
+                "message": message,
             }
+            if cache is not None:
+                params["cache"] = "true" if cache else "false"
+            if language is not None:
+                params["language"] = language
+            if options is not None:
+                params.update(options)
 
             await hass.services.async_call(
                 DOMAIN_MP,
                 SERVICE_PLAY_MEDIA,
-                data,
+                {
+                    ATTR_ENTITY_ID: entity_ids,
+                    ATTR_MEDIA_CONTENT_ID: generate_media_source_id(
+                        DOMAIN,
+                        str(yarl.URL.build(path=p_type, query=params)),
+                    ),
+                    ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC,
+                },
                 blocking=True,
                 context=service.context,
             )
@@ -344,23 +350,16 @@ class SpeechManager:
             PLATFORM_FORMAT.format(domain=engine, platform=DOMAIN)
         )
 
-    async def async_get_url_path(
+    @callback
+    def process_options(
         self,
         engine: str,
-        message: str,
-        cache: bool | None = None,
         language: str | None = None,
         options: dict | None = None,
-    ) -> str:
-        """Get URL for play message.
-
-        This method is a coroutine.
-        """
+    ) -> tuple[str, dict | None]:
+        """Validate and process options."""
         if (provider := self.providers.get(engine)) is None:
             raise HomeAssistantError(f"Provider {engine} not found")
-
-        msg_hash = hashlib.sha1(bytes(message, "utf-8")).hexdigest()
-        use_cache = cache if cache is not None else self.use_cache
 
         # Languages
         language = language or provider.default_language
@@ -382,9 +381,25 @@ class SpeechManager:
             ]
             if invalid_opts:
                 raise HomeAssistantError(f"Invalid options found: {invalid_opts}")
-            options_key = _hash_options(options)
-        else:
-            options_key = "-"
+
+        return language, options
+
+    async def async_get_url_path(
+        self,
+        engine: str,
+        message: str,
+        cache: bool | None = None,
+        language: str | None = None,
+        options: dict | None = None,
+    ) -> str:
+        """Get URL for play message.
+
+        This method is a coroutine.
+        """
+        language, options = self.process_options(engine, language, options)
+        options_key = _hash_options(options) if options else "-"
+        msg_hash = hashlib.sha1(bytes(message, "utf-8")).hexdigest()
+        use_cache = cache if cache is not None else self.use_cache
 
         key = KEY_PATTERN.format(
             msg_hash, language.replace("_", "-"), options_key, engine

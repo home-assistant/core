@@ -1,7 +1,7 @@
 """Class for helpers and communication with the OverKiz API."""
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 from urllib.parse import urlparse
 
 from pyoverkiz.enums import OverkizCommand, Protocol
@@ -113,7 +113,9 @@ class OverkizExecutor:
             return True
 
         # Retrieve executions initiated outside Home Assistant via API
-        executions = await self.coordinator.client.get_current_executions()
+        executions = cast(Any, await self.coordinator.client.get_current_executions())
+        # executions.action_group is typed incorrectly in the upstream library
+        # or the below code is incorrect.
         exec_id = next(
             (
                 execution.id

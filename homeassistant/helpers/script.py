@@ -36,10 +36,12 @@ from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_ELSE,
+    CONF_ENABLED,
     CONF_ERROR,
     CONF_EVENT,
     CONF_EVENT_DATA,
     CONF_EVENT_DATA_TEMPLATE,
+    CONF_FOR_EACH,
     CONF_IF,
     CONF_MODE,
     CONF_PARALLEL,
@@ -238,7 +240,6 @@ STATIC_VALIDATION_ACTION_TYPES = (
     cv.SCRIPT_ACTION_FIRE_EVENT,
     cv.SCRIPT_ACTION_ACTIVATE_SCENE,
     cv.SCRIPT_ACTION_VARIABLES,
-    cv.SCRIPT_ACTION_ERROR,
     cv.SCRIPT_ACTION_STOP,
 )
 
@@ -411,8 +412,17 @@ class _ScriptRun:
             async with trace_action(self._hass, self, self._stop, self._variables):
                 if self._stop.is_set():
                     return
+
+                action = cv.determine_script_action(self._action)
+
+                if not self._action.get(CONF_ENABLED, True):
+                    self._log(
+                        "Skipped disabled step %s", self._action.get(CONF_ALIAS, action)
+                    )
+                    return
+
                 try:
-                    handler = f"_async_{cv.determine_script_action(self._action)}_step"
+                    handler = f"_async_{action}_step"
                     await getattr(self, handler)()
                 except Exception as ex:  # pylint: disable=broad-except
                     self._handle_exception(
@@ -734,17 +744,21 @@ class _ScriptRun:
         return result
 
     @async_trace_path("repeat")
-    async def _async_repeat_step(self):
+    async def _async_repeat_step(self):  # noqa: C901
         """Repeat a sequence."""
         description = self._action.get(CONF_ALIAS, "sequence")
         repeat = self._action[CONF_REPEAT]
 
         saved_repeat_vars = self._variables.get("repeat")
 
-        def set_repeat_var(iteration, count=None):
+        def set_repeat_var(
+            iteration: int, count: int | None = None, item: Any = None
+        ) -> None:
             repeat_vars = {"first": iteration == 1, "index": iteration}
             if count:
                 repeat_vars["last"] = iteration == count
+            if item is not None:
+                repeat_vars["item"] = item
             self._variables["repeat"] = repeat_vars
 
         # pylint: disable=protected-access
@@ -774,6 +788,35 @@ class _ScriptRun:
                 await async_run_sequence(iteration, extra_msg)
                 if self._stop.is_set():
                     break
+
+        elif CONF_FOR_EACH in repeat:
+            try:
+                items = template.render_complex(repeat[CONF_FOR_EACH], self._variables)
+            except (exceptions.TemplateError, ValueError) as ex:
+                self._log(
+                    "Error rendering %s repeat for each items template: %s",
+                    self._script.name,
+                    ex,
+                    level=logging.ERROR,
+                )
+                raise _AbortScript from ex
+
+            if not isinstance(items, list):
+                self._log(
+                    "Repeat 'for_each' must be a list of items in %s, got: %s",
+                    self._script.name,
+                    items,
+                    level=logging.ERROR,
+                )
+                raise _AbortScript("Repeat 'for_each' must be a list of items")
+
+            count = len(items)
+            for iteration, item in enumerate(items, 1):
+                set_repeat_var(iteration, count, item)
+                extra_msg = f" of {count} with item: {repr(item)}"
+                if self._stop.is_set():
+                    break
+                await async_run_sequence(iteration, extra_msg)
 
         elif CONF_WHILE in repeat:
             conditions = [
@@ -928,16 +971,13 @@ class _ScriptRun:
     async def _async_stop_step(self):
         """Stop script execution."""
         stop = self._action[CONF_STOP]
-        self._log("Stop script sequence: %s", stop)
-        trace_set_result(stop=stop)
-        raise _StopScript(stop)
-
-    async def _async_error_step(self):
-        """Abort and error script execution."""
         error = self._action[CONF_ERROR]
-        self._log("Error script sequence: %s", error)
-        trace_set_result(error=error)
-        raise _AbortScript(error)
+        trace_set_result(stop=stop, error=error)
+        if error:
+            self._log("Error script sequence: %s", stop)
+            raise _AbortScript(stop)
+        self._log("Stop script sequence: %s", stop)
+        raise _StopScript(stop)
 
     @async_trace_path("parallel")
     async def _async_parallel_step(self) -> None:

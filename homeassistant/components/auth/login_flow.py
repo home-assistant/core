@@ -201,7 +201,6 @@ class LoginFlowIndexView(LoginFlowBaseView):
 
     async def get(self, request):
         """Do not allow index of flows in progress."""
-        # pylint: disable=no-self-use
         return web.Response(status=HTTPStatus.METHOD_NOT_ALLOWED)
 
     @RequestDataValidator(

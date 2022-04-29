@@ -28,6 +28,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     HTTP_BASIC_AUTHENTICATION,
 )
+from homeassistant.helpers import entity_registry
 
 from tests.common import MockConfigEntry
 
@@ -62,7 +63,7 @@ async def test_form(hass, fakeimg_png, mock_av_open, user_flow):
             TESTDATA,
         )
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result2["title"] == "127_0_0_1_testurl_1"
+    assert result2["title"] == "127_0_0_1"
     assert result2["options"] == {
         CONF_STILL_IMAGE_URL: "http://127.0.0.1/testurl/1",
         CONF_STREAM_SOURCE: "http://127.0.0.1/testurl/2",
@@ -96,7 +97,7 @@ async def test_form_only_stillimage(hass, fakeimg_png, user_flow):
         data,
     )
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result2["title"] == "127_0_0_1_testurl_1"
+    assert result2["title"] == "127_0_0_1"
     assert result2["options"] == {
         CONF_STILL_IMAGE_URL: "http://127.0.0.1/testurl/1",
         CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
@@ -176,7 +177,7 @@ async def test_form_rtsp_mode(hass, fakeimg_png, mock_av_open, user_flow):
         )
     assert "errors" not in result2, f"errors={result2['errors']}"
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result2["title"] == "127_0_0_1_testurl_1"
+    assert result2["title"] == "127_0_0_1"
     assert result2["options"] == {
         CONF_STILL_IMAGE_URL: "http://127.0.0.1/testurl/1",
         CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
@@ -202,22 +203,18 @@ async def test_form_only_stream(hass, mock_av_open, fakeimgbytes_jpg):
     )
     data = TESTDATA.copy()
     data.pop(CONF_STILL_IMAGE_URL)
+    data[CONF_STREAM_SOURCE] = "rtsp://user:pass@127.0.0.1/testurl/2"
     with mock_av_open as mock_setup:
-        result2 = await hass.config_entries.flow.async_configure(
+        result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             data,
         )
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
-    result3 = await hass.config_entries.flow.async_configure(
-        result2["flow_id"],
-        {CONF_CONTENT_TYPE: "image/jpeg"},
-    )
 
     assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result3["title"] == "127_0_0_1_testurl_2"
+    assert result3["title"] == "127_0_0_1"
     assert result3["options"] == {
         CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
-        CONF_STREAM_SOURCE: "http://127.0.0.1/testurl/2",
+        CONF_STREAM_SOURCE: "rtsp://user:pass@127.0.0.1/testurl/2",
         CONF_USERNAME: "fred_flintstone",
         CONF_PASSWORD: "bambam",
         CONF_LIMIT_REFETCH_TO_URL_CHANGE: False,
@@ -232,7 +229,7 @@ async def test_form_only_stream(hass, mock_av_open, fakeimgbytes_jpg):
         "homeassistant.components.generic.camera.GenericCamera.async_camera_image",
         return_value=fakeimgbytes_jpg,
     ):
-        image_obj = await async_get_image(hass, "camera.127_0_0_1_testurl_2")
+        image_obj = await async_get_image(hass, "camera.127_0_0_1")
         assert image_obj.content == fakeimgbytes_jpg
     assert len(mock_setup.mock_calls) == 1
 
@@ -516,20 +513,12 @@ async def test_options_only_stream(hass, fakeimgbytes_png, mock_av_open):
         assert result["step_id"] == "init"
 
         # try updating the config options
-        result2 = await hass.config_entries.options.async_configure(
+        result3 = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input=data,
         )
-        # Should be shown a 2nd form
-        assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result2["step_id"] == "content_type"
-
-        result3 = await hass.config_entries.options.async_configure(
-            result2["flow_id"],
-            user_input={CONF_CONTENT_TYPE: "image/png"},
-        )
         assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result3["data"][CONF_CONTENT_TYPE] == "image/png"
+        assert result3["data"][CONF_CONTENT_TYPE] == "image/jpeg"
 
 
 # These below can be deleted after deprecation period is finished.
@@ -589,3 +578,36 @@ async def test_reload_on_title_change(hass) -> None:
     await hass.async_block_till_done()
 
     assert hass.states.get("camera.my_title").attributes["friendly_name"] == "New Title"
+
+
+async def test_migrate_existing_ids(hass) -> None:
+    """Test that existing ids are migrated for issue #70568."""
+
+    registry = entity_registry.async_get(hass)
+
+    test_data = TESTDATA_OPTIONS.copy()
+    test_data[CONF_CONTENT_TYPE] = "image/png"
+    old_unique_id = "54321"
+    entity_id = "camera.sample_camera"
+
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN, unique_id=old_unique_id, options=test_data, title="My Title"
+    )
+    new_unique_id = mock_entry.entry_id
+    mock_entry.add_to_hass(hass)
+
+    entity_entry = registry.async_get_or_create(
+        "camera",
+        DOMAIN,
+        old_unique_id,
+        suggested_object_id="sample camera",
+        config_entry=mock_entry,
+    )
+    assert entity_entry.entity_id == entity_id
+    assert entity_entry.unique_id == old_unique_id
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_entry = registry.async_get(entity_id)
+    assert entity_entry.unique_id == new_unique_id

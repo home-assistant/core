@@ -76,8 +76,6 @@ REPEAT_TO_SONOS = {
 
 SONOS_TO_REPEAT = {meaning: mode for mode, meaning in REPEAT_TO_SONOS.items()}
 
-ATTR_SONOS_GROUP = "sonos_group"
-
 UPNP_ERRORS_TO_IGNORE = ["701", "711", "712"]
 
 SERVICE_JOIN = "join"
@@ -261,9 +259,23 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             self.async_write_ha_state()
 
     @property
+    def available(self) -> bool:
+        """Return if the media_player is available."""
+        return (
+            self.speaker.available
+            and self.speaker.sonos_group_entities
+            and self.media.playback_status
+        )
+
+    @property
     def coordinator(self) -> SonosSpeaker:
         """Return the current coordinator SonosSpeaker."""
         return self.speaker.coordinator or self.speaker
+
+    @property
+    def group_members(self) -> list[str] | None:
+        """List of entity_ids which are currently grouped together."""
+        return self.speaker.sonos_group_entities
 
     def __hash__(self) -> int:
         """Return a hash of self."""
@@ -654,9 +666,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return entity specific state attributes."""
-        attributes: dict[str, Any] = {
-            ATTR_SONOS_GROUP: self.speaker.sonos_group_entities
-        }
+        attributes: dict[str, Any] = {}
 
         if self.media.queue_position is not None:
             attributes[ATTR_QUEUE_POSITION] = self.media.queue_position

@@ -118,7 +118,9 @@ def soco_fixture(
         mock_soco.surround_enabled = True
         mock_soco.soundbar_audio_input_format = "Dolby 5.1"
         mock_soco.get_battery_info.return_value = battery_info
-        mock_soco.all_zones = [mock_soco]
+        mock_soco.all_zones = {mock_soco}
+        mock_soco.visible_zones = {mock_soco}
+        mock_soco.group.coordinator = mock_soco
         yield mock_soco
 
 
