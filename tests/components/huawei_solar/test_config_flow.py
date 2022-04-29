@@ -2,14 +2,14 @@
 from unittest.mock import Mock, patch
 
 from huawei_solar import (
-    AsyncHuaweiSolar,
     ConnectionException,
+    HuaweiSolarBridge,
     HuaweiSolarException,
     ReadException,
-    Result,
 )
 
 from homeassistant import config_entries
+from homeassistant.components.huawei_solar.config_flow import SlaveException
 from homeassistant.components.huawei_solar.const import CONF_SLAVE_IDS, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
@@ -28,16 +28,25 @@ async def test_form(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == RESULT_TYPE_FORM
-    assert result["errors"] is None
+    assert result["errors"] == {}
 
-    inverter = Mock(spec=AsyncHuaweiSolar)
+    mock_bridge = Mock(spec=HuaweiSolarBridge)
+    mock_bridge.model_name = "MOCK_MODEL_NAME"
+    mock_bridge.serial_number = "MOCK_SN"
+    mock_bridge.slave_id = 0
 
-    inverter.get_multiple.return_value = [
-        Result("MOCK_MODEL_NAME", None),
-        Result("MOCK_SN", None),
-    ]
+    mock_secondary_bridge = Mock(spec=HuaweiSolarBridge)
+    mock_secondary_bridge.model_name = "MOCK_MODEL_NAME"
+    mock_secondary_bridge.serial_number = "MOCK_SN"
+    mock_secondary_bridge.slave_id = 1
 
-    with patch("huawei_solar.AsyncHuaweiSolar.create", return_value=inverter,), patch(
+    with patch(
+        "huawei_solar.HuaweiSolarBridge.create",
+        return_value=mock_bridge,
+    ), patch(
+        "huawei_solar.HuaweiSolarBridge.create_extra_slave",
+        return_value=mock_secondary_bridge,
+    ), patch(
         "homeassistant.components.huawei_solar.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -64,10 +73,10 @@ async def test_form_connection_error(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == RESULT_TYPE_FORM
-    assert result["errors"] is None
+    assert result["errors"] == {}
 
     with patch(
-        "huawei_solar.AsyncHuaweiSolar.create",
+        "huawei_solar.HuaweiSolarBridge.create",
         side_effect=ConnectionException,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -86,10 +95,10 @@ async def test_form_read_error(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == RESULT_TYPE_FORM
-    assert result["errors"] is None
+    assert result["errors"] == {}
 
     with patch(
-        "huawei_solar.AsyncHuaweiSolar.create",
+        "huawei_solar.HuaweiSolarBridge.create",
         side_effect=ReadException,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -108,10 +117,10 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == RESULT_TYPE_FORM
-    assert result["errors"] is None
+    assert result["errors"] == {}
 
     with patch(
-        "huawei_solar.AsyncHuaweiSolar.create",
+        "huawei_solar.HuaweiSolarBridge.create",
         side_effect=HuaweiSolarException,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -130,7 +139,7 @@ async def test_form_invalid_slave_ids(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == RESULT_TYPE_FORM
-    assert result["errors"] is None
+    assert result["errors"] == {}
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -147,28 +156,20 @@ async def test_form_invalid_extra_slave(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == RESULT_TYPE_FORM
-    assert result["errors"] is None
+    assert result["errors"] == {}
 
-    def _get_multiple(names: list[str], slave=None):
-        if slave is None:
-            return [
-                Result("MOCK_MODEL_NAME", None),
-                Result("MOCK_SN", None),
-            ]
-        else:
-            raise HuaweiSolarException("Invalid extra slave")
-
-    inverter = Mock(spec=AsyncHuaweiSolar)
+    mock_bridge = Mock(spec=HuaweiSolarBridge)
+    mock_bridge.model_name = "MOCK_MODEL_NAME"
+    mock_bridge.serial_number = "MOCK_SN"
+    mock_bridge.slave_id = 0
 
     with patch(
-        "huawei_solar.AsyncHuaweiSolar.create",
-        return_value=inverter,
-    ), patch.object(
-        inverter,
-        "get_multiple",
-    ) as mock_get_multiple:
-        mock_get_multiple.side_effect = _get_multiple
-
+        "huawei_solar.HuaweiSolarBridge.create",
+        return_value=mock_bridge,
+    ), patch(
+        "huawei_solar.HuaweiSolarBridge.create_extra_slave",
+        side_effect=SlaveException,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_HOST: "1.1.1.1", CONF_PORT: 502, CONF_SLAVE_IDS: "0,1"},
@@ -191,16 +192,17 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == RESULT_TYPE_FORM
-    assert result["errors"] is None
+    assert result["errors"] == {}
 
-    inverter = Mock(spec=AsyncHuaweiSolar)
+    mock_bridge = Mock(spec=HuaweiSolarBridge)
+    mock_bridge.model_name = "MOCK_MODEL_NAME"
+    mock_bridge.serial_number = "MOCK_SN"
+    mock_bridge.slave_id = 0
 
-    inverter.get_multiple.return_value = [
-        Result("MOCK_MODEL_NAME", None),
-        Result("MOCK_SN", None),
-    ]
-
-    with patch("huawei_solar.AsyncHuaweiSolar.create", return_value=inverter):
+    with patch(
+        "huawei_solar.HuaweiSolarBridge.create",
+        return_value=mock_bridge,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_HOST: "1.1.1.1", CONF_PORT: 502, CONF_SLAVE_IDS: "0"},
