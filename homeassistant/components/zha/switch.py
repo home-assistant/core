@@ -46,13 +46,14 @@ async def async_setup_entry(
     config_entry.async_on_unload(unsub)
 
 
-class BaseSwitch(SwitchEntity):
-    """Common base class for zha switches."""
+@STRICT_MATCH(channel_names=CHANNEL_ON_OFF)
+class Switch(ZhaEntity, SwitchEntity):
+    """ZHA switch."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, unique_id, zha_device, channels, **kwargs):
         """Initialize the ZHA switch."""
-        self._on_off_channel = None
-        super().__init__(*args, **kwargs)
+        super().__init__(unique_id, zha_device, channels, **kwargs)
+        self._on_off_channel = self.cluster_channels.get(CHANNEL_ON_OFF)
 
     @property
     def is_on(self) -> bool:
@@ -75,16 +76,6 @@ class BaseSwitch(SwitchEntity):
             return
         self.async_write_ha_state()
 
-
-@STRICT_MATCH(channel_names=CHANNEL_ON_OFF)
-class Switch(BaseSwitch, ZhaEntity):
-    """ZHA switch."""
-
-    def __init__(self, unique_id, zha_device, channels, **kwargs):
-        """Initialize the ZHA switch."""
-        super().__init__(unique_id, zha_device, channels, **kwargs)
-        self._on_off_channel = self.cluster_channels.get(CHANNEL_ON_OFF)
-
     @callback
     def async_set_state(self, attr_id: int, attr_name: str, value: Any):
         """Handle state update from channel."""
@@ -105,7 +96,7 @@ class Switch(BaseSwitch, ZhaEntity):
 
 
 @GROUP_MATCH()
-class SwitchGroup(BaseSwitch, ZhaGroupEntity):
+class SwitchGroup(ZhaGroupEntity, SwitchEntity):
     """Representation of a switch group."""
 
     def __init__(
@@ -124,6 +115,22 @@ class SwitchGroup(BaseSwitch, ZhaGroupEntity):
         if self._state is None:
             return False
         return self._state
+
+    async def async_turn_on(self, **kwargs) -> None:
+        """Turn the entity on."""
+        result = await self._on_off_channel.on()
+        if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
+            return
+        self._state = True
+        self.async_write_ha_state()
+
+    async def async_turn_off(self, **kwargs) -> None:
+        """Turn the entity off."""
+        result = await self._on_off_channel.off()
+        if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
+            return
+        self._state = False
+        self.async_write_ha_state()
 
     async def async_update(self) -> None:
         """Query all members and determine the light group state."""
