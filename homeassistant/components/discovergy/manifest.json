@@ -3,11 +3,7 @@
   "name": "Discovergy",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/discovergy",
-  "requirements": [
-    "pydiscovergy==1.1.2"
-  ],
-  "codeowners": [
-    "@jpbede"
-  ],
+  "requirements": ["pydiscovergy==1.1.2"],
+  "codeowners": ["@jpbede"],
   "iot_class": "cloud_polling"
 }
