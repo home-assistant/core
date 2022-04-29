@@ -167,8 +167,6 @@ async def test_incompatible_meter_error(hass: HomeAssistant) -> None:
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-        print(result)
-
         assert result["type"] == RESULT_TYPE_ABORT
         assert result["reason"] == "incompatible_meter"
 

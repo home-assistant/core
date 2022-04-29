@@ -16,7 +16,7 @@ from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 
-from .const import CONF_COUNTY, CONF_PHONE_NUMBER, COUNTY_LIST, DOMAIN, LOGGER
+from .const import CONF_COUNTY, CONF_PHONE_NUMBER, COUNTY_LIST, DOMAIN
 
 STEP_OUTAGE_COUNTER_DATA_SCHEMA = vol.Schema(
     {
@@ -55,7 +55,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except HttpError:
             self.meter_error = {"base": "http_error", "type": "error"}
 
-        LOGGER.debug("verify meter done :)")
         self.hass.async_create_task(
             self.hass.config_entries.flow.async_configure(flow_id=self.flow_id)
         )
@@ -92,9 +91,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the smart meter step."""
         if self.meter_verification is True:
-            LOGGER.debug(self.meter_error)
-            LOGGER.debug("hi")
-            if self.meter_error is not None:
+            if "base" in self.meter_error:
                 if self.meter_error["base"] == "invalid_phone_number":
                     await asyncio.sleep(
                         0.1
@@ -132,12 +129,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the finish smart meter step."""
-        LOGGER.debug(self.meter_error)
-        LOGGER.debug("e.e.e.e.e.e.e.e")
-        if self.meter_error:
-            LOGGER.debug("woah an error")
+        if "base" in self.meter_error:
             if self.meter_error["type"] == "error":
-                LOGGER.debug("error detected")
                 self.meter_verification = False
                 return self.async_show_form(
                     step_id="smart_meter",
