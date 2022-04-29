@@ -10,7 +10,7 @@ from devolo_plc_api.exceptions.device import DeviceNotFound, DeviceUnavailable
 
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_IP_ADDRESS, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.httpx_client import get_async_client
@@ -39,6 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         device = Device(
             ip=entry.data[CONF_IP_ADDRESS], zeroconf_instance=zeroconf_instance
         )
+        device.password = entry.data[CONF_PASSWORD]
         await device.async_connect(session_instance=async_client)
     except DeviceNotFound as err:
         raise ConfigEntryNotReady(
