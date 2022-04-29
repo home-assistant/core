@@ -73,6 +73,7 @@ from homeassistant.loader import bind_hass
 import homeassistant.util.dt as dt_util
 
 ENTITY_ID_JSON_TEMPLATE = '%"entity_id":"{}"%'
+FRIENDLY_NAME_JSON_EXTRACT = re.compile('"friendly_name": ?"([^"]+)"')
 ENTITY_ID_JSON_EXTRACT = re.compile('"entity_id": ?"([^"]+)"')
 DOMAIN_JSON_EXTRACT = re.compile('"domain": ?"([^"]+)"')
 ICON_JSON_EXTRACT = re.compile('"icon": ?"([^"]+)"')
@@ -481,14 +482,13 @@ def _get_events(
     ), "can't pass in both entity_ids and context_id"
 
     entity_attr_cache = EntityAttributeCache(hass)
-    attr_cache: dict[str, dict[str, Any]] = {}
     event_data_cache: dict[str, dict[str, Any]] = {}
     context_lookup: dict[str | None, LazyEventPartialState | None] = {None: None}
 
     def yield_events(query: Query) -> Generator[LazyEventPartialState, None, None]:
         """Yield Events that are not filtered away."""
         for row in query.yield_per(1000):
-            event = LazyEventPartialState(row, attr_cache, event_data_cache)
+            event = LazyEventPartialState(row, event_data_cache)
             context_lookup.setdefault(event.context_id, event)
             if event.event_type == EVENT_CALL_SERVICE:
                 continue
@@ -802,14 +802,12 @@ class LazyEventPartialState:
         "context_user_id",
         "context_parent_id",
         "time_fired_minute",
-        "_attr_cache",
         "_event_data_cache",
     ]
 
     def __init__(
         self,
         row: Row,
-        attr_cache: dict[str, dict[str, Any]],
         event_data_cache: dict[str, dict[str, Any]],
     ) -> None:
         """Init the lazy event."""
@@ -825,7 +823,6 @@ class LazyEventPartialState:
         self.context_user_id: str | None = self._row.context_user_id
         self.context_parent_id: str | None = self._row.context_parent_id
         self.time_fired_minute: int = self._row.time_fired.minute
-        self._attr_cache = attr_cache
         self._event_data_cache = event_data_cache
 
     @property
@@ -842,7 +839,7 @@ class LazyEventPartialState:
         if self._attributes:
             return self._attributes.get(ATTR_ICON)
         result = ICON_JSON_EXTRACT.search(
-            self._row.shared_attrs or self._row.attributes
+            self._row.shared_attrs or self._row.attributes or ""
         )
         return result.group(1) if result else None
 
@@ -856,6 +853,16 @@ class LazyEventPartialState:
         return result.group(1) if result else None
 
     @property
+    def attributes_friendly_name(self) -> str | None:
+        """Extract the friendly name from the decoded attributes or json."""
+        if self._attributes:
+            return self._attributes.get(ATTR_FRIENDLY_NAME)
+        result = FRIENDLY_NAME_JSON_EXTRACT.search(
+            self._row.shared_attrs or self._row.attributes or ""
+        )
+        return result.group(1) if result else None
+
+    @property
     def data_domain(self) -> str | None:
         """Extract the domain from the decoded data or json."""
         if self._event_data:
@@ -863,25 +870,6 @@ class LazyEventPartialState:
 
         result = DOMAIN_JSON_EXTRACT.search(self._row.event_data)
         return result.group(1) if result else None
-
-    @property
-    def attributes(self) -> dict[str, Any]:
-        """State attributes."""
-        if self._attributes is None:
-            source = self._row.shared_attrs or self._row.attributes
-            if attributes := self._attr_cache.get(source):
-                self._attributes = attributes
-                return attributes
-            if source == EMPTY_JSON_OBJECT or source is None:
-                self._attributes = {}
-                return self._attributes
-            try:
-                self._attributes = json.loads(source)
-            except ValueError:
-                # When json.loads fails
-                self._attributes = {}
-            self._attr_cache[source] = self._attributes
-        return self._attributes
 
     @property
     def data(self) -> dict[str, Any]:
@@ -938,6 +926,13 @@ class EntityAttributeCache:
         else:
             # If the entity has been removed, decode the attributes
             # instead
-            cache[attribute] = event.attributes.get(attribute)
+            if attribute == ATTR_ICON:
+                cache[attribute] = event.attributes_icon
+            elif attribute == ATTR_FRIENDLY_NAME:
+                cache[attribute] = event.attributes_friendly_name
+            else:
+                raise ValueError(
+                    f"{attribute} is not supported by {self.__class__.__name__}"
+                )
 
         return cache[attribute]
