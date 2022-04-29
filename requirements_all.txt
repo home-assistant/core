@@ -2445,6 +2445,9 @@ xbox-webapi==2.0.11
 xboxapi==2.0.1
 
 # homeassistant.components.knx
+xknx-custom-panel==1.6.6
+
+# homeassistant.components.knx
 xknx==0.21.1
 
 # homeassistant.components.bluesound

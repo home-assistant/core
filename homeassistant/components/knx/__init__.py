@@ -20,6 +20,7 @@ from xknx.telegram.address import (
     parse_device_group_address,
 )
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
+from xknx_custom_panel import get_knx_ui
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -217,6 +218,24 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DATA_KNX_CONFIG] = conf
 
     register_websocket_api(hass)
+
+    url = "/api/panel_custom/knx_ui"
+    hass.http.register_static_path(url, get_knx_ui())
+    hass.components.frontend.async_register_built_in_panel(
+        component_name="custom",
+        sidebar_title="KNX UI",
+        sidebar_icon="mdi:earth",
+        frontend_url_path="knx_ui",
+        config={
+            "_panel_custom": {
+                "name": "knx-custom-panel",
+                "embed_iframe": False,
+                "trust_external": False,
+                "js_url": url,
+            }
+        },
+        require_admin=True,
+    )
 
     return True
 
