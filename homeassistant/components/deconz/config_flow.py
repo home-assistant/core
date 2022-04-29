@@ -8,7 +8,7 @@ from typing import Any, cast
 from urllib.parse import urlparse
 
 import async_timeout
-from pydeconz.errors import RequestError, ResponseError
+from pydeconz.errors import LinkButtonNotPressed, RequestError, ResponseError
 from pydeconz.gateway import DeconzSession
 from pydeconz.utils import (
     DiscoveredBridge,
@@ -159,6 +159,9 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
             try:
                 async with async_timeout.timeout(10):
                     api_key = await deconz_session.get_api_key()
+
+            except LinkButtonNotPressed:
+                errors["base"] = "linking_not_possible"
 
             except (ResponseError, RequestError, asyncio.TimeoutError):
                 errors["base"] = "no_key"
