@@ -11,6 +11,11 @@ import homeassistant.util.dt as dt_util
 
 from .helpers import async_calculate_period, floored_timestamp
 
+# Add 24 hours to min time since min time is min time UTC
+# and we want min time that can be represented in the configured
+# time zone
+MIN_TIME = datetime.datetime.min + datetime.timedelta(hours=24)
+
 
 @dataclass
 class HistoryStatsState:
@@ -36,7 +41,7 @@ class HistoryStats:
         """Init the history stats manager."""
         self.hass = hass
         self.entity_id = entity_id
-        self._period = (datetime.datetime.min, datetime.datetime.min)
+        self._period = (MIN_TIME, MIN_TIME)
         self._state: HistoryStatsState = HistoryStatsState(None, None, self._period)
         self._history_current_period: list[State] = []
         self._previous_run_before_start = False

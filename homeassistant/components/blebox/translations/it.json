@@ -7,7 +7,7 @@
         "error": {
             "cannot_connect": "Impossibile connettersi",
             "unknown": "Errore imprevisto",
-            "unsupported_version": "Il dispositivo BleBox ha un firmware obsoleto. Si prega di aggiornarlo prima."
+            "unsupported_version": "Il dispositivo BleBox ha un firmware obsoleto. Aggiornalo prima."
         },
         "flow_title": "{name} ({host})",
         "step": {

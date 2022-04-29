@@ -18,9 +18,9 @@
                     "value_template": "Value Template"
                 },
                 "data_description": {
+                    "column": "Column for returned query to present as state",
                     "db_url": "Database URL, leave empty to use default HA database",
                     "query": "Query to run, needs to start with 'SELECT'",
-                    "column": "Column for returned query to present as state",
                     "unit_of_measurement": "Unit of Measure (optional)",
                     "value_template": "Value Template (optional)"
                 }
@@ -43,9 +43,9 @@
                     "value_template": "Value Template"
                 },
                 "data_description": {
+                    "column": "Column for returned query to present as state",
                     "db_url": "Database URL, leave empty to use default HA database",
                     "query": "Query to run, needs to start with 'SELECT'",
-                    "column": "Column for returned query to present as state",
                     "unit_of_measurement": "Unit of Measure (optional)",
                     "value_template": "Value Template (optional)"
                 }

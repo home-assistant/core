@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "Apparaat is al geconfigureerd",
             "already_in_progress": "De configuratiestroom is al aan de gang",
+            "ignore_ip6_link_local": "IPv6 link lokaal adres wordt niet ondersteund.",
             "no_devices_found": "Geen apparaten gevonden op het netwerk",
             "not_supported": "Verbonden met AVM FRITZ! Box, maar het kan geen Smart Home-apparaten bedienen.",
             "reauth_successful": "Herauthenticatie was succesvol"
