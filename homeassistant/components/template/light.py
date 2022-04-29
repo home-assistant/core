@@ -94,8 +94,13 @@ LIGHT_SCHEMA = vol.All(
     ).extend(TEMPLATE_ENTITY_COMMON_SCHEMA_LEGACY.schema),
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_LIGHTS): cv.schema_with_slug_keys(LIGHT_SCHEMA)}
+PLATFORM_SCHEMA = vol.All(
+    # CONF_WHITE_VALUE_* is deprecated, support will be removed in release 2022.9
+    cv.deprecated(CONF_WHITE_VALUE_ACTION),
+    cv.deprecated(CONF_WHITE_VALUE_TEMPLATE),
+    PLATFORM_SCHEMA.extend(
+        {vol.Required(CONF_LIGHTS): cv.schema_with_slug_keys(LIGHT_SCHEMA)}
+    ),
 )
 
 
