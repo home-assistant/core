@@ -99,6 +99,20 @@ class CalendarEvent:
         """Return true if the event is an all day event."""
         return not isinstance(self.start, datetime.datetime)
 
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of the event."""
+        data = {
+            "start": self.start.isoformat(),
+            "end": self.end.isoformat(),
+            "summary": self.summary,
+            "all_day": self.all_day,
+        }
+        if self.description:
+            data["description"] = self.description
+        if self.location:
+            data["location"] = self.location
+        return data
+
 
 def _get_datetime_local(
     dt_or_d: datetime.datetime | datetime.date,

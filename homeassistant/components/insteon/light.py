@@ -1,10 +1,10 @@
 """Support for Insteon lights via PowerLinc Modem."""
-from pyinsteon.extended_property import ON_LEVEL
+from pyinsteon.config import ON_LEVEL
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    COLOR_MODE_BRIGHTNESS,
     DOMAIN as LIGHT_DOMAIN,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -41,8 +41,8 @@ async def async_setup_entry(
 class InsteonDimmerEntity(InsteonEntity, LightEntity):
     """A Class for an Insteon light entity."""
 
-    _attr_color_mode = COLOR_MODE_BRIGHTNESS
-    _attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
+    _attr_color_mode = ColorMode.BRIGHTNESS
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
     @property
     def brightness(self):

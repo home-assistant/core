@@ -15,14 +15,13 @@
                 "data": {
                     "host": "Host",
                     "type": "Type printer"
-                },
-                "description": "Zet Brother printerintegratie op. Als u problemen heeft met de configuratie ga dan naar: https://www.home-assistant.io/integrations/brother"
+                }
             },
             "zeroconf_confirm": {
                 "data": {
                     "type": "Type printer"
                 },
-                "description": "Wilt u het Brother Printer {model} met serienummer {serial_number}' toevoegen aan Home Assistant?",
+                "description": "Wilt u de printer {model} met serienummer ` {serial_number} ` toevoegen aan Home Assistant?",
                 "title": "Ontdekte Brother Printer"
             }
         }

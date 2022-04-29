@@ -13,7 +13,8 @@
   ],
   "dhcp": [
     { "registered_devices": true },
-    { "hostname": "isy*", "macaddress": "0021B9*" }
+    { "hostname": "isy*", "macaddress": "0021B9*" },
+    { "hostname": "polisy*", "macaddress": "000DB9*" }
   ],
   "iot_class": "local_push",
   "loggers": ["pyisy"]

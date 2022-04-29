@@ -16,7 +16,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.exceptions import Unauthorized
+from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.setup import async_setup_component
 import homeassistant.util.color as color_util
 
@@ -595,6 +595,7 @@ async def test_default_profiles_group(
     "extra_call_params, expected_params_state_was_off, expected_params_state_was_on",
     (
         (
+            # No turn on params, should apply profile
             {},
             {
                 light.ATTR_HS_COLOR: (50.353, 100),
@@ -608,6 +609,7 @@ async def test_default_profiles_group(
             },
         ),
         (
+            # Brightness in turn on params, brightness from profile ignored
             {light.ATTR_BRIGHTNESS: 22},
             {
                 light.ATTR_HS_COLOR: (50.353, 100),
@@ -620,6 +622,7 @@ async def test_default_profiles_group(
             },
         ),
         (
+            # Transition in turn on params, transition from profile ignored
             {light.ATTR_TRANSITION: 22},
             {
                 light.ATTR_HS_COLOR: (50.353, 100),
@@ -631,23 +634,115 @@ async def test_default_profiles_group(
             },
         ),
         (
+            # Color temp in turn on params, color from profile ignored
+            {
+                light.ATTR_COLOR_TEMP: 600,
+                light.ATTR_BRIGHTNESS: 11,
+                light.ATTR_TRANSITION: 1,
+            },
+            {
+                light.ATTR_COLOR_TEMP: 600,
+                light.ATTR_BRIGHTNESS: 11,
+                light.ATTR_TRANSITION: 1,
+            },
+            {
+                light.ATTR_COLOR_TEMP: 600,
+                light.ATTR_BRIGHTNESS: 11,
+                light.ATTR_TRANSITION: 1,
+            },
+        ),
+        (
+            # HS-color in turn on params, color from profile ignored
+            {
+                light.ATTR_HS_COLOR: [70, 80],
+                light.ATTR_BRIGHTNESS: 11,
+                light.ATTR_TRANSITION: 1,
+            },
+            {
+                light.ATTR_HS_COLOR: (70, 80),
+                light.ATTR_BRIGHTNESS: 11,
+                light.ATTR_TRANSITION: 1,
+            },
+            {
+                light.ATTR_HS_COLOR: (70, 80),
+                light.ATTR_BRIGHTNESS: 11,
+                light.ATTR_TRANSITION: 1,
+            },
+        ),
+        (
+            # RGB-color in turn on params, color from profile ignored
+            {
+                light.ATTR_RGB_COLOR: [1, 2, 3],
+                light.ATTR_BRIGHTNESS: 11,
+                light.ATTR_TRANSITION: 1,
+            },
+            {
+                light.ATTR_RGB_COLOR: (1, 2, 3),
+                light.ATTR_BRIGHTNESS: 11,
+                light.ATTR_TRANSITION: 1,
+            },
+            {
+                light.ATTR_RGB_COLOR: (1, 2, 3),
+                light.ATTR_BRIGHTNESS: 11,
+                light.ATTR_TRANSITION: 1,
+            },
+        ),
+        (
+            # RGBW-color in turn on params, color from profile ignored
+            {
+                light.ATTR_RGBW_COLOR: [1, 2, 3, 4],
+                light.ATTR_BRIGHTNESS: 11,
+                light.ATTR_TRANSITION: 1,
+            },
+            {
+                light.ATTR_RGBW_COLOR: (1, 2, 3, 4),
+                light.ATTR_BRIGHTNESS: 11,
+                light.ATTR_TRANSITION: 1,
+            },
+            {
+                light.ATTR_RGBW_COLOR: (1, 2, 3, 4),
+                light.ATTR_BRIGHTNESS: 11,
+                light.ATTR_TRANSITION: 1,
+            },
+        ),
+        (
+            # RGBWW-color in turn on params, color from profile ignored
+            {
+                light.ATTR_RGBWW_COLOR: [1, 2, 3, 4, 5],
+                light.ATTR_BRIGHTNESS: 11,
+                light.ATTR_TRANSITION: 1,
+            },
+            {
+                light.ATTR_RGBWW_COLOR: (1, 2, 3, 4, 5),
+                light.ATTR_BRIGHTNESS: 11,
+                light.ATTR_TRANSITION: 1,
+            },
+            {
+                light.ATTR_RGBWW_COLOR: (1, 2, 3, 4, 5),
+                light.ATTR_BRIGHTNESS: 11,
+                light.ATTR_TRANSITION: 1,
+            },
+        ),
+        (
+            # XY-color in turn on params, color from profile ignored
             {
                 light.ATTR_XY_COLOR: [0.4448, 0.4066],
                 light.ATTR_BRIGHTNESS: 11,
                 light.ATTR_TRANSITION: 1,
             },
             {
-                light.ATTR_HS_COLOR: (38.88, 49.02),
+                light.ATTR_XY_COLOR: (0.4448, 0.4066),
                 light.ATTR_BRIGHTNESS: 11,
                 light.ATTR_TRANSITION: 1,
             },
             {
-                light.ATTR_HS_COLOR: (38.88, 49.02),
+                light.ATTR_XY_COLOR: (0.4448, 0.4066),
                 light.ATTR_BRIGHTNESS: 11,
                 light.ATTR_TRANSITION: 1,
             },
         ),
         (
+            # Brightness + transition in turn on params
             {light.ATTR_BRIGHTNESS: 11, light.ATTR_TRANSITION: 1},
             {
                 light.ATTR_HS_COLOR: (50.353, 100),
@@ -684,7 +779,14 @@ async def test_default_profiles_light(
     mock_light_profiles[profile.name] = profile
 
     dev = next(filter(lambda x: x.entity_id == "light.ceiling_2", platform.ENTITIES))
-    dev.supported_color_modes = [light.ColorMode.HS]
+    dev.supported_color_modes = {
+        light.ColorMode.COLOR_TEMP,
+        light.ColorMode.HS,
+        light.ColorMode.RGB,
+        light.ColorMode.RGBW,
+        light.ColorMode.RGBWW,
+        light.ColorMode.XY,
+    }
     dev.supported_features = light.LightEntityFeature.TRANSITION
     await hass.services.async_call(
         light.DOMAIN,
@@ -2315,3 +2417,44 @@ def test_valid_supported_color_modes():
     supported = {light.ColorMode.BRIGHTNESS, light.ColorMode.COLOR_TEMP}
     with pytest.raises(vol.Error):
         light.valid_supported_color_modes(supported)
+
+
+def test_filter_supported_color_modes():
+    """Test filter_supported_color_modes."""
+    supported = {light.ColorMode.HS}
+    assert light.filter_supported_color_modes(supported) == supported
+
+    # Supported color modes must not be empty
+    supported = set()
+    with pytest.raises(HomeAssistantError):
+        light.filter_supported_color_modes(supported)
+
+    # ColorMode.WHITE must be combined with a color mode supporting color
+    supported = {light.ColorMode.WHITE}
+    with pytest.raises(HomeAssistantError):
+        light.filter_supported_color_modes(supported)
+
+    supported = {light.ColorMode.WHITE, light.ColorMode.COLOR_TEMP}
+    with pytest.raises(HomeAssistantError):
+        light.filter_supported_color_modes(supported)
+
+    supported = {light.ColorMode.WHITE, light.ColorMode.HS}
+    assert light.filter_supported_color_modes(supported) == supported
+
+    # ColorMode.ONOFF will be removed if combined with other modes
+    supported = {light.ColorMode.ONOFF}
+    assert light.filter_supported_color_modes(supported) == supported
+
+    supported = {light.ColorMode.ONOFF, light.ColorMode.COLOR_TEMP}
+    assert light.filter_supported_color_modes(supported) == {light.ColorMode.COLOR_TEMP}
+
+    # ColorMode.BRIGHTNESS will be removed if combined with other modes
+    supported = {light.ColorMode.BRIGHTNESS}
+    assert light.filter_supported_color_modes(supported) == supported
+
+    supported = {light.ColorMode.BRIGHTNESS, light.ColorMode.COLOR_TEMP}
+    assert light.filter_supported_color_modes(supported) == {light.ColorMode.COLOR_TEMP}
+
+    # ColorMode.BRIGHTNESS has priority over ColorMode.ONOFF
+    supported = {light.ColorMode.ONOFF, light.ColorMode.BRIGHTNESS}
+    assert light.filter_supported_color_modes(supported) == {light.ColorMode.BRIGHTNESS}

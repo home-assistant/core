@@ -12,11 +12,9 @@ from homeassistant.components.light import (
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
-    COLOR_MODE_COLOR_TEMP,
-    COLOR_MODE_HS,
-    SUPPORT_EFFECT,
-    SUPPORT_TRANSITION,
+    ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -46,8 +44,8 @@ async def async_setup_entry(
 class NanoleafLight(NanoleafEntity, LightEntity):
     """Representation of a Nanoleaf Light."""
 
-    _attr_supported_color_modes = {COLOR_MODE_COLOR_TEMP, COLOR_MODE_HS}
-    _attr_supported_features = SUPPORT_EFFECT | SUPPORT_TRANSITION
+    _attr_supported_color_modes = {ColorMode.COLOR_TEMP, ColorMode.HS}
+    _attr_supported_features = LightEntityFeature.EFFECT | LightEntityFeature.TRANSITION
 
     def __init__(self, nanoleaf: Nanoleaf, coordinator: DataUpdateCoordinator) -> None:
         """Initialize the Nanoleaf light."""
@@ -99,14 +97,14 @@ class NanoleafLight(NanoleafEntity, LightEntity):
         return self._nanoleaf.hue, self._nanoleaf.saturation
 
     @property
-    def color_mode(self) -> str | None:
+    def color_mode(self) -> ColorMode | None:
         """Return the color mode of the light."""
         # According to API docs, color mode is "ct", "effect" or "hs"
         # https://forum.nanoleaf.me/docs/openapi#_4qgqrz96f44d
         if self._nanoleaf.color_mode == "ct":
-            return COLOR_MODE_COLOR_TEMP
+            return ColorMode.COLOR_TEMP
         # Home Assistant does not have an "effect" color mode, just report hs
-        return COLOR_MODE_HS
+        return ColorMode.HS
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""

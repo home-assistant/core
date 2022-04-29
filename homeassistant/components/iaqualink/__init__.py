@@ -2,8 +2,10 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
 import logging
+from typing import Any, TypeVar
 
 import aiohttp.client_exceptions
 from iaqualink.client import AqualinkClient
@@ -16,6 +18,7 @@ from iaqualink.device import (
     AqualinkToggle,
 )
 from iaqualink.exception import AqualinkServiceException
+from typing_extensions import Concatenate, ParamSpec
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -39,6 +42,9 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, UPDATE_INTERVAL
+
+_AqualinkEntityT = TypeVar("_AqualinkEntityT", bound="AqualinkEntity")
+_P = ParamSpec("_P")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -193,11 +199,15 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await hass.config_entries.async_unload_platforms(entry, platforms_to_unload)
 
 
-def refresh_system(func):
+def refresh_system(
+    func: Callable[Concatenate[_AqualinkEntityT, _P], Awaitable[Any]]
+) -> Callable[Concatenate[_AqualinkEntityT, _P], Coroutine[Any, Any, None]]:
     """Force update all entities after state change."""
 
     @wraps(func)
-    async def wrapper(self, *args, **kwargs):
+    async def wrapper(
+        self: _AqualinkEntityT, *args: _P.args, **kwargs: _P.kwargs
+    ) -> None:
         """Call decorated function and send update signal to all entities."""
         await func(self, *args, **kwargs)
         async_dispatcher_send(self.hass, DOMAIN)

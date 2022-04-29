@@ -10,12 +10,9 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_EFFECT,
     ATTR_HS_COLOR,
-    COLOR_MODE_HS,
-    COLOR_MODE_ONOFF,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_EFFECT,
+    ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -152,10 +149,8 @@ class PhilipsTVLightEntity(
         self._last_selected_effect: AmbilightEffect = None
         super().__init__(coordinator)
 
-        self._attr_supported_color_modes = [COLOR_MODE_HS, COLOR_MODE_ONOFF]
-        self._attr_supported_features = (
-            SUPPORT_EFFECT | SUPPORT_COLOR | SUPPORT_BRIGHTNESS
-        )
+        self._attr_supported_color_modes = {ColorMode.HS, ColorMode.ONOFF}
+        self._attr_supported_features = LightEntityFeature.EFFECT
         self._attr_name = f"{coordinator.system['name']} Ambilight"
         self._attr_unique_id = coordinator.unique_id
         self._attr_icon = "mdi:television-ambient-light"
@@ -217,16 +212,16 @@ class PhilipsTVLightEntity(
         return AmbilightEffect(EFFECT_MODE, self._tv.ambilight_mode, None)
 
     @property
-    def color_mode(self):
+    def color_mode(self) -> ColorMode:
         """Return the current color mode."""
         current = self._tv.ambilight_current_configuration
         if current and current["isExpert"]:
-            return COLOR_MODE_HS
+            return ColorMode.HS
 
         if self._tv.ambilight_mode in ["manual", "expert"]:
-            return COLOR_MODE_HS
+            return ColorMode.HS
 
-        return COLOR_MODE_ONOFF
+        return ColorMode.ONOFF
 
     @property
     def is_on(self):

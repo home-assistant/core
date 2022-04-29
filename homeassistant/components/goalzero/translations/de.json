@@ -20,7 +20,7 @@
                     "host": "Host",
                     "name": "Name"
                 },
-                "description": "Zuerst musst du die Goal Zero App herunterladen: https://www.goalzero.com/product-features/yeti-app/ \n\nFolge den Anweisungen, um deinen Yeti mit deinem WLAN-Netzwerk zu verbinden. Eine DHCP-Reservierung auf deinem Router wird empfohlen. Wenn es nicht eingerichtet ist, ist das Ger\u00e4t m\u00f6glicherweise nicht verf\u00fcgbar, bis Home Assistant die neue IP-Adresse erkennt. Schlage dazu im Benutzerhandbuch deines Routers nach.",
+                "description": "Bitte lies die Dokumentation, um sicherzustellen, dass alle Anforderungen erf\u00fcllt sind.",
                 "title": "Goal Zero Yeti"
             }
         }

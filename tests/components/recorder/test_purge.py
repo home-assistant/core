@@ -4,6 +4,7 @@ import json
 import sqlite3
 from unittest.mock import MagicMock, patch
 
+import pytest
 from sqlalchemy.exc import DatabaseError, OperationalError
 from sqlalchemy.orm.session import Session
 
@@ -29,9 +30,19 @@ from .common import (
     async_recorder_block_till_done,
     async_wait_purge_done,
     async_wait_recording_done,
-    async_wait_recording_done_without_instance,
 )
-from .conftest import SetupRecorderInstanceT
+
+from tests.common import SetupRecorderInstanceT
+
+
+@pytest.fixture(name="use_sqlite")
+def mock_use_sqlite(request):
+    """Pytest fixture to switch purge method."""
+    with patch(
+        "homeassistant.components.recorder.Recorder.using_sqlite",
+        return_value=request.param,
+    ):
+        yield
 
 
 async def test_purge_old_states(
@@ -40,7 +51,7 @@ async def test_purge_old_states(
     """Test deleting old states."""
     instance = await async_setup_recorder_instance(hass)
 
-    await _add_test_states(hass, instance)
+    await _add_test_states(hass)
 
     # make sure we start with 6 states
     with session_scope(hass=hass) as session:
@@ -49,7 +60,7 @@ async def test_purge_old_states(
 
         assert states.count() == 6
         assert states[0].old_state_id is None
-        assert states[-1].old_state_id == states[-2].state_id
+        assert states[5].old_state_id == states[4].state_id
         assert state_attributes.count() == 3
 
         events = session.query(Events).filter(Events.event_type == "state_changed")
@@ -87,14 +98,14 @@ async def test_purge_old_states(
         assert "test.recorder2" not in instance._old_states
 
     # Add some more states
-    await _add_test_states(hass, instance)
+    await _add_test_states(hass)
 
     # make sure we start with 6 states
     with session_scope(hass=hass) as session:
         states = session.query(States)
         assert states.count() == 6
         assert states[0].old_state_id is None
-        assert states[-1].old_state_id == states[-2].state_id
+        assert states[5].old_state_id == states[4].state_id
 
         events = session.query(Events).filter(Events.event_type == "state_changed")
         assert events.count() == 6
@@ -108,10 +119,10 @@ async def test_purge_old_states_encouters_database_corruption(
     hass: HomeAssistant, async_setup_recorder_instance: SetupRecorderInstanceT
 ):
     """Test database image image is malformed while deleting old states."""
-    instance = await async_setup_recorder_instance(hass)
+    await async_setup_recorder_instance(hass)
 
-    await _add_test_states(hass, instance)
-    await async_wait_recording_done_without_instance(hass)
+    await _add_test_states(hass)
+    await async_wait_recording_done(hass)
 
     sqlite3_exception = DatabaseError("statement", {}, [])
     sqlite3_exception.__cause__ = sqlite3.DatabaseError()
@@ -126,7 +137,7 @@ async def test_purge_old_states_encouters_database_corruption(
             recorder.DOMAIN, recorder.SERVICE_PURGE, {"keep_days": 0}
         )
         await hass.async_block_till_done()
-        await async_wait_recording_done_without_instance(hass)
+        await async_wait_recording_done(hass)
 
     assert move_away.called
 
@@ -144,8 +155,8 @@ async def test_purge_old_states_encounters_temporary_mysql_error(
     """Test retry on specific mysql operational errors."""
     instance = await async_setup_recorder_instance(hass)
 
-    await _add_test_states(hass, instance)
-    await async_wait_recording_done_without_instance(hass)
+    await _add_test_states(hass)
+    await async_wait_recording_done(hass)
 
     mysql_exception = OperationalError("statement", {}, [])
     mysql_exception.orig = MagicMock(args=(1205, "retryable"))
@@ -162,8 +173,8 @@ async def test_purge_old_states_encounters_temporary_mysql_error(
             recorder.DOMAIN, recorder.SERVICE_PURGE, {"keep_days": 0}
         )
         await hass.async_block_till_done()
-        await async_wait_recording_done_without_instance(hass)
-        await async_wait_recording_done_without_instance(hass)
+        await async_wait_recording_done(hass)
+        await async_wait_recording_done(hass)
 
     assert "retrying" in caplog.text
     assert sleep_mock.called
@@ -175,10 +186,10 @@ async def test_purge_old_states_encounters_operational_error(
     caplog,
 ):
     """Test error on operational errors that are not mysql does not retry."""
-    instance = await async_setup_recorder_instance(hass)
+    await async_setup_recorder_instance(hass)
 
-    await _add_test_states(hass, instance)
-    await async_wait_recording_done_without_instance(hass)
+    await _add_test_states(hass)
+    await async_wait_recording_done(hass)
 
     exception = OperationalError("statement", {}, [])
 
@@ -190,8 +201,8 @@ async def test_purge_old_states_encounters_operational_error(
             recorder.DOMAIN, recorder.SERVICE_PURGE, {"keep_days": 0}
         )
         await hass.async_block_till_done()
-        await async_wait_recording_done_without_instance(hass)
-        await async_wait_recording_done_without_instance(hass)
+        await async_wait_recording_done(hass)
+        await async_wait_recording_done(hass)
 
     assert "retrying" not in caplog.text
     assert "Error executing purge" in caplog.text
@@ -203,7 +214,7 @@ async def test_purge_old_events(
     """Test deleting old events."""
     instance = await async_setup_recorder_instance(hass)
 
-    await _add_test_events(hass, instance)
+    await _add_test_events(hass)
 
     with session_scope(hass=hass) as session:
         events = session.query(Events).filter(Events.event_type.like("EVENT_TEST%"))
@@ -228,7 +239,7 @@ async def test_purge_old_recorder_runs(
     """Test deleting old recorder runs keeps current run."""
     instance = await async_setup_recorder_instance(hass)
 
-    await _add_test_recorder_runs(hass, instance)
+    await _add_test_recorder_runs(hass)
 
     # make sure we start with 7 recorder runs
     with session_scope(hass=hass) as session:
@@ -252,7 +263,7 @@ async def test_purge_old_statistics_runs(
     """Test deleting old statistics runs keeps the latest run."""
     instance = await async_setup_recorder_instance(hass)
 
-    await _add_test_statistics_runs(hass, instance)
+    await _add_test_statistics_runs(hass)
 
     # make sure we start with 7 statistics runs
     with session_scope(hass=hass) as session:
@@ -270,10 +281,12 @@ async def test_purge_old_statistics_runs(
         assert statistics_runs.count() == 1
 
 
+@pytest.mark.parametrize("use_sqlite", (True, False), indirect=True)
 async def test_purge_method(
     hass: HomeAssistant,
     async_setup_recorder_instance: SetupRecorderInstanceT,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
+    use_sqlite: bool,
 ):
     """Test purge method."""
 
@@ -288,16 +301,16 @@ async def test_purge_method(
         assert run1.run_id == run2.run_id
         assert run1.start == run2.start
 
-    instance = await async_setup_recorder_instance(hass)
+    await async_setup_recorder_instance(hass)
 
     service_data = {"keep_days": 4}
-    await _add_test_events(hass, instance)
-    await _add_test_states(hass, instance)
-    await _add_test_statistics(hass, instance)
-    await _add_test_recorder_runs(hass, instance)
-    await _add_test_statistics_runs(hass, instance)
+    await _add_test_events(hass)
+    await _add_test_states(hass)
+    await _add_test_statistics(hass)
+    await _add_test_recorder_runs(hass)
+    await _add_test_statistics_runs(hass)
     await hass.async_block_till_done()
-    await async_wait_recording_done(hass, instance)
+    await async_wait_recording_done(hass)
 
     # make sure we start with 6 states
     with session_scope(hass=hass) as session:
@@ -324,14 +337,14 @@ async def test_purge_method(
             session.expunge(itm)
 
     await hass.async_block_till_done()
-    await async_wait_purge_done(hass, instance)
+    await async_wait_purge_done(hass)
 
     # run purge method - no service data, use defaults
     await hass.services.async_call("recorder", "purge")
     await hass.async_block_till_done()
 
     # Small wait for recorder thread
-    await async_wait_purge_done(hass, instance)
+    await async_wait_purge_done(hass)
 
     with session_scope(hass=hass) as session:
         states = session.query(States)
@@ -348,7 +361,7 @@ async def test_purge_method(
     await hass.async_block_till_done()
 
     # Small wait for recorder thread
-    await async_wait_purge_done(hass, instance)
+    await async_wait_purge_done(hass)
 
     with session_scope(hass=hass) as session:
         states = session.query(States)
@@ -380,13 +393,15 @@ async def test_purge_method(
     service_data["repack"] = True
     await hass.services.async_call("recorder", "purge", service_data=service_data)
     await hass.async_block_till_done()
-    await async_wait_purge_done(hass, instance)
+    await async_wait_purge_done(hass)
     assert "Vacuuming SQL DB to free space" in caplog.text
 
 
+@pytest.mark.parametrize("use_sqlite", (True, False), indirect=True)
 async def test_purge_edge_case(
     hass: HomeAssistant,
     async_setup_recorder_instance: SetupRecorderInstanceT,
+    use_sqlite: bool,
 ):
     """Test states and events are purged even if they occurred shortly before purge_before."""
 
@@ -420,8 +435,8 @@ async def test_purge_edge_case(
                 )
             )
 
-    instance = await async_setup_recorder_instance(hass, None)
-    await async_wait_purge_done(hass, instance)
+    await async_setup_recorder_instance(hass, None)
+    await async_wait_purge_done(hass)
 
     service_data = {"keep_days": 2}
     timestamp = dt_util.utcnow() - timedelta(days=2, minutes=1)
@@ -442,8 +457,8 @@ async def test_purge_edge_case(
     )
     await hass.async_block_till_done()
 
-    await async_recorder_block_till_done(hass, instance)
-    await async_wait_purge_done(hass, instance)
+    await async_recorder_block_till_done(hass)
+    await async_wait_purge_done(hass)
 
     with session_scope(hass=hass) as session:
         states = session.query(States)
@@ -520,7 +535,7 @@ async def test_purge_cutoff_date(
                 )
 
     instance = await async_setup_recorder_instance(hass, None)
-    await async_wait_purge_done(hass, instance)
+    await async_wait_purge_done(hass)
 
     service_data = {"keep_days": 2}
 
@@ -548,8 +563,8 @@ async def test_purge_cutoff_date(
 
     instance.queue.put(PurgeTask(cutoff, repack=False, apply_filter=False))
     await hass.async_block_till_done()
-    await async_recorder_block_till_done(hass, instance)
-    await async_wait_purge_done(hass, instance)
+    await async_recorder_block_till_done(hass)
+    await async_wait_purge_done(hass)
 
     with session_scope(hass=hass) as session:
         states = session.query(States)
@@ -578,8 +593,8 @@ async def test_purge_cutoff_date(
 
     # Make sure we can purge everything
     instance.queue.put(PurgeTask(dt_util.utcnow(), repack=False, apply_filter=False))
-    await async_recorder_block_till_done(hass, instance)
-    await async_wait_purge_done(hass, instance)
+    await async_recorder_block_till_done(hass)
+    await async_wait_purge_done(hass)
 
     with session_scope(hass=hass) as session:
         states = session.query(States)
@@ -589,8 +604,8 @@ async def test_purge_cutoff_date(
 
     # Make sure we can purge everything when the db is already empty
     instance.queue.put(PurgeTask(dt_util.utcnow(), repack=False, apply_filter=False))
-    await async_recorder_block_till_done(hass, instance)
-    await async_wait_purge_done(hass, instance)
+    await async_recorder_block_till_done(hass)
+    await async_wait_purge_done(hass)
 
     with session_scope(hass=hass) as session:
         states = session.query(States)
@@ -599,9 +614,11 @@ async def test_purge_cutoff_date(
         assert state_attributes.count() == 0
 
 
+@pytest.mark.parametrize("use_sqlite", (True, False), indirect=True)
 async def test_purge_filtered_states(
     hass: HomeAssistant,
     async_setup_recorder_instance: SetupRecorderInstanceT,
+    use_sqlite: bool,
 ):
     """Test filtered states are purged."""
     config: ConfigType = {"exclude": {"entities": ["sensor.excluded"]}}
@@ -710,8 +727,8 @@ async def test_purge_filtered_states(
     )
     await hass.async_block_till_done()
 
-    await async_recorder_block_till_done(hass, instance)
-    await async_wait_purge_done(hass, instance)
+    await async_recorder_block_till_done(hass)
+    await async_wait_purge_done(hass)
 
     with session_scope(hass=hass) as session:
         states = session.query(States)
@@ -730,11 +747,11 @@ async def test_purge_filtered_states(
     )
     await hass.async_block_till_done()
 
-    await async_recorder_block_till_done(hass, instance)
-    await async_wait_purge_done(hass, instance)
+    await async_recorder_block_till_done(hass)
+    await async_wait_purge_done(hass)
 
-    await async_recorder_block_till_done(hass, instance)
-    await async_wait_purge_done(hass, instance)
+    await async_recorder_block_till_done(hass)
+    await async_wait_purge_done(hass)
 
     with session_scope(hass=hass) as session:
         states = session.query(States)
@@ -766,8 +783,8 @@ async def test_purge_filtered_states(
     await hass.services.async_call(
         recorder.DOMAIN, recorder.SERVICE_PURGE, service_data
     )
-    await async_recorder_block_till_done(hass, instance)
-    await async_wait_purge_done(hass, instance)
+    await async_recorder_block_till_done(hass)
+    await async_wait_purge_done(hass)
 
     with session_scope(hass=hass) as session:
         final_keep_state = session.query(States).get(74)
@@ -781,8 +798,8 @@ async def test_purge_filtered_states(
     await hass.services.async_call(
         recorder.DOMAIN, recorder.SERVICE_PURGE, service_data
     )
-    await async_recorder_block_till_done(hass, instance)
-    await async_wait_purge_done(hass, instance)
+    await async_recorder_block_till_done(hass)
+    await async_wait_purge_done(hass)
 
     with session_scope(hass=hass) as session:
         remaining = list(session.query(States))
@@ -792,9 +809,11 @@ async def test_purge_filtered_states(
         assert session.query(StateAttributes).count() == 1
 
 
+@pytest.mark.parametrize("use_sqlite", (True, False), indirect=True)
 async def test_purge_filtered_states_to_empty(
     hass: HomeAssistant,
     async_setup_recorder_instance: SetupRecorderInstanceT,
+    use_sqlite: bool,
 ):
     """Test filtered states are purged all the way to an empty db."""
     config: ConfigType = {"exclude": {"entities": ["sensor.excluded"]}}
@@ -829,8 +848,8 @@ async def test_purge_filtered_states_to_empty(
     await hass.services.async_call(
         recorder.DOMAIN, recorder.SERVICE_PURGE, service_data
     )
-    await async_recorder_block_till_done(hass, instance)
-    await async_wait_purge_done(hass, instance)
+    await async_recorder_block_till_done(hass)
+    await async_wait_purge_done(hass)
 
     with session_scope(hass=hass) as session:
         states = session.query(States)
@@ -843,13 +862,15 @@ async def test_purge_filtered_states_to_empty(
     await hass.services.async_call(
         recorder.DOMAIN, recorder.SERVICE_PURGE, service_data
     )
-    await async_recorder_block_till_done(hass, instance)
-    await async_wait_purge_done(hass, instance)
+    await async_recorder_block_till_done(hass)
+    await async_wait_purge_done(hass)
 
 
+@pytest.mark.parametrize("use_sqlite", (True, False), indirect=True)
 async def test_purge_without_state_attributes_filtered_states_to_empty(
     hass: HomeAssistant,
     async_setup_recorder_instance: SetupRecorderInstanceT,
+    use_sqlite: bool,
 ):
     """Test filtered legacy states without state attributes are purged all the way to an empty db."""
     config: ConfigType = {"exclude": {"entities": ["sensor.old_format"]}}
@@ -897,8 +918,8 @@ async def test_purge_without_state_attributes_filtered_states_to_empty(
     await hass.services.async_call(
         recorder.DOMAIN, recorder.SERVICE_PURGE, service_data
     )
-    await async_recorder_block_till_done(hass, instance)
-    await async_wait_purge_done(hass, instance)
+    await async_recorder_block_till_done(hass)
+    await async_wait_purge_done(hass)
 
     with session_scope(hass=hass) as session:
         states = session.query(States)
@@ -911,8 +932,8 @@ async def test_purge_without_state_attributes_filtered_states_to_empty(
     await hass.services.async_call(
         recorder.DOMAIN, recorder.SERVICE_PURGE, service_data
     )
-    await async_recorder_block_till_done(hass, instance)
-    await async_wait_purge_done(hass, instance)
+    await async_recorder_block_till_done(hass)
+    await async_wait_purge_done(hass)
 
 
 async def test_purge_filtered_events(
@@ -921,7 +942,7 @@ async def test_purge_filtered_events(
 ):
     """Test filtered events are purged."""
     config: ConfigType = {"exclude": {"event_types": ["EVENT_PURGE"]}}
-    instance = await async_setup_recorder_instance(hass, config)
+    await async_setup_recorder_instance(hass, config)
 
     def _add_db_entries(hass: HomeAssistant) -> None:
         with recorder.session_scope(hass=hass) as session:
@@ -970,8 +991,8 @@ async def test_purge_filtered_events(
     )
     await hass.async_block_till_done()
 
-    await async_recorder_block_till_done(hass, instance)
-    await async_wait_purge_done(hass, instance)
+    await async_recorder_block_till_done(hass)
+    await async_wait_purge_done(hass)
 
     with session_scope(hass=hass) as session:
         events_purge = session.query(Events).filter(Events.event_type == "EVENT_PURGE")
@@ -990,11 +1011,11 @@ async def test_purge_filtered_events(
     )
     await hass.async_block_till_done()
 
-    await async_recorder_block_till_done(hass, instance)
-    await async_wait_purge_done(hass, instance)
+    await async_recorder_block_till_done(hass)
+    await async_wait_purge_done(hass)
 
-    await async_recorder_block_till_done(hass, instance)
-    await async_wait_purge_done(hass, instance)
+    await async_recorder_block_till_done(hass)
+    await async_wait_purge_done(hass)
 
     with session_scope(hass=hass) as session:
         events_purge = session.query(Events).filter(Events.event_type == "EVENT_PURGE")
@@ -1090,11 +1111,11 @@ async def test_purge_filtered_events_state_changed(
     )
     await hass.async_block_till_done()
 
-    await async_recorder_block_till_done(hass, instance)
-    await async_wait_purge_done(hass, instance)
+    await async_recorder_block_till_done(hass)
+    await async_wait_purge_done(hass)
 
-    await async_recorder_block_till_done(hass, instance)
-    await async_wait_purge_done(hass, instance)
+    await async_recorder_block_till_done(hass)
+    await async_wait_purge_done(hass)
 
     with session_scope(hass=hass) as session:
         events_keep = session.query(Events).filter(Events.event_type == "EVENT_KEEP")
@@ -1116,7 +1137,7 @@ async def test_purge_entities(
     hass: HomeAssistant, async_setup_recorder_instance: SetupRecorderInstanceT
 ):
     """Test purging of specific entities."""
-    instance = await async_setup_recorder_instance(hass)
+    await async_setup_recorder_instance(hass)
 
     async def _purge_entities(hass, entity_ids, domains, entity_globs):
         service_data = {
@@ -1130,8 +1151,8 @@ async def test_purge_entities(
         )
         await hass.async_block_till_done()
 
-        await async_recorder_block_till_done(hass, instance)
-        await async_wait_purge_done(hass, instance)
+        await async_recorder_block_till_done(hass)
+        await async_wait_purge_done(hass)
 
     def _add_purge_records(hass: HomeAssistant) -> None:
         with recorder.session_scope(hass=hass) as session:
@@ -1241,7 +1262,7 @@ async def test_purge_entities(
         assert states.count() == 0
 
 
-async def _add_test_states(hass: HomeAssistant, instance: recorder.Recorder):
+async def _add_test_states(hass: HomeAssistant):
     """Add multiple states to the db for testing."""
     utcnow = dt_util.utcnow()
     five_days_ago = utcnow - timedelta(days=5)
@@ -1252,7 +1273,7 @@ async def _add_test_states(hass: HomeAssistant, instance: recorder.Recorder):
         """Set the state."""
         hass.states.async_set(entity_id, state, **kwargs)
         await hass.async_block_till_done()
-        await async_wait_recording_done(hass, instance)
+        await async_wait_recording_done(hass)
 
     for event_id in range(6):
         if event_id < 2:
@@ -1274,7 +1295,7 @@ async def _add_test_states(hass: HomeAssistant, instance: recorder.Recorder):
             await set_state("test.recorder2", state, attributes=attributes)
 
 
-async def _add_test_events(hass: HomeAssistant, instance: recorder.Recorder):
+async def _add_test_events(hass: HomeAssistant):
     """Add a few events for testing."""
     utcnow = dt_util.utcnow()
     five_days_ago = utcnow - timedelta(days=5)
@@ -1282,7 +1303,7 @@ async def _add_test_events(hass: HomeAssistant, instance: recorder.Recorder):
     event_data = {"test_attr": 5, "test_attr_10": "nice"}
 
     await hass.async_block_till_done()
-    await async_wait_recording_done(hass, instance)
+    await async_wait_recording_done(hass)
 
     with recorder.session_scope(hass=hass) as session:
         for event_id in range(6):
@@ -1306,14 +1327,14 @@ async def _add_test_events(hass: HomeAssistant, instance: recorder.Recorder):
             )
 
 
-async def _add_test_statistics(hass: HomeAssistant, instance: recorder.Recorder):
+async def _add_test_statistics(hass: HomeAssistant):
     """Add multiple statistics to the db for testing."""
     utcnow = dt_util.utcnow()
     five_days_ago = utcnow - timedelta(days=5)
     eleven_days_ago = utcnow - timedelta(days=11)
 
     await hass.async_block_till_done()
-    await async_wait_recording_done(hass, instance)
+    await async_wait_recording_done(hass)
 
     with recorder.session_scope(hass=hass) as session:
         for event_id in range(6):
@@ -1335,14 +1356,14 @@ async def _add_test_statistics(hass: HomeAssistant, instance: recorder.Recorder)
             )
 
 
-async def _add_test_recorder_runs(hass: HomeAssistant, instance: recorder.Recorder):
+async def _add_test_recorder_runs(hass: HomeAssistant):
     """Add a few recorder_runs for testing."""
     utcnow = dt_util.utcnow()
     five_days_ago = utcnow - timedelta(days=5)
     eleven_days_ago = utcnow - timedelta(days=11)
 
     await hass.async_block_till_done()
-    await async_wait_recording_done(hass, instance)
+    await async_wait_recording_done(hass)
 
     with recorder.session_scope(hass=hass) as session:
         for rec_id in range(6):
@@ -1362,14 +1383,14 @@ async def _add_test_recorder_runs(hass: HomeAssistant, instance: recorder.Record
             )
 
 
-async def _add_test_statistics_runs(hass: HomeAssistant, instance: recorder.Recorder):
+async def _add_test_statistics_runs(hass: HomeAssistant):
     """Add a few recorder_runs for testing."""
     utcnow = dt_util.utcnow()
     five_days_ago = utcnow - timedelta(days=5)
     eleven_days_ago = utcnow - timedelta(days=11)
 
     await hass.async_block_till_done()
-    await async_wait_recording_done(hass, instance)
+    await async_wait_recording_done(hass)
 
     with recorder.session_scope(hass=hass) as session:
         for rec_id in range(6):

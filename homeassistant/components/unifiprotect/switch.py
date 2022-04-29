@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
-from typing import Any, Generic
+from typing import Any
 
 from pyunifiprotect.data import Camera, RecordingMode, VideoMode
 from pyunifiprotect.data.base import ProtectAdoptableDeviceModel
@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 
 @dataclass
 class ProtectSwitchEntityDescription(
-    ProtectSetableKeysMixin, SwitchEntityDescription, Generic[T]
+    ProtectSetableKeysMixin[T], SwitchEntityDescription
 ):
     """Describes UniFi Protect Switch entity."""
 

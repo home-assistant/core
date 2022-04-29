@@ -5,9 +5,8 @@ from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
-    CURRENT_HVAC_COOL,
-    CURRENT_HVAC_HEAT,
     ClimateEntityFeature,
+    HVACAction,
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -43,7 +42,7 @@ async def async_setup_platform(
                 current_humidity=None,
                 swing_mode=None,
                 hvac_mode=HVACMode.HEAT,
-                hvac_action=CURRENT_HVAC_HEAT,
+                hvac_action=HVACAction.HEATING,
                 aux=None,
                 target_temp_high=None,
                 target_temp_low=None,
@@ -61,7 +60,7 @@ async def async_setup_platform(
                 current_humidity=54,
                 swing_mode="Off",
                 hvac_mode=HVACMode.COOL,
-                hvac_action=CURRENT_HVAC_COOL,
+                hvac_action=HVACAction.COOLING,
                 aux=False,
                 target_temp_high=None,
                 target_temp_low=None,

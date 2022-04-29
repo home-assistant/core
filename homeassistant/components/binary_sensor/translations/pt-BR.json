@@ -179,7 +179,7 @@
             "on": "Molhado"
         },
         "motion": {
-            "off": "Sem movimento",
+            "off": "N\u00e3o detectado",
             "on": "Detectado"
         },
         "moving": {

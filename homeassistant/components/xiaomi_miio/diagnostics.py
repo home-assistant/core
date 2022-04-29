@@ -1,6 +1,8 @@
 """Diagnostics support for Xiaomi Miio."""
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MAC, CONF_TOKEN, CONF_UNIQUE_ID
@@ -19,9 +21,9 @@ TO_REDACT = {
 
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry
-) -> dict:
+) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    diagnostics_data = {
+    diagnostics_data: dict[str, Any] = {
         "config_entry": async_redact_data(config_entry.as_dict(), TO_REDACT)
     }
 
@@ -30,6 +32,6 @@ async def async_get_config_entry_diagnostics(
         if isinstance(coordinator.data, dict):
             diagnostics_data["coordinator_data"] = coordinator.data
         else:
-            diagnostics_data["coordinator_data"] = coordinator.data.__repr__()
+            diagnostics_data["coordinator_data"] = repr(coordinator.data)
 
     return diagnostics_data
