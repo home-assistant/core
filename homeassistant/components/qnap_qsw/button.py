@@ -1,11 +1,12 @@
 """Support for the QNAP QSW buttons."""
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Final
 
 from aioqsw.const import QSD_PRODUCT, QSD_SYSTEM_BOARD
+from aioqsw.localapi import QnapQswApi
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -23,14 +24,19 @@ from .coordinator import QswUpdateCoordinator
 
 
 @dataclass
-class QswButtonEntityDescription(ButtonEntityDescription):
-    """A class that describes QNAP QSW button entities."""
+class QswButtonDescriptionMixin:
+    """Mixin to describe a Button entity."""
 
-    press_action: Callable | None = None
+    press_action: Callable[[QnapQswApi], Awaitable[bool]]
 
 
-BUTTON_TYPES: Final[tuple[QswButtonEntityDescription, ...]] = (
-    QswButtonEntityDescription(
+@dataclass
+class QswButtonDescription(ButtonEntityDescription, QswButtonDescriptionMixin):
+    """Class to describe a Button entity."""
+
+
+BUTTON_TYPES: Final[tuple[QswButtonDescription, ...]] = (
+    QswButtonDescription(
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
         key=QSW_REBOOT,
@@ -53,12 +59,12 @@ async def async_setup_entry(
 class QswButton(QswEntity, ButtonEntity):
     """Define a QNAP QSW button."""
 
-    entity_description: QswButtonEntityDescription
+    entity_description: QswButtonDescription
 
     def __init__(
         self,
         coordinator: QswUpdateCoordinator,
-        description: QswButtonEntityDescription,
+        description: QswButtonDescription,
         entry: ConfigEntry,
     ) -> None:
         """Initialize."""
