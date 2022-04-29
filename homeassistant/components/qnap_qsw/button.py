@@ -77,5 +77,4 @@ class QswButton(QswEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Triggers the QNAP QSW button action."""
-        if self.entity_description.press_action:
-            await self.entity_description.press_action(self.coordinator.qsw)
+        await self.entity_description.press_action(self.coordinator.qsw)
