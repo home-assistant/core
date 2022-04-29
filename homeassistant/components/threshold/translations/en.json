@@ -9,6 +9,7 @@
                     "entity_id": "Input sensor",
                     "hysteresis": "Hysteresis",
                     "lower": "Lower limit",
+                    "mode": "Threshold mode",
                     "name": "Name",
                     "upper": "Upper limit"
                 },
@@ -27,6 +28,7 @@
                     "entity_id": "Input sensor",
                     "hysteresis": "Hysteresis",
                     "lower": "Lower limit",
+                    "mode": "Threshold mode",
                     "name": "Name",
                     "upper": "Upper limit"
                 },

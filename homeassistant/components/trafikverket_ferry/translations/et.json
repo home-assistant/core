@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto on juba h\u00e4\u00e4lestatud",
+            "reauth_successful": "Taastuvastamine \u00f5nnestus"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "incorrect_api_key": "Valitud konto API-v\u00f5ti on kehtetu",
+            "invalid_auth": "Tuvastamine nurjus",
+            "invalid_route": "Esitatud teabega marsruuti ei leitud"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API v\u00f5ti"
+                }
+            },
+            "user": {
+                "data": {
+                    "api_key": "API v\u00f5ti",
+                    "from": "Sadamast",
+                    "time": "Kellaaeg",
+                    "to": "Sadamasse",
+                    "weekday": "N\u00e4dalap\u00e4ev"
+                }
+            }
+        }
+    }
+}

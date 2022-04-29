@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from enum import Enum
 import functools
+import logging
 
 from zigpy.zcl.clusters.general import OnOff
 from zigpy.zcl.clusters.security import IasWd
@@ -30,6 +31,7 @@ from .entity import ZhaEntity
 CONFIG_DIAGNOSTIC_MATCH = functools.partial(
     ZHA_ENTITIES.config_diagnostic_match, Platform.SELECT
 )
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -47,7 +49,6 @@ async def async_setup_entry(
             discovery.async_add_entities,
             async_add_entities,
             entities_to_create,
-            update_before_add=False,
         ),
     )
     config_entry.async_on_unload(unsub)
@@ -163,7 +164,15 @@ class ZCLEnumSelectEntity(ZhaEntity, SelectEntity):
         Return entity if it is a supported configuration, otherwise return None
         """
         channel = channels[0]
-        if cls._select_attr in channel.cluster.unsupported_attributes:
+        if (
+            cls._select_attr in channel.cluster.unsupported_attributes
+            or channel.cluster.get(cls._select_attr) is None
+        ):
+            _LOGGER.debug(
+                "%s is not supported - skipping %s entity creation",
+                cls._select_attr,
+                cls.__name__,
+            )
             return None
 
         return cls(unique_id, zha_device, channels, **kwargs)
