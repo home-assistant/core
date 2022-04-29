@@ -1,7 +1,7 @@
 """The sms component."""
 import logging
 
-import voluptuous as vol  # pylint: disable=import-error
+import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_DEVICE, Platform
@@ -25,7 +25,7 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Configure Gammu state machine."""
     hass.data.setdefault(DOMAIN, {})
-    if not (sms_config := config.get(DOMAIN, {})):  # pylint: disable=superfluous-parens
+    if not (sms_config := config.get(DOMAIN, {})):
         return True
 
     hass.async_create_task(

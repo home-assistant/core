@@ -2,17 +2,13 @@
 import logging
 
 import gammu  # pylint: disable=import-error
-import voluptuous as vol  # pylint: disable=import-error
+import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_DEVICE
 import homeassistant.helpers.config_validation as cv
 
-from .const import (  # pylint: disable=unused-import
-    CONF_BAUD_SPEED,
-    DEFAULT_BAUD_SPEED,
-    DOMAIN,
-)
+from .const import CONF_BAUD_SPEED, DEFAULT_BAUD_SPEED, DOMAIN
 from .gateway import create_sms_gateway
 
 _LOGGER = logging.getLogger(__name__)
