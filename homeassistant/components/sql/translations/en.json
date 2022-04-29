@@ -13,6 +13,7 @@
                 "data": {
                     "column": "Column",
                     "db_url": "Database URL",
+                    "name": "Name",
                     "query": "Select Query",
                     "unit_of_measurement": "Unit of Measure",
                     "value_template": "Value Template"
@@ -20,6 +21,7 @@
                 "data_description": {
                     "column": "Column for returned query to present as state",
                     "db_url": "Database URL, leave empty to use default HA database",
+                    "name": "Name that will be used for Config Entry and also the Sensor",
                     "query": "Query to run, needs to start with 'SELECT'",
                     "unit_of_measurement": "Unit of Measure (optional)",
                     "value_template": "Value Template (optional)"
@@ -38,6 +40,7 @@
                 "data": {
                     "column": "Column",
                     "db_url": "Database URL",
+                    "name": "Name",
                     "query": "Select Query",
                     "unit_of_measurement": "Unit of Measure",
                     "value_template": "Value Template"
@@ -45,6 +48,7 @@
                 "data_description": {
                     "column": "Column for returned query to present as state",
                     "db_url": "Database URL, leave empty to use default HA database",
+                    "name": "Name that will be used for Config Entry and also the Sensor",
                     "query": "Query to run, needs to start with 'SELECT'",
                     "unit_of_measurement": "Unit of Measure (optional)",
                     "value_template": "Value Template (optional)"
