@@ -113,9 +113,17 @@ class SwitchGroup(BaseSwitch, ZhaGroupEntity):
     ) -> None:
         """Initialize a switch group."""
         super().__init__(entity_ids, unique_id, group_id, zha_device, **kwargs)
-        self._available: bool = False
+        self._available: bool
+        self._state: bool
         group = self.zha_device.gateway.get_group(self._group_id)
         self._on_off_channel = group.endpoint[OnOff.cluster_id]
+
+    @property
+    def is_on(self) -> bool:
+        """Return if the switch is on based on the statemachine."""
+        if self._state is None:
+            return False
+        return self._state
 
     async def async_update(self) -> None:
         """Query all members and determine the light group state."""
