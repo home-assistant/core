@@ -16,8 +16,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_PORT,
     DATA_GIGABYTES,
+    ELECTRIC_POTENTIAL_VOLT,
     FREQUENCY_GIGAHERTZ,
     PERCENTAGE,
+    TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -54,24 +56,24 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         icon="mdi:speedometer",
         value=lambda data: data["cpu"]["frequency_current"] / 1000,
     ),
-    # SystemBridgeSensorEntityDescription(
-    #     key="cpu_temperature",
-    #     name="CPU Temperature",
-    #     entity_registry_enabled_default=False,
-    #     device_class=SensorDeviceClass.TEMPERATURE,
-    #     state_class=SensorStateClass.MEASUREMENT,
-    #     native_unit_of_measurement=TEMP_CELSIUS,
-    #     value=lambda data: data["cpu"].temperature.main,
-    # ),
-    # SystemBridgeSensorEntityDescription(
-    #     key="cpu_voltage",
-    #     name="CPU Voltage",
-    #     entity_registry_enabled_default=False,
-    #     device_class=SensorDeviceClass.VOLTAGE,
-    #     state_class=SensorStateClass.MEASUREMENT,
-    #     native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-    #     value=lambda data: data["cpu"].cpu.voltage,
-    # ),
+    SystemBridgeSensorEntityDescription(
+        key="cpu_temperature",
+        name="CPU Temperature",
+        entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=TEMP_CELSIUS,
+        value=lambda data: data["cpu"]["temperature"],
+    ),
+    SystemBridgeSensorEntityDescription(
+        key="cpu_voltage",
+        name="CPU Voltage",
+        entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        value=lambda data: data["cpu"]["voltage"],
+    ),
     # SystemBridgeSensorEntityDescription(
     #     key="displays_connected",
     #     name="Displays Connected",
