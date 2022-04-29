@@ -4744,3 +4744,120 @@ async def test_disabled_actions(
             "3": [{"result": {"event": "test_event", "event_data": {}}}],
         },
     )
+
+
+async def test_condition_and_shorthand(hass, caplog):
+    """Test if we can use the shorthand and conditions in a script."""
+    events = async_capture_events(hass, "test_event")
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {"event": "test_event"},
+            {
+                "alias": "shorthand and condition",
+                "and": [
+                    {
+                        "condition": "template",
+                        "value_template": "{{ states('test.entity') == 'hello' }}",
+                    }
+                ],
+            },
+            {"event": "test_event"},
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    hass.states.async_set("test.entity", "hello")
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert "Test condition shorthand and condition: True" in caplog.text
+    assert len(events) == 2
+
+    assert_action_trace(
+        {
+            "0": [{"result": {"event": "test_event", "event_data": {}}}],
+            "1": [{"result": {"result": True}}],
+            "1/conditions/0": [
+                {"result": {"entities": ["test.entity"], "result": True}}
+            ],
+            "2": [{"result": {"event": "test_event", "event_data": {}}}],
+        }
+    )
+
+
+async def test_condition_or_shorthand(hass, caplog):
+    """Test if we can use the shorthand or conditions in a script."""
+    events = async_capture_events(hass, "test_event")
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {"event": "test_event"},
+            {
+                "alias": "shorthand or condition",
+                "or": [
+                    {
+                        "condition": "template",
+                        "value_template": "{{ states('test.entity') == 'hello' }}",
+                    }
+                ],
+            },
+            {"event": "test_event"},
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    hass.states.async_set("test.entity", "hello")
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert "Test condition shorthand or condition: True" in caplog.text
+    assert len(events) == 2
+
+    assert_action_trace(
+        {
+            "0": [{"result": {"event": "test_event", "event_data": {}}}],
+            "1": [{"result": {"result": True}}],
+            "1/conditions/0": [
+                {"result": {"entities": ["test.entity"], "result": True}}
+            ],
+            "2": [{"result": {"event": "test_event", "event_data": {}}}],
+        }
+    )
+
+
+async def test_condition_not_shorthand(hass, caplog):
+    """Test if we can use the shorthand not conditions in a script."""
+    events = async_capture_events(hass, "test_event")
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {"event": "test_event"},
+            {
+                "alias": "shorthand not condition",
+                "not": [
+                    {
+                        "condition": "template",
+                        "value_template": "{{ states('test.entity') == 'hello' }}",
+                    }
+                ],
+            },
+            {"event": "test_event"},
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    hass.states.async_set("test.entity", "not hello")
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert "Test condition shorthand not condition: True" in caplog.text
+    assert len(events) == 2
+
+    assert_action_trace(
+        {
+            "0": [{"result": {"event": "test_event", "event_data": {}}}],
+            "1": [{"result": {"result": True}}],
+            "1/conditions/0": [
+                {"result": {"entities": ["test.entity"], "result": False}}
+            ],
+            "2": [{"result": {"event": "test_event", "event_data": {}}}],
+        }
+    )
