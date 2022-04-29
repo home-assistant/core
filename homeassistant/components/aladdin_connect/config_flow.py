@@ -39,7 +39,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
             raise InvalidAuth
 
 
-
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Aladdin Connect."""
 
