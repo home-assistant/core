@@ -13,9 +13,9 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_EFFECT,
     ATTR_HS_COLOR,
-    COLOR_MODE_HS,
-    SUPPORT_EFFECT,
+    ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -124,9 +124,9 @@ async def async_setup_entry(
 class HyperionBaseLight(LightEntity):
     """A Hyperion light base class."""
 
-    _attr_color_mode = COLOR_MODE_HS
-    _attr_supported_color_modes = {COLOR_MODE_HS}
-    _attr_supported_features = SUPPORT_EFFECT
+    _attr_color_mode = ColorMode.HS
+    _attr_supported_color_modes = {ColorMode.HS}
+    _attr_supported_features = LightEntityFeature.EFFECT
 
     def __init__(
         self,
@@ -485,7 +485,6 @@ class HyperionBaseLight(LightEntity):
         priority: dict[str, Any] | None = self._client.visible_priority
         return priority
 
-    # pylint: disable=no-self-use
     def _allow_priority_update(self, priority: dict[str, Any] | None = None) -> bool:
         """Determine whether to allow a priority to update internal state."""
         return True

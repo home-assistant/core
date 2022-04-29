@@ -7,7 +7,7 @@
             "cannot_connect": "Impossibile connettersi",
             "invalid_host": "Nome host o indirizzo IP non valido",
             "pwd_and_ssh": "Fornire solo la password o il file della chiave SSH",
-            "pwd_or_ssh": "Si prega di fornire la password o il file della chiave SSH",
+            "pwd_or_ssh": "Fornisci la password o il file della chiave SSH",
             "ssh_not_file": "File chiave SSH non trovato",
             "unknown": "Errore imprevisto"
         },
@@ -18,7 +18,7 @@
                     "mode": "Modalit\u00e0",
                     "name": "Nome",
                     "password": "Password",
-                    "port": "Porta",
+                    "port": "Porta (lascia vuoto per impostazione predefinita del protocollo)",
                     "protocol": "Protocollo di comunicazione da utilizzare",
                     "ssh_key": "Percorso del file della chiave SSH (invece della password)",
                     "username": "Nome utente"

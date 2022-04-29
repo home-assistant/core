@@ -183,7 +183,8 @@ class DataUpdateCoordinator(Generic[_T]):
         if scheduled and self.hass.is_stopping:
             return
 
-        start = monotonic()
+        if log_timing := self.logger.isEnabledFor(logging.DEBUG):
+            start = monotonic()
         auth_failed = False
 
         try:
@@ -255,12 +256,13 @@ class DataUpdateCoordinator(Generic[_T]):
                 self.logger.info("Fetching %s data recovered", self.name)
 
         finally:
-            self.logger.debug(
-                "Finished fetching %s data in %.3f seconds (success: %s)",
-                self.name,
-                monotonic() - start,
-                self.last_update_success,
-            )
+            if log_timing:
+                self.logger.debug(
+                    "Finished fetching %s data in %.3f seconds (success: %s)",
+                    self.name,
+                    monotonic() - start,
+                    self.last_update_success,
+                )
             if not auth_failed and self._listeners and not self.hass.is_stopping:
                 self._schedule_refresh()
 

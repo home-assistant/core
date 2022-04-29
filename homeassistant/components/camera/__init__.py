@@ -54,7 +54,7 @@ from homeassistant.helpers.network import get_url
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
-from .const import (
+from .const import (  # noqa: F401
     CAMERA_IMAGE_TIMEOUT,
     CAMERA_STREAM_SOURCE_TIMEOUT,
     CONF_DURATION,
@@ -65,6 +65,7 @@ from .const import (
     SERVICE_RECORD,
     STREAM_TYPE_HLS,
     STREAM_TYPE_WEB_RTC,
+    StreamType,
 )
 from .img_util import scale_jpeg_camera_image
 from .prefs import CameraPreferences
@@ -436,7 +437,7 @@ class Camera(Entity):
     # Entity Properties
     _attr_brand: str | None = None
     _attr_frame_interval: float = MIN_STREAM_INTERVAL
-    _attr_frontend_stream_type: str | None
+    _attr_frontend_stream_type: StreamType | None
     _attr_is_on: bool = True
     _attr_is_recording: bool = False
     _attr_is_streaming: bool = False
@@ -500,7 +501,7 @@ class Camera(Entity):
         return self._attr_frame_interval
 
     @property
-    def frontend_stream_type(self) -> str | None:
+    def frontend_stream_type(self) -> StreamType | None:
         """Return the type of stream supported by this camera.
 
         A camera may have a single stream type which is used to inform the
@@ -512,8 +513,8 @@ class Camera(Entity):
         if not self.supported_features & CameraEntityFeature.STREAM:
             return None
         if self._rtsp_to_webrtc:
-            return STREAM_TYPE_WEB_RTC
-        return STREAM_TYPE_HLS
+            return StreamType.WEB_RTC
+        return StreamType.HLS
 
     @property
     def available(self) -> bool:
@@ -546,16 +547,15 @@ class Camera(Entity):
         """Return the source of the stream.
 
         This is used by cameras with CameraEntityFeature.STREAM
-        and STREAM_TYPE_HLS.
+        and StreamType.HLS.
         """
-        # pylint: disable=no-self-use
         return None
 
     async def async_handle_web_rtc_offer(self, offer_sdp: str) -> str | None:
         """Handle the WebRTC offer and return an answer.
 
         This is used by cameras with CameraEntityFeature.STREAM
-        and STREAM_TYPE_WEB_RTC.
+        and StreamType.WEB_RTC.
 
         Integrations can override with a native WebRTC implementation.
         """
@@ -870,7 +870,7 @@ async def ws_camera_web_rtc_offer(
     entity_id = msg["entity_id"]
     offer = msg["offer"]
     camera = _get_camera_from_entity_id(hass, entity_id)
-    if camera.frontend_stream_type != STREAM_TYPE_WEB_RTC:
+    if camera.frontend_stream_type != StreamType.WEB_RTC:
         connection.send_error(
             msg["id"],
             "web_rtc_offer_failed",

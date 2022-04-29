@@ -7,12 +7,9 @@ from aioshelly.block_device import Block
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    SUPPORT_CLOSE,
-    SUPPORT_OPEN,
-    SUPPORT_SET_POSITION,
-    SUPPORT_STOP,
     CoverDeviceClass,
     CoverEntity,
+    CoverEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -76,9 +73,11 @@ class BlockShellyCover(ShellyBlockEntity, CoverEntity):
         """Initialize block cover."""
         super().__init__(wrapper, block)
         self.control_result: dict[str, Any] | None = None
-        self._attr_supported_features: int = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP
+        self._attr_supported_features: int = (
+            CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
+        )
         if self.wrapper.device.settings["rollers"][0]["positioning"]:
-            self._attr_supported_features |= SUPPORT_SET_POSITION
+            self._attr_supported_features |= CoverEntityFeature.SET_POSITION
 
     @property
     def is_closed(self) -> bool:
@@ -150,16 +149,15 @@ class RpcShellyCover(ShellyRpcEntity, CoverEntity):
         """Initialize rpc cover."""
         super().__init__(wrapper, f"cover:{id_}")
         self._id = id_
-        self._attr_supported_features: int = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP
+        self._attr_supported_features: int = (
+            CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
+        )
         if self.status["pos_control"]:
-            self._attr_supported_features |= SUPPORT_SET_POSITION
+            self._attr_supported_features |= CoverEntityFeature.SET_POSITION
 
     @property
     def is_closed(self) -> bool | None:
         """If cover is closed."""
-        if not self.status["pos_control"]:
-            return None
-
         return cast(bool, self.status["state"] == "closed")
 
     @property

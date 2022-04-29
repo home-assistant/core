@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+from freezegun import freeze_time
 import pytest
 
 from homeassistant.components.alexa import messages, smart_home
@@ -30,7 +31,7 @@ from homeassistant.core import Context
 from homeassistant.helpers import entityfilter
 from homeassistant.setup import async_setup_component
 
-from . import (
+from .test_common import (
     MockConfig,
     ReportedProperties,
     assert_power_controller_works,
@@ -172,6 +173,7 @@ def assert_endpoint_capabilities(endpoint, *interfaces):
     return capabilities
 
 
+@freeze_time("2022-04-19 07:53:05")
 async def test_switch(hass, events):
     """Test switch discovery."""
     device = ("switch.test", "on", {"friendly_name": "Test switch"})
@@ -185,7 +187,7 @@ async def test_switch(hass, events):
     )
 
     await assert_power_controller_works(
-        "switch#test", "switch.turn_on", "switch.turn_off", hass
+        "switch#test", "switch.turn_on", "switch.turn_off", hass, "2022-04-19T07:53:05Z"
     )
 
     properties = await reported_properties(hass, "switch#test")
@@ -209,6 +211,7 @@ async def test_outlet(hass, events):
     )
 
 
+@freeze_time("2022-04-19 07:53:05")
 async def test_light(hass):
     """Test light discovery."""
     device = ("light.test_1", "on", {"friendly_name": "Test light 1"})
@@ -222,7 +225,7 @@ async def test_light(hass):
     )
 
     await assert_power_controller_works(
-        "light#test_1", "light.turn_on", "light.turn_off", hass
+        "light#test_1", "light.turn_on", "light.turn_off", hass, "2022-04-19T07:53:05Z"
     )
 
 
@@ -302,6 +305,7 @@ async def test_color_light(hass, supported_color_modes):
     # tests
 
 
+@freeze_time("2022-04-19 07:53:05")
 async def test_script(hass):
     """Test script discovery."""
     device = ("script.test", "off", {"friendly_name": "Test script"})
@@ -318,10 +322,11 @@ async def test_script(hass):
     assert scene_capability["supportsDeactivation"]
 
     await assert_scene_controller_works(
-        "script#test", "script.turn_on", "script.turn_off", hass
+        "script#test", "script.turn_on", "script.turn_off", hass, "2022-04-19T07:53:05Z"
     )
 
 
+@freeze_time("2022-04-19 07:53:05")
 async def test_input_boolean(hass):
     """Test input boolean discovery."""
     device = ("input_boolean.test", "off", {"friendly_name": "Test input boolean"})
@@ -335,10 +340,15 @@ async def test_input_boolean(hass):
     )
 
     await assert_power_controller_works(
-        "input_boolean#test", "input_boolean.turn_on", "input_boolean.turn_off", hass
+        "input_boolean#test",
+        "input_boolean.turn_on",
+        "input_boolean.turn_off",
+        hass,
+        "2022-04-19T07:53:05Z",
     )
 
 
+@freeze_time("2022-04-19 07:53:05")
 async def test_scene(hass):
     """Test scene discovery."""
     device = ("scene.test", "off", {"friendly_name": "Test scene"})
@@ -354,9 +364,12 @@ async def test_scene(hass):
     scene_capability = get_capability(capabilities, "Alexa.SceneController")
     assert not scene_capability["supportsDeactivation"]
 
-    await assert_scene_controller_works("scene#test", "scene.turn_on", None, hass)
+    await assert_scene_controller_works(
+        "scene#test", "scene.turn_on", None, hass, "2022-04-19T07:53:05Z"
+    )
 
 
+@freeze_time("2022-04-19 07:53:05")
 async def test_fan(hass):
     """Test fan discovery."""
     device = ("fan.test_1", "off", {"friendly_name": "Test fan 1"})
@@ -379,7 +392,7 @@ async def test_fan(hass):
     assert "configuration" not in power_capability
 
     await assert_power_controller_works(
-        "fan#test_1", "fan.turn_on", "fan.turn_off", hass
+        "fan#test_1", "fan.turn_on", "fan.turn_off", hass, "2022-04-19T07:53:05Z"
     )
 
     await assert_request_calls_service(
@@ -936,6 +949,7 @@ async def test_lock(hass):
     assert properties["value"] == "UNLOCKED"
 
 
+@freeze_time("2022-04-19 07:53:05")
 async def test_media_player(hass):
     """Test media player discovery."""
     device = (
@@ -984,7 +998,11 @@ async def test_media_player(hass):
         assert operation in supported_operations
 
     await assert_power_controller_works(
-        "media_player#test", "media_player.turn_on", "media_player.turn_off", hass
+        "media_player#test",
+        "media_player.turn_on",
+        "media_player.turn_off",
+        hass,
+        "2022-04-19T07:53:05Z",
     )
 
     await assert_request_calls_service(
@@ -1532,6 +1550,7 @@ async def test_media_player_seek_error(hass):
         assert msg["payload"]["type"] == "ACTION_NOT_PERMITTED_FOR_CONTENT"
 
 
+@freeze_time("2022-04-19 07:53:05")
 async def test_alert(hass):
     """Test alert discovery."""
     device = ("alert.test", "off", {"friendly_name": "Test alert"})
@@ -1545,10 +1564,11 @@ async def test_alert(hass):
     )
 
     await assert_power_controller_works(
-        "alert#test", "alert.turn_on", "alert.turn_off", hass
+        "alert#test", "alert.turn_on", "alert.turn_off", hass, "2022-04-19T07:53:05Z"
     )
 
 
+@freeze_time("2022-04-19 07:53:05")
 async def test_automation(hass):
     """Test automation discovery."""
     device = ("automation.test", "off", {"friendly_name": "Test automation"})
@@ -1562,10 +1582,15 @@ async def test_automation(hass):
     )
 
     await assert_power_controller_works(
-        "automation#test", "automation.turn_on", "automation.turn_off", hass
+        "automation#test",
+        "automation.turn_on",
+        "automation.turn_off",
+        hass,
+        "2022-04-19T07:53:05Z",
     )
 
 
+@freeze_time("2022-04-19 07:53:05")
 async def test_group(hass):
     """Test group discovery."""
     device = ("group.test", "off", {"friendly_name": "Test group"})
@@ -1579,7 +1604,11 @@ async def test_group(hass):
     )
 
     await assert_power_controller_works(
-        "group#test", "homeassistant.turn_on", "homeassistant.turn_off", hass
+        "group#test",
+        "homeassistant.turn_on",
+        "homeassistant.turn_off",
+        hass,
+        "2022-04-19T07:53:05Z",
     )
 
 
@@ -3955,6 +3984,7 @@ async def test_initialize_camera_stream(hass, mock_camera, mock_stream):
     )
 
 
+@freeze_time("2022-04-19 07:53:05")
 @pytest.mark.parametrize(
     "domain",
     ["button", "input_button"],
@@ -3979,7 +4009,11 @@ async def test_button(hass, domain):
     assert scene_capability["supportsDeactivation"] is False
 
     await assert_scene_controller_works(
-        f"{domain}#ring_doorbell", f"{domain}.press", False, hass
+        f"{domain}#ring_doorbell",
+        f"{domain}.press",
+        False,
+        hass,
+        "2022-04-19T07:53:05Z",
     )
 
 

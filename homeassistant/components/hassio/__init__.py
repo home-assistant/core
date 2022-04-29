@@ -53,6 +53,7 @@ from .const import (
     ATTR_ADDONS,
     ATTR_AUTO_UPDATE,
     ATTR_CHANGELOG,
+    ATTR_COMPRESSED,
     ATTR_DISCOVERY,
     ATTR_FOLDERS,
     ATTR_HOMEASSISTANT,
@@ -127,7 +128,11 @@ SCHEMA_ADDON_STDIN = SCHEMA_ADDON.extend(
 )
 
 SCHEMA_BACKUP_FULL = vol.Schema(
-    {vol.Optional(ATTR_NAME): cv.string, vol.Optional(ATTR_PASSWORD): cv.string}
+    {
+        vol.Optional(ATTR_NAME): cv.string,
+        vol.Optional(ATTR_PASSWORD): cv.string,
+        vol.Optional(ATTR_COMPRESSED): cv.boolean,
+    }
 )
 
 SCHEMA_BACKUP_PARTIAL = SCHEMA_BACKUP_FULL.extend(
@@ -711,7 +716,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     dev_reg = await async_get_registry(hass)
     coordinator = HassioDataUpdateCoordinator(hass, entry, dev_reg)
     hass.data[ADDONS_COORDINATOR] = coordinator
-    await coordinator.async_refresh()
+    await coordinator.async_config_entry_first_refresh()
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
@@ -824,7 +829,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         self.data = {}
         self.entry_id = config_entry.entry_id
         self.dev_reg = dev_reg
-        self.is_hass_os = "hassos" in get_info(self.hass)
+        self.is_hass_os = (get_info(self.hass) or {}).get("hassos") is not None
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
@@ -848,8 +853,8 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         new_data[DATA_KEY_ADDONS] = {
             addon[ATTR_SLUG]: {
                 **addon,
-                **((addons_stats or {}).get(addon[ATTR_SLUG], {})),
-                ATTR_AUTO_UPDATE: addons_info.get(addon[ATTR_SLUG], {}).get(
+                **((addons_stats or {}).get(addon[ATTR_SLUG]) or {}),
+                ATTR_AUTO_UPDATE: (addons_info.get(addon[ATTR_SLUG]) or {}).get(
                     ATTR_AUTO_UPDATE, False
                 ),
                 ATTR_CHANGELOG: (addons_changelogs or {}).get(addon[ATTR_SLUG]),
@@ -891,6 +896,12 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         if stale_addons := supervisor_addon_devices - set(new_data[DATA_KEY_ADDONS]):
             async_remove_addons_from_dev_reg(self.dev_reg, stale_addons)
 
+        if not self.is_hass_os and (
+            dev := self.dev_reg.async_get_device({(DOMAIN, "OS")})
+        ):
+            # Remove the OS device if it exists and the installation is not hassos
+            self.dev_reg.async_remove_device(dev.id)
+
         # If there are new add-ons, we should reload the config entry so we can
         # create new devices and entities. We can return an empty dict because
         # coordinator will be recreated.
@@ -911,7 +922,6 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def force_data_refresh(self) -> None:
         """Force update of the addon info."""
-        await self.hassio.refresh_updates()
         (
             self.hass.data[DATA_INFO],
             self.hass.data[DATA_CORE_INFO],
@@ -946,15 +956,42 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _update_addon_stats(self, slug):
         """Update single addon stats."""
-        stats = await self.hassio.get_addon_stats(slug)
-        return (slug, stats)
+        try:
+            stats = await self.hassio.get_addon_stats(slug)
+            return (slug, stats)
+        except HassioAPIError as err:
+            _LOGGER.warning("Could not fetch stats for %s: %s", slug, err)
+        return (slug, None)
 
     async def _update_addon_changelog(self, slug):
         """Return the changelog for an add-on."""
-        changelog = await self.hassio.get_addon_changelog(slug)
-        return (slug, changelog)
+        try:
+            changelog = await self.hassio.get_addon_changelog(slug)
+            return (slug, changelog)
+        except HassioAPIError as err:
+            _LOGGER.warning("Could not fetch changelog for %s: %s", slug, err)
+        return (slug, None)
 
     async def _update_addon_info(self, slug):
         """Return the info for an add-on."""
-        info = await self.hassio.get_addon_info(slug)
-        return (slug, info)
+        try:
+            info = await self.hassio.get_addon_info(slug)
+            return (slug, info)
+        except HassioAPIError as err:
+            _LOGGER.warning("Could not fetch info for %s: %s", slug, err)
+        return (slug, None)
+
+    async def _async_refresh(
+        self,
+        log_failures: bool = True,
+        raise_on_auth_failed: bool = False,
+        scheduled: bool = False,
+    ) -> None:
+        """Refresh data."""
+        if not scheduled:
+            # Force refreshing updates for non-scheduled updates
+            try:
+                await self.hassio.refresh_updates()
+            except HassioAPIError as err:
+                _LOGGER.warning("Error on Supervisor API: %s", err)
+        await super()._async_refresh(log_failures, raise_on_auth_failed, scheduled)

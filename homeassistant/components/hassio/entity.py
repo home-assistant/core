@@ -90,7 +90,7 @@ class HassioSupervisorEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
         """Return True if entity is available."""
         return (
             super().available
-            and DATA_KEY_OS in self.coordinator.data
+            and DATA_KEY_SUPERVISOR in self.coordinator.data
             and self.entity_description.key
             in self.coordinator.data[DATA_KEY_SUPERVISOR]
         )

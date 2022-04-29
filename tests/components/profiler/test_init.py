@@ -39,9 +39,7 @@ async def test_basic_usage(hass, tmpdir):
         last_filename = f"{test_dir}/{filename}"
         return last_filename
 
-    with patch("homeassistant.components.profiler.cProfile.Profile"), patch.object(
-        hass.config, "path", _mock_path
-    ):
+    with patch("cProfile.Profile"), patch.object(hass.config, "path", _mock_path):
         await hass.services.async_call(DOMAIN, SERVICE_START, {CONF_SECONDS: 0.000001})
         await hass.async_block_till_done()
 
@@ -70,9 +68,7 @@ async def test_memory_usage(hass, tmpdir):
         last_filename = f"{test_dir}/{filename}"
         return last_filename
 
-    with patch("homeassistant.components.profiler.hpy") as mock_hpy, patch.object(
-        hass.config, "path", _mock_path
-    ):
+    with patch("guppy.hpy") as mock_hpy, patch.object(hass.config, "path", _mock_path):
         await hass.services.async_call(DOMAIN, SERVICE_MEMORY, {CONF_SECONDS: 0.000001})
         await hass.async_block_till_done()
 
@@ -94,7 +90,7 @@ async def test_object_growth_logging(hass, caplog):
     assert hass.services.has_service(DOMAIN, SERVICE_START_LOG_OBJECTS)
     assert hass.services.has_service(DOMAIN, SERVICE_STOP_LOG_OBJECTS)
 
-    with patch("homeassistant.components.profiler.objgraph.growth"):
+    with patch("objgraph.growth"):
         await hass.services.async_call(
             DOMAIN, SERVICE_START_LOG_OBJECTS, {CONF_SCAN_INTERVAL: 10}
         )

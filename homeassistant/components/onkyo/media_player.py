@@ -7,18 +7,12 @@ import eiscp
 from eiscp import eISCP
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    DOMAIN,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
+from homeassistant.components.media_player import (
+    PLATFORM_SCHEMA,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
 )
+from homeassistant.components.media_player.const import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_HOST,
@@ -41,23 +35,19 @@ DEFAULT_NAME = "Onkyo Receiver"
 SUPPORTED_MAX_VOLUME = 100
 DEFAULT_RECEIVER_MAX_VOLUME = 80
 
-SUPPORT_ONKYO = (
-    SUPPORT_VOLUME_SET
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_VOLUME_STEP
-    | SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-    | SUPPORT_SELECT_SOURCE
-    | SUPPORT_PLAY
-    | SUPPORT_PLAY_MEDIA
-)
 
 SUPPORT_ONKYO_WO_VOLUME = (
-    SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-    | SUPPORT_SELECT_SOURCE
-    | SUPPORT_PLAY
-    | SUPPORT_PLAY_MEDIA
+    MediaPlayerEntityFeature.TURN_ON
+    | MediaPlayerEntityFeature.TURN_OFF
+    | MediaPlayerEntityFeature.SELECT_SOURCE
+    | MediaPlayerEntityFeature.PLAY
+    | MediaPlayerEntityFeature.PLAY_MEDIA
+)
+SUPPORT_ONKYO = (
+    SUPPORT_ONKYO_WO_VOLUME
+    | MediaPlayerEntityFeature.VOLUME_SET
+    | MediaPlayerEntityFeature.VOLUME_MUTE
+    | MediaPlayerEntityFeature.VOLUME_STEP
 )
 
 KNOWN_HOSTS: list[str] = []
@@ -254,6 +244,8 @@ def setup_platform(
 class OnkyoDevice(MediaPlayerEntity):
     """Representation of an Onkyo device."""
 
+    _attr_supported_features = SUPPORT_ONKYO
+
     def __init__(
         self,
         receiver,
@@ -388,11 +380,6 @@ class OnkyoDevice(MediaPlayerEntity):
     def is_volume_muted(self):
         """Return boolean indicating mute status."""
         return self._muted
-
-    @property
-    def supported_features(self):
-        """Return media player features that are supported."""
-        return SUPPORT_ONKYO
 
     @property
     def source(self):

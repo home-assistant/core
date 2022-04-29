@@ -8,6 +8,7 @@ from homeassistant.components.cover import (
     CoverEntity,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -24,7 +25,9 @@ async def async_setup_entry(
     async_add_entities(
         [
             FibaroCover(device)
-            for device in hass.data[DOMAIN][entry.entry_id][FIBARO_DEVICES]["cover"]
+            for device in hass.data[DOMAIN][entry.entry_id][FIBARO_DEVICES][
+                Platform.COVER
+            ]
         ],
         True,
     )

@@ -74,5 +74,5 @@ class StationOpenBinarySensorEntity(CoordinatorEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if the station is open."""
-        data = self.coordinator.data[self._station_id]
-        return data is not None and "status" in data
+        data: dict = self.coordinator.data[self._station_id]
+        return data is not None and data.get("status") == "open"

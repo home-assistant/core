@@ -36,6 +36,11 @@ async def test_process_play_media_url(hass, mock_sign_path):
         async_process_play_media_url(hass, "https://not-hass.com/path")
         == "https://not-hass.com/path"
     )
+    # Not changing a url that is not http/https
+    assert (
+        async_process_play_media_url(hass, "file:///tmp/test.mp3")
+        == "file:///tmp/test.mp3"
+    )
 
     # Testing signing hass URLs
     assert (

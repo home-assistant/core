@@ -9,6 +9,7 @@
             "device_not_found": "Apparaat werd niet gevonden tijdens het zoeken, probeer het opnieuw toe te voegen.",
             "inconsistent_device": "De verwachte protocollen zijn niet gevonden tijdens het zoeken. Dit wijst gewoonlijk op een probleem met multicast DNS (Zeroconf). Probeer het apparaat opnieuw toe te voegen.",
             "invalid_config": "De configuratie voor dit apparaat is onvolledig. Probeer het opnieuw toe te voegen.",
+            "ipv6_not_supported": "IPv6 wordt niet ondersteund.",
             "no_devices_found": "Geen apparaten gevonden op het netwerk",
             "reauth_successful": "Herauthenticatie was succesvol",
             "setup_failed": "Kan het apparaat niet instellen.",

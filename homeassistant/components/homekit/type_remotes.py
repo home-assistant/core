@@ -9,7 +9,7 @@ from homeassistant.components.remote import (
     ATTR_ACTIVITY_LIST,
     ATTR_CURRENT_ACTIVITY,
     DOMAIN as REMOTE_DOMAIN,
-    SUPPORT_ACTIVITY,
+    RemoteEntityFeature,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -203,7 +203,7 @@ class ActivityRemote(RemoteInputSelectAccessory):
     def __init__(self, *args):
         """Initialize a Activity Remote accessory object."""
         super().__init__(
-            SUPPORT_ACTIVITY,
+            RemoteEntityFeature.ACTIVITY,
             ATTR_CURRENT_ACTIVITY,
             ATTR_ACTIVITY_LIST,
             *args,

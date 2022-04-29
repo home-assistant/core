@@ -16,7 +16,7 @@
                     "host": "Nazwa hosta lub adres IP"
                 },
                 "description": "Wybierz Roomb\u0119 lub Braava",
-                "title": "Po\u0142\u0105cz si\u0119 automatycznie z urz\u0105dzeniem"
+                "title": "Automatyczne po\u0142\u0105czenie z urz\u0105dzeniem"
             },
             "link": {
                 "description": "Naci\u015bnij i przytrzymaj przycisk Home na {name} a\u017c urz\u0105dzenie wygeneruje d\u017awi\u0119k (oko\u0142o dwie sekundy), a nast\u0119pnie zatwierd\u017a w ci\u0105gu 30 sekund.",
@@ -46,7 +46,7 @@
                     "password": "Has\u0142o"
                 },
                 "description": "Wybierz Roomb\u0119 lub Braava",
-                "title": "Po\u0142\u0105cz si\u0119 automatycznie z urz\u0105dzeniem"
+                "title": "Automatyczne po\u0142\u0105czenie z urz\u0105dzeniem"
             }
         }
     },

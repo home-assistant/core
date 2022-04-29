@@ -189,7 +189,12 @@ class SonosSpeaker:
 
     def setup(self, entry: ConfigEntry) -> None:
         """Run initial setup of the speaker."""
-        self.set_basic_info()
+        self.media.play_mode = self.soco.play_mode
+        self.update_volume()
+        self.update_groups()
+        if self.is_coordinator:
+            self.media.poll_media()
+
         future = asyncio.run_coroutine_threadsafe(
             self.async_setup_dispatchers(entry), self.hass.loop
         )
@@ -246,11 +251,6 @@ class SonosSpeaker:
     def async_write_entity_states(self) -> None:
         """Write states for associated SonosEntity instances."""
         async_dispatcher_send(self.hass, f"{SONOS_STATE_UPDATED}-{self.soco.uid}")
-
-    def set_basic_info(self) -> None:
-        """Set basic information when speaker is reconnected."""
-        self.media.play_mode = self.soco.play_mode
-        self.update_volume()
 
     #
     # Properties
@@ -456,6 +456,34 @@ class SonosSpeaker:
     @callback
     def async_dispatch_media_update(self, event: SonosEvent) -> None:
         """Update information about currently playing media from an event."""
+        # The new coordinator can be provided in a media update event but
+        # before the ZoneGroupState updates. If this happens the playback
+        # state will be incorrect and should be ignored. Switching to the
+        # new coordinator will use its media. The regrouping process will
+        # be completed during the next ZoneGroupState update.
+        av_transport_uri = event.variables.get("av_transport_uri", "")
+        current_track_uri = event.variables.get("current_track_uri", "")
+        if av_transport_uri == current_track_uri and av_transport_uri.startswith(
+            "x-rincon:"
+        ):
+            new_coordinator_uid = av_transport_uri.split(":")[-1]
+            if new_coordinator_speaker := self.hass.data[DATA_SONOS].discovered.get(
+                new_coordinator_uid
+            ):
+                _LOGGER.debug(
+                    "Media update coordinator (%s) received for %s",
+                    new_coordinator_speaker.zone_name,
+                    self.zone_name,
+                )
+                self.coordinator = new_coordinator_speaker
+            else:
+                _LOGGER.debug(
+                    "Media update coordinator (%s) for %s not yet available",
+                    new_coordinator_uid,
+                    self.zone_name,
+                )
+            return
+
         if crossfade := event.variables.get("current_crossfade_mode"):
             self.cross_fade = bool(int(crossfade))
 
@@ -582,15 +610,10 @@ class SonosSpeaker:
         )
         await self.async_offline()
 
-    async def async_rebooted(self, soco: SoCo) -> None:
+    async def async_rebooted(self) -> None:
         """Handle a detected speaker reboot."""
-        _LOGGER.debug(
-            "%s rebooted, reconnecting with %s",
-            self.zone_name,
-            soco,
-        )
+        _LOGGER.debug("%s rebooted, reconnecting", self.zone_name)
         await self.async_offline()
-        self.soco = soco
         self.speaker_activity("reboot")
 
     #
@@ -779,6 +802,7 @@ class SonosSpeaker:
                         self.zone_name,
                         uid,
                     )
+                    return
 
             if self.sonos_group_entities == sonos_group_entities:
                 # Useful in polling mode for speakers with stereo pairs or surrounds

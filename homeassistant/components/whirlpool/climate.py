@@ -1,4 +1,6 @@
 """Platform for climate integration."""
+from __future__ import annotations
+
 import asyncio
 import logging
 
@@ -13,15 +15,10 @@ from homeassistant.components.climate.const import (
     FAN_LOW,
     FAN_MEDIUM,
     FAN_OFF,
-    HVAC_MODE_COOL,
-    HVAC_MODE_FAN_ONLY,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
-    SUPPORT_FAN_MODE,
-    SUPPORT_SWING_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
     SWING_HORIZONTAL,
     SWING_OFF,
+    ClimateEntityFeature,
+    HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
@@ -34,9 +31,9 @@ _LOGGER = logging.getLogger(__name__)
 
 
 AIRCON_MODE_MAP = {
-    AirconMode.Cool: HVAC_MODE_COOL,
-    AirconMode.Heat: HVAC_MODE_HEAT,
-    AirconMode.Fan: HVAC_MODE_FAN_ONLY,
+    AirconMode.Cool: HVACMode.COOL,
+    AirconMode.Heat: HVACMode.HEAT,
+    AirconMode.Fan: HVACMode.FAN_ONLY,
 }
 
 HVAC_MODE_TO_AIRCON_MODE = {v: k for k, v in AIRCON_MODE_MAP.items()}
@@ -53,10 +50,10 @@ FAN_MODE_TO_AIRCON_FANSPEED = {v: k for k, v in AIRCON_FANSPEED_MAP.items()}
 
 SUPPORTED_FAN_MODES = [FAN_AUTO, FAN_HIGH, FAN_MEDIUM, FAN_LOW, FAN_OFF]
 SUPPORTED_HVAC_MODES = [
-    HVAC_MODE_COOL,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_FAN_ONLY,
-    HVAC_MODE_OFF,
+    HVACMode.COOL,
+    HVACMode.HEAT,
+    HVACMode.FAN_ONLY,
+    HVACMode.OFF,
 ]
 SUPPORTED_MAX_TEMP = 30
 SUPPORTED_MIN_TEMP = 16
@@ -89,7 +86,9 @@ class AirConEntity(ClimateEntity):
     _attr_max_temp = SUPPORTED_MAX_TEMP
     _attr_min_temp = SUPPORTED_MIN_TEMP
     _attr_supported_features = (
-        SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE | SUPPORT_SWING_MODE
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.SWING_MODE
     )
     _attr_swing_modes = SUPPORTED_SWING_MODES
     _attr_target_temperature_step = SUPPORTED_TARGET_TEMPERATURE_STEP
@@ -148,17 +147,17 @@ class AirConEntity(ClimateEntity):
         await self._aircon.set_humidity(humidity)
 
     @property
-    def hvac_mode(self):
+    def hvac_mode(self) -> HVACMode | None:
         """Return current operation ie. heat, cool, fan."""
         if not self._aircon.get_power_on():
-            return HVAC_MODE_OFF
+            return HVACMode.OFF
 
         mode: AirconMode = self._aircon.get_mode()
         return AIRCON_MODE_MAP.get(mode)
 
-    async def async_set_hvac_mode(self, hvac_mode):
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set HVAC mode."""
-        if hvac_mode == HVAC_MODE_OFF:
+        if hvac_mode == HVACMode.OFF:
             await self._aircon.set_power_on(False)
             return
 
