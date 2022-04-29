@@ -41,6 +41,7 @@ ATTR_TYPE: Final = "type"
 ATTR_USED: Final = "used"
 
 PIXELS: Final = "px"
+RPM: Final = "RPM"
 
 
 @dataclass
@@ -368,7 +369,7 @@ async def async_setup_entry(
                     name=f"{gpu['name']} Fan Speed",
                     entity_registry_enabled_default=False,
                     state_class=SensorStateClass.MEASUREMENT,
-                    native_unit_of_measurement=PERCENTAGE,
+                    native_unit_of_measurement=RPM,
                     icon="mdi:fan",
                     value=lambda data, k=gpu["key"]: data["gpu"][f"{k}_fan_speed"],
                 ),
