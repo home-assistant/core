@@ -252,9 +252,20 @@ class TemplateEntity(Entity):
             self._entity_picture_template = config.get(CONF_PICTURE)
             self._friendly_name_template = config.get(CONF_NAME)
 
-        variables = {
-            "this": State("unknown.unknown", STATE_UNKNOWN, validate_entity_id=False)
-        }
+        class DummyState(State):
+            """None-state for template entities not yet added to the state machine."""
+
+            def __init__(self) -> None:
+                """Initialize a new state."""
+                super().__init__("unknown.unknown", STATE_UNKNOWN)
+                self.entity_id = None  # type: ignore[assignment]
+
+            @property
+            def name(self) -> str:
+                """Name of this state."""
+                return "<None>"
+
+        variables = {"this": DummyState()}
 
         # Try to render the name as it can influence the entity ID
         self._attr_name = fallback_name
