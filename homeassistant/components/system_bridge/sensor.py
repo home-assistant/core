@@ -207,6 +207,7 @@ async def async_setup_entry(
                     "name": value.replace("Display ", ""),
                 },
             )
+    display_count = len(displays)
 
     entities.append(
         SystemBridgeSensor(
@@ -216,7 +217,7 @@ async def async_setup_entry(
                 name="Displays Connected",
                 state_class=SensorStateClass.MEASUREMENT,
                 icon="mdi:monitor",
-                value=lambda: len(displays),
+                value=lambda _, count=display_count: count,
             ),
             entry.data[CONF_PORT],
         )
