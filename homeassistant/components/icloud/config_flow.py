@@ -172,10 +172,6 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self._validate_and_create_entry(user_input, "user")
 
-    async def async_step_import(self, user_input):
-        """Import a config entry."""
-        return await self.async_step_user(user_input)
-
     async def async_step_reauth(self, user_input=None):
         """Update password for a config entry that can't authenticate."""
         # Store existing entry data so it can be used later and set unique ID

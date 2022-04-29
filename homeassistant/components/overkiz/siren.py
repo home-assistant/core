@@ -4,13 +4,8 @@ from typing import Any
 from pyoverkiz.enums import OverkizState
 from pyoverkiz.enums.command import OverkizCommand, OverkizCommandParam
 
-from homeassistant.components.siren import SirenEntity
-from homeassistant.components.siren.const import (
-    ATTR_DURATION,
-    SUPPORT_DURATION,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-)
+from homeassistant.components.siren import SirenEntity, SirenEntityFeature
+from homeassistant.components.siren.const import ATTR_DURATION
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -38,7 +33,11 @@ async def async_setup_entry(
 class OverkizSiren(OverkizEntity, SirenEntity):
     """Representation an Overkiz Siren."""
 
-    _attr_supported_features = SUPPORT_TURN_OFF | SUPPORT_TURN_ON | SUPPORT_DURATION
+    _attr_supported_features = (
+        SirenEntityFeature.TURN_OFF
+        | SirenEntityFeature.TURN_ON
+        | SirenEntityFeature.DURATION
+    )
 
     @property
     def is_on(self) -> bool:

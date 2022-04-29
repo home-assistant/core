@@ -3,24 +3,14 @@ from __future__ import annotations
 
 import temescal
 
-from homeassistant.components.media_player import MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    SUPPORT_SELECT_SOUND_MODE,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
+from homeassistant.components.media_player import (
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
 )
 from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-
-SUPPORT_LG = (
-    SUPPORT_VOLUME_SET
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_SELECT_SOURCE
-    | SUPPORT_SELECT_SOUND_MODE
-)
 
 
 def setup_platform(
@@ -36,6 +26,13 @@ def setup_platform(
 
 class LGDevice(MediaPlayerEntity):
     """Representation of an LG soundbar device."""
+
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.SELECT_SOURCE
+        | MediaPlayerEntityFeature.SELECT_SOUND_MODE
+    )
 
     def __init__(self, discovery_info):
         """Initialize the LG speakers."""
@@ -188,11 +185,6 @@ class LGDevice(MediaPlayerEntity):
             if function < len(temescal.functions):
                 sources.append(temescal.functions[function])
         return sorted(sources)
-
-    @property
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        return SUPPORT_LG
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""

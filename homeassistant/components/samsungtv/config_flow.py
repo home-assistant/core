@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
     CONF_METHOD,
+    CONF_MODEL,
     CONF_NAME,
     CONF_PORT,
     CONF_TOKEN,
@@ -28,8 +29,8 @@ from homeassistant.helpers.device_registry import format_mac
 from .bridge import SamsungTVBridge, async_get_device_info, mac_from_device_info
 from .const import (
     CONF_MANUFACTURER,
-    CONF_MODEL,
     CONF_SESSION_ID,
+    CONF_SSDP_MAIN_TV_AGENT_LOCATION,
     CONF_SSDP_RENDERING_CONTROL_LOCATION,
     DEFAULT_MANUFACTURER,
     DOMAIN,
@@ -46,7 +47,8 @@ from .const import (
     RESULT_SUCCESS,
     RESULT_UNKNOWN_HOST,
     SUCCESSFUL_RESULTS,
-    UPNP_SVC_RENDERINGCONTROL,
+    UPNP_SVC_MAIN_TV_AGENT,
+    UPNP_SVC_RENDERING_CONTROL,
     WEBSOCKET_PORTS,
 )
 
@@ -58,7 +60,9 @@ def _strip_uuid(udn: str) -> str:
 
 
 def _entry_is_complete(
-    entry: config_entries.ConfigEntry, ssdp_rendering_control_location: str | None
+    entry: config_entries.ConfigEntry,
+    ssdp_rendering_control_location: str | None,
+    ssdp_main_tv_agent_location: str | None,
 ) -> bool:
     """Return True if the config entry information is complete.
 
@@ -71,6 +75,10 @@ def _entry_is_complete(
         and (
             not ssdp_rendering_control_location
             or entry.data.get(CONF_SSDP_RENDERING_CONTROL_LOCATION)
+        )
+        and (
+            not ssdp_main_tv_agent_location
+            or entry.data.get(CONF_SSDP_MAIN_TV_AGENT_LOCATION)
         )
     )
 
@@ -88,6 +96,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._udn: str | None = None
         self._upnp_udn: str | None = None
         self._ssdp_rendering_control_location: str | None = None
+        self._ssdp_main_tv_agent_location: str | None = None
         self._manufacturer: str | None = None
         self._model: str | None = None
         self._connect_result: str | None = None
@@ -111,6 +120,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_NAME: self._name,
             CONF_PORT: self._bridge.port,
             CONF_SSDP_RENDERING_CONTROL_LOCATION: self._ssdp_rendering_control_location,
+            CONF_SSDP_MAIN_TV_AGENT_LOCATION: self._ssdp_main_tv_agent_location,
         }
 
     def _get_entry_from_bridge(self) -> data_entry_flow.FlowResult:
@@ -141,7 +151,11 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(self._udn, raise_on_progress=False)
         if (
             entry := self._async_update_existing_matching_entry()
-        ) and _entry_is_complete(entry, self._ssdp_rendering_control_location):
+        ) and _entry_is_complete(
+            entry,
+            self._ssdp_rendering_control_location,
+            self._ssdp_main_tv_agent_location,
+        ):
             raise data_entry_flow.AbortFlow("already_configured")
         # Now that we have updated the config entry, we can raise
         # if another one is progressing
@@ -157,7 +171,11 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             updates[
                 CONF_SSDP_RENDERING_CONTROL_LOCATION
             ] = self._ssdp_rendering_control_location
-        self._abort_if_unique_id_configured(updates=updates)
+        if self._ssdp_main_tv_agent_location:
+            updates[
+                CONF_SSDP_MAIN_TV_AGENT_LOCATION
+            ] = self._ssdp_main_tv_agent_location
+        self._abort_if_unique_id_configured(updates=updates, reload_on_update=False)
 
     async def _async_create_bridge(self) -> None:
         """Create the bridge."""
@@ -342,36 +360,53 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         Returns the existing entry if it was updated.
         """
         entry, is_unique_match = self._async_get_existing_matching_entry()
-        if entry:
-            entry_kw_args: dict = {}
-            if self.unique_id and (
-                entry.unique_id is None
-                or (is_unique_match and self.unique_id != entry.unique_id)
-            ):
-                entry_kw_args["unique_id"] = self.unique_id
-            data = entry.data
-            update_ssdp_rendering_control_location = (
-                self._ssdp_rendering_control_location
-                and data.get(CONF_SSDP_RENDERING_CONTROL_LOCATION)
-                != self._ssdp_rendering_control_location
+        if not entry:
+            return None
+        entry_kw_args: dict = {}
+        if self.unique_id and (
+            entry.unique_id is None
+            or (is_unique_match and self.unique_id != entry.unique_id)
+        ):
+            entry_kw_args["unique_id"] = self.unique_id
+        data: dict[str, Any] = dict(entry.data)
+        update_ssdp_rendering_control_location = (
+            self._ssdp_rendering_control_location
+            and data.get(CONF_SSDP_RENDERING_CONTROL_LOCATION)
+            != self._ssdp_rendering_control_location
+        )
+        update_ssdp_main_tv_agent_location = (
+            self._ssdp_main_tv_agent_location
+            and data.get(CONF_SSDP_MAIN_TV_AGENT_LOCATION)
+            != self._ssdp_main_tv_agent_location
+        )
+        update_mac = self._mac and not data.get(CONF_MAC)
+        if (
+            update_ssdp_rendering_control_location
+            or update_ssdp_main_tv_agent_location
+            or update_mac
+        ):
+            if update_ssdp_rendering_control_location:
+                data[
+                    CONF_SSDP_RENDERING_CONTROL_LOCATION
+                ] = self._ssdp_rendering_control_location
+            if update_ssdp_main_tv_agent_location:
+                data[
+                    CONF_SSDP_MAIN_TV_AGENT_LOCATION
+                ] = self._ssdp_main_tv_agent_location
+            if update_mac:
+                data[CONF_MAC] = self._mac
+            entry_kw_args["data"] = data
+        if not entry_kw_args:
+            return None
+        LOGGER.debug("Updating existing config entry with %s", entry_kw_args)
+        self.hass.config_entries.async_update_entry(entry, **entry_kw_args)
+        if entry.state != config_entries.ConfigEntryState.LOADED:
+            # If its loaded it already has a reload listener in place
+            # and we do not want to trigger multiple reloads
+            self.hass.async_create_task(
+                self.hass.config_entries.async_reload(entry.entry_id)
             )
-            update_mac = self._mac and not data.get(CONF_MAC)
-            if update_ssdp_rendering_control_location or update_mac:
-                entry_kw_args["data"] = {**entry.data}
-                if update_ssdp_rendering_control_location:
-                    entry_kw_args["data"][
-                        CONF_SSDP_RENDERING_CONTROL_LOCATION
-                    ] = self._ssdp_rendering_control_location
-                if update_mac:
-                    entry_kw_args["data"][CONF_MAC] = self._mac
-            if entry_kw_args:
-                LOGGER.debug("Updating existing config entry with %s", entry_kw_args)
-                self.hass.config_entries.async_update_entry(entry, **entry_kw_args)
-                self.hass.async_create_task(
-                    self.hass.config_entries.async_reload(entry.entry_id)
-                )
-                return entry
-        return None
+        return entry
 
     async def _async_start_discovery_with_mac_address(self) -> None:
         """Start discovery."""
@@ -402,10 +437,17 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by ssdp discovery."""
         LOGGER.debug("Samsung device found via SSDP: %s", discovery_info)
         model_name: str = discovery_info.upnp.get(ssdp.ATTR_UPNP_MODEL_NAME) or ""
-        if discovery_info.ssdp_st == UPNP_SVC_RENDERINGCONTROL:
+        if discovery_info.ssdp_st == UPNP_SVC_RENDERING_CONTROL:
             self._ssdp_rendering_control_location = discovery_info.ssdp_location
             LOGGER.debug(
-                "Set SSDP location to: %s", self._ssdp_rendering_control_location
+                "Set SSDP RenderingControl location to: %s",
+                self._ssdp_rendering_control_location,
+            )
+        elif discovery_info.ssdp_st == UPNP_SVC_MAIN_TV_AGENT:
+            self._ssdp_main_tv_agent_location = discovery_info.ssdp_location
+            LOGGER.debug(
+                "Set SSDP MainTvAgent location to: %s",
+                self._ssdp_main_tv_agent_location,
             )
         self._udn = self._upnp_udn = _strip_uuid(
             discovery_info.upnp[ssdp.ATTR_UPNP_UDN]
@@ -426,6 +468,13 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self._async_set_unique_id_from_udn()
         self._async_update_and_abort_for_matching_unique_id()
         self._async_abort_if_host_already_in_progress()
+        if self._method == METHOD_LEGACY and discovery_info.ssdp_st in (
+            UPNP_SVC_RENDERING_CONTROL,
+            UPNP_SVC_MAIN_TV_AGENT,
+        ):
+            # The UDN we use for the unique id cannot be determined
+            # from device_info for legacy devices
+            return self.async_abort(reason="not_supported")
         self.context["title_placeholders"] = {"device": self._title}
         return await self.async_step_confirm()
 

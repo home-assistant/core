@@ -1,4 +1,6 @@
 """Support for MQTT discovery."""
+from __future__ import annotations
+
 import asyncio
 from collections import deque
 import functools
@@ -73,18 +75,20 @@ LAST_DISCOVERY = "mqtt_last_discovery"
 TOPIC_BASE = "~"
 
 
-def clear_discovery_hash(hass, discovery_hash):
+class MQTTConfig(dict):
+    """Dummy class to allow adding attributes."""
+
+    discovery_data: dict
+
+
+def clear_discovery_hash(hass: HomeAssistant, discovery_hash: tuple) -> None:
     """Clear entry in ALREADY_DISCOVERED list."""
     del hass.data[ALREADY_DISCOVERED][discovery_hash]
 
 
-def set_discovery_hash(hass, discovery_hash):
+def set_discovery_hash(hass: HomeAssistant, discovery_hash: tuple):
     """Clear entry in ALREADY_DISCOVERED list."""
     hass.data[ALREADY_DISCOVERED][discovery_hash] = {}
-
-
-class MQTTConfig(dict):
-    """Dummy class to allow adding attributes."""
 
 
 async def async_start(  # noqa: C901
@@ -181,6 +185,7 @@ async def async_start(  # noqa: C901
         await async_process_discovery_payload(component, discovery_id, payload)
 
     async def async_process_discovery_payload(component, discovery_id, payload):
+        """Process the payload of a new discovery."""
 
         _LOGGER.debug("Process discovery payload %s", payload)
         discovery_hash = (component, discovery_id)

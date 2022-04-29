@@ -10,8 +10,7 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_HS_COLOR,
     PLATFORM_SCHEMA,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.const import CONF_HOST
@@ -22,8 +21,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.color as color_util
 
 _LOGGER = logging.getLogger(__name__)
-
-SUPPORT_YEELIGHT_SUNFLOWER = SUPPORT_BRIGHTNESS | SUPPORT_COLOR
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_HOST): cv.string})
 
@@ -47,6 +44,9 @@ def setup_platform(
 
 class SunflowerBulb(LightEntity):
     """Representation of a Yeelight Sunflower Light."""
+
+    _attr_color_mode = ColorMode.HS
+    _attr_supported_color_modes = {ColorMode.HS}
 
     def __init__(self, light):
         """Initialize a Yeelight Sunflower bulb."""
@@ -86,11 +86,6 @@ class SunflowerBulb(LightEntity):
     def hs_color(self):
         """Return the color property."""
         return color_util.color_RGB_to_hs(*self._rgb_color)
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_YEELIGHT_SUNFLOWER
 
     def turn_on(self, **kwargs):
         """Instruct the light to turn on, optionally set colour/brightness."""

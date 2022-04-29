@@ -24,7 +24,9 @@ from tests.common import MockConfigEntry
         ("cover", "open", "open", {}, {}, {}, {}),
         ("fan", "on", "on", {}, {}, {}, {}),
         ("light", "on", "on", {}, {}, {}, {}),
+        ("lock", "locked", "locked", {}, {}, {}, {}),
         ("media_player", "on", "on", {}, {}, {}, {}),
+        ("switch", "on", "on", {}, {}, {}, {}),
     ),
 )
 async def test_config_flow(
@@ -107,7 +109,9 @@ async def test_config_flow(
         ("cover", {}),
         ("fan", {}),
         ("light", {}),
+        ("lock", {}),
         ("media_player", {}),
+        ("switch", {}),
     ),
 )
 async def test_config_flow_hides_members(
@@ -177,7 +181,9 @@ def get_suggested(schema, key):
         ("cover", "open", {}),
         ("fan", "on", {}),
         ("light", "on", {"all": False}),
+        ("lock", "locked", {}),
         ("media_player", "on", {}),
+        ("switch", "on", {"all": False}),
     ),
 )
 async def test_options(
@@ -218,6 +224,9 @@ async def test_options(
     assert result["step_id"] == group_type
     assert get_suggested(result["data_schema"].schema, "entities") == members1
     assert "name" not in result["data_schema"].schema
+    assert result["data_schema"].schema["entities"].config["exclude_entities"] == [
+        f"{group_type}.bed_room"
+    ]
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -273,9 +282,13 @@ async def test_options(
         ("light", {"all": True}, {"all": True}, False),
         ("light", {"all": False}, {"all": False}, True),
         ("light", {"all": True}, {"all": False}, True),
+        ("switch", {"all": False}, {"all": False}, False),
+        ("switch", {"all": True}, {"all": True}, False),
+        ("switch", {"all": False}, {"all": False}, True),
+        ("switch", {"all": True}, {"all": False}, True),
     ),
 )
-async def test_light_all_options(
+async def test_all_options(
     hass: HomeAssistant, group_type, extra_options, extra_options_after, advanced
 ) -> None:
     """Test reconfiguring."""
@@ -344,7 +357,9 @@ async def test_light_all_options(
         ("cover", {}),
         ("fan", {}),
         ("light", {}),
+        ("lock", {}),
         ("media_player", {}),
+        ("switch", {}),
     ),
 )
 async def test_options_flow_hides_members(

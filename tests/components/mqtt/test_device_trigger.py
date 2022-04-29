@@ -61,6 +61,7 @@ async def test_get_triggers(hass, device_reg, entity_reg, mqtt_mock):
             "discovery_id": "bla",
             "type": "button_short_press",
             "subtype": "button_1",
+            "metadata": {},
         },
     ]
     triggers = await async_get_device_automations(
@@ -166,6 +167,7 @@ async def test_discover_bad_triggers(hass, device_reg, entity_reg, mqtt_mock):
             "discovery_id": "bla",
             "type": "button_short_press",
             "subtype": "button_1",
+            "metadata": {},
         },
     ]
     triggers = await async_get_device_automations(
@@ -210,6 +212,7 @@ async def test_update_remove_triggers(hass, device_reg, entity_reg, mqtt_mock):
             "discovery_id": "bla",
             "type": "button_short_press",
             "subtype": "button_1",
+            "metadata": {},
         },
     ]
     expected_triggers2 = [dict(expected_triggers1[0])]

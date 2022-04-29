@@ -13,7 +13,7 @@
                     "host": "Host",
                     "name": "Nimi"
                 },
-                "description": "See sidumine n\u00f5uab Android TV rakenduse Notifications for Android TV kasutamist.\n\nAndroid TV jaoks: https://play.google.com/store/apps/details?id=de.cyberdream.androidtv.notifications.google\nFire TV jaoks: https://www.amazon.com/Christian-Fees-Notifications-for-Fire/dp/B00OESCXEK\n\nPead seadma ruuterile kas DHCP-reservatsiooni (vt ruuteri kasutusjuhendit) v\u00f5i seadme staatilise IP-aadressi. Vastasel juhul muutub seade l\u00f5puks k\u00e4ttesaamatuks.",
+                "description": "Vaata dokumentatsiooni, et veenduda, et k\u00f5ik n\u00f5uded on t\u00e4idetud.",
                 "title": "Android TV / Fire TV teavitused"
             }
         }

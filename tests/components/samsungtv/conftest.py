@@ -3,10 +3,12 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from datetime import datetime
+from socket import AddressFamily
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 from async_upnp_client.client import UpnpDevice
+from async_upnp_client.event_handler import UpnpEventHandler
 from async_upnp_client.exceptions import UpnpConnectionError
 import pytest
 from samsungctl import Remote
@@ -21,6 +23,32 @@ from homeassistant.components.samsungtv.const import WEBSOCKET_SSL_PORT
 import homeassistant.util.dt as dt_util
 
 from .const import SAMPLE_DEVICE_INFO_WIFI
+
+
+@pytest.fixture(autouse=True)
+async def silent_ssdp_scanner(hass):
+    """Start SSDP component and get Scanner, prevent actual SSDP traffic."""
+    with patch(
+        "homeassistant.components.ssdp.Scanner._async_start_ssdp_listeners"
+    ), patch("homeassistant.components.ssdp.Scanner._async_stop_ssdp_listeners"), patch(
+        "homeassistant.components.ssdp.Scanner.async_scan"
+    ):
+        yield
+
+
+@pytest.fixture(autouse=True)
+def samsungtv_mock_get_source_ip(mock_get_source_ip):
+    """Mock network util's async_get_source_ip."""
+
+
+@pytest.fixture(autouse=True)
+def samsungtv_mock_async_get_local_ip():
+    """Mock upnp util's async_get_local_ip."""
+    with patch(
+        "homeassistant.components.samsungtv.media_player.async_get_local_ip",
+        return_value=(AddressFamily.AF_INET, "10.10.10.10"),
+    ):
+        yield
 
 
 @pytest.fixture(autouse=True)
@@ -60,6 +88,53 @@ async def upnp_device_fixture(upnp_factory: Mock) -> Mock:
 
     with patch.object(upnp_factory, "async_create_device", side_effect=[upnp_device]):
         yield upnp_device
+
+
+@pytest.fixture(name="dmr_device")
+async def dmr_device_fixture(upnp_device: Mock) -> Mock:
+    """Patch async_upnp_client."""
+    with patch(
+        "homeassistant.components.samsungtv.media_player.DmrDevice",
+        autospec=True,
+    ) as dmr_device_class:
+        dmr_device: Mock = dmr_device_class.return_value
+        dmr_device.volume_level = 0.44
+        dmr_device.is_volume_muted = False
+        dmr_device.on_event = None
+        dmr_device.is_subscribed = False
+
+        def _raise_event(service, state_variables):
+            if dmr_device.on_event:
+                dmr_device.on_event(service, state_variables)
+
+        dmr_device.raise_event = _raise_event
+
+        def _async_subscribe_services(auto_resubscribe: bool = False):
+            dmr_device.is_subscribed = True
+
+        dmr_device.async_subscribe_services = AsyncMock(
+            side_effect=_async_subscribe_services
+        )
+
+        def _async_unsubscribe_services():
+            dmr_device.is_subscribed = False
+
+        dmr_device.async_unsubscribe_services = AsyncMock(
+            side_effect=_async_unsubscribe_services
+        )
+        yield dmr_device
+
+
+@pytest.fixture(name="upnp_notify_server")
+async def upnp_notify_server_fixture(upnp_factory: Mock) -> Mock:
+    """Patch async_upnp_client."""
+    with patch(
+        "homeassistant.components.samsungtv.media_player.AiohttpNotifyServer",
+        autospec=True,
+    ) as notify_server_class:
+        notify_server: Mock = notify_server_class.return_value
+        notify_server.event_handler = Mock(UpnpEventHandler)
+        yield notify_server
 
 
 @pytest.fixture(name="remote")

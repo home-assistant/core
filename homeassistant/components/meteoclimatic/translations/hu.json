@@ -12,8 +12,9 @@
                 "data": {
                     "code": "\u00c1llom\u00e1s k\u00f3dja"
                 },
-                "description": "Adja meg a meteorol\u00f3giai \u00e1llom\u00e1s k\u00f3dj\u00e1t (pl. ESCAT4300000043206B)",
-                "title": "Meteoklimatikus"
+                "data_description": {
+                    "code": "\u00dagy n\u00e9z ki, mint ESCAT4300000043206B"
+                }
             }
         }
     }

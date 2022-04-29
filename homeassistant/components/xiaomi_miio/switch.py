@@ -21,6 +21,7 @@ from homeassistant.const import (
     ATTR_MODE,
     ATTR_TEMPERATURE,
     CONF_HOST,
+    CONF_MODEL,
     CONF_TOKEN,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -32,7 +33,6 @@ from .const import (
     CONF_DEVICE,
     CONF_FLOW_TYPE,
     CONF_GATEWAY,
-    CONF_MODEL,
     DOMAIN,
     FEATURE_FLAGS_AIRFRESH,
     FEATURE_FLAGS_AIRFRESH_A1,

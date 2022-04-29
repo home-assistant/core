@@ -7,7 +7,14 @@ from homeassistant.components.tomorrowio.config_flow import (
 from homeassistant.components.tomorrowio.const import DOMAIN
 from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
-from homeassistant.const import CONF_API_KEY, CONF_API_VERSION, CONF_NAME
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_API_VERSION,
+    CONF_LATITUDE,
+    CONF_LOCATION,
+    CONF_LONGITUDE,
+    CONF_NAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -49,7 +56,7 @@ async def test_climacell_migration_logic(
     old_config_entry = MockConfigEntry(
         domain=CC_DOMAIN,
         data=old_data,
-        unique_id=_get_unique_id(hass, old_data),
+        unique_id="v3apikey_80.0_80.0",
         version=1,
     )
     old_config_entry.add_to_hass(hass)
@@ -70,7 +77,7 @@ async def test_climacell_migration_logic(
     old_entity_daily = ent_reg.async_get_or_create(
         "weather",
         CC_DOMAIN,
-        f"{_get_unique_id(hass, old_data)}_daily",
+        "v3apikey_80.0_80.0_daily",
         config_entry=old_config_entry,
         original_name="ClimaCell - Daily",
         suggested_object_id="climacell_daily",
@@ -79,17 +86,17 @@ async def test_climacell_migration_logic(
     old_entity_hourly = ent_reg.async_get_or_create(
         "weather",
         CC_DOMAIN,
-        f"{_get_unique_id(hass, old_data)}_hourly",
+        "v3apikey_80.0_80.0_hourly",
         config_entry=old_config_entry,
         original_name="ClimaCell - Hourly",
         suggested_object_id="climacell_hourly",
         device_id=old_device.id,
-        disabled_by=er.DISABLED_USER,
+        disabled_by=er.RegistryEntryDisabler.USER,
     )
     old_entity_nowcast = ent_reg.async_get_or_create(
         "weather",
         CC_DOMAIN,
-        f"{_get_unique_id(hass, old_data)}_nowcast",
+        "v3apikey_80.0_80.0_nowcast",
         config_entry=old_config_entry,
         original_name="ClimaCell - Nowcast",
         suggested_object_id="climacell_nowcast",
@@ -101,6 +108,10 @@ async def test_climacell_migration_logic(
     # climacell import and see what happens - we are also changing the API key to ensure
     # that things work as expected
     new_data = API_V3_ENTRY_DATA.copy()
+    new_data[CONF_LOCATION] = {
+        CONF_LATITUDE: float(new_data.pop(CONF_LATITUDE)),
+        CONF_LONGITUDE: float(new_data.pop(CONF_LONGITUDE)),
+    }
     new_data[CONF_API_VERSION] = 4
     new_data["old_config_entry_id"] = old_config_entry.entry_id
     config_entry = MockConfigEntry(
@@ -140,7 +151,7 @@ async def test_climacell_migration_logic(
     assert new_entity_hourly.original_name == "ClimaCell - Hourly"
     assert new_entity_hourly.device_id != old_device.id
     assert new_entity_hourly.unique_id == f"{_get_unique_id(hass, new_data)}_hourly"
-    assert new_entity_hourly.disabled_by == er.DISABLED_USER
+    assert new_entity_hourly.disabled_by == er.RegistryEntryDisabler.USER
 
     new_entity_nowcast = ent_reg.async_get(old_entity_nowcast.entity_id)
     assert new_entity_nowcast.platform == DOMAIN

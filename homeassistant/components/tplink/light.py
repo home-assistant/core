@@ -1,10 +1,12 @@
 """Support for TPLink lights."""
 from __future__ import annotations
 
+from collections.abc import Sequence
 import logging
-from typing import Any, cast
+from typing import Any, Final, cast
 
 from kasa import SmartBulb, SmartLightStrip
+import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -12,16 +14,14 @@ from homeassistant.components.light import (
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
-    COLOR_MODE_BRIGHTNESS,
-    COLOR_MODE_COLOR_TEMP,
-    COLOR_MODE_HS,
-    COLOR_MODE_ONOFF,
-    SUPPORT_EFFECT,
-    SUPPORT_TRANSITION,
+    ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_platform
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.color import (
     color_temperature_kelvin_to_mired as kelvin_to_mired,
@@ -34,6 +34,97 @@ from .coordinator import TPLinkDataUpdateCoordinator
 from .entity import CoordinatedTPLinkEntity, async_refresh_after
 
 _LOGGER = logging.getLogger(__name__)
+
+SERVICE_RANDOM_EFFECT = "random_effect"
+SERVICE_SEQUENCE_EFFECT = "sequence_effect"
+
+HUE = vol.Range(min=0, max=360)
+SAT = vol.Range(min=0, max=100)
+VAL = vol.Range(min=0, max=100)
+TRANSITION = vol.Range(min=0, max=6000)
+HSV_SEQUENCE = vol.ExactSequence((HUE, SAT, VAL))
+
+BASE_EFFECT_DICT: Final = {
+    vol.Optional("brightness", default=100): vol.All(
+        vol.Coerce(int), vol.Range(min=0, max=100)
+    ),
+    vol.Optional("duration", default=0): vol.All(
+        vol.Coerce(int), vol.Range(min=0, max=5000)
+    ),
+    vol.Optional("transition", default=0): vol.All(vol.Coerce(int), TRANSITION),
+    vol.Optional("segments", default=[0]): vol.All(
+        cv.ensure_list_csv,
+        vol.Length(min=1, max=80),
+        [vol.All(vol.Coerce(int), vol.Range(min=0, max=80))],
+    ),
+}
+
+SEQUENCE_EFFECT_DICT: Final = {
+    **BASE_EFFECT_DICT,
+    vol.Required("sequence"): vol.All(
+        cv.ensure_list,
+        vol.Length(min=1, max=16),
+        [vol.All(vol.Coerce(tuple), HSV_SEQUENCE)],
+    ),
+    vol.Optional("spread", default=1): vol.All(
+        vol.Coerce(int), vol.Range(min=1, max=16)
+    ),
+    vol.Optional("direction", default=4): vol.All(
+        vol.Coerce(int), vol.Range(min=1, max=4)
+    ),
+}
+
+RANDOM_EFFECT_DICT: Final = {
+    **BASE_EFFECT_DICT,
+    vol.Optional("fadeoff", default=0): vol.All(
+        vol.Coerce(int), vol.Range(min=0, max=3000)
+    ),
+    vol.Optional("hue_range"): vol.All(
+        cv.ensure_list_csv, [vol.Coerce(int)], vol.ExactSequence((HUE, HUE))
+    ),
+    vol.Optional("saturation_range"): vol.All(
+        cv.ensure_list_csv, [vol.Coerce(int)], vol.ExactSequence((SAT, SAT))
+    ),
+    vol.Optional("brightness_range"): vol.All(
+        cv.ensure_list_csv, [vol.Coerce(int)], vol.ExactSequence((VAL, VAL))
+    ),
+    vol.Optional("transition_range"): vol.All(
+        cv.ensure_list_csv,
+        [vol.Coerce(int)],
+        vol.ExactSequence((TRANSITION, TRANSITION)),
+    ),
+    vol.Required("init_states"): vol.All(
+        cv.ensure_list_csv, [vol.Coerce(int)], HSV_SEQUENCE
+    ),
+    vol.Optional("random_seed", default=100): vol.All(
+        vol.Coerce(int), vol.Range(min=1, max=600)
+    ),
+    vol.Optional("backgrounds"): vol.All(
+        cv.ensure_list,
+        vol.Length(min=1, max=16),
+        [vol.All(vol.Coerce(tuple), HSV_SEQUENCE)],
+    ),
+}
+
+
+@callback
+def _async_build_base_effect(
+    brightness: int,
+    duration: int,
+    transition: int,
+    segments: list[int],
+) -> dict[str, Any]:
+    return {
+        "custom": 1,
+        "id": "yMwcNpLxijmoKamskHCvvravpbnIqAIN",
+        "brightness": brightness,
+        "name": "Custom",
+        "segments": segments,
+        "expansion_strategy": 1,
+        "enable": 1,
+        "duration": duration,
+        "transition": transition,
+    }
 
 
 async def async_setup_entry(
@@ -51,6 +142,17 @@ async def async_setup_entry(
                 )
             ]
         )
+        platform = entity_platform.async_get_current_platform()
+        platform.async_register_entity_service(
+            SERVICE_RANDOM_EFFECT,
+            RANDOM_EFFECT_DICT,
+            "async_set_random_effect",
+        )
+        platform.async_register_entity_service(
+            SERVICE_SEQUENCE_EFFECT,
+            SEQUENCE_EFFECT_DICT,
+            "async_set_sequence_effect",
+        )
     elif coordinator.device.is_bulb or coordinator.device.is_dimmer:
         async_add_entities(
             [TPLinkSmartBulb(cast(SmartBulb, coordinator.device), coordinator)]
@@ -59,6 +161,8 @@ async def async_setup_entry(
 
 class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
     """Representation of a TPLink Smart Bulb."""
+
+    _attr_supported_features = LightEntityFeature.TRANSITION
 
     device: SmartBulb
 
@@ -174,37 +278,32 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
         return hue, saturation
 
     @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return SUPPORT_TRANSITION
-
-    @property
-    def supported_color_modes(self) -> set[str] | None:
+    def supported_color_modes(self) -> set[ColorMode | str] | None:
         """Return list of available color modes."""
-        modes = set()
+        modes: set[ColorMode | str] = set()
         if self.device.is_variable_color_temp:
-            modes.add(COLOR_MODE_COLOR_TEMP)
+            modes.add(ColorMode.COLOR_TEMP)
         if self.device.is_color:
-            modes.add(COLOR_MODE_HS)
+            modes.add(ColorMode.HS)
         if self.device.is_dimmable:
-            modes.add(COLOR_MODE_BRIGHTNESS)
+            modes.add(ColorMode.BRIGHTNESS)
 
         if not modes:
-            modes.add(COLOR_MODE_ONOFF)
+            modes.add(ColorMode.ONOFF)
 
         return modes
 
     @property
-    def color_mode(self) -> str | None:
+    def color_mode(self) -> ColorMode:
         """Return the active color mode."""
         if self.device.is_color:
             if self.device.is_variable_color_temp and self.device.color_temp:
-                return COLOR_MODE_COLOR_TEMP
-            return COLOR_MODE_HS
+                return ColorMode.COLOR_TEMP
+            return ColorMode.HS
         if self.device.is_variable_color_temp:
-            return COLOR_MODE_COLOR_TEMP
+            return ColorMode.COLOR_TEMP
 
-        return COLOR_MODE_BRIGHTNESS
+        return ColorMode.BRIGHTNESS
 
 
 class TPLinkSmartLightStrip(TPLinkSmartBulb):
@@ -212,18 +311,10 @@ class TPLinkSmartLightStrip(TPLinkSmartBulb):
 
     device: SmartLightStrip
 
-    def __init__(
-        self,
-        device: SmartLightStrip,
-        coordinator: TPLinkDataUpdateCoordinator,
-    ) -> None:
-        """Initialize the smart light strip."""
-        super().__init__(device, coordinator)
-
     @property
     def supported_features(self) -> int:
         """Flag supported features."""
-        return super().supported_features | SUPPORT_EFFECT
+        return super().supported_features | LightEntityFeature.EFFECT
 
     @property
     def effect_list(self) -> list[str] | None:
@@ -244,6 +335,11 @@ class TPLinkSmartLightStrip(TPLinkSmartBulb):
         """Turn the light on."""
         brightness, transition = self._async_extract_brightness_transition(**kwargs)
         if ATTR_COLOR_TEMP in kwargs:
+            if self.effect:
+                # If there is an effect in progress
+                # we have to set an HSV value to clear the effect
+                # before we can set a color temp
+                await self.device.set_hsv(0, 0, brightness)
             await self._async_set_color_temp(
                 int(kwargs[ATTR_COLOR_TEMP]), brightness, transition
             )
@@ -251,17 +347,66 @@ class TPLinkSmartLightStrip(TPLinkSmartBulb):
             await self._async_set_hsv(kwargs[ATTR_HS_COLOR], brightness, transition)
         elif ATTR_EFFECT in kwargs:
             await self.device.set_effect(kwargs[ATTR_EFFECT])
-        elif (
-            self.device.is_off
-            and self.device.effect
-            and self.device.effect["enable"] == 0
-            and self.device.effect["name"]
-        ):
-            if not self.device.effect["custom"]:
-                await self.device.set_effect(self.device.effect["name"])
-            # The device does not remember custom effects
-            # so we must set a default value or it can never turn back on
-            else:
-                await self.device.set_hsv(0, 0, 100, transition=transition)
         else:
             await self._async_turn_on_with_brightness(brightness, transition)
+
+    async def async_set_random_effect(
+        self,
+        brightness: int,
+        duration: int,
+        transition: int,
+        segments: list[int],
+        fadeoff: int,
+        init_states: tuple[int, int, int],
+        random_seed: int,
+        backgrounds: Sequence[tuple[int, int, int]] | None = None,
+        hue_range: tuple[int, int] | None = None,
+        saturation_range: tuple[int, int] | None = None,
+        brightness_range: tuple[int, int] | None = None,
+        transition_range: tuple[int, int] | None = None,
+    ) -> None:
+        """Set a random effect."""
+        effect: dict[str, Any] = {
+            **_async_build_base_effect(brightness, duration, transition, segments),
+            "type": "random",
+            "init_states": [init_states],
+            "random_seed": random_seed,
+        }
+        if backgrounds:
+            effect["backgrounds"] = backgrounds
+        if fadeoff:
+            effect["fadeoff"] = fadeoff
+        if hue_range:
+            effect["hue_range"] = hue_range
+        if saturation_range:
+            effect["saturation_range"] = saturation_range
+        if brightness_range:
+            effect["brightness_range"] = brightness_range
+            effect["brightness"] = min(
+                brightness_range[1], max(brightness, brightness_range[0])
+            )
+        if transition_range:
+            effect["transition_range"] = transition_range
+            effect["transition"] = 0
+        await self.device.set_custom_effect(effect)
+
+    async def async_set_sequence_effect(
+        self,
+        brightness: int,
+        duration: int,
+        transition: int,
+        segments: list[int],
+        sequence: Sequence[tuple[int, int, int]],
+        spread: int,
+        direction: int,
+    ) -> None:
+        """Set a sequence effect."""
+        effect: dict[str, Any] = {
+            **_async_build_base_effect(brightness, duration, transition, segments),
+            "type": "sequence",
+            "sequence": sequence,
+            "repeat_times": 0,
+            "spread": spread,
+            "direction": direction,
+        }
+        await self.device.set_custom_effect(effect)

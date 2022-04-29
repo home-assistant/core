@@ -3,12 +3,12 @@ from __future__ import annotations
 
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 import functools
 import logging
 import os
 import time
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from awesomeversion import (
     AwesomeVersion,
@@ -20,6 +20,7 @@ from sqlalchemy.engine.cursor import CursorFetchStrategy
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.orm.query import Query
 from sqlalchemy.orm.session import Session
+from typing_extensions import Concatenate, ParamSpec
 
 from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
@@ -39,6 +40,9 @@ from .models import (
 
 if TYPE_CHECKING:
     from . import Recorder
+
+_RecorderT = TypeVar("_RecorderT", bound="Recorder")
+_P = ParamSpec("_P")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,6 +68,10 @@ RETRYABLE_MYSQL_ERRORS = (1205, 1206, 1213)
 # 1205: Lock wait timeout exceeded; try restarting transaction
 # 1206: The total number of locks exceeds the lock table size
 # 1213: Deadlock found when trying to get lock; try restarting transaction
+
+FIRST_POSSIBLE_SUNDAY = 8
+SUNDAY_WEEKDAY = 6
+DAYS_IN_WEEK = 7
 
 
 @contextmanager
@@ -426,15 +434,22 @@ def end_incomplete_runs(session: Session, start_time: datetime) -> None:
         session.add(run)
 
 
-def retryable_database_job(description: str) -> Callable:
+def retryable_database_job(
+    description: str,
+) -> Callable[
+    [Callable[Concatenate[_RecorderT, _P], bool]],
+    Callable[Concatenate[_RecorderT, _P], bool],
+]:
     """Try to execute a database job.
 
     The job should return True if it finished, and False if it needs to be rescheduled.
     """
 
-    def decorator(job: Callable[[Any], bool]) -> Callable:
+    def decorator(
+        job: Callable[Concatenate[_RecorderT, _P], bool]
+    ) -> Callable[Concatenate[_RecorderT, _P], bool]:
         @functools.wraps(job)
-        def wrapper(instance: Recorder, *args: Any, **kwargs: Any) -> bool:
+        def wrapper(instance: _RecorderT, *args: _P.args, **kwargs: _P.kwargs) -> bool:
             try:
                 return job(instance, *args, **kwargs)
             except OperationalError as err:
@@ -460,8 +475,8 @@ def retryable_database_job(description: str) -> Callable:
     return decorator
 
 
-def perodic_db_cleanups(instance: Recorder) -> None:
-    """Run any database cleanups that need to happen perodiclly.
+def periodic_db_cleanups(instance: Recorder) -> None:
+    """Run any database cleanups that need to happen periodically.
 
     These cleanups will happen nightly or after any purge.
     """
@@ -501,3 +516,19 @@ def async_migration_in_progress(hass: HomeAssistant) -> bool:
         return False
     instance: Recorder = hass.data[DATA_INSTANCE]
     return instance.migration_in_progress
+
+
+def second_sunday(year: int, month: int) -> date:
+    """Return the datetime.date for the second sunday of a month."""
+    second = date(year, month, FIRST_POSSIBLE_SUNDAY)
+    day_of_week = second.weekday()
+    if day_of_week == SUNDAY_WEEKDAY:
+        return second
+    return second.replace(
+        day=(FIRST_POSSIBLE_SUNDAY + (SUNDAY_WEEKDAY - day_of_week) % DAYS_IN_WEEK)
+    )
+
+
+def is_second_sunday(date_time: datetime) -> bool:
+    """Check if a time is the second sunday of the month."""
+    return bool(second_sunday(date_time.year, date_time.month).day == date_time.day)

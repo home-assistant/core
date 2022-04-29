@@ -17,7 +17,7 @@
                     "longitude": "L\u00e4ngengrad",
                     "radius": "Stationsradius (Meilen; optional)"
                 },
-                "description": "Richte die AirNow-Luftqualit\u00e4tsintegration ein. Um den API-Schl\u00fcssel zu generieren, besuche https://docs.airnowapi.org/account/request/.",
+                "description": "Um den API-Schl\u00fcssel zu generieren, besuche https://docs.airnowapi.org/account/request/",
                 "title": "AirNow"
             }
         }

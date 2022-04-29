@@ -69,7 +69,6 @@ class HuisbaasjeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         Data has the keys from DATA_SCHEMA with values provided by the user.
         """
-        # pylint: disable=no-self-use
         username = user_input[CONF_USERNAME]
         password = user_input[CONF_PASSWORD]
 

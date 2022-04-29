@@ -11,7 +11,7 @@ import voluptuous as vol
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     PLATFORM_SCHEMA,
-    SUPPORT_BRIGHTNESS,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.const import CONF_HOST
@@ -24,8 +24,6 @@ from homeassistant.util import Throttle
 _LOGGER = logging.getLogger(__name__)
 
 CONF_VERSION = "version"
-
-SUPPORTED_FEATURES = SUPPORT_BRIGHTNESS
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_HOST): cv.string, vol.Required(CONF_VERSION): cv.positive_int}
@@ -67,6 +65,9 @@ def setup_platform(
 class GreenwaveLight(LightEntity):
     """Representation of an Greenwave Reality Light."""
 
+    _attr_color_mode = ColorMode.BRIGHTNESS
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+
     def __init__(self, light, host, token, gatewaydata):
         """Initialize a Greenwave Reality Light."""
         self._did = int(light["did"])
@@ -77,11 +78,6 @@ class GreenwaveLight(LightEntity):
         self._online = greenwave.check_online(light)
         self._token = token
         self._gatewaydata = gatewaydata
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORTED_FEATURES
 
     @property
     def available(self):

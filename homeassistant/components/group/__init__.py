@@ -65,8 +65,10 @@ PLATFORMS = [
     Platform.COVER,
     Platform.FAN,
     Platform.LIGHT,
+    Platform.LOCK,
     Platform.MEDIA_PLAYER,
     Platform.NOTIFY,
+    Platform.SWITCH,
 ]
 
 REG_KEY = f"{DOMAIN}_registry"
@@ -452,7 +454,7 @@ class GroupEntity(Entity):
             self.async_update_group_state()
             self.async_write_ha_state()
 
-        start.async_at_start(self.hass, _update_at_start)
+        self.async_on_remove(start.async_at_start(self.hass, _update_at_start))
 
     @callback
     def async_defer_or_update_ha_state(self) -> None:
@@ -687,7 +689,7 @@ class Group(Entity):
 
     async def async_added_to_hass(self):
         """Handle addition to Home Assistant."""
-        start.async_at_start(self.hass, self._async_start)
+        self.async_on_remove(start.async_at_start(self.hass, self._async_start))
 
     async def async_will_remove_from_hass(self):
         """Handle removal from Home Assistant."""

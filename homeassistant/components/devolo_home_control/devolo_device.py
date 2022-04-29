@@ -46,7 +46,7 @@ class DevoloDeviceEntity(Entity):
 
         self.subscriber: Subscriber | None = None
         self.sync_callback = self._sync
-        self._value: int
+        self._value: float
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""

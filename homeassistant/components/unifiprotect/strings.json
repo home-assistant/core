@@ -27,9 +27,9 @@
         "description": "Do you want to setup {name} ({ip_address})? [%key:component::unifiprotect::config::step::user::description%]",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"        
+          "password": "[%key:common::config_flow::data::password%]"
         }
-      }      
+      }
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",

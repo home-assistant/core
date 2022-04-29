@@ -336,7 +336,11 @@ async def test_play_media(hass):
 
     ent_id = "media_player.living_room"
     state = hass.states.get(ent_id)
-    assert mp.SUPPORT_PLAY_MEDIA & state.attributes.get(ATTR_SUPPORTED_FEATURES) > 0
+    assert (
+        mp.MediaPlayerEntityFeature.PLAY_MEDIA
+        & state.attributes.get(ATTR_SUPPORTED_FEATURES)
+        > 0
+    )
     assert state.attributes.get(mp.ATTR_MEDIA_CONTENT_ID) is not None
 
     with pytest.raises(vol.Invalid):
@@ -347,7 +351,11 @@ async def test_play_media(hass):
             blocking=True,
         )
     state = hass.states.get(ent_id)
-    assert mp.SUPPORT_PLAY_MEDIA & state.attributes.get(ATTR_SUPPORTED_FEATURES) > 0
+    assert (
+        mp.MediaPlayerEntityFeature.PLAY_MEDIA
+        & state.attributes.get(ATTR_SUPPORTED_FEATURES)
+        > 0
+    )
     assert state.attributes.get(mp.ATTR_MEDIA_CONTENT_ID) != "some_id"
 
     await hass.services.async_call(
@@ -361,7 +369,11 @@ async def test_play_media(hass):
         blocking=True,
     )
     state = hass.states.get(ent_id)
-    assert mp.SUPPORT_PLAY_MEDIA & state.attributes.get(ATTR_SUPPORTED_FEATURES) > 0
+    assert (
+        mp.MediaPlayerEntityFeature.PLAY_MEDIA
+        & state.attributes.get(ATTR_SUPPORTED_FEATURES)
+        > 0
+    )
     assert state.attributes.get(mp.ATTR_MEDIA_CONTENT_ID) == "some_id"
 
 
@@ -374,7 +386,7 @@ async def test_seek(hass, mock_media_seek):
 
     ent_id = "media_player.living_room"
     state = hass.states.get(ent_id)
-    assert state.attributes[ATTR_SUPPORTED_FEATURES] & mp.SUPPORT_SEEK
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] & mp.MediaPlayerEntityFeature.SEEK
     assert not mock_media_seek.called
 
     with pytest.raises(vol.Invalid):

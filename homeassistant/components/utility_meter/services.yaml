@@ -2,7 +2,7 @@
 
 reset:
   name: Reset
-  description: Resets all counters of an utility meter.
+  description: Resets all counters of a utility meter.
   target:
     entity:
       domain: select

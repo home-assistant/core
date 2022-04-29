@@ -9,6 +9,7 @@ from aiohue.v2.models.resource import ResourceTypes
 from aiohue.v2.models.zigbee_connectivity import ConnectivityServiceStatus
 
 from homeassistant.core import callback
+from homeassistant.helpers.device_registry import async_get as async_get_device_registry
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.entity_registry import async_get as async_get_entity_registry
 
@@ -135,17 +136,21 @@ class HueBaseEntity(Entity):
     @callback
     def _handle_event(self, event_type: EventType, resource: HueResource) -> None:
         """Handle status event for this resource (or it's parent)."""
-        if event_type == EventType.RESOURCE_DELETED and resource.id == self.resource.id:
-            self.logger.debug("Received delete for %s", self.entity_id)
-            # non-device bound entities like groups and scenes need to be removed here
-            # all others will be be removed by device setup in case of device removal
-            ent_reg = async_get_entity_registry(self.hass)
-            ent_reg.async_remove(self.entity_id)
-        else:
-            self.logger.debug("Received status update for %s", self.entity_id)
-            self._check_availability()
-            self.on_update()
-            self.async_write_ha_state()
+        if event_type == EventType.RESOURCE_DELETED:
+            # remove any services created for zones/rooms
+            # regular devices are removed automatically by the logic in device.py.
+            if resource.type in [ResourceTypes.ROOM, ResourceTypes.ZONE]:
+                dev_reg = async_get_device_registry(self.hass)
+                if device := dev_reg.async_get_device({(DOMAIN, resource.id)}):
+                    dev_reg.async_remove_device(device.id)
+            if resource.type in [ResourceTypes.GROUPED_LIGHT, ResourceTypes.SCENE]:
+                ent_reg = async_get_entity_registry(self.hass)
+                ent_reg.async_remove(self.entity_id)
+            return
+        self.logger.debug("Received status update for %s", self.entity_id)
+        self._check_availability()
+        self.on_update()
+        self.async_write_ha_state()
 
     @callback
     def _check_availability(self):

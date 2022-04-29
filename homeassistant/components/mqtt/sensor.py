@@ -163,9 +163,8 @@ class MqttSensor(MqttEntity, RestoreSensor):
 
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
-    async def async_added_to_hass(self) -> None:
+    async def mqtt_async_added_to_hass(self) -> None:
         """Restore state for entities with expire_after set."""
-        await super().async_added_to_hass()
         if (
             (expire_after := self._config.get(CONF_EXPIRE_AFTER)) is not None
             and expire_after > 0
@@ -174,7 +173,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
             and (last_sensor_data := await self.async_get_last_sensor_data())
             is not None
             # We might have set up a trigger already after subscribing from
-            # super().async_added_to_hass(), then we should not restore state
+            # MqttEntity.async_added_to_hass(), then we should not restore state
             and not self._expiration_trigger
         ):
             expiration_at = last_state.last_changed + timedelta(seconds=expire_after)

@@ -14,11 +14,8 @@ from homeassistant.components.fan import (
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
     ENTITY_ID_FORMAT,
-    SUPPORT_DIRECTION,
-    SUPPORT_OSCILLATE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_SET_SPEED,
     FanEntity,
+    FanEntityFeature,
 )
 from homeassistant.const import (
     CONF_ENTITY_ID,
@@ -199,13 +196,13 @@ class TemplateFan(TemplateEntity, FanEntity):
         self._preset_modes = config.get(CONF_PRESET_MODES)
 
         if self._percentage_template:
-            self._supported_features |= SUPPORT_SET_SPEED
+            self._supported_features |= FanEntityFeature.SET_SPEED
         if self._preset_mode_template and self._preset_modes:
-            self._supported_features |= SUPPORT_PRESET_MODE
+            self._supported_features |= FanEntityFeature.PRESET_MODE
         if self._oscillating_template:
-            self._supported_features |= SUPPORT_OSCILLATE
+            self._supported_features |= FanEntityFeature.OSCILLATE
         if self._direction_template:
-            self._supported_features |= SUPPORT_DIRECTION
+            self._supported_features |= FanEntityFeature.DIRECTION
 
     @property
     def supported_features(self) -> int:

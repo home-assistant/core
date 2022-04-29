@@ -17,10 +17,8 @@
                     "password": "Wachtwoord",
                     "region": "Regio"
                 },
-                "description": "Voer het e-mailadres en wachtwoord in dat u gebruikt om in te loggen op de MyMazda mobiele app.",
-                "title": "Mazda Connected Services - Account toevoegen"
+                "description": "Voer het e-mailadres en wachtwoord in dat u gebruikt om in te loggen op de MyMazda mobiele app."
             }
         }
-    },
-    "title": "Mazda Connected Services"
+    }
 }
