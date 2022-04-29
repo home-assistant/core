@@ -160,24 +160,19 @@ jobs:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: Generate partial Python venv restore key
         id: generate-python-key
-        run: >-
-          echo "::set-output name=key::base-venv-${{ env.CACHE_VERSION }}-${{
-            hashFiles('requirements.txt') }}-${{
-            hashFiles('requirements_test.txt') }}-${{
-            hashFiles('homeassistant/package_constraints.txt') }}"
+        run: |
+          echo "::set-output name=key::base-venv-${{ env.CACHE_VERSION }}-${{ hashFiles('requirements.txt') }}-${{hashFiles('requirements_test.txt') }}-${{hashFiles('homeassistant/package_constraints.txt') }}"
       - name: Generate partial pip restore key
         id: generate-pip-key
-        run: >-
-          echo "::set-output name=key::base-pip-${{ env.PIP_CACHE_VERSION }}-${{
-            env.HA_SHORT_VERSION }}-$(date -u '+%Y-%m-%dT%H:%M:%s')"
+        run: |
+          echo "::set-output name=key::base-pip-${{ env.PIP_CACHE_VERSION }}-${{ env.HA_SHORT_VERSION }}-$(date -u '+%Y-%m-%dT%H:%M:%s')"
       - name: Restore base Python virtual environment
         id: cache-venv
         uses: actions/cache@v3.0.2
         with:
           path: venv
-          key: >-
-            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
-            steps.generate-python-key.outputs.key }}
+          key: |
+            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{steps.generate-python-key.outputs.key }}
           # Temporary disabling the restore of environments when bumping
           # a dependency. It seems that we are experiencing issues with
           # restoring environments in GitHub Actions, although unclear why.
@@ -192,9 +187,8 @@ jobs:
         uses: actions/cache@v3.0.2
         with:
           path: ${{ env.PIP_CACHE }}
-          key: >-
-            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
-            steps.generate-pip-key.outputs.key }}
+          key: |
+            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{steps.generate-pip-key.outputs.key }}
           restore-keys: |
             ${{ runner.os }}-${{ steps.python.outputs.python-version }}-base-pip-${{ env.PIP_CACHE_VERSION }}-${{ env.HA_SHORT_VERSION }}-
       - name: Create Python virtual environment
@@ -207,16 +201,14 @@ jobs:
           pip install --cache-dir=$PIP_CACHE -r requirements.txt -r requirements_test.txt --use-deprecated=legacy-resolver
       - name: Generate partial pre-commit restore key
         id: generate-pre-commit-key
-        run: >-
-          echo "::set-output name=key::pre-commit-${{ env.CACHE_VERSION }}-${{
-            hashFiles('.pre-commit-config.yaml') }}"
+        run: |
+          echo "::set-output name=key::pre-commit-${{ env.CACHE_VERSION }}-${{ hashFiles('.pre-commit-config.yaml') }}"
       - name: Restore pre-commit environment from cache
         id: cache-precommit
         uses: actions/cache@v3.0.2
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
-          key: >-
-            ${{ runner.os }}-${{ steps.generate-pre-commit-key.outputs.key }}
+          key: ${{ runner.os }}-${{ steps.generate-pre-commit-key.outputs.key }}
           restore-keys: |
             ${{ runner.os }}-pre-commit-${{ env.CACHE_VERSION }}-
       - name: Install pre-commit dependencies
@@ -561,24 +553,16 @@ jobs:
         uses: actions/checkout@v3.0.2
       - name: Generate partial Python venv restore key
         id: generate-python-key
-        run: >-
-          echo "::set-output name=key::venv-${{ env.CACHE_VERSION }}-${{
-            hashFiles('requirements_test.txt') }}-${{
-            hashFiles('requirements_all.txt') }}-${{
-            hashFiles('homeassistant/package_constraints.txt') }}"
+        run: echo "::set-output name=key::venv-${{ env.CACHE_VERSION }}-${{ hashFiles('requirements_test.txt') }}-${{ hashFiles('requirements_all.txt') }}-${{ hashFiles('homeassistant/package_constraints.txt') }}"
       - name: Generate partial pip restore key
         id: generate-pip-key
-        run: >-
-          echo "::set-output name=key::pip-${{ env.PIP_CACHE_VERSION }}-${{
-            env.HA_SHORT_VERSION }}-$(date -u '+%Y-%m-%dT%H:%M:%s')"
+        run: echo "::set-output name=key::pip-${{ env.PIP_CACHE_VERSION }}-${{env.HA_SHORT_VERSION }}-$(date -u '+%Y-%m-%dT%H:%M:%s')"
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
         uses: actions/cache@v3.0.2
         with:
           path: venv
-          key: >-
-            ${{ runner.os }}-${{ matrix.python-version }}-${{
-            steps.generate-python-key.outputs.key }}
+          key: ${{ runner.os }}-${{ matrix.python-version }}-${{steps.generate-python-key.outputs.key }}
           # Temporary disabling the restore of environments when bumping
           # a dependency. It seems that we are experiencing issues with
           # restoring environments in GitHub Actions, although unclear why.
@@ -593,8 +577,7 @@ jobs:
         uses: actions/cache@v3.0.2
         with:
           path: ${{ env.PIP_CACHE }}
-          key: >-
-            ${{ runner.os }}-${{ matrix.python-version }}-${{
+          key: ${{ runner.os }}-${{ matrix.python-version }}-${{
             steps.generate-pip-key.outputs.key }}
           restore-keys: |
             ${{ runner.os }}-${{ matrix.python-version }}-pip-${{ env.PIP_CACHE_VERSION }}-${{ env.HA_SHORT_VERSION }}-
@@ -750,8 +733,7 @@ jobs:
       matrix:
         group: ${{ fromJson(needs.changes.outputs.test_groups) }}
         python-version: ["3.9", "3.10"]
-    name: >-
-      Run tests Python ${{ matrix.python-version }} (${{ matrix.group }})
+    name: Run tests Python ${{ matrix.python-version }} (${{ matrix.group }})
     container: homeassistant/ci-azure:${{ matrix.python-version }}
     steps:
       - name: Check out code from GitHub
