@@ -3,12 +3,15 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterable
 from datetime import datetime
+from itertools import zip_longest
 import logging
 from typing import TYPE_CHECKING
 
-from sqlalchemy import column, func, select, union
+from sqlalchemy import func, lambda_stmt, select, union_all
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.expression import distinct
+from sqlalchemy.sql.lambdas import StatementLambdaElement
+from sqlalchemy.sql.selectable import Select
 
 from homeassistant.const import EVENT_STATE_CHANGED
 
@@ -112,6 +115,223 @@ def _select_event_state_and_attributes_ids_to_purge(
     return event_ids, state_ids, attributes_ids
 
 
+def _state_attrs_exist(attr: int | None) -> Select:
+    """Check if a state attributes id exists in the states table."""
+    return select(func.min(States.attributes_id)).where(States.attributes_id == attr)
+
+
+def _generate_find_attr_lambda(
+    attr1: int,
+    attr2: int | None,
+    attr3: int | None,
+    attr4: int | None,
+    attr5: int | None,
+    attr6: int | None,
+    attr7: int | None,
+    attr8: int | None,
+    attr9: int | None,
+    attr10: int | None,
+    attr11: int | None,
+    attr12: int | None,
+    attr13: int | None,
+    attr14: int | None,
+    attr15: int | None,
+    attr16: int | None,
+    attr17: int | None,
+    attr18: int | None,
+    attr19: int | None,
+    attr20: int | None,
+    attr21: int | None,
+    attr22: int | None,
+    attr23: int | None,
+    attr24: int | None,
+    attr25: int | None,
+    attr26: int | None,
+    attr27: int | None,
+    attr28: int | None,
+    attr29: int | None,
+    attr30: int | None,
+    attr31: int | None,
+    attr32: int | None,
+    attr33: int | None,
+    attr34: int | None,
+    attr35: int | None,
+    attr36: int | None,
+    attr37: int | None,
+    attr38: int | None,
+    attr39: int | None,
+    attr40: int | None,
+    attr41: int | None,
+    attr42: int | None,
+    attr43: int | None,
+    attr44: int | None,
+    attr45: int | None,
+    attr46: int | None,
+    attr47: int | None,
+    attr48: int | None,
+    attr49: int | None,
+    attr50: int | None,
+    attr51: int | None,
+    attr52: int | None,
+    attr53: int | None,
+    attr54: int | None,
+    attr55: int | None,
+    attr56: int | None,
+    attr57: int | None,
+    attr58: int | None,
+    attr59: int | None,
+    attr60: int | None,
+    attr61: int | None,
+    attr62: int | None,
+    attr63: int | None,
+    attr64: int | None,
+    attr65: int | None,
+    attr66: int | None,
+    attr67: int | None,
+    attr68: int | None,
+    attr69: int | None,
+    attr70: int | None,
+    attr71: int | None,
+    attr72: int | None,
+    attr73: int | None,
+    attr74: int | None,
+    attr75: int | None,
+    attr76: int | None,
+    attr77: int | None,
+    attr78: int | None,
+    attr79: int | None,
+    attr80: int | None,
+    attr81: int | None,
+    attr82: int | None,
+    attr83: int | None,
+    attr84: int | None,
+    attr85: int | None,
+    attr86: int | None,
+    attr87: int | None,
+    attr88: int | None,
+    attr89: int | None,
+    attr90: int | None,
+    attr91: int | None,
+    attr92: int | None,
+    attr93: int | None,
+    attr94: int | None,
+    attr95: int | None,
+    attr96: int | None,
+    attr97: int | None,
+    attr98: int | None,
+    attr99: int | None,
+    attr100: int | None,
+) -> StatementLambdaElement:
+    """Generate the find attributes select only once.
+
+    https://docs.sqlalchemy.org/en/14/core/connections.html#quick-guidelines-for-lambdas
+    """
+    return lambda_stmt(
+        lambda: union_all(
+            _state_attrs_exist(attr1),
+            _state_attrs_exist(attr2),
+            _state_attrs_exist(attr3),
+            _state_attrs_exist(attr4),
+            _state_attrs_exist(attr5),
+            _state_attrs_exist(attr6),
+            _state_attrs_exist(attr7),
+            _state_attrs_exist(attr8),
+            _state_attrs_exist(attr9),
+            _state_attrs_exist(attr10),
+            _state_attrs_exist(attr11),
+            _state_attrs_exist(attr12),
+            _state_attrs_exist(attr13),
+            _state_attrs_exist(attr14),
+            _state_attrs_exist(attr15),
+            _state_attrs_exist(attr16),
+            _state_attrs_exist(attr17),
+            _state_attrs_exist(attr18),
+            _state_attrs_exist(attr19),
+            _state_attrs_exist(attr20),
+            _state_attrs_exist(attr21),
+            _state_attrs_exist(attr22),
+            _state_attrs_exist(attr23),
+            _state_attrs_exist(attr24),
+            _state_attrs_exist(attr25),
+            _state_attrs_exist(attr26),
+            _state_attrs_exist(attr27),
+            _state_attrs_exist(attr28),
+            _state_attrs_exist(attr29),
+            _state_attrs_exist(attr30),
+            _state_attrs_exist(attr31),
+            _state_attrs_exist(attr32),
+            _state_attrs_exist(attr33),
+            _state_attrs_exist(attr34),
+            _state_attrs_exist(attr35),
+            _state_attrs_exist(attr36),
+            _state_attrs_exist(attr37),
+            _state_attrs_exist(attr38),
+            _state_attrs_exist(attr39),
+            _state_attrs_exist(attr40),
+            _state_attrs_exist(attr41),
+            _state_attrs_exist(attr42),
+            _state_attrs_exist(attr43),
+            _state_attrs_exist(attr44),
+            _state_attrs_exist(attr45),
+            _state_attrs_exist(attr46),
+            _state_attrs_exist(attr47),
+            _state_attrs_exist(attr48),
+            _state_attrs_exist(attr49),
+            _state_attrs_exist(attr50),
+            _state_attrs_exist(attr51),
+            _state_attrs_exist(attr52),
+            _state_attrs_exist(attr53),
+            _state_attrs_exist(attr54),
+            _state_attrs_exist(attr55),
+            _state_attrs_exist(attr56),
+            _state_attrs_exist(attr57),
+            _state_attrs_exist(attr58),
+            _state_attrs_exist(attr59),
+            _state_attrs_exist(attr60),
+            _state_attrs_exist(attr61),
+            _state_attrs_exist(attr62),
+            _state_attrs_exist(attr63),
+            _state_attrs_exist(attr64),
+            _state_attrs_exist(attr65),
+            _state_attrs_exist(attr66),
+            _state_attrs_exist(attr67),
+            _state_attrs_exist(attr68),
+            _state_attrs_exist(attr69),
+            _state_attrs_exist(attr70),
+            _state_attrs_exist(attr71),
+            _state_attrs_exist(attr72),
+            _state_attrs_exist(attr73),
+            _state_attrs_exist(attr74),
+            _state_attrs_exist(attr75),
+            _state_attrs_exist(attr76),
+            _state_attrs_exist(attr77),
+            _state_attrs_exist(attr78),
+            _state_attrs_exist(attr79),
+            _state_attrs_exist(attr80),
+            _state_attrs_exist(attr81),
+            _state_attrs_exist(attr82),
+            _state_attrs_exist(attr83),
+            _state_attrs_exist(attr84),
+            _state_attrs_exist(attr85),
+            _state_attrs_exist(attr86),
+            _state_attrs_exist(attr87),
+            _state_attrs_exist(attr88),
+            _state_attrs_exist(attr89),
+            _state_attrs_exist(attr90),
+            _state_attrs_exist(attr91),
+            _state_attrs_exist(attr92),
+            _state_attrs_exist(attr93),
+            _state_attrs_exist(attr94),
+            _state_attrs_exist(attr95),
+            _state_attrs_exist(attr96),
+            _state_attrs_exist(attr97),
+            _state_attrs_exist(attr98),
+            _state_attrs_exist(attr99),
+            _state_attrs_exist(attr100),
+        )
+    )
+
+
 def _select_unused_attributes_ids(
     session: Session, attributes_ids: set[int], using_sqlite: bool
 ) -> set[int]:
@@ -132,9 +352,12 @@ def _select_unused_attributes_ids(
         # > explain select distinct attributes_id from states where attributes_id in (136723);
         # ...Using index
         #
-        id_query = session.query(distinct(States.attributes_id)).filter(
-            States.attributes_id.in_(attributes_ids)
-        )
+        seen_ids = {
+            state[0]
+            for state in session.query(distinct(States.attributes_id))
+            .filter(States.attributes_id.in_(attributes_ids))
+            .all()
+        }
     else:
         #
         # This branch is for DBMS that cannot optimize the distinct query well and has to examine
@@ -151,17 +374,25 @@ def _select_unused_attributes_ids(
         # > explain select min(attributes_id) from states where attributes_id = 136723;
         # ...Select tables optimized away
         #
-        id_query = session.query(column("id")).from_statement(
-            union(
-                *[
-                    select(func.min(States.attributes_id).label("id")).where(
-                        States.attributes_id == attributes_id
-                    )
-                    for attributes_id in attributes_ids
-                ]
-            )
-        )
-    to_remove = attributes_ids - {state[0] for state in id_query.all()}
+        # We used to generate a query based on how many attribute_ids to find but
+        # that meant sqlalchemy Transparent SQL Compilation Caching was working against
+        # us by cached up to MAX_ROWS_TO_PURGE different statements which could be
+        # up to 500MB for large database due to the complexity of the ORM objects.
+        #
+        # We now break the query into groups of 100 and use a lambda_stmt to ensure
+        # that the query is only cached once.
+        #
+        seen_ids = set()
+        groups = [iter(attributes_ids)] * 100
+        for attr_ids in zip_longest(*groups, fillvalue=None):
+            seen_ids |= {
+                state[0]
+                for state in session.execute(
+                    _generate_find_attr_lambda(*attr_ids)
+                ).all()
+                if state[0] is not None
+            }
+    to_remove = attributes_ids - seen_ids
     _LOGGER.debug(
         "Selected %s shared attributes to remove",
         len(to_remove),
