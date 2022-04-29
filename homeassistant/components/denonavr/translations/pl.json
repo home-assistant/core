@@ -27,6 +27,9 @@
                 "data": {
                     "host": "Adres IP"
                 },
+                "data_description": {
+                    "host": "Pozostaw puste, aby u\u017cy\u0107 automatycznego wykrywania"
+                },
                 "description": "\u0141\u0105czenie z urz\u0105dzeniem, je\u015bli adres IP nie jest zdefiniowany, u\u017cywane jest automatyczne wykrywanie.",
                 "title": "Denon AVR"
             }

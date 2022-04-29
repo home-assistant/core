@@ -27,6 +27,9 @@
                 "data": {
                     "host": "IP-adres"
                 },
+                "data_description": {
+                    "host": "Leeg laten om auto-discovery te gebruiken"
+                },
                 "description": "Maak verbinding met uw ontvanger. Als het IP-adres niet is ingesteld, wordt automatische detectie gebruikt",
                 "title": "Denon AVR Netwerk Ontvangers"
             }

@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Kasutaja on juba seadistatud",
+            "already_in_progress": "Seadistamine on juba k\u00e4imas",
+            "code_expired": "Tuvastuskood on aegunud v\u00f5i mandaadi seadistus on vale, proovi uuesti.",
+            "invalid_access_token": "Vigane juurdep\u00e4\u00e4sut\u00f5end",
+            "missing_configuration": "Komponent pole seadistatud. Palun loe dokumentatsiooni.",
+            "oauth_error": "Saadi sobimatud loaandmed.",
+            "reauth_successful": "Taastuvastamine \u00f5nnestus"
+        },
+        "create_entry": {
+            "default": "Tuvastamine \u00f5nnestus"
+        },
+        "progress": {
+            "exchange": "Google'i konto linkimiseks k\u00fclasta aadressi [ {url} ]( {url} ) ja sisesta kood: \n\n {user_code}"
+        },
+        "step": {
+            "auth": {
+                "title": "Google'i konto linkimine"
+            },
+            "pick_implementation": {
+                "title": "Vali tuvastusmeetod"
+            },
+            "reauth_confirm": {
+                "description": "Google'i kalendri sidumine peab konto uuesti tuvastama",
+                "title": "Taastuvasta sidumine"
+            }
+        }
+    }
+}
