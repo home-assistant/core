@@ -1,6 +1,7 @@
 """Support for functionality to interact with Android TV/Fire TV devices."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import os
 from typing import Any
 
@@ -85,7 +86,7 @@ def _setup_androidtv(
 
 async def async_connect_androidtv(
     hass: HomeAssistant,
-    config: dict[str, Any],
+    config: Mapping[str, Any],
     *,
     state_detection_rules: dict[str, Any] | None = None,
     timeout: float = 30.0,
@@ -129,7 +130,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     state_det_rules = entry.options.get(CONF_STATE_DETECTION_RULES)
     aftv, error_message = await async_connect_androidtv(
-        hass, dict(entry.data), state_detection_rules=state_det_rules
+        hass, entry.data, state_detection_rules=state_det_rules
     )
     if not aftv:
         raise ConfigEntryNotReady(error_message)
