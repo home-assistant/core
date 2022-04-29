@@ -52,22 +52,20 @@ class BaseSwitch(SwitchEntity):
     def __init__(self, *args, **kwargs):
         """Initialize the ZHA switch."""
         self._on_off_channel = None
-        self._state = None
         super().__init__(*args, **kwargs)
 
     @property
     def is_on(self) -> bool:
         """Return if the switch is on based on the statemachine."""
-        if self._state is None:
+        if self._on_off_channel.on_off is None:
             return False
-        return self._state
+        return self._on_off_channel.on_off
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn the entity on."""
         result = await self._on_off_channel.on()
         if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
             return
-        self._state = True
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs) -> None:
@@ -75,7 +73,6 @@ class BaseSwitch(SwitchEntity):
         result = await self._on_off_channel.off()
         if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
             return
-        self._state = False
         self.async_write_ha_state()
 
 
@@ -91,7 +88,6 @@ class Switch(BaseSwitch, ZhaEntity):
     @callback
     def async_set_state(self, attr_id: int, attr_name: str, value: Any):
         """Handle state update from channel."""
-        self._state = bool(value)
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
@@ -101,18 +97,11 @@ class Switch(BaseSwitch, ZhaEntity):
             self._on_off_channel, SIGNAL_ATTR_UPDATED, self.async_set_state
         )
 
-    @callback
-    def async_restore_last_state(self, last_state) -> None:
-        """Restore previous state."""
-        self._state = last_state.state == STATE_ON
-
     async def async_update(self) -> None:
         """Attempt to retrieve on off state from the switch."""
         await super().async_update()
         if self._on_off_channel:
-            state = await self._on_off_channel.get_attribute_value("on_off")
-            if state is not None:
-                self._state = state
+            await self._on_off_channel.get_attribute_value("on_off", from_cache=False)
 
 
 @GROUP_MATCH()
