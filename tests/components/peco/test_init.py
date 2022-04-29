@@ -2,7 +2,13 @@
 import asyncio
 from unittest.mock import patch
 
-from peco import AlertResults, BadJSONError, HttpError, OutageResults, UnresponsiveMeterError
+from peco import (
+    AlertResults,
+    BadJSONError,
+    HttpError,
+    OutageResults,
+    UnresponsiveMeterError,
+)
 import pytest
 
 from homeassistant.components.peco.const import DOMAIN
