@@ -18,7 +18,7 @@
                     "mode": "Re\u017eiim",
                     "name": "Nimi",
                     "password": "Salas\u00f5na",
-                    "port": "Port",
+                    "port": "Port (vaikepordi kasutamiseks j\u00e4ta t\u00fchjaks)",
                     "protocol": "Kasutatav sideprotokoll",
                     "ssh_key": "Rada SSH v\u00f5tmefailini (parooli asemel)",
                     "username": "Kasutajanimi"

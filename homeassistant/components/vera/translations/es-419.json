@@ -9,9 +9,7 @@
                     "exclude": "Identificadores de dispositivo de Vera para excluir de Home Assistant.",
                     "lights": "Vera cambia los identificadores del dispositivo para tratarlos como luces en Home Assistant.",
                     "vera_controller_url": "URL del controlador"
-                },
-                "description": "Proporcione una URL del controlador Vera a continuaci\u00f3n. Deber\u00eda verse as\u00ed: http://192.168.1.161:3480.",
-                "title": "Configurar el controlador Vera"
+                }
             }
         }
     },

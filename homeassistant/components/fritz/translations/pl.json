@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
             "already_in_progress": "Konfiguracja jest ju\u017c w toku",
+            "ignore_ip6_link_local": "Adres lokalny \u0142\u0105cza IPv6 nie jest obs\u0142ugiwany.",
             "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119"
         },
         "error": {

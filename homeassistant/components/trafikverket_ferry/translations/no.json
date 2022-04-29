@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Kontoen er allerede konfigurert",
+            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "incorrect_api_key": "Ugyldig API-n\u00f8kkel for valgt konto",
+            "invalid_auth": "Ugyldig godkjenning",
+            "invalid_route": "Kunne ikke finne rute med oppgitt informasjon"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API-n\u00f8kkel"
+                }
+            },
+            "user": {
+                "data": {
+                    "api_key": "API-n\u00f8kkel",
+                    "from": "Fra havnen",
+                    "time": "Tid",
+                    "to": "Til havn",
+                    "weekday": "Hverdager"
+                }
+            }
+        }
+    }
+}

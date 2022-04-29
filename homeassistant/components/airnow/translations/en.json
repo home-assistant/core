@@ -17,7 +17,7 @@
                     "longitude": "Longitude",
                     "radius": "Station Radius (miles; optional)"
                 },
-                "description": "Set up AirNow air quality integration. To generate API key go to https://docs.airnowapi.org/account/request/",
+                "description": "To generate API key go to https://docs.airnowapi.org/account/request/",
                 "title": "AirNow"
             }
         }

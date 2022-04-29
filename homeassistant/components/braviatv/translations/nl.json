@@ -21,7 +21,7 @@
                 "data": {
                     "host": "Host"
                 },
-                "description": "Stel Sony Bravia TV-integratie in. Als je problemen hebt met de configuratie ga dan naar: https://www.home-assistant.io/integrations/braviatv \n\nZorg ervoor dat uw tv is ingeschakeld.",
+                "description": "Zorg ervoor dat uw TV aan staat voordat u hem probeert in te stellen.",
                 "title": "Sony Bravia TV"
             }
         }

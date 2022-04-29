@@ -29,7 +29,8 @@
         },
         "step": {
             "ack_no_options": {
-                "description": "Il n'y a pas d'option pour l'impl\u00e9mentation de SysBus"
+                "description": "Il n'y a pas d'option pour l'impl\u00e9mentation de SysBus",
+                "title": "Options de bus syst\u00e8me OneWire"
             },
             "configure_device": {
                 "data": {
