@@ -295,7 +295,7 @@ def create_state_changed_event_from_old_new(
     row.context_parent_id = None
     row.old_state_id = old_state and 1
     row.state_id = new_state and 1
-    return logbook.LazyEventPartialState(row)
+    return logbook.LazyEventPartialState(row, {}, {})
 
 
 async def test_logbook_view(hass, hass_client, recorder_mock):
