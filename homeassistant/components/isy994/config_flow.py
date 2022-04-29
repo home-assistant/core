@@ -266,9 +266,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle reauth input."""
         errors = {}
         assert self._existing_entry is not None
+        existing_entry = self._existing_entry
+        existing_data = existing_entry.data
         if user_input is not None:
             new_data = {
-                **self._existing_entry.data,
+                **existing_data,
+                CONF_USERNAME: user_input[CONF_USERNAME],
                 CONF_PASSWORD: user_input[CONF_PASSWORD],
             }
             try:
@@ -280,21 +283,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except InvalidAuth:
                 errors[CONF_PASSWORD] = "invalid_auth"
             else:
-                self.hass.config_entries.async_update_entry(
-                    self._existing_entry, data=new_data
-                )
-                await self.hass.config_entries.async_reload(
-                    self._existing_entry.entry_id
-                )
+                cfg_entries = self.hass.config_entries
+                cfg_entries.async_update_entry(existing_entry, data=new_data)
+                await cfg_entries.async_reload(existing_entry.entry_id)
                 return self.async_abort(reason="reauth_successful")
 
+        self.context["title_placeholders"] = {
+            CONF_NAME: existing_entry.title,
+            CONF_HOST: existing_data[CONF_HOST],
+        }
         return self.async_show_form(
-            description_placeholders={CONF_HOST: self._existing_entry.data[CONF_HOST]},
+            description_placeholders={CONF_HOST: existing_data[CONF_HOST]},
             step_id="reauth_confirm",
             data_schema=vol.Schema(
                 {
                     vol.Required(
-                        CONF_USERNAME, default=self._existing_entry.data[CONF_USERNAME]
+                        CONF_USERNAME, default=existing_data[CONF_USERNAME]
                     ): str,
                     vol.Required(CONF_PASSWORD): str,
                 }
