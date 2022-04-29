@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Apparaat is al geconfigureerd",
+            "already_configured": "Apparaat is al geconfigureerd, verbindingsinstellingen zijn bijgewerkt",
             "already_in_progress": "De configuratiestroom is al aan de gang",
             "connection_error": "Kan geen verbinding maken"
         },
@@ -9,7 +9,7 @@
             "discovery_error": "Kan geen Motion Gateway vinden",
             "invalid_interface": "Ongeldige netwerkinterface"
         },
-        "flow_title": "Motion Blinds",
+        "flow_title": "{short_mac} ({ip_address})",
         "step": {
             "connect": {
                 "data": {
