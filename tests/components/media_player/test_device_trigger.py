@@ -4,8 +4,10 @@ from datetime import timedelta
 import pytest
 
 import homeassistant.components.automation as automation
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.media_player import DOMAIN
 from homeassistant.const import (
+    STATE_BUFFERING,
     STATE_IDLE,
     STATE_OFF,
     STATE_ON,
@@ -13,6 +15,8 @@ from homeassistant.const import (
     STATE_PLAYING,
 )
 from homeassistant.helpers import device_registry
+from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -57,7 +61,15 @@ async def test_get_triggers(hass, device_reg, entity_reg):
     )
     entity_reg.async_get_or_create(DOMAIN, "test", "5678", device_id=device_entry.id)
 
-    trigger_types = {"turned_on", "turned_off", "idle", "paused", "playing"}
+    trigger_types = {
+        "buffering",
+        "changed_states",
+        "idle",
+        "paused",
+        "playing",
+        "turned_off",
+        "turned_on",
+    }
     expected_triggers = [
         {
             "platform": "device",
@@ -65,10 +77,69 @@ async def test_get_triggers(hass, device_reg, entity_reg):
             "type": trigger,
             "device_id": device_entry.id,
             "entity_id": f"{DOMAIN}.test_5678",
+            "metadata": {"secondary": False},
         }
         for trigger in trigger_types
     ]
-    triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device_entry.id
+    )
+    assert_lists_same(triggers, expected_triggers)
+
+
+@pytest.mark.parametrize(
+    "hidden_by,entity_category",
+    (
+        (RegistryEntryHider.INTEGRATION, None),
+        (RegistryEntryHider.USER, None),
+        (None, EntityCategory.CONFIG),
+        (None, EntityCategory.DIAGNOSTIC),
+    ),
+)
+async def test_get_triggers_hidden_auxiliary(
+    hass,
+    device_reg,
+    entity_reg,
+    hidden_by,
+    entity_category,
+):
+    """Test we get the expected triggers from a hidden or auxiliary entity."""
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_reg.async_get_or_create(
+        DOMAIN,
+        "test",
+        "5678",
+        device_id=device_entry.id,
+        entity_category=entity_category,
+        hidden_by=hidden_by,
+    )
+    expected_triggers = [
+        {
+            "platform": "device",
+            "domain": DOMAIN,
+            "type": trigger,
+            "device_id": device_entry.id,
+            "entity_id": f"{DOMAIN}.test_5678",
+            "metadata": {"secondary": True},
+        }
+        for trigger in [
+            "buffering",
+            "changed_states",
+            "idle",
+            "paused",
+            "playing",
+            "turned_off",
+            "turned_on",
+        ]
+    ]
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device_entry.id
+    )
     assert_lists_same(triggers, expected_triggers)
 
 
@@ -82,11 +153,13 @@ async def test_get_trigger_capabilities(hass, device_reg, entity_reg):
     )
     entity_reg.async_get_or_create(DOMAIN, "test", "5678", device_id=device_entry.id)
 
-    triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
-    assert len(triggers) == 5
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device_entry.id
+    )
+    assert len(triggers) == 7
     for trigger in triggers:
         capabilities = await async_get_device_automation_capabilities(
-            hass, "trigger", trigger
+            hass, DeviceAutomationType.TRIGGER, trigger
         )
         assert capabilities == {
             "extra_fields": [
@@ -104,7 +177,15 @@ async def test_if_fires_on_state_change(hass, calls):
         "{{{{ trigger.entity_id}}}} - {{{{ trigger.from_state.state}}}} - "
         "{{{{ trigger.to_state.state}}}} - {{{{ trigger.for }}}}"
     )
-    trigger_types = {"turned_on", "turned_off", "idle", "paused", "playing"}
+    trigger_types = {
+        "buffering",
+        "changed_states",
+        "idle",
+        "paused",
+        "playing",
+        "turned_off",
+        "turned_on",
+    }
 
     assert await async_setup_component(
         hass,
@@ -132,47 +213,56 @@ async def test_if_fires_on_state_change(hass, calls):
     # Fake that the entity is turning on.
     hass.states.async_set("media_player.entity", STATE_ON)
     await hass.async_block_till_done()
-    assert len(calls) == 1
-    assert (
-        calls[0].data["some"]
-        == "turned_on - device - media_player.entity - off - on - None"
-    )
+    assert len(calls) == 2
+    assert {calls[0].data["some"], calls[1].data["some"]} == {
+        "turned_on - device - media_player.entity - off - on - None",
+        "changed_states - device - media_player.entity - off - on - None",
+    }
 
     # Fake that the entity is turning off.
     hass.states.async_set("media_player.entity", STATE_OFF)
     await hass.async_block_till_done()
-    assert len(calls) == 2
-    assert (
-        calls[1].data["some"]
-        == "turned_off - device - media_player.entity - on - off - None"
-    )
+    assert len(calls) == 4
+    assert {calls[2].data["some"], calls[3].data["some"]} == {
+        "turned_off - device - media_player.entity - on - off - None",
+        "changed_states - device - media_player.entity - on - off - None",
+    }
 
     # Fake that the entity becomes idle.
     hass.states.async_set("media_player.entity", STATE_IDLE)
     await hass.async_block_till_done()
-    assert len(calls) == 3
-    assert (
-        calls[2].data["some"]
-        == "idle - device - media_player.entity - off - idle - None"
-    )
+    assert len(calls) == 6
+    assert {calls[4].data["some"], calls[5].data["some"]} == {
+        "idle - device - media_player.entity - off - idle - None",
+        "changed_states - device - media_player.entity - off - idle - None",
+    }
 
     # Fake that the entity starts playing.
     hass.states.async_set("media_player.entity", STATE_PLAYING)
     await hass.async_block_till_done()
-    assert len(calls) == 4
-    assert (
-        calls[3].data["some"]
-        == "playing - device - media_player.entity - idle - playing - None"
-    )
+    assert len(calls) == 8
+    assert {calls[6].data["some"], calls[7].data["some"]} == {
+        "playing - device - media_player.entity - idle - playing - None",
+        "changed_states - device - media_player.entity - idle - playing - None",
+    }
 
     # Fake that the entity is paused.
     hass.states.async_set("media_player.entity", STATE_PAUSED)
     await hass.async_block_till_done()
-    assert len(calls) == 5
-    assert (
-        calls[4].data["some"]
-        == "paused - device - media_player.entity - playing - paused - None"
-    )
+    assert len(calls) == 10
+    assert {calls[8].data["some"], calls[9].data["some"]} == {
+        "paused - device - media_player.entity - playing - paused - None",
+        "changed_states - device - media_player.entity - playing - paused - None",
+    }
+
+    # Fake that the entity is buffering.
+    hass.states.async_set("media_player.entity", STATE_BUFFERING)
+    await hass.async_block_till_done()
+    assert len(calls) == 12
+    assert {calls[10].data["some"], calls[11].data["some"]} == {
+        "buffering - device - media_player.entity - paused - buffering - None",
+        "changed_states - device - media_player.entity - paused - buffering - None",
+    }
 
 
 async def test_if_fires_on_state_change_with_for(hass, calls):

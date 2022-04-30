@@ -1,6 +1,5 @@
 """Tests for the reload helper."""
 import logging
-from os import path
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -20,6 +19,7 @@ from homeassistant.loader import async_get_integration
 from tests.common import (
     MockModule,
     MockPlatform,
+    get_fixture_path,
     mock_entity_platform,
     mock_integration,
 )
@@ -57,11 +57,7 @@ async def test_reload_platform(hass):
     assert platform.platform_name == PLATFORM
     assert platform.domain == DOMAIN
 
-    yaml_path = path.join(
-        _get_fixtures_base_path(),
-        "fixtures",
-        "helpers/reload_configuration.yaml",
-    )
+    yaml_path = get_fixture_path("helpers/reload_configuration.yaml")
     with patch.object(config, "YAML_CONFIG_FILE", yaml_path):
         await async_reload_integration_platforms(hass, PLATFORM, [DOMAIN])
 
@@ -99,11 +95,7 @@ async def test_setup_reload_service(hass):
 
     await async_setup_reload_service(hass, PLATFORM, [DOMAIN])
 
-    yaml_path = path.join(
-        _get_fixtures_base_path(),
-        "fixtures",
-        "helpers/reload_configuration.yaml",
-    )
+    yaml_path = get_fixture_path("helpers/reload_configuration.yaml")
     with patch.object(config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             PLATFORM,
@@ -142,11 +134,7 @@ async def test_setup_reload_service_when_async_process_component_config_fails(ha
 
     await async_setup_reload_service(hass, PLATFORM, [DOMAIN])
 
-    yaml_path = path.join(
-        _get_fixtures_base_path(),
-        "fixtures",
-        "helpers/reload_configuration.yaml",
-    )
+    yaml_path = get_fixture_path("helpers/reload_configuration.yaml")
     with patch.object(config, "YAML_CONFIG_FILE", yaml_path), patch.object(
         config, "async_process_component_config", return_value=None
     ):
@@ -196,11 +184,7 @@ async def test_setup_reload_service_with_platform_that_provides_async_reset_plat
 
     await async_setup_reload_service(hass, PLATFORM, [DOMAIN])
 
-    yaml_path = path.join(
-        _get_fixtures_base_path(),
-        "fixtures",
-        "helpers/reload_configuration.yaml",
-    )
+    yaml_path = get_fixture_path("helpers/reload_configuration.yaml")
     with patch.object(config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             PLATFORM,
@@ -218,11 +202,7 @@ async def test_async_integration_yaml_config(hass):
     """Test loading yaml config for an integration."""
     mock_integration(hass, MockModule(DOMAIN))
 
-    yaml_path = path.join(
-        _get_fixtures_base_path(),
-        "fixtures",
-        f"helpers/{DOMAIN}_configuration.yaml",
-    )
+    yaml_path = get_fixture_path(f"helpers/{DOMAIN}_configuration.yaml")
     with patch.object(config, "YAML_CONFIG_FILE", yaml_path):
         processed_config = await async_integration_yaml_config(hass, DOMAIN)
 
@@ -233,16 +213,8 @@ async def test_async_integration_missing_yaml_config(hass):
     """Test loading missing yaml config for an integration."""
     mock_integration(hass, MockModule(DOMAIN))
 
-    yaml_path = path.join(
-        _get_fixtures_base_path(),
-        "fixtures",
-        "helpers/does_not_exist_configuration.yaml",
-    )
+    yaml_path = get_fixture_path("helpers/does_not_exist_configuration.yaml")
     with pytest.raises(FileNotFoundError), patch.object(
         config, "YAML_CONFIG_FILE", yaml_path
     ):
         await async_integration_yaml_config(hass, DOMAIN)
-
-
-def _get_fixtures_base_path():
-    return path.dirname(path.dirname(__file__))

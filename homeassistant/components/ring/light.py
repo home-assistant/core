@@ -4,8 +4,10 @@ import logging
 
 import requests
 
-from homeassistant.components.light import LightEntity
-from homeassistant.core import callback
+from homeassistant.components.light import ColorMode, LightEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
 from . import DOMAIN
@@ -25,7 +27,11 @@ ON_STATE = "on"
 OFF_STATE = "off"
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Create the lights for the Ring devices."""
     devices = hass.data[DOMAIN][config_entry.entry_id]["devices"]
 
@@ -40,6 +46,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 class RingLight(RingEntityMixin, LightEntity):
     """Creates a switch to turn the ring cameras light on and off."""
+
+    _attr_color_mode = ColorMode.ONOFF
+    _attr_supported_color_modes = {ColorMode.ONOFF}
 
     def __init__(self, config_entry_id, device):
         """Initialize the light."""

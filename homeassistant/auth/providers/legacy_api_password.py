@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import hmac
-from typing import cast
+from typing import Any, cast
 
 import voluptuous as vol
 
@@ -44,7 +44,7 @@ class LegacyApiPasswordAuthProvider(AuthProvider):
         """Return api_password."""
         return str(self.config[CONF_API_PASSWORD])
 
-    async def async_login_flow(self, context: dict | None) -> LoginFlow:
+    async def async_login_flow(self, context: dict[str, Any] | None) -> LoginFlow:
         """Return a flow to login."""
         return LegacyLoginFlow(self)
 
@@ -100,5 +100,7 @@ class LegacyLoginFlow(LoginFlow):
                 return await self.async_finish({})
 
         return self.async_show_form(
-            step_id="init", data_schema=vol.Schema({"password": str}), errors=errors
+            step_id="init",
+            data_schema=vol.Schema({vol.Required("password"): str}),
+            errors=errors,
         )

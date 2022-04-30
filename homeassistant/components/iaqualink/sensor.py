@@ -1,10 +1,11 @@
 """Support for Aqualink temperature sensors."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import DOMAIN, SensorEntity
+from homeassistant.components.sensor import DOMAIN, SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import AqualinkEntity
 from .const import DOMAIN as AQUALINK_DOMAIN
@@ -13,7 +14,9 @@ PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up discovered sensors."""
     devs = []
@@ -31,7 +34,7 @@ class HassAqualinkSensor(AqualinkEntity, SensorEntity):
         return self.dev.label
 
     @property
-    def unit_of_measurement(self) -> str | None:
+    def native_unit_of_measurement(self) -> str | None:
         """Return the measurement unit for the sensor."""
         if self.dev.name.endswith("_temp"):
             if self.dev.system.temp_unit == "F":
@@ -40,20 +43,19 @@ class HassAqualinkSensor(AqualinkEntity, SensorEntity):
         return None
 
     @property
-    def state(self) -> str | None:
+    def native_value(self) -> int | float | None:
         """Return the state of the sensor."""
         if self.dev.state == "":
             return None
 
         try:
-            state = int(self.dev.state)
+            return int(self.dev.state)
         except ValueError:
-            state = float(self.dev.state)
-        return state
+            return float(self.dev.state)
 
     @property
     def device_class(self) -> str | None:
         """Return the class of the sensor."""
         if self.dev.name.endswith("_temp"):
-            return DEVICE_CLASS_TEMPERATURE
+            return SensorDeviceClass.TEMPERATURE
         return None

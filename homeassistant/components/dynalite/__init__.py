@@ -12,6 +12,7 @@ from homeassistant.const import CONF_DEFAULT, CONF_HOST, CONF_NAME, CONF_PORT, C
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 # Loading the config flow file will register the flow
 from .bridge import DynaliteBridge
@@ -179,7 +180,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Dynalite platform."""
     conf = config.get(DOMAIN)
     LOGGER.debug("Setting up dynalite component config = %s", conf)
@@ -207,7 +208,7 @@ async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
             )
         )
 
-    async def dynalite_service(service_call: ServiceCall):
+    async def dynalite_service(service_call: ServiceCall) -> None:
         data = service_call.data
         host = data.get(ATTR_HOST, "")
         bridges = []

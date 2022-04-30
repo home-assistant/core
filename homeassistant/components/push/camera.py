@@ -1,4 +1,6 @@
 """Camera platform that receives images through HTTP POST."""
+from __future__ import annotations
+
 import asyncio
 from collections import deque
 from datetime import timedelta
@@ -8,17 +10,15 @@ import aiohttp
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.components.camera import (
-    PLATFORM_SCHEMA,
-    STATE_IDLE,
-    STATE_RECORDING,
-    Camera,
-)
+from homeassistant.components import webhook
+from homeassistant.components.camera import PLATFORM_SCHEMA, STATE_IDLE, Camera
 from homeassistant.components.camera.const import DOMAIN
 from homeassistant.const import CONF_NAME, CONF_TIMEOUT, CONF_WEBHOOK_ID
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -46,7 +46,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Push Camera platform."""
     if PUSH_CAMERA_DATA not in hass.data:
         hass.data[PUSH_CAMERA_DATA] = {}
@@ -70,7 +75,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 async def handle_webhook(hass, webhook_id, request):
     """Handle incoming webhook POST with image files."""
     try:
-        with async_timeout.timeout(5):
+        async with async_timeout.timeout(5):
             data = dict(await request.post())
     except (asyncio.TimeoutError, aiohttp.web.HTTPException) as error:
         _LOGGER.error("Could not get information from POST <%s>", error)
@@ -97,21 +102,20 @@ class PushCamera(Camera):
         self._last_trip = None
         self._filename = None
         self._expired_listener = None
-        self._state = STATE_IDLE
         self._timeout = timeout
         self.queue = deque([], buffer_size)
         self._current_image = None
         self._image_field = image_field
         self.webhook_id = webhook_id
-        self.webhook_url = hass.components.webhook.async_generate_url(webhook_id)
+        self.webhook_url = webhook.async_generate_url(hass, webhook_id)
 
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
         self.hass.data[PUSH_CAMERA_DATA][self.webhook_id] = self
 
         try:
-            self.hass.components.webhook.async_register(
-                DOMAIN, self.name, self.webhook_id, handle_webhook
+            webhook.async_register(
+                self.hass, DOMAIN, self.name, self.webhook_id, handle_webhook
             )
         except ValueError:
             _LOGGER.error(
@@ -123,15 +127,10 @@ class PushCamera(Camera):
         """HTTP field containing the image file."""
         return self._image_field
 
-    @property
-    def state(self):
-        """Return current state of the camera."""
-        return self._state
-
     async def update_image(self, image, filename):
         """Update the camera image."""
-        if self._state == STATE_IDLE:
-            self._state = STATE_RECORDING
+        if self.state == STATE_IDLE:
+            self._attr_is_recording = True
             self._last_trip = dt_util.utcnow()
             self.queue.clear()
 
@@ -141,7 +140,7 @@ class PushCamera(Camera):
         @callback
         def reset_state(now):
             """Set state to idle after no new images for a period of time."""
-            self._state = STATE_IDLE
+            self._attr_is_recording = False
             self._expired_listener = None
             _LOGGER.debug("Reset state")
             self.async_write_ha_state()
@@ -155,10 +154,12 @@ class PushCamera(Camera):
 
         self.async_write_ha_state()
 
-    async def async_camera_image(self):
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return a still image response."""
         if self.queue:
-            if self._state == STATE_IDLE:
+            if self.state == STATE_IDLE:
                 self.queue.rotate(1)
             self._current_image = self.queue[0]
 

@@ -12,8 +12,11 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SSL,
     CONF_USERNAME,
+    Platform,
 )
+from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_SEASON,
@@ -73,7 +76,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Ombi component platform."""
 
     ombi = pyombi.Ombi(
@@ -95,7 +98,7 @@ def setup(hass, config):
 
     hass.data[DOMAIN] = {"instance": ombi}
 
-    def submit_movie_request(call):
+    def submit_movie_request(call: ServiceCall) -> None:
         """Submit request for movie."""
         name = call.data[ATTR_NAME]
         movies = ombi.search_movie(name)
@@ -105,7 +108,7 @@ def setup(hass, config):
         else:
             raise Warning("No movie found.")
 
-    def submit_tv_request(call):
+    def submit_tv_request(call: ServiceCall) -> None:
         """Submit request for TV show."""
         name = call.data[ATTR_NAME]
         tv_shows = ombi.search_tv(name)
@@ -122,7 +125,7 @@ def setup(hass, config):
         else:
             raise Warning("No TV show found.")
 
-    def submit_music_request(call):
+    def submit_music_request(call: ServiceCall) -> None:
         """Submit request for music album."""
         name = call.data[ATTR_NAME]
         music = ombi.search_music_album(name)
@@ -149,6 +152,6 @@ def setup(hass, config):
         submit_tv_request,
         schema=SUBMIT_TV_REQUEST_SERVICE_SCHEMA,
     )
-    hass.helpers.discovery.load_platform("sensor", DOMAIN, {}, config)
+    hass.helpers.discovery.load_platform(Platform.SENSOR, DOMAIN, {}, config)
 
     return True

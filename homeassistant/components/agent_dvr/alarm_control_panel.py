@@ -1,9 +1,7 @@
 """Support for Agent DVR Alarm Control Panels."""
-from homeassistant.components.alarm_control_panel import AlarmControlPanelEntity
-from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_HOME,
-    SUPPORT_ALARM_ARM_NIGHT,
+from homeassistant.components.alarm_control_panel import (
+    AlarmControlPanelEntity,
+    AlarmControlPanelEntityFeature,
 )
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
@@ -11,6 +9,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_NIGHT,
     STATE_ALARM_DISARMED,
 )
+from homeassistant.helpers.entity import DeviceInfo
 
 from .const import CONNECTION, DOMAIN as AGENT_DOMAIN
 
@@ -37,7 +36,9 @@ class AgentBaseStation(AlarmControlPanelEntity):
 
     _attr_icon = ICON
     _attr_supported_features = (
-        SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_NIGHT
+        AlarmControlPanelEntityFeature.ARM_HOME
+        | AlarmControlPanelEntityFeature.ARM_AWAY
+        | AlarmControlPanelEntityFeature.ARM_NIGHT
     )
 
     def __init__(self, client):
@@ -45,12 +46,12 @@ class AgentBaseStation(AlarmControlPanelEntity):
         self._client = client
         self._attr_name = f"{client.name} {CONST_ALARM_CONTROL_PANEL_NAME}"
         self._attr_unique_id = f"{client.unique}_CP"
-        self._attr_device_info = {
-            "identifiers": {(AGENT_DOMAIN, client.unique)},
-            "manufacturer": "Agent",
-            "model": CONST_ALARM_CONTROL_PANEL_NAME,
-            "sw_version": client.version,
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(AGENT_DOMAIN, client.unique)},
+            manufacturer="Agent",
+            model=CONST_ALARM_CONTROL_PANEL_NAME,
+            sw_version=client.version,
+        )
 
     async def async_update(self):
         """Update the state of the device."""

@@ -27,6 +27,7 @@ from homeassistant.const import (
     STATE_ALARM_TRIGGERED,
     STATE_UNKNOWN,
 )
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 
@@ -337,17 +338,24 @@ async def test_sets_with_correct_code(hass, two_part_alarm):
     await _test_service_call(
         hass, SERVICE_ALARM_ARM_NIGHT, "group_arm", SECOND_ENTITY_ID, 1, "C", **code
     )
-    await _test_no_service_call(
-        hass, SERVICE_ALARM_ARM_CUSTOM_BYPASS, "partial_arm", FIRST_ENTITY_ID, 0, **code
-    )
-    await _test_no_service_call(
-        hass,
-        SERVICE_ALARM_ARM_CUSTOM_BYPASS,
-        "partial_arm",
-        SECOND_ENTITY_ID,
-        1,
-        **code,
-    )
+    with pytest.raises(HomeAssistantError):
+        await _test_no_service_call(
+            hass,
+            SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+            "partial_arm",
+            FIRST_ENTITY_ID,
+            0,
+            **code,
+        )
+    with pytest.raises(HomeAssistantError):
+        await _test_no_service_call(
+            hass,
+            SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+            "partial_arm",
+            SECOND_ENTITY_ID,
+            1,
+            **code,
+        )
 
 
 async def test_sets_with_incorrect_code(hass, two_part_alarm):
@@ -379,14 +387,21 @@ async def test_sets_with_incorrect_code(hass, two_part_alarm):
     await _test_no_service_call(
         hass, SERVICE_ALARM_ARM_NIGHT, "group_arm", SECOND_ENTITY_ID, 1, **code
     )
-    await _test_no_service_call(
-        hass, SERVICE_ALARM_ARM_CUSTOM_BYPASS, "partial_arm", FIRST_ENTITY_ID, 0, **code
-    )
-    await _test_no_service_call(
-        hass,
-        SERVICE_ALARM_ARM_CUSTOM_BYPASS,
-        "partial_arm",
-        SECOND_ENTITY_ID,
-        1,
-        **code,
-    )
+    with pytest.raises(HomeAssistantError):
+        await _test_no_service_call(
+            hass,
+            SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+            "partial_arm",
+            FIRST_ENTITY_ID,
+            0,
+            **code,
+        )
+    with pytest.raises(HomeAssistantError):
+        await _test_no_service_call(
+            hass,
+            SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+            "partial_arm",
+            SECOND_ENTITY_ID,
+            1,
+            **code,
+        )

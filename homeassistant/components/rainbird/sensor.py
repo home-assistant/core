@@ -1,9 +1,14 @@
 """Support for Rain Bird Irrigation system LNK WiFi Module."""
+from __future__ import annotations
+
 import logging
 
 from pyrainbird import RainbirdController
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import (
     DATA_RAINBIRD,
@@ -16,7 +21,12 @@ from . import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up a Rain Bird sensor."""
 
     if discovery_info is None:
@@ -45,6 +55,6 @@ class RainBirdSensor(SensorEntity):
         """Get the latest data and updates the states."""
         _LOGGER.debug("Updating sensor: %s", self.name)
         if self.entity_description.key == SENSOR_TYPE_RAINSENSOR:
-            self._attr_state = self._controller.get_rain_sensor_state()
+            self._attr_native_value = self._controller.get_rain_sensor_state()
         elif self.entity_description.key == SENSOR_TYPE_RAINDELAY:
-            self._attr_state = self._controller.get_rain_delay()
+            self._attr_native_value = self._controller.get_rain_delay()

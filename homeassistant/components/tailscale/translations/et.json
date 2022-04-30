@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "reauth_successful": "Taastuvastamine \u00f5nnestus"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_auth": "Tuvastamine nurjus"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API v\u00f5ti"
+                },
+                "description": "Tailscale API v\u00f5tmed kehtivad 90 p\u00e4eva. Saad luua v\u00e4rske Tailscale API v\u00f5tme aadressil https://login.tailscale.com/admin/settings/authkeys."
+            },
+            "user": {
+                "data": {
+                    "api_key": "API v\u00f5ti",
+                    "tailnet": "Tailnet"
+                },
+                "description": "See sidumine j\u00e4lgib Tailscale v\u00f5rku, see **EI TEE** seda Home Assistantile juurdep\u00e4\u00e4setavaks Tailscale VPN-i kaudu. \n\n Tailscale'iga autentimiseks pead looma API v\u00f5tme aadressil {authkeys_url} . \n\n Tailnet on Tailscale v\u00f5rgu nimi. Leiadselle Tailscale halduspaneeli vasakus \u00fclanurgas (Tailscale logo k\u00f5rval)."
+            }
+        }
+    }
+}

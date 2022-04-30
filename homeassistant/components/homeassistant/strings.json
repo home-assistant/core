@@ -4,6 +4,7 @@
       "arch": "CPU Architecture",
       "dev": "Development",
       "docker": "Docker",
+      "user": "User",
       "hassio": "Supervisor",
       "installation_type": "Installation Type",
       "os_name": "Operating System Family",

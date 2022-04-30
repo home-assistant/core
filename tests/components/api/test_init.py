@@ -1,5 +1,6 @@
 """The tests for the Home Assistant API component."""
 # pylint: disable=protected-access
+from http import HTTPStatus
 import json
 from unittest.mock import patch
 
@@ -26,7 +27,7 @@ async def test_api_list_state_entities(hass, mock_api_client):
     """Test if the debug interface allows us to list state entities."""
     hass.states.async_set("test.entity", "hello")
     resp = await mock_api_client.get(const.URL_API_STATES)
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     json = await resp.json()
 
     remote_data = [ha.State.from_dict(item) for item in json]
@@ -37,7 +38,7 @@ async def test_api_get_state(hass, mock_api_client):
     """Test if the debug interface allows us to get a state."""
     hass.states.async_set("hello.world", "nice", {"attr": 1})
     resp = await mock_api_client.get("/api/states/hello.world")
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     json = await resp.json()
 
     data = ha.State.from_dict(json)
@@ -52,7 +53,7 @@ async def test_api_get_state(hass, mock_api_client):
 async def test_api_get_non_existing_state(hass, mock_api_client):
     """Test if the debug interface allows us to get a state."""
     resp = await mock_api_client.get("/api/states/does_not_exist")
-    assert resp.status == const.HTTP_NOT_FOUND
+    assert resp.status == HTTPStatus.NOT_FOUND
 
 
 async def test_api_state_change(hass, mock_api_client):
@@ -75,7 +76,7 @@ async def test_api_state_change_of_non_existing_entity(hass, mock_api_client):
         "/api/states/test_entity.that_does_not_exist", json={"state": new_state}
     )
 
-    assert resp.status == 201
+    assert resp.status == HTTPStatus.CREATED
 
     assert hass.states.get("test_entity.that_does_not_exist").state == new_state
 
@@ -87,7 +88,7 @@ async def test_api_state_change_with_bad_data(hass, mock_api_client):
         "/api/states/test_entity.that_does_not_exist", json={}
     )
 
-    assert resp.status == 400
+    assert resp.status == HTTPStatus.BAD_REQUEST
 
 
 # pylint: disable=invalid-name
@@ -97,13 +98,13 @@ async def test_api_state_change_to_zero_value(hass, mock_api_client):
         "/api/states/test_entity.with_zero_state", json={"state": 0}
     )
 
-    assert resp.status == 201
+    assert resp.status == HTTPStatus.CREATED
 
     resp = await mock_api_client.post(
         "/api/states/test_entity.with_zero_state", json={"state": 0.0}
     )
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
 
 
 # pylint: disable=invalid-name
@@ -190,7 +191,7 @@ async def test_api_fire_event_with_invalid_json(hass, mock_api_client):
 
     await hass.async_block_till_done()
 
-    assert resp.status == 400
+    assert resp.status == HTTPStatus.BAD_REQUEST
     assert len(test_value) == 0
 
     # Try now with valid but unusable JSON
@@ -200,7 +201,7 @@ async def test_api_fire_event_with_invalid_json(hass, mock_api_client):
 
     await hass.async_block_till_done()
 
-    assert resp.status == 400
+    assert resp.status == HTTPStatus.BAD_REQUEST
     assert len(test_value) == 0
 
 
@@ -319,7 +320,7 @@ async def test_api_template_error(hass, mock_api_client):
         const.URL_API_TEMPLATE, json={"template": "{{ states.sensor.temperature.state"}
     )
 
-    assert resp.status == 400
+    assert resp.status == HTTPStatus.BAD_REQUEST
 
 
 async def test_stream(hass, mock_api_client):
@@ -327,7 +328,7 @@ async def test_stream(hass, mock_api_client):
     listen_count = _listen_count(hass)
 
     resp = await mock_api_client.get(const.URL_API_STREAM)
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     assert listen_count + 1 == _listen_count(hass)
 
     hass.bus.async_fire("test_event")
@@ -344,7 +345,7 @@ async def test_stream_with_restricted(hass, mock_api_client):
     resp = await mock_api_client.get(
         f"{const.URL_API_STREAM}?restrict=test_event1,test_event3"
     )
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     assert listen_count + 1 == _listen_count(hass)
 
     hass.bus.async_fire("test_event1")
@@ -382,18 +383,20 @@ def _listen_count(hass):
     return sum(hass.bus.async_listeners().values())
 
 
-async def test_api_error_log(hass, aiohttp_client, hass_access_token, hass_admin_user):
+async def test_api_error_log(
+    hass, hass_client_no_auth, hass_access_token, hass_admin_user
+):
     """Test if we can fetch the error log."""
     hass.data[DATA_LOGGING] = "/some/path"
     await async_setup_component(hass, "api", {})
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
 
     resp = await client.get(const.URL_API_ERROR_LOG)
     # Verify auth required
-    assert resp.status == 401
+    assert resp.status == HTTPStatus.UNAUTHORIZED
 
     with patch(
-        "aiohttp.web.FileResponse", return_value=web.Response(status=200, text="Hello")
+        "aiohttp.web.FileResponse", return_value=web.Response(text="Hello")
     ) as mock_file:
         resp = await client.get(
             const.URL_API_ERROR_LOG,
@@ -402,7 +405,7 @@ async def test_api_error_log(hass, aiohttp_client, hass_access_token, hass_admin
 
     assert len(mock_file.mock_calls) == 1
     assert mock_file.mock_calls[0][1][0] == hass.data[DATA_LOGGING]
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     assert await resp.text() == "Hello"
 
     # Verify we require admin user
@@ -411,7 +414,7 @@ async def test_api_error_log(hass, aiohttp_client, hass_access_token, hass_admin
         const.URL_API_ERROR_LOG,
         headers={"Authorization": f"Bearer {hass_access_token}"},
     )
-    assert resp.status == 401
+    assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
 async def test_api_fire_event_context(hass, mock_api_client, hass_access_token):
@@ -471,7 +474,7 @@ async def test_event_stream_requires_admin(hass, mock_api_client, hass_admin_use
     """Test user needs to be admin to access event stream."""
     hass_admin_user.groups = []
     resp = await mock_api_client.get("/api/stream")
-    assert resp.status == 401
+    assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
 async def test_states_view_filters(hass, mock_api_client, hass_admin_user):
@@ -480,7 +483,7 @@ async def test_states_view_filters(hass, mock_api_client, hass_admin_user):
     hass.states.async_set("test.entity", "hello")
     hass.states.async_set("test.not_visible_entity", "invisible")
     resp = await mock_api_client.get(const.URL_API_STATES)
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     json = await resp.json()
     assert len(json) == 1
     assert json[0]["entity_id"] == "test.entity"
@@ -490,35 +493,35 @@ async def test_get_entity_state_read_perm(hass, mock_api_client, hass_admin_user
     """Test getting a state requires read permission."""
     hass_admin_user.mock_policy({})
     resp = await mock_api_client.get("/api/states/light.test")
-    assert resp.status == 401
+    assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
 async def test_post_entity_state_admin(hass, mock_api_client, hass_admin_user):
     """Test updating state requires admin."""
     hass_admin_user.groups = []
     resp = await mock_api_client.post("/api/states/light.test")
-    assert resp.status == 401
+    assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
 async def test_delete_entity_state_admin(hass, mock_api_client, hass_admin_user):
     """Test deleting entity requires admin."""
     hass_admin_user.groups = []
     resp = await mock_api_client.delete("/api/states/light.test")
-    assert resp.status == 401
+    assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
 async def test_post_event_admin(hass, mock_api_client, hass_admin_user):
     """Test sending event requires admin."""
     hass_admin_user.groups = []
     resp = await mock_api_client.post("/api/events/state_changed")
-    assert resp.status == 401
+    assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
 async def test_rendering_template_admin(hass, mock_api_client, hass_admin_user):
     """Test rendering a template requires admin."""
     hass_admin_user.groups = []
     resp = await mock_api_client.post(const.URL_API_TEMPLATE)
-    assert resp.status == 401
+    assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
 async def test_rendering_template_legacy_user(
@@ -531,13 +534,13 @@ async def test_rendering_template_legacy_user(
         const.URL_API_TEMPLATE,
         json={"template": "{{ states.sensor.temperature.state }}"},
     )
-    assert resp.status == 401
+    assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
 async def test_api_call_service_not_found(hass, mock_api_client):
     """Test if the API fails 400 if unknown service."""
     resp = await mock_api_client.post("/api/services/test_domain/test_service")
-    assert resp.status == 400
+    assert resp.status == HTTPStatus.BAD_REQUEST
 
 
 async def test_api_call_service_bad_data(hass, mock_api_client):
@@ -556,4 +559,4 @@ async def test_api_call_service_bad_data(hass, mock_api_client):
     resp = await mock_api_client.post(
         "/api/services/test_domain/test_service", json={"hello": 5}
     )
-    assert resp.status == 400
+    assert resp.status == HTTPStatus.BAD_REQUEST

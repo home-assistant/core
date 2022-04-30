@@ -1,4 +1,6 @@
 """Support for myStrom Wifi bulbs."""
+from __future__ import annotations
+
 import logging
 
 from pymystrom.bulb import MyStromBulb
@@ -10,21 +12,20 @@ from homeassistant.components.light import (
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     PLATFORM_SCHEMA,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_EFFECT,
-    SUPPORT_FLASH,
+    ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "myStrom bulb"
-
-SUPPORT_MYSTROM = SUPPORT_BRIGHTNESS | SUPPORT_EFFECT | SUPPORT_FLASH | SUPPORT_COLOR
 
 EFFECT_RAINBOW = "rainbow"
 EFFECT_SUNRISE = "sunrise"
@@ -40,7 +41,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the myStrom light integration."""
     host = config.get(CONF_HOST)
     mac = config.get(CONF_MAC)
@@ -49,8 +55,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     bulb = MyStromBulb(host, mac)
     try:
         await bulb.get_state()
-        if bulb.bulb_type != "rgblamp":
-            _LOGGER.error("Device %s (%s) is not a myStrom bulb", host, mac)
+        if bulb.bulb_type not in ["rgblamp", "strip"]:
+            _LOGGER.error(
+                "Device %s (%s) is not a myStrom bulb nor myStrom LED Strip", host, mac
+            )
             return
     except MyStromConnectionError as err:
         _LOGGER.warning("No route to myStrom bulb: %s", host)
@@ -61,6 +69,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 class MyStromLight(LightEntity):
     """Representation of the myStrom WiFi bulb."""
+
+    _attr_color_mode = ColorMode.HS
+    _attr_supported_color_modes = {ColorMode.HS}
+    _attr_supported_features = LightEntityFeature.EFFECT | LightEntityFeature.FLASH
 
     def __init__(self, bulb, name, mac):
         """Initialize the light."""
@@ -82,11 +94,6 @@ class MyStromLight(LightEntity):
     def unique_id(self):
         """Return a unique ID."""
         return self._mac
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_MYSTROM
 
     @property
     def brightness(self):

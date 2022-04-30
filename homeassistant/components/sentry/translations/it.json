@@ -10,7 +10,7 @@
         "step": {
             "user": {
                 "data": {
-                    "dsn": "DSN"
+                    "dsn": "DSN Sentry"
                 },
                 "description": "Inserisci il tuo DSN Sentry",
                 "title": "Sentry"
@@ -22,12 +22,12 @@
             "init": {
                 "data": {
                     "environment": "Nome opzionale dell'ambiente.",
-                    "event_custom_components": "Inviare eventi da componenti personalizzati",
+                    "event_custom_components": "Invia eventi da componenti personalizzati",
                     "event_handled": "Inviare eventi gestiti",
-                    "event_third_party_packages": "Inviare eventi da pacchetti di terze parti",
+                    "event_third_party_packages": "Invia eventi da pacchetti di terze parti",
                     "logging_event_level": "Il livello di registro Sentry registrer\u00e0 un evento per",
                     "logging_level": "Il livello di registro Sentry registrer\u00e0 i registri cos\u00ec granulari per",
-                    "tracing": "Attivare il tracciamento delle prestazioni",
+                    "tracing": "Attiva il tracciamento delle prestazioni",
                     "tracing_sample_rate": "Frequenza di campionamento del tracciamento; tra 0,0 e 1,0 (1,0 = 100%)"
                 }
             }

@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Already configured. Only a single configuration possible.",
+            "not_compatible": "Unable to get CPU information, this integration is not compatible with your system"
+        },
+        "step": {
+            "user": {
+                "description": "Do you want to start set up?",
+                "title": "CPU Speed"
+            }
+        }
+    },
+    "title": "CPU Speed"
+}

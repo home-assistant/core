@@ -6,15 +6,17 @@ import async_timeout
 import coronavirus
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client, entity_registry, update_coordinator
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.SENSOR]
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Coronavirus component."""
     # Make sure coordinator is initialized.
     await get_coordinator(hass)
@@ -65,7 +67,7 @@ async def get_coordinator(
         return hass.data[DOMAIN]
 
     async def async_get_cases():
-        with async_timeout.timeout(10):
+        async with async_timeout.timeout(10):
             return {
                 case.country: case
                 for case in await coronavirus.get_cases(

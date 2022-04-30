@@ -21,7 +21,7 @@ _LOGGER: Final = logging.getLogger(__name__)
 def host_valid(host: str) -> bool:
     """Return True if hostname or IP address is valid."""
     try:
-        if ipaddress.ip_address(host).version in [4, 6]:
+        if ipaddress.ip_address(host).version in (4, 6):
             return True
     except ValueError:
         pass
@@ -76,6 +76,12 @@ class DuneHDConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, str] | None = None
     ) -> FlowResult:
         """Handle configuration by yaml file."""
+        _LOGGER.warning(
+            "Configuration of the Dune HD integration in YAML is deprecated and will be "
+            "removed in Home Assistant 2022.6; Your existing configuration "
+            "has been imported into the UI automatically and can be safely removed "
+            "from your configuration.yaml file"
+        )
         assert user_input is not None
         host: str = user_input[CONF_HOST]
 

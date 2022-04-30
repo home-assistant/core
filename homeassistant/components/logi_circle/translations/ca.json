@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El compte ja ha estat configurat",
+            "already_configured": "El compte ja est\u00e0 configurat",
             "external_error": "S'ha produ\u00eft una excepci\u00f3 d'un altre flux de dades.",
             "external_setup": "Logi Circle s'ha configurat correctament des d'un altre flux de dades.",
             "missing_configuration": "El component no est\u00e0 configurat. Mira'n la documentaci\u00f3."

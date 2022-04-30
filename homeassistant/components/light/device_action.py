@@ -4,13 +4,6 @@ from __future__ import annotations
 import voluptuous as vol
 
 from homeassistant.components.device_automation import toggle_entity
-from homeassistant.components.light import (
-    ATTR_FLASH,
-    FLASH_SHORT,
-    SUPPORT_FLASH,
-    VALID_BRIGHTNESS_PCT,
-    VALID_FLASH,
-)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DEVICE_ID,
@@ -19,7 +12,8 @@ from homeassistant.const import (
     CONF_TYPE,
     SERVICE_TURN_ON,
 )
-from homeassistant.core import Context, HomeAssistant, HomeAssistantError
+from homeassistant.core import Context, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
@@ -27,10 +21,17 @@ from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 from . import (
     ATTR_BRIGHTNESS_PCT,
     ATTR_BRIGHTNESS_STEP_PCT,
+    ATTR_FLASH,
     DOMAIN,
+    FLASH_SHORT,
+    VALID_BRIGHTNESS_PCT,
+    VALID_FLASH,
+    LightEntityFeature,
     brightness_supported,
     get_supported_color_modes,
 )
+
+# mypy: disallow-any-generics
 
 TYPE_BRIGHTNESS_INCREASE = "brightness_increase"
 TYPE_BRIGHTNESS_DECREASE = "brightness_decrease"
@@ -86,7 +87,9 @@ async def async_call_action_from_config(
     )
 
 
-async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict]:
+async def async_get_actions(
+    hass: HomeAssistant, device_id: str
+) -> list[dict[str, str]]:
     """List device actions."""
     actions = await toggle_entity.async_get_actions(hass, device_id, DOMAIN)
 
@@ -113,13 +116,15 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict]:
                 )
             )
 
-        if supported_features & SUPPORT_FLASH:
+        if supported_features & LightEntityFeature.FLASH:
             actions.append({**base_action, CONF_TYPE: TYPE_FLASH})
 
     return actions
 
 
-async def async_get_action_capabilities(hass: HomeAssistant, config: dict) -> dict:
+async def async_get_action_capabilities(
+    hass: HomeAssistant, config: ConfigType
+) -> dict[str, vol.Schema]:
     """List action capabilities."""
     if config[CONF_TYPE] != toggle_entity.CONF_TURN_ON:
         return {}
@@ -139,7 +144,7 @@ async def async_get_action_capabilities(hass: HomeAssistant, config: dict) -> di
     if brightness_supported(supported_color_modes):
         extra_fields[vol.Optional(ATTR_BRIGHTNESS_PCT)] = VALID_BRIGHTNESS_PCT
 
-    if supported_features & SUPPORT_FLASH:
+    if supported_features & LightEntityFeature.FLASH:
         extra_fields[vol.Optional(ATTR_FLASH)] = VALID_FLASH
 
     return {"extra_fields": vol.Schema(extra_fields)} if extra_fields else {}

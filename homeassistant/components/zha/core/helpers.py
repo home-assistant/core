@@ -8,14 +8,14 @@ from __future__ import annotations
 
 import asyncio
 import binascii
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 import functools
 import itertools
 import logging
 from random import uniform
 import re
-from typing import Any, Callable
+from typing import Any, TypeVar
 
 import voluptuous as vol
 import zigpy.exceptions
@@ -23,6 +23,7 @@ import zigpy.types
 import zigpy.util
 import zigpy.zdo.types as zdo_types
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import State, callback
 
 from .const import (
@@ -34,6 +35,8 @@ from .const import (
 )
 from .registries import BINDABLE_CLUSTERS
 from .typing import ZhaDeviceType, ZigpyClusterType
+
+_T = TypeVar("_T")
 
 
 @dataclass
@@ -130,7 +133,9 @@ def async_is_bindable_target(source_zha_device, target_zha_device):
 
 
 @callback
-def async_get_zha_config_value(config_entry, section, config_key, default):
+def async_get_zha_config_value(
+    config_entry: ConfigEntry, section: str, config_key: str, default: _T
+) -> _T:
     """Get the value for the specified configuration from the zha config entry."""
     return (
         config_entry.options.get(CUSTOM_CONFIGURATION, {})
@@ -167,8 +172,7 @@ async def async_get_zha_device(hass, device_id):
 def find_state_attributes(states: list[State], key: str) -> Iterator[Any]:
     """Find attributes with matching key from states."""
     for state in states:
-        value = state.attributes.get(key)
-        if value is not None:
+        if (value := state.attributes.get(key)) is not None:
             yield value
 
 
@@ -206,23 +210,23 @@ def reduce_attribute(
 class LogMixin:
     """Log helper."""
 
-    def log(self, level, msg, *args):
+    def log(self, level, msg, *args, **kwargs):
         """Log with level."""
         raise NotImplementedError
 
-    def debug(self, msg, *args):
+    def debug(self, msg, *args, **kwargs):
         """Debug level log."""
         return self.log(logging.DEBUG, msg, *args)
 
-    def info(self, msg, *args):
+    def info(self, msg, *args, **kwargs):
         """Info level log."""
         return self.log(logging.INFO, msg, *args)
 
-    def warning(self, msg, *args):
+    def warning(self, msg, *args, **kwargs):
         """Warning method log."""
         return self.log(logging.WARNING, msg, *args)
 
-    def error(self, msg, *args):
+    def error(self, msg, *args, **kwargs):
         """Error level log."""
         return self.log(logging.ERROR, msg, *args)
 

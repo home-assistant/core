@@ -1,10 +1,12 @@
 """Support for Somfy Thermostat Battery."""
-
 from pymfy.api.devices.category import Category
 from pymfy.api.devices.thermostat import Thermostat
 
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import DEVICE_CLASS_BATTERY, PERCENTAGE
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import PERCENTAGE
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import COORDINATOR, DOMAIN
 from .entity import SomfyEntity
@@ -12,7 +14,11 @@ from .entity import SomfyEntity
 SUPPORTED_CATEGORIES = {Category.HVAC.value}
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Somfy sensor platform."""
     domain_data = hass.data[DOMAIN]
     coordinator = domain_data[COORDINATOR]
@@ -29,8 +35,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class SomfyThermostatBatterySensor(SomfyEntity, SensorEntity):
     """Representation of a Somfy thermostat battery."""
 
-    _attr_device_class = DEVICE_CLASS_BATTERY
-    _attr_unit_of_measurement = PERCENTAGE
+    _attr_device_class = SensorDeviceClass.BATTERY
+    _attr_native_unit_of_measurement = PERCENTAGE
 
     def __init__(self, coordinator, device_id):
         """Initialize the Somfy device."""
@@ -43,6 +49,6 @@ class SomfyThermostatBatterySensor(SomfyEntity, SensorEntity):
         self._climate = Thermostat(self.device, self.coordinator.client)
 
     @property
-    def state(self) -> int:
+    def native_value(self) -> int:
         """Return the state of the sensor."""
         return self._climate.get_battery()

@@ -1,4 +1,6 @@
 """Support for HomematicIP Cloud weather devices."""
+from __future__ import annotations
+
 from homematicip.aio.device import (
     AsyncWeatherSensor,
     AsyncWeatherSensorPlus,
@@ -22,6 +24,7 @@ from homeassistant.components.weather import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN as HMIPC_DOMAIN, HomematicipGenericEntity
 from .hap import HomematicipHAP
@@ -46,11 +49,13 @@ HOME_WEATHER_CONDITION = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the HomematicIP weather sensor from a config entry."""
     hap = hass.data[HMIPC_DOMAIN][config_entry.unique_id]
-    entities = []
+    entities: list[HomematicipGenericEntity] = []
     for device in hap.home.devices:
         if isinstance(device, AsyncWeatherSensorPro):
             entities.append(HomematicipWeatherSensorPro(hap, device))
@@ -170,6 +175,6 @@ class HomematicipHomeWeather(HomematicipGenericEntity, WeatherEntity):
         return "Powered by Homematic IP"
 
     @property
-    def condition(self) -> str:
+    def condition(self) -> str | None:
         """Return the current condition."""
         return HOME_WEATHER_CONDITION.get(self._device.weather.weatherCondition)

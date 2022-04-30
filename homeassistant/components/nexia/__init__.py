@@ -1,5 +1,4 @@
 """Support for Nexia / Trane XL Thermostats."""
-from datetime import timedelta
 from functools import partial
 import logging
 
@@ -12,16 +11,14 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import CONF_BRAND, DOMAIN, NEXIA_DEVICE, PLATFORMS, UPDATE_COORDINATOR
+from .const import CONF_BRAND, DOMAIN, PLATFORMS
+from .coordinator import NexiaDataUpdateCoordinator
 from .util import is_invalid_auth_code
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = cv.deprecated(DOMAIN)
-
-DEFAULT_UPDATE_RATE = 120
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -57,30 +54,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.error("HTTP error from Nexia service: %s", http_ex)
         raise ConfigEntryNotReady from http_ex
 
-    async def _async_update_data():
-        """Fetch data from API endpoint."""
-        return await hass.async_add_executor_job(nexia_home.update)
-
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name="Nexia update",
-        update_method=_async_update_data,
-        update_interval=timedelta(seconds=DEFAULT_UPDATE_RATE),
-    )
-
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {
-        NEXIA_DEVICE: nexia_home,
-        UPDATE_COORDINATOR: coordinator,
-    }
+    coordinator = NexiaDataUpdateCoordinator(hass, nexia_home)
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:

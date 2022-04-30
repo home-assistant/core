@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Tjenesten er allerede konfigurert",
             "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
         },
         "error": {
@@ -79,7 +80,7 @@
                     "will_retain": "Testament melding behold",
                     "will_topic": "Testament melding emne"
                 },
-                "description": "Discovery - Hvis oppdagelse er aktivert (anbefales), vil Home Assistant automatisk oppdage enheter og enheter som publiserer konfigurasjonen p\u00e5 MQTT-megleren. Hvis s\u00f8k er deaktivert, m\u00e5 all konfigurasjon utf\u00f8res manuelt.\nF\u00f8dselsmelding - F\u00f8dselsmeldingen vil bli sendt hver gang Home Assistant (re) kobles til MQTT megleren.\nWill message - Will-meldingen vil bli sendt hver gang Home Assistant mister forbindelsen til megleren, b\u00e5de i tilfelle en ren (f.eks. at Home Assistant avsluttes) og i tilfelle en uren (f.eks. hjemmeassistent krasjer eller mister nettverkstilkoblingen) koble fra.",
+                "description": "Oppdagelse - Hvis oppdagelse er aktivert (anbefales), vil Home Assistant automatisk oppdage enheter og entiteter som publiserer konfigurasjonen til MQTT-megleren. Hvis oppdaglse er deaktivert, m\u00e5 all konfigurasjon utf\u00f8res manuelt.\nF\u00f8dselsmelding - F\u00f8dselsmeldingen vil bli sendt hver gang Home Assistant kobler til MQTT megleren.\nWill message - Will-meldingen vil bli sendt hver gang Home Assistant mister forbindelsen til megleren, b\u00e5de i tilfelle en ren (f.eks. at Home Assistant avsluttes) og i tilfelle en uren (f.eks. Home Assistant krasjer eller mister nettverkstilkoblingen) frakobling.",
                 "title": "MQTT-alternativer"
             }
         }

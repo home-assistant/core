@@ -1,15 +1,17 @@
 """Platform for Kostal Plenticore sensors."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import timedelta
 import logging
-from typing import Any, Callable
+from typing import Any
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_ICON, ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -28,8 +30,8 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
-):
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Add kostal plenticore Sensors."""
     plenticore = hass.data[DOMAIN][entry.entry_id]
 
@@ -64,6 +66,7 @@ async def async_setup_entry(
                 sensor_data,
                 PlenticoreDataFormatter.get_method(fmt),
                 plenticore.device_info,
+                None,
             )
         )
 
@@ -95,6 +98,7 @@ async def async_setup_entry(
                 sensor_data,
                 PlenticoreDataFormatter.get_method(fmt),
                 plenticore.device_info,
+                EntityCategory.DIAGNOSTIC,
             )
         )
 
@@ -115,6 +119,7 @@ class PlenticoreDataSensor(CoordinatorEntity, SensorEntity):
         sensor_data: dict[str, Any],
         formatter: Callable[[str], Any],
         device_info: DeviceInfo,
+        entity_category: EntityCategory,
     ):
         """Create a new Sensor Entity for Plenticore process data."""
         super().__init__(coordinator)
@@ -128,6 +133,8 @@ class PlenticoreDataSensor(CoordinatorEntity, SensorEntity):
         self._formatter = formatter
 
         self._device_info = device_info
+
+        self._attr_entity_category = entity_category
 
     @property
     def available(self) -> bool:
@@ -165,7 +172,7 @@ class PlenticoreDataSensor(CoordinatorEntity, SensorEntity):
         return f"{self.platform_name} {self._sensor_name}"
 
     @property
-    def unit_of_measurement(self) -> str | None:
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit of this Sensor Entity or None."""
         return self._sensor_data.get(ATTR_UNIT_OF_MEASUREMENT)
 
@@ -180,12 +187,17 @@ class PlenticoreDataSensor(CoordinatorEntity, SensorEntity):
         return self._sensor_data.get(ATTR_DEVICE_CLASS)
 
     @property
+    def state_class(self) -> str | None:
+        """Return the class of the state of this device, from component STATE_CLASSES."""
+        return self._sensor_data.get(ATTR_STATE_CLASS)
+
+    @property
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
         return self._sensor_data.get(ATTR_ENABLED_DEFAULT, False)
 
     @property
-    def state(self) -> Any | None:
+    def native_value(self) -> Any | None:
         """Return the state of the sensor."""
         if self.coordinator.data is None:
             # None is translated to STATE_UNKNOWN

@@ -54,6 +54,7 @@ SCHEDULE_TYPE_FIXED = "FIXED"
 SCHEDULE_TYPE_FLEX = "FLEX"
 SERVICE_PAUSE_WATERING = "pause_watering"
 SERVICE_RESUME_WATERING = "resume_watering"
+SERVICE_STOP_WATERING = "stop_watering"
 SERVICE_SET_ZONE_MOISTURE = "set_zone_moisture_percent"
 SERVICE_START_MULTIPLE_ZONES = "start_multiple_zone_schedule"
 

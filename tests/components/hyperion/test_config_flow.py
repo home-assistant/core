@@ -3,12 +3,14 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Awaitable
+import dataclasses
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 from hyperion import const
 
 from homeassistant import data_entry_flow
+from homeassistant.components import ssdp
 from homeassistant.components.hyperion.const import (
     CONF_AUTH_ID,
     CONF_CREATE_TOKEN,
@@ -65,39 +67,41 @@ TEST_REQUEST_TOKEN_FAIL = {
     "error": "Token request timeout or denied",
 }
 
-TEST_SSDP_SERVICE_INFO = {
-    "ssdp_location": f"http://{TEST_HOST}:{TEST_PORT_UI}/description.xml",
-    "ssdp_st": "upnp:rootdevice",
-    "deviceType": "urn:schemas-upnp-org:device:Basic:1",
-    "friendlyName": f"Hyperion ({TEST_HOST})",
-    "manufacturer": "Hyperion Open Source Ambient Lighting",
-    "manufacturerURL": "https://www.hyperion-project.org",
-    "modelDescription": "Hyperion Open Source Ambient Light",
-    "modelName": "Hyperion",
-    "modelNumber": "2.0.0-alpha.8",
-    "modelURL": "https://www.hyperion-project.org",
-    "serialNumber": f"{TEST_SYSINFO_ID}",
-    "UDN": f"uuid:{TEST_SYSINFO_ID}",
-    "ports": {
-        "jsonServer": f"{TEST_PORT}",
-        "sslServer": "8092",
-        "protoBuffer": "19445",
-        "flatBuffer": "19400",
+TEST_SSDP_SERVICE_INFO = ssdp.SsdpServiceInfo(
+    ssdp_st="upnp:rootdevice",
+    ssdp_location=f"http://{TEST_HOST}:{TEST_PORT_UI}/description.xml",
+    ssdp_usn=f"uuid:{TEST_SYSINFO_ID}",
+    ssdp_ext="",
+    ssdp_server="Raspbian GNU/Linux 10 (buster)/10 UPnP/1.0 Hyperion/2.0.0-alpha.8",
+    upnp={
+        "deviceType": "urn:schemas-upnp-org:device:Basic:1",
+        "friendlyName": f"Hyperion ({TEST_HOST})",
+        "manufacturer": "Hyperion Open Source Ambient Lighting",
+        "manufacturerURL": "https://www.hyperion-project.org",
+        "modelDescription": "Hyperion Open Source Ambient Light",
+        "modelName": "Hyperion",
+        "modelNumber": "2.0.0-alpha.8",
+        "modelURL": "https://www.hyperion-project.org",
+        "serialNumber": f"{TEST_SYSINFO_ID}",
+        "UDN": f"uuid:{TEST_SYSINFO_ID}",
+        "ports": {
+            "jsonServer": f"{TEST_PORT}",
+            "sslServer": "8092",
+            "protoBuffer": "19445",
+            "flatBuffer": "19400",
+        },
+        "presentationURL": "index.html",
+        "iconList": {
+            "icon": {
+                "mimetype": "image/png",
+                "height": "100",
+                "width": "100",
+                "depth": "32",
+                "url": "img/hyperion/ssdp_icon.png",
+            }
+        },
     },
-    "presentationURL": "index.html",
-    "iconList": {
-        "icon": {
-            "mimetype": "image/png",
-            "height": "100",
-            "width": "100",
-            "depth": "32",
-            "url": "img/hyperion/ssdp_icon.png",
-        }
-    },
-    "ssdp_usn": f"uuid:{TEST_SYSINFO_ID}",
-    "ssdp_ext": "",
-    "ssdp_server": "Raspbian GNU/Linux 10 (buster)/10 UPnP/1.0 Hyperion/2.0.0-alpha.8",
-}
+)
 
 
 async def _create_mock_entry(hass: HomeAssistant) -> MockConfigEntry:
@@ -639,8 +643,9 @@ async def test_ssdp_missing_serial(hass: HomeAssistant) -> None:
     """Check an SSDP flow where no id is provided."""
 
     client = create_mock_client()
-    bad_data = {**TEST_SSDP_SERVICE_INFO}
-    del bad_data["serialNumber"]
+    bad_data = dataclasses.replace(TEST_SSDP_SERVICE_INFO)
+    bad_data.upnp = bad_data.upnp.copy()
+    del bad_data.upnp["serialNumber"]
 
     with patch(
         "homeassistant.components.hyperion.client.HyperionClient", return_value=client
@@ -656,8 +661,9 @@ async def test_ssdp_failure_bad_port_json(hass: HomeAssistant) -> None:
     """Check an SSDP flow with bad json port."""
 
     client = create_mock_client()
-    bad_data: dict[str, Any] = {**TEST_SSDP_SERVICE_INFO}
-    bad_data["ports"]["jsonServer"] = "not_a_port"
+    bad_data = dataclasses.replace(TEST_SSDP_SERVICE_INFO)
+    bad_data.upnp = bad_data.upnp.copy()
+    bad_data.upnp["ports"]["jsonServer"] = "not_a_port"
 
     with patch(
         "homeassistant.components.hyperion.client.HyperionClient", return_value=client
@@ -676,8 +682,8 @@ async def test_ssdp_failure_bad_port_ui(hass: HomeAssistant) -> None:
     client = create_mock_client()
     client.async_is_auth_required = AsyncMock(return_value=TEST_AUTH_REQUIRED_RESP)
 
-    bad_data = {**TEST_SSDP_SERVICE_INFO}
-    bad_data["ssdp_location"] = f"http://{TEST_HOST}:not_a_port/description.xml"
+    bad_data = dataclasses.replace(TEST_SSDP_SERVICE_INFO)
+    bad_data.ssdp_location = f"http://{TEST_HOST}:not_a_port/description.xml"
 
     with patch(
         "homeassistant.components.hyperion.client.HyperionClient", return_value=client

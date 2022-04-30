@@ -16,7 +16,7 @@
                     "name": "Il nome del certificato",
                     "port": "Porta"
                 },
-                "title": "Definire il certificato da testare"
+                "title": "Definire il certificato da provare"
             }
         }
     },

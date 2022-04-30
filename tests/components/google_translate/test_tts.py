@@ -6,17 +6,27 @@ from unittest.mock import patch
 from gtts import gTTSError
 import pytest
 
+from homeassistant.components import media_source, tts
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_ID,
     DOMAIN as DOMAIN_MP,
     SERVICE_PLAY_MEDIA,
 )
-import homeassistant.components.tts as tts
 from homeassistant.config import async_process_ha_core_config
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_service
-from tests.components.tts.test_init import mutagen_mock  # noqa: F401
+from tests.components.tts.conftest import mutagen_mock  # noqa: F401
+
+
+async def get_media_source_url(hass, media_content_id):
+    """Get the media source url."""
+    if media_source.DOMAIN not in hass.config.components:
+        assert await async_setup_component(hass, media_source.DOMAIN, {})
+
+    resolved = await media_source.async_resolve_media(hass, media_content_id)
+    return resolved.url
 
 
 @pytest.fixture(autouse=True)
@@ -67,8 +77,9 @@ async def test_service_say(hass, mock_gtts, calls):
     )
 
     assert len(calls) == 1
+    url = await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
     assert len(mock_gtts.mock_calls) == 2
-    assert calls[0].data[ATTR_MEDIA_CONTENT_ID].find(".mp3") != -1
+    assert url.endswith(".mp3")
 
     assert mock_gtts.mock_calls[0][2] == {
         "text": "There is a person at the front door.",
@@ -96,6 +107,7 @@ async def test_service_say_german_config(hass, mock_gtts, calls):
     )
 
     assert len(calls) == 1
+    await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
     assert len(mock_gtts.mock_calls) == 2
     assert mock_gtts.mock_calls[0][2] == {
         "text": "There is a person at the front door.",
@@ -124,6 +136,7 @@ async def test_service_say_german_service(hass, mock_gtts, calls):
     )
 
     assert len(calls) == 1
+    await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
     assert len(mock_gtts.mock_calls) == 2
     assert mock_gtts.mock_calls[0][2] == {
         "text": "There is a person at the front door.",
@@ -148,5 +161,7 @@ async def test_service_say_error(hass, mock_gtts, calls):
         blocking=True,
     )
 
-    assert len(calls) == 0
+    assert len(calls) == 1
+    with pytest.raises(HomeAssistantError):
+        await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
     assert len(mock_gtts.mock_calls) == 2

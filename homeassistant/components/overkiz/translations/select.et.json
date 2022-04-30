@@ -1,0 +1,13 @@
+{
+    "state": {
+        "overkiz__memorized_simple_volume": {
+            "highest": "K\u00f5rgeim",
+            "standard": "Tavaline"
+        },
+        "overkiz__open_closed_pedestrian": {
+            "closed": "Suletud",
+            "open": "Avatud",
+            "pedestrian": "Pedestrian"
+        }
+    }
+}

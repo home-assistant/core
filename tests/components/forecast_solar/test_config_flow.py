@@ -5,6 +5,7 @@ from homeassistant.components.forecast_solar.const import (
     CONF_AZIMUTH,
     CONF_DAMPING,
     CONF_DECLINATION,
+    CONF_INVERTER_SIZE,
     CONF_MODULES_POWER,
     DOMAIN,
 )
@@ -61,6 +62,11 @@ async def test_options_flow(
 ) -> None:
     """Test config flow options."""
     mock_config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.forecast_solar.async_setup_entry", return_value=True
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
 
@@ -76,6 +82,7 @@ async def test_options_flow(
             CONF_AZIMUTH: 22,
             CONF_MODULES_POWER: 2122,
             CONF_DAMPING: 0.25,
+            CONF_INVERTER_SIZE: 2000,
         },
     )
 
@@ -86,4 +93,5 @@ async def test_options_flow(
         CONF_AZIMUTH: 22,
         CONF_MODULES_POWER: 2122,
         CONF_DAMPING: 0.25,
+        CONF_INVERTER_SIZE: 2000,
     }

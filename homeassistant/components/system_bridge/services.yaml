@@ -42,3 +42,49 @@ open:
       example: "https://www.home-assistant.io"
       selector:
         text:
+send_keypress:
+  name: Send Keyboard Keypress
+  description: Sends a keyboard keypress.
+  fields:
+    bridge:
+      name: Bridge
+      description: The server to send the command to.
+      required: true
+      selector:
+        device:
+          integration: system_bridge
+    key:
+      name: Key
+      description: "Key to press. List available here: http://robotjs.io/docs/syntax#keys"
+      required: true
+      example: "audio_play"
+      selector:
+        text:
+    modifiers:
+      name: Modifiers
+      description: "List of modifier(s). Accepts alt, command/win, control, and shift."
+      required: false
+      default: ""
+      example:
+        - "control"
+        - "shift"
+      selector:
+        text:
+send_text:
+  name: Send Keyboard Text
+  description: Sends text for the server to type.
+  fields:
+    bridge:
+      name: Bridge
+      description: The server to send the command to.
+      required: true
+      selector:
+        device:
+          integration: system_bridge
+    text:
+      name: Text
+      description: "Text to type."
+      required: true
+      example: "Hello world"
+      selector:
+        text:

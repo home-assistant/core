@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 import math
+from typing import Any
 
 from pycomfoconnect import (
     CMD_FAN_MODE_AWAY,
@@ -12,8 +13,11 @@ from pycomfoconnect import (
     SENSOR_FAN_SPEED_MODE,
 )
 
-from homeassistant.components.fan import SUPPORT_SET_SPEED, FanEntity
+from homeassistant.components.fan import FanEntity, FanEntityFeature
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.percentage import (
     int_states_in_range,
     percentage_to_ranged_value,
@@ -34,22 +38,29 @@ CMD_MAPPING = {
 SPEED_RANGE = (1, 3)  # away is not included in speeds and instead mapped to off
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the ComfoConnect fan platform."""
     ccb = hass.data[DOMAIN]
 
-    add_entities([ComfoConnectFan(ccb.name, ccb)], True)
+    add_entities([ComfoConnectFan(ccb)], True)
 
 
 class ComfoConnectFan(FanEntity):
     """Representation of the ComfoConnect fan platform."""
 
-    def __init__(self, name, ccb: ComfoConnectBridge) -> None:
+    _attr_supported_features = FanEntityFeature.SET_SPEED
+    current_speed = None
+
+    def __init__(self, ccb: ComfoConnectBridge) -> None:
         """Initialize the ComfoConnect fan."""
         self._ccb = ccb
-        self._name = name
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register for sensor updates."""
         _LOGGER.debug("Registering for fan speed")
         self.async_on_remove(
@@ -68,7 +79,7 @@ class ComfoConnectFan(FanEntity):
         _LOGGER.debug(
             "Handle update for fan speed (%d): %s", SENSOR_FAN_SPEED_MODE, value
         )
-        self._ccb.data[SENSOR_FAN_SPEED_MODE] = value
+        self.current_speed = value
         self.schedule_update_ha_state()
 
     @property
@@ -84,7 +95,7 @@ class ComfoConnectFan(FanEntity):
     @property
     def name(self):
         """Return the name of the fan."""
-        return self._name
+        return self._ccb.name
 
     @property
     def icon(self):
@@ -92,17 +103,11 @@ class ComfoConnectFan(FanEntity):
         return "mdi:air-conditioner"
 
     @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return SUPPORT_SET_SPEED
-
-    @property
     def percentage(self) -> int | None:
         """Return the current speed percentage."""
-        speed = self._ccb.data.get(SENSOR_FAN_SPEED_MODE)
-        if speed is None:
+        if self.current_speed is None:
             return None
-        return ranged_value_to_percentage(SPEED_RANGE, speed)
+        return ranged_value_to_percentage(SPEED_RANGE, self.current_speed)
 
     @property
     def speed_count(self) -> int:
@@ -110,28 +115,29 @@ class ComfoConnectFan(FanEntity):
         return int_states_in_range(SPEED_RANGE)
 
     def turn_on(
-        self, speed: str = None, percentage=None, preset_mode=None, **kwargs
+        self,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
+        **kwargs,
     ) -> None:
         """Turn on the fan."""
-        self.set_percentage(percentage)
+        if percentage is None:
+            self.set_percentage(1)  # Set fan speed to low
+        else:
+            self.set_percentage(percentage)
 
-    def turn_off(self, **kwargs) -> None:
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn off the fan (to away)."""
         self.set_percentage(0)
 
-    def set_percentage(self, percentage: int):
+    def set_percentage(self, percentage: int) -> None:
         """Set fan speed percentage."""
         _LOGGER.debug("Changing fan speed percentage to %s", percentage)
 
-        if percentage is None:
-            cmd = CMD_FAN_MODE_LOW
-        elif percentage == 0:
+        if percentage == 0:
             cmd = CMD_FAN_MODE_AWAY
         else:
             speed = math.ceil(percentage_to_ranged_value(SPEED_RANGE, percentage))
             cmd = CMD_MAPPING[speed]
 
         self._ccb.comfoconnect.cmd_rmi_request(cmd)
-
-        # Update current mode
-        self.schedule_update_ha_state()

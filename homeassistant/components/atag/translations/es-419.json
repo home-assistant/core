@@ -3,6 +3,9 @@
         "abort": {
             "already_configured": "Solo se puede agregar un dispositivo Atag a Home Assistant"
         },
+        "error": {
+            "unauthorized": "Emparejamiento denegado, verifique el dispositivo para obtener una solicitud de autenticaci\u00f3n"
+        },
         "step": {
             "user": {
                 "data": {

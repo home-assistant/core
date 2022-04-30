@@ -26,8 +26,6 @@ TIME_TYPES = [ARRIVAL_TIME, DEPARTURE_TIME]
 
 DEFAULT_NAME = "Google Travel Time"
 
-TRACKABLE_DOMAINS = ["device_tracker", "sensor", "zone", "person"]
-
 ALL_LANGUAGES = [
     "ar",
     "bg",

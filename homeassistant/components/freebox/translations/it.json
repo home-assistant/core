@@ -5,12 +5,12 @@
         },
         "error": {
             "cannot_connect": "Impossibile connettersi",
-            "register_failed": "Errore in fase di registrazione, si prega di riprovare",
+            "register_failed": "Errore in fase di registrazione, riprova",
             "unknown": "Errore imprevisto"
         },
         "step": {
             "link": {
-                "description": "Fare clic su \"Invia\", quindi toccare la freccia destra sul router per registrare Freebox con Home Assistant.\n\n![Posizione del pulsante sul router](/static/images/config_freebox.png)",
+                "description": "Fai clic su \"Invia\", quindi tocca la freccia destra sul router per registrare Freebox con Home Assistant.\n\n![Posizione del pulsante sul router](/static/images/config_freebox.png)",
                 "title": "Collega il router Freebox"
             },
             "user": {

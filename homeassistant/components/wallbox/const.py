@@ -1,99 +1,50 @@
 """Constants for the Wallbox integration."""
-from homeassistant.const import (
-    CONF_ICON,
-    CONF_NAME,
-    CONF_UNIT_OF_MEASUREMENT,
-    ELECTRIC_CURRENT_AMPERE,
-    ENERGY_KILO_WATT_HOUR,
-    LENGTH_KILOMETERS,
-    PERCENTAGE,
-    POWER_KILO_WATT,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.backports.enum import StrEnum
 
 DOMAIN = "wallbox"
 
 CONF_STATION = "station"
+CHARGER_ADDED_ENERGY_KEY = "added_energy"
+CHARGER_ADDED_RANGE_KEY = "added_range"
+CHARGER_CHARGING_POWER_KEY = "charging_power"
+CHARGER_CHARGING_SPEED_KEY = "charging_speed"
+CHARGER_CHARGING_TIME_KEY = "charging_time"
+CHARGER_COST_KEY = "cost"
+CHARGER_CURRENT_MODE_KEY = "current_mode"
+CHARGER_CURRENT_VERSION_KEY = "currentVersion"
+CHARGER_DATA_KEY = "config_data"
+CHARGER_DEPOT_PRICE_KEY = "depot_price"
+CHARGER_SERIAL_NUMBER_KEY = "serial_number"
+CHARGER_PART_NUMBER_KEY = "part_number"
+CHARGER_SOFTWARE_KEY = "software"
+CHARGER_MAX_AVAILABLE_POWER_KEY = "max_available_power"
+CHARGER_MAX_CHARGING_CURRENT_KEY = "max_charging_current"
+CHARGER_PAUSE_RESUME_KEY = "paused"
+CHARGER_LOCKED_UNLOCKED_KEY = "locked"
+CHARGER_NAME_KEY = "name"
+CHARGER_STATE_OF_CHARGE_KEY = "state_of_charge"
+CHARGER_STATUS_ID_KEY = "status_id"
+CHARGER_STATUS_DESCRIPTION_KEY = "status_description"
+CHARGER_CONNECTIONS = "connections"
 
-CONF_CONNECTIONS = "connections"
-CONF_ROUND = "round"
 
-CONF_SENSOR_TYPES = {
-    "charging_power": {
-        CONF_ICON: "mdi:ev-station",
-        CONF_NAME: "Charging Power",
-        CONF_ROUND: 2,
-        CONF_UNIT_OF_MEASUREMENT: POWER_KILO_WATT,
-        STATE_UNAVAILABLE: False,
-    },
-    "max_available_power": {
-        CONF_ICON: "mdi:ev-station",
-        CONF_NAME: "Max Available Power",
-        CONF_ROUND: 0,
-        CONF_UNIT_OF_MEASUREMENT: ELECTRIC_CURRENT_AMPERE,
-        STATE_UNAVAILABLE: False,
-    },
-    "charging_speed": {
-        CONF_ICON: "mdi:speedometer",
-        CONF_NAME: "Charging Speed",
-        CONF_ROUND: 0,
-        CONF_UNIT_OF_MEASUREMENT: None,
-        STATE_UNAVAILABLE: False,
-    },
-    "added_range": {
-        CONF_ICON: "mdi:map-marker-distance",
-        CONF_NAME: "Added Range",
-        CONF_ROUND: 0,
-        CONF_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
-        STATE_UNAVAILABLE: False,
-    },
-    "added_energy": {
-        CONF_ICON: "mdi:battery-positive",
-        CONF_NAME: "Added Energy",
-        CONF_ROUND: 2,
-        CONF_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-        STATE_UNAVAILABLE: False,
-    },
-    "charging_time": {
-        CONF_ICON: "mdi:timer",
-        CONF_NAME: "Charging Time",
-        CONF_ROUND: None,
-        CONF_UNIT_OF_MEASUREMENT: None,
-        STATE_UNAVAILABLE: False,
-    },
-    "cost": {
-        CONF_ICON: "mdi:ev-station",
-        CONF_NAME: "Cost",
-        CONF_ROUND: None,
-        CONF_UNIT_OF_MEASUREMENT: None,
-        STATE_UNAVAILABLE: False,
-    },
-    "state_of_charge": {
-        CONF_ICON: "mdi:battery-charging-80",
-        CONF_NAME: "State of Charge",
-        CONF_ROUND: None,
-        CONF_UNIT_OF_MEASUREMENT: PERCENTAGE,
-        STATE_UNAVAILABLE: False,
-    },
-    "current_mode": {
-        CONF_ICON: "mdi:ev-station",
-        CONF_NAME: "Current Mode",
-        CONF_ROUND: None,
-        CONF_UNIT_OF_MEASUREMENT: None,
-        STATE_UNAVAILABLE: False,
-    },
-    "depot_price": {
-        CONF_ICON: "mdi:ev-station",
-        CONF_NAME: "Depot Price",
-        CONF_ROUND: 2,
-        CONF_UNIT_OF_MEASUREMENT: None,
-        STATE_UNAVAILABLE: False,
-    },
-    "status_description": {
-        CONF_ICON: "mdi:ev-station",
-        CONF_NAME: "Status Description",
-        CONF_ROUND: None,
-        CONF_UNIT_OF_MEASUREMENT: None,
-        STATE_UNAVAILABLE: False,
-    },
-}
+class ChargerStatus(StrEnum):
+    """Charger Status Description."""
+
+    CHARGING = "Charging"
+    DISCHARGING = "Discharging"
+    PAUSED = "Paused"
+    SCHEDULED = "Scheduled"
+    WAITING_FOR_CAR = "Waiting for car demand"
+    WAITING = "Waiting"
+    DISCONNECTED = "Disconnected"
+    ERROR = "Error"
+    READY = "Ready"
+    LOCKED = "Locked"
+    UPDATING = "Updating"
+    WAITING_IN_QUEUE_POWER_SHARING = "Waiting in queue by Power Sharing"
+    WAITING_IN_QUEUE_POWER_BOOST = "Waiting in queue by Power Boost"
+    WAITING_MID_FAILED = "Waiting MID failed"
+    WAITING_MID_SAFETY = "Waiting MID safety margin exceeded"
+    WAITING_IN_QUEUE_ECO_SMART = "Waiting in queue by Eco-Smart"
+    UNKNOWN = "Unknown"

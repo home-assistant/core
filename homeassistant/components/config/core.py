@@ -7,6 +7,7 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.config import async_check_ha_config_file
 from homeassistant.const import CONF_UNIT_SYSTEM_IMPERIAL, CONF_UNIT_SYSTEM_METRIC
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import location
 
 
@@ -34,7 +35,6 @@ class CheckConfigView(HomeAssistantView):
 
 
 @websocket_api.require_admin
-@websocket_api.async_response
 @websocket_api.websocket_command(
     {
         "type": "config/core/update",
@@ -44,11 +44,12 @@ class CheckConfigView(HomeAssistantView):
         vol.Optional("unit_system"): cv.unit_system,
         vol.Optional("location_name"): str,
         vol.Optional("time_zone"): cv.time_zone,
-        vol.Optional("external_url"): vol.Any(cv.url, None),
-        vol.Optional("internal_url"): vol.Any(cv.url, None),
+        vol.Optional("external_url"): vol.Any(cv.url_no_path, None),
+        vol.Optional("internal_url"): vol.Any(cv.url_no_path, None),
         vol.Optional("currency"): cv.currency,
     }
 )
+@websocket_api.async_response
 async def websocket_update_config(hass, connection, msg):
     """Handle update core config command."""
     data = dict(msg)
@@ -63,11 +64,11 @@ async def websocket_update_config(hass, connection, msg):
 
 
 @websocket_api.require_admin
-@websocket_api.async_response
 @websocket_api.websocket_command({"type": "config/core/detect"})
+@websocket_api.async_response
 async def websocket_detect_config(hass, connection, msg):
     """Detect core config."""
-    session = hass.helpers.aiohttp_client.async_get_clientsession()
+    session = async_get_clientsession(hass)
     location_info = await location.async_detect_location_info(session)
 
     info = {}

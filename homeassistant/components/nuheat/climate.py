@@ -14,16 +14,16 @@ from nuheat.util import (
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
-    HVAC_MODE_AUTO,
-    HVAC_MODE_HEAT,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import event as event_helper
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -42,7 +42,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # The device does not have an off function.
 # To turn it off set to min_temp and PRESET_PERMANENT_HOLD
-OPERATION_LIST = [HVAC_MODE_AUTO, HVAC_MODE_HEAT]
+OPERATION_LIST = [HVACMode.AUTO, HVACMode.HEAT]
 
 PRESET_RUN = "Run Schedule"
 PRESET_TEMPORARY_HOLD = "Temporary Hold"
@@ -60,10 +60,12 @@ SCHEDULE_MODE_TO_PRESET_MODE_MAP = {
     value: key for key, value in PRESET_MODE_TO_SCHEDULE_MODE_MAP.items()
 }
 
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
-
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the NuHeat thermostat(s)."""
     thermostat, coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
@@ -79,6 +81,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class NuHeatThermostat(CoordinatorEntity, ClimateEntity):
     """Representation of a NuHeat Thermostat."""
 
+    _attr_hvac_modes = OPERATION_LIST
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+    )
+
     def __init__(self, coordinator, thermostat, temperature_unit):
         """Initialize the thermostat."""
         super().__init__(coordinator)
@@ -91,11 +98,6 @@ class NuHeatThermostat(CoordinatorEntity, ClimateEntity):
     def name(self):
         """Return the name of the thermostat."""
         return self._thermostat.room
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_FLAGS
 
     @property
     def temperature_unit(self):
@@ -123,24 +125,24 @@ class NuHeatThermostat(CoordinatorEntity, ClimateEntity):
         """Return the unique id."""
         return self.coordinator.last_update_success and self._thermostat.online
 
-    def set_hvac_mode(self, hvac_mode):
+    def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the system mode."""
-        if hvac_mode == HVAC_MODE_AUTO:
+        if hvac_mode == HVACMode.AUTO:
             self._set_schedule_mode(SCHEDULE_RUN)
-        elif hvac_mode == HVAC_MODE_HEAT:
+        elif hvac_mode == HVACMode.HEAT:
             self._set_schedule_mode(SCHEDULE_HOLD)
 
     @property
-    def hvac_mode(self):
+    def hvac_mode(self) -> HVACMode:
         """Return current setting heat or auto."""
         if self._schedule_mode in (SCHEDULE_TEMPORARY_HOLD, SCHEDULE_HOLD):
-            return HVAC_MODE_HEAT
-        return HVAC_MODE_AUTO
+            return HVACMode.HEAT
+        return HVACMode.AUTO
 
     @property
-    def hvac_action(self):
+    def hvac_action(self) -> HVACAction:
         """Return current operation heat or idle."""
-        return CURRENT_HVAC_HEAT if self._thermostat.heating else CURRENT_HVAC_IDLE
+        return HVACAction.HEATING if self._thermostat.heating else HVACAction.IDLE
 
     @property
     def min_temp(self):
@@ -175,11 +177,6 @@ class NuHeatThermostat(CoordinatorEntity, ClimateEntity):
     def preset_modes(self):
         """Return available preset modes."""
         return PRESET_MODES
-
-    @property
-    def hvac_modes(self):
-        """Return list of possible operation modes."""
-        return OPERATION_LIST
 
     def set_preset_mode(self, preset_mode):
         """Update the hold mode of the thermostat."""
@@ -216,7 +213,7 @@ class NuHeatThermostat(CoordinatorEntity, ClimateEntity):
                 preset_mode, SCHEDULE_RUN
             )
         elif self._schedule_mode == SCHEDULE_HOLD or (
-            hvac_mode and hvac_mode == HVAC_MODE_HEAT
+            hvac_mode and hvac_mode == HVACMode.HEAT
         ):
             target_schedule_mode = SCHEDULE_HOLD
 
@@ -284,12 +281,12 @@ class NuHeatThermostat(CoordinatorEntity, ClimateEntity):
         self.async_write_ha_state()
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device_info of the device."""
-        return {
-            "identifiers": {(DOMAIN, self._thermostat.serial_number)},
-            "name": self._thermostat.room,
-            "model": "nVent Signature",
-            "manufacturer": MANUFACTURER,
-            "suggested_area": self._thermostat.room,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._thermostat.serial_number)},
+            name=self._thermostat.room,
+            model="nVent Signature",
+            manufacturer=MANUFACTURER,
+            suggested_area=self._thermostat.room,
+        )

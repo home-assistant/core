@@ -1,4 +1,6 @@
 """Support for eQ-3 Bluetooth Smart thermostats."""
+from __future__ import annotations
+
 import logging
 
 from bluepy.btle import BTLEException  # pylint: disable=import-error
@@ -7,14 +9,11 @@ import voluptuous as vol
 
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
-    HVAC_MODE_AUTO,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
     PRESET_AWAY,
     PRESET_BOOST,
     PRESET_NONE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
+    ClimateEntityFeature,
+    HVACMode,
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
@@ -23,7 +22,13 @@ from homeassistant.const import (
     PRECISION_HALVES,
     TEMP_CELSIUS,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from .const import PRESET_CLOSED, PRESET_NO_HOLD, PRESET_OPEN, PRESET_PERMANENT_HOLD
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,23 +41,37 @@ ATTR_STATE_LOW_BAT = "low_battery"
 ATTR_STATE_AWAY_END = "away_end"
 
 EQ_TO_HA_HVAC = {
-    eq3.Mode.Open: HVAC_MODE_HEAT,
-    eq3.Mode.Closed: HVAC_MODE_OFF,
-    eq3.Mode.Auto: HVAC_MODE_AUTO,
-    eq3.Mode.Manual: HVAC_MODE_HEAT,
-    eq3.Mode.Boost: HVAC_MODE_AUTO,
-    eq3.Mode.Away: HVAC_MODE_HEAT,
+    eq3.Mode.Open: HVACMode.HEAT,
+    eq3.Mode.Closed: HVACMode.OFF,
+    eq3.Mode.Auto: HVACMode.AUTO,
+    eq3.Mode.Manual: HVACMode.HEAT,
+    eq3.Mode.Boost: HVACMode.AUTO,
+    eq3.Mode.Away: HVACMode.HEAT,
 }
 
 HA_TO_EQ_HVAC = {
-    HVAC_MODE_HEAT: eq3.Mode.Manual,
-    HVAC_MODE_OFF: eq3.Mode.Closed,
-    HVAC_MODE_AUTO: eq3.Mode.Auto,
+    HVACMode.HEAT: eq3.Mode.Manual,
+    HVACMode.OFF: eq3.Mode.Closed,
+    HVACMode.AUTO: eq3.Mode.Auto,
 }
 
-EQ_TO_HA_PRESET = {eq3.Mode.Boost: PRESET_BOOST, eq3.Mode.Away: PRESET_AWAY}
+EQ_TO_HA_PRESET = {
+    eq3.Mode.Boost: PRESET_BOOST,
+    eq3.Mode.Away: PRESET_AWAY,
+    eq3.Mode.Manual: PRESET_PERMANENT_HOLD,
+    eq3.Mode.Auto: PRESET_NO_HOLD,
+    eq3.Mode.Open: PRESET_OPEN,
+    eq3.Mode.Closed: PRESET_CLOSED,
+}
 
-HA_TO_EQ_PRESET = {PRESET_BOOST: eq3.Mode.Boost, PRESET_AWAY: eq3.Mode.Away}
+HA_TO_EQ_PRESET = {
+    PRESET_BOOST: eq3.Mode.Boost,
+    PRESET_AWAY: eq3.Mode.Away,
+    PRESET_PERMANENT_HOLD: eq3.Mode.Manual,
+    PRESET_NO_HOLD: eq3.Mode.Auto,
+    PRESET_OPEN: eq3.Mode.Open,
+    PRESET_CLOSED: eq3.Mode.Closed,
+}
 
 
 DEVICE_SCHEMA = vol.Schema({vol.Required(CONF_MAC): cv.string})
@@ -61,10 +80,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_DEVICES): vol.Schema({cv.string: DEVICE_SCHEMA})}
 )
 
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the eQ-3 BLE thermostats."""
     devices = []
 
@@ -78,16 +100,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class EQ3BTSmartThermostat(ClimateEntity):
     """Representation of an eQ-3 Bluetooth Smart thermostat."""
 
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+    )
+
     def __init__(self, _mac, _name):
         """Initialize the thermostat."""
         # We want to avoid name clash with this module.
         self._name = _name
+        self._mac = _mac
         self._thermostat = eq3.Thermostat(_mac)
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_FLAGS
 
     @property
     def available(self) -> bool:
@@ -121,8 +143,7 @@ class EQ3BTSmartThermostat(ClimateEntity):
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
-        if temperature is None:
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
         self._thermostat.target_temperature = temperature
 
@@ -130,7 +151,7 @@ class EQ3BTSmartThermostat(ClimateEntity):
     def hvac_mode(self):
         """Return the current operation mode."""
         if self._thermostat.mode < 0:
-            return HVAC_MODE_OFF
+            return HVACMode.OFF
         return EQ_TO_HA_HVAC[self._thermostat.mode]
 
     @property
@@ -140,8 +161,6 @@ class EQ3BTSmartThermostat(ClimateEntity):
 
     def set_hvac_mode(self, hvac_mode):
         """Set operation mode."""
-        if self.preset_mode:
-            return
         self._thermostat.mode = HA_TO_EQ_HVAC[hvac_mode]
 
     @property
@@ -171,7 +190,7 @@ class EQ3BTSmartThermostat(ClimateEntity):
     def preset_mode(self):
         """Return the current preset mode, e.g., home, away, temp.
 
-        Requires SUPPORT_PRESET_MODE.
+        Requires ClimateEntityFeature.PRESET_MODE.
         """
         return EQ_TO_HA_PRESET.get(self._thermostat.mode)
 
@@ -179,14 +198,19 @@ class EQ3BTSmartThermostat(ClimateEntity):
     def preset_modes(self):
         """Return a list of available preset modes.
 
-        Requires SUPPORT_PRESET_MODE.
+        Requires ClimateEntityFeature.PRESET_MODE.
         """
         return list(HA_TO_EQ_PRESET)
+
+    @property
+    def unique_id(self) -> str:
+        """Return the MAC address of the thermostat."""
+        return format_mac(self._mac)
 
     def set_preset_mode(self, preset_mode):
         """Set new preset mode."""
         if preset_mode == PRESET_NONE:
-            self.set_hvac_mode(HVAC_MODE_HEAT)
+            self.set_hvac_mode(HVACMode.HEAT)
         self._thermostat.mode = HA_TO_EQ_PRESET[preset_mode]
 
     def update(self):

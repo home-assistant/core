@@ -1,0 +1,75 @@
+{
+  "825": {
+    "type": 5,
+    "serial": "825",
+    "name": "Fire Door",
+    "setting": {
+      "instantTrigger": false,
+      "away2": 1,
+      "away": 1,
+      "home2": 1,
+      "home": 1,
+      "off": 0
+    },
+    "status": {
+      "triggered": false
+    },
+    "flags": {
+      "swingerShutdown": false,
+      "lowBattery": false,
+      "offline": false
+    }
+  },
+  "14": {
+    "type": 12,
+    "serial": "14",
+    "name": "Front Door",
+    "setting": {
+      "instantTrigger": false,
+      "away2": 1,
+      "away": 1,
+      "home2": 1,
+      "home": 1,
+      "off": 0
+    },
+    "status": {
+      "triggered": false
+    },
+    "flags": {
+      "swingerShutdown": false,
+      "lowBattery": false,
+      "offline": false
+    }
+  },
+  "987": {
+    "serial": "987",
+    "type": 16,
+    "status": {
+      "pinPadState": 0,
+      "lockState": 1,
+      "pinPadOffline": false,
+      "pinPadLowBattery": false,
+      "lockDisabled": false,
+      "lockLowBattery": false,
+      "calibrationErrDelta": 0,
+      "calibrationErrZero": 0,
+      "lockJamState": 0
+    },
+    "name": "Front Door",
+    "deviceGroupID": 1,
+    "firmwareVersion": "1.0.0",
+    "bootVersion": "1.0.0",
+    "setting": {
+      "autoLock": 3,
+      "away": 1,
+      "home": 1,
+      "awayToOff": 0,
+      "homeToOff": 1
+    },
+    "flags": {
+      "swingerShutdown": false,
+      "lowBattery": false,
+      "offline": false
+    }
+  }
+}

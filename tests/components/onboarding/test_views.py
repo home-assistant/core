@@ -1,5 +1,6 @@
 """Test the onboarding views."""
 import asyncio
+from http import HTTPStatus
 import os
 from unittest.mock import patch
 
@@ -7,20 +8,12 @@ import pytest
 
 from homeassistant.components import onboarding
 from homeassistant.components.onboarding import const, views
-from homeassistant.const import HTTP_FORBIDDEN
 from homeassistant.helpers import area_registry as ar
 from homeassistant.setup import async_setup_component
 
 from . import mock_storage
 
 from tests.common import CLIENT_ID, CLIENT_REDIRECT_URI, register_auth_provider
-from tests.components.met.conftest import mock_weather  # noqa: F401
-
-
-@pytest.fixture(autouse=True)
-def always_mock_weather(mock_weather):  # noqa: F811
-    """Mock the Met weather provider."""
-    pass
 
 
 @pytest.fixture(autouse=True)
@@ -91,14 +84,29 @@ async def mock_supervisor_fixture(hass, aioclient_mock):
         yield
 
 
-async def test_onboarding_progress(hass, hass_storage, aiohttp_client):
+@pytest.fixture
+def mock_default_integrations():
+    """Mock the default integrations set up during onboarding."""
+    with patch(
+        "homeassistant.components.rpi_power.config_flow.new_under_voltage"
+    ), patch(
+        "homeassistant.components.rpi_power.binary_sensor.new_under_voltage"
+    ), patch(
+        "homeassistant.components.met.async_setup_entry", return_value=True
+    ), patch(
+        "homeassistant.components.radio_browser.async_setup_entry", return_value=True
+    ):
+        yield
+
+
+async def test_onboarding_progress(hass, hass_storage, hass_client_no_auth):
     """Test fetching progress."""
     mock_storage(hass_storage, {"done": ["hello"]})
 
     assert await async_setup_component(hass, "onboarding", {})
     await hass.async_block_till_done()
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
 
     with patch.object(views, "STEPS", ["hello", "world"]):
         resp = await client.get("/api/onboarding")
@@ -110,7 +118,7 @@ async def test_onboarding_progress(hass, hass_storage, aiohttp_client):
     assert data[1] == {"step": "world", "done": False}
 
 
-async def test_onboarding_user_already_done(hass, hass_storage, aiohttp_client):
+async def test_onboarding_user_already_done(hass, hass_storage, hass_client_no_auth):
     """Test creating a new user when user step already done."""
     mock_storage(hass_storage, {"done": [views.STEP_USER]})
 
@@ -118,7 +126,7 @@ async def test_onboarding_user_already_done(hass, hass_storage, aiohttp_client):
         assert await async_setup_component(hass, "onboarding", {})
         await hass.async_block_till_done()
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
 
     resp = await client.post(
         "/api/onboarding/users",
@@ -131,16 +139,17 @@ async def test_onboarding_user_already_done(hass, hass_storage, aiohttp_client):
         },
     )
 
-    assert resp.status == HTTP_FORBIDDEN
+    assert resp.status == HTTPStatus.FORBIDDEN
 
 
-async def test_onboarding_user(hass, hass_storage, aiohttp_client):
+async def test_onboarding_user(hass, hass_storage, hass_client_no_auth):
     """Test creating a new user."""
     assert await async_setup_component(hass, "person", {})
     assert await async_setup_component(hass, "onboarding", {})
     await hass.async_block_till_done()
 
-    client = await aiohttp_client(hass.http.app)
+    cur_users = len(await hass.auth.async_get_users())
+    client = await hass_client_no_auth()
 
     resp = await client.post(
         "/api/onboarding/users",
@@ -160,9 +169,9 @@ async def test_onboarding_user(hass, hass_storage, aiohttp_client):
     assert "auth_code" in data
 
     users = await hass.auth.async_get_users()
-    assert len(users) == 1
-    user = users[0]
-    assert user.name == "Test Name"
+    assert len(await hass.auth.async_get_users()) == cur_users + 1
+    user = next((user for user in users if user.name == "Test Name"), None)
+    assert user is not None
     assert len(user.credentials) == 1
     assert user.credentials[0].data["username"] == "test-user"
     assert len(hass.data["person"][1].async_items()) == 1
@@ -194,14 +203,14 @@ async def test_onboarding_user(hass, hass_storage, aiohttp_client):
     ]
 
 
-async def test_onboarding_user_invalid_name(hass, hass_storage, aiohttp_client):
+async def test_onboarding_user_invalid_name(hass, hass_storage, hass_client_no_auth):
     """Test not providing name."""
     mock_storage(hass_storage, {"done": []})
 
     assert await async_setup_component(hass, "onboarding", {})
     await hass.async_block_till_done()
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
 
     resp = await client.post(
         "/api/onboarding/users",
@@ -216,14 +225,14 @@ async def test_onboarding_user_invalid_name(hass, hass_storage, aiohttp_client):
     assert resp.status == 400
 
 
-async def test_onboarding_user_race(hass, hass_storage, aiohttp_client):
+async def test_onboarding_user_race(hass, hass_storage, hass_client_no_auth):
     """Test race condition on creating new user."""
     mock_storage(hass_storage, {"done": ["hello"]})
 
     assert await async_setup_component(hass, "onboarding", {})
     await hass.async_block_till_done()
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
 
     resp1 = client.post(
         "/api/onboarding/users",
@@ -248,7 +257,7 @@ async def test_onboarding_user_race(hass, hass_storage, aiohttp_client):
 
     res1, res2 = await asyncio.gather(resp1, resp2)
 
-    assert sorted([res1.status, res2.status]) == [200, HTTP_FORBIDDEN]
+    assert sorted([res1.status, res2.status]) == [HTTPStatus.OK, HTTPStatus.FORBIDDEN]
 
 
 async def test_onboarding_integration(hass, hass_storage, hass_client, hass_admin_user):
@@ -288,8 +297,8 @@ async def test_onboarding_integration(hass, hass_storage, hass_client, hass_admi
     )
 
     # Onboarding refresh token and new refresh token
-    for user in await hass.auth.async_get_users():
-        assert len(user.refresh_tokens) == 2, user
+    user = await hass.auth.async_get_user(hass_admin_user.id)
+    assert len(user.refresh_tokens) == 2, user
 
 
 async def test_onboarding_integration_missing_credential(
@@ -325,10 +334,16 @@ async def test_onboarding_integration_invalid_redirect_uri(
 
     client = await hass_client()
 
-    resp = await client.post(
-        "/api/onboarding/integration",
-        json={"client_id": CLIENT_ID, "redirect_uri": "http://invalid-redirect.uri"},
-    )
+    with patch(
+        "homeassistant.components.auth.indieauth.fetch_redirect_uris", return_value=[]
+    ):
+        resp = await client.post(
+            "/api/onboarding/integration",
+            json={
+                "client_id": CLIENT_ID,
+                "redirect_uri": "http://invalid-redirect.uri",
+            },
+        )
 
     assert resp.status == 400
 
@@ -340,14 +355,16 @@ async def test_onboarding_integration_invalid_redirect_uri(
         assert len(user.refresh_tokens) == 1, user
 
 
-async def test_onboarding_integration_requires_auth(hass, hass_storage, aiohttp_client):
+async def test_onboarding_integration_requires_auth(
+    hass, hass_storage, hass_client_no_auth
+):
     """Test finishing integration step."""
     mock_storage(hass_storage, {"done": [const.STEP_USER]})
 
     assert await async_setup_component(hass, "onboarding", {})
     await hass.async_block_till_done()
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
 
     resp = await client.post(
         "/api/onboarding/integration", json={"client_id": CLIENT_ID}
@@ -356,8 +373,46 @@ async def test_onboarding_integration_requires_auth(hass, hass_storage, aiohttp_
     assert resp.status == 401
 
 
-async def test_onboarding_core_sets_up_met(hass, hass_storage, hass_client):
+async def test_onboarding_core_sets_up_met(
+    hass, hass_storage, hass_client, mock_default_integrations
+):
     """Test finishing the core step."""
+    mock_storage(hass_storage, {"done": [const.STEP_USER]})
+
+    assert await async_setup_component(hass, "onboarding", {})
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+    resp = await client.post("/api/onboarding/core_config")
+
+    assert resp.status == 200
+
+    await hass.async_block_till_done()
+    assert len(hass.config_entries.async_entries("met")) == 1
+
+
+async def test_onboarding_core_sets_up_radio_browser(
+    hass, hass_storage, hass_client, mock_default_integrations
+):
+    """Test finishing the core step set up the radio browser."""
+    mock_storage(hass_storage, {"done": [const.STEP_USER]})
+
+    assert await async_setup_component(hass, "onboarding", {})
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+    resp = await client.post("/api/onboarding/core_config")
+
+    assert resp.status == 200
+
+    await hass.async_block_till_done()
+    assert len(hass.config_entries.async_entries("radio_browser")) == 1
+
+
+async def test_onboarding_core_sets_up_rpi_power(
+    hass, hass_storage, hass_client, aioclient_mock, rpi, mock_default_integrations
+):
+    """Test that the core step sets up rpi_power on RPi."""
     mock_storage(hass_storage, {"done": [const.STEP_USER]})
 
     assert await async_setup_component(hass, "onboarding", {})
@@ -370,54 +425,27 @@ async def test_onboarding_core_sets_up_met(hass, hass_storage, hass_client):
     assert resp.status == 200
 
     await hass.async_block_till_done()
-    assert len(hass.states.async_entity_ids("weather")) == 1
-
-
-async def test_onboarding_core_sets_up_rpi_power(
-    hass, hass_storage, hass_client, aioclient_mock, rpi
-):
-    """Test that the core step sets up rpi_power on RPi."""
-    mock_storage(hass_storage, {"done": [const.STEP_USER]})
-    await async_setup_component(hass, "persistent_notification", {})
-
-    assert await async_setup_component(hass, "onboarding", {})
-    await hass.async_block_till_done()
-
-    client = await hass_client()
-
-    with patch(
-        "homeassistant.components.rpi_power.config_flow.new_under_voltage"
-    ), patch("homeassistant.components.rpi_power.binary_sensor.new_under_voltage"):
-        resp = await client.post("/api/onboarding/core_config")
-
-        assert resp.status == 200
-
-        await hass.async_block_till_done()
 
     rpi_power_state = hass.states.get("binary_sensor.rpi_power_status")
     assert rpi_power_state
 
 
 async def test_onboarding_core_no_rpi_power(
-    hass, hass_storage, hass_client, aioclient_mock, no_rpi
+    hass, hass_storage, hass_client, aioclient_mock, no_rpi, mock_default_integrations
 ):
     """Test that the core step do not set up rpi_power on non RPi."""
     mock_storage(hass_storage, {"done": [const.STEP_USER]})
-    await async_setup_component(hass, "persistent_notification", {})
 
     assert await async_setup_component(hass, "onboarding", {})
     await hass.async_block_till_done()
 
     client = await hass_client()
 
-    with patch(
-        "homeassistant.components.rpi_power.config_flow.new_under_voltage"
-    ), patch("homeassistant.components.rpi_power.binary_sensor.new_under_voltage"):
-        resp = await client.post("/api/onboarding/core_config")
+    resp = await client.post("/api/onboarding/core_config")
 
-        assert resp.status == 200
+    assert resp.status == 200
 
-        await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     rpi_power_state = hass.states.get("binary_sensor.rpi_power_status")
     assert not rpi_power_state
@@ -440,3 +468,38 @@ async def test_onboarding_analytics(hass, hass_storage, hass_client, hass_admin_
 
     resp = await client.post("/api/onboarding/analytics")
     assert resp.status == 403
+
+
+async def test_onboarding_installation_type(hass, hass_storage, hass_client):
+    """Test returning installation type during onboarding."""
+    mock_storage(hass_storage, {"done": []})
+
+    assert await async_setup_component(hass, "onboarding", {})
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+
+    with patch(
+        "homeassistant.components.onboarding.views.async_get_system_info",
+        return_value={"installation_type": "Home Assistant Core"},
+    ):
+        resp = await client.get("/api/onboarding/installation_type")
+
+        assert resp.status == 200
+
+        resp_content = await resp.json()
+        assert resp_content["installation_type"] == "Home Assistant Core"
+
+
+async def test_onboarding_installation_type_after_done(hass, hass_storage, hass_client):
+    """Test raising for installation type after onboarding."""
+    mock_storage(hass_storage, {"done": [const.STEP_USER]})
+
+    assert await async_setup_component(hass, "onboarding", {})
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+
+    resp = await client.get("/api/onboarding/installation_type")
+
+    assert resp.status == 401

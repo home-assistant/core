@@ -23,7 +23,7 @@
                 "data": {
                     "flow_impl": "Leverancier"
                 },
-                "description": "Wil je beginnen met instellen?",
+                "description": "Wilt u beginnen met instellen?",
                 "title": "Kies een authenticatie methode"
             }
         }

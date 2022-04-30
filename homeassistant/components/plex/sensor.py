@@ -1,12 +1,18 @@
 """Support for Plex media server monitoring."""
+from __future__ import annotations
+
 import logging
 
 from plexapi.exceptions import NotFound
 import requests.exceptions
 
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     CONF_SERVER_IDENTIFIER,
@@ -16,6 +22,7 @@ from .const import (
     PLEX_UPDATE_SENSOR_SIGNAL,
     SERVERS,
 )
+from .helpers import pretty_title
 
 LIBRARY_ATTRIBUTE_TYPES = {
     "artist": ["artist", "album"],
@@ -28,6 +35,11 @@ LIBRARY_PRIMARY_LIBTYPE = {
     "artist": "track",
 }
 
+LIBRARY_RECENT_LIBTYPE = {
+    "show": "episode",
+    "artist": "album",
+}
+
 LIBRARY_ICON_LOOKUP = {
     "artist": "mdi:music",
     "movie": "mdi:movie",
@@ -38,7 +50,11 @@ LIBRARY_ICON_LOOKUP = {
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up Plex sensor from a config entry."""
     server_id = config_entry.data[CONF_SERVER_IDENTIFIER]
     plexserver = hass.data[PLEX_DOMAIN][SERVERS][server_id]
@@ -62,7 +78,7 @@ class PlexSensor(SensorEntity):
         self._attr_name = NAME_FORMAT.format(plex_server.friendly_name)
         self._attr_should_poll = False
         self._attr_unique_id = f"sensor-{plex_server.machine_identifier}"
-        self._attr_unit_of_measurement = "Watching"
+        self._attr_native_unit_of_measurement = "Watching"
 
         self._server = plex_server
         self.async_refresh_sensor = Debouncer(
@@ -87,7 +103,7 @@ class PlexSensor(SensorEntity):
     async def _async_refresh_sensor(self):
         """Set instance object and trigger an entity state update."""
         _LOGGER.debug("Refreshing sensor [%s]", self.unique_id)
-        self._attr_state = len(self._server.sensor_attributes)
+        self._attr_native_value = len(self._server.sensor_attributes)
         self.async_write_ha_state()
 
     @property
@@ -96,18 +112,19 @@ class PlexSensor(SensorEntity):
         return self._server.sensor_attributes
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo | None:
         """Return a device description for device registry."""
         if self.unique_id is None:
             return None
 
-        return {
-            "identifiers": {(PLEX_DOMAIN, self._server.machine_identifier)},
-            "manufacturer": "Plex",
-            "model": "Plex Media Server",
-            "name": self._server.friendly_name,
-            "sw_version": self._server.version,
-        }
+        return DeviceInfo(
+            identifiers={(PLEX_DOMAIN, self._server.machine_identifier)},
+            manufacturer="Plex",
+            model="Plex Media Server",
+            name=self._server.friendly_name,
+            sw_version=self._server.version,
+            configuration_url=f"{self._server.url_in_use}/web",
+        )
 
 
 class PlexLibrarySectionSensor(SensorEntity):
@@ -128,7 +145,7 @@ class PlexLibrarySectionSensor(SensorEntity):
         self._attr_name = f"{self.server_name} Library - {plex_library_section.title}"
         self._attr_should_poll = False
         self._attr_unique_id = f"library-{self.server_id}-{plex_library_section.uuid}"
-        self._attr_unit_of_measurement = "Items"
+        self._attr_native_unit_of_measurement = "Items"
 
     async def async_added_to_hass(self):
         """Run when about to be added to hass."""
@@ -164,7 +181,7 @@ class PlexLibrarySectionSensor(SensorEntity):
             self.library_type, self.library_type
         )
 
-        self._attr_state = self.library_section.totalViewSize(
+        self._attr_native_value = self.library_section.totalViewSize(
             libtype=primary_libtype, includeCollections=False
         )
         for libtype in LIBRARY_ATTRIBUTE_TYPES.get(self.library_type, []):
@@ -174,16 +191,28 @@ class PlexLibrarySectionSensor(SensorEntity):
                 libtype=libtype, includeCollections=False
             )
 
+        recent_libtype = LIBRARY_RECENT_LIBTYPE.get(
+            self.library_type, self.library_type
+        )
+        recently_added = self.library_section.recentlyAdded(
+            maxresults=1, libtype=recent_libtype
+        )
+        if recently_added:
+            media = recently_added[0]
+            self._attr_extra_state_attributes["last_added_item"] = pretty_title(media)
+            self._attr_extra_state_attributes["last_added_timestamp"] = media.addedAt
+
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo | None:
         """Return a device description for device registry."""
         if self.unique_id is None:
             return None
 
-        return {
-            "identifiers": {(PLEX_DOMAIN, self.server_id)},
-            "manufacturer": "Plex",
-            "model": "Plex Media Server",
-            "name": self.server_name,
-            "sw_version": self._server.version,
-        }
+        return DeviceInfo(
+            identifiers={(PLEX_DOMAIN, self.server_id)},
+            manufacturer="Plex",
+            model="Plex Media Server",
+            name=self.server_name,
+            sw_version=self._server.version,
+            configuration_url=f"{self._server.url_in_use}/web",
+        )

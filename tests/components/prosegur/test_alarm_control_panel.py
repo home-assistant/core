@@ -48,7 +48,7 @@ def mock_status(request):
 
 async def test_entity_registry(hass, mock_auth, mock_status):
     """Tests that the devices are registered in the entity registry."""
-    await setup_platform(hass, ALARM_DOMAIN)
+    await setup_platform(hass)
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
 
     entry = entity_registry.async_get(PROSEGUR_ALARM_ENTITY)
@@ -74,7 +74,7 @@ async def test_connection_error(hass, mock_auth):
 
     with patch("pyprosegur.installation.Installation.retrieve", return_value=install):
 
-        await setup_platform(hass, ALARM_DOMAIN)
+        await setup_platform(hass)
 
         await hass.async_block_till_done()
 
@@ -106,7 +106,7 @@ async def test_arm(hass, mock_auth, code, alarm_service, alarm_state):
     install.status = code
 
     with patch("pyprosegur.installation.Installation.retrieve", return_value=install):
-        await setup_platform(hass, ALARM_DOMAIN)
+        await setup_platform(hass)
 
         await hass.services.async_call(
             ALARM_DOMAIN,

@@ -10,6 +10,7 @@
             "os_version": "\u64cd\u4f5c\u7cfb\u7edf\u7248\u672c",
             "python_version": "Python \u7248\u672c",
             "timezone": "\u65f6\u533a",
+            "user": "\u7528\u6237",
             "version": "\u7248\u672c",
             "virtualenv": "\u865a\u62df\u73af\u5883"
         }

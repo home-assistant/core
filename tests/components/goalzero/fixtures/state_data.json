@@ -1,0 +1,38 @@
+{
+  "thingName": "yeti123456789012",
+  "v12PortStatus": 0,
+  "usbPortStatus": 0,
+  "acPortStatus": 1,
+  "backlight": 1,
+  "app_online": 0,
+  "wattsIn": 0.0,
+  "ampsIn": 0.0,
+  "wattsOut": 50.5,
+  "ampsOut": 2.1,
+  "whOut": 5.23,
+  "whStored": 1330,
+  "volts": 12.0,
+  "socPercent": 95,
+  "isCharging": 0,
+  "inputDetected": 0,
+  "timeToEmptyFull": -1,
+  "temperature": 25,
+  "wifiStrength": -62,
+  "ssid": "wifi",
+  "ipAddr": "1.2.3.4",
+  "timestamp": 1720984,
+  "firmwareVersion": "1.5.7",
+  "version": 3,
+  "ota": {
+    "delay": 0,
+    "status": "000-000-100_001-000-100_002-000-100_003-000-100"
+  },
+  "notify": {
+    "enabled": 1048575,
+    "trigger": 0
+  },
+  "foreignAcsry": {
+    "model": "Yeti MPPT",
+    "firmwareVersion": "1.1.2"
+  }
+}

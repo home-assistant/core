@@ -1,7 +1,9 @@
 """Support for media browsing."""
 import asyncio
+import contextlib
 import logging
 
+from homeassistant.components import media_source
 from homeassistant.components.media_player import BrowseError, BrowseMedia
 from homeassistant.components.media_player.const import (
     MEDIA_CLASS_ALBUM,
@@ -146,8 +148,7 @@ async def item_payload(item, get_thumbnail_url=None):
     elif "channelid" in item:
         media_content_type = MEDIA_TYPE_CHANNEL
         media_content_id = f"{item['channelid']}"
-        broadcasting = item.get("broadcastnow")
-        if broadcasting:
+        if broadcasting := item.get("broadcastnow"):
             show = broadcasting.get("title")
             title = f"{title} - {show}"
         can_play = True
@@ -185,7 +186,16 @@ async def item_payload(item, get_thumbnail_url=None):
     )
 
 
-async def library_payload():
+def media_source_content_filter(item: BrowseMedia) -> bool:
+    """Content filter for media sources."""
+    # Filter out cameras using PNG over MJPEG. They don't work in Kodi.
+    return not (
+        item.media_content_id.startswith("media-source://camera/")
+        and item.media_content_type == "image/png"
+    )
+
+
+async def library_payload(hass):
     """
     Create response payload to describe contents of a specific library.
 
@@ -222,6 +232,19 @@ async def library_payload():
             ]
         )
     )
+
+    for child in library_info.children:
+        child.thumbnail = "https://brands.home-assistant.io/_/kodi/logo.png"
+
+    with contextlib.suppress(media_source.BrowseError):
+        item = await media_source.async_browse_media(
+            hass, None, content_filter=media_source_content_filter
+        )
+        # If domain is None, it's overview of available sources
+        if item.domain is None:
+            library_info.children.extend(item.children)
+        else:
+            library_info.children.append(item)
 
     return library_info
 

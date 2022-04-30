@@ -1,5 +1,5 @@
 """Test HomeKit util module."""
-from unittest.mock import Mock
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 import voluptuous as vol
@@ -25,25 +25,22 @@ from homeassistant.components.homekit.const import (
 )
 from homeassistant.components.homekit.util import (
     accessory_friendly_name,
+    async_dismiss_setup_message,
     async_find_next_available_port,
+    async_port_is_available,
+    async_show_setup_message,
     cleanup_name_for_homekit,
+    coerce_int,
     convert_to_float,
     density_to_air_quality,
-    dismiss_setup_message,
-    format_sw_version,
-    port_is_available,
-    show_setup_message,
+    format_version,
     state_needs_accessory_mode,
     temperature_to_homekit,
     temperature_to_states,
     validate_entity_config as vec,
     validate_media_player_features,
 )
-from homeassistant.components.persistent_notification import (
-    ATTR_MESSAGE,
-    ATTR_NOTIFICATION_ID,
-    DOMAIN as PERSISTENT_NOTIFICATION_DOMAIN,
-)
+from homeassistant.components.persistent_notification import async_create, async_dismiss
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_SUPPORTED_FEATURES,
@@ -58,7 +55,23 @@ from homeassistant.core import State
 
 from .util import async_init_integration
 
-from tests.common import MockConfigEntry, async_mock_service
+from tests.common import MockConfigEntry
+
+
+def _mock_socket(failure_attempts: int = 0) -> MagicMock:
+    """Mock a socket that fails to bind failure_attempts amount of times."""
+    mock_socket = MagicMock()
+    attempts = 0
+
+    def _simulate_bind(*_):
+        nonlocal attempts
+        attempts += 1
+        if attempts <= failure_attempts:
+            raise OSError
+        return
+
+    mock_socket.bind = Mock(side_effect=_simulate_bind)
+    return mock_socket
 
 
 def test_validate_entity_config():
@@ -219,49 +232,73 @@ def test_density_to_air_quality():
     assert density_to_air_quality(300) == 5
 
 
-async def test_show_setup_msg(hass, hk_driver):
+async def test_async_show_setup_msg(hass, hk_driver, mock_get_source_ip):
     """Test show setup message as persistence notification."""
     pincode = b"123-45-678"
 
     entry = await async_init_integration(hass)
     assert entry
 
-    call_create_notification = async_mock_service(
-        hass, PERSISTENT_NOTIFICATION_DOMAIN, "create"
-    )
-
-    await hass.async_add_executor_job(
-        show_setup_message, hass, entry.entry_id, "bridge_name", pincode, "X-HM://0"
-    )
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.persistent_notification.async_create",
+        side_effect=async_create,
+    ) as mock_create:
+        async_show_setup_message(
+            hass, entry.entry_id, "bridge_name", pincode, "X-HM://0"
+        )
+        await hass.async_block_till_done()
     assert hass.data[DOMAIN][entry.entry_id][HOMEKIT_PAIRING_QR_SECRET]
     assert hass.data[DOMAIN][entry.entry_id][HOMEKIT_PAIRING_QR]
 
-    assert call_create_notification
-    assert call_create_notification[0].data[ATTR_NOTIFICATION_ID] == entry.entry_id
-    assert pincode.decode() in call_create_notification[0].data[ATTR_MESSAGE]
+    assert len(mock_create.mock_calls) == 1
+    assert mock_create.mock_calls[0][1][3] == entry.entry_id
+    assert pincode.decode() in mock_create.mock_calls[0][1][1]
 
 
-async def test_dismiss_setup_msg(hass):
+async def test_async_dismiss_setup_msg(hass):
     """Test dismiss setup message."""
-    call_dismiss_notification = async_mock_service(
-        hass, PERSISTENT_NOTIFICATION_DOMAIN, "dismiss"
-    )
+    with patch(
+        "homeassistant.components.persistent_notification.async_dismiss",
+        side_effect=async_dismiss,
+    ) as mock_dismiss:
+        async_dismiss_setup_message(hass, "entry_id")
+        await hass.async_block_till_done()
 
-    await hass.async_add_executor_job(dismiss_setup_message, hass, "entry_id")
-    await hass.async_block_till_done()
-
-    assert call_dismiss_notification
-    assert call_dismiss_notification[0].data[ATTR_NOTIFICATION_ID] == "entry_id"
+    assert len(mock_dismiss.mock_calls) == 1
+    assert mock_dismiss.mock_calls[0][1][1] == "entry_id"
 
 
 async def test_port_is_available(hass):
     """Test we can get an available port and it is actually available."""
-    next_port = await async_find_next_available_port(hass, DEFAULT_CONFIG_FLOW_PORT)
-
+    with patch(
+        "homeassistant.components.homekit.util.socket.socket",
+        return_value=_mock_socket(0),
+    ):
+        next_port = async_find_next_available_port(hass, DEFAULT_CONFIG_FLOW_PORT)
     assert next_port
+    with patch(
+        "homeassistant.components.homekit.util.socket.socket",
+        return_value=_mock_socket(0),
+    ):
+        assert async_port_is_available(next_port)
 
-    assert await hass.async_add_executor_job(port_is_available, next_port)
+    with patch(
+        "homeassistant.components.homekit.util.socket.socket",
+        return_value=_mock_socket(5),
+    ):
+        next_port = async_find_next_available_port(hass, DEFAULT_CONFIG_FLOW_PORT)
+    assert next_port == DEFAULT_CONFIG_FLOW_PORT + 5
+    with patch(
+        "homeassistant.components.homekit.util.socket.socket",
+        return_value=_mock_socket(0),
+    ):
+        assert async_port_is_available(next_port)
+
+    with patch(
+        "homeassistant.components.homekit.util.socket.socket",
+        return_value=_mock_socket(1),
+    ):
+        assert not async_port_is_available(next_port)
 
 
 async def test_port_is_available_skips_existing_entries(hass):
@@ -273,21 +310,61 @@ async def test_port_is_available_skips_existing_entries(hass):
     )
     entry.add_to_hass(hass)
 
-    next_port = await async_find_next_available_port(hass, DEFAULT_CONFIG_FLOW_PORT)
+    with patch(
+        "homeassistant.components.homekit.util.socket.socket",
+        return_value=_mock_socket(),
+    ):
+        next_port = async_find_next_available_port(hass, DEFAULT_CONFIG_FLOW_PORT)
 
-    assert next_port
-    assert next_port != DEFAULT_CONFIG_FLOW_PORT
+    assert next_port == DEFAULT_CONFIG_FLOW_PORT + 1
 
-    assert await hass.async_add_executor_job(port_is_available, next_port)
+    with patch(
+        "homeassistant.components.homekit.util.socket.socket",
+        return_value=_mock_socket(),
+    ):
+        assert async_port_is_available(next_port)
+
+    with patch(
+        "homeassistant.components.homekit.util.socket.socket",
+        return_value=_mock_socket(4),
+    ):
+        next_port = async_find_next_available_port(hass, DEFAULT_CONFIG_FLOW_PORT)
+
+    assert next_port == DEFAULT_CONFIG_FLOW_PORT + 5
+    with patch(
+        "homeassistant.components.homekit.util.socket.socket",
+        return_value=_mock_socket(),
+    ):
+        assert async_port_is_available(next_port)
+
+    with pytest.raises(OSError), patch(
+        "homeassistant.components.homekit.util.socket.socket",
+        return_value=_mock_socket(10),
+    ):
+        async_find_next_available_port(hass, 65530)
 
 
-async def test_format_sw_version():
-    """Test format_sw_version method."""
-    assert format_sw_version("soho+3.6.8+soho-release-rt120+10") == "3.6.8"
-    assert format_sw_version("undefined-undefined-1.6.8") == "1.6.8"
-    assert format_sw_version("56.0-76060") == "56.0.76060"
-    assert format_sw_version(3.6) == "3.6"
-    assert format_sw_version("unknown") is None
+async def test_format_version():
+    """Test format_version method."""
+    assert format_version("soho+3.6.8+soho-release-rt120+10") == "3.6.8"
+    assert format_version("undefined-undefined-1.6.8") == "1.6.8"
+    assert format_version("56.0-76060") == "56.0.76060"
+    assert format_version(3.6) == "3.6"
+    assert format_version("AK001-ZJ100") == "1.100"
+    assert format_version("HF-LPB100-") == "100"
+    assert format_version("AK001-ZJ2149") == "1.2149"
+    assert format_version("13216407885") == "4294967295"  # max value
+    assert format_version("000132 16407885") == "132.16407885"
+    assert format_version("0.1") == "0.1"
+    assert format_version("0") is None
+    assert format_version("unknown") is None
+
+
+async def test_coerce_int():
+    """Test coerce_int method."""
+    assert coerce_int("1") == 1
+    assert coerce_int("") == 0
+    assert coerce_int(0) == 0
 
 
 async def test_accessory_friendly_name():

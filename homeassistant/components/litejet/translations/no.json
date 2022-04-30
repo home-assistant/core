@@ -15,5 +15,15 @@
                 "title": "Koble til LiteJet"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "default_transition": "Standard overgang (sekunder)"
+                },
+                "title": "Konfigurer LiteJet"
+            }
+        }
     }
 }

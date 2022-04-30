@@ -9,6 +9,10 @@ from typing import Any
 from async_timeout import timeout
 from dsmr_parser import obis_references as obis_ref
 from dsmr_parser.clients.protocol import create_dsmr_reader, create_tcp_dsmr_reader
+from dsmr_parser.clients.rfxtrx_protocol import (
+    create_rfxtrx_dsmr_reader,
+    create_rfxtrx_tcp_dsmr_reader,
+)
 from dsmr_parser.objects import DSMRObject
 import serial
 import serial.tools.list_ports
@@ -19,16 +23,19 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_DSMR_VERSION,
+    CONF_PROTOCOL,
     CONF_SERIAL_ID,
     CONF_SERIAL_ID_GAS,
     CONF_TIME_BETWEEN_UPDATE,
     DEFAULT_TIME_BETWEEN_UPDATE,
     DOMAIN,
+    DSMR_PROTOCOL,
+    DSMR_VERSIONS,
     LOGGER,
+    RFXTRX_DSMR_PROTOCOL,
 )
 
 CONF_MANUAL_PATH = "Enter Manually"
@@ -37,15 +44,20 @@ CONF_MANUAL_PATH = "Enter Manually"
 class DSMRConnection:
     """Test the connection to DSMR and receive telegram to read serial ids."""
 
-    def __init__(self, host: str | None, port: int, dsmr_version: str) -> None:
+    def __init__(
+        self, host: str | None, port: int, dsmr_version: str, protocol: str
+    ) -> None:
         """Initialize."""
         self._host = host
         self._port = port
         self._dsmr_version = dsmr_version
+        self._protocol = protocol
         self._telegram: dict[str, DSMRObject] = {}
         self._equipment_identifier = obis_ref.EQUIPMENT_IDENTIFIER
         if dsmr_version == "5L":
             self._equipment_identifier = obis_ref.LUXEMBOURG_EQUIPMENT_IDENTIFIER
+        if dsmr_version == "Q3D":
+            self._equipment_identifier = obis_ref.Q3D_EQUIPMENT_IDENTIFIER
 
     def equipment_identifier(self) -> str | None:
         """Equipment identifier."""
@@ -70,18 +82,30 @@ class DSMRConnection:
             if self._equipment_identifier in telegram:
                 self._telegram = telegram
                 transport.close()
+            # Swedish meters have no equipment identifier
+            if self._dsmr_version == "5S" and obis_ref.P1_MESSAGE_TIMESTAMP in telegram:
+                self._telegram = telegram
+                transport.close()
 
         if self._host is None:
+            if self._protocol == DSMR_PROTOCOL:
+                create_reader = create_dsmr_reader
+            else:
+                create_reader = create_rfxtrx_dsmr_reader
             reader_factory = partial(
-                create_dsmr_reader,
+                create_reader,
                 self._port,
                 self._dsmr_version,
                 update_telegram,
                 loop=hass.loop,
             )
         else:
+            if self._protocol == DSMR_PROTOCOL:
+                create_reader = create_tcp_dsmr_reader
+            else:
+                create_reader = create_rfxtrx_tcp_dsmr_reader
             reader_factory = partial(
-                create_tcp_dsmr_reader,
+                create_reader,
                 self._host,
                 self._port,
                 self._dsmr_version,
@@ -107,10 +131,15 @@ class DSMRConnection:
 
 
 async def _validate_dsmr_connection(
-    hass: core.HomeAssistant, data: dict[str, Any]
+    hass: core.HomeAssistant, data: dict[str, Any], protocol: str
 ) -> dict[str, str | None]:
     """Validate the user input allows us to connect."""
-    conn = DSMRConnection(data.get(CONF_HOST), data[CONF_PORT], data[CONF_DSMR_VERSION])
+    conn = DSMRConnection(
+        data.get(CONF_HOST),
+        data[CONF_PORT],
+        data[CONF_DSMR_VERSION],
+        protocol,
+    )
 
     if not await conn.validate_connect(hass):
         raise CannotConnect
@@ -119,7 +148,7 @@ async def _validate_dsmr_connection(
     equipment_identifier_gas = conn.equipment_identifier_gas()
 
     # Check only for equipment identifier in case no gas meter is connected
-    if equipment_identifier is None:
+    if equipment_identifier is None and data[CONF_DSMR_VERSION] != "5S":
         raise CannotCommunicate
 
     return {
@@ -140,36 +169,6 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     def async_get_options_flow(config_entry: ConfigEntry) -> DSMROptionFlowHandler:
         """Get the options flow for this handler."""
         return DSMROptionFlowHandler(config_entry)
-
-    def _abort_if_host_port_configured(
-        self,
-        port: str,
-        host: str | None = None,
-        updates: dict[Any, Any] | None = None,
-        reload_on_update: bool = True,
-    ) -> FlowResult | None:
-        """Test if host and port are already configured."""
-        for entry in self._async_current_entries():
-            if entry.data.get(CONF_HOST) == host and entry.data[CONF_PORT] == port:
-                if updates is not None:
-                    changed = self.hass.config_entries.async_update_entry(
-                        entry, data={**entry.data, **updates}
-                    )
-                    if (
-                        changed
-                        and reload_on_update
-                        and entry.state
-                        in (
-                            config_entries.ConfigEntryState.LOADED,
-                            config_entries.ConfigEntryState.SETUP_RETRY,
-                        )
-                    ):
-                        self.hass.async_create_task(
-                            self.hass.config_entries.async_reload(entry.entry_id)
-                        )
-                return self.async_abort(reason="already_configured")
-
-        return None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -203,7 +202,7 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             {
                 vol.Required(CONF_HOST): str,
                 vol.Required(CONF_PORT): int,
-                vol.Required(CONF_DSMR_VERSION): vol.In(["2.2", "4", "5", "5B", "5L"]),
+                vol.Required(CONF_DSMR_VERSION): vol.In(DSMR_VERSIONS),
             }
         )
         return self.async_show_form(
@@ -247,7 +246,7 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         schema = vol.Schema(
             {
                 vol.Required(CONF_PORT): vol.In(list_of_ports),
-                vol.Required(CONF_DSMR_VERSION): vol.In(["2.2", "4", "5", "5B", "5L"]),
+                vol.Required(CONF_DSMR_VERSION): vol.In(DSMR_VERSIONS),
             }
         )
         return self.async_show_form(
@@ -284,42 +283,24 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         data = input_data
 
         try:
-            info = await _validate_dsmr_connection(self.hass, data)
+            try:
+                protocol = DSMR_PROTOCOL
+                info = await _validate_dsmr_connection(self.hass, data, protocol)
+            except CannotCommunicate:
+                protocol = RFXTRX_DSMR_PROTOCOL
+                info = await _validate_dsmr_connection(self.hass, data, protocol)
 
-            data = {**data, **info}
+            data = {**data, **info, CONF_PROTOCOL: protocol}
 
-            await self.async_set_unique_id(info[CONF_SERIAL_ID])
-            self._abort_if_unique_id_configured()
+            if info[CONF_SERIAL_ID]:
+                await self.async_set_unique_id(info[CONF_SERIAL_ID])
+                self._abort_if_unique_id_configured()
         except CannotConnect:
             errors["base"] = "cannot_connect"
         except CannotCommunicate:
             errors["base"] = "cannot_communicate"
 
         return data
-
-    async def async_step_import(self, import_config: ConfigType) -> FlowResult:
-        """Handle the initial step."""
-        host = import_config.get(CONF_HOST)
-        port = import_config[CONF_PORT]
-
-        status = self._abort_if_host_port_configured(port, host, import_config)
-        if status is not None:
-            return status
-
-        try:
-            info = await _validate_dsmr_connection(self.hass, import_config)
-        except CannotConnect:
-            return self.async_abort(reason="cannot_connect")
-        except CannotCommunicate:
-            return self.async_abort(reason="cannot_communicate")
-
-        name = f"{host}:{port}" if host is not None else port
-        data = {**import_config, **info}
-
-        await self.async_set_unique_id(info[CONF_SERIAL_ID])
-        self._abort_if_unique_id_configured(data)
-
-        return self.async_create_entry(title=name, data=data)
 
 
 class DSMROptionFlowHandler(config_entries.OptionsFlow):

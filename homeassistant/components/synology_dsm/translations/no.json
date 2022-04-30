@@ -1,7 +1,9 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Enheten er allerede konfigurert"
+            "already_configured": "Enheten er allerede konfigurert",
+            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket",
+            "reconfigure_successful": "Omkonfigurasjonen var vellykket"
         },
         "error": {
             "cannot_connect": "Tilkobling mislyktes",
@@ -29,6 +31,21 @@
                 "description": "Vil du konfigurere {name} ({host})?",
                 "title": ""
             },
+            "reauth": {
+                "data": {
+                    "password": "Passord",
+                    "username": "Brukernavn"
+                },
+                "description": "\u00c5rsak: {details}",
+                "title": "Synology DSM Godkjenne integrering p\u00e5 nytt"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Passord",
+                    "username": "Brukernavn"
+                },
+                "title": "Synology DSM Godkjenne integrering p\u00e5 nytt"
+            },
             "user": {
                 "data": {
                     "host": "Vert",
@@ -47,6 +64,7 @@
             "init": {
                 "data": {
                     "scan_interval": "Minutter mellom skanninger",
+                    "snap_profile_type": "Kvalitetsniv\u00e5et p\u00e5 kameraets \u00f8yeblikksbilder (0:h\u00f8y 1:middels 2:lav)",
                     "timeout": "Tidsavbrudd (sekunder)"
                 }
             }

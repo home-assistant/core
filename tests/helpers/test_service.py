@@ -25,10 +25,12 @@ from homeassistant.helpers import (
     template,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
     MockEntity,
+    async_mock_service,
     get_test_home_assistant,
     mock_device_registry,
     mock_registry,
@@ -113,11 +115,39 @@ def area_mock(hass):
         platform="test",
         area_id="own-area",
     )
+    config_entity_in_own_area = ent_reg.RegistryEntry(
+        entity_id="light.config_in_own_area",
+        unique_id="config-in-own-area-id",
+        platform="test",
+        area_id="own-area",
+        entity_category=EntityCategory.CONFIG,
+    )
+    hidden_entity_in_own_area = ent_reg.RegistryEntry(
+        entity_id="light.hidden_in_own_area",
+        unique_id="hidden-in-own-area-id",
+        platform="test",
+        area_id="own-area",
+        hidden_by=ent_reg.RegistryEntryHider.USER,
+    )
     entity_in_area = ent_reg.RegistryEntry(
         entity_id="light.in_area",
         unique_id="in-area-id",
         platform="test",
         device_id=device_in_area.id,
+    )
+    config_entity_in_area = ent_reg.RegistryEntry(
+        entity_id="light.config_in_area",
+        unique_id="config-in-area-id",
+        platform="test",
+        device_id=device_in_area.id,
+        entity_category=EntityCategory.CONFIG,
+    )
+    hidden_entity_in_area = ent_reg.RegistryEntry(
+        entity_id="light.hidden_in_area",
+        unique_id="hidden-in-area-id",
+        platform="test",
+        device_id=device_in_area.id,
+        hidden_by=ent_reg.RegistryEntryHider.USER,
     )
     entity_in_other_area = ent_reg.RegistryEntry(
         entity_id="light.in_other_area",
@@ -138,6 +168,20 @@ def area_mock(hass):
         unique_id="no-area-id",
         platform="test",
         device_id=device_no_area.id,
+    )
+    config_entity_no_area = ent_reg.RegistryEntry(
+        entity_id="light.config_no_area",
+        unique_id="config-no-area-id",
+        platform="test",
+        device_id=device_no_area.id,
+        entity_category=EntityCategory.CONFIG,
+    )
+    hidden_entity_no_area = ent_reg.RegistryEntry(
+        entity_id="light.hidden_no_area",
+        unique_id="hidden-no-area-id",
+        platform="test",
+        device_id=device_no_area.id,
+        hidden_by=ent_reg.RegistryEntryHider.USER,
     )
     entity_diff_area = ent_reg.RegistryEntry(
         entity_id="light.diff_area",
@@ -163,10 +207,16 @@ def area_mock(hass):
         hass,
         {
             entity_in_own_area.entity_id: entity_in_own_area,
+            config_entity_in_own_area.entity_id: config_entity_in_own_area,
+            hidden_entity_in_own_area.entity_id: hidden_entity_in_own_area,
             entity_in_area.entity_id: entity_in_area,
+            config_entity_in_area.entity_id: config_entity_in_area,
+            hidden_entity_in_area.entity_id: hidden_entity_in_area,
             entity_in_other_area.entity_id: entity_in_other_area,
             entity_assigned_to_area.entity_id: entity_assigned_to_area,
             entity_no_area.entity_id: entity_no_area,
+            config_entity_no_area.entity_id: config_entity_no_area,
+            hidden_entity_no_area.entity_id: hidden_entity_no_area,
             entity_diff_area.entity_id: entity_diff_area,
             entity_in_area_a.entity_id: entity_in_area_a,
             entity_in_area_b.entity_id: entity_in_area_b,
@@ -351,6 +401,43 @@ class TestServiceHelpers(unittest.TestCase):
         assert mock_log.call_count == 3
 
 
+async def test_service_call_entry_id(hass):
+    """Test service call with entity specified by entity registry ID."""
+    registry = ent_reg.async_get(hass)
+    calls = async_mock_service(hass, "test_domain", "test_service")
+    entry = registry.async_get_or_create(
+        "hello", "hue", "1234", suggested_object_id="world"
+    )
+
+    assert entry.entity_id == "hello.world"
+
+    config = {
+        "service": "test_domain.test_service",
+        "target": {"entity_id": entry.id},
+    }
+
+    await service.async_call_from_config(hass, config)
+    await hass.async_block_till_done()
+
+    assert dict(calls[0].data) == {"entity_id": ["hello.world"]}
+
+
+@pytest.mark.parametrize("target", ("all", "none"))
+async def test_service_call_all_none(hass, target):
+    """Test service call targeting all."""
+    calls = async_mock_service(hass, "test_domain", "test_service")
+
+    config = {
+        "service": "test_domain.test_service",
+        "target": {"entity_id": target},
+    }
+
+    await service.async_call_from_config(hass, config)
+    await hass.async_block_till_done()
+
+    assert dict(calls[0].data) == {"entity_id": target}
+
+
 async def test_extract_entity_ids(hass):
     """Test extract_entity_ids method."""
     hass.states.async_set("light.Bowl", STATE_ON)
@@ -481,6 +568,20 @@ async def test_call_with_required_features(hass, mock_entities):
     ]
     actual = [call[0][0] for call in test_service_mock.call_args_list]
     assert all(entity in actual for entity in expected)
+
+    # Test we raise if we target entity ID that does not support the service
+    test_service_mock.reset_mock()
+    with pytest.raises(exceptions.HomeAssistantError):
+        await service.entity_service_call(
+            hass,
+            [Mock(entities=mock_entities)],
+            test_service_mock,
+            ha.ServiceCall(
+                "test_domain", "test_service", {"entity_id": "light.living_room"}
+            ),
+            required_features=[SUPPORT_A],
+        )
+    assert test_service_mock.call_count == 0
 
 
 async def test_call_with_both_required_features(hass, mock_entities):

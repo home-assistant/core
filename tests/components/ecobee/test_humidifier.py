@@ -55,7 +55,7 @@ async def test_attributes(hass):
 
 
 async def test_turn_on(hass):
-    """Test the humidifer can be turned on."""
+    """Test the humidifier can be turned on."""
     with patch("pyecobee.Ecobee.set_humidifier_mode") as mock_turn_on:
         await setup_platform(hass, HUMIDIFIER_DOMAIN)
 
@@ -70,7 +70,7 @@ async def test_turn_on(hass):
 
 
 async def test_turn_off(hass):
-    """Test the humidifer can be turned off."""
+    """Test the humidifier can be turned off."""
     with patch("pyecobee.Ecobee.set_humidifier_mode") as mock_turn_off:
         await setup_platform(hass, HUMIDIFIER_DOMAIN)
 
@@ -85,7 +85,7 @@ async def test_turn_off(hass):
 
 
 async def test_set_mode(hass):
-    """Test the humidifer can change modes."""
+    """Test the humidifier can change modes."""
     with patch("pyecobee.Ecobee.set_humidifier_mode") as mock_set_mode:
         await setup_platform(hass, HUMIDIFIER_DOMAIN)
 
@@ -117,7 +117,7 @@ async def test_set_mode(hass):
 
 
 async def test_set_humidity(hass):
-    """Test the humidifer can set humidity level."""
+    """Test the humidifier can set humidity level."""
     with patch("pyecobee.Ecobee.set_humidity") as mock_set_humidity:
         await setup_platform(hass, HUMIDIFIER_DOMAIN)
 

@@ -7,15 +7,15 @@
             "fog": "Nevoeiro",
             "hail": "Granizo",
             "lightning": "Raios",
-            "lightning-rainy": "Raios, chuvoso",
+            "lightning-rainy": "Chuvoso com raios",
             "partlycloudy": "Parcialmente nublado",
             "pouring": "Torrencial",
             "rainy": "Chuvoso",
             "snowy": "Neve",
-            "snowy-rainy": "Neve, chuva",
+            "snowy-rainy": "Chuvoso com neve",
             "sunny": "Ensolarado",
-            "windy": "Ventoso",
-            "windy-variant": "Ventoso"
+            "windy": "Ventania",
+            "windy-variant": "Ventania"
         }
     }
 }

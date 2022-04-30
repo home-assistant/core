@@ -1,14 +1,18 @@
 """The tests for the Met Office sensor component."""
+import datetime
 from datetime import timedelta
 import json
-from unittest.mock import patch
+
+from freezegun import freeze_time
 
 from homeassistant.components.metoffice.const import DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.helpers.device_registry import async_get as get_dev_reg
 from homeassistant.util import utcnow
 
-from . import NewDateTime
 from .const import (
+    DEVICE_KEY_KINGSLYNN,
+    DEVICE_KEY_WAVERTREE,
     METOFFICE_CONFIG_KINGSLYNN,
     METOFFICE_CONFIG_WAVERTREE,
     WAVERTREE_SENSOR_RESULTS,
@@ -17,11 +21,8 @@ from .const import (
 from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
 
 
-@patch(
-    "datapoint.Forecast.datetime.datetime",
-    NewDateTime,
-)
-async def test_site_cannot_connect(hass, requests_mock, legacy_patchable_time):
+@freeze_time(datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.timezone.utc))
+async def test_site_cannot_connect(hass, requests_mock):
     """Test we handle cannot connect error."""
 
     requests_mock.get("/public/data/val/wxfcs/all/json/sitelist/", text="")
@@ -36,6 +37,9 @@ async def test_site_cannot_connect(hass, requests_mock, legacy_patchable_time):
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
+    dev_reg = get_dev_reg(hass)
+    assert len(dev_reg.devices) == 0
+
     assert hass.states.get("weather.met_office_wavertree_3hourly") is None
     assert hass.states.get("weather.met_office_wavertree_daily") is None
     for sensor_id in WAVERTREE_SENSOR_RESULTS:
@@ -44,11 +48,8 @@ async def test_site_cannot_connect(hass, requests_mock, legacy_patchable_time):
         assert sensor is None
 
 
-@patch(
-    "datapoint.Forecast.datetime.datetime",
-    NewDateTime,
-)
-async def test_site_cannot_update(hass, requests_mock, legacy_patchable_time):
+@freeze_time(datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.timezone.utc))
+async def test_site_cannot_update(hass, requests_mock):
     """Test we handle cannot connect error."""
 
     # all metoffice test data encapsulated in here
@@ -93,11 +94,8 @@ async def test_site_cannot_update(hass, requests_mock, legacy_patchable_time):
     assert weather.state == STATE_UNAVAILABLE
 
 
-@patch(
-    "datapoint.Forecast.datetime.datetime",
-    NewDateTime,
-)
-async def test_one_weather_site_running(hass, requests_mock, legacy_patchable_time):
+@freeze_time(datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.timezone.utc))
+async def test_one_weather_site_running(hass, requests_mock):
     """Test the Met Office weather platform."""
 
     # all metoffice test data encapsulated in here
@@ -124,6 +122,11 @@ async def test_one_weather_site_running(hass, requests_mock, legacy_patchable_ti
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
+    dev_reg = get_dev_reg(hass)
+    assert len(dev_reg.devices) == 1
+    device_wavertree = dev_reg.async_get_device(identifiers=DEVICE_KEY_WAVERTREE)
+    assert device_wavertree.name == "Met Office Wavertree"
+
     # Wavertree 3-hourly weather platform expected results
     weather = hass.states.get("weather.met_office_wavertree_3_hourly")
     assert weather
@@ -143,6 +146,7 @@ async def test_one_weather_site_running(hass, requests_mock, legacy_patchable_ti
         == "2020-04-28T21:00:00+00:00"
     )
     assert weather.attributes.get("forecast")[26]["condition"] == "cloudy"
+    assert weather.attributes.get("forecast")[26]["precipitation_probability"] == 9
     assert weather.attributes.get("forecast")[26]["temperature"] == 10
     assert weather.attributes.get("forecast")[26]["wind_speed"] == 4
     assert weather.attributes.get("forecast")[26]["wind_bearing"] == "NNE"
@@ -165,16 +169,14 @@ async def test_one_weather_site_running(hass, requests_mock, legacy_patchable_ti
         weather.attributes.get("forecast")[7]["datetime"] == "2020-04-29T12:00:00+00:00"
     )
     assert weather.attributes.get("forecast")[7]["condition"] == "rainy"
+    assert weather.attributes.get("forecast")[7]["precipitation_probability"] == 59
     assert weather.attributes.get("forecast")[7]["temperature"] == 13
     assert weather.attributes.get("forecast")[7]["wind_speed"] == 13
     assert weather.attributes.get("forecast")[7]["wind_bearing"] == "SE"
 
 
-@patch(
-    "datapoint.Forecast.datetime.datetime",
-    NewDateTime,
-)
-async def test_two_weather_sites_running(hass, requests_mock, legacy_patchable_time):
+@freeze_time(datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.timezone.utc))
+async def test_two_weather_sites_running(hass, requests_mock):
     """Test we handle two different weather sites both running."""
 
     # all metoffice test data encapsulated in here
@@ -213,6 +215,13 @@ async def test_two_weather_sites_running(hass, requests_mock, legacy_patchable_t
     await hass.config_entries.async_setup(entry2.entry_id)
     await hass.async_block_till_done()
 
+    dev_reg = get_dev_reg(hass)
+    assert len(dev_reg.devices) == 2
+    device_kingslynn = dev_reg.async_get_device(identifiers=DEVICE_KEY_KINGSLYNN)
+    assert device_kingslynn.name == "Met Office King's Lynn"
+    device_wavertree = dev_reg.async_get_device(identifiers=DEVICE_KEY_WAVERTREE)
+    assert device_wavertree.name == "Met Office Wavertree"
+
     # Wavertree 3-hourly weather platform expected results
     weather = hass.states.get("weather.met_office_wavertree_3_hourly")
     assert weather
@@ -231,7 +240,8 @@ async def test_two_weather_sites_running(hass, requests_mock, legacy_patchable_t
         weather.attributes.get("forecast")[18]["datetime"]
         == "2020-04-27T21:00:00+00:00"
     )
-    assert weather.attributes.get("forecast")[18]["condition"] == "sunny"
+    assert weather.attributes.get("forecast")[18]["condition"] == "clear-night"
+    assert weather.attributes.get("forecast")[18]["precipitation_probability"] == 1
     assert weather.attributes.get("forecast")[18]["temperature"] == 9
     assert weather.attributes.get("forecast")[18]["wind_speed"] == 4
     assert weather.attributes.get("forecast")[18]["wind_bearing"] == "NW"
@@ -254,6 +264,7 @@ async def test_two_weather_sites_running(hass, requests_mock, legacy_patchable_t
         weather.attributes.get("forecast")[7]["datetime"] == "2020-04-29T12:00:00+00:00"
     )
     assert weather.attributes.get("forecast")[7]["condition"] == "rainy"
+    assert weather.attributes.get("forecast")[7]["precipitation_probability"] == 59
     assert weather.attributes.get("forecast")[7]["temperature"] == 13
     assert weather.attributes.get("forecast")[7]["wind_speed"] == 13
     assert weather.attributes.get("forecast")[7]["wind_bearing"] == "SE"
@@ -277,6 +288,7 @@ async def test_two_weather_sites_running(hass, requests_mock, legacy_patchable_t
         == "2020-04-27T21:00:00+00:00"
     )
     assert weather.attributes.get("forecast")[18]["condition"] == "cloudy"
+    assert weather.attributes.get("forecast")[18]["precipitation_probability"] == 9
     assert weather.attributes.get("forecast")[18]["temperature"] == 10
     assert weather.attributes.get("forecast")[18]["wind_speed"] == 7
     assert weather.attributes.get("forecast")[18]["wind_bearing"] == "SE"
@@ -299,6 +311,7 @@ async def test_two_weather_sites_running(hass, requests_mock, legacy_patchable_t
         weather.attributes.get("forecast")[5]["datetime"] == "2020-04-28T12:00:00+00:00"
     )
     assert weather.attributes.get("forecast")[5]["condition"] == "cloudy"
+    assert weather.attributes.get("forecast")[5]["precipitation_probability"] == 14
     assert weather.attributes.get("forecast")[5]["temperature"] == 11
     assert weather.attributes.get("forecast")[5]["wind_speed"] == 7
     assert weather.attributes.get("forecast")[5]["wind_bearing"] == "ESE"

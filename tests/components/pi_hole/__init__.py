@@ -3,10 +3,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from hole.exceptions import HoleError
 
-from homeassistant.components.pi_hole.const import CONF_LOCATION, CONF_STATISTICS_ONLY
+from homeassistant.components.pi_hole.const import CONF_STATISTICS_ONLY
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
+    CONF_LOCATION,
     CONF_NAME,
     CONF_PORT,
     CONF_SSL,
@@ -24,6 +25,18 @@ ZERO_DATA = {
     "status": "disabled",
     "unique_clients": 0,
     "unique_domains": 0,
+}
+
+SAMPLE_VERSIONS = {
+    "core_current": "v5.5",
+    "core_latest": "v5.6",
+    "core_update": True,
+    "web_current": "v5.7",
+    "web_latest": "v5.8",
+    "web_update": True,
+    "FTL_current": "v5.10",
+    "FTL_latest": "v5.11",
+    "FTL_update": True,
 }
 
 HOST = "1.2.3.4"
@@ -70,14 +83,21 @@ CONF_CONFIG_ENTRY = {
 SWITCH_ENTITY_ID = "switch.pi_hole"
 
 
-def _create_mocked_hole(raise_exception=False):
+def _create_mocked_hole(raise_exception=False, has_versions=True):
     mocked_hole = MagicMock()
     type(mocked_hole).get_data = AsyncMock(
+        side_effect=HoleError("") if raise_exception else None
+    )
+    type(mocked_hole).get_versions = AsyncMock(
         side_effect=HoleError("") if raise_exception else None
     )
     type(mocked_hole).enable = AsyncMock()
     type(mocked_hole).disable = AsyncMock()
     mocked_hole.data = ZERO_DATA
+    if has_versions:
+        mocked_hole.versions = SAMPLE_VERSIONS
+    else:
+        mocked_hole.versions = None
     return mocked_hole
 
 

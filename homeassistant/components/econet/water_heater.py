@@ -5,20 +5,19 @@ from pyeconet.equipment import EquipmentType
 from pyeconet.equipment.water_heater import WaterHeaterOperationMode
 
 from homeassistant.components.water_heater import (
-    ATTR_TEMPERATURE,
     STATE_ECO,
     STATE_ELECTRIC,
     STATE_GAS,
     STATE_HEAT_PUMP,
     STATE_HIGH_DEMAND,
-    STATE_OFF,
     STATE_PERFORMANCE,
-    SUPPORT_AWAY_MODE,
-    SUPPORT_OPERATION_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
     WaterHeaterEntity,
+    WaterHeaterEntityFeature,
 )
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import EcoNetEntity
 from .const import DOMAIN, EQUIPMENT
@@ -36,10 +35,15 @@ ECONET_STATE_TO_HA = {
 }
 HA_STATE_TO_ECONET = {value: key for key, value in ECONET_STATE_TO_HA.items()}
 
-SUPPORT_FLAGS_HEATER = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
+SUPPORT_FLAGS_HEATER = (
+    WaterHeaterEntityFeature.TARGET_TEMPERATURE
+    | WaterHeaterEntityFeature.OPERATION_MODE
+)
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up EcoNet water heater based on a config entry."""
     equipment = hass.data[DOMAIN][EQUIPMENT][entry.entry_id]
     async_add_entities(
@@ -105,16 +109,18 @@ class EcoNetWaterHeater(EcoNetEntity, WaterHeaterEntity):
         """Return the list of supported features."""
         if self.water_heater.modes:
             if self.water_heater.supports_away:
-                return SUPPORT_FLAGS_HEATER | SUPPORT_AWAY_MODE
+                return SUPPORT_FLAGS_HEATER | WaterHeaterEntityFeature.AWAY_MODE
             return SUPPORT_FLAGS_HEATER
         if self.water_heater.supports_away:
-            return SUPPORT_TARGET_TEMPERATURE | SUPPORT_AWAY_MODE
-        return SUPPORT_TARGET_TEMPERATURE
+            return (
+                WaterHeaterEntityFeature.TARGET_TEMPERATURE
+                | WaterHeaterEntityFeature.AWAY_MODE
+            )
+        return WaterHeaterEntityFeature.TARGET_TEMPERATURE
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
-        target_temp = kwargs.get(ATTR_TEMPERATURE)
-        if target_temp is not None:
+        if (target_temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
             self.water_heater.set_set_point(target_temp)
         else:
             _LOGGER.error("A target temperature must be provided")

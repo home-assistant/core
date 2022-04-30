@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "reauth_successful": "Yeniden kimlik do\u011frulama ba\u015far\u0131l\u0131 oldu"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API Anahtar\u0131"
+                },
+                "description": "PVOutput ile yeniden kimlik do\u011frulamas\u0131 yapmak i\u00e7in {account_url} adresinden API anahtar\u0131n\u0131 alman\u0131z gerekir."
+            },
+            "user": {
+                "data": {
+                    "api_key": "API Anahtar\u0131",
+                    "system_id": "Sistem ID"
+                },
+                "description": "PVOutput ile kimlik do\u011frulamas\u0131 yapmak i\u00e7in {account_url} adresinden API anahtar\u0131n\u0131 alman\u0131z gerekir. \n\n Kay\u0131tl\u0131 sistemlerin sistem kimlikleri ayn\u0131 sayfada listelenir."
+            }
+        }
+    }
+}

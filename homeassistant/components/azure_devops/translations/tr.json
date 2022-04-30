@@ -9,9 +9,13 @@
             "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
             "project_error": "Proje bilgileri al\u0131namad\u0131."
         },
-        "flow_title": "Azure DevOps: {project_url}",
+        "flow_title": "{project_url}",
         "step": {
             "reauth": {
+                "data": {
+                    "personal_access_token": "Ki\u015fisel Eri\u015fim Anahtar\u0131 (PAT)"
+                },
+                "description": "{project_url} i\u00e7in kimlik do\u011frulama ba\u015far\u0131s\u0131z oldu. L\u00fctfen mevcut kimlik bilgilerinizi girin.",
                 "title": "Yeniden kimlik do\u011frulama"
             },
             "user": {

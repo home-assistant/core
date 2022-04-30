@@ -167,7 +167,6 @@ MELACHA_TEST_IDS = [
 )
 async def test_issur_melacha_sensor(
     hass,
-    legacy_patchable_time,
     now,
     candle_lighting,
     havdalah,
@@ -181,7 +180,7 @@ async def test_issur_melacha_sensor(
     time_zone = dt_util.get_time_zone(tzname)
     test_time = now.replace(tzinfo=time_zone)
 
-    hass.config.time_zone = tzname
+    hass.config.set_time_zone(tzname)
     hass.config.latitude = latitude
     hass.config.longitude = longitude
 
@@ -258,7 +257,6 @@ async def test_issur_melacha_sensor(
 )
 async def test_issur_melacha_sensor_update(
     hass,
-    legacy_patchable_time,
     now,
     candle_lighting,
     havdalah,
@@ -272,7 +270,7 @@ async def test_issur_melacha_sensor_update(
     time_zone = dt_util.get_time_zone(tzname)
     test_time = now.replace(tzinfo=time_zone)
 
-    hass.config.time_zone = tzname
+    hass.config.set_time_zone(tzname)
     hass.config.latitude = latitude
     hass.config.longitude = longitude
 

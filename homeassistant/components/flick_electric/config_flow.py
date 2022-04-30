@@ -45,7 +45,7 @@ class FlickConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         try:
-            with async_timeout.timeout(60):
+            async with async_timeout.timeout(60):
                 token = await auth.async_get_access_token()
         except asyncio.TimeoutError as err:
             raise CannotConnect() from err

@@ -9,7 +9,7 @@ from homeassistant.components.remote import (
     ATTR_ACTIVITY_LIST,
     ATTR_CURRENT_ACTIVITY,
     DOMAIN as REMOTE_DOMAIN,
-    SUPPORT_ACTIVITY,
+    RemoteEntityFeature,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -49,6 +49,11 @@ from .const import (
     KEY_SELECT,
     SERV_INPUT_SOURCE,
     SERV_TELEVISION,
+)
+from .util import cleanup_name_for_homekit
+
+MAXIMUM_SOURCES = (
+    90  # Maximum services per accessory is 100. The base acccessory uses 9
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -91,7 +96,16 @@ class RemoteInputSelectAccessory(HomeAccessory):
         self.sources = []
         self.support_select_source = False
         if features & required_feature:
-            self.sources = state.attributes.get(source_list_key, [])
+            sources = state.attributes.get(source_list_key, [])
+            if len(sources) > MAXIMUM_SOURCES:
+                _LOGGER.warning(
+                    "%s: Reached maximum number of sources (%s)",
+                    self.entity_id,
+                    MAXIMUM_SOURCES,
+                )
+            self.sources = [
+                cleanup_name_for_homekit(source) for source in sources[:MAXIMUM_SOURCES]
+            ]
             if self.sources:
                 self.support_select_source = True
 
@@ -147,32 +161,39 @@ class RemoteInputSelectAccessory(HomeAccessory):
         # Set active input
         if not self.support_select_source or not self.sources:
             return
-        source_name = new_state.attributes.get(self.source_key)
+        source = new_state.attributes.get(self.source_key)
+        source_name = cleanup_name_for_homekit(source)
         _LOGGER.debug("%s: Set current input to %s", self.entity_id, source_name)
         if source_name in self.sources:
             index = self.sources.index(source_name)
-            if self.char_input_source.value != index:
-                self.char_input_source.set_value(index)
+            self.char_input_source.set_value(index)
             return
 
         possible_sources = new_state.attributes.get(self.source_list_key, [])
-        if source_name in possible_sources:
-            _LOGGER.debug(
-                "%s: Sources out of sync. Rebuilding Accessory",
-                self.entity_id,
-            )
-            # Sources are out of sync, recreate the accessory
-            self.async_reset()
-            return
+        if source in possible_sources:
+            index = possible_sources.index(source)
+            if index >= MAXIMUM_SOURCES:
+                _LOGGER.debug(
+                    "%s: Source %s and above are not supported",
+                    self.entity_id,
+                    MAXIMUM_SOURCES,
+                )
+            else:
+                _LOGGER.debug(
+                    "%s: Sources out of sync. Rebuilding Accessory",
+                    self.entity_id,
+                )
+                # Sources are out of sync, recreate the accessory
+                self.async_reset()
+                return
 
         _LOGGER.debug(
             "%s: Source %s does not exist the source list: %s",
             self.entity_id,
-            source_name,
+            source,
             possible_sources,
         )
-        if self.char_input_source.value != 0:
-            self.char_input_source.set_value(0)
+        self.char_input_source.set_value(0)
 
 
 @TYPES.register("ActivityRemote")
@@ -182,7 +203,7 @@ class ActivityRemote(RemoteInputSelectAccessory):
     def __init__(self, *args):
         """Initialize a Activity Remote accessory object."""
         super().__init__(
-            SUPPORT_ACTIVITY,
+            RemoteEntityFeature.ACTIVITY,
             ATTR_CURRENT_ACTIVITY,
             ATTR_ACTIVITY_LIST,
             *args,
@@ -206,8 +227,7 @@ class ActivityRemote(RemoteInputSelectAccessory):
     def set_remote_key(self, value):
         """Send remote key value if call came from HomeKit."""
         _LOGGER.debug("%s: Set remote key to %s", self.entity_id, value)
-        key_name = REMOTE_KEYS.get(value)
-        if key_name is None:
+        if (key_name := REMOTE_KEYS.get(value)) is None:
             _LOGGER.warning("%s: Unhandled key press for %s", self.entity_id, value)
             return
         self.hass.bus.async_fire(
@@ -222,7 +242,6 @@ class ActivityRemote(RemoteInputSelectAccessory):
         # Power state remote
         hk_state = 1 if current_state == STATE_ON else 0
         _LOGGER.debug("%s: Set current active state to %s", self.entity_id, hk_state)
-        if self.char_active.value != hk_state:
-            self.char_active.set_value(hk_state)
+        self.char_active.set_value(hk_state)
 
         self._async_update_input_state(hk_state, new_state)

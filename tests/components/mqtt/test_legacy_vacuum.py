@@ -11,6 +11,13 @@ from homeassistant.components.mqtt.vacuum import schema_legacy as mqttvacuum
 from homeassistant.components.mqtt.vacuum.schema import services_to_strings
 from homeassistant.components.mqtt.vacuum.schema_legacy import (
     ALL_SERVICES,
+    CONF_BATTERY_LEVEL_TOPIC,
+    CONF_CHARGING_TOPIC,
+    CONF_CLEANING_TOPIC,
+    CONF_DOCKED_TOPIC,
+    CONF_ERROR_TOPIC,
+    CONF_FAN_SPEED_TOPIC,
+    CONF_SUPPORTED_FEATURES,
     MQTT_LEGACY_VACUUM_ATTRIBUTES_BLOCKED,
     SERVICE_TO_STRING,
 )
@@ -20,6 +27,7 @@ from homeassistant.components.vacuum import (
     ATTR_FAN_SPEED,
     ATTR_FAN_SPEED_LIST,
     ATTR_STATUS,
+    VacuumEntityFeature,
 )
 from homeassistant.const import CONF_NAME, CONF_PLATFORM, STATE_OFF, STATE_ON
 from homeassistant.setup import async_setup_component
@@ -34,6 +42,7 @@ from .test_common import (
     help_test_discovery_update,
     help_test_discovery_update_attr,
     help_test_discovery_update_unchanged,
+    help_test_encoding_subscribable_topics,
     help_test_entity_debug_info_message,
     help_test_entity_device_info_remove,
     help_test_entity_device_info_update,
@@ -41,6 +50,9 @@ from .test_common import (
     help_test_entity_device_info_with_identifier,
     help_test_entity_id_update_discovery_update,
     help_test_entity_id_update_subscriptions,
+    help_test_publishing_with_custom_encoding,
+    help_test_reloadable,
+    help_test_reloadable_late,
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
     help_test_setting_blocked_attribute_via_mqtt_json_message,
@@ -401,7 +413,7 @@ async def test_status_no_fan_speed_list(hass, mqtt_mock):
     If the vacuum doesn't support fan speed, fan speed list should be None.
     """
     config = deepcopy(DEFAULT_CONFIG)
-    services = ALL_SERVICES - mqttvacuum.SUPPORT_FAN_SPEED
+    services = ALL_SERVICES - VacuumEntityFeature.FAN_SPEED
     config[mqttvacuum.CONF_SUPPORTED_FEATURES] = services_to_strings(
         services, SERVICE_TO_STRING
     )
@@ -651,10 +663,10 @@ async def test_discovery_removal_vacuum(hass, mqtt_mock, caplog):
 
 async def test_discovery_update_vacuum(hass, mqtt_mock, caplog):
     """Test update of discovered vacuum."""
-    data1 = '{ "name": "Beer",' '  "command_topic": "test_topic" }'
-    data2 = '{ "name": "Milk",' '  "command_topic": "test_topic" }'
+    config1 = {"name": "Beer", "command_topic": "test_topic"}
+    config2 = {"name": "Milk", "command_topic": "test_topic"}
     await help_test_discovery_update(
-        hass, mqtt_mock, caplog, vacuum.DOMAIN, data1, data2
+        hass, mqtt_mock, caplog, vacuum.DOMAIN, config1, config2
     )
 
 
@@ -737,12 +749,155 @@ async def test_entity_debug_info_message(hass, mqtt_mock):
         vacuum.DOMAIN: {
             "platform": "mqtt",
             "name": "test",
-            "battery_level_topic": "test-topic",
+            "battery_level_topic": "state-topic",
             "battery_level_template": "{{ value_json.battery_level }}",
             "command_topic": "command-topic",
-            "availability_topic": "avty-topic",
+            "payload_turn_on": "ON",
         }
     }
     await help_test_entity_debug_info_message(
-        hass, mqtt_mock, vacuum.DOMAIN, config, "test-topic"
+        hass, mqtt_mock, vacuum.DOMAIN, config, vacuum.SERVICE_TURN_ON
+    )
+
+
+@pytest.mark.parametrize(
+    "service,topic,parameters,payload,template",
+    [
+        (
+            vacuum.SERVICE_TURN_ON,
+            "command_topic",
+            None,
+            "turn_on",
+            None,
+        ),
+        (
+            vacuum.SERVICE_CLEAN_SPOT,
+            "command_topic",
+            None,
+            "clean_spot",
+            None,
+        ),
+        (
+            vacuum.SERVICE_SET_FAN_SPEED,
+            "set_fan_speed_topic",
+            {"fan_speed": "medium"},
+            "medium",
+            None,
+        ),
+        (
+            vacuum.SERVICE_SEND_COMMAND,
+            "send_command_topic",
+            {"command": "custom command"},
+            "custom command",
+            None,
+        ),
+        (
+            vacuum.SERVICE_TURN_OFF,
+            "command_topic",
+            None,
+            "turn_off",
+            None,
+        ),
+    ],
+)
+async def test_publishing_with_custom_encoding(
+    hass,
+    mqtt_mock,
+    caplog,
+    service,
+    topic,
+    parameters,
+    payload,
+    template,
+):
+    """Test publishing MQTT payload with different encoding."""
+    domain = vacuum.DOMAIN
+    config = deepcopy(DEFAULT_CONFIG)
+    config["supported_features"] = [
+        "turn_on",
+        "turn_off",
+        "clean_spot",
+        "fan_speed",
+        "send_command",
+    ]
+
+    await help_test_publishing_with_custom_encoding(
+        hass,
+        mqtt_mock,
+        caplog,
+        domain,
+        config,
+        service,
+        topic,
+        parameters,
+        payload,
+        template,
+    )
+
+
+async def test_reloadable(hass, mqtt_mock, caplog, tmp_path):
+    """Test reloading the MQTT platform."""
+    domain = vacuum.DOMAIN
+    config = DEFAULT_CONFIG
+    await help_test_reloadable(hass, mqtt_mock, caplog, tmp_path, domain, config)
+
+
+async def test_reloadable_late(hass, mqtt_client_mock, caplog, tmp_path):
+    """Test reloading the MQTT platform with late entry setup."""
+    domain = vacuum.DOMAIN
+    config = DEFAULT_CONFIG
+    await help_test_reloadable_late(hass, caplog, tmp_path, domain, config)
+
+
+@pytest.mark.parametrize(
+    "topic,value,attribute,attribute_value",
+    [
+        (CONF_BATTERY_LEVEL_TOPIC, '{ "battery_level": 60 }', "battery_level", 60),
+        (CONF_CHARGING_TOPIC, '{ "charging": true }', "status", "Stopped"),
+        (CONF_CLEANING_TOPIC, '{ "cleaning": true }', "status", "Cleaning"),
+        (CONF_DOCKED_TOPIC, '{ "docked": true }', "status", "Docked"),
+        (
+            CONF_ERROR_TOPIC,
+            '{ "error": "some error" }',
+            "status",
+            "Error: some error",
+        ),
+        (
+            CONF_FAN_SPEED_TOPIC,
+            '{ "fan_speed": "medium" }',
+            "fan_speed",
+            "medium",
+        ),
+    ],
+)
+async def test_encoding_subscribable_topics(
+    hass, mqtt_mock, caplog, topic, value, attribute, attribute_value
+):
+    """Test handling of incoming encoded payload."""
+    config = deepcopy(DEFAULT_CONFIG)
+    config[CONF_SUPPORTED_FEATURES] = [
+        "turn_on",
+        "turn_off",
+        "pause",
+        "stop",
+        "return_home",
+        "battery",
+        "status",
+        "locate",
+        "clean_spot",
+        "fan_speed",
+        "send_command",
+    ]
+
+    await help_test_encoding_subscribable_topics(
+        hass,
+        mqtt_mock,
+        caplog,
+        vacuum.DOMAIN,
+        config,
+        topic,
+        value,
+        attribute,
+        attribute_value,
+        skip_raw_test=True,
     )

@@ -1,18 +1,27 @@
 """Support for magicseaweed data from magicseaweed.com."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
 import magicseaweed
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_API_KEY,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
 
@@ -30,18 +39,30 @@ ICON = "mdi:waves"
 
 HOURS = ["12AM", "3AM", "6AM", "9AM", "12PM", "3PM", "6PM", "9PM"]
 
-SENSOR_TYPES = {
-    "max_breaking_swell": ["Max"],
-    "min_breaking_swell": ["Min"],
-    "swell_forecast": ["Forecast"],
-}
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="max_breaking_swell",
+        name="Max",
+    ),
+    SensorEntityDescription(
+        key="min_breaking_swell",
+        name="Min",
+    ),
+    SensorEntityDescription(
+        key="swell_forecast",
+        name="Forecast",
+    ),
+)
+
+SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
+
 
 UNITS = ["eu", "uk", "us"]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_MONITORED_CONDITIONS): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_TYPES)]
+            cv.ensure_list, [vol.In(SENSOR_KEYS)]
         ),
         vol.Required(CONF_API_KEY): cv.string,
         vol.Required(CONF_SPOT_ID): vol.All(cv.ensure_list, [cv.string]),
@@ -57,7 +78,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Magicseaweed sensor."""
     name = config.get(CONF_NAME)
     spot_id = config[CONF_SPOT_ID]
@@ -78,66 +104,58 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if forecast_data.currently is None or forecast_data.hourly is None:
         return
 
-    sensors = []
-    for variable in config[CONF_MONITORED_CONDITIONS]:
-        sensors.append(MagicSeaweedSensor(forecast_data, variable, name, units))
-        if "forecast" not in variable and hours is not None:
-            for hour in hours:
-                sensors.append(
-                    MagicSeaweedSensor(forecast_data, variable, name, units, hour)
-                )
+    monitored_conditions = config[CONF_MONITORED_CONDITIONS]
+    sensors = [
+        MagicSeaweedSensor(forecast_data, name, units, description)
+        for description in SENSOR_TYPES
+        if description.key in monitored_conditions
+    ]
+    if hours is not None:
+        sensors.extend(
+            [
+                MagicSeaweedSensor(forecast_data, name, units, description, hour)
+                for description in SENSOR_TYPES
+                if description.key in monitored_conditions
+                and "forecast" not in description.key
+                for hour in hours
+            ]
+        )
     add_entities(sensors, True)
 
 
 class MagicSeaweedSensor(SensorEntity):
     """Implementation of a MagicSeaweed sensor."""
 
-    def __init__(self, forecast_data, sensor_type, name, unit_system, hour=None):
+    _attr_icon = ICON
+
+    def __init__(
+        self,
+        forecast_data,
+        name,
+        unit_system,
+        description: SensorEntityDescription,
+        hour=None,
+    ):
         """Initialize the sensor."""
+        self.entity_description = description
         self.client_name = name
         self.data = forecast_data
         self.hour = hour
-        self.type = sensor_type
-        self._attrs = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
-        self._name = SENSOR_TYPES[sensor_type][0]
-        self._icon = None
-        self._state = None
         self._unit_system = unit_system
-        self._unit_of_measurement = None
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        if self.hour is None and "forecast" in self.type:
-            return f"{self.client_name} {self._name}"
-        if self.hour is None:
-            return f"Current {self.client_name} {self._name}"
-        return f"{self.hour} {self.client_name} {self._name}"
+        if hour is None and "forecast" in description.key:
+            self._attr_name = f"{name} {description.name}"
+        elif hour is None:
+            self._attr_name = f"Current {name} {description.name}"
+        else:
+            self._attr_name = f"{hour} {name} {description.name}"
 
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
+        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
 
     @property
     def unit_system(self):
         """Return the unit system of this entity."""
         return self._unit_system
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
-
-    @property
-    def icon(self):
-        """Return the entity weather icon, if any."""
-        return ICON
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return self._attrs
 
     def update(self):
         """Get the latest data from Magicseaweed and updates the states."""
@@ -147,22 +165,23 @@ class MagicSeaweedSensor(SensorEntity):
         else:
             forecast = self.data.hourly[self.hour]
 
-        self._unit_of_measurement = forecast.swell_unit
-        if self.type == "min_breaking_swell":
-            self._state = forecast.swell_minBreakingHeight
-        elif self.type == "max_breaking_swell":
-            self._state = forecast.swell_maxBreakingHeight
-        elif self.type == "swell_forecast":
+        self._attr_native_unit_of_measurement = forecast.swell_unit
+        sensor_type = self.entity_description.key
+        if sensor_type == "min_breaking_swell":
+            self._attr_native_value = forecast.swell_minBreakingHeight
+        elif sensor_type == "max_breaking_swell":
+            self._attr_native_value = forecast.swell_maxBreakingHeight
+        elif sensor_type == "swell_forecast":
             summary = f"{forecast.swell_minBreakingHeight} - {forecast.swell_maxBreakingHeight}"
-            self._state = summary
+            self._attr_native_value = summary
             if self.hour is None:
                 for hour, data in self.data.hourly.items():
                     occurs = hour
                     hr_summary = f"{data.swell_minBreakingHeight} - {data.swell_maxBreakingHeight} {data.swell_unit}"
-                    self._attrs[occurs] = hr_summary
+                    self._attr_extra_state_attributes[occurs] = hr_summary
 
-        if self.type != "swell_forecast":
-            self._attrs.update(forecast.attrs)
+        if sensor_type != "swell_forecast":
+            self._attr_extra_state_attributes.update(forecast.attrs)
 
 
 class MagicSeaweedData:

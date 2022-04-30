@@ -1,4 +1,6 @@
 """Sensor for Suez Water Consumption data."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
@@ -8,15 +10,19 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, VOLUME_LITERS
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
-CONF_COUNTER_ID = "counter_id"
 
 SCAN_INTERVAL = timedelta(hours=12)
 
-COMPONENT_ICON = "mdi:water-pump"
-COMPONENT_NAME = "Suez Water Client"
+CONF_COUNTER_ID = "counter_id"
+
+NAME = "Suez Water Client"
+ICON = "mdi:water-pump"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -27,7 +33,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the sensor platform."""
     username = config[CONF_USERNAME]
     password = config[CONF_PASSWORD]
@@ -49,6 +60,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class SuezSensor(SensorEntity):
     """Representation of a Sensor."""
 
+    _attr_name = NAME
+    _attr_icon = ICON
+    _attr_native_unit_of_measurement = VOLUME_LITERS
+
     def __init__(self, client):
         """Initialize the data object."""
         self._attributes = {}
@@ -57,29 +72,14 @@ class SuezSensor(SensorEntity):
         self.client = client
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return COMPONENT_NAME
-
-    @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return VOLUME_LITERS
 
     @property
     def extra_state_attributes(self):
         """Return the state attributes."""
         return self._attributes
-
-    @property
-    def icon(self):
-        """Return the icon of the sensor."""
-        return COMPONENT_ICON
 
     def _fetch_data(self):
         """Fetch latest data from Suez."""

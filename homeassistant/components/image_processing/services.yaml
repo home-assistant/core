@@ -4,3 +4,5 @@ scan:
   name: Scan
   description: Process an image immediately
   target:
+    entity:
+      domain: image_processing

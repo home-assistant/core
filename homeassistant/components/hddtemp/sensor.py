@@ -1,4 +1,6 @@
 """Support for getting the disk temperature of a host."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 import socket
@@ -6,17 +8,23 @@ from telnetlib import Telnet
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorDeviceClass,
+    SensorEntity,
+)
 from homeassistant.const import (
     CONF_DISKS,
     CONF_HOST,
     CONF_NAME,
     CONF_PORT,
-    DEVICE_CLASS_TEMPERATURE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,7 +48,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the HDDTemp sensor."""
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
@@ -63,34 +76,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class HddTempSensor(SensorEntity):
     """Representation of a HDDTemp sensor."""
 
+    _attr_device_class = SensorDeviceClass.TEMPERATURE
+
     def __init__(self, name, disk, hddtemp):
         """Initialize a HDDTemp sensor."""
         self.hddtemp = hddtemp
         self.disk = disk
-        self._name = f"{name} {disk}"
-        self._state = None
+        self._attr_name = f"{name} {disk}"
         self._details = None
-        self._unit = None
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._state
-
-    @property
-    def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return DEVICE_CLASS_TEMPERATURE
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return self._unit
 
     @property
     def extra_state_attributes(self):
@@ -104,13 +97,13 @@ class HddTempSensor(SensorEntity):
 
         if self.hddtemp.data and self.disk in self.hddtemp.data:
             self._details = self.hddtemp.data[self.disk].split("|")
-            self._state = self._details[2]
+            self._attr_native_value = self._details[2]
             if self._details is not None and self._details[3] == "F":
-                self._unit = TEMP_FAHRENHEIT
+                self._attr_native_unit_of_measurement = TEMP_FAHRENHEIT
             else:
-                self._unit = TEMP_CELSIUS
+                self._attr_native_unit_of_measurement = TEMP_CELSIUS
         else:
-            self._state = None
+            self._attr_native_value = None
 
 
 class HddTempData:

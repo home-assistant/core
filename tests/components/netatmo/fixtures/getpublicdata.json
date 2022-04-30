@@ -1,0 +1,271 @@
+{
+  "status": "ok",
+  "time_server": 1560248397,
+  "time_exec": 0,
+  "body": [
+    {
+      "_id": "70:ee:50:36:94:7c",
+      "place": {
+        "location": [8.791382999999996, 50.2136394],
+        "timezone": "Europe/Berlin",
+        "country": "DE",
+        "altitude": 132
+      },
+      "mark": 14,
+      "measures": {
+        "02:00:00:36:f2:94": {
+          "res": {
+            "1560248022": [21.4, 62]
+          },
+          "type": ["temperature", "humidity"]
+        },
+        "70:ee:50:36:94:7c": {
+          "res": {
+            "1560248030": [1010.6]
+          },
+          "type": ["pressure"]
+        },
+        "05:00:00:05:33:84": {
+          "rain_60min": 0.2,
+          "rain_24h": 12.322000000000001,
+          "rain_live": 0.5,
+          "rain_timeutc": 1560248022
+        }
+      },
+      "modules": ["05:00:00:05:33:84", "02:00:00:36:f2:94"],
+      "module_types": {
+        "05:00:00:05:33:84": "NAModule3",
+        "02:00:00:36:f2:94": "NAModule1"
+      }
+    },
+    {
+      "_id": "70:ee:50:1f:68:9e",
+      "place": {
+        "location": [8.795445200000017, 50.2130169],
+        "timezone": "Europe/Berlin",
+        "country": "DE",
+        "altitude": 125
+      },
+      "mark": 14,
+      "measures": {
+        "02:00:00:1f:82:28": {
+          "res": {
+            "1560248312": [21.1, 69]
+          },
+          "type": ["temperature", "humidity"]
+        },
+        "70:ee:50:1f:68:9e": {
+          "res": {
+            "1560248344": [1007.3]
+          },
+          "type": ["pressure"]
+        },
+        "05:00:00:02:bb:6e": {
+          "rain_60min": 0,
+          "rain_24h": 9.999,
+          "rain_live": 0,
+          "rain_timeutc": 1560248344
+        }
+      },
+      "modules": ["02:00:00:1f:82:28", "05:00:00:02:bb:6e"],
+      "module_types": {
+        "02:00:00:1f:82:28": "NAModule1",
+        "05:00:00:02:bb:6e": "NAModule3"
+      }
+    },
+    {
+      "_id": "70:ee:50:27:25:b0",
+      "place": {
+        "location": [8.7807159, 50.1946167],
+        "timezone": "Europe/Berlin",
+        "country": "DE",
+        "altitude": 112
+      },
+      "mark": 14,
+      "measures": {
+        "02:00:00:27:19:b2": {
+          "res": {
+            "1560247889": [23.2, 60]
+          },
+          "type": ["temperature", "humidity"]
+        },
+        "70:ee:50:27:25:b0": {
+          "res": {
+            "1560247907": [1012.8]
+          },
+          "type": ["pressure"]
+        },
+        "05:00:00:03:5d:2e": {
+          "rain_60min": 0,
+          "rain_24h": 11.716000000000001,
+          "rain_live": 0,
+          "rain_timeutc": 1560247896
+        }
+      },
+      "modules": ["02:00:00:27:19:b2", "05:00:00:03:5d:2e"],
+      "module_types": {
+        "02:00:00:27:19:b2": "NAModule1",
+        "05:00:00:03:5d:2e": "NAModule3"
+      }
+    },
+    {
+      "_id": "70:ee:50:04:ed:7a",
+      "place": {
+        "location": [8.785034, 50.192169],
+        "timezone": "Europe/Berlin",
+        "country": "DE",
+        "altitude": 112
+      },
+      "mark": 14,
+      "measures": {
+        "02:00:00:04:c2:2e": {
+          "res": {
+            "1560248137": [19.8, 76]
+          },
+          "type": ["temperature", "humidity"]
+        },
+        "70:ee:50:04:ed:7a": {
+          "res": {
+            "1560248152": [1005.4]
+          },
+          "type": ["pressure"]
+        }
+      },
+      "modules": ["02:00:00:04:c2:2e"],
+      "module_types": {
+        "02:00:00:04:c2:2e": "NAModule1"
+      }
+    },
+    {
+      "_id": "70:ee:50:27:9f:2c",
+      "place": {
+        "location": [8.785342, 50.193573],
+        "timezone": "Europe/Berlin",
+        "country": "DE",
+        "altitude": 116
+      },
+      "mark": 1,
+      "measures": {
+        "02:00:00:27:aa:70": {
+          "res": {
+            "1560247821": [25.5, 56]
+          },
+          "type": ["temperature", "humidity"]
+        },
+        "70:ee:50:27:9f:2c": {
+          "res": {
+            "1560247853": [1010.6]
+          },
+          "type": ["pressure"]
+        }
+      },
+      "modules": ["02:00:00:27:aa:70"],
+      "module_types": {
+        "02:00:00:27:aa:70": "NAModule1"
+      }
+    },
+    {
+      "_id": "70:ee:50:01:20:fa",
+      "place": {
+        "location": [8.7953, 50.195241],
+        "timezone": "Europe/Berlin",
+        "country": "DE",
+        "altitude": 119
+      },
+      "mark": 1,
+      "measures": {
+        "02:00:00:00:f7:ba": {
+          "res": {
+            "1560247831": [27.4, 58]
+          },
+          "type": ["temperature", "humidity"]
+        },
+        "70:ee:50:01:20:fa": {
+          "res": {
+            "1560247876": [1014.4]
+          },
+          "type": ["pressure"]
+        }
+      },
+      "modules": ["02:00:00:00:f7:ba"],
+      "module_types": {
+        "02:00:00:00:f7:ba": "NAModule1"
+      }
+    },
+    {
+      "_id": "70:ee:50:3c:02:78",
+      "place": {
+        "location": [8.795953681700666, 50.19530139868166],
+        "timezone": "Europe/Berlin",
+        "country": "DE",
+        "altitude": 119
+      },
+      "mark": 7,
+      "measures": {
+        "02:00:00:3c:21:f2": {
+          "res": {
+            "1560248225": [23.3, 58]
+          },
+          "type": ["temperature", "humidity"]
+        },
+        "70:ee:50:3c:02:78": {
+          "res": {
+            "1560248270": [1011.7]
+          },
+          "type": ["pressure"]
+        }
+      },
+      "modules": ["02:00:00:3c:21:f2"],
+      "module_types": {
+        "02:00:00:3c:21:f2": "NAModule1"
+      }
+    },
+    {
+      "_id": "70:ee:50:36:a9:fc",
+      "place": {
+        "location": [8.801164269110814, 50.19596181704958],
+        "timezone": "Europe/Berlin",
+        "country": "DE",
+        "altitude": 113
+      },
+      "mark": 14,
+      "measures": {
+        "02:00:00:36:a9:50": {
+          "res": {
+            "1560248145": [20.1, 67]
+          },
+          "type": ["temperature", "humidity"]
+        },
+        "70:ee:50:36:a9:fc": {
+          "res": {
+            "1560248191": [1010]
+          },
+          "type": ["pressure"]
+        },
+        "05:00:00:02:92:82": {
+          "rain_60min": 0,
+          "rain_24h": 11.009,
+          "rain_live": 0,
+          "rain_timeutc": 1560248184
+        },
+        "06:00:00:03:19:76": {
+          "wind_strength": 15,
+          "wind_angle": 17,
+          "gust_strength": 31,
+          "gust_angle": 217,
+          "wind_timeutc": 1560248190
+        }
+      },
+      "modules": [
+        "05:00:00:02:92:82",
+        "02:00:00:36:a9:50",
+        "06:00:00:03:19:76"
+      ],
+      "module_types": {
+        "05:00:00:02:92:82": "NAModule3",
+        "02:00:00:36:a9:50": "NAModule1",
+        "06:00:00:03:19:76": "NAModule2"
+      }
+    }
+  ]
+}

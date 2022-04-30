@@ -16,17 +16,16 @@
                 "data": {
                     "api_key": "API kulcs"
                 },
-                "description": "K\u00e9rj\u00fck, adja meg a(z) {name} konfigur\u00e1ci\u00f3j\u00e1ban be\u00e1ll\u00edtott API-kulcsot."
+                "description": "K\u00e9rem, adja meg a konfigur\u00e1ci\u00f3ban l\u00e9v\u0151, {name} API-kulcs\u00e1t."
             },
             "user": {
                 "data": {
                     "api_key": "API kulcs",
-                    "host": "Gazdag\u00e9p",
+                    "host": "C\u00edm",
                     "port": "Port"
                 },
                 "description": "K\u00e9rj\u00fck, adja meg kapcsolati adatait."
             }
         }
-    },
-    "title": "Rendszer h\u00edd"
+    }
 }

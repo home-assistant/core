@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import ChainMap
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -24,7 +25,7 @@ TRANSLATION_FLATTEN_CACHE = "translation_flatten_cache"
 LOCALE_EN = "en"
 
 
-def recursive_flatten(prefix: Any, data: dict) -> dict[str, Any]:
+def recursive_flatten(prefix: Any, data: dict[str, Any]) -> dict[str, Any]:
     """Return a flattened representation of dict data."""
     output = {}
     for key, value in data.items():
@@ -134,7 +135,7 @@ def _build_resources(
     translation_strings: dict[str, dict[str, Any]],
     components: set[str],
     category: str,
-) -> dict[str, dict[str, Any]]:
+) -> dict[str, dict[str, Any] | str]:
     """Build the resources response for the given components."""
     # Build response
     return {
@@ -212,7 +213,7 @@ class _TranslationCache:
         self,
         language: str,
         category: str,
-        components: set,
+        components: set[str],
     ) -> list[dict[str, dict[str, Any]]]:
         """Load resources into the cache."""
         components_to_load = components - self.loaded.setdefault(language, set())
@@ -224,7 +225,7 @@ class _TranslationCache:
 
         return [cached.get(component, {}).get(category, {}) for component in components]
 
-    async def _async_load(self, language: str, components: set) -> None:
+    async def _async_load(self, language: str, components: set[str]) -> None:
         """Populate the cache for a given set of components."""
         _LOGGER.debug(
             "Cache miss for %s: %s",
@@ -247,10 +248,11 @@ class _TranslationCache:
     def _build_category_cache(
         self,
         language: str,
-        components: set,
+        components: set[str],
         translation_strings: dict[str, dict[str, Any]],
     ) -> None:
         """Extract resources into the cache."""
+        resource: dict[str, Any] | str
         cached = self.cache.setdefault(language, {})
         categories: set[str] = set()
         for resource in translation_strings.values():
@@ -260,7 +262,8 @@ class _TranslationCache:
             resource_func = (
                 _merge_resources if category == "state" else _build_resources
             )
-            new_resources = resource_func(translation_strings, components, category)
+            new_resources: Mapping[str, dict[str, Any] | str]
+            new_resources = resource_func(translation_strings, components, category)  # type: ignore[assignment]
 
             for component, resource in new_resources.items():
                 category_cache: dict[str, Any] = cached.setdefault(

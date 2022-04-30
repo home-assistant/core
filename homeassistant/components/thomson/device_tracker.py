@@ -1,4 +1,6 @@
 """Support for THOMSON routers."""
+from __future__ import annotations
+
 import logging
 import re
 import telnetlib
@@ -11,7 +13,9 @@ from homeassistant.components.device_tracker import (
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,7 +38,7 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 )
 
 
-def get_scanner(hass, config):
+def get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner | None:
     """Validate the configuration and return a THOMSON scanner."""
     scanner = ThomsonDeviceScanner(config[DOMAIN])
 
@@ -78,8 +82,7 @@ class ThomsonDeviceScanner(DeviceScanner):
             return False
 
         _LOGGER.info("Checking ARP")
-        data = self.get_thomson_data()
-        if not data:
+        if not (data := self.get_thomson_data()):
             return False
 
         # Flag C stands for CONNECTED
@@ -110,8 +113,7 @@ class ThomsonDeviceScanner(DeviceScanner):
 
         devices = {}
         for device in devices_result:
-            match = _DEVICES_REGEX.search(device.decode("utf-8"))
-            if match:
+            if match := _DEVICES_REGEX.search(device.decode("utf-8")):
                 devices[match.group("ip")] = {
                     "ip": match.group("ip"),
                     "mac": match.group("mac").upper(),

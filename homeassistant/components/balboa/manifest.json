@@ -1,0 +1,10 @@
+{
+  "domain": "balboa",
+  "name": "Balboa Spa Client",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/balboa",
+  "requirements": ["pybalboa==0.13"],
+  "codeowners": ["@garbled1"],
+  "iot_class": "local_push",
+  "loggers": ["pybalboa"]
+}

@@ -1,0 +1,29 @@
+{
+    "config": {
+        "error": {
+            "invalid_hostname": "Nieprawid\u0142owa nazwa hosta"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "hostname": "Nazwa hosta, dla kt\u00f3rego ma zosta\u0107 wykonane zapytanie DNS",
+                    "resolver": "Program do rozpoznawania nazw dla wyszukiwania IPV4",
+                    "resolver_ipv6": "Program do rozpoznawania nazw dla wyszukiwania IPV6"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_resolver": "Nieprawid\u0142owy adres IP dla resolvera"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "resolver": "Resolver do wyszukiwania IPV4",
+                    "resolver_ipv6": "Resolver do wyszukiwania IPV6"
+                }
+            }
+        }
+    }
+}

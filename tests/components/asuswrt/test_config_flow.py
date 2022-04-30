@@ -14,7 +14,7 @@ from homeassistant.components.asuswrt.const import (
     DOMAIN,
 )
 from homeassistant.components.device_tracker.const import CONF_CONSIDER_HOME
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_HOST,
     CONF_MODE,
@@ -52,11 +52,11 @@ def mock_controller_connect():
 
 async def test_user(hass, connect):
     """Test user config."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
+    flow_result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER, "show_advanced_options": True}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
+    assert flow_result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert flow_result["step_id"] == "user"
 
     # test with all provided
     with patch(
@@ -66,72 +66,14 @@ async def test_user(hass, connect):
         "homeassistant.components.asuswrt.config_flow.socket.gethostbyname",
         return_value=IP_ADDRESS,
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data=CONFIG_DATA,
+        result = await hass.config_entries.flow.async_configure(
+            flow_result["flow_id"], user_input=CONFIG_DATA
         )
         await hass.async_block_till_done()
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["title"] == HOST
         assert result["data"] == CONFIG_DATA
-
-        assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_import(hass, connect):
-    """Test import step."""
-    with patch(
-        "homeassistant.components.asuswrt.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry, patch(
-        "homeassistant.components.asuswrt.config_flow.socket.gethostbyname",
-        return_value=IP_ADDRESS,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=CONFIG_DATA,
-        )
-        await hass.async_block_till_done()
-
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == HOST
-        assert result["data"] == CONFIG_DATA
-
-        assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_import_ssh(hass, connect):
-    """Test import step with ssh file."""
-    config_data = CONFIG_DATA.copy()
-    config_data.pop(CONF_PASSWORD)
-    config_data[CONF_SSH_KEY] = SSH_KEY
-
-    with patch(
-        "homeassistant.components.asuswrt.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry, patch(
-        "homeassistant.components.asuswrt.config_flow.socket.gethostbyname",
-        return_value=IP_ADDRESS,
-    ), patch(
-        "homeassistant.components.asuswrt.config_flow.os.path.isfile",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.asuswrt.config_flow.os.access",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=config_data,
-        )
-        await hass.async_block_till_done()
-
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == HOST
-        assert result["data"] == config_data
 
         assert len(mock_setup_entry.mock_calls) == 1
 
@@ -142,7 +84,7 @@ async def test_error_no_password_ssh(hass):
     config_data.pop(CONF_PASSWORD)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": SOURCE_USER},
+        context={"source": SOURCE_USER, "show_advanced_options": True},
         data=config_data,
     )
 
@@ -156,7 +98,7 @@ async def test_error_both_password_ssh(hass):
     config_data[CONF_SSH_KEY] = SSH_KEY
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": SOURCE_USER},
+        context={"source": SOURCE_USER, "show_advanced_options": True},
         data=config_data,
     )
 
@@ -171,7 +113,7 @@ async def test_error_invalid_ssh(hass):
     config_data[CONF_SSH_KEY] = SSH_KEY
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": SOURCE_USER},
+        context={"source": SOURCE_USER, "show_advanced_options": True},
         data=config_data,
     )
 
@@ -215,21 +157,12 @@ async def test_abort_if_already_setup(hass):
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
         assert result["reason"] == "single_instance_allowed"
 
-        # Should fail, same HOST (import)
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=CONFIG_DATA,
-        )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-        assert result["reason"] == "single_instance_allowed"
-
 
 async def test_on_connect_failed(hass):
     """Test when we have errors connecting the router."""
     flow_result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": SOURCE_USER},
+        context={"source": SOURCE_USER, "show_advanced_options": True},
     )
 
     with patch("homeassistant.components.asuswrt.router.AsusWrt") as asus_wrt:

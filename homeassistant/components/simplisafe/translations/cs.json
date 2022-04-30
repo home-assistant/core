@@ -11,7 +11,6 @@
         },
         "step": {
             "mfa": {
-                "description": "Zkontrolujte, zda v\u00e1m do e-mail p\u0159i\u0161el odkaz od SimpliSafe. Po ov\u011b\u0159en\u00ed odkazu se vra\u0165te sem a dokon\u010dete instalaci integrace.",
                 "title": "V\u00edcefaktorov\u00e9 ov\u011b\u0159ov\u00e1n\u00ed SimpliSafe"
             },
             "reauth_confirm": {
@@ -23,6 +22,7 @@
             },
             "user": {
                 "data": {
+                    "auth_code": "Autoriza\u010dn\u00ed k\u00f3d",
                     "code": "K\u00f3d (pou\u017eit\u00fd v u\u017eivatelsk\u00e9m rozhran\u00ed Home Assistant)",
                     "password": "Heslo",
                     "username": "E-mail"

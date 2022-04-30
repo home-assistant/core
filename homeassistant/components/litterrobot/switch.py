@@ -9,16 +9,18 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .entity import LitterRobotControlEntity
+from .entity import LitterRobotConfigEntity
 from .hub import LitterRobotHub
 
 
-class LitterRobotNightLightModeSwitch(LitterRobotControlEntity, SwitchEntity):
+class LitterRobotNightLightModeSwitch(LitterRobotConfigEntity, SwitchEntity):
     """Litter-Robot Night Light Mode Switch."""
 
     @property
     def is_on(self) -> bool:
         """Return true if switch is on."""
+        if self._refresh_callback is not None:
+            return self._assumed_state
         return self.robot.night_light_mode_enabled
 
     @property
@@ -28,19 +30,21 @@ class LitterRobotNightLightModeSwitch(LitterRobotControlEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        await self.perform_action_and_refresh(self.robot.set_night_light, True)
+        await self.perform_action_and_assume_state(self.robot.set_night_light, True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        await self.perform_action_and_refresh(self.robot.set_night_light, False)
+        await self.perform_action_and_assume_state(self.robot.set_night_light, False)
 
 
-class LitterRobotPanelLockoutSwitch(LitterRobotControlEntity, SwitchEntity):
+class LitterRobotPanelLockoutSwitch(LitterRobotConfigEntity, SwitchEntity):
     """Litter-Robot Panel Lockout Switch."""
 
     @property
     def is_on(self) -> bool:
         """Return true if switch is on."""
+        if self._refresh_callback is not None:
+            return self._assumed_state
         return self.robot.panel_lock_enabled
 
     @property
@@ -50,14 +54,14 @@ class LitterRobotPanelLockoutSwitch(LitterRobotControlEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        await self.perform_action_and_refresh(self.robot.set_panel_lockout, True)
+        await self.perform_action_and_assume_state(self.robot.set_panel_lockout, True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        await self.perform_action_and_refresh(self.robot.set_panel_lockout, False)
+        await self.perform_action_and_assume_state(self.robot.set_panel_lockout, False)
 
 
-ROBOT_SWITCHES: list[tuple[type[LitterRobotControlEntity], str]] = [
+ROBOT_SWITCHES: list[tuple[type[LitterRobotConfigEntity], str]] = [
     (LitterRobotNightLightModeSwitch, "Night Light Mode"),
     (LitterRobotPanelLockoutSwitch, "Panel Lockout"),
 ]
@@ -76,4 +80,4 @@ async def async_setup_entry(
         for switch_class, switch_type in ROBOT_SWITCHES:
             entities.append(switch_class(robot=robot, entity_type=switch_type, hub=hub))
 
-    async_add_entities(entities, True)
+    async_add_entities(entities)

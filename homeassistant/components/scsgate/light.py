@@ -1,12 +1,17 @@
 """Support for SCSGate lights."""
+from __future__ import annotations
+
 import logging
 
 from scsgate.tasks import ToggleStatusTask
 import voluptuous as vol
 
-from homeassistant.components.light import PLATFORM_SCHEMA, LightEntity
+from homeassistant.components.light import PLATFORM_SCHEMA, ColorMode, LightEntity
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_STATE, CONF_DEVICES, CONF_NAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import CONF_SCS_ID, DOMAIN, SCSGATE_SCHEMA
 
@@ -15,7 +20,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the SCSGate switches."""
     devices = config.get(CONF_DEVICES)
     lights = []
@@ -44,9 +54,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class SCSGateLight(LightEntity):
     """Representation of a SCSGate light."""
 
+    _attr_color_mode = ColorMode.ONOFF
+    _attr_supported_color_modes = {ColorMode.ONOFF}
+    _attr_should_poll = False
+
     def __init__(self, scs_id, name, logger, scsgate):
         """Initialize the light."""
-        self._name = name
+        self._attr_name = name
         self._scs_id = scs_id
         self._toggled = False
         self._logger = logger
@@ -56,16 +70,6 @@ class SCSGateLight(LightEntity):
     def scs_id(self):
         """Return the SCS ID."""
         return self._scs_id
-
-    @property
-    def should_poll(self):
-        """No polling needed for a SCSGate light."""
-        return False
-
-    @property
-    def name(self):
-        """Return the name of the device if any."""
-        return self._name
 
     @property
     def is_on(self):

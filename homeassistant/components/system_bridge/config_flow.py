@@ -8,16 +8,14 @@ import async_timeout
 from systembridge import Bridge
 from systembridge.client import BridgeClient
 from systembridge.exceptions import BridgeAuthenticationException
-from systembridge.objects.os import Os
-from systembridge.objects.system import System
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
+from homeassistant.components import zeroconf
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client, config_validation as cv
-from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import BRIDGE_CONNECTION_ERRORS, DOMAIN
 
@@ -47,10 +45,14 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     hostname = data[CONF_HOST]
     try:
         async with async_timeout.timeout(30):
-            bridge_os: Os = await bridge.async_get_os()
-            if bridge_os.hostname is not None:
-                hostname = bridge_os.hostname
-            bridge_system: System = await bridge.async_get_system()
+            await bridge.async_get_information()
+            if (
+                bridge.information is not None
+                and bridge.information.host is not None
+                and bridge.information.uuid is not None
+            ):
+                hostname = bridge.information.host
+                uuid = bridge.information.uuid
     except BridgeAuthenticationException as exception:
         _LOGGER.info(exception)
         raise InvalidAuth from exception
@@ -58,7 +60,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         _LOGGER.info(exception)
         raise CannotConnect from exception
 
-    return {"hostname": hostname, "uuid": bridge_system.uuid.os}
+    return {"hostname": hostname, "uuid": uuid}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -146,11 +148,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_zeroconf(
-        self, discovery_info: DiscoveryInfoType
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle zeroconf discovery."""
-        host = discovery_info["properties"].get("ip")
-        uuid = discovery_info["properties"].get("uuid")
+        properties = discovery_info.properties
+        host = properties.get("ip")
+        uuid = properties.get("uuid")
 
         if host is None or uuid is None:
             return self.async_abort(reason="unknown")
@@ -162,7 +165,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._name = host
         self._input = {
             CONF_HOST: host,
-            CONF_PORT: discovery_info["properties"].get("port"),
+            CONF_PORT: properties.get("port"),
         }
 
         return await self.async_step_authenticate()

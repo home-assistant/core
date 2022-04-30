@@ -15,7 +15,7 @@ from homeassistant.setup import async_setup_component
 
 async def test_constructor_loads_info_from_config(hass):
     """Test non-dev mode loads info from SERVERS constant."""
-    with patch("hass_nabucasa.Cloud.start"):
+    with patch("hass_nabucasa.Cloud.initialize"):
         result = await async_setup_component(
             hass,
             "cloud",
@@ -109,7 +109,7 @@ async def test_setup_existing_cloud_user(hass, hass_storage):
     """Test setup with API push default data."""
     user = await hass.auth.async_create_system_user("Cloud test")
     hass_storage[STORAGE_KEY] = {"version": 1, "data": {"cloud_user": user.id}}
-    with patch("hass_nabucasa.Cloud.start"):
+    with patch("hass_nabucasa.Cloud.initialize"):
         result = await async_setup_component(
             hass,
             "cloud",
@@ -137,6 +137,14 @@ async def test_on_connect(hass, mock_cloud_fixture):
 
     assert len(hass.states.async_entity_ids("binary_sensor")) == 0
 
+    cloud_states = []
+
+    def handle_state(cloud_state):
+        nonlocal cloud_states
+        cloud_states.append(cloud_state)
+
+    cloud.async_listen_connection_change(hass, handle_state)
+
     assert "async_setup" in str(cl.iot._on_connect[-1])
     await cl.iot._on_connect[-1]()
     await hass.async_block_till_done()
@@ -148,6 +156,17 @@ async def test_on_connect(hass, mock_cloud_fixture):
         await hass.async_block_till_done()
 
     assert len(mock_load.mock_calls) == 0
+
+    assert len(cloud_states) == 1
+    assert cloud_states[-1] == cloud.CloudConnectionState.CLOUD_CONNECTED
+
+    assert len(cl.iot._on_disconnect) == 2
+    assert "async_setup" in str(cl.iot._on_disconnect[-1])
+    await cl.iot._on_disconnect[-1]()
+    await hass.async_block_till_done()
+
+    assert len(cloud_states) == 2
+    assert cloud_states[-1] == cloud.CloudConnectionState.CLOUD_DISCONNECTED
 
 
 async def test_remote_ui_url(hass, mock_cloud_fixture):
@@ -163,12 +182,15 @@ async def test_remote_ui_url(hass, mock_cloud_fixture):
         with pytest.raises(cloud.CloudNotAvailable):
             cloud.async_remote_ui_url(hass)
 
-        await cl.client.prefs.async_update(remote_enabled=True)
+        with patch.object(cl.remote, "connect"):
+            await cl.client.prefs.async_update(remote_enabled=True)
+            await hass.async_block_till_done()
 
         # No instance domain
         with pytest.raises(cloud.CloudNotAvailable):
             cloud.async_remote_ui_url(hass)
 
-        cl.remote._instance_domain = "example.com"
+        # Remote finished initializing
+        cl.client.prefs._prefs["remote_domain"] = "example.com"
 
         assert cloud.async_remote_ui_url(hass) == "https://example.com"

@@ -1,0 +1,50 @@
+{
+  "userData": {
+    "_id": "abc",
+    "color": {
+      "green": 0,
+      "blue": 255,
+      "brightness": 5,
+      "red": 0
+    },
+    "autoBackup": false,
+    "ip": "192.168.1.72",
+    "macAddress": "aa:bb:cc:dd:ee:ff",
+    "mask": "255.255.255.0",
+    "gateway": "192.168.1.1",
+    "dns": "192.168.1.3",
+    "firmware": {
+      "mainProcessor": {
+        "name": "PV Hub2.0",
+        "revision": 2,
+        "subRevision": 0,
+        "build": 1024
+      },
+      "radio": {
+        "revision": 2,
+        "subRevision": 0,
+        "build": 2610
+      }
+    },
+    "serialNumber": "ABC123",
+    "rfIDInt": 64789,
+    "rfID": "0xFD15",
+    "rfStatus": 0,
+    "brand": "HD",
+    "wireless": false,
+    "hubName": "QWxleGFuZGVySEQ=",
+    "localTimeDataSet": true,
+    "enableScheduledEvents": true,
+    "editingEnabled": true,
+    "setupCompleted": false,
+    "staticIp": false,
+    "times": {
+      "timezone": "America/Chicago",
+      "localSunriseTimeInMinutes": 0,
+      "localSunsetTimeInMinutes": 0,
+      "currentOffset": -18000
+    },
+    "rcUp": true,
+    "remoteConnectEnabled": true
+  }
+}

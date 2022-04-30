@@ -3,9 +3,10 @@
   "name": "Daikin AC",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/daikin",
-  "requirements": ["pydaikin==2.4.4"],
+  "requirements": ["pydaikin==2.7.0"],
   "codeowners": ["@fredrike"],
   "zeroconf": ["_dkapi._tcp.local."],
   "quality_scale": "platinum",
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "loggers": ["pydaikin"]
 }

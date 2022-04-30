@@ -2,13 +2,18 @@
     "config": {
         "abort": {
             "cannot_connect": "Ha fallat la connexi\u00f3",
+            "not_insteon_device": "El dispositiu descobert no \u00e9s un dispositiu Insteon",
             "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3."
         },
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3",
             "select_single": "Selecciona una opci\u00f3."
         },
+        "flow_title": "{name}",
         "step": {
+            "confirm_usb": {
+                "description": "Vols configurar {name}?"
+            },
             "hubv1": {
                 "data": {
                     "host": "Adre\u00e7a IP",
@@ -29,7 +34,7 @@
             },
             "plm": {
                 "data": {
-                    "device": "Ruta del port USB del dispositiu"
+                    "device": "Ruta del dispositiu USB"
                 },
                 "description": "Configura el m\u00f2dem Insteon PowerLink (PLM).",
                 "title": "Insteon PLM"

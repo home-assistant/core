@@ -13,7 +13,7 @@
         "step": {
             "reauth": {
                 "data": {
-                    "personal_access_token": "\u500b\u4eba\u5b58\u53d6\u5bc6\u9470\uff08PAT\uff09"
+                    "personal_access_token": "\u500b\u4eba\u5b58\u53d6\u91d1\u9470\uff08PAT\uff09"
                 },
                 "description": "{project_url}\u8a8d\u8b49\u5931\u6557\u3002\u8acb\u8f38\u5165\u76ee\u524d\u8b49\u66f8\u3002",
                 "title": "\u91cd\u65b0\u8a8d\u8b49"
@@ -21,10 +21,10 @@
             "user": {
                 "data": {
                     "organization": "\u7d44\u7e54",
-                    "personal_access_token": "\u500b\u4eba\u5b58\u53d6\u5bc6\u9470\uff08PAT\uff09",
+                    "personal_access_token": "\u500b\u4eba\u5b58\u53d6\u91d1\u9470\uff08PAT\uff09",
                     "project": "\u5c08\u6848"
                 },
-                "description": "\u8a2d\u5b9a Azure DevOps \u4ee5\u5b58\u53d6\u5c08\u6848\u3002\u79c1\u4eba\u5c08\u6848\u5247\u9700\u8981\u8f38\u5165\u300c\u500b\u4eba\u5b58\u53d6\u5bc6\u9470\uff09\u3002",
+                "description": "\u8a2d\u5b9a Azure DevOps \u4ee5\u5b58\u53d6\u5c08\u6848\u3002\u79c1\u4eba\u5c08\u6848\u5247\u9700\u8981\u8f38\u5165\u300c\u500b\u4eba\u5b58\u53d6\u91d1\u9470\uff09\u3002",
                 "title": "\u65b0\u589e Azure DevOps \u5c08\u6848"
             }
         }

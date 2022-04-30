@@ -1,5 +1,4 @@
 """Support for Axis binary sensors."""
-
 from datetime import timedelta
 
 from axis.event_stream import (
@@ -17,14 +16,13 @@ from axis.event_stream import (
 )
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_CONNECTIVITY,
-    DEVICE_CLASS_LIGHT,
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_SOUND,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 
@@ -32,14 +30,18 @@ from .axis_base import AxisEventBase
 from .const import DOMAIN as AXIS_DOMAIN
 
 DEVICE_CLASS = {
-    CLASS_INPUT: DEVICE_CLASS_CONNECTIVITY,
-    CLASS_LIGHT: DEVICE_CLASS_LIGHT,
-    CLASS_MOTION: DEVICE_CLASS_MOTION,
-    CLASS_SOUND: DEVICE_CLASS_SOUND,
+    CLASS_INPUT: BinarySensorDeviceClass.CONNECTIVITY,
+    CLASS_LIGHT: BinarySensorDeviceClass.LIGHT,
+    CLASS_MOTION: BinarySensorDeviceClass.MOTION,
+    CLASS_SOUND: BinarySensorDeviceClass.SOUND,
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up a Axis binary sensor."""
     device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
 

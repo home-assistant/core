@@ -10,9 +10,12 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
     CONF_PORT,
+    Platform,
 )
+from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, SENSOR_TYPES
 
@@ -53,7 +56,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the eBusd component."""
     _LOGGER.debug("Integration setup started")
     conf = config[DOMAIN]
@@ -72,7 +75,7 @@ def setup(hass, config):
             "client_name": name,
             "sensor_types": SENSOR_TYPES[circuit],
         }
-        load_platform(hass, "sensor", DOMAIN, sensor_config, config)
+        load_platform(hass, Platform.SENSOR, DOMAIN, sensor_config, config)
 
         hass.services.register(DOMAIN, SERVICE_EBUSD_WRITE, hass.data[DOMAIN].write)
 
@@ -107,7 +110,7 @@ class EbusdData:
             _LOGGER.error(err)
             raise RuntimeError(err) from err
 
-    def write(self, call):
+    def write(self, call: ServiceCall) -> None:
         """Call write methon on ebusd."""
         name = call.data.get("name")
         value = call.data.get("value")

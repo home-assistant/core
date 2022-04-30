@@ -23,7 +23,10 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS, CONF_NAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -81,7 +84,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the DWD-Weather-Warnings sensor."""
     name = config.get(CONF_NAME)
     region_name = config.get(CONF_REGION_NAME)
@@ -112,7 +120,7 @@ class DwdWeatherWarningsSensor(SensorEntity):
         self._attr_name = f"{name} {description.name}"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
         if self.entity_description.key == CURRENT_WARNING_SENSOR:
             return self._api.api.current_warning_level

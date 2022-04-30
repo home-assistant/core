@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "{ip_address}",
+    "flow_title": "{name} ({ip_address})",
     "step": {
       "user": {
         "title": "Connect to the powerwall",
@@ -9,6 +9,17 @@
           "ip_address": "[%key:common::config_flow::data::ip%]",
           "password": "[%key:common::config_flow::data::password%]"
         }
+      },
+      "reauth_confim": {
+        "title": "Reauthenticate the powerwall",
+        "description": "[%key:component::powerwall::config::step::user::description%]",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "confirm_discovery": {
+        "title": "[%key:component::powerwall::config::step::user::title%]",
+        "description": "Do you want to setup {name} ({ip_address})?"
       }
     },
     "error": {
@@ -18,6 +29,7 @@
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     },
     "abort": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }

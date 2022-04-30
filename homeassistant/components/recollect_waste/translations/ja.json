@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u30c7\u30d0\u30a4\u30b9\u306f\u3059\u3067\u306b\u8a2d\u5b9a\u3055\u308c\u3066\u3044\u307e\u3059"
+        },
+        "error": {
+            "invalid_place_or_service_id": "\u7121\u52b9\u306a\u30d7\u30ec\u30a4\u30b9ID\u3001\u307e\u305f\u306f\u30b5\u30fc\u30d3\u30b9ID"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "place_id": "\u30d7\u30ec\u30a4\u30b9ID",
+                    "service_id": "\u30b5\u30fc\u30d3\u30b9ID"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "friendly_name": "\u30d4\u30c3\u30af\u30a2\u30c3\u30d7\u30bf\u30a4\u30d7\u306b\u306f\u308f\u304b\u308a\u3084\u3059\u3044\u540d\u524d\u3092\u4f7f\u7528\u3057\u3066\u304f\u3060\u3055\u3044(\u53ef\u80fd\u306a\u5834\u5408)"
+                },
+                "title": "Recollect Waste\u306e\u8a2d\u5b9a"
+            }
+        }
+    }
+}

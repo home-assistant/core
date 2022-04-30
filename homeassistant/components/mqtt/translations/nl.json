@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Dienst is al geconfigureerd",
             "single_instance_allowed": "Al geconfigureerd. Slechts een enkele configuratie mogelijk."
         },
         "error": {
@@ -70,14 +71,14 @@
                     "birth_enable": "Geboortebericht inschakelen",
                     "birth_payload": "Birth message payload",
                     "birth_qos": "Birth message QoS",
-                    "birth_retain": "Birth message behouden",
+                    "birth_retain": "Verbind bericht onthouden",
                     "birth_topic": "Birth message onderwerp",
                     "discovery": "Discovery inschakelen",
-                    "will_enable": "Will message inschakelen",
-                    "will_payload": "Will message payload",
-                    "will_qos": "Will message QoS",
-                    "will_retain": "Will message behouden",
-                    "will_topic": "Will message topic"
+                    "will_enable": "Offline bericht inschakelen",
+                    "will_payload": "Offline bericht inhoud",
+                    "will_qos": "Offline bericht QoS",
+                    "will_retain": "Offline bericht onthouden",
+                    "will_topic": "Offline bericht topic"
                 },
                 "description": "Detectie - Als detectie is ingeschakeld (aanbevolen), zal Home Assistant automatisch apparaten en entiteiten detecteren die hun configuratie publiceren op de MQTT-broker. Als detectie is uitgeschakeld, moet alle configuratie handmatig worden uitgevoerd.\n Birth message - Het birth message wordt elke keer dat Home Assistant (opnieuw) verbinding maakt met de MQTT-broker, verzonden.\n Will message - Het will message wordt telkens verzonden  wanneer Home Assistant de verbinding met de broker verliest, zowel in het geval van een schone (bijv. Home Assistant wordt uitgeschakeld) als in geval van een onjuiste (bijv. Home Assistant crasht of verliest de netwerkverbinding) verbroken verbinding.",
                 "title": "MQTT-opties"

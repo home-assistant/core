@@ -1,15 +1,15 @@
 {
     "config": {
         "abort": {
-            "already_configured": "L'appareil est d\u00e9ja configur\u00e9 ",
-            "cannot_connect": "Echec de connection",
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
+            "cannot_connect": "\u00c9chec de connexion",
             "not_irobot_device": "L'appareil d\u00e9couvert n'est pas un appareil iRobot",
             "short_blid": "La BLID a \u00e9t\u00e9 tronqu\u00e9"
         },
         "error": {
-            "cannot_connect": "Impossible de se connecter, veuillez r\u00e9essayer"
+            "cannot_connect": "\u00c9chec de connexion"
         },
-        "flow_title": "iRobot {name} ( {host} )",
+        "flow_title": "{name} ({host})",
         "step": {
             "init": {
                 "data": {
@@ -34,7 +34,7 @@
                     "blid": "BLID",
                     "host": "H\u00f4te"
                 },
-                "description": "Aucun Roomba ou Braava d\u00e9couvert sur votre r\u00e9seau. Le BLID est la partie du nom d'h\u00f4te du p\u00e9riph\u00e9rique apr\u00e8s `iRobot-`. Veuillez suivre les \u00e9tapes d\u00e9crites dans la documentation \u00e0 {auth_help_url}\u00b4",
+                "description": "Aucun Roomba ou Braava n'a \u00e9t\u00e9 d\u00e9couvert sur votre r\u00e9seau.",
                 "title": "Se connecter manuellement \u00e0 l'appareil"
             },
             "user": {
@@ -42,11 +42,11 @@
                     "blid": "BLID",
                     "continuous": "En continu",
                     "delay": "D\u00e9lai",
-                    "host": "Nom d'h\u00f4te ou adresse IP",
+                    "host": "H\u00f4te",
                     "password": "Mot de passe"
                 },
                 "description": "La r\u00e9cup\u00e9ration du BLID et du mot de passe est actuellement un processus manuel. Veuillez suivre les \u00e9tapes d\u00e9crites dans la documentation \u00e0 l'adresse: https://www.home-assistant.io/integrations/roomba/#retrieving-your-credentials",
-                "title": "Se connecter \u00e0 l'appareil"
+                "title": "Se connecter automatiquement \u00e0 l'appareil"
             }
         }
     },

@@ -10,10 +10,8 @@ from typing import Final
 from bravia_tv import BraviaRC
 from bravia_tv.braviarc import NoIPControl
 
-from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
-from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PIN
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PIN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -22,7 +20,7 @@ from .const import CLIENTID_PREFIX, CONF_IGNORED_SOURCES, DOMAIN, NICKNAME
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS: Final[list[str]] = [MEDIA_PLAYER_DOMAIN, REMOTE_DOMAIN]
+PLATFORMS: Final[list[Platform]] = [Platform.MEDIA_PLAYER, Platform.REMOTE]
 SCAN_INTERVAL: Final = timedelta(seconds=10)
 
 
@@ -112,7 +110,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
             ),
         )
 
-    def _send_command(self, command: str, repeats: int = 1) -> None:
+    def _send_command(self, command: Iterable[str], repeats: int = 1) -> None:
         """Send a command to the TV."""
         for _ in range(repeats):
             for cmd in command:

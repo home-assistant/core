@@ -114,7 +114,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         return
 
     @verify_domain_control(hass, HMIPC_DOMAIN)
-    async def async_call_hmipc_service(service: ServiceCall):
+    async def async_call_hmipc_service(service: ServiceCall) -> None:
         """Call correct HomematicIP Cloud service."""
         service_name = service.service
 
@@ -208,11 +208,9 @@ async def _async_activate_eco_mode_with_duration(
 ) -> None:
     """Service to activate eco mode with duration."""
     duration = service.data[ATTR_DURATION]
-    hapid = service.data.get(ATTR_ACCESSPOINT_ID)
 
-    if hapid:
-        home = _get_home(hass, hapid)
-        if home:
+    if hapid := service.data.get(ATTR_ACCESSPOINT_ID):
+        if home := _get_home(hass, hapid):
             await home.activate_absence_with_duration(duration)
     else:
         for hap in hass.data[HMIPC_DOMAIN].values():
@@ -224,11 +222,9 @@ async def _async_activate_eco_mode_with_period(
 ) -> None:
     """Service to activate eco mode with period."""
     endtime = service.data[ATTR_ENDTIME]
-    hapid = service.data.get(ATTR_ACCESSPOINT_ID)
 
-    if hapid:
-        home = _get_home(hass, hapid)
-        if home:
+    if hapid := service.data.get(ATTR_ACCESSPOINT_ID):
+        if home := _get_home(hass, hapid):
             await home.activate_absence_with_period(endtime)
     else:
         for hap in hass.data[HMIPC_DOMAIN].values():
@@ -239,11 +235,9 @@ async def _async_activate_vacation(hass: HomeAssistant, service: ServiceCall) ->
     """Service to activate vacation."""
     endtime = service.data[ATTR_ENDTIME]
     temperature = service.data[ATTR_TEMPERATURE]
-    hapid = service.data.get(ATTR_ACCESSPOINT_ID)
 
-    if hapid:
-        home = _get_home(hass, hapid)
-        if home:
+    if hapid := service.data.get(ATTR_ACCESSPOINT_ID):
+        if home := _get_home(hass, hapid):
             await home.activate_vacation(endtime, temperature)
     else:
         for hap in hass.data[HMIPC_DOMAIN].values():
@@ -252,11 +246,8 @@ async def _async_activate_vacation(hass: HomeAssistant, service: ServiceCall) ->
 
 async def _async_deactivate_eco_mode(hass: HomeAssistant, service: ServiceCall) -> None:
     """Service to deactivate eco mode."""
-    hapid = service.data.get(ATTR_ACCESSPOINT_ID)
-
-    if hapid:
-        home = _get_home(hass, hapid)
-        if home:
+    if hapid := service.data.get(ATTR_ACCESSPOINT_ID):
+        if home := _get_home(hass, hapid):
             await home.deactivate_absence()
     else:
         for hap in hass.data[HMIPC_DOMAIN].values():
@@ -265,11 +256,8 @@ async def _async_deactivate_eco_mode(hass: HomeAssistant, service: ServiceCall) 
 
 async def _async_deactivate_vacation(hass: HomeAssistant, service: ServiceCall) -> None:
     """Service to deactivate vacation."""
-    hapid = service.data.get(ATTR_ACCESSPOINT_ID)
-
-    if hapid:
-        home = _get_home(hass, hapid)
-        if home:
+    if hapid := service.data.get(ATTR_ACCESSPOINT_ID):
+        if home := _get_home(hass, hapid):
             await home.deactivate_vacation()
     else:
         for hap in hass.data[HMIPC_DOMAIN].values():
@@ -297,7 +285,9 @@ async def _set_active_climate_profile(
 
 async def _async_dump_hap_config(hass: HomeAssistant, service: ServiceCall) -> None:
     """Service to dump the configuration of a Homematic IP Access Point."""
-    config_path = service.data.get(ATTR_CONFIG_OUTPUT_PATH) or hass.config.config_dir
+    config_path: str = (
+        service.data.get(ATTR_CONFIG_OUTPUT_PATH) or hass.config.config_dir or "."
+    )
     config_file_prefix = service.data[ATTR_CONFIG_OUTPUT_FILE_PREFIX]
     anonymize = service.data[ATTR_ANONYMIZE]
 
@@ -335,8 +325,7 @@ async def _async_reset_energy_counter(hass: HomeAssistant, service: ServiceCall)
 
 def _get_home(hass: HomeAssistant, hapid: str) -> AsyncHome | None:
     """Return a HmIP home."""
-    hap = hass.data[HMIPC_DOMAIN].get(hapid)
-    if hap:
+    if hap := hass.data[HMIPC_DOMAIN].get(hapid):
         return hap.home
 
     _LOGGER.info("No matching access point found for access point id %s", hapid)

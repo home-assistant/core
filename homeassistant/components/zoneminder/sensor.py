@@ -1,12 +1,21 @@
 """Support for ZoneMinder sensors."""
+from __future__ import annotations
+
 import logging
 
 import voluptuous as vol
 from zoneminder.monitor import TimePeriod
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.const import CONF_MONITORED_CONDITIONS
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN as ZONEMINDER_DOMAIN
 
@@ -16,13 +25,30 @@ CONF_INCLUDE_ARCHIVED = "include_archived"
 
 DEFAULT_INCLUDE_ARCHIVED = False
 
-SENSOR_TYPES = {
-    "all": ["Events"],
-    "hour": ["Events Last Hour"],
-    "day": ["Events Last Day"],
-    "week": ["Events Last Week"],
-    "month": ["Events Last Month"],
-}
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="all",
+        name="Events",
+    ),
+    SensorEntityDescription(
+        key="hour",
+        name="Events Last Hour",
+    ),
+    SensorEntityDescription(
+        key="day",
+        name="Events Last Day",
+    ),
+    SensorEntityDescription(
+        key="week",
+        name="Events Last Week",
+    ),
+    SensorEntityDescription(
+        key="month",
+        name="Events Last Month",
+    ),
+)
+
+SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -30,27 +56,37 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             CONF_INCLUDE_ARCHIVED, default=DEFAULT_INCLUDE_ARCHIVED
         ): cv.boolean,
         vol.Optional(CONF_MONITORED_CONDITIONS, default=["all"]): vol.All(
-            cv.ensure_list, [vol.In(list(SENSOR_TYPES))]
+            cv.ensure_list, [vol.In(SENSOR_KEYS)]
         ),
     }
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the ZoneMinder sensor platform."""
-    include_archived = config.get(CONF_INCLUDE_ARCHIVED)
+    include_archived = config[CONF_INCLUDE_ARCHIVED]
+    monitored_conditions = config[CONF_MONITORED_CONDITIONS]
 
-    sensors = []
+    sensors: list[SensorEntity] = []
     for zm_client in hass.data[ZONEMINDER_DOMAIN].values():
-        monitors = zm_client.get_monitors()
-        if not monitors:
+        if not (monitors := zm_client.get_monitors()):
             _LOGGER.warning("Could not fetch any monitors from ZoneMinder")
 
         for monitor in monitors:
             sensors.append(ZMSensorMonitors(monitor))
 
-            for sensor in config[CONF_MONITORED_CONDITIONS]:
-                sensors.append(ZMSensorEvents(monitor, include_archived, sensor))
+            sensors.extend(
+                [
+                    ZMSensorEvents(monitor, include_archived, description)
+                    for description in SENSOR_TYPES
+                    if description.key in monitored_conditions
+                ]
+            )
 
         sensors.append(ZMSensorRunState(zm_client))
     add_entities(sensors)
@@ -71,7 +107,7 @@ class ZMSensorMonitors(SensorEntity):
         return f"{self._monitor.name} Status"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
@@ -82,8 +118,7 @@ class ZMSensorMonitors(SensorEntity):
 
     def update(self):
         """Update the sensor."""
-        state = self._monitor.function
-        if not state:
+        if not (state := self._monitor.function):
             self._state = None
         else:
             self._state = state.value
@@ -93,32 +128,26 @@ class ZMSensorMonitors(SensorEntity):
 class ZMSensorEvents(SensorEntity):
     """Get the number of events for each monitor."""
 
-    def __init__(self, monitor, include_archived, sensor_type):
+    _attr_native_unit_of_measurement = "Events"
+
+    def __init__(self, monitor, include_archived, description: SensorEntityDescription):
         """Initialize event sensor."""
+        self.entity_description = description
 
         self._monitor = monitor
         self._include_archived = include_archived
-        self.time_period = TimePeriod.get_time_period(sensor_type)
-        self._state = None
+        self.time_period = TimePeriod.get_time_period(description.key)
 
     @property
     def name(self):
         """Return the name of the sensor."""
         return f"{self._monitor.name} {self.time_period.title}"
 
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return "Events"
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
     def update(self):
         """Update the sensor."""
-        self._state = self._monitor.get_events(self.time_period, self._include_archived)
+        self._attr_native_value = self._monitor.get_events(
+            self.time_period, self._include_archived
+        )
 
 
 class ZMSensorRunState(SensorEntity):
@@ -136,7 +165,7 @@ class ZMSensorRunState(SensorEntity):
         return "Run State"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 

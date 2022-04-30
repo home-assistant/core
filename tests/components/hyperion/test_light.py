@@ -23,6 +23,8 @@ from homeassistant.components.light import (
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     DOMAIN as LIGHT_DOMAIN,
+    ColorMode,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import (
     RELOAD_AFTER_UPDATE_DELAY,
@@ -257,9 +259,9 @@ async def test_light_basic_properties(hass: HomeAssistant) -> None:
     # By default the effect list is the 3 external sources + 'Solid'.
     assert len(entity_state.attributes["effect_list"]) == 4
 
-    assert (
-        entity_state.attributes["supported_features"] == hyperion_light.SUPPORT_HYPERION
-    )
+    assert entity_state.attributes["color_mode"] == ColorMode.HS
+    assert entity_state.attributes["supported_color_modes"] == [ColorMode.HS]
+    assert entity_state.attributes["supported_features"] == LightEntityFeature.EFFECT
 
 
 async def test_light_async_turn_on(hass: HomeAssistant) -> None:
@@ -897,6 +899,7 @@ async def test_setup_entry_no_token_reauth(hass: HomeAssistant) -> None:
                 CONF_SOURCE: SOURCE_REAUTH,
                 "entry_id": config_entry.entry_id,
                 "unique_id": config_entry.unique_id,
+                "title_placeholders": {"name": config_entry.title},
             },
             data=config_entry.data,
         )
@@ -925,6 +928,7 @@ async def test_setup_entry_bad_token_reauth(hass: HomeAssistant) -> None:
                 CONF_SOURCE: SOURCE_REAUTH,
                 "entry_id": config_entry.entry_id,
                 "unique_id": config_entry.unique_id,
+                "title_placeholders": {"name": config_entry.title},
             },
             data=config_entry.data,
         )
@@ -1345,7 +1349,7 @@ async def test_lights_can_be_enabled(hass: HomeAssistant) -> None:
     entry = entity_registry.async_get(TEST_PRIORITY_LIGHT_ENTITY_ID_1)
     assert entry
     assert entry.disabled
-    assert entry.disabled_by == er.DISABLED_INTEGRATION
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
     entity_state = hass.states.get(TEST_PRIORITY_LIGHT_ENTITY_ID_1)
     assert not entity_state
 

@@ -2,13 +2,15 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from dataclasses import dataclass
 import datetime
 from datetime import timedelta
 from enum import Enum, IntEnum
+from http import HTTPStatus
 import logging
 import re
-from typing import Any, Callable, Dict
+from typing import Any
 
 from aiohttp.web import Response
 import requests
@@ -25,13 +27,13 @@ from withings_api.common import (
     query_measure_groups,
 )
 
+from homeassistant.components import webhook
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import (
     CONF_WEBHOOK_ID,
-    HTTP_UNAUTHORIZED,
     MASS_KILOGRAMS,
     PERCENTAGE,
     SPEED_METERS_PER_SECOND,
@@ -57,12 +59,12 @@ from .const import Measurement
 
 _LOGGER = logging.getLogger(const.LOG_NAMESPACE)
 NOT_AUTHENTICATED_ERROR = re.compile(
-    f"^{HTTP_UNAUTHORIZED},.*",
+    f"^{HTTPStatus.UNAUTHORIZED},.*",
     re.IGNORECASE,
 )
 DATA_UPDATED_SIGNAL = "withings_entity_state_updated"
 
-MeasurementData = Dict[Measurement, Any]
+MeasurementData = dict[Measurement, Any]
 
 
 class NotAuthenticatedError(HomeAssistantError):
@@ -493,7 +495,7 @@ class ConfigEntryWithingsApi(AbstractWithingsApi):
         """Perform an async request."""
         asyncio.run_coroutine_threadsafe(
             self.session.async_ensure_token_valid(), self._hass.loop
-        )
+        ).result()
 
         access_token = self._config_entry.data["token"]["access_token"]
         response = requests.request(
@@ -507,7 +509,7 @@ class ConfigEntryWithingsApi(AbstractWithingsApi):
 
 def json_message_response(message: str, message_code: int) -> Response:
     """Produce common json output."""
-    return HomeAssistantView.json({"message": message, "code": message_code}, 200)
+    return HomeAssistantView.json({"message": message, "code": message_code})
 
 
 class WebhookAvailability(IntEnum):
@@ -587,7 +589,7 @@ class DataManager:
             update_method=self.async_subscribe_webhook,
         )
         self.poll_data_update_coordinator = DataUpdateCoordinator[
-            Dict[MeasureType, Any]
+            dict[MeasureType, Any]
         ](
             hass,
             _LOGGER,
@@ -646,7 +648,11 @@ class DataManager:
             try:
                 return await func()
             except Exception as exception1:  # pylint: disable=broad-except
-                await asyncio.sleep(0.1)
+                _LOGGER.debug(
+                    "Failed attempt %s of %s (%s)", attempt, attempts, exception1
+                )
+                # Make each backoff pause a little bit longer
+                await asyncio.sleep(0.5 * attempt)
                 exception = exception1
                 continue
 
@@ -743,7 +749,9 @@ class DataManager:
                 flow = next(
                     iter(
                         flow
-                        for flow in self._hass.config_entries.flow.async_progress()
+                        for flow in self._hass.config_entries.flow.async_progress_by_handler(
+                            const.DOMAIN
+                        )
                         if flow.context == context
                     ),
                     None,
@@ -792,6 +800,7 @@ class DataManager:
             )
             for group in groups
             for measure in group.measures
+            if measure.type in WITHINGS_MEASURE_TYPE_MAP
         }
 
     async def async_get_sleep_summary(self) -> dict[MeasureType, Any]:
@@ -1038,7 +1047,9 @@ async def async_get_data_manager(
             config_entry.data["token"]["userid"],
             WebhookConfig(
                 id=config_entry.data[CONF_WEBHOOK_ID],
-                url=config_entry.data[const.CONF_WEBHOOK_URL],
+                url=webhook.async_generate_url(
+                    hass, config_entry.data[CONF_WEBHOOK_ID]
+                ),
                 enabled=config_entry.data[const.CONF_USE_WEBHOOK],
             ),
         )
@@ -1106,3 +1117,46 @@ class WithingsLocalOAuth2Implementation(LocalOAuth2Implementation):
         """Return the redirect uri."""
         url = get_url(self.hass, allow_internal=False, prefer_cloud=True)
         return f"{url}{AUTH_CALLBACK_PATH}"
+
+    async def _token_request(self, data: dict) -> dict:
+        """Make a token request and adapt Withings API reply."""
+        new_token = await super()._token_request(data)
+        # Withings API returns habitual token data under json key "body":
+        # {
+        #     "status": [{integer} Withings API response status],
+        #     "body": {
+        #         "access_token": [{string} Your new access_token],
+        #         "expires_in": [{integer} Access token expiry delay in seconds],
+        #         "token_type": [{string] HTTP Authorization Header format: Bearer],
+        #         "scope": [{string} Scopes the user accepted],
+        #         "refresh_token": [{string} Your new refresh_token],
+        #         "userid": [{string} The Withings ID of the user]
+        #     }
+        # }
+        # so we copy that to token root.
+        if body := new_token.pop("body", None):
+            new_token.update(body)
+        return new_token
+
+    async def async_resolve_external_data(self, external_data: Any) -> dict:
+        """Resolve the authorization code to tokens."""
+        return await self._token_request(
+            {
+                "action": "requesttoken",
+                "grant_type": "authorization_code",
+                "code": external_data["code"],
+                "redirect_uri": external_data["state"]["redirect_uri"],
+            }
+        )
+
+    async def _async_refresh_token(self, token: dict) -> dict:
+        """Refresh tokens."""
+        new_token = await self._token_request(
+            {
+                "action": "requesttoken",
+                "grant_type": "refresh_token",
+                "client_id": self.client_id,
+                "refresh_token": token["refresh_token"],
+            }
+        )
+        return {**token, **new_token}

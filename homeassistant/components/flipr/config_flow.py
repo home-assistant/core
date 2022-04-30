@@ -45,7 +45,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
                 _LOGGER.exception(exception)
 
-            if not errors and len(flipr_ids) == 0:
+            if not errors and not flipr_ids:
                 # No flipr_id found. Tell the user with an error message.
                 errors["base"] = "no_flipr_id_found"
 
@@ -85,9 +85,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _authenticate_and_search_flipr(self) -> list[str]:
         """Validate the username and password provided and searches for a flipr id."""
-        client = await self.hass.async_add_executor_job(
-            FliprAPIRestClient, self._username, self._password
-        )
+        # Instantiates the flipr API that does not require async since it is has no network access.
+        client = FliprAPIRestClient(self._username, self._password)
 
         flipr_ids = await self.hass.async_add_executor_job(client.search_flipr_ids)
 

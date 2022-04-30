@@ -7,6 +7,7 @@ from homeassistant.helpers.check_config import (
     CheckConfigError,
     async_check_ha_config_file,
 )
+from homeassistant.requirements import RequirementsNotFound
 
 from tests.common import mock_platform, patch_yaml_files
 
@@ -75,11 +76,47 @@ async def test_component_platform_not_found(hass):
 
         assert res.keys() == {"homeassistant"}
         assert res.errors[0] == CheckConfigError(
-            "Component error: beer - Integration 'beer' not found.", None, None
+            "Integration error: beer - Integration 'beer' not found.", None, None
         )
 
         # Only 1 error expected
         res.errors.pop(0)
+        assert not res.errors
+
+
+async def test_component_requirement_not_found(hass):
+    """Test errors if component with a requirement not found not found."""
+    # Make sure they don't exist
+    files = {YAML_CONFIG_FILE: BASE_CONFIG + "test_custom_component:"}
+    with patch(
+        "homeassistant.helpers.check_config.async_get_integration_with_requirements",
+        side_effect=RequirementsNotFound("test_custom_component", ["any"]),
+    ), patch("os.path.isfile", return_value=True), patch_yaml_files(files):
+        res = await async_check_ha_config_file(hass)
+        log_ha_config(res)
+
+        assert res.keys() == {"homeassistant"}
+        assert res.errors[0] == CheckConfigError(
+            "Integration error: test_custom_component - Requirements for test_custom_component not found: ['any'].",
+            None,
+            None,
+        )
+
+        # Only 1 error expected
+        res.errors.pop(0)
+        assert not res.errors
+
+
+async def test_component_not_found_safe_mode(hass):
+    """Test no errors if component not found in safe mode."""
+    # Make sure they don't exist
+    files = {YAML_CONFIG_FILE: BASE_CONFIG + "beer:"}
+    hass.config.safe_mode = True
+    with patch("os.path.isfile", return_value=True), patch_yaml_files(files):
+        res = await async_check_ha_config_file(hass)
+        log_ha_config(res)
+
+        assert res.keys() == {"homeassistant"}
         assert not res.errors
 
 
@@ -100,6 +137,21 @@ async def test_component_platform_not_found_2(hass):
 
         # Only 1 error expected
         res.errors.pop(0)
+        assert not res.errors
+
+
+async def test_platform_not_found_safe_mode(hass):
+    """Test no errors if platform not found in safe_mode."""
+    # Make sure they don't exist
+    files = {YAML_CONFIG_FILE: BASE_CONFIG + "light:\n  platform: beer"}
+    hass.config.safe_mode = True
+    with patch("os.path.isfile", return_value=True), patch_yaml_files(files):
+        res = await async_check_ha_config_file(hass)
+        log_ha_config(res)
+
+        assert res.keys() == {"homeassistant", "light"}
+        assert res["light"] == []
+
         assert not res.errors
 
 

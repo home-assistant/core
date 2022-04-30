@@ -23,13 +23,14 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import event as event_helper, state as state_helper
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import (
     INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
     convert_include_exclude_filter,
 )
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,7 +66,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Zabbix component."""
 
     conf = config[DOMAIN]
@@ -89,7 +90,11 @@ def setup(hass, config):
         _LOGGER.error("HTTPError when connecting to Zabbix API: %s", http_error)
         zapi = None
         _LOGGER.error(RETRY_MESSAGE, http_error)
-        event_helper.call_later(hass, RETRY_INTERVAL, lambda _: setup(hass, config))
+        event_helper.call_later(
+            hass,
+            RETRY_INTERVAL,
+            lambda _: setup(hass, config),  # type: ignore[arg-type,return-value]
+        )
         return True
 
     hass.data[DOMAIN] = zapi

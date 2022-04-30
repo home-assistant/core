@@ -1,4 +1,6 @@
 """Support for departure information for public transport in Munich."""
+from __future__ import annotations
+
 from copy import deepcopy
 from datetime import timedelta
 import logging
@@ -8,7 +10,10 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, TIME_MINUTES
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,7 +45,7 @@ SCAN_INTERVAL = timedelta(seconds=30)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_NEXT_DEPARTURE): [
+        vol.Required(CONF_NEXT_DEPARTURE): [
             {
                 vol.Required(CONF_STATION): cv.string,
                 vol.Optional(CONF_DESTINATIONS, default=[""]): cv.ensure_list_csv,
@@ -58,10 +63,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the MVGLive sensor."""
     sensors = []
-    for nextdeparture in config.get(CONF_NEXT_DEPARTURE):
+    for nextdeparture in config[CONF_NEXT_DEPARTURE]:
         sensors.append(
             MVGLiveSensor(
                 nextdeparture.get(CONF_STATION),
@@ -108,15 +118,14 @@ class MVGLiveSensor(SensorEntity):
         return self._station
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the next departure time."""
         return self._state
 
     @property
     def extra_state_attributes(self):
         """Return the state attributes."""
-        dep = self.data.departures
-        if not dep:
+        if not (dep := self.data.departures):
             return None
         attr = dep[0]  # next depature attributes
         attr["departures"] = deepcopy(dep)  # all departures dictionary
@@ -128,7 +137,7 @@ class MVGLiveSensor(SensorEntity):
         return self._icon
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit this state is expressed in."""
         return TIME_MINUTES
 

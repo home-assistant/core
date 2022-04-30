@@ -1,0 +1,10 @@
+{
+    "config": {
+        "abort": {
+            "invalid_auth": "Neplatn\u00e9 overenie"
+        },
+        "error": {
+            "invalid_auth": "Neplatn\u00e9 overenie"
+        }
+    }
+}

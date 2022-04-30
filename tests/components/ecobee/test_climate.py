@@ -1,4 +1,5 @@
 """The test for the Ecobee thermostat module."""
+from http import HTTPStatus
 from unittest import mock
 
 import pytest
@@ -78,7 +79,7 @@ async def test_name(thermostat):
 async def test_current_temperature(ecobee_fixture, thermostat):
     """Test current temperature."""
     assert thermostat.current_temperature == 30
-    ecobee_fixture["runtime"]["actualTemperature"] = const.HTTP_NOT_FOUND
+    ecobee_fixture["runtime"]["actualTemperature"] = HTTPStatus.NOT_FOUND
     assert thermostat.current_temperature == 40.4
 
 
@@ -86,14 +87,14 @@ async def test_target_temperature_low(ecobee_fixture, thermostat):
     """Test target low temperature."""
     assert thermostat.target_temperature_low == 40
     ecobee_fixture["runtime"]["desiredHeat"] = 502
-    assert thermostat.target_temperature_low == 50
+    assert thermostat.target_temperature_low == 50.2
 
 
 async def test_target_temperature_high(ecobee_fixture, thermostat):
     """Test target high temperature."""
     assert thermostat.target_temperature_high == 20
     ecobee_fixture["runtime"]["desiredCool"] = 679
-    assert thermostat.target_temperature_high == 68
+    assert thermostat.target_temperature_high == 67.9
 
 
 async def test_target_temperature(ecobee_fixture, thermostat):

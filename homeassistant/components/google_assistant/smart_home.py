@@ -4,6 +4,7 @@ from itertools import product
 import logging
 
 from homeassistant.const import ATTR_ENTITY_ID, __version__
+from homeassistant.helpers import instance_id
 from homeassistant.util.decorator import Registry
 
 from .const import (
@@ -17,7 +18,9 @@ from .const import (
 from .error import SmartHomeError
 from .helpers import GoogleEntity, RequestData, async_get_entities
 
-HANDLERS = Registry()
+EXECUTE_LIMIT = 2  # Wait 2 seconds for execute to finish
+
+HANDLERS = Registry()  # type: ignore[var-annotated]
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -45,9 +48,7 @@ async def _process(hass, data, message):
             "payload": {"errorCode": ERR_PROTOCOL_ERROR},
         }
 
-    handler = HANDLERS.get(inputs[0].get("intent"))
-
-    if handler is None:
+    if (handler := HANDLERS.get(inputs[0].get("intent"))) is None:
         return {
             "requestId": data.request_id,
             "payload": {"errorCode": ERR_PROTOCOL_ERROR},
@@ -83,27 +84,22 @@ async def async_devices_sync(hass, data, payload):
     )
 
     agent_user_id = data.config.get_agent_user_id(data.context)
-    entities = async_get_entities(hass, data.config)
-    results = await asyncio.gather(
-        *(
-            entity.sync_serialize(agent_user_id)
-            for entity in entities
-            if entity.should_expose()
-        ),
-        return_exceptions=True,
-    )
+    await data.config.async_connect_agent_user(agent_user_id)
 
+    entities = async_get_entities(hass, data.config)
+    instance_uuid = await instance_id.async_get(hass)
     devices = []
 
-    for entity, result in zip(entities, results):
-        if isinstance(result, Exception):
-            _LOGGER.error("Error serializing %s", entity.entity_id, exc_info=result)
-        else:
-            devices.append(result)
+    for entity in entities:
+        if not entity.should_expose():
+            continue
+
+        try:
+            devices.append(entity.sync_serialize(agent_user_id, instance_uuid))
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Error serializing %s", entity.entity_id)
 
     response = {"agentUserId": agent_user_id, "devices": devices}
-
-    await data.config.async_connect_agent_user(agent_user_id)
 
     _LOGGER.debug("Syncing entities response: %s", response)
 
@@ -131,9 +127,8 @@ async def async_devices_query(hass, data, payload):
     devices = {}
     for device in payload_devices:
         devid = device["id"]
-        state = hass.states.get(devid)
 
-        if not state:
+        if not (state := hass.states.get(devid)):
             # If we can't find a state, the device is offline
             devices[devid] = {"online": False}
             continue
@@ -199,9 +194,7 @@ async def handle_devices_execute(hass, data, payload):
                 executions[entity_id].append(execution)
                 continue
 
-            state = hass.states.get(entity_id)
-
-            if state is None:
+            if (state := hass.states.get(entity_id)) is None:
                 results[entity_id] = {
                     "ids": [entity_id],
                     "status": "ERROR",
@@ -212,16 +205,23 @@ async def handle_devices_execute(hass, data, payload):
             entities[entity_id] = GoogleEntity(hass, data.config, state)
             executions[entity_id] = [execution]
 
-    execute_results = await asyncio.gather(
-        *(
-            _entity_execute(entities[entity_id], data, execution)
-            for entity_id, execution in executions.items()
+    try:
+        execute_results = await asyncio.wait_for(
+            asyncio.shield(
+                asyncio.gather(
+                    *(
+                        _entity_execute(entities[entity_id], data, execution)
+                        for entity_id, execution in executions.items()
+                    )
+                )
+            ),
+            EXECUTE_LIMIT,
         )
-    )
-
-    for entity_id, result in zip(executions, execute_results):
-        if result is not None:
-            results[entity_id] = result
+        for entity_id, result in zip(executions, execute_results):
+            if result is not None:
+                results[entity_id] = result
+    except asyncio.TimeoutError:
+        pass
 
     final_results = list(results.values())
 
@@ -248,6 +248,7 @@ async def async_devices_disconnect(hass, data: RequestData, payload):
 
     https://developers.google.com/assistant/smarthome/develop/process-intents#DISCONNECT
     """
+    assert data.context.user_id is not None
     await data.config.async_disconnect_agent_user(data.context.user_id)
     return None
 
@@ -277,7 +278,7 @@ async def async_devices_identify(hass, data: RequestData, payload):
 async def async_devices_reachable(hass, data: RequestData, payload):
     """Handle action.devices.REACHABLE_DEVICES request.
 
-    https://developers.google.com/actions/smarthome/create#actiondevicesdisconnect
+    https://developers.google.com/assistant/smarthome/develop/local#implement_the_reachable_devices_handler_hub_integrations_only
     """
     google_ids = {dev["id"] for dev in (data.devices or [])}
 
@@ -288,6 +289,15 @@ async def async_devices_reachable(hass, data: RequestData, payload):
             if entity.entity_id in google_ids and entity.should_expose_local()
         ]
     }
+
+
+@HANDLERS.register("action.devices.PROXY_SELECTED")
+async def async_devices_proxy_selected(hass, data: RequestData, payload):
+    """Handle action.devices.PROXY_SELECTED request.
+
+    When selected for local SDK.
+    """
+    return {}
 
 
 def turned_off_response(message):

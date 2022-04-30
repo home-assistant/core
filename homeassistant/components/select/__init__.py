@@ -9,7 +9,7 @@ from typing import Any, final
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
@@ -40,10 +40,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(
         SERVICE_SELECT_OPTION,
         {vol.Required(ATTR_OPTION): cv.string},
-        "async_select_option",
+        async_select_option,
     )
 
     return True
+
+
+async def async_select_option(entity: SelectEntity, service_call: ServiceCall) -> None:
+    """Service call wrapper to set a new value."""
+    option = service_call.data[ATTR_OPTION]
+    if option not in entity.options:
+        raise ValueError(f"Option {option} not valid for {entity.name}")
+    await entity.async_select_option(option)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

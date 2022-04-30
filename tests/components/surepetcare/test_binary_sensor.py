@@ -7,11 +7,11 @@ from homeassistant.setup import async_setup_component
 from . import HOUSEHOLD_ID, HUB_ID, MOCK_CONFIG
 
 EXPECTED_ENTITY_IDS = {
-    "binary_sensor.pet_flap_pet_flap_connectivity": f"{HOUSEHOLD_ID}-13576-connectivity",
-    "binary_sensor.cat_flap_cat_flap_connectivity": f"{HOUSEHOLD_ID}-13579-connectivity",
-    "binary_sensor.feeder_feeder_connectivity": f"{HOUSEHOLD_ID}-12345-connectivity",
-    "binary_sensor.pet_pet": f"{HOUSEHOLD_ID}-24680",
-    "binary_sensor.hub_hub": f"{HOUSEHOLD_ID}-{HUB_ID}",
+    "binary_sensor.pet_flap_connectivity": f"{HOUSEHOLD_ID}-13576-connectivity",
+    "binary_sensor.cat_flap_connectivity": f"{HOUSEHOLD_ID}-13579-connectivity",
+    "binary_sensor.feeder_connectivity": f"{HOUSEHOLD_ID}-12345-connectivity",
+    "binary_sensor.pet": f"{HOUSEHOLD_ID}-24680",
+    "binary_sensor.hub": f"{HOUSEHOLD_ID}-{HUB_ID}",
 }
 
 

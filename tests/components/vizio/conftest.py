@@ -39,15 +39,6 @@ def get_mock_inputs(input_list):
     return [MockInput(input) for input in input_list]
 
 
-@pytest.fixture(name="skip_notifications", autouse=True)
-def skip_notifications_fixture():
-    """Skip notification calls."""
-    with patch("homeassistant.components.persistent_notification.async_create"), patch(
-        "homeassistant.components.persistent_notification.async_dismiss"
-    ):
-        yield
-
-
 @pytest.fixture(name="vizio_get_unique_id", autouse=True)
 def vizio_get_unique_id_fixture():
     """Mock get vizio unique ID."""
@@ -221,6 +212,22 @@ def vizio_update_with_apps_fixture(vizio_update: pytest.fixture):
     ), patch(
         "homeassistant.components.vizio.media_player.VizioAsync.get_current_app_config",
         return_value=AppConfig(**CURRENT_APP_CONFIG),
+    ):
+        yield
+
+
+@pytest.fixture(name="vizio_update_with_apps_on_input")
+def vizio_update_with_apps_on_input_fixture(vizio_update: pytest.fixture):
+    """Mock valid updates to vizio device that supports apps but is on a TV input."""
+    with patch(
+        "homeassistant.components.vizio.media_player.VizioAsync.get_inputs_list",
+        return_value=get_mock_inputs(INPUT_LIST_WITH_APPS),
+    ), patch(
+        "homeassistant.components.vizio.media_player.VizioAsync.get_current_input",
+        return_value=CURRENT_INPUT,
+    ), patch(
+        "homeassistant.components.vizio.media_player.VizioAsync.get_current_app_config",
+        return_value=AppConfig("unknown", 1, "app"),
     ):
         yield
 

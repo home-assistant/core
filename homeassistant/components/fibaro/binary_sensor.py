@@ -1,36 +1,46 @@
 """Support for Fibaro binary sensors."""
+from __future__ import annotations
+
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_DOOR,
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_SMOKE,
-    DEVICE_CLASS_WINDOW,
-    DOMAIN,
+    ENTITY_ID_FORMAT,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_ICON
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import FIBARO_DEVICES, FibaroDevice
+from .const import DOMAIN
 
 SENSOR_TYPES = {
-    "com.fibaro.floodSensor": ["Flood", "mdi:water", "flood"],
-    "com.fibaro.motionSensor": ["Motion", "mdi:run", DEVICE_CLASS_MOTION],
-    "com.fibaro.doorSensor": ["Door", "mdi:window-open", DEVICE_CLASS_DOOR],
-    "com.fibaro.windowSensor": ["Window", "mdi:window-open", DEVICE_CLASS_WINDOW],
-    "com.fibaro.smokeSensor": ["Smoke", "mdi:smoking", DEVICE_CLASS_SMOKE],
-    "com.fibaro.FGMS001": ["Motion", "mdi:run", DEVICE_CLASS_MOTION],
-    "com.fibaro.heatDetector": ["Heat", "mdi:fire", "heat"],
+    "com.fibaro.floodSensor": ["Flood", "mdi:water", BinarySensorDeviceClass.MOISTURE],
+    "com.fibaro.motionSensor": ["Motion", "mdi:run", BinarySensorDeviceClass.MOTION],
+    "com.fibaro.doorSensor": ["Door", "mdi:window-open", BinarySensorDeviceClass.DOOR],
+    "com.fibaro.windowSensor": [
+        "Window",
+        "mdi:window-open",
+        BinarySensorDeviceClass.WINDOW,
+    ],
+    "com.fibaro.smokeSensor": ["Smoke", "mdi:smoking", BinarySensorDeviceClass.SMOKE],
+    "com.fibaro.FGMS001": ["Motion", "mdi:run", BinarySensorDeviceClass.MOTION],
+    "com.fibaro.heatDetector": ["Heat", "mdi:fire", BinarySensorDeviceClass.HEAT],
 }
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Perform the setup for Fibaro controller devices."""
-    if discovery_info is None:
-        return
-
-    add_entities(
+    async_add_entities(
         [
             FibaroBinarySensor(device)
-            for device in hass.data[FIBARO_DEVICES]["binary_sensor"]
+            for device in hass.data[DOMAIN][entry.entry_id][FIBARO_DEVICES][
+                Platform.BINARY_SENSOR
+            ]
         ],
         True,
     )
@@ -41,40 +51,17 @@ class FibaroBinarySensor(FibaroDevice, BinarySensorEntity):
 
     def __init__(self, fibaro_device):
         """Initialize the binary_sensor."""
-        self._state = None
         super().__init__(fibaro_device)
-        self.entity_id = f"{DOMAIN}.{self.ha_id}"
+        self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
         stype = None
-        devconf = fibaro_device.device_config
         if fibaro_device.type in SENSOR_TYPES:
             stype = fibaro_device.type
         elif fibaro_device.baseType in SENSOR_TYPES:
             stype = fibaro_device.baseType
         if stype:
-            self._device_class = SENSOR_TYPES[stype][2]
-            self._icon = SENSOR_TYPES[stype][1]
-        else:
-            self._device_class = None
-            self._icon = None
-        # device_config overrides:
-        self._device_class = devconf.get(CONF_DEVICE_CLASS, self._device_class)
-        self._icon = devconf.get(CONF_ICON, self._icon)
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return self._icon
-
-    @property
-    def device_class(self):
-        """Return the device class of the sensor."""
-        return self._device_class
-
-    @property
-    def is_on(self):
-        """Return true if sensor is on."""
-        return self._state
+            self._attr_device_class = SENSOR_TYPES[stype][2]
+            self._attr_icon = SENSOR_TYPES[stype][1]
 
     def update(self):
         """Get the latest data and update the state."""
-        self._state = self.current_binary_state
+        self._attr_is_on = self.current_binary_state

@@ -1,0 +1,379 @@
+{
+  "authorized_doorbots": [],
+  "chimes": [
+    {
+      "address": "123 Main St",
+      "alerts": { "connection": "online" },
+      "description": "Downstairs",
+      "device_id": "abcdef123",
+      "do_not_disturb": { "seconds_left": 0 },
+      "features": { "ringtones_enabled": true },
+      "firmware_version": "1.2.3",
+      "id": 123456,
+      "kind": "chime",
+      "latitude": 12.0,
+      "longitude": -70.12345,
+      "owned": true,
+      "owner": {
+        "email": "foo@bar.org",
+        "first_name": "Marcelo",
+        "id": 999999,
+        "last_name": "Assistant"
+      },
+      "settings": {
+        "ding_audio_id": null,
+        "ding_audio_user_id": null,
+        "motion_audio_id": null,
+        "motion_audio_user_id": null,
+        "volume": 2
+      },
+      "time_zone": "America/New_York"
+    }
+  ],
+  "doorbots": [
+    {
+      "address": "123 Main St",
+      "alerts": { "connection": "online" },
+      "battery_life": 4081,
+      "description": "Front Door",
+      "device_id": "aacdef123",
+      "external_connection": false,
+      "features": {
+        "advanced_motion_enabled": false,
+        "motion_message_enabled": false,
+        "motions_enabled": true,
+        "people_only_enabled": false,
+        "shadow_correction_enabled": false,
+        "show_recordings": true
+      },
+      "firmware_version": "1.4.26",
+      "id": 987654,
+      "kind": "lpd_v1",
+      "latitude": 12.0,
+      "longitude": -70.12345,
+      "motion_snooze": null,
+      "owned": true,
+      "owner": {
+        "email": "foo@bar.org",
+        "first_name": "Home",
+        "id": 999999,
+        "last_name": "Assistant"
+      },
+      "settings": {
+        "chime_settings": {
+          "duration": 3,
+          "enable": true,
+          "type": 0
+        },
+        "doorbell_volume": 1,
+        "enable_vod": true,
+        "live_view_preset_profile": "highest",
+        "live_view_presets": ["low", "middle", "high", "highest"],
+        "motion_announcement": false,
+        "motion_snooze_preset_profile": "low",
+        "motion_snooze_presets": ["null", "low", "medium", "high"]
+      },
+      "subscribed": true,
+      "subscribed_motions": true,
+      "time_zone": "America/New_York"
+    }
+  ],
+  "stickup_cams": [
+    {
+      "address": "123 Main St",
+      "alerts": { "connection": "online" },
+      "battery_life": 80,
+      "description": "Front",
+      "device_id": "aacdef123",
+      "external_connection": false,
+      "features": {
+        "advanced_motion_enabled": false,
+        "motion_message_enabled": false,
+        "motions_enabled": true,
+        "night_vision_enabled": false,
+        "people_only_enabled": false,
+        "shadow_correction_enabled": false,
+        "show_recordings": true
+      },
+      "firmware_version": "1.9.3",
+      "id": 765432,
+      "kind": "hp_cam_v1",
+      "latitude": 12.0,
+      "led_status": "off",
+      "location_id": null,
+      "longitude": -70.12345,
+      "motion_snooze": { "scheduled": true },
+      "night_mode_status": "false",
+      "owned": true,
+      "owner": {
+        "email": "foo@bar.org",
+        "first_name": "Foo",
+        "id": 999999,
+        "last_name": "Bar"
+      },
+      "ring_cam_light_installed": "false",
+      "ring_id": null,
+      "settings": {
+        "chime_settings": {
+          "duration": 10,
+          "enable": true,
+          "type": 0
+        },
+        "doorbell_volume": 11,
+        "enable_vod": true,
+        "floodlight_settings": {
+          "duration": 30,
+          "priority": 0
+        },
+        "light_schedule_settings": {
+          "end_hour": 0,
+          "end_minute": 0,
+          "start_hour": 0,
+          "start_minute": 0
+        },
+        "live_view_preset_profile": "highest",
+        "live_view_presets": ["low", "middle", "high", "highest"],
+        "motion_announcement": false,
+        "motion_snooze_preset_profile": "low",
+        "motion_snooze_presets": ["none", "low", "medium", "high"],
+        "motion_zones": {
+          "active_motion_filter": 1,
+          "advanced_object_settings": {
+            "human_detection_confidence": {
+              "day": 0.7,
+              "night": 0.7
+            },
+            "motion_zone_overlap": {
+              "day": 0.1,
+              "night": 0.2
+            },
+            "object_size_maximum": {
+              "day": 0.8,
+              "night": 0.8
+            },
+            "object_size_minimum": {
+              "day": 0.03,
+              "night": 0.05
+            },
+            "object_time_overlap": {
+              "day": 0.1,
+              "night": 0.6
+            }
+          },
+          "enable_audio": false,
+          "pir_settings": {
+            "sensitivity1": 1,
+            "sensitivity2": 1,
+            "sensitivity3": 1,
+            "zone_mask": 6
+          },
+          "sensitivity": 5,
+          "zone1": {
+            "name": "Zone 1",
+            "state": 2,
+            "vertex1": { "x": 0.0, "y": 0.0 },
+            "vertex2": { "x": 0.0, "y": 0.0 },
+            "vertex3": { "x": 0.0, "y": 0.0 },
+            "vertex4": { "x": 0.0, "y": 0.0 },
+            "vertex5": { "x": 0.0, "y": 0.0 },
+            "vertex6": { "x": 0.0, "y": 0.0 },
+            "vertex7": { "x": 0.0, "y": 0.0 },
+            "vertex8": { "x": 0.0, "y": 0.0 }
+          },
+          "zone2": {
+            "name": "Zone 2",
+            "state": 2,
+            "vertex1": { "x": 0.0, "y": 0.0 },
+            "vertex2": { "x": 0.0, "y": 0.0 },
+            "vertex3": { "x": 0.0, "y": 0.0 },
+            "vertex4": { "x": 0.0, "y": 0.0 },
+            "vertex5": { "x": 0.0, "y": 0.0 },
+            "vertex6": { "x": 0.0, "y": 0.0 },
+            "vertex7": { "x": 0.0, "y": 0.0 },
+            "vertex8": { "x": 0.0, "y": 0.0 }
+          },
+          "zone3": {
+            "name": "Zone 3",
+            "state": 2,
+            "vertex1": { "x": 0.0, "y": 0.0 },
+            "vertex2": { "x": 0.0, "y": 0.0 },
+            "vertex3": { "x": 0.0, "y": 0.0 },
+            "vertex4": { "x": 0.0, "y": 0.0 },
+            "vertex5": { "x": 0.0, "y": 0.0 },
+            "vertex6": { "x": 0.0, "y": 0.0 },
+            "vertex7": { "x": 0.0, "y": 0.0 },
+            "vertex8": { "x": 0.0, "y": 0.0 }
+          }
+        },
+        "pir_motion_zones": [0, 1, 1],
+        "pir_settings": {
+          "sensitivity1": 1,
+          "sensitivity2": 1,
+          "sensitivity3": 1,
+          "zone_mask": 6
+        },
+        "stream_setting": 0,
+        "video_settings": {
+          "ae_level": 0,
+          "birton": null,
+          "brightness": 0,
+          "contrast": 64,
+          "saturation": 80
+        }
+      },
+      "siren_status": { "seconds_remaining": 0 },
+      "stolen": false,
+      "subscribed": true,
+      "subscribed_motions": true,
+      "time_zone": "America/New_York"
+    },
+    {
+      "address": "123 Main St",
+      "alerts": { "connection": "online" },
+      "battery_life": 80,
+      "description": "Internal",
+      "device_id": "aacdef124",
+      "external_connection": false,
+      "features": {
+        "advanced_motion_enabled": false,
+        "motion_message_enabled": false,
+        "motions_enabled": true,
+        "night_vision_enabled": false,
+        "people_only_enabled": false,
+        "shadow_correction_enabled": false,
+        "show_recordings": true
+      },
+      "firmware_version": "1.9.3",
+      "id": 345678,
+      "kind": "hp_cam_v1",
+      "latitude": 12.0,
+      "led_status": "on",
+      "location_id": null,
+      "longitude": -70.12345,
+      "motion_snooze": { "scheduled": true },
+      "night_mode_status": "false",
+      "owned": true,
+      "owner": {
+        "email": "foo@bar.org",
+        "first_name": "Foo",
+        "id": 999999,
+        "last_name": "Bar"
+      },
+      "ring_cam_light_installed": "false",
+      "ring_id": null,
+      "settings": {
+        "chime_settings": {
+          "duration": 10,
+          "enable": true,
+          "type": 0
+        },
+        "doorbell_volume": 11,
+        "enable_vod": true,
+        "floodlight_settings": {
+          "duration": 30,
+          "priority": 0
+        },
+        "light_schedule_settings": {
+          "end_hour": 0,
+          "end_minute": 0,
+          "start_hour": 0,
+          "start_minute": 0
+        },
+        "live_view_preset_profile": "highest",
+        "live_view_presets": ["low", "middle", "high", "highest"],
+        "motion_announcement": false,
+        "motion_snooze_preset_profile": "low",
+        "motion_snooze_presets": ["none", "low", "medium", "high"],
+        "motion_zones": {
+          "active_motion_filter": 1,
+          "advanced_object_settings": {
+            "human_detection_confidence": {
+              "day": 0.7,
+              "night": 0.7
+            },
+            "motion_zone_overlap": {
+              "day": 0.1,
+              "night": 0.2
+            },
+            "object_size_maximum": {
+              "day": 0.8,
+              "night": 0.8
+            },
+            "object_size_minimum": {
+              "day": 0.03,
+              "night": 0.05
+            },
+            "object_time_overlap": {
+              "day": 0.1,
+              "night": 0.6
+            }
+          },
+          "enable_audio": false,
+          "pir_settings": {
+            "sensitivity1": 1,
+            "sensitivity2": 1,
+            "sensitivity3": 1,
+            "zone_mask": 6
+          },
+          "sensitivity": 5,
+          "zone1": {
+            "name": "Zone 1",
+            "state": 2,
+            "vertex1": { "x": 0.0, "y": 0.0 },
+            "vertex2": { "x": 0.0, "y": 0.0 },
+            "vertex3": { "x": 0.0, "y": 0.0 },
+            "vertex4": { "x": 0.0, "y": 0.0 },
+            "vertex5": { "x": 0.0, "y": 0.0 },
+            "vertex6": { "x": 0.0, "y": 0.0 },
+            "vertex7": { "x": 0.0, "y": 0.0 },
+            "vertex8": { "x": 0.0, "y": 0.0 }
+          },
+          "zone2": {
+            "name": "Zone 2",
+            "state": 2,
+            "vertex1": { "x": 0.0, "y": 0.0 },
+            "vertex2": { "x": 0.0, "y": 0.0 },
+            "vertex3": { "x": 0.0, "y": 0.0 },
+            "vertex4": { "x": 0.0, "y": 0.0 },
+            "vertex5": { "x": 0.0, "y": 0.0 },
+            "vertex6": { "x": 0.0, "y": 0.0 },
+            "vertex7": { "x": 0.0, "y": 0.0 },
+            "vertex8": { "x": 0.0, "y": 0.0 }
+          },
+          "zone3": {
+            "name": "Zone 3",
+            "state": 2,
+            "vertex1": { "x": 0.0, "y": 0.0 },
+            "vertex2": { "x": 0.0, "y": 0.0 },
+            "vertex3": { "x": 0.0, "y": 0.0 },
+            "vertex4": { "x": 0.0, "y": 0.0 },
+            "vertex5": { "x": 0.0, "y": 0.0 },
+            "vertex6": { "x": 0.0, "y": 0.0 },
+            "vertex7": { "x": 0.0, "y": 0.0 },
+            "vertex8": { "x": 0.0, "y": 0.0 }
+          }
+        },
+        "pir_motion_zones": [0, 1, 1],
+        "pir_settings": {
+          "sensitivity1": 1,
+          "sensitivity2": 1,
+          "sensitivity3": 1,
+          "zone_mask": 6
+        },
+        "stream_setting": 0,
+        "video_settings": {
+          "ae_level": 0,
+          "birton": null,
+          "brightness": 0,
+          "contrast": 64,
+          "saturation": 80
+        }
+      },
+      "siren_status": { "seconds_remaining": 30 },
+      "stolen": false,
+      "subscribed": true,
+      "subscribed_motions": true,
+      "time_zone": "America/New_York"
+    }
+  ]
+}

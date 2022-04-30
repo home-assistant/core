@@ -1,12 +1,16 @@
 """Define patches used for androidtv tests."""
-
 from unittest.mock import mock_open, patch
+
+from androidtv.constants import CMD_DEVICE_PROPERTIES, CMD_MAC_ETH0, CMD_MAC_WLAN0
 
 KEY_PYTHON = "python"
 KEY_SERVER = "server"
 
 ADB_DEVICE_TCP_ASYNC_FAKE = "AdbDeviceTcpAsyncFake"
 DEVICE_ASYNC_FAKE = "DeviceAsyncFake"
+
+PROPS_DEV_INFO = "fake\nfake\n0123456\nfake"
+PROPS_DEV_MAC = "ether ab:cd:ef:gh:ij:kl brd"
 
 
 class AdbDeviceTcpAsyncFake:
@@ -100,12 +104,18 @@ def patch_connect(success):
     }
 
 
-def patch_shell(response=None, error=False):
+def patch_shell(response=None, error=False, mac_eth=False):
     """Mock the `AdbDeviceTcpAsyncFake.shell` and `DeviceAsyncFake.shell` methods."""
 
     async def shell_success(self, cmd, *args, **kwargs):
         """Mock the `AdbDeviceTcpAsyncFake.shell` and `DeviceAsyncFake.shell` methods when they are successful."""
         self.shell_cmd = cmd
+        if cmd == CMD_DEVICE_PROPERTIES:
+            return PROPS_DEV_INFO
+        if cmd == CMD_MAC_WLAN0:
+            return PROPS_DEV_MAC
+        if cmd == CMD_MAC_ETH0:
+            return PROPS_DEV_MAC if mac_eth else None
         return response
 
     async def shell_fail_python(self, cmd, *args, **kwargs):
@@ -139,9 +149,9 @@ PATCH_ADB_DEVICE_TCP = patch(
 PATCH_ANDROIDTV_OPEN = patch(
     "homeassistant.components.androidtv.media_player.open", mock_open()
 )
-PATCH_KEYGEN = patch("homeassistant.components.androidtv.media_player.keygen")
+PATCH_KEYGEN = patch("homeassistant.components.androidtv.keygen")
 PATCH_SIGNER = patch(
-    "homeassistant.components.androidtv.media_player.ADBPythonSync.load_adbkey",
+    "homeassistant.components.androidtv.ADBPythonSync.load_adbkey",
     return_value="signer for testing",
 )
 
@@ -149,10 +159,6 @@ PATCH_SIGNER = patch(
 def isfile(filepath):
     """Mock `os.path.isfile`."""
     return filepath.endswith("adbkey")
-
-
-PATCH_ISFILE = patch("os.path.isfile", isfile)
-PATCH_ACCESS = patch("os.access", return_value=True)
 
 
 def patch_firetv_update(state, current_app, running_apps, hdmi_input):

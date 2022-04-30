@@ -1,47 +1,17 @@
 """The jewish_calendar component."""
 from __future__ import annotations
 
-import hdate
+from hdate import Location
 import voluptuous as vol
 
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, Platform
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "jewish_calendar"
-
-SENSOR_TYPES = {
-    "binary": {
-        "issur_melacha_in_effect": ["Issur Melacha in Effect", "mdi:power-plug-off"]
-    },
-    "data": {
-        "date": ["Date", "mdi:judaism"],
-        "weekly_portion": ["Parshat Hashavua", "mdi:book-open-variant"],
-        "holiday": ["Holiday", "mdi:calendar-star"],
-        "omer_count": ["Day of the Omer", "mdi:counter"],
-        "daf_yomi": ["Daf Yomi", "mdi:book-open-variant"],
-    },
-    "time": {
-        "first_light": ["Alot Hashachar", "mdi:weather-sunset-up"],
-        "talit": ["Talit and Tefillin", "mdi:calendar-clock"],
-        "gra_end_shma": ['Latest time for Shma Gr"a', "mdi:calendar-clock"],
-        "mga_end_shma": ['Latest time for Shma MG"A', "mdi:calendar-clock"],
-        "gra_end_tfila": ['Latest time for Tefilla Gr"a', "mdi:calendar-clock"],
-        "mga_end_tfila": ['Latest time for Tefilla MG"A', "mdi:calendar-clock"],
-        "big_mincha": ["Mincha Gedola", "mdi:calendar-clock"],
-        "small_mincha": ["Mincha Ketana", "mdi:calendar-clock"],
-        "plag_mincha": ["Plag Hamincha", "mdi:weather-sunset-down"],
-        "sunset": ["Shkia", "mdi:weather-sunset"],
-        "first_stars": ["T'set Hakochavim", "mdi:weather-night"],
-        "upcoming_shabbat_candle_lighting": [
-            "Upcoming Shabbat Candle Lighting",
-            "mdi:candle",
-        ],
-        "upcoming_shabbat_havdalah": ["Upcoming Shabbat Havdalah", "mdi:weather-night"],
-        "upcoming_candle_lighting": ["Upcoming Candle Lighting", "mdi:candle"],
-        "upcoming_havdalah": ["Upcoming Havdalah", "mdi:weather-night"],
-    },
-}
+PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.BINARY_SENSOR]
 
 CONF_DIASPORA = "diaspora"
 CONF_LANGUAGE = "language"
@@ -76,7 +46,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 def get_unique_prefix(
-    location: hdate.Location,
+    location: Location,
     language: str,
     candle_lighting_offset: int | None,
     havdalah_offset: int | None,
@@ -96,8 +66,11 @@ def get_unique_prefix(
     return f"{prefix}"
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Jewish Calendar component."""
+    if DOMAIN not in config:
+        return True
+
     name = config[DOMAIN][CONF_NAME]
     language = config[DOMAIN][CONF_LANGUAGE]
 
@@ -108,7 +81,7 @@ async def async_setup(hass, config):
     candle_lighting_offset = config[DOMAIN][CONF_CANDLE_LIGHT_MINUTES]
     havdalah_offset = config[DOMAIN][CONF_HAVDALAH_OFFSET_MINUTES]
 
-    location = hdate.Location(
+    location = Location(
         latitude=latitude,
         longitude=longitude,
         timezone=hass.config.time_zone,
@@ -128,10 +101,7 @@ async def async_setup(hass, config):
         "prefix": prefix,
     }
 
-    hass.async_create_task(async_load_platform(hass, "sensor", DOMAIN, {}, config))
-
-    hass.async_create_task(
-        async_load_platform(hass, "binary_sensor", DOMAIN, {}, config)
-    )
+    for platform in PLATFORMS:
+        hass.async_create_task(async_load_platform(hass, platform, DOMAIN, {}, config))
 
     return True

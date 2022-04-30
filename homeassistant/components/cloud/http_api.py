@@ -1,12 +1,14 @@
 """The HTTP api to control the cloud integration."""
 import asyncio
+import dataclasses
 from functools import wraps
+from http import HTTPStatus
 import logging
 
 import aiohttp
 import async_timeout
 import attr
-from hass_nabucasa import Cloud, auth, thingtalk
+from hass_nabucasa import Cloud, auth, cloud_api, thingtalk
 from hass_nabucasa.const import STATE_DISCONNECTED
 from hass_nabucasa.voice import MAP_VOICE
 import voluptuous as vol
@@ -20,13 +22,9 @@ from homeassistant.components.google_assistant import helpers as google_helpers
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.websocket_api import const as ws_const
-from homeassistant.const import (
-    HTTP_BAD_GATEWAY,
-    HTTP_BAD_REQUEST,
-    HTTP_INTERNAL_SERVER_ERROR,
-    HTTP_OK,
-    HTTP_UNAUTHORIZED,
-)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.util.location import async_detect_location_info
 
 from .const import (
     DOMAIN,
@@ -39,53 +37,18 @@ from .const import (
     PREF_GOOGLE_SECURE_DEVICES_PIN,
     PREF_TTS_DEFAULT_VOICE,
     REQUEST_TIMEOUT,
-    InvalidTrustedNetworks,
-    InvalidTrustedProxies,
-    RequireRelink,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 
-WS_TYPE_STATUS = "cloud/status"
-SCHEMA_WS_STATUS = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {vol.Required("type"): WS_TYPE_STATUS}
-)
-
-
-WS_TYPE_SUBSCRIPTION = "cloud/subscription"
-SCHEMA_WS_SUBSCRIPTION = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {vol.Required("type"): WS_TYPE_SUBSCRIPTION}
-)
-
-
-WS_TYPE_HOOK_CREATE = "cloud/cloudhook/create"
-SCHEMA_WS_HOOK_CREATE = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {vol.Required("type"): WS_TYPE_HOOK_CREATE, vol.Required("webhook_id"): str}
-)
-
-
-WS_TYPE_HOOK_DELETE = "cloud/cloudhook/delete"
-SCHEMA_WS_HOOK_DELETE = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {vol.Required("type"): WS_TYPE_HOOK_DELETE, vol.Required("webhook_id"): str}
-)
-
-
 _CLOUD_ERRORS = {
-    InvalidTrustedNetworks: (
-        HTTP_INTERNAL_SERVER_ERROR,
-        "Remote UI not compatible with 127.0.0.1/::1 as a trusted network.",
-    ),
-    InvalidTrustedProxies: (
-        HTTP_INTERNAL_SERVER_ERROR,
-        "Remote UI not compatible with 127.0.0.1/::1 as trusted proxies.",
-    ),
     asyncio.TimeoutError: (
-        HTTP_BAD_GATEWAY,
+        HTTPStatus.BAD_GATEWAY,
         "Unable to reach the Home Assistant cloud.",
     ),
     aiohttp.ClientError: (
-        HTTP_INTERNAL_SERVER_ERROR,
+        HTTPStatus.INTERNAL_SERVER_ERROR,
         "Error making internal request",
     ),
 }
@@ -93,30 +56,23 @@ _CLOUD_ERRORS = {
 
 async def async_setup(hass):
     """Initialize the HTTP API."""
-    async_register_command = hass.components.websocket_api.async_register_command
-    async_register_command(WS_TYPE_STATUS, websocket_cloud_status, SCHEMA_WS_STATUS)
-    async_register_command(
-        WS_TYPE_SUBSCRIPTION, websocket_subscription, SCHEMA_WS_SUBSCRIPTION
-    )
-    async_register_command(websocket_update_prefs)
-    async_register_command(
-        WS_TYPE_HOOK_CREATE, websocket_hook_create, SCHEMA_WS_HOOK_CREATE
-    )
-    async_register_command(
-        WS_TYPE_HOOK_DELETE, websocket_hook_delete, SCHEMA_WS_HOOK_DELETE
-    )
-    async_register_command(websocket_remote_connect)
-    async_register_command(websocket_remote_disconnect)
+    websocket_api.async_register_command(hass, websocket_cloud_status)
+    websocket_api.async_register_command(hass, websocket_subscription)
+    websocket_api.async_register_command(hass, websocket_update_prefs)
+    websocket_api.async_register_command(hass, websocket_hook_create)
+    websocket_api.async_register_command(hass, websocket_hook_delete)
+    websocket_api.async_register_command(hass, websocket_remote_connect)
+    websocket_api.async_register_command(hass, websocket_remote_disconnect)
 
-    async_register_command(google_assistant_list)
-    async_register_command(google_assistant_update)
+    websocket_api.async_register_command(hass, google_assistant_list)
+    websocket_api.async_register_command(hass, google_assistant_update)
 
-    async_register_command(alexa_list)
-    async_register_command(alexa_update)
-    async_register_command(alexa_sync)
+    websocket_api.async_register_command(hass, alexa_list)
+    websocket_api.async_register_command(hass, alexa_update)
+    websocket_api.async_register_command(hass, alexa_sync)
 
-    async_register_command(thingtalk_convert)
-    async_register_command(tts_info)
+    websocket_api.async_register_command(hass, thingtalk_convert)
+    websocket_api.async_register_command(hass, tts_info)
 
     hass.http.register_view(GoogleActionsSyncView)
     hass.http.register_view(CloudLoginView)
@@ -127,15 +83,15 @@ async def async_setup(hass):
 
     _CLOUD_ERRORS.update(
         {
-            auth.UserNotFound: (HTTP_BAD_REQUEST, "User does not exist."),
-            auth.UserNotConfirmed: (HTTP_BAD_REQUEST, "Email not confirmed."),
+            auth.UserNotFound: (HTTPStatus.BAD_REQUEST, "User does not exist."),
+            auth.UserNotConfirmed: (HTTPStatus.BAD_REQUEST, "Email not confirmed."),
             auth.UserExists: (
-                HTTP_BAD_REQUEST,
+                HTTPStatus.BAD_REQUEST,
                 "An account with the given email already exists.",
             ),
-            auth.Unauthenticated: (HTTP_UNAUTHORIZED, "Authentication failed."),
+            auth.Unauthenticated: (HTTPStatus.UNAUTHORIZED, "Authentication failed."),
             auth.PasswordChangeRequired: (
-                HTTP_BAD_REQUEST,
+                HTTPStatus.BAD_REQUEST,
                 "Password change required.",
             ),
         }
@@ -188,7 +144,7 @@ def _process_cloud_exception(exc, where):
 
     if err_info is None:
         _LOGGER.exception("Unexpected error processing request for %s", where)
-        err_info = (HTTP_BAD_GATEWAY, f"Unexpected error: {exc}")
+        err_info = (HTTPStatus.BAD_GATEWAY, f"Unexpected error: {exc}")
 
     return err_info
 
@@ -240,7 +196,7 @@ class CloudLogoutView(HomeAssistantView):
         hass = request.app["hass"]
         cloud = hass.data[DOMAIN]
 
-        with async_timeout.timeout(REQUEST_TIMEOUT):
+        async with async_timeout.timeout(REQUEST_TIMEOUT):
             await cloud.logout()
 
         return self.json_message("ok")
@@ -266,8 +222,23 @@ class CloudRegisterView(HomeAssistantView):
         hass = request.app["hass"]
         cloud = hass.data[DOMAIN]
 
-        with async_timeout.timeout(REQUEST_TIMEOUT):
-            await cloud.auth.async_register(data["email"], data["password"])
+        client_metadata = None
+
+        if location_info := await async_detect_location_info(
+            async_get_clientsession(hass)
+        ):
+            client_metadata = {
+                "NC_COUNTRY_CODE": location_info.country_code,
+                "NC_REGION_CODE": location_info.region_code,
+                "NC_ZIP_CODE": location_info.zip_code,
+            }
+
+        async with async_timeout.timeout(REQUEST_TIMEOUT):
+            await cloud.auth.async_register(
+                data["email"],
+                data["password"],
+                client_metadata=client_metadata,
+            )
 
         return self.json_message("ok")
 
@@ -285,7 +256,7 @@ class CloudResendConfirmView(HomeAssistantView):
         hass = request.app["hass"]
         cloud = hass.data[DOMAIN]
 
-        with async_timeout.timeout(REQUEST_TIMEOUT):
+        async with async_timeout.timeout(REQUEST_TIMEOUT):
             await cloud.auth.async_resend_email_confirm(data["email"])
 
         return self.json_message("ok")
@@ -304,12 +275,13 @@ class CloudForgotPasswordView(HomeAssistantView):
         hass = request.app["hass"]
         cloud = hass.data[DOMAIN]
 
-        with async_timeout.timeout(REQUEST_TIMEOUT):
+        async with async_timeout.timeout(REQUEST_TIMEOUT):
             await cloud.auth.async_forgot_password(data["email"])
 
         return self.json_message("ok")
 
 
+@websocket_api.websocket_command({vol.Required("type"): "cloud/status"})
 @websocket_api.async_response
 async def websocket_cloud_status(hass, connection, msg):
     """Handle request for account info.
@@ -318,7 +290,7 @@ async def websocket_cloud_status(hass, connection, msg):
     """
     cloud = hass.data[DOMAIN]
     connection.send_message(
-        websocket_api.result_message(msg["id"], await _account_data(cloud))
+        websocket_api.result_message(msg["id"], await _account_data(hass, cloud))
     )
 
 
@@ -343,41 +315,23 @@ def _require_cloud_login(handler):
 
 
 @_require_cloud_login
+@websocket_api.websocket_command({vol.Required("type"): "cloud/subscription"})
 @websocket_api.async_response
 async def websocket_subscription(hass, connection, msg):
     """Handle request for account info."""
-
     cloud = hass.data[DOMAIN]
-
-    with async_timeout.timeout(REQUEST_TIMEOUT):
-        response = await cloud.fetch_subscription_info()
-
-    if response.status != HTTP_OK:
-        connection.send_message(
-            websocket_api.error_message(
-                msg["id"], "request_failed", "Failed to request subscription"
-            )
+    try:
+        async with async_timeout.timeout(REQUEST_TIMEOUT):
+            data = await cloud_api.async_subscription_info(cloud)
+    except aiohttp.ClientError:
+        connection.send_error(
+            msg["id"], "request_failed", "Failed to request subscription"
         )
-
-    data = await response.json()
-
-    # Check if a user is subscribed but local info is outdated
-    # In that case, let's refresh and reconnect
-    if data.get("provider") and not cloud.is_connected:
-        _LOGGER.debug("Found disconnected account with valid subscriotion, connecting")
-        await cloud.auth.async_renew_access_token()
-
-        # Cancel reconnect in progress
-        if cloud.iot.state != STATE_DISCONNECTED:
-            await cloud.iot.disconnect()
-
-        hass.async_create_task(cloud.iot.connect())
-
-    connection.send_message(websocket_api.result_message(msg["id"], data))
+    else:
+        connection.send_result(msg["id"], data)
 
 
 @_require_cloud_login
-@websocket_api.async_response
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "cloud/update_prefs",
@@ -393,6 +347,7 @@ async def websocket_subscription(hass, connection, msg):
         ),
     }
 )
+@websocket_api.async_response
 async def websocket_update_prefs(hass, connection, msg):
     """Handle request for account info."""
     cloud = hass.data[DOMAIN]
@@ -405,21 +360,24 @@ async def websocket_update_prefs(hass, connection, msg):
     if changes.get(PREF_ALEXA_REPORT_STATE):
         alexa_config = await cloud.client.get_alexa_config()
         try:
-            with async_timeout.timeout(10):
+            async with async_timeout.timeout(10):
                 await alexa_config.async_get_access_token()
         except asyncio.TimeoutError:
             connection.send_error(
                 msg["id"], "alexa_timeout", "Timeout validating Alexa access token."
             )
             return
-        except (alexa_errors.NoTokenAvailable, RequireRelink):
+        except (alexa_errors.NoTokenAvailable, alexa_errors.RequireRelink):
             connection.send_error(
                 msg["id"],
                 "alexa_relink",
                 "Please go to the Alexa app and re-link the Home Assistant "
                 "skill and then try to enable state reporting.",
             )
+            await alexa_config.set_authorized(False)
             return
+
+        await alexa_config.set_authorized(True)
 
     await cloud.client.prefs.async_update(**changes)
 
@@ -427,6 +385,12 @@ async def websocket_update_prefs(hass, connection, msg):
 
 
 @_require_cloud_login
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "cloud/cloudhook/create",
+        vol.Required("webhook_id"): str,
+    }
+)
 @websocket_api.async_response
 @_ws_handle_cloud_errors
 async def websocket_hook_create(hass, connection, msg):
@@ -437,6 +401,12 @@ async def websocket_hook_create(hass, connection, msg):
 
 
 @_require_cloud_login
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "cloud/cloudhook/delete",
+        vol.Required("webhook_id"): str,
+    }
+)
 @websocket_api.async_response
 @_ws_handle_cloud_errors
 async def websocket_hook_delete(hass, connection, msg):
@@ -446,17 +416,22 @@ async def websocket_hook_delete(hass, connection, msg):
     connection.send_message(websocket_api.result_message(msg["id"]))
 
 
-async def _account_data(cloud):
+async def _account_data(hass: HomeAssistant, cloud: Cloud):
     """Generate the auth data JSON response."""
 
     if not cloud.is_logged_in:
-        return {"logged_in": False, "cloud": STATE_DISCONNECTED}
+        return {
+            "logged_in": False,
+            "cloud": STATE_DISCONNECTED,
+            "http_use_ssl": hass.config.api.use_ssl,
+        }
 
     claims = cloud.claims
     client = cloud.client
     remote = cloud.remote
 
-    gconf = await client.get_google_config()
+    alexa_config = await client.get_alexa_config()
+    google_config = await client.get_google_config()
 
     # Load remote certificate
     if remote.certificate:
@@ -464,51 +439,61 @@ async def _account_data(cloud):
     else:
         certificate = None
 
+    if cloud.iot.last_disconnect_reason:
+        cloud_last_disconnect_reason = dataclasses.asdict(
+            cloud.iot.last_disconnect_reason
+        )
+    else:
+        cloud_last_disconnect_reason = None
+
     return {
-        "logged_in": True,
-        "email": claims["email"],
-        "cloud": cloud.iot.state,
-        "prefs": client.prefs.as_dict(),
-        "google_registered": gconf.has_registered_user_agent,
-        "google_entities": client.google_user_config["filter"].config,
         "alexa_entities": client.alexa_user_config["filter"].config,
-        "remote_domain": remote.instance_domain,
-        "remote_connected": remote.is_connected,
+        "alexa_registered": alexa_config.authorized,
+        "cloud": cloud.iot.state,
+        "cloud_last_disconnect_reason": cloud_last_disconnect_reason,
+        "email": claims["email"],
+        "google_entities": client.google_user_config["filter"].config,
+        "google_registered": google_config.has_registered_user_agent,
+        "google_local_connected": google_config.is_local_connected,
+        "logged_in": True,
+        "prefs": client.prefs.as_dict(),
         "remote_certificate": certificate,
+        "remote_connected": remote.is_connected,
+        "remote_domain": remote.instance_domain,
+        "http_use_ssl": hass.config.api.use_ssl,
+        "active_subscription": not cloud.subscription_expired,
     }
 
 
 @websocket_api.require_admin
 @_require_cloud_login
+@websocket_api.websocket_command({"type": "cloud/remote/connect"})
 @websocket_api.async_response
 @_ws_handle_cloud_errors
-@websocket_api.websocket_command({"type": "cloud/remote/connect"})
 async def websocket_remote_connect(hass, connection, msg):
     """Handle request for connect remote."""
     cloud = hass.data[DOMAIN]
     await cloud.client.prefs.async_update(remote_enabled=True)
-    await cloud.remote.connect()
-    connection.send_result(msg["id"], await _account_data(cloud))
+    connection.send_result(msg["id"], await _account_data(hass, cloud))
 
 
 @websocket_api.require_admin
 @_require_cloud_login
+@websocket_api.websocket_command({"type": "cloud/remote/disconnect"})
 @websocket_api.async_response
 @_ws_handle_cloud_errors
-@websocket_api.websocket_command({"type": "cloud/remote/disconnect"})
 async def websocket_remote_disconnect(hass, connection, msg):
     """Handle request for disconnect remote."""
     cloud = hass.data[DOMAIN]
     await cloud.client.prefs.async_update(remote_enabled=False)
-    await cloud.remote.disconnect()
-    connection.send_result(msg["id"], await _account_data(cloud))
+    connection.send_result(msg["id"], await _account_data(hass, cloud))
 
 
 @websocket_api.require_admin
 @_require_cloud_login
+@websocket_api.websocket_command({"type": "cloud/google_assistant/entities"})
 @websocket_api.async_response
 @_ws_handle_cloud_errors
-@websocket_api.websocket_command({"type": "cloud/google_assistant/entities"})
 async def google_assistant_list(hass, connection, msg):
     """List all google assistant entities."""
     cloud = hass.data[DOMAIN]
@@ -531,8 +516,6 @@ async def google_assistant_list(hass, connection, msg):
 
 @websocket_api.require_admin
 @_require_cloud_login
-@websocket_api.async_response
-@_ws_handle_cloud_errors
 @websocket_api.websocket_command(
     {
         "type": "cloud/google_assistant/entities/update",
@@ -543,6 +526,8 @@ async def google_assistant_list(hass, connection, msg):
         vol.Optional("disable_2fa"): bool,
     }
 )
+@websocket_api.async_response
+@_ws_handle_cloud_errors
 async def google_assistant_update(hass, connection, msg):
     """Update google assistant config."""
     cloud = hass.data[DOMAIN]
@@ -559,9 +544,9 @@ async def google_assistant_update(hass, connection, msg):
 
 @websocket_api.require_admin
 @_require_cloud_login
+@websocket_api.websocket_command({"type": "cloud/alexa/entities"})
 @websocket_api.async_response
 @_ws_handle_cloud_errors
-@websocket_api.websocket_command({"type": "cloud/alexa/entities"})
 async def alexa_list(hass, connection, msg):
     """List all alexa entities."""
     cloud = hass.data[DOMAIN]
@@ -584,8 +569,6 @@ async def alexa_list(hass, connection, msg):
 
 @websocket_api.require_admin
 @_require_cloud_login
-@websocket_api.async_response
-@_ws_handle_cloud_errors
 @websocket_api.websocket_command(
     {
         "type": "cloud/alexa/entities/update",
@@ -593,6 +576,8 @@ async def alexa_list(hass, connection, msg):
         vol.Optional("should_expose"): vol.Any(None, bool),
     }
 )
+@websocket_api.async_response
+@_ws_handle_cloud_errors
 async def alexa_update(hass, connection, msg):
     """Update alexa entity config."""
     cloud = hass.data[DOMAIN]
@@ -609,14 +594,14 @@ async def alexa_update(hass, connection, msg):
 
 @websocket_api.require_admin
 @_require_cloud_login
-@websocket_api.async_response
 @websocket_api.websocket_command({"type": "cloud/alexa/sync"})
+@websocket_api.async_response
 async def alexa_sync(hass, connection, msg):
     """Sync with Alexa."""
     cloud = hass.data[DOMAIN]
     alexa_config = await cloud.client.get_alexa_config()
 
-    with async_timeout.timeout(10):
+    async with async_timeout.timeout(10):
         try:
             success = await alexa_config.async_sync_entities()
         except alexa_errors.NoTokenAvailable:
@@ -633,13 +618,13 @@ async def alexa_sync(hass, connection, msg):
         connection.send_error(msg["id"], ws_const.ERR_UNKNOWN_ERROR, "Unknown error")
 
 
-@websocket_api.async_response
 @websocket_api.websocket_command({"type": "cloud/thingtalk/convert", "query": str})
+@websocket_api.async_response
 async def thingtalk_convert(hass, connection, msg):
     """Convert a query."""
     cloud = hass.data[DOMAIN]
 
-    with async_timeout.timeout(10):
+    async with async_timeout.timeout(10):
         try:
             connection.send_result(
                 msg["id"], await thingtalk.async_convert(cloud, msg["query"])

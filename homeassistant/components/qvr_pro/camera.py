@@ -1,17 +1,26 @@
 """Support for QVR Pro streams."""
+from __future__ import annotations
 
 import logging
 
 from pyqvrpro.client import QVRResponseError
 
 from homeassistant.components.camera import Camera
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DOMAIN, SHORT_NAME
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the QVR Pro camera platform."""
     if discovery_info is None:
         return
@@ -88,7 +97,9 @@ class QVRProCamera(Camera):
 
         return attrs
 
-    def camera_image(self):
+    def camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Get image bytes from camera."""
         try:
             return self._client.get_snapshot(self.guid)

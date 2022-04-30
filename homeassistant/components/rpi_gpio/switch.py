@@ -1,12 +1,16 @@
 """Allows to configure a switch using RPi GPIO."""
+from __future__ import annotations
+
 import voluptuous as vol
 
 from homeassistant.components import rpi_gpio
-from homeassistant.components.switch import PLATFORM_SCHEMA
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import DEVICE_DEFAULT_NAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.reload import setup_reload_service
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN, PLATFORMS
 
@@ -26,20 +30,25 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Raspberry PI GPIO devices."""
     setup_reload_service(hass, DOMAIN, PLATFORMS)
 
-    invert_logic = config.get(CONF_INVERT_LOGIC)
+    invert_logic = config[CONF_INVERT_LOGIC]
 
     switches = []
-    ports = config.get(CONF_PORTS)
+    ports = config[CONF_PORTS]
     for port, name in ports.items():
         switches.append(RPiGPIOSwitch(name, port, invert_logic))
     add_entities(switches)
 
 
-class RPiGPIOSwitch(ToggleEntity):
+class RPiGPIOSwitch(SwitchEntity):
     """Representation of a  Raspberry Pi GPIO."""
 
     def __init__(self, name, port, invert_logic):

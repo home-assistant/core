@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 from pydexcom import AccountError, SessionError
 
-from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.dexcom.const import DOMAIN, MG_DL, MMOL_L
 from homeassistant.const import CONF_UNIT_OF_MEASUREMENT, CONF_USERNAME
 
@@ -13,7 +13,7 @@ from tests.components.dexcom import CONFIG
 
 async def test_form(hass):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )

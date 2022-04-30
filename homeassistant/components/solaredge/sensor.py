@@ -5,9 +5,8 @@ from typing import Any
 
 from solaredge import Solaredge
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DEVICE_CLASS_BATTERY, DEVICE_CLASS_POWER
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -21,7 +20,7 @@ from .coordinator import (
     SolarEdgeOverviewDataService,
     SolarEdgePowerFlowDataService,
 )
-from .models import SolarEdgeSensor
+from .models import SolarEdgeSensorEntityDescription
 
 
 async def async_setup_entry(
@@ -68,7 +67,8 @@ class SolarEdgeSensorFactory:
         self.services: dict[
             str,
             tuple[
-                type[SolarEdgeSensor | SolarEdgeOverviewSensor], SolarEdgeDataService
+                type[SolarEdgeSensorEntity | SolarEdgeOverviewSensor],
+                SolarEdgeDataService,
             ],
         ] = {"site_details": (SolarEdgeDetailsSensor, details)}
 
@@ -91,15 +91,17 @@ class SolarEdgeSensorFactory:
             self.services[key] = (SolarEdgeStorageLevelSensor, flow)
 
         for key in (
-            "purchased_power",
-            "production_power",
-            "feedin_power",
-            "consumption_power",
-            "selfconsumption_power",
+            "purchased_energy",
+            "production_energy",
+            "feedin_energy",
+            "consumption_energy",
+            "selfconsumption_energy",
         ):
             self.services[key] = (SolarEdgeEnergyDetailsSensor, energy)
 
-    def create_sensor(self, sensor_type: SolarEdgeSensor) -> SolarEdgeSensor:
+    def create_sensor(
+        self, sensor_type: SolarEdgeSensorEntityDescription
+    ) -> SolarEdgeSensorEntityDescription:
         """Create and return a sensor based on the sensor_key."""
         sensor_class, service = self.services[sensor_type.key]
 
@@ -109,36 +111,37 @@ class SolarEdgeSensorFactory:
 class SolarEdgeSensorEntity(CoordinatorEntity, SensorEntity):
     """Abstract class for a solaredge sensor."""
 
+    entity_description: SolarEdgeSensorEntityDescription
+
     def __init__(
         self,
         platform_name: str,
-        sensor_type: SolarEdgeSensor,
+        description: SolarEdgeSensorEntityDescription,
         data_service: SolarEdgeDataService,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(data_service.coordinator)
         self.platform_name = platform_name
-        self.sensor_type = sensor_type
+        self.entity_description = description
         self.data_service = data_service
 
-        self._attr_device_class = sensor_type.device_class
-        self._attr_entity_registry_enabled_default = (
-            sensor_type.entity_registry_enabled_default
-        )
-        self._attr_icon = sensor_type.icon
-        self._attr_last_reset = sensor_type.last_reset
-        self._attr_name = f"{platform_name} ({sensor_type.name})"
-        self._attr_state_class = sensor_type.state_class
-        self._attr_unit_of_measurement = sensor_type.unit_of_measurement
+        self._attr_name = f"{platform_name} ({description.name})"
+
+    @property
+    def unique_id(self) -> str | None:
+        """Return a unique ID."""
+        if not self.data_service.site_id:
+            return None
+        return f"{self.data_service.site_id}_{self.entity_description.key}"
 
 
 class SolarEdgeOverviewSensor(SolarEdgeSensorEntity):
     """Representation of an SolarEdge Monitoring API overview sensor."""
 
     @property
-    def state(self) -> str | None:
+    def native_value(self) -> str | None:
         """Return the state of the sensor."""
-        return self.data_service.data.get(self.sensor_type.json_key)
+        return self.data_service.data.get(self.entity_description.json_key)
 
 
 class SolarEdgeDetailsSensor(SolarEdgeSensorEntity):
@@ -150,9 +153,16 @@ class SolarEdgeDetailsSensor(SolarEdgeSensorEntity):
         return self.data_service.attributes
 
     @property
-    def state(self) -> str | None:
+    def native_value(self) -> str | None:
         """Return the state of the sensor."""
         return self.data_service.data
+
+    @property
+    def unique_id(self) -> str | None:
+        """Return a unique ID."""
+        if not self.data_service.site_id:
+            return None
+        return f"{self.data_service.site_id}"
 
 
 class SolarEdgeInventorySensor(SolarEdgeSensorEntity):
@@ -161,12 +171,12 @@ class SolarEdgeInventorySensor(SolarEdgeSensorEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        return self.data_service.attributes.get(self.sensor_type.json_key)
+        return self.data_service.attributes.get(self.entity_description.json_key)
 
     @property
-    def state(self) -> str | None:
+    def native_value(self) -> str | None:
         """Return the state of the sensor."""
-        return self.data_service.data.get(self.sensor_type.json_key)
+        return self.data_service.data.get(self.entity_description.json_key)
 
 
 class SolarEdgeEnergyDetailsSensor(SolarEdgeSensorEntity):
@@ -176,55 +186,55 @@ class SolarEdgeEnergyDetailsSensor(SolarEdgeSensorEntity):
         """Initialize the power flow sensor."""
         super().__init__(platform_name, sensor_type, data_service)
 
-        self._attr_unit_of_measurement = data_service.unit
+        self._attr_native_unit_of_measurement = data_service.unit
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        return self.data_service.attributes.get(self.sensor_type.json_key)
+        return self.data_service.attributes.get(self.entity_description.json_key)
 
     @property
-    def state(self) -> str | None:
+    def native_value(self) -> str | None:
         """Return the state of the sensor."""
-        return self.data_service.data.get(self.sensor_type.json_key)
+        return self.data_service.data.get(self.entity_description.json_key)
 
 
 class SolarEdgePowerFlowSensor(SolarEdgeSensorEntity):
     """Representation of an SolarEdge Monitoring API power flow sensor."""
 
-    _attr_device_class = DEVICE_CLASS_POWER
+    _attr_device_class = SensorDeviceClass.POWER
 
     def __init__(
         self,
         platform_name: str,
-        sensor_type: SolarEdgeSensor,
+        description: SolarEdgeSensorEntityDescription,
         data_service: SolarEdgeDataService,
     ) -> None:
         """Initialize the power flow sensor."""
-        super().__init__(platform_name, sensor_type, data_service)
+        super().__init__(platform_name, description, data_service)
 
-        self._attr_unit_of_measurement = data_service.unit
+        self._attr_native_unit_of_measurement = data_service.unit
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        return self.data_service.attributes.get(self.sensor_type.json_key)
+        return self.data_service.attributes.get(self.entity_description.json_key)
 
     @property
-    def state(self) -> str | None:
+    def native_value(self) -> str | None:
         """Return the state of the sensor."""
-        return self.data_service.data.get(self.sensor_type.json_key)
+        return self.data_service.data.get(self.entity_description.json_key)
 
 
 class SolarEdgeStorageLevelSensor(SolarEdgeSensorEntity):
     """Representation of an SolarEdge Monitoring API storage level sensor."""
 
-    _attr_device_class = DEVICE_CLASS_BATTERY
+    _attr_device_class = SensorDeviceClass.BATTERY
 
     @property
-    def state(self) -> str | None:
+    def native_value(self) -> str | None:
         """Return the state of the sensor."""
-        attr = self.data_service.attributes.get(self.sensor_type.json_key)
+        attr = self.data_service.attributes.get(self.entity_description.json_key)
         if attr and "soc" in attr:
             return attr["soc"]
         return None

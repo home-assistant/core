@@ -1,16 +1,14 @@
 """The climate tests for the venstar integration."""
+from unittest.mock import patch
 
-from homeassistant.components.climate.const import (
-    SUPPORT_FAN_MODE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_HUMIDITY,
-    SUPPORT_TARGET_TEMPERATURE,
-)
+from homeassistant.components.climate.const import ClimateEntityFeature
 
 from .util import async_init_integration, mock_venstar_devices
 
 EXPECTED_BASE_SUPPORTED_FEATURES = (
-    SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE | SUPPORT_PRESET_MODE
+    ClimateEntityFeature.TARGET_TEMPERATURE
+    | ClimateEntityFeature.FAN_MODE
+    | ClimateEntityFeature.PRESET_MODE
 )
 
 
@@ -18,7 +16,8 @@ EXPECTED_BASE_SUPPORTED_FEATURES = (
 async def test_colortouch(hass):
     """Test interfacing with a venstar colortouch with attached humidifier."""
 
-    await async_init_integration(hass)
+    with patch("homeassistant.components.venstar.VENSTAR_SLEEP", new=0):
+        await async_init_integration(hass)
 
     state = hass.states.get("climate.colortouch")
     assert state.state == "heat"
@@ -42,7 +41,7 @@ async def test_colortouch(hass):
         "hvac_mode": 0,
         "friendly_name": "COLORTOUCH",
         "supported_features": EXPECTED_BASE_SUPPORTED_FEATURES
-        | SUPPORT_TARGET_HUMIDITY,
+        | ClimateEntityFeature.TARGET_HUMIDITY,
     }
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
@@ -53,7 +52,8 @@ async def test_colortouch(hass):
 async def test_t2000(hass):
     """Test interfacing with a venstar T2000 presently turned off."""
 
-    await async_init_integration(hass)
+    with patch("homeassistant.components.venstar.VENSTAR_SLEEP", new=0):
+        await async_init_integration(hass)
 
     state = hass.states.get("climate.t2000")
     assert state.state == "off"

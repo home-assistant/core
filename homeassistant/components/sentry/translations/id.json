@@ -10,7 +10,7 @@
         "step": {
             "user": {
                 "data": {
-                    "dsn": "DSN"
+                    "dsn": "Sentry DSN"
                 },
                 "description": "Masukkan DSN Sentry Anda",
                 "title": "Sentry"
@@ -25,6 +25,8 @@
                     "event_custom_components": "Kirim event dari komponen khusus",
                     "event_handled": "Kirim event yang ditangani",
                     "event_third_party_packages": "Kirim event dari paket pihak ketiga",
+                    "logging_event_level": "Tingkat log Sentry yang didaftarkan untuk peristiwa",
+                    "logging_level": "Tingkat log Sentry yang direkam sebagai jalur",
                     "tracing": "Aktifkan pelacakan kinerja",
                     "tracing_sample_rate": "Laju sampel pelacakan; antara 0,0 dan 1,0 (1,0 = 100%)"
                 }

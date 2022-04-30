@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il servizio \u00e8 gi\u00e0 configurato"
+        },
+        "error": {
+            "unexpected_response": "Risposta inattesa dal server whois",
+            "unknown_date_format": "Formato della data sconosciuto nella risposta del server whois",
+            "unknown_tld": "Il TLD specificato \u00e8 sconosciuto o non disponibile per questa integrazione",
+            "whois_command_failed": "Comando Whois non riuscito: impossibile recuperare le informazioni whois"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "domain": "Nome di dominio"
+                }
+            }
+        }
+    }
+}

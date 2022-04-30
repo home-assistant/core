@@ -1,21 +1,5 @@
-set_profile:
-  name: Set profile
-  description: Set the ventilation profile.
-  fields:
-    profile:
-      name: Profile
-      description: "Set profile."
-      required: true
-      selector:
-        select:
-          options:
-            - 'Away'
-            - 'Boost'
-            - 'Fireplace'
-            - 'Home'
-
 set_profile_fan_speed_home:
-  name: Set profile fan speed hom
+  name: Set profile fan speed home
   description: Set the fan speed of the Home profile.
   fields:
     fan_speed:
@@ -26,7 +10,7 @@ set_profile_fan_speed_home:
         number:
           min: 0
           max: 100
-          unit_of_measurement: '%'
+          unit_of_measurement: "%"
 
 set_profile_fan_speed_away:
   name: Set profile fan speed away
@@ -40,7 +24,7 @@ set_profile_fan_speed_away:
         number:
           min: 0
           max: 100
-          unit_of_measurement: '%'
+          unit_of_measurement: "%"
 
 set_profile_fan_speed_boost:
   name: Set profile fan speed boost
@@ -54,4 +38,4 @@ set_profile_fan_speed_boost:
         number:
           min: 0
           max: 100
-          unit_of_measurement: '%'
+          unit_of_measurement: "%"

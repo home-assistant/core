@@ -9,9 +9,21 @@
     "step": {
       "user": {
         "data": {
+          "connection_type": "Select connection type"
+        },
+        "description": "Select connection type. Local requires generation 3 heaters"
+      },
+      "cloud": {
+        "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
         }
+      },
+      "local": {
+        "data": {
+          "ip_address": "[%key:common::config_flow::data::ip%]"
+        },
+        "description": "Local IP address of the device."
       }
     }
   }

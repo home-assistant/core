@@ -4,7 +4,8 @@ from unittest.mock import MagicMock, Mock, patch
 import pytest
 import requests
 
-from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant import config_entries, data_entry_flow
+from homeassistant.components import zeroconf
 from homeassistant.components.doorbird.const import CONF_EVENTS, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 
@@ -38,7 +39,7 @@ def _get_mock_doorbirdapi_side_effects(ready=None, info=None):
 
 async def test_user_form(hass):
     """Test we get the user form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -77,16 +78,19 @@ async def test_user_form(hass):
 
 async def test_form_zeroconf_wrong_oui(hass):
     """Test we abort when we get the wrong OUI via zeroconf."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data={
-            "properties": {"macaddress": "notdoorbirdoui"},
-            "host": "192.168.1.8",
-            "name": "Doorstation - abc123._axis-video._tcp.local.",
-        },
+        data=zeroconf.ZeroconfServiceInfo(
+            host="192.168.1.8",
+            addresses=["192.168.1.8"],
+            hostname="mock_hostname",
+            name="Doorstation - abc123._axis-video._tcp.local.",
+            port=None,
+            properties={"macaddress": "notdoorbirdoui"},
+            type="mock_type",
+        ),
     )
     assert result["type"] == "abort"
     assert result["reason"] == "not_doorbird_device"
@@ -94,19 +98,70 @@ async def test_form_zeroconf_wrong_oui(hass):
 
 async def test_form_zeroconf_link_local_ignored(hass):
     """Test we abort when we get a link local address via zeroconf."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data={
-            "properties": {"macaddress": "1CCAE3DOORBIRD"},
-            "host": "169.254.103.61",
-            "name": "Doorstation - abc123._axis-video._tcp.local.",
-        },
+        data=zeroconf.ZeroconfServiceInfo(
+            host="169.254.103.61",
+            addresses=["169.254.103.61"],
+            hostname="mock_hostname",
+            name="Doorstation - abc123._axis-video._tcp.local.",
+            port=None,
+            properties={"macaddress": "1CCAE3DOORBIRD"},
+            type="mock_type",
+        ),
     )
     assert result["type"] == "abort"
     assert result["reason"] == "link_local_address"
+
+
+async def test_form_zeroconf_ipv4_address(hass):
+    """Test we abort and update the ip address from zeroconf with an ipv4 address."""
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="1CCAE3AAAAAA",
+        data=VALID_CONFIG,
+        options={CONF_EVENTS: ["event1", "event2", "event3"]},
+    )
+    config_entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=zeroconf.ZeroconfServiceInfo(
+            host="4.4.4.4",
+            addresses=["4.4.4.4"],
+            hostname="mock_hostname",
+            name="Doorstation - abc123._axis-video._tcp.local.",
+            port=None,
+            properties={"macaddress": "1CCAE3AAAAAA"},
+            type="mock_type",
+        ),
+    )
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
+    assert config_entry.data[CONF_HOST] == "4.4.4.4"
+
+
+async def test_form_zeroconf_non_ipv4_ignored(hass):
+    """Test we abort when we get a non ipv4 address via zeroconf."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=zeroconf.ZeroconfServiceInfo(
+            host="fd00::b27c:63bb:cc85:4ea0",
+            addresses=["fd00::b27c:63bb:cc85:4ea0"],
+            hostname="mock_hostname",
+            name="Doorstation - abc123._axis-video._tcp.local.",
+            port=None,
+            properties={"macaddress": "1CCAE3DOORBIRD"},
+            type="mock_type",
+        ),
+    )
+    assert result["type"] == "abort"
+    assert result["reason"] == "not_ipv4_address"
 
 
 async def test_form_zeroconf_correct_oui(hass):
@@ -114,7 +169,6 @@ async def test_form_zeroconf_correct_oui(hass):
     doorbirdapi = _get_mock_doorbirdapi_return_values(
         ready=[True], info={"WIFI_MAC_ADDR": "macaddr"}
     )
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     with patch(
         "homeassistant.components.doorbird.config_flow.DoorBird",
@@ -123,11 +177,15 @@ async def test_form_zeroconf_correct_oui(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
-            data={
-                "properties": {"macaddress": "1CCAE3DOORBIRD"},
-                "name": "Doorstation - abc123._axis-video._tcp.local.",
-                "host": "192.168.1.5",
-            },
+            data=zeroconf.ZeroconfServiceInfo(
+                host="192.168.1.5",
+                addresses=["192.168.1.5"],
+                hostname="mock_hostname",
+                name="Doorstation - abc123._axis-video._tcp.local.",
+                port=None,
+                properties={"macaddress": "1CCAE3DOORBIRD"},
+                type="mock_type",
+            ),
         )
         await hass.async_block_till_done()
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -174,7 +232,6 @@ async def test_form_zeroconf_correct_oui_wrong_device(hass, doorbell_state_side_
         ready=[True], info={"WIFI_MAC_ADDR": "macaddr"}
     )
     type(doorbirdapi).doorbell_state = MagicMock(side_effect=doorbell_state_side_effect)
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     with patch(
         "homeassistant.components.doorbird.config_flow.DoorBird",
@@ -183,11 +240,15 @@ async def test_form_zeroconf_correct_oui_wrong_device(hass, doorbell_state_side_
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
-            data={
-                "properties": {"macaddress": "1CCAE3DOORBIRD"},
-                "name": "Doorstation - abc123._axis-video._tcp.local.",
-                "host": "192.168.1.5",
-            },
+            data=zeroconf.ZeroconfServiceInfo(
+                host="192.168.1.5",
+                addresses=["192.168.1.5"],
+                hostname="mock_hostname",
+                name="Doorstation - abc123._axis-video._tcp.local.",
+                port=None,
+                properties={"macaddress": "1CCAE3DOORBIRD"},
+                type="mock_type",
+            ),
         )
         await hass.async_block_till_done()
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT

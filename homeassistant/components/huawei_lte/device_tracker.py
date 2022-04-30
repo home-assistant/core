@@ -1,11 +1,11 @@
 """Support for device tracking of Huawei LTE routers."""
 from __future__ import annotations
 
+from dataclasses import dataclass, field
 import logging
 import re
-from typing import Any, Dict, List, cast
+from typing import Any, cast
 
-import attr
 from stringcase import snakecase
 
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
@@ -34,7 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 
 _DEVICE_SCAN = f"{DEVICE_TRACKER_DOMAIN}/device_scan"
 
-_HostType = Dict[str, Any]
+_HostType = dict[str, Any]
 
 
 def _get_hosts(
@@ -44,7 +44,7 @@ def _get_hosts(
         if not ignore_subscriptions and key not in router.subscriptions:
             continue
         try:
-            return cast(List[_HostType], router.data[key]["Hosts"]["Host"])
+            return cast(list[_HostType], router.data[key]["Hosts"]["Host"])
         except KeyError:
             _LOGGER.debug("%s[%s][%s] not in data", key, "Hosts", "Host")
     return None
@@ -133,8 +133,7 @@ def async_add_new_entities(
     tracked: set[str],
 ) -> None:
     """Add new entities that are not already being tracked."""
-    hosts = _get_hosts(router)
-    if not hosts:
+    if not (hosts := _get_hosts(router)):
         return
 
     track_wired_clients = router.config_entry.options.get(
@@ -174,16 +173,16 @@ def _better_snakecase(text: str) -> str:
     return cast(str, snakecase(text))
 
 
-@attr.s
+@dataclass
 class HuaweiLteScannerEntity(HuaweiLteBaseEntity, ScannerEntity):
     """Huawei LTE router scanner entity."""
 
-    _mac_address: str = attr.ib()
+    _mac_address: str
 
-    _ip_address: str | None = attr.ib(init=False, default=None)
-    _is_connected: bool = attr.ib(init=False, default=False)
-    _hostname: str | None = attr.ib(init=False, default=None)
-    _extra_state_attributes: dict[str, Any] = attr.ib(init=False, factory=dict)
+    _ip_address: str | None = field(default=None, init=False)
+    _is_connected: bool = field(default=False, init=False)
+    _hostname: str | None = field(default=None, init=False)
+    _extra_state_attributes: dict[str, Any] = field(default_factory=dict, init=False)
 
     @property
     def _entity_name(self) -> str:
@@ -225,8 +224,7 @@ class HuaweiLteScannerEntity(HuaweiLteBaseEntity, ScannerEntity):
 
     async def async_update(self) -> None:
         """Update state."""
-        hosts = _get_hosts(self.router)
-        if hosts is None:
+        if (hosts := _get_hosts(self.router)) is None:
             self._available = False
             return
         self._available = True

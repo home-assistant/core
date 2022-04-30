@@ -1,20 +1,23 @@
 """BleBox climate entity."""
-
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
-    CURRENT_HVAC_OFF,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
-    SUPPORT_TARGET_TEMPERATURE,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BleBoxEntity, create_blebox_entities
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up a BleBox climate entity."""
 
     create_blebox_entities(
@@ -25,8 +28,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class BleBoxClimateEntity(BleBoxEntity, ClimateEntity):
     """Representation of a BleBox climate feature (saunaBox)."""
 
-    _attr_supported_features = SUPPORT_TARGET_TEMPERATURE
-    _attr_hvac_modes = [HVAC_MODE_OFF, HVAC_MODE_HEAT]
+    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+    _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
     _attr_temperature_unit = TEMP_CELSIUS
 
     @property
@@ -35,17 +38,16 @@ class BleBoxClimateEntity(BleBoxEntity, ClimateEntity):
         if self._feature.is_on is None:
             return None
 
-        return HVAC_MODE_HEAT if self._feature.is_on else HVAC_MODE_OFF
+        return HVACMode.HEAT if self._feature.is_on else HVACMode.OFF
 
     @property
     def hvac_action(self):
         """Return the actual current HVAC action."""
-        is_on = self._feature.is_on
-        if not is_on:
-            return None if is_on is None else CURRENT_HVAC_OFF
+        if not (is_on := self._feature.is_on):
+            return None if is_on is None else HVACAction.OFF
 
         # NOTE: In practice, there's no need to handle case when is_heating is None
-        return CURRENT_HVAC_HEAT if self._feature.is_heating else CURRENT_HVAC_IDLE
+        return HVACAction.HEATING if self._feature.is_heating else HVACAction.IDLE
 
     @property
     def max_temp(self):
@@ -69,7 +71,7 @@ class BleBoxClimateEntity(BleBoxEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set the climate entity mode."""
-        if hvac_mode == HVAC_MODE_HEAT:
+        if hvac_mode == HVACMode.HEAT:
             await self._feature.async_on()
             return
 

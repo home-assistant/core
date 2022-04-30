@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
-            "reauth_successful": "Taastuvastamine \u00f5nnestus"
+            "reauth_successful": "Taastuvastamine \u00f5nnestus",
+            "reconfigure_successful": "\u00dcmberseadistamine \u00f5nnestus"
         },
         "error": {
             "cannot_connect": "\u00dchendamine nurjus",
@@ -38,6 +39,13 @@
                 "description": "P\u00f5hjus: {details}",
                 "title": "Synology DSM: Taastuvasta sidumine"
             },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Salas\u00f5na",
+                    "username": "Kasutajanimi"
+                },
+                "title": "Taastuvasta Synology DSM"
+            },
             "user": {
                 "data": {
                     "host": "",
@@ -56,6 +64,7 @@
             "init": {
                 "data": {
                     "scan_interval": "P\u00e4ringute vahe minutites",
+                    "snap_profile_type": "Kaamera hetkt\u00f5mmiste kvaliteeditase (0: k\u00f5rge 1: keskmine 2: madal)",
                     "timeout": "Ajal\u00f5pp (sekundites)"
                 }
             }

@@ -1,0 +1,36 @@
+{
+  "Body": {
+    "Data": {
+      "0": {
+        "Controller": {
+          "Capacity_Maximum": 16588,
+          "Current_DC": 0.0,
+          "DesignedCapacity": 16588,
+          "Details": {
+            "Manufacturer": "BYD",
+            "Model": "BYD Battery-Box Premium HV",
+            "Serial": "P030T020Z2001234567     "
+          },
+          "Enable": 1,
+          "StateOfCharge_Relative": 4.5999999999999996,
+          "Status_BatteryCell": 0.0,
+          "Temperature_Cell": 21.5,
+          "TimeStamp": 1638105056.0,
+          "Voltage_DC": 0.0
+        },
+        "Modules": []
+      }
+    }
+  },
+  "Head": {
+    "RequestArguments": {
+      "Scope": "System"
+    },
+    "Status": {
+      "Code": 0,
+      "Reason": "",
+      "UserMessage": ""
+    },
+    "Timestamp": "2021-11-28T13:10:57+00:00"
+  }
+}

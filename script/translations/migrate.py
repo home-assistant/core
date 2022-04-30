@@ -237,7 +237,7 @@ STATE_REWRITE = {
     "[%key:state::lock::unlocked%]": "[%key:common::state::unlocked%]",
 }
 SKIP_DOMAIN = {"default", "scene"}
-STATES_WITH_DEV_CLASS = {"binary_sensor", "zwave"}
+STATES_WITH_DEV_CLASS = {"binary_sensor"}
 GROUP_DELETE = {"opening", "closing", "stopped"}  # They don't exist
 
 

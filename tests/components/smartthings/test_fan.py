@@ -7,13 +7,8 @@ real HTTP calls are not initiated during testing.
 from pysmartthings import Attribute, Capability
 
 from homeassistant.components.fan import (
-    ATTR_SPEED,
-    ATTR_SPEED_LIST,
+    ATTR_PERCENTAGE,
     DOMAIN as FAN_DOMAIN,
-    SPEED_HIGH,
-    SPEED_LOW,
-    SPEED_MEDIUM,
-    SPEED_OFF,
     SUPPORT_SET_SPEED,
 )
 from homeassistant.components.smartthings.const import DOMAIN, SIGNAL_SMARTTHINGS_UPDATE
@@ -42,13 +37,7 @@ async def test_entity_state(hass, device_factory):
     state = hass.states.get("fan.fan_1")
     assert state.state == "on"
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == SUPPORT_SET_SPEED
-    assert state.attributes[ATTR_SPEED] == SPEED_MEDIUM
-    assert state.attributes[ATTR_SPEED_LIST] == [
-        SPEED_OFF,
-        SPEED_LOW,
-        SPEED_MEDIUM,
-        SPEED_HIGH,
-    ]
+    assert state.attributes[ATTR_PERCENTAGE] == 66
 
 
 async def test_entity_and_device_attributes(hass, device_factory):
@@ -70,6 +59,8 @@ async def test_entity_and_device_attributes(hass, device_factory):
 
     entry = device_registry.async_get_device({(DOMAIN, device.device_id)})
     assert entry
+    assert entry.configuration_url == "https://account.smartthings.com"
+    assert entry.identifiers == {(DOMAIN, device.device_id)}
     assert entry.name == device.label
     assert entry.model == device.device_type_name
     assert entry.manufacturer == "Unavailable"
@@ -126,17 +117,17 @@ async def test_turn_on_with_speed(hass, device_factory):
     await hass.services.async_call(
         "fan",
         "turn_on",
-        {ATTR_ENTITY_ID: "fan.fan_1", ATTR_SPEED: SPEED_HIGH},
+        {ATTR_ENTITY_ID: "fan.fan_1", ATTR_PERCENTAGE: 100},
         blocking=True,
     )
     # Assert
     state = hass.states.get("fan.fan_1")
     assert state is not None
     assert state.state == "on"
-    assert state.attributes[ATTR_SPEED] == SPEED_HIGH
+    assert state.attributes[ATTR_PERCENTAGE] == 100
 
 
-async def test_set_speed(hass, device_factory):
+async def test_set_percentage(hass, device_factory):
     """Test setting to specific fan speed."""
     # Arrange
     device = device_factory(
@@ -148,15 +139,15 @@ async def test_set_speed(hass, device_factory):
     # Act
     await hass.services.async_call(
         "fan",
-        "set_speed",
-        {ATTR_ENTITY_ID: "fan.fan_1", ATTR_SPEED: SPEED_HIGH},
+        "set_percentage",
+        {ATTR_ENTITY_ID: "fan.fan_1", ATTR_PERCENTAGE: 100},
         blocking=True,
     )
     # Assert
     state = hass.states.get("fan.fan_1")
     assert state is not None
     assert state.state == "on"
-    assert state.attributes[ATTR_SPEED] == SPEED_HIGH
+    assert state.attributes[ATTR_PERCENTAGE] == 100
 
 
 async def test_update_from_signal(hass, device_factory):

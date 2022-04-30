@@ -6,8 +6,9 @@ from arcam.fmj.utils import get_uniqueid_from_host, get_uniqueid_from_udn
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.ssdp import ATTR_SSDP_LOCATION, ATTR_UPNP_UDN
+from homeassistant.components import ssdp
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DEFAULT_NAME, DEFAULT_PORT, DOMAIN, DOMAIN_DATA_ENTRIES
@@ -84,11 +85,11 @@ class ArcamFmjFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="confirm", description_placeholders=placeholders
         )
 
-    async def async_step_ssdp(self, discovery_info):
+    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
         """Handle a discovered device."""
-        host = urlparse(discovery_info[ATTR_SSDP_LOCATION]).hostname
+        host = urlparse(discovery_info.ssdp_location).hostname
         port = DEFAULT_PORT
-        uuid = get_uniqueid_from_udn(discovery_info[ATTR_UPNP_UDN])
+        uuid = get_uniqueid_from_udn(discovery_info.upnp[ssdp.ATTR_UPNP_UDN])
 
         await self._async_set_unique_id_and_update(host, port, uuid)
 

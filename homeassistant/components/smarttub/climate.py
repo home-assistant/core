@@ -1,25 +1,24 @@
 """Platform for climate integration."""
-import logging
+from __future__ import annotations
 
 from smarttub import Spa
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
-    HVAC_MODE_HEAT,
     PRESET_ECO,
     PRESET_NONE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.temperature import convert as convert_temperature
 
 from .const import DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP, DOMAIN, SMARTTUB_CONTROLLER
 from .entity import SmartTubEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 PRESET_DAY = "day"
 
@@ -32,12 +31,14 @@ PRESET_MODES = {
 HEAT_MODES = {v: k for k, v in PRESET_MODES.items()}
 
 HVAC_ACTIONS = {
-    "OFF": CURRENT_HVAC_IDLE,
-    "ON": CURRENT_HVAC_HEAT,
+    "OFF": HVACAction.IDLE,
+    "ON": HVACAction.HEATING,
 }
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up climate entity for the thermostat in the tub."""
 
     controller = hass.data[DOMAIN][entry.entry_id][SMARTTUB_CONTROLLER]
@@ -52,6 +53,15 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class SmartTubThermostat(SmartTubEntity, ClimateEntity):
     """The target water temperature for the spa."""
 
+    # SmartTub devices don't seem to have the option of disabling the heater,
+    # so this is always HVACMode.HEAT.
+    _attr_hvac_mode = HVACMode.HEAT
+    _attr_hvac_modes = [HVACMode.HEAT]
+    # Only target temperature is supported.
+    _attr_supported_features = (
+        ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
+    )
+
     def __init__(self, coordinator, spa):
         """Initialize the entity."""
         super().__init__(coordinator, spa, "Thermostat")
@@ -62,30 +72,16 @@ class SmartTubThermostat(SmartTubEntity, ClimateEntity):
         return TEMP_CELSIUS
 
     @property
-    def hvac_action(self):
+    def hvac_action(self) -> HVACAction | None:
         """Return the current running hvac operation."""
         return HVAC_ACTIONS.get(self.spa_status.heater)
 
-    @property
-    def hvac_modes(self):
-        """Return the list of available hvac operation modes."""
-        return [HVAC_MODE_HEAT]
-
-    @property
-    def hvac_mode(self):
-        """Return the current hvac mode.
-
-        SmartTub devices don't seem to have the option of disabling the heater,
-        so this is always HVAC_MODE_HEAT.
-        """
-        return HVAC_MODE_HEAT
-
-    async def async_set_hvac_mode(self, hvac_mode: str):
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode):
         """Set new target hvac mode.
 
         As with hvac_mode, we don't really have an option here.
         """
-        if hvac_mode == HVAC_MODE_HEAT:
+        if hvac_mode == HVACMode.HEAT:
             return
         raise NotImplementedError(hvac_mode)
 
@@ -100,14 +96,6 @@ class SmartTubThermostat(SmartTubEntity, ClimateEntity):
         """Return the maximum temperature."""
         max_temp = DEFAULT_MAX_TEMP
         return convert_temperature(max_temp, TEMP_CELSIUS, self.temperature_unit)
-
-    @property
-    def supported_features(self):
-        """Return the set of supported features.
-
-        Only target temperature is supported.
-        """
-        return SUPPORT_PRESET_MODE | SUPPORT_TARGET_TEMPERATURE
 
     @property
     def preset_mode(self):
