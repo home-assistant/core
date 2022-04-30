@@ -30,7 +30,9 @@ def ulid() -> str:
 
     This string can be loaded directly with https://github.com/ahawker/ulid
 
-    ULID(ulid())
+    import homeassistant.util.ulid as ulid_util
+    import ulid
+    ulid.parse(ulid_util.ulid())
     """
     enc = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
     ulid_upper_hex = f"{int(time.time()*1000):012x}{getrandbits(80):020x}".encode(
