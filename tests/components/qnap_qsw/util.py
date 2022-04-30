@@ -127,8 +127,12 @@ async def async_init_integration(
 ) -> None:
     """Set up the QNAP QSW integration in Home Assistant."""
 
-    entry = MockConfigEntry(domain=DOMAIN, data=CONFIG)
-    entry.add_to_hass(hass)
+    config_entry = MockConfigEntry(
+        data=CONFIG,
+        domain=DOMAIN,
+        unique_id="qsw_unique_id",
+    )
+    config_entry.add_to_hass(hass)
 
     with patch(
         "homeassistant.components.qnap_qsw.QnapQswApi.get_firmware_condition",
@@ -149,5 +153,5 @@ async def async_init_integration(
         "homeassistant.components.qnap_qsw.QnapQswApi.post_users_login",
         return_value=USERS_LOGIN_MOCK,
     ):
-        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
