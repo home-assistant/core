@@ -1,7 +1,7 @@
 """Mock devices object to test Insteon."""
 
 import asyncio
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyinsteon.address import Address
 from pyinsteon.constants import ALDBStatus, ResponseStatus
@@ -129,18 +129,20 @@ class MockDevices:
 
     def fill_properties(self, address, props_dict):
         """Fill the operating flags and extended properties of a device."""
+
         device = self._devices[Address(address)]
         operating_flags = props_dict.get("operating_flags", {})
         properties = props_dict.get("properties", {})
 
-        for flag in operating_flags:
-            value = operating_flags[flag]
-            if device.operating_flags.get(flag):
-                device.operating_flags[flag].load(value)
-        for flag in properties:
-            value = properties[flag]
-            if device.properties.get(flag):
-                device.properties[flag].load(value)
+        with patch("pyinsteon.subscriber_base.publish_topic", MagicMock()):
+            for flag in operating_flags:
+                value = operating_flags[flag]
+                if device.operating_flags.get(flag):
+                    device.operating_flags[flag].load(value)
+            for flag in properties:
+                value = properties[flag]
+                if device.properties.get(flag):
+                    device.properties[flag].load(value)
 
     async def async_add_device(self, address=None, multiple=False):
         """Mock the async_add_device method."""

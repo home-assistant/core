@@ -428,15 +428,11 @@ async def test_load_properties_failure(hass, hass_ws_client, kpl_properties_data
         assert msg["error"]["code"] == "load_failed"
 
 
-async def test_reset_properties(hass, hass_ws_client):
+async def test_reset_properties(hass, hass_ws_client, kpl_properties_data):
     """Test getting an Insteon device's properties."""
-    props = {
-        "operating_flags": {"led_off": False},
-        "properties": {
-            "on_mask": 0,
-        },
-    }
-    ws_client, devices = await _setup(hass, hass_ws_client, "33.33.33", props)
+    ws_client, devices = await _setup(
+        hass, hass_ws_client, "33.33.33", kpl_properties_data
+    )
 
     device = devices["33.33.33"]
     device.configuration["led_off"].new_value = True
