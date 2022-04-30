@@ -78,7 +78,7 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            ElroConnectsFireAlarm(
+            ElroConnectsSiren(
                 elro_connects_api,
                 connector_id,
                 device_id,
@@ -90,7 +90,7 @@ async def async_setup_entry(
     )
 
 
-class ElroConnectsFireAlarm(ElroConnectsEntity, SirenEntity):
+class ElroConnectsSiren(ElroConnectsEntity, SirenEntity):
     """Elro Connects Fire Alarm Entity."""
 
     def __init__(
