@@ -11,7 +11,10 @@ from systembridgeconnector.const import (
     TYPE_DATA_UPDATE,
     TYPE_ERROR,
 )
-from systembridgeconnector.exceptions import ConnectionErrorException
+from systembridgeconnector.exceptions import (
+    ConnectionClosedException,
+    ConnectionErrorException,
+)
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import zeroconf
@@ -68,26 +71,6 @@ FIXTURE_ZEROCONF_BAD = zeroconf.ZeroconfServiceInfo(
     },
 )
 
-
-# FIXTURE_INFORMATION = {
-#     "address": "http://test-bridge:9170",
-#     "apiPort": 9170,
-#     "fqdn": "test-bridge",
-#     "host": "test-bridge",
-#     "ip": "1.1.1.1",
-#     "mac": FIXTURE_MAC_ADDRESS,
-#     "updates": {
-#         "available": False,
-#         "newer": False,
-#         "url": "https://github.com/timmo001/system-bridge/releases/tag/v2.3.2",
-#         "version": {"current": "2.3.2", "new": "2.3.2"},
-#     },
-#     "uuid": FIXTURE_UUID,
-#     "version": "2.3.2",
-#     "websocketAddress": "ws://test-bridge:9172",
-#     "websocketPort": 9172,
-# }
-
 FIXTURE_DATA_SYSTEM = {
     EVENT_TYPE: TYPE_DATA_UPDATE,
     EVENT_MESSAGE: "Data changed",
@@ -102,10 +85,6 @@ FIXTURE_DATA_AUTH_ERROR = {
     EVENT_SUBTYPE: SUBTYPE_BAD_API_KEY,
     EVENT_MESSAGE: "Invalid api-key",
 }
-
-FIXTURE_URL = f"http://{FIXTURE_USER_INPUT[CONF_HOST]}:{FIXTURE_USER_INPUT[CONF_PORT]}/api/websocket"
-
-FIXTURE_ZEROCONF_BASE_URL = f"http://{FIXTURE_ZEROCONF.host}:{FIXTURE_ZEROCONF.port}"
 
 
 async def test_show_user_form(hass: HomeAssistant) -> None:
@@ -159,6 +138,31 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     with patch(
         "systembridgeconnector.websocket_client.WebSocketClient.connect",
         side_effect=ConnectionErrorException,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FIXTURE_USER_INPUT
+        )
+    await hass.async_block_till_done()
+
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["step_id"] == "user"
+    assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_form_connection_closed_cannot_connect(hass: HomeAssistant) -> None:
+    """Test we handle connection closed cannot connect error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["errors"] is None
+
+    with patch("systembridgeconnector.websocket_client.WebSocketClient.connect"), patch(
+        "systembridgeconnector.websocket_client.WebSocketClient.get_data"
+    ), patch(
+        "systembridgeconnector.websocket_client.WebSocketClient.receive_message",
+        side_effect=ConnectionClosedException,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], FIXTURE_USER_INPUT
@@ -257,6 +261,31 @@ async def test_reauth_connection_error(hass: HomeAssistant) -> None:
     with patch(
         "systembridgeconnector.websocket_client.WebSocketClient.connect",
         side_effect=ConnectionErrorException,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FIXTURE_AUTH_INPUT
+        )
+    await hass.async_block_till_done()
+
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["step_id"] == "authenticate"
+    assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_reauth_connection_closed_error(hass: HomeAssistant) -> None:
+    """Test we show user form on connection error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "reauth"}, data=FIXTURE_USER_INPUT
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "authenticate"
+
+    with patch("systembridgeconnector.websocket_client.WebSocketClient.connect"), patch(
+        "systembridgeconnector.websocket_client.WebSocketClient.get_data"
+    ), patch(
+        "systembridgeconnector.websocket_client.WebSocketClient.receive_message",
+        side_effect=ConnectionClosedException,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], FIXTURE_AUTH_INPUT
