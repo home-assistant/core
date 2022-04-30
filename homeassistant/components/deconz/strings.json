@@ -23,6 +23,7 @@
       }
     },
     "error": {
+      "linking_not_possible": "Couldn't link with the gateway",
       "no_key": "Couldn't get an API key"
     },
     "abort": {

@@ -819,7 +819,7 @@ hole==0.7.0
 holidays==0.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220428.0
+home-assistant-frontend==20220429.0
 
 # homeassistant.components.home_connect
 homeconnect==0.7.0
@@ -1547,7 +1547,7 @@ pyialarm==1.9.0
 pyicloud==1.0.0
 
 # homeassistant.components.insteon
-pyinsteon==1.1.0b1
+pyinsteon==1.1.0b3
 
 # homeassistant.components.intesishome
 pyintesishome==1.7.6
