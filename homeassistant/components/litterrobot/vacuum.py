@@ -1,6 +1,7 @@
 """Support for Litter-Robot "Vacuum"."""
 from __future__ import annotations
 
+from datetime import datetime, timedelta, timezone
 import logging
 from typing import Any
 
@@ -17,7 +18,7 @@ from homeassistant.components.vacuum import (
     VacuumEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_OFF
+from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -33,6 +34,19 @@ TYPE_LITTER_BOX = "Litter Box"
 SERVICE_RESET_WASTE_DRAWER = "reset_waste_drawer"
 SERVICE_SET_SLEEP_MODE = "set_sleep_mode"
 SERVICE_SET_WAIT_TIME = "set_wait_time"
+
+LITTER_BOX_STATUS_STATE_MAP = {
+    LitterBoxStatus.CLEAN_CYCLE: STATE_CLEANING,
+    LitterBoxStatus.EMPTY_CYCLE: STATE_CLEANING,
+    LitterBoxStatus.CLEAN_CYCLE_COMPLETE: STATE_DOCKED,
+    LitterBoxStatus.CAT_SENSOR_TIMING: STATE_DOCKED,
+    LitterBoxStatus.DRAWER_FULL_1: STATE_DOCKED,
+    LitterBoxStatus.DRAWER_FULL_2: STATE_DOCKED,
+    LitterBoxStatus.READY: STATE_DOCKED,
+    LitterBoxStatus.CAT_SENSOR_INTERRUPTED: STATE_PAUSED,
+    LitterBoxStatus.OFF: STATE_OFF,
+}
+UNAVAILABLE_AFTER = timedelta(minutes=30)
 
 
 async def async_setup_entry(
@@ -85,19 +99,10 @@ class LitterRobotCleaner(LitterRobotControlEntity, StateVacuumEntity):
     @property
     def state(self) -> str:
         """Return the state of the cleaner."""
-        switcher = {
-            LitterBoxStatus.CLEAN_CYCLE: STATE_CLEANING,
-            LitterBoxStatus.EMPTY_CYCLE: STATE_CLEANING,
-            LitterBoxStatus.CLEAN_CYCLE_COMPLETE: STATE_DOCKED,
-            LitterBoxStatus.CAT_SENSOR_TIMING: STATE_DOCKED,
-            LitterBoxStatus.DRAWER_FULL_1: STATE_DOCKED,
-            LitterBoxStatus.DRAWER_FULL_2: STATE_DOCKED,
-            LitterBoxStatus.READY: STATE_DOCKED,
-            LitterBoxStatus.CAT_SENSOR_INTERRUPTED: STATE_PAUSED,
-            LitterBoxStatus.OFF: STATE_OFF,
-        }
+        if self.robot.last_seen < datetime.now(timezone.utc) - UNAVAILABLE_AFTER:
+            return STATE_UNAVAILABLE
 
-        return switcher.get(self.robot.status, STATE_ERROR)
+        return LITTER_BOX_STATUS_STATE_MAP.get(self.robot.status, STATE_ERROR)
 
     @property
     def status(self) -> str:

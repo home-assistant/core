@@ -240,14 +240,14 @@ class ZHAGateway:
     async def async_initialize_devices_and_entities(self) -> None:
         """Initialize devices and load entities."""
 
-        _LOGGER.warning("Loading all devices")
+        _LOGGER.debug("Loading all devices")
         await asyncio.gather(
             *(dev.async_initialize(from_cache=True) for dev in self.devices.values())
         )
 
         async def fetch_updated_state() -> None:
             """Fetch updated state for mains powered devices."""
-            _LOGGER.warning("Fetching current state for mains powered devices")
+            _LOGGER.debug("Fetching current state for mains powered devices")
             await asyncio.gather(
                 *(
                     dev.async_initialize(from_cache=False)
