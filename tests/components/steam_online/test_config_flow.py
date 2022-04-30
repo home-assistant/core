@@ -1,4 +1,6 @@
 """Test Steam config flow."""
+from unittest.mock import patch
+
 import steam
 
 from homeassistant import data_entry_flow
@@ -25,7 +27,10 @@ from . import (
 
 async def test_flow_user(hass: HomeAssistant) -> None:
     """Test user initialized flow."""
-    with patch_interface():
+    with patch_interface(), patch(
+        "homeassistant.components.steam_online.async_setup_entry",
+        return_value=True,
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},

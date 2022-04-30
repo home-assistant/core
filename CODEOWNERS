@@ -75,6 +75,8 @@ build.json @home-assistant/supervisor
 /tests/components/api/ @home-assistant/core
 /homeassistant/components/apple_tv/ @postlund
 /tests/components/apple_tv/ @postlund
+/homeassistant/components/application_credentials/ @home-assistant/core
+/tests/components/application_credentials/ @home-assistant/core
 /homeassistant/components/apprise/ @caronc
 /tests/components/apprise/ @caronc
 /homeassistant/components/aprs/ @PhilRW
