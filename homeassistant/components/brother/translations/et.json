@@ -15,14 +15,13 @@
                 "data": {
                     "host": "Host",
                     "type": "Printeri t\u00fc\u00fcp"
-                },
-                "description": "Seadista Brotheri printeri sidumine. Kui seadistamisega on probleeme mine aadressile https://www.home-assistant.io/integrations/brother"
+                }
             },
             "zeroconf_confirm": {
                 "data": {
                     "type": "Printeri t\u00fc\u00fcp"
                 },
-                "description": "Kas soovite lisada Home Assistanti Brotheri printeri {model} seerianumbriga \" {serial_number} \"?",
+                "description": "Kas lisada Home Assistantile printer {model} seerianumbriga ` {serial_number} `?",
                 "title": "Avastatud Brotheri printer"
             }
         }

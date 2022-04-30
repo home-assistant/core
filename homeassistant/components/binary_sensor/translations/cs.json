@@ -112,6 +112,10 @@
             "off": "Nenab\u00edj\u00ed se",
             "on": "Nab\u00edjen\u00ed"
         },
+        "carbon_monoxide": {
+            "off": "\u017d\u00e1dn\u00fd plyn",
+            "on": "Zji\u0161t\u011bn plyn"
+        },
         "cold": {
             "off": "Norm\u00e1ln\u00ed",
             "on": "Studen\u00e9"

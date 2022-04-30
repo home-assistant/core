@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "El dispositiu ja est\u00e0 configurat",
             "already_in_progress": "El flux de configuraci\u00f3 ja est\u00e0 en curs",
+            "ignore_ip6_link_local": "L'enlla\u00e7 amb adreces IPv6 locals no est\u00e0 perm\u00e8s",
             "no_devices_found": "No s'han trobat dispositius a la xarxa",
             "not_supported": "Connectat a AVM FRITZ!Box per\u00f2 no es poden controlar dispositius Smart Home.",
             "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament"
