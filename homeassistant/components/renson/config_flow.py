@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-import renson_endura_delta.renson as renson
+from renson_endura_delta import renson
 import voluptuous as vol
 
 from homeassistant import config_entries

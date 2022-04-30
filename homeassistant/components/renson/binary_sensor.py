@@ -1,6 +1,5 @@
 """Binary sensors for renson."""
 from dataclasses import dataclass
-import typing
 
 from renson_endura_delta.field_enum import (
     AIR_QUALITY_CONTROL_FIELD,
@@ -39,7 +38,7 @@ class RensonBinarySensorEntityDescription(
     """Description of binary sensor."""
 
 
-BINARY_SENSORS: typing.Tuple[RensonBinarySensorEntityDescription, ...] = (
+BINARY_SENSORS: tuple[RensonBinarySensorEntityDescription, ...] = (
     RensonBinarySensorEntityDescription(
         name="Frost protection active",
         key="FROST_PROTECTION_FIELD",

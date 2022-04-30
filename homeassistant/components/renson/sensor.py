@@ -1,7 +1,6 @@
 """Sensor data of the Renson ventilation unit."""
 from dataclasses import dataclass
 import logging
-import typing
 
 from renson_endura_delta.field_enum import (
     AIR_QUALITY_FIELD,
@@ -42,6 +41,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, DEVICE_CLASS_HUMIDITY, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import CONCENTRATION_PARTS_PER_CUBIC_METER, DOMAIN
 
@@ -67,7 +67,7 @@ class RensonSensorEntityDescription(
     """Description of sensor."""
 
 
-SENSORS: typing.Tuple[RensonSensorEntityDescription, ...] = (
+SENSORS: tuple[RensonSensorEntityDescription, ...] = (
     RensonSensorEntityDescription(
         key="CO2_QUALITY_FIELD",
         name="CO2 quality",
@@ -278,11 +278,6 @@ class RensonSensor(SensorEntity):
         self.renson_api = renson_api
         self.raw_format = description.raw_format
 
-    @property
-    def state(self):
-        """Lookup the state of the sensor and save it."""
-        return self._state
-
     def update(self):
         """Save state of sensor."""
         if self.raw_format:
@@ -304,8 +299,11 @@ class RensonSensor(SensorEntity):
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config: ConfigEntry, async_add_entities, discovery_info=None
-):
+    hass: HomeAssistant,
+    config: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info=None,
+) -> None:
     """Call the Renson integration to setup."""
 
     renson_api: RensonVentilation = hass.data[DOMAIN][config.entry_id]
