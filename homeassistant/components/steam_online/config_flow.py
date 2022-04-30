@@ -189,7 +189,6 @@ class SteamOptionsFlowHandler(config_entries.OptionsFlow):
         """Get accounts."""
         interface = steam.api.interface("ISteamUser")
         friends = interface.GetFriendList(steamid=self.entry.data[CONF_ACCOUNT])
-        friends = friends["friendslist"]["friends"]
-        _users_str = [user["steamid"] for user in friends]
+        _users_str = [user["steamid"] for user in friends["friendslist"]["friends"]]
         names = interface.GetPlayerSummaries(steamids=_users_str)
         return names["response"]["players"]["player"]
