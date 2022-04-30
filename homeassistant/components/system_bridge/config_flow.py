@@ -1,19 +1,14 @@
 """Config flow for System Bridge integration."""
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any
 
-from systembridgeconnector.const import (
-    EVENT_MESSAGE,
-    EVENT_MODULE,
-    EVENT_SUBTYPE,
-    EVENT_TYPE,
-    SUBTYPE_BAD_API_KEY,
-    TYPE_DATA_UPDATE,
-    TYPE_ERROR,
-)
+import async_timeout
+from systembridgeconnector.const import EVENT_MODULE, EVENT_TYPE, TYPE_DATA_UPDATE
 from systembridgeconnector.exceptions import (
+    AuthenticationException,
     ConnectionClosedException,
     ConnectionErrorException,
 )
@@ -53,8 +48,9 @@ async def validate_input(data: dict[str, Any]) -> dict[str, str]:
         data[CONF_API_KEY],
     )
     try:
-        await websocket_client.connect()
-    except ConnectionErrorException as exception:
+        async with async_timeout.timeout(20):
+            await websocket_client.connect()
+    except (asyncio.TimeoutError, ConnectionErrorException) as exception:
         _LOGGER.info(exception)
         raise CannotConnect from exception
 
@@ -68,12 +64,13 @@ async def validate_input(data: dict[str, Any]) -> dict[str, str]:
             ):
                 break
             _LOGGER.info("Message: %s", message)
-            if (
-                message[EVENT_TYPE] == TYPE_ERROR
-                and message[EVENT_SUBTYPE] == SUBTYPE_BAD_API_KEY
-            ):
-                raise InvalidAuth(message[EVENT_MESSAGE])
-    except ConnectionClosedException as exception:
+    except AuthenticationException as exception:
+        _LOGGER.info(exception)
+        raise InvalidAuth from exception
+    except (
+        ConnectionClosedException,
+        ConnectionErrorException,
+    ) as exception:
         _LOGGER.info(exception)
         raise CannotConnect from exception
 
