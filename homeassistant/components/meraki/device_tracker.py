@@ -1,12 +1,12 @@
 """Support for the Meraki CMX location service."""
 from __future__ import annotations
 
-from awesomeversion import AwesomeVersion
 from collections.abc import Awaitable, Callable
 from http import HTTPStatus
 import json
 import logging
 
+from awesomeversion import AwesomeVersion
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
