@@ -35,12 +35,15 @@ def ulid() -> str:
     ulid.parse(ulid_util.ulid())
     """
     enc = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
-    ulid_upper_hex = f"{int(time.time()*1000):012x}{getrandbits(80):020x}".encode(
+    ulid_upper_hex = f"{int(time.time()*1000):012X}{getrandbits(80):020X}".encode(
         "ascii"
     )
 
     # This is base32 crockford encoding with the loop unrolled for performance
+    #
+    # This code is adapted from:
     # https://github.com/ahawker/ulid/blob/06289583e9de4286b4d80b4ad000d137816502ca/ulid/base32.py#L102
+    #
 
     return (
         enc[(ulid_upper_hex[0] & 224) >> 5]
