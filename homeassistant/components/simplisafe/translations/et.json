@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "See SimpliSafe'i konto on juba kasutusel.",
+            "email_2fa_timed_out": "Meilip\u00f5hise kahefaktorilise autentimise ajal\u00f5pp.",
             "reauth_successful": "Taastuvastamine \u00f5nnestus",
             "wrong_account": "Esitatud kasutaja mandaadid ei \u00fchti selle SimpliSafe kontoga."
         },
@@ -11,6 +12,9 @@
             "invalid_auth": "Tuvastamise viga",
             "still_awaiting_mfa": "Ootan endiselt MFA e-posti klikki",
             "unknown": "Tundmatu viga"
+        },
+        "progress": {
+            "email_2fa": "Sisesta e-kirjaga saadetud kahefaktoriline autentimiskood."
         },
         "step": {
             "mfa": {

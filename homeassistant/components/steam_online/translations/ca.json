@@ -16,7 +16,17 @@
             },
             "user": {
                 "data": {
+                    "account": "ID del compte de Steam",
                     "api_key": "Clau API"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "accounts": "Noms dels comptes a controlar"
                 }
             }
         }
