@@ -168,16 +168,20 @@ async def async_test_still(hass, info) -> tuple[dict[str, str], str | None]:
     return {}, f"image/{fmt}"
 
 
-def slug_url(hass, url) -> str | None:
+def slug(hass, template) -> str | None:
     """Convert a camera url into a string suitable for a camera name."""
-    if not url:
+    if not template:
         return None
-    if not isinstance(url, template_helper.Template):
-        url = cv.template(url)
-        url.hass = hass
-    # We shouldn't have any exceptions here, because we verified the url earlier
-    url = url.async_render(parse_result=False)
-    return slugify(yarl.URL(url).host)
+    if not isinstance(template, template_helper.Template):
+        template = template_helper.Template(template, hass)
+    try:
+        url = template.async_render(parse_result=False)
+        return slugify(yarl.URL(url).host)
+    except TemplateError as err:
+        _LOGGER.error("Syntax error in '%s': %s", template.template, err)
+    except (ValueError, TypeError) as err:
+        _LOGGER.error("Syntax error in '%s': %s", url, err)
+    return None
 
 
 async def async_test_stream(hass, info) -> dict[str, str]:
@@ -257,6 +261,7 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the start of the config flow."""
         errors = {}
+        hass = self.hass
         if user_input:
             # Secondary validation because serialised vol can't seem to handle this complexity:
             if not user_input.get(CONF_STILL_IMAGE_URL) and not user_input.get(
@@ -268,12 +273,7 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors = errors | await async_test_stream(self.hass, user_input)
                 still_url = user_input.get(CONF_STILL_IMAGE_URL)
                 stream_url = user_input.get(CONF_STREAM_SOURCE)
-                name = (
-                    slug_url(self.hass, still_url)
-                    or slug_url(self.hass, stream_url)
-                    or DEFAULT_NAME
-                )
-
+                name = slug(hass, still_url) or slug(hass, stream_url) or DEFAULT_NAME
                 if not errors:
                     user_input[CONF_CONTENT_TYPE] = still_format
                     user_input[CONF_LIMIT_REFETCH_TO_URL_CHANGE] = False
@@ -305,9 +305,7 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
         stream_url = import_config.get(CONF_STREAM_SOURCE)
         name = import_config.get(
             CONF_NAME,
-            slug_url(self.hass, still_url)
-            or slug_url(self.hass, stream_url)
-            or DEFAULT_NAME,
+            slug(self.hass, still_url) or slug(self.hass, stream_url) or DEFAULT_NAME,
         )
         if CONF_LIMIT_REFETCH_TO_URL_CHANGE not in import_config:
             import_config[CONF_LIMIT_REFETCH_TO_URL_CHANGE] = False
@@ -330,6 +328,7 @@ class GenericOptionsFlowHandler(OptionsFlow):
     ) -> FlowResult:
         """Manage Generic IP Camera options."""
         errors: dict[str, str] = {}
+        hass = self.hass
 
         if user_input is not None:
             errors, still_format = await async_test_still(
@@ -339,11 +338,7 @@ class GenericOptionsFlowHandler(OptionsFlow):
             still_url = user_input.get(CONF_STILL_IMAGE_URL)
             stream_url = user_input.get(CONF_STREAM_SOURCE)
             if not errors:
-                title = (
-                    slug_url(self.hass, still_url)
-                    or slug_url(self.hass, stream_url)
-                    or DEFAULT_NAME
-                )
+                title = slug(hass, still_url) or slug(hass, stream_url) or DEFAULT_NAME
                 if still_url is None:
                     # If user didn't specify a still image URL,
                     # The automatically generated still image that stream generates
