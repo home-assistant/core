@@ -13,7 +13,14 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_ACCOUNT, CONF_ACCOUNTS, DEFAULT_NAME, DOMAIN, LOGGER
+from .const import (
+    CONF_ACCOUNT,
+    CONF_ACCOUNTS,
+    DEFAULT_NAME,
+    DOMAIN,
+    LOGGER,
+    PLACEHOLDERS,
+)
 
 
 def validate_input(user_input: dict[str, str | int]) -> list[dict[str, str | int]]:
@@ -52,14 +59,14 @@ class SteamFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 if res[0] is not None:
                     name = str(res[0]["personaname"])
                 else:
-                    errors = {"base": "invalid_account"}
+                    errors["base"] = "invalid_account"
             except (steam.api.HTTPError, steam.api.HTTPTimeoutError) as ex:
-                errors = {"base": "cannot_connect"}
+                errors["base"] = "cannot_connect"
                 if "403" in str(ex):
-                    errors = {"base": "invalid_auth"}
+                    errors["base"] = "invalid_auth"
             except Exception as ex:  # pylint:disable=broad-except
                 LOGGER.exception("Unknown exception: %s", ex)
-                errors = {"base": "unknown"}
+                errors["base"] = "unknown"
             if not errors:
                 entry = await self.async_set_unique_id(user_input[CONF_ACCOUNT])
                 if entry and self.source == config_entries.SOURCE_REAUTH:
@@ -70,20 +77,12 @@ class SteamFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 if self.source == config_entries.SOURCE_IMPORT:
                     accounts_data = {
                         CONF_ACCOUNTS: {
-                            acc["steamid"]: {
-                                "name": acc["personaname"],
-                                "enabled": True,
-                            }
-                            for acc in res
+                            acc["steamid"]: acc["personaname"] for acc in res
                         }
                     }
                     user_input.pop(CONF_ACCOUNTS)
                 else:
-                    accounts_data = {
-                        CONF_ACCOUNTS: {
-                            user_input[CONF_ACCOUNT]: {"name": name, "enabled": True}
-                        }
-                    }
+                    accounts_data = {CONF_ACCOUNTS: {user_input[CONF_ACCOUNT]: name}}
                 return self.async_create_entry(
                     title=name or DEFAULT_NAME,
                     data=user_input,
@@ -103,6 +102,7 @@ class SteamFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
+            description_placeholders=PLACEHOLDERS,
         )
 
     async def async_step_import(self, import_config: ConfigType) -> FlowResult:
@@ -131,7 +131,9 @@ class SteamFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_user()
 
         self._set_confirm_only()
-        return self.async_show_form(step_id="reauth_confirm")
+        return self.async_show_form(
+            step_id="reauth_confirm", description_placeholders=PLACEHOLDERS
+        )
 
 
 class SteamOptionsFlowHandler(config_entries.OptionsFlow):
@@ -149,22 +151,15 @@ class SteamOptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             await self.hass.config_entries.async_unload(self.entry.entry_id)
             for k in self.options[CONF_ACCOUNTS]:
-                if (
-                    self.options[CONF_ACCOUNTS][k]["enabled"]
-                    and k not in user_input[CONF_ACCOUNTS]
-                    and (
-                        entity_id := er.async_get(self.hass).async_get_entity_id(
-                            Platform.SENSOR, DOMAIN, f"sensor.steam_{k}"
-                        )
+                if k not in user_input[CONF_ACCOUNTS] and (
+                    entity_id := er.async_get(self.hass).async_get_entity_id(
+                        Platform.SENSOR, DOMAIN, f"sensor.steam_{k}"
                     )
                 ):
                     er.async_get(self.hass).async_remove(entity_id)
             channel_data = {
                 CONF_ACCOUNTS: {
-                    k: {
-                        "name": v["name"],
-                        "enabled": k in user_input[CONF_ACCOUNTS],
-                    }
+                    k: v
                     for k, v in self.options[CONF_ACCOUNTS].items()
                     if k in user_input[CONF_ACCOUNTS]
                 }
@@ -173,31 +168,20 @@ class SteamOptionsFlowHandler(config_entries.OptionsFlow):
             return self.async_create_entry(title="", data=channel_data)
         try:
             users = {
-                name["steamid"]: {"name": name["personaname"], "enabled": False}
+                name["steamid"]: name["personaname"]
                 for name in await self.hass.async_add_executor_job(self.get_accounts)
             }
 
         except steam.api.HTTPTimeoutError:
             users = self.options[CONF_ACCOUNTS]
-        _users = users | self.options[CONF_ACCOUNTS]
-        self.options[CONF_ACCOUNTS] = {
-            k: v
-            for k, v in _users.items()
-            if k in users or self.options[CONF_ACCOUNTS][k]["enabled"]
-        }
 
         options = {
             vol.Required(
                 CONF_ACCOUNTS,
-                default={
-                    k
-                    for k in self.options[CONF_ACCOUNTS]
-                    if self.options[CONF_ACCOUNTS][k]["enabled"]
-                },
-            ): cv.multi_select(
-                {k: v["name"] for k, v in self.options[CONF_ACCOUNTS].items()}
-            ),
+                default=set(self.options[CONF_ACCOUNTS]),
+            ): cv.multi_select(users | self.options[CONF_ACCOUNTS]),
         }
+        self.options[CONF_ACCOUNTS] = users | self.options[CONF_ACCOUNTS]
 
         return self.async_show_form(step_id="init", data_schema=vol.Schema(options))
 
