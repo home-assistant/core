@@ -12,6 +12,7 @@ import pytest
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.application_credentials import (
+    CONF_AUTH_DOMAIN,
     DOMAIN,
     AuthorizationServer,
     ClientCredential,
@@ -343,6 +344,7 @@ async def test_websocket_import_config(
             CONF_CLIENT_ID: CLIENT_ID,
             CONF_CLIENT_SECRET: CLIENT_SECRET,
             "id": ID,
+            CONF_AUTH_DOMAIN: TEST_DOMAIN,
         }
     ]
 
@@ -369,6 +371,7 @@ async def test_import_duplicate_credentials(
             CONF_CLIENT_ID: CLIENT_ID,
             CONF_CLIENT_SECRET: CLIENT_SECRET,
             "id": ID,
+            CONF_AUTH_DOMAIN: TEST_DOMAIN,
         }
     ]
 
@@ -523,7 +526,8 @@ async def test_config_flow_with_config_credential(
     )
     assert result.get("type") == data_entry_flow.RESULT_TYPE_EXTERNAL_STEP
     result = await oauth_fixture.complete_external_step(result)
-    assert result["data"].get("auth_implementation") == ID
+    # Uses the imported auth domain for compatibility
+    assert result["data"].get("auth_implementation") == TEST_DOMAIN
 
 
 @pytest.mark.parametrize("mock_application_credentials_integration", [None])

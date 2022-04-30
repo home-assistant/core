@@ -34,11 +34,13 @@ DOMAIN = "application_credentials"
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 DATA_STORAGE = "storage"
+CONF_AUTH_DOMAIN = "auth_domain"
 
 CREATE_FIELDS = {
     vol.Required(CONF_DOMAIN): cv.string,
     vol.Required(CONF_CLIENT_ID): cv.string,
     vol.Required(CONF_CLIENT_SECRET): cv.string,
+    vol.Optional(CONF_AUTH_DOMAIN): cv.string,
 }
 UPDATE_FIELDS: dict = {}  # Not supported
 
@@ -110,7 +112,10 @@ class ApplicationCredentialsStorageCollection(collection.StorageCollection):
         for item in self.async_items():
             if item[CONF_DOMAIN] != domain:
                 continue
-            credentials[item[CONF_ID]] = ClientCredential(
+            auth_domain = (
+                item[CONF_AUTH_DOMAIN] if CONF_AUTH_DOMAIN in item else item[CONF_ID]
+            )
+            credentials[auth_domain] = ClientCredential(
                 item[CONF_CLIENT_ID], item[CONF_CLIENT_SECRET]
             )
         return credentials
@@ -153,6 +158,7 @@ async def async_import_client_credential(
         CONF_DOMAIN: domain,
         CONF_CLIENT_ID: credential.client_id,
         CONF_CLIENT_SECRET: credential.client_secret,
+        CONF_AUTH_DOMAIN: domain,
     }
     await storage_collection.async_import_item(item)
 
