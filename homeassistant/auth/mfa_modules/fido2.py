@@ -98,7 +98,7 @@ class Fido2Wrapper:
 
         This is needed because cbor does not support None.
         """
-        if isinstance(data, dict):
+        if not isinstance(data, dict):
             return data
 
         keys = list(data.keys())
@@ -120,7 +120,7 @@ class Fido2Wrapper:
 
         This is needed because cbor does not support None.
         """
-        if isinstance(data, dict):
+        if not isinstance(data, dict):
             return data
 
         keys = list(data.keys())
