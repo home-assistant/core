@@ -13,12 +13,13 @@ from homeassistant.const import CONF_API_KEY, CONF_WEEKDAY, WEEKDAYS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util.dt import UTC, as_utc, parse_time
+from homeassistant.util.dt import get_time_zone, parse_time
 
 from .const import CONF_FROM, CONF_TIME, CONF_TO, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 TIME_BETWEEN_UPDATES = timedelta(minutes=5)
+STOCKHOLM_TIMEZONE = get_time_zone("Europe/Stockholm")
 
 
 def next_weekday(fromdate: date, weekday: int) -> date:
@@ -65,11 +66,11 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator):
         """Fetch data from Trafikverket."""
 
         departure_day = next_departuredate(self._weekdays)
-        currenttime = datetime.now()
+        currenttime = datetime.now(STOCKHOLM_TIMEZONE)
         when = (
-            datetime.combine(departure_day, self._time)
+            datetime.combine(departure_day, self._time, STOCKHOLM_TIMEZONE)
             if self._time
-            else datetime.now()
+            else datetime.now(STOCKHOLM_TIMEZONE)
         )
         if currenttime > when:
             when = currenttime
@@ -84,10 +85,11 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator):
             ) from error
 
         states = {
-            "departure_time": routedata.departure_time.replace(tzinfo=UTC),
+            "departure_time": routedata.departure_time,
             "departure_from": routedata.from_harbor_name,
             "departure_to": routedata.to_harbor_name,
-            "departure_modified": as_utc(routedata.modified_time.replace(tzinfo=UTC)),
+            "departure_modified": routedata.modified_time,
             "departure_information": routedata.other_information,
         }
+        _LOGGER.debug("States: %s", states)
         return states

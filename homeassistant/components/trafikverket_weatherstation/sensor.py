@@ -156,8 +156,8 @@ async def async_setup_entry(
 
 def _to_datetime(measuretime: str) -> datetime:
     """Return isoformatted utc time."""
-    time_obj = datetime.strptime(measuretime, "%Y-%m-%dT%H:%M:%S")
-    return as_utc(time_obj.replace(tzinfo=STOCKHOLM_TIMEZONE))
+    time_obj = datetime.strptime(measuretime, "%Y-%m-%dT%H:%M:%S.%f%z")
+    return as_utc(time_obj)
 
 
 class TrafikverketWeatherStation(
@@ -184,7 +184,7 @@ class TrafikverketWeatherStation(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, entry_id)},
             manufacturer="Trafikverket",
-            model="v1.2",
+            model="v2.0",
             name=sensor_station,
             configuration_url="https://api.trafikinfo.trafikverket.se/",
         )

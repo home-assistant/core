@@ -3,8 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import timedelta
-import logging
+from datetime import datetime, timedelta
 from typing import Any
 
 from homeassistant.components.sensor import (
@@ -20,11 +19,10 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util.dt import as_utc
 
 from .const import ATTRIBUTION, DOMAIN
 from .coordinator import TVDataUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_FROM = "from_harbour"
 ATTR_TO = "to_harbour"
@@ -122,7 +120,7 @@ class FerrySensor(CoordinatorEntity[TVDataUpdateCoordinator], SensorEntity):
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, entry_id)},
             manufacturer="Trafikverket",
-            model="v1.2",
+            model="v2.0",
             name=name,
             configuration_url="https://api.trafikinfo.trafikverket.se/",
         )
@@ -133,6 +131,9 @@ class FerrySensor(CoordinatorEntity[TVDataUpdateCoordinator], SensorEntity):
         self._attr_native_value = self.entity_description.value_fn(
             self.coordinator.data
         )
+        if isinstance(self._attr_native_value, datetime):
+            self._attr_native_value = as_utc(self._attr_native_value)
+
         self._attr_extra_state_attributes = {
             "other_information": self.entity_description.info_fn(self.coordinator.data),
         }

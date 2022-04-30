@@ -153,7 +153,7 @@ def next_departuredate(departure: list[str]) -> date:
 
 def _to_iso_format(traintime: datetime) -> str:
     """Return isoformatted utc time."""
-    return as_utc(traintime.replace(tzinfo=STOCKHOLM_TIMEZONE)).isoformat()
+    return as_utc(traintime).isoformat()
 
 
 class TrainSensor(SensorEntity):
@@ -183,7 +183,7 @@ class TrainSensor(SensorEntity):
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, entry_id)},
             manufacturer="Trafikverket",
-            model="v1.2",
+            model="v2.0",
             name=name,
             configuration_url="https://api.trafikinfo.trafikverket.se/",
         )
@@ -193,13 +193,11 @@ class TrainSensor(SensorEntity):
 
     async def async_update(self) -> None:
         """Retrieve latest state."""
-        when = datetime.now()
+        when = datetime.now(STOCKHOLM_TIMEZONE)
         _state: TrainStop | None = None
         if self._time:
             departure_day = next_departuredate(self._weekday)
-            when = datetime.combine(departure_day, self._time).replace(
-                tzinfo=STOCKHOLM_TIMEZONE
-            )
+            when = datetime.combine(departure_day, self._time, STOCKHOLM_TIMEZONE)
         try:
             if self._time:
                 _state = await self._train_api.async_get_train_stop(
@@ -222,17 +220,11 @@ class TrainSensor(SensorEntity):
         self._attr_available = True
 
         # The original datetime doesn't provide a timezone so therefore attaching it here.
-        self._attr_native_value = _state.advertised_time_at_location.replace(
-            tzinfo=STOCKHOLM_TIMEZONE
-        )
+        self._attr_native_value = as_utc(_state.advertised_time_at_location)
         if _state.time_at_location:
-            self._attr_native_value = _state.time_at_location.replace(
-                tzinfo=STOCKHOLM_TIMEZONE
-            )
+            self._attr_native_value = as_utc(_state.time_at_location)
         if _state.estimated_time_at_location:
-            self._attr_native_value = _state.estimated_time_at_location.replace(
-                tzinfo=STOCKHOLM_TIMEZONE
-            )
+            self._attr_native_value = as_utc(_state.estimated_time_at_location)
 
         self._update_attributes(_state)
 
