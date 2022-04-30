@@ -13,6 +13,7 @@
                 "data": {
                     "column": "Kolom",
                     "db_url": "Database URL",
+                    "name": "Naam",
                     "query": "Selecteer Query",
                     "unit_of_measurement": "Meeteenheid",
                     "value_template": "Waarde Template"
@@ -38,6 +39,7 @@
                 "data": {
                     "column": "Kolom",
                     "db_url": "Database URL",
+                    "name": "Naam",
                     "query": "Selecteer Query",
                     "unit_of_measurement": "Meeteenheid",
                     "value_template": "Waarde Template"
