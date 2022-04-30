@@ -864,13 +864,12 @@ class LazyEventPartialState:
             source: str = self._row.event_data
             if event_data := self._event_data_cache.get(source):
                 self._event_data = event_data
-                return event_data
-            if source == EMPTY_JSON_OBJECT:
+            elif source == EMPTY_JSON_OBJECT:
                 self._event_data = {}
-                return self._event_data
-            self._event_data_cache[source] = self._event_data = cast(
-                dict[str, Any], json.loads(source)
-            )
+            else:
+                self._event_data = self._event_data_cache[source] = cast(
+                    dict[str, Any], json.loads(source)
+                )
         return self._event_data
 
     @property
