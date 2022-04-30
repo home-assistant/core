@@ -1197,16 +1197,16 @@ class Recorder(threading.Thread):
         assert self.event_session is not None
         dbevent = Events.from_event(event)
 
-        try:
-            shared_data = EventData.shared_data_from_event(event)
-        except (TypeError, ValueError):
-            _LOGGER.warning("Event is not JSON serializable: %s", event)
-            return
-
         if event.event_type != EVENT_STATE_CHANGED:
+            try:
+                shared_data = EventData.shared_data_from_event(event)
+            except (TypeError, ValueError):
+                _LOGGER.warning("Event is not JSON serializable: %s", event)
+                return
+
             # Matching attributes found in the pending commit
             if pending_event_data := self._pending_event_data.get(shared_data):
-                dbevent.event_data = pending_event_data
+                dbevent.event_data_rel = pending_event_data
             # Matching attributes id found in the cache
             elif data_id := self._event_data_ids.get(shared_data):
                 dbevent.data_id = data_id
@@ -1218,7 +1218,7 @@ class Recorder(threading.Thread):
                 # No matching attributes found, save them in the DB
                 else:
                     dbevent_data = EventData(shared_data=shared_data, hash=attr_hash)
-                    dbevent.event_data = self._pending_event_data[
+                    dbevent.event_data_rel = self._pending_event_data[
                         shared_data
                     ] = dbevent_data
                     self.event_session.add(dbevent_data)

@@ -6,6 +6,7 @@ import asyncio
 from datetime import datetime, timedelta
 import sqlite3
 import threading
+from typing import cast
 from unittest.mock import Mock, patch
 
 import pytest
@@ -31,6 +32,7 @@ from homeassistant.components.recorder import (
 )
 from homeassistant.components.recorder.const import DATA_INSTANCE
 from homeassistant.components.recorder.models import (
+    EventData,
     Events,
     RecorderRuns,
     StateAttributes,
@@ -47,7 +49,7 @@ from homeassistant.const import (
     STATE_LOCKED,
     STATE_UNLOCKED,
 )
-from homeassistant.core import Context, CoreState, HomeAssistant, callback
+from homeassistant.core import Context, CoreState, Event, HomeAssistant, callback
 from homeassistant.setup import async_setup_component, setup_component
 from homeassistant.util import dt as dt_util
 
@@ -363,14 +365,25 @@ def test_saving_event(hass, hass_recorder):
     wait_recording_done(hass)
 
     assert len(events) == 1
-    event = events[0]
+    event: Event = events[0]
 
     hass.data[DATA_INSTANCE].block_till_done()
+    events: list[Event] = []
 
     with session_scope(hass=hass) as session:
-        db_events = list(session.query(Events).filter_by(event_type=event_type))
-        assert len(db_events) == 1
-        db_event = db_events[0].to_native()
+        for select_event, event_data in (
+            session.query(Events, EventData)
+            .filter_by(event_type=event_type)
+            .outerjoin(EventData, Events.data_id == EventData.data_id)
+        ):
+            select_event = cast(Events, select_event)
+            event_data = cast(EventData, event_data)
+
+            native_event = select_event.to_native()
+            native_event.data = event_data.to_native()
+            events.append(native_event)
+
+    db_event = events[0]
 
     assert event.event_type == db_event.event_type
     assert event.data == db_event.data
@@ -427,7 +440,17 @@ def _add_events(hass, events):
     wait_recording_done(hass)
 
     with session_scope(hass=hass) as session:
-        return [ev.to_native() for ev in session.query(Events)]
+        events = []
+        for event, event_data in session.query(Events, EventData).outerjoin(
+            EventData, Events.data_id == EventData.data_id
+        ):
+            event = cast(Events, event)
+            event_data = cast(EventData, event_data)
+
+            native_event = event.to_native()
+            native_event.data = event_data.to_native()
+            events.append(native_event)
+        return events
 
 
 def _state_empty_context(hass, entity_id):

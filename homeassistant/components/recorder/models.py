@@ -106,7 +106,7 @@ class Events(Base):  # type: ignore[misc,valid-type]
     context_user_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
     context_parent_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
     data_id = Column(Integer, ForeignKey("event_data.data_id"), index=True)
-    event_data = relationship("EventData")
+    event_data_rel = relationship("EventData")
 
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
