@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Dieses SimpliSafe-Konto wird bereits verwendet.",
+            "email_2fa_timed_out": "Zeit\u00fcberschreitung beim Warten auf E-Mail-basierte Zwei-Faktor-Authentifizierung.",
             "reauth_successful": "Die erneute Authentifizierung war erfolgreich",
             "wrong_account": "Die angegebenen Benutzeranmeldeinformationen stimmen nicht mit diesem SimpliSafe-Konto \u00fcberein."
         },
@@ -11,6 +12,9 @@
             "invalid_auth": "Ung\u00fcltige Authentifizierung",
             "still_awaiting_mfa": "Immernoch warten auf MFA-E-Mail-Klick",
             "unknown": "Unerwarteter Fehler"
+        },
+        "progress": {
+            "email_2fa": "Gib den Code f\u00fcr die Zwei-Faktor-Authentifizierung ein, den du per E-Mail erhalten hast."
         },
         "step": {
             "mfa": {

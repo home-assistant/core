@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Ez a SimpliSafe-fi\u00f3k m\u00e1r haszn\u00e1latban van.",
+            "email_2fa_timed_out": "Az e-mail alap\u00fa k\u00e9tfaktoros hiteles\u00edt\u00e9sre val\u00f3 v\u00e1rakoz\u00e1s ideje lej\u00e1rt",
             "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt.",
             "wrong_account": "A megadott felhaszn\u00e1l\u00f3i hiteles\u00edt\u0151 adatok nem j\u00f3k ehhez a SimpliSafe fi\u00f3khoz."
         },
@@ -11,6 +12,9 @@
             "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
             "still_awaiting_mfa": "M\u00e9g v\u00e1r az MFA e-mail kattint\u00e1sra",
             "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "progress": {
+            "email_2fa": "Adja meg a k\u00e9tfaktoros hiteles\u00edt\u00e9si k\u00f3dot amelyet e-mailben kapott."
         },
         "step": {
             "mfa": {
