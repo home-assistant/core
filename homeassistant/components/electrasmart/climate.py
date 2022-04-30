@@ -37,7 +37,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from .const import DELAY_BETWEEN_SET_AND_READ_SEC, DOMAIN
+from .const import API_DELAY, DOMAIN
 
 FAN_ELECTRA_TO_HASS = {
     electra.OPER_FAN_SPEED_AUTO: FAN_AUTO,
@@ -145,18 +145,21 @@ class ElectraClimate(ClimateEntity):
             manufacturer=self._electra_ac_device.manufactor,
         )
 
-        self._last_state_change = 0
+        # This attribute will be used to mark the time we communicated a command to the API
+        self._last_state_update = 0
 
     async def async_update(self):
         """Update Electra device."""
 
-        if (
-            self._last_state_change
-            and int(time.time())
-            < self._last_state_change + DELAY_BETWEEN_SET_AND_READ_SEC
+        # if we communicated a change to the API in the last X seconds, don't receive any updates-
+        # as the API takes few seconds until it start sending the last change
+        if self._last_state_update and int(time.time()) < (
+            self._last_state_update + API_DELAY
         ):
             _LOGGER.debug("Skipping state update, keeping old values")
             return
+
+        self._last_state_update = 0
 
         try:
             await self._api.get_last_telemtry(self._electra_ac_device)
@@ -277,10 +280,10 @@ class ElectraClimate(ClimateEntity):
                     and resp[electra.ATTR_DATA][electra.ATTR_RES]
                     == electra.STATUS_SUCCESS
                 ):
-                    _LOGGER.error(
-                        "Failed to update %s, error: %s", self._attr_name, resp
+                    raise UpdateFailed(
+                        f"Failed to update {self._attr_name}, error: {resp}"
                     )
-                else:
-                    self._update_device_attrs()
-                    self._last_state_change = int(time.time())
-                    self._async_write_ha_state()
+
+                self._update_device_attrs()
+                self._last_state_update = int(time.time())
+                self._async_write_ha_state()
