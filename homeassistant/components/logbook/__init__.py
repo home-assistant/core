@@ -466,7 +466,7 @@ def _get_events(
                 # When entity_matches_only is provided, contexts and events that do not
                 # contain the entity_ids are not included in the logbook response.
                 query = _apply_event_entity_id_matchers(query, entity_ids)
-            query.outerjoin(EventData, (Events.data_id == EventData.data_id))
+            query = query.outerjoin(EventData, (Events.data_id == EventData.data_id))
 
             query = query.union_all(
                 _generate_states_query(
@@ -490,7 +490,7 @@ def _get_events(
             if context_id is not None:
                 query = query.filter(Events.context_id == context_id)
 
-            query.outerjoin(EventData, (Events.data_id == EventData.data_id))
+            query = query.outerjoin(EventData, (Events.data_id == EventData.data_id))
 
         query = query.order_by(Events.time_fired)
 
