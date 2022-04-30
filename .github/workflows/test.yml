@@ -15,5 +15,5 @@ jobs:
           args: |
             --test \
             --all \
-            --target addon-folder \
-            --docker-hub user-name-or-space-name
+            --target renson \
+            --docker-hub jimmyd-be
