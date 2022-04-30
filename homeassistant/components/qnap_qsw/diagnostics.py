@@ -7,7 +7,7 @@ from aioqsw.const import QSD_MAC, QSD_SERIAL
 
 from homeassistant.components.diagnostics.util import async_redact_data
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_UNIQUE_ID, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
@@ -16,6 +16,7 @@ from .coordinator import QswUpdateCoordinator
 TO_REDACT_CONFIG = [
     CONF_USERNAME,
     CONF_PASSWORD,
+    CONF_UNIQUE_ID,
 ]
 
 TO_REDACT_DATA = [
@@ -31,6 +32,6 @@ async def async_get_config_entry_diagnostics(
     coordinator: QswUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     return {
-        "config": async_redact_data(config_entry.data, TO_REDACT_CONFIG),
-        "data": async_redact_data(coordinator.data, TO_REDACT_DATA),
+        "config_entry": async_redact_data(config_entry.as_dict(), TO_REDACT_CONFIG),
+        "coord_data": async_redact_data(coordinator.data, TO_REDACT_DATA),
     }
