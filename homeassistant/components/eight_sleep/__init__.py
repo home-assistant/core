@@ -107,15 +107,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     await heat_coordinator.async_config_entry_first_refresh()
     await user_coordinator.async_config_entry_first_refresh()
+
+    if not eight.users:
+        # No users, cannot continue
+        return False
+
     hass.data[DOMAIN] = {
         DATA_API: eight,
         DATA_HEAT: heat_coordinator,
         DATA_USER: user_coordinator,
     }
-
-    if not eight.users:
-        # No users, cannot continue
-        return False
 
     for platform in PLATFORMS:
         hass.async_create_task(
