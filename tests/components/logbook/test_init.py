@@ -113,6 +113,35 @@ async def test_service_call_create_logbook_entry(hass_):
     assert last_call.data.get(logbook.ATTR_DOMAIN) == "logbook"
 
 
+async def test_service_call_create_logbook_entry_invalid_entity_id(hass, recorder_mock):
+    """Test if service call create log book entry with an invalid entity id."""
+    await async_setup_component(hass, "logbook", {})
+    await hass.async_block_till_done()
+    hass.bus.async_fire(
+        logbook.EVENT_LOGBOOK_ENTRY,
+        {
+            logbook.ATTR_NAME: "Alarm",
+            logbook.ATTR_MESSAGE: "is triggered",
+            logbook.ATTR_DOMAIN: "switch",
+            logbook.ATTR_ENTITY_ID: 1234,
+        },
+    )
+    await async_wait_recording_done(hass)
+
+    events = list(
+        logbook._get_events(
+            hass,
+            dt_util.utcnow() - timedelta(hours=1),
+            dt_util.utcnow() + timedelta(hours=1),
+        )
+    )
+    assert len(events) == 1
+    assert events[0][logbook.ATTR_DOMAIN] == "switch"
+    assert events[0][logbook.ATTR_NAME] == "Alarm"
+    assert events[0][logbook.ATTR_ENTITY_ID] == 1234
+    assert events[0][logbook.ATTR_MESSAGE] == "is triggered"
+
+
 async def test_service_call_create_log_book_entry_no_message(hass_):
     """Test if service call create log book entry without message."""
     calls = async_capture_events(hass_, logbook.EVENT_LOGBOOK_ENTRY)
@@ -173,6 +202,14 @@ def test_home_assistant_start_stop_grouped(hass_):
     assert_entry(
         entries[0], name="Home Assistant", message="restarted", domain=ha.DOMAIN
     )
+
+
+def test_unsupported_attributes_in_cache_throws(hass):
+    """Test unsupported attributes in cache."""
+    entity_attr_cache = logbook.EntityAttributeCache(hass)
+    event = MockLazyEventPartialState(EVENT_STATE_CHANGED)
+    with pytest.raises(ValueError):
+        entity_attr_cache.get("sensor.xyz", "not_supported", event)
 
 
 def test_home_assistant_start(hass_):
