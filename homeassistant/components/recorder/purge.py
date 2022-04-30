@@ -636,19 +636,9 @@ def _select_unused_event_data_ids(
     if not data_ids:
         return set()
 
+    # See _select_unused_attributes_ids for why this function
+    # branches for non-sqlite databases.
     if using_sqlite:
-        #
-        # SQLite has a superior query optimizer for the distinct query below as it uses the
-        # covering index without having to examine the rows directly for both of the queries
-        # below.
-        #
-        # We use the distinct query for SQLite since the query in the other branch can
-        # generate more than 500 unions which SQLite does not support.
-        #
-        # How MariaDB's query optimizer handles this query:
-        # > explain select distinct attributes_id from states where attributes_id in (136723);
-        # ...Using index
-        #
         seen_ids = {
             state[0]
             for state in session.query(distinct(Events.data_id))
@@ -656,29 +646,6 @@ def _select_unused_event_data_ids(
             .all()
         }
     else:
-        #
-        # This branch is for DBMS that cannot optimize the distinct query well and has to examine
-        # all the rows that match.
-        #
-        # This branch uses a union of simple queries, as each query is optimized away as the answer
-        # to the query can be found in the index.
-        #
-        # The below query works for SQLite as long as there are no more than 500 attributes_id
-        # to be selected. We currently do not have MySQL or PostgreSQL servers running in the
-        # test suite; we test this path using SQLite when there are less than 500 attributes_id.
-        #
-        # How MariaDB's query optimizer handles this query:
-        # > explain select min(attributes_id) from states where attributes_id = 136723;
-        # ...Select tables optimized away
-        #
-        # We used to generate a query based on how many attribute_ids to find but
-        # that meant sqlalchemy Transparent SQL Compilation Caching was working against
-        # us by cached up to MAX_ROWS_TO_PURGE different statements which could be
-        # up to 500MB for large database due to the complexity of the ORM objects.
-        #
-        # We now break the query into groups of 100 and use a lambda_stmt to ensure
-        # that the query is only cached once.
-        #
         seen_ids = set()
         groups = [iter(data_ids)] * 100
         for data_ids_group in zip_longest(*groups, fillvalue=None):
@@ -690,10 +657,7 @@ def _select_unused_event_data_ids(
                 if state[0] is not None
             }
     to_remove = data_ids - seen_ids
-    _LOGGER.debug(
-        "Selected %s shared event data to remove",
-        len(to_remove),
-    )
+    _LOGGER.debug("Selected %s shared event data to remove", len(to_remove))
     return to_remove
 
 
