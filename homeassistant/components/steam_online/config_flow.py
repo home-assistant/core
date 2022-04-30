@@ -150,18 +150,18 @@ class SteamOptionsFlowHandler(config_entries.OptionsFlow):
         """Manage Steam options."""
         if user_input is not None:
             await self.hass.config_entries.async_unload(self.entry.entry_id)
-            for k in self.options[CONF_ACCOUNTS]:
-                if k not in user_input[CONF_ACCOUNTS] and (
+            for _id in self.options[CONF_ACCOUNTS]:
+                if _id not in user_input[CONF_ACCOUNTS] and (
                     entity_id := er.async_get(self.hass).async_get_entity_id(
-                        Platform.SENSOR, DOMAIN, f"sensor.steam_{k}"
+                        Platform.SENSOR, DOMAIN, f"sensor.steam_{_id}"
                     )
                 ):
                     er.async_get(self.hass).async_remove(entity_id)
             channel_data = {
                 CONF_ACCOUNTS: {
-                    k: v
-                    for k, v in self.options[CONF_ACCOUNTS].items()
-                    if k in user_input[CONF_ACCOUNTS]
+                    _id: name
+                    for _id, name in self.options[CONF_ACCOUNTS].items()
+                    if _id in user_input[CONF_ACCOUNTS]
                 }
             }
             await self.hass.config_entries.async_reload(self.entry.entry_id)
