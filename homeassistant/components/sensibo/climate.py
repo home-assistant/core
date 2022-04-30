@@ -45,7 +45,7 @@ HA_TO_SENSIBO = {value: key for key, value in SENSIBO_TO_HA.items()}
 AC_STATE_TO_DATA = {
     "targetTemperature": "target_temp",
     "fanLevel": "fan_mode",
-    "on": "on",
+    "on": "device_on",
     "mode": "hvac_mode",
     "swing": "swing_mode",
 }
