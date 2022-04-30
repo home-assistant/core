@@ -6,6 +6,7 @@ from typing import Any
 
 from systembridgeconnector.const import (
     EVENT_MESSAGE,
+    EVENT_MODULE,
     EVENT_SUBTYPE,
     EVENT_TYPE,
     SUBTYPE_BAD_API_KEY,
@@ -61,7 +62,10 @@ async def validate_input(data: dict[str, Any]) -> dict[str, str]:
     try:
         while True:
             message = await websocket_client.receive_message()
-            if message[EVENT_TYPE] == TYPE_DATA_UPDATE:
+            if (
+                message[EVENT_TYPE] == TYPE_DATA_UPDATE
+                and message[EVENT_MODULE] == "system"
+            ):
                 break
             _LOGGER.info("Message: %s", message)
             if (
@@ -74,6 +78,8 @@ async def validate_input(data: dict[str, Any]) -> dict[str, str]:
         raise CannotConnect from exception
 
     _LOGGER.info("%s Message: %s", TYPE_DATA_UPDATE, message)
+
+    print("message:", message)
 
     if "uuid" not in message["data"]:
         error = "No UUID in result!"

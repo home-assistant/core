@@ -80,6 +80,13 @@ FIXTURE_DATA_SYSTEM = {
     },
 }
 
+FIXTURE_DATA_SYSTEM_BAD = {
+    EVENT_TYPE: TYPE_DATA_UPDATE,
+    EVENT_MESSAGE: "Data changed",
+    EVENT_MODULE: "system",
+    EVENT_DATA: {},
+}
+
 FIXTURE_DATA_AUTH_ERROR = {
     EVENT_TYPE: TYPE_ERROR,
     EVENT_SUBTYPE: SUBTYPE_BAD_API_KEY,
@@ -212,7 +219,7 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
         "systembridgeconnector.websocket_client.WebSocketClient.get_data"
     ), patch(
         "systembridgeconnector.websocket_client.WebSocketClient.receive_message",
-        return_value={},
+        return_value=FIXTURE_DATA_SYSTEM_BAD,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], FIXTURE_USER_INPUT
