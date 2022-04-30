@@ -1,7 +1,9 @@
-"""Support for the Airzone climate."""
+"""Support for the Electra climate."""
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
+import time
 
 import electra
 
@@ -30,13 +32,12 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from .const import DOMAIN
+from .const import DELAY_BETWEEN_SET_AND_READ_SEC, DOMAIN
 
 FAN_ELECTRA_TO_HASS = {
     electra.OPER_FAN_SPEED_AUTO: FAN_AUTO,
@@ -78,27 +79,40 @@ HVAC_ACTION_ELECTRA_TO_HASS = {
 _LOGGER = logging.getLogger(__name__)
 
 
+SCAN_INTERVAL = timedelta(seconds=10)
+
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Add Electra AC devices."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities(
-        ElectraClimate(coordinator.data[device_mac], coordinator)
-        for device_mac in coordinator.data
-    )
+    api = hass.data[DOMAIN][entry.entry_id]
+
+    devices = await get_devices(api)
+
+    async_add_entities((ElectraClimate(device, api) for device in devices), True)
 
 
-class ElectraClimate(CoordinatorEntity, ClimateEntity):
-    """Define an Airzone sensor."""
+async def get_devices(api):
+    """Return Electra."""
+    _LOGGER.debug("Fetching Electra AC devices")
+    try:
+        return await api.get_devices()
+    except electra.ElectraApiError as exp:
+        raise UpdateFailed(
+            f"Error communicating with API: {exp}"
+        ) from electra.ElectraApiError
 
-    def __init__(self, device: electra.ElectraAirConditioner, coordinator) -> None:
-        """Initialize Airzone climate entity."""
-        super().__init__(coordinator)
+
+class ElectraClimate(ClimateEntity):
+    """Define an Electra sensor."""
+
+    def __init__(self, device: electra.ElectraAirConditioner, api) -> None:
+        """Initialize Electra climate entity."""
+        self._api = api
         self._electra_ac_device = device
         self._attr_name = device.name
         self._attr_unique_id = device.mac
-
         self._attr_supported_features = (
             ClimateEntityFeature.TARGET_TEMPERATURE
             | ClimateEntityFeature.SWING_MODE
@@ -131,7 +145,38 @@ class ElectraClimate(CoordinatorEntity, ClimateEntity):
             manufacturer=self._electra_ac_device.manufactor,
         )
 
-        self._update_device_attrs(device)
+        self._last_state_change = 0
+
+    async def async_update(self):
+        """Update Electra device."""
+
+        if (
+            self._last_state_change
+            and int(time.time())
+            < self._last_state_change + DELAY_BETWEEN_SET_AND_READ_SEC
+        ):
+            _LOGGER.debug("Skipping state update, keeping old values")
+            return
+
+        try:
+            await self._api.get_last_telemtry(self._electra_ac_device)
+            _LOGGER.debug(
+                "%s (%s) state updated: %s",
+                self._electra_ac_device.mac,
+                self._electra_ac_device.name,
+                self._electra_ac_device.__dict__,
+            )
+        except electra.ElectraApiError as exp:
+            _LOGGER.error(
+                "Failed to get %s state: %s, keeping old state",
+                self._electra_ac_device.name,
+                exp,
+            )
+            raise UpdateFailed from electra.ElectraApiError
+
+        else:
+
+            self._update_device_attrs()
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set AC fand mode."""
@@ -155,39 +200,39 @@ class ElectraClimate(CoordinatorEntity, ClimateEntity):
         self._electra_ac_device.set_temperature(int(kwargs[ATTR_TEMPERATURE]))
         await self._async_update_electra_ac_state()
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Update attributes when the coordinator updates."""
-        self._update_device_attrs(self.coordinator.data[self._attr_unique_id])
-        super()._handle_coordinator_update()
+    def _update_device_attrs(self):
 
-    @callback
-    def _update_device_attrs(self, device: electra.ElectraAirConditioner):
-
-        self._attr_fan_mode = FAN_ELECTRA_TO_HASS[device.get_fan_speed()]
-        self._attr_current_temperature = device.get_sensor_temperature()
-        self._attr_target_temperature = device.get_temperature()
+        self._attr_fan_mode = FAN_ELECTRA_TO_HASS[
+            self._electra_ac_device.get_fan_speed()
+        ]
+        self._attr_current_temperature = (
+            self._electra_ac_device.get_sensor_temperature()
+        )
+        self._attr_target_temperature = self._electra_ac_device.get_temperature()
 
         self._attr_hvac_mode = (
             HVAC_MODE_OFF
-            if not device.is_on()
-            else HVAC_MODE_ELECTRA_TO_HASS[device.get_mode()]
+            if not self._electra_ac_device.is_on()
+            else HVAC_MODE_ELECTRA_TO_HASS[self._electra_ac_device.get_mode()]
         )
 
-        if device.get_mode() == electra.OPER_MODE_AUTO:
+        if self._electra_ac_device.get_mode() == electra.OPER_MODE_AUTO:
             self._attr_hvac_action = None
         else:
             self._attr_hvac_action = (
                 CURRENT_HVAC_OFF
-                if not device.is_on()
-                else HVAC_ACTION_ELECTRA_TO_HASS[device.get_mode()]
+                if not self._electra_ac_device.is_on()
+                else HVAC_ACTION_ELECTRA_TO_HASS[self._electra_ac_device.get_mode()]
             )
 
-        if device.is_horizontal_swing() and device.is_vertical_swing():
+        if (
+            self._electra_ac_device.is_horizontal_swing()
+            and self._electra_ac_device.is_vertical_swing()
+        ):
             self._attr_swing_mode = SWING_BOTH
-        elif device.is_horizontal_swing():
+        elif self._electra_ac_device.is_horizontal_swing():
             self._attr_swing_mode = SWING_HORIZONTAL
-        elif device.is_vertical_swing():
+        elif self._electra_ac_device.is_vertical_swing():
             self._attr_swing_mode = SWING_VERTICAL
         else:
             self._attr_swing_mode = SWING_OFF
@@ -221,20 +266,21 @@ class ElectraClimate(CoordinatorEntity, ClimateEntity):
             and self._attr_hvac_mode != HVAC_MODE_OFF
         ):
             try:
-                resp = await self.coordinator.api.set_state(self._electra_ac_device)
+                resp = await self._api.set_state(self._electra_ac_device)
             except electra.ElectraApiError as exp:
-                raise HomeAssistantError(
+                raise UpdateFailed(
                     f"Failed to communicate with Electra API: {exp}"
                 ) from electra.ElectraApiError
-            if not (
-                resp[electra.ATTR_STATUS] == electra.STATUS_SUCCESS
-                and resp[electra.ATTR_DATA][electra.ATTR_RES] == electra.STATUS_SUCCESS
-            ):
-                # request immediate update restore the state of self._electra_ac_device object
-                await self.coordinator.async_refresh()
-                raise HomeAssistantError(
-                    f"Failed to communicate with Electra API {self.name}"
-                )
-
-        self.coordinator.data[self._attr_unique_id] = self._electra_ac_device
-        self.coordinator.async_set_updated_data(self.coordinator.data)
+            else:
+                if not (
+                    resp[electra.ATTR_STATUS] == electra.STATUS_SUCCESS
+                    and resp[electra.ATTR_DATA][electra.ATTR_RES]
+                    == electra.STATUS_SUCCESS
+                ):
+                    _LOGGER.error(
+                        "Failed to update %s, error: %s", self._attr_name, resp
+                    )
+                else:
+                    self._update_device_attrs()
+                    self._last_state_change = int(time.time())
+                    self._async_write_ha_state()
