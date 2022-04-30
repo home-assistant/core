@@ -18,7 +18,7 @@ from homeassistant.components.vacuum import (
     VacuumEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
+from homeassistant.const import STATE_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -97,11 +97,13 @@ class LitterRobotCleaner(LitterRobotControlEntity, StateVacuumEntity):
     )
 
     @property
+    def available(self) -> bool:
+        """Return True if the cleaner has been seen recently."""
+        return self.robot.last_seen > datetime.now(timezone.utc) - UNAVAILABLE_AFTER
+
+    @property
     def state(self) -> str:
         """Return the state of the cleaner."""
-        if self.robot.last_seen < datetime.now(timezone.utc) - UNAVAILABLE_AFTER:
-            return STATE_UNAVAILABLE
-
         return LITTER_BOX_STATUS_STATE_MAP.get(self.robot.status, STATE_ERROR)
 
     @property
