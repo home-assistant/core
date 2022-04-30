@@ -638,6 +638,9 @@ feedparser==6.0.2
 # homeassistant.components.fibaro
 fiblary3==0.1.8
 
+# homeassistant.auth.mfa_modules.fido2
+fido2==0.9.3
+
 # homeassistant.components.fints
 fints==1.0.1
 
