@@ -111,7 +111,7 @@ class SteamFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if entry.data[CONF_API_KEY] == import_config[CONF_API_KEY]:
                 return self.async_abort(reason="already_configured")
         LOGGER.warning(
-            "Steam yaml config in now deprecated and has been imported. "
+            "Steam yaml config is now deprecated and has been imported. "
             "Please remove it from your config"
         )
         import_config[CONF_ACCOUNT] = import_config[CONF_ACCOUNTS][0]
