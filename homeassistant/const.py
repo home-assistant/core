@@ -545,6 +545,7 @@ PRESSURE_BAR: Final = "bar"
 PRESSURE_CBAR: Final = "cbar"
 PRESSURE_MBAR: Final = "mbar"
 PRESSURE_MMHG: Final = "mmHg"
+PRESSURE_INH2O: Final = "inH2O"
 PRESSURE_INHG: Final = "inHg"
 PRESSURE_PSI: Final = "psi"
 
