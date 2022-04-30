@@ -278,6 +278,11 @@ class RensonSensor(SensorEntity):
         self.renson_api = renson_api
         self.raw_format = description.raw_format
 
+    @property
+    def native_value(self):
+        """Return the value reported by the sensor."""
+        return self._state
+
     def update(self):
         """Save state of sensor."""
         if self.raw_format:
