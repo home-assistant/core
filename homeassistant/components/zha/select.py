@@ -86,12 +86,6 @@ class ZHAEnumSelectEntity(ZhaEntity, SelectEntity):
         self._channel.data_cache[self._attr_name] = self._enum[option.replace(" ", "_")]
         self.async_write_ha_state()
 
-    async def async_added_to_hass(self) -> None:
-        """Run when about to be added to hass."""
-        await super().async_added_to_hass()
-        if last_state := await self.async_get_last_state():
-            self.async_restore_last_state(last_state)
-
     @callback
     def async_restore_last_state(self, last_state) -> None:
         """Restore previous state."""
