@@ -1,10 +1,12 @@
 """DataUpdateCoordinator for System Bridge."""
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
 from datetime import timedelta
 import logging
 
+import async_timeout
 from systembridgeconnector.const import (
     EVENT_DATA,
     EVENT_MODULE,
@@ -82,7 +84,7 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[dict]):
                 self.unsub = None
             self.last_update_success = False
             self.update_listeners()
-        except ConnectionClosedException as exception:
+        except (ConnectionClosedException, ConnectionResetError) as exception:
             self.logger.info(
                 "Websocket connection closed for %s. Will retry: %s",
                 self.title,
@@ -110,9 +112,10 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[dict]):
 
         if not self.websocket_client.connected:
             try:
-                await self.websocket_client.connect(
-                    session=async_get_clientsession(self.hass),
-                )
+                async with async_timeout.timeout(20):
+                    await self.websocket_client.connect(
+                        session=async_get_clientsession(self.hass),
+                    )
             except AuthenticationException as exception:
                 self.last_update_success = False
                 self.logger.error(
@@ -129,9 +132,14 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[dict]):
                     self.title,
                     exception,
                 )
-                if self.unsub:
-                    self.unsub()
-                    self.unsub = None
+                self.last_update_success = False
+                self.update_listeners()
+            except asyncio.TimeoutError as exception:
+                self.logger.warning(
+                    "Timed out waiting for %s. Will retry: %s",
+                    self.title,
+                    exception,
+                )
                 self.last_update_success = False
                 self.update_listeners()
 

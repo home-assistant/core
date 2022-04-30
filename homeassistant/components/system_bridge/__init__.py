@@ -257,7 +257,9 @@ class SystemBridgeEntity(CoordinatorEntity[SystemBridgeDataUpdateCoordinator]):
         self._hostname = coordinator.data["system"]["hostname"]
         self._key = f"{self._hostname}_{key}"
         self._name = f"{self._hostname} {name}"
-        self._configuration_url = f"http://{self._hostname}:{api_port}/app/settings"
+        self._configuration_url = (
+            f"http://{self._hostname}:{api_port}/app/settings.html"
+        )
         self._mac_address = coordinator.data["system"]["mac_address"]
         self._version = coordinator.data["system"]["version"]
 
