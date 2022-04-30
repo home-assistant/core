@@ -2,21 +2,43 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from typing import Final
 
 import voluptuous as vol
 from xknx.telegram import Telegram, TelegramDirection
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
+from xknx_custom_panel import get_knx_ui
 
-from homeassistant.components import websocket_api
-from homeassistant.core import HomeAssistant
+from homeassistant.components import panel_custom, websocket_api
+from homeassistant.core import HomeAssistant, callback
 
-from .const import DOMAIN, AsyncMessageCallbackType, MessageCallbackType
+from .const import (
+    DOMAIN,
+    AsyncMessageCallbackType,
+    KNXBusMonitorMessage,
+    MessageCallbackType,
+)
+
+URL_BASE: Final = "/static_knx"
 
 
-def register_websocket_api(hass: HomeAssistant) -> None:
-    """Register the KNX Websocket API."""
+async def register_panel(hass: HomeAssistant) -> None:
+    """Register the KNX Panel and Websocket API."""
     websocket_api.async_register_command(hass, ws_info)
     websocket_api.async_register_command(hass, ws_subscribe_telegram)
+
+    if DOMAIN not in hass.data.get("frontend_panels", {}):
+        hass.http.register_static_path(URL_BASE, get_knx_ui())
+        await panel_custom.async_register_panel(
+            hass=hass,
+            frontend_url_path=DOMAIN,
+            webcomponent_name="knx-panel",
+            sidebar_title=DOMAIN.upper(),
+            sidebar_icon="mdi:earth",
+            module_url=f"{URL_BASE}",
+            embed_iframe=True,
+            require_admin=True,
+        )
 
 
 @websocket_api.websocket_command(
@@ -24,8 +46,8 @@ def register_websocket_api(hass: HomeAssistant) -> None:
         vol.Required("type"): "knx/info",
     }
 )
-@websocket_api.async_response
-async def ws_info(
+@callback
+def ws_info(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict,
@@ -47,13 +69,13 @@ async def ws_info(
         vol.Required("type"): "knx/subscribe_telegrams",
     }
 )
-@websocket_api.async_response
-async def ws_subscribe_telegram(
+@callback
+def ws_subscribe_telegram(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict,
 ) -> None:
-    """Handle get info command."""
+    """Subscribe to incoming and outgoing KNX telegrams."""
 
     async def forward_telegrams(telegram: Telegram) -> None:
         """Forward events to websocket."""
@@ -62,41 +84,48 @@ async def ws_subscribe_telegram(
         ):
             return
 
+        payload = (
+            str(telegram.payload.value)
+            if isinstance(telegram.payload, (GroupValueWrite, GroupValueResponse))
+            else ""
+        )
+        direction = (
+            "label.incoming"
+            if telegram.direction == TelegramDirection.INCOMING
+            else "label.outgoing"
+        )
+        bus_message: KNXBusMonitorMessage = KNXBusMonitorMessage(
+            destination_address=str(telegram.destination_address),
+            payload=payload,
+            type=str(telegram.payload.__class__.__name__),
+            source_address=str(telegram.source_address),
+            direction=direction,
+            timestamp=str(telegram.timestamp),
+        )
+
         connection.send_message(
             websocket_api.event_message(
                 msg["id"],
-                {
-                    "destination_address": str(telegram.destination_address),
-                    "payload": str(telegram.payload.value)
-                    if isinstance(
-                        telegram.payload, (GroupValueWrite, GroupValueResponse)
-                    )
-                    else "",
-                    "type": str(telegram.payload.__class__.__name__),
-                    "source_address": str(telegram.source_address),
-                    "direction": "label.incoming"
-                    if telegram.direction == TelegramDirection.INCOMING
-                    else "label.outgoing",
-                    "timestamp": str(telegram.timestamp),
-                },
+                bus_message,
             )
         )
 
-    connection.subscriptions[msg["id"]] = await async_subscribe_telegrams(
+    connection.subscriptions[msg["id"]] = async_subscribe_telegrams(
         hass, forward_telegrams
     )
 
     connection.send_message(websocket_api.result_message(msg["id"]))
 
 
-async def async_subscribe_telegrams(
-    hass: HomeAssistant, callback: AsyncMessageCallbackType | MessageCallbackType
+def async_subscribe_telegrams(
+    hass: HomeAssistant,
+    telegram_callback: AsyncMessageCallbackType | MessageCallbackType,
 ) -> Callable[[], None]:
     """Subscribe to telegram received callback."""
     xknx = hass.data[DOMAIN].xknx
 
     unregister = xknx.telegram_queue.register_telegram_received_cb(
-        callback, match_for_outgoing=True
+        telegram_callback, match_for_outgoing=True
     )
 
     def async_remove() -> None:

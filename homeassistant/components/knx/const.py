@@ -98,6 +98,17 @@ class KNXConfigEntryData(TypedDict, total=False):
     knxkeys_password: str
 
 
+class KNXBusMonitorMessage(TypedDict):
+    """KNX bus monitor message."""
+
+    destination_address: str
+    payload: str
+    type: str
+    source_address: str
+    direction: str
+    timestamp: str
+
+
 class ColorTempModes(Enum):
     """Color temperature modes for config validation."""
 
