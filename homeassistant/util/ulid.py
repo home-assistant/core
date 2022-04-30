@@ -1,6 +1,6 @@
 """Helpers to generate ulids."""
 
-from random import getrandbits, randbytes
+from random import getrandbits
 import time
 
 
@@ -34,7 +34,9 @@ def ulid() -> str:
     import ulid
     ulid.parse(ulid_util.ulid())
     """
-    ulid_bytes = int(time.time() * 1000).to_bytes(6, byteorder="big") + randbytes(10)
+    ulid_bytes = int(time.time() * 1000).to_bytes(6, byteorder="big") + int(
+        getrandbits(80)
+    ).to_bytes(10, byteorder="big")
 
     # This is base32 crockford encoding with the loop unrolled for performance
     #
