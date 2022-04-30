@@ -1,6 +1,7 @@
 """Support for the Meraki CMX location service."""
 from __future__ import annotations
 
+from awesomeversion import AwesomeVersion
 from collections.abc import Awaitable, Callable
 from http import HTTPStatus
 import json
@@ -73,7 +74,7 @@ class MerakiView(HomeAssistantView):
         if data["secret"] != self.secret:
             _LOGGER.error("Invalid Secret received from Meraki")
             return self.json_message("Invalid secret", HTTPStatus.UNPROCESSABLE_ENTITY)
-        if data["version"] != VERSION:
+        if AwesomeVersion(data["version"]).major != AwesomeVersion(VERSION).major:
             _LOGGER.error("Invalid API version: %s", data["version"])
             return self.json_message("Invalid version", HTTPStatus.UNPROCESSABLE_ENTITY)
         _LOGGER.debug("Valid Secret")
