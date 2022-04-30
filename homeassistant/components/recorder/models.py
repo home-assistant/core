@@ -43,7 +43,7 @@ from .const import ALL_DOMAIN_EXCLUDE_ATTRS, JSON_DUMP
 # pylint: disable=invalid-name
 Base = declarative_base()
 
-SCHEMA_VERSION = 26
+SCHEMA_VERSION = 27
 
 _LOGGER = logging.getLogger(__name__)
 
