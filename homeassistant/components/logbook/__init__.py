@@ -641,14 +641,12 @@ def _apply_event_types_filter(
 def _apply_event_entity_id_matchers(
     events_query: Query, entity_ids: Iterable[str]
 ) -> Query:
-    return events_query.filter(
-        sqlalchemy.or_(
-            *(
-                Events.event_data.like(ENTITY_ID_JSON_TEMPLATE.format(entity_id))
-                for entity_id in entity_ids
-            )
-        )
-    )
+    ors = []
+    for entity_id in entity_ids:
+        like = ENTITY_ID_JSON_TEMPLATE.format(entity_id)
+        ors.append(Events.event_data.like(like))
+        ors.append(EventData.shared_data.like(like))
+    return events_query.filter(sqlalchemy.or_(*ors))
 
 
 def _keep_event(hass, event, entities_filter):
