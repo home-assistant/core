@@ -307,7 +307,6 @@ class KodiEntity(MediaPlayerEntity):
         self._connect_error = False
 
         self._attr_name = name
-        self._attr_supported_features = SUPPORT_KODI
 
     def _reset_state(self, players=None):
         self._players = players
