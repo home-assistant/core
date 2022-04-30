@@ -110,7 +110,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         def logout() -> None:
             try:
-                conn.user.logout()
+                conn.user_session.user.logout()  # type: ignore[union-attr]
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.debug("Could not logout", exc_info=True)
 
