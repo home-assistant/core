@@ -39,7 +39,6 @@ from homeassistant.const import (
     ATTR_DOMAIN,
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
-    ATTR_ICON,
     ATTR_NAME,
     ATTR_SERVICE,
     EVENT_CALL_SERVICE,
@@ -120,7 +119,7 @@ EVENT_COLUMNS = [
     Events.context_parent_id,
 ]
 
-SCRIPT_AUTOMATION_EVENTS = [EVENT_AUTOMATION_TRIGGERED, EVENT_SCRIPT_STARTED]
+SCRIPT_AUTOMATION_EVENTS = {EVENT_AUTOMATION_TRIGGERED, EVENT_SCRIPT_STARTED}
 
 LOG_MESSAGE_SCHEMA = vol.Schema(
     {
@@ -700,10 +699,9 @@ def _keep_event(
     else:
         domain = event.data_domain
 
-    if domain is None:
-        return False
-
-    return entities_filter is None or entities_filter(f"{domain}._")
+    return domain is not None and (
+        entities_filter is None or entities_filter(f"{domain}._")
+    )
 
 
 def _augment_data_with_context(
@@ -750,16 +748,12 @@ def _augment_data_with_context(
         data["context_event_type"] = event_type
         return
 
-    if not entity_id:
+    if not entity_id or context_event == event:
         return
 
-    attr_entity_id = event_data.get(ATTR_ENTITY_ID)
-    if not isinstance(attr_entity_id, str) or (
+    if (attr_entity_id := context_event.data_entity_id) is None or (
         event_type in SCRIPT_AUTOMATION_EVENTS and attr_entity_id == entity_id
     ):
-        return
-
-    if context_event == event:
         return
 
     data["context_entity_id"] = attr_entity_id
@@ -860,9 +854,6 @@ class LazyEventPartialState:
     @property
     def data_domain(self) -> str | None:
         """Extract the domain from the decoded data or json."""
-        if self._event_data:
-            return self._event_data.get(ATTR_DOMAIN)
-
         result = DOMAIN_JSON_EXTRACT.search(self._row.event_data)
         return result.group(1) if result else None
 
@@ -921,13 +912,10 @@ class EntityAttributeCache:
         else:
             # If the entity has been removed, decode the attributes
             # instead
-            if attribute == ATTR_ICON:
-                cache[attribute] = event.attributes_icon
-            elif attribute == ATTR_FRIENDLY_NAME:
-                cache[attribute] = event.attributes_friendly_name
-            else:
+            if attribute != ATTR_FRIENDLY_NAME:
                 raise ValueError(
                     f"{attribute} is not supported by {self.__class__.__name__}"
                 )
+            cache[attribute] = event.attributes_friendly_name
 
         return cache[attribute]
