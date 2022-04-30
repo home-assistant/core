@@ -35,7 +35,7 @@ SIREN_DEVICE_TYPES = {
     ALARM_CO: SirenEntityDescription(
         key=ALARM_CO,
         device_class="carbon_monoxide",
-        name="CO2 Alarm",
+        name="CO Alarm",
         icon="mdi:molecule-co",
     ),
     ALARM_FIRE: SirenEntityDescription(
