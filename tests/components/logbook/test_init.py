@@ -204,6 +204,14 @@ def test_home_assistant_start_stop_grouped(hass_):
     )
 
 
+def test_unsupported_attributes_in_cache_throws(hass):
+    """Test unsupported attributes in cache."""
+    entity_attr_cache = logbook.EntityAttributeCache(hass)
+    event = MockLazyEventPartialState(EVENT_STATE_CHANGED)
+    with pytest.raises(ValueError):
+        entity_attr_cache.get("sensor.xyz", "not_supported", event)
+
+
 def test_home_assistant_start(hass_):
     """Test if HA start is not filtered or converted into a restart."""
     entity_id = "switch.bla"
