@@ -5,7 +5,11 @@ import asyncio
 import logging
 
 import async_timeout
-from systembridgeconnector.exceptions import ConnectionErrorException
+from systembridgeconnector.exceptions import (
+    AuthenticationException,
+    ConnectionClosedException,
+    ConnectionErrorException,
+)
 from systembridgeconnector.websocket_client import WebSocketClient
 import voluptuous as vol
 
@@ -19,13 +23,14 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
-from .coordinator import MODULES, SystemBridgeDataUpdateCoordinator
+from .const import DOMAIN, MODULES
+from .coordinator import SystemBridgeDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,21 +58,36 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.data[CONF_API_KEY],
     )
     try:
-        await websocket_client.connect()
-        await websocket_client.close()
-    except ConnectionErrorException as exception:
+        async with async_timeout.timeout(20):
+            await websocket_client.connect(session=async_get_clientsession(hass))
+            await websocket_client.get_data(MODULES)
+            message = await websocket_client.receive_message()
+            _LOGGER.debug("Received message: %s", message)
+    except AuthenticationException as exception:
+        _LOGGER.error("Authentication failed for %s: %s", entry.title, exception)
+        raise ConfigEntryAuthFailed from exception
+    except (ConnectionClosedException, ConnectionErrorException) as exception:
         raise ConfigEntryNotReady(
             f"Could not connect to {entry.title} ({entry.data[CONF_HOST]})."
         ) from exception
+    except asyncio.TimeoutError as exception:
+        raise ConfigEntryNotReady(
+            f"Timed out waiting for {entry.title} ({entry.data[CONF_HOST]})."
+        ) from exception
 
-    coordinator = SystemBridgeDataUpdateCoordinator(hass, _LOGGER, entry=entry)
+    coordinator = SystemBridgeDataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        entry=entry,
+        websocket_client=websocket_client,
+    )
     await coordinator.async_config_entry_first_refresh()
 
     _LOGGER.debug("Data: %s", coordinator.data)
 
-    # Wait for initial data
     try:
-        async with async_timeout.timeout(60):
+        # Wait for initial data
+        async with async_timeout.timeout(30):
             while (
                 coordinator.data is None
                 or coordinator.data == {}
