@@ -1167,7 +1167,7 @@ class Recorder(threading.Thread):
                 return cast(int, attributes[0])
         return None
 
-    def _find_shared_data_in_db(self, attr_hash: int, shared_data: str) -> int | None:
+    def _find_shared_data_in_db(self, data_hash: int, shared_data: str) -> int | None:
         """Find shared event data in the db from the hash and shared_attrs."""
         #
         # Avoid the event session being flushed since it will
@@ -1181,13 +1181,13 @@ class Recorder(threading.Thread):
         if self._find_shared_data_query is None:
             self._find_shared_data_query = self._bakery(
                 lambda session: session.query(EventData.data_id)
-                .filter(EventData.hash == bindparam("attr_hash"))
+                .filter(EventData.hash == bindparam("data_hash"))
                 .filter(EventData.shared_data == bindparam("shared_data"))
             )
         with self.event_session.no_autoflush:
             if (
                 data_id := self._find_shared_data_query(self.event_session)
-                .params(attr_hash=attr_hash, shared_data=shared_data)
+                .params(data_hash=data_hash, shared_data=shared_data)
                 .first()
             ):
                 return cast(int, data_id[0])
@@ -1211,13 +1211,13 @@ class Recorder(threading.Thread):
             elif data_id := self._event_data_ids.get(shared_data):
                 dbevent.data_id = data_id
             else:
-                attr_hash = EventData.hash_shared_data(shared_data)
+                data_hash = EventData.hash_shared_data(shared_data)
                 # Matching attributes found in the database
-                if data_id := self._find_shared_data_in_db(attr_hash, shared_data):
+                if data_id := self._find_shared_data_in_db(data_hash, shared_data):
                     self._event_data_ids[shared_data] = dbevent.data_id = data_id
                 # No matching attributes found, save them in the DB
                 else:
-                    dbevent_data = EventData(shared_data=shared_data, hash=attr_hash)
+                    dbevent_data = EventData(shared_data=shared_data, hash=data_hash)
                     dbevent.event_data_rel = self._pending_event_data[
                         shared_data
                     ] = dbevent_data
