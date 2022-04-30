@@ -1096,11 +1096,22 @@ def test_service_disable_events_not_recording(hass, hass_recorder):
     assert events[0] != events[1]
     assert events[0].data != events[1].data
 
+    db_events = []
     with session_scope(hass=hass) as session:
-        db_events = list(session.query(Events).filter_by(event_type=event_type))
-        assert len(db_events) == 1
-        db_event = db_events[0].to_native()
+        for select_event, event_data in (
+            session.query(Events, EventData)
+            .filter_by(event_type=event_type)
+            .outerjoin(EventData, Events.data_id == EventData.data_id)
+        ):
+            select_event = cast(Events, select_event)
+            event_data = cast(EventData, event_data)
 
+            native_event = select_event.to_native()
+            native_event.data = event_data.to_native()
+            db_events.append(native_event)
+
+    assert len(db_events) == 1
+    db_event = db_events[0]
     event = events[1]
 
     assert event.event_type == db_event.event_type
