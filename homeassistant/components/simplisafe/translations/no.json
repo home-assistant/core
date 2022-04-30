@@ -2,32 +2,45 @@
     "config": {
         "abort": {
             "already_configured": "Denne SimpliSafe-kontoen er allerede i bruk.",
-            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket"
+            "email_2fa_timed_out": "Tidsavbrudd mens du ventet p\u00e5 e-postbasert tofaktorautentisering.",
+            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket",
+            "wrong_account": "Brukerlegitimasjonen som er oppgitt, samsvarer ikke med denne SimpliSafe -kontoen."
         },
         "error": {
+            "2fa_timed_out": "Tidsavbrutt mens du ventet p\u00e5 tofaktorautentisering",
             "identifier_exists": "Konto er allerede registrert",
             "invalid_auth": "Ugyldig godkjenning",
             "still_awaiting_mfa": "Forventer fortsatt MFA-e-postklikk",
             "unknown": "Uventet feil"
         },
+        "progress": {
+            "email_2fa": "Skriv inn tofaktorautentiseringskoden\n sendt til deg via e-post."
+        },
         "step": {
             "mfa": {
-                "description": "Sjekk e-posten din for en lenke fra SimpliSafe. Etter \u00e5 ha bekreftet lenken, g\u00e5 tilbake hit for \u00e5 fullf\u00f8re installasjonen av integrasjonen.",
                 "title": "SimpliSafe flertrinnsbekreftelse"
             },
             "reauth_confirm": {
                 "data": {
                     "password": "Passord"
                 },
-                "description": "Din tilgang har utl\u00f8pt eller blitt tilbakekalt. Skriv inn passordet ditt for \u00e5 koble kontoen din p\u00e5 nytt.",
+                "description": "Vennligst skriv inn passordet for {username} p\u00e5 nytt.",
                 "title": "Godkjenne integrering p\u00e5 nytt"
+            },
+            "sms_2fa": {
+                "data": {
+                    "code": "Kode"
+                },
+                "description": "Skriv inn tofaktorautentiseringskoden sendt til deg via SMS."
             },
             "user": {
                 "data": {
+                    "auth_code": "Autorisasjonskode",
                     "code": "Kode (brukt i Home Assistant brukergrensesnittet)",
                     "password": "Passord",
-                    "username": "E-post"
+                    "username": "Brukernavn"
                 },
+                "description": "Skriv inn brukernavn og passord.",
                 "title": "Fyll ut informasjonen din."
             }
         }

@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto on juba h\u00e4\u00e4lestatud",
+            "reauth_failed_existing": "Seadekirjet ei \u00f5nnestunud uuendada, eemalda sidumine ja seadista see uuesti.",
+            "reauth_successful": "Taastuvastamine \u00f5nnestus",
+            "unknown": "Ootamatu t\u00f5rge"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_api_key": "Vigane API v\u00f5ti",
+            "not_main_key": "Tuvastati vale API-v\u00f5tme t\u00fc\u00fcp, kasuta API peamist v\u00f5tit",
+            "reauth_failed_matching_account": "Sisestatud API v\u00f5ti ei vasta olemasoleva konto ID s\u00e4tetele.",
+            "unknown": "Ootamatu t\u00f5rge"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API v\u00f5ti"
+                },
+                "description": "Pead sisestama uue UptimeRoboti peamise API-v\u00f5tme",
+                "title": "Taastuvasta sidumine"
+            },
+            "user": {
+                "data": {
+                    "api_key": "API v\u00f5ti"
+                },
+                "description": "Pead sisestama UptimeRoboti peamise API-v\u00f5tme"
+            }
+        }
+    }
+}

@@ -2,61 +2,24 @@
 from onvif.exceptions import ONVIFAuthError, ONVIFError, ONVIFTimeoutError
 
 from homeassistant.components.ffmpeg import CONF_EXTRA_ARGUMENTS
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
     HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_per_platform
 
 from .const import (
     CONF_RTSP_TRANSPORT,
     CONF_SNAPSHOT_AUTH,
     DEFAULT_ARGUMENTS,
-    DEFAULT_NAME,
-    DEFAULT_PASSWORD,
-    DEFAULT_PORT,
-    DEFAULT_USERNAME,
     DOMAIN,
     RTSP_TRANS_PROTOCOLS,
 )
 from .device import ONVIFDevice
-
-
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the ONVIF component."""
-    # Import from yaml
-    configs = {}
-    for p_type, p_config in config_per_platform(config, "camera"):
-        if p_type != DOMAIN:
-            continue
-
-        config = p_config.copy()
-        if config[CONF_HOST] not in configs:
-            configs[config[CONF_HOST]] = {
-                CONF_HOST: config[CONF_HOST],
-                CONF_NAME: config.get(CONF_NAME, DEFAULT_NAME),
-                CONF_PASSWORD: config.get(CONF_PASSWORD, DEFAULT_PASSWORD),
-                CONF_PORT: config.get(CONF_PORT, DEFAULT_PORT),
-                CONF_USERNAME: config.get(CONF_USERNAME, DEFAULT_USERNAME),
-            }
-
-    for conf in configs.values():
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
-            )
-        )
-
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -81,10 +44,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data[DOMAIN][entry.unique_id] = device
 
-    platforms = ["camera"]
+    platforms = [Platform.BUTTON, Platform.CAMERA]
 
     if device.capabilities.events:
-        platforms += ["binary_sensor", "sensor"]
+        platforms += [Platform.BINARY_SENSOR, Platform.SENSOR]
 
     hass.config_entries.async_setup_platforms(entry, platforms)
 
@@ -95,7 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
 
     device = hass.data[DOMAIN][entry.unique_id]

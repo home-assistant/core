@@ -7,18 +7,12 @@ import eiscp
 from eiscp import eISCP
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    DOMAIN,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
+from homeassistant.components.media_player import (
+    PLATFORM_SCHEMA,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
 )
+from homeassistant.components.media_player.const import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_HOST,
@@ -26,7 +20,10 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,23 +35,19 @@ DEFAULT_NAME = "Onkyo Receiver"
 SUPPORTED_MAX_VOLUME = 100
 DEFAULT_RECEIVER_MAX_VOLUME = 80
 
-SUPPORT_ONKYO = (
-    SUPPORT_VOLUME_SET
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_VOLUME_STEP
-    | SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-    | SUPPORT_SELECT_SOURCE
-    | SUPPORT_PLAY
-    | SUPPORT_PLAY_MEDIA
-)
 
 SUPPORT_ONKYO_WO_VOLUME = (
-    SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-    | SUPPORT_SELECT_SOURCE
-    | SUPPORT_PLAY
-    | SUPPORT_PLAY_MEDIA
+    MediaPlayerEntityFeature.TURN_ON
+    | MediaPlayerEntityFeature.TURN_OFF
+    | MediaPlayerEntityFeature.SELECT_SOURCE
+    | MediaPlayerEntityFeature.PLAY
+    | MediaPlayerEntityFeature.PLAY_MEDIA
+)
+SUPPORT_ONKYO = (
+    SUPPORT_ONKYO_WO_VOLUME
+    | MediaPlayerEntityFeature.VOLUME_SET
+    | MediaPlayerEntityFeature.VOLUME_MUTE
+    | MediaPlayerEntityFeature.VOLUME_STEP
 )
 
 KNOWN_HOSTS: list[str] = []
@@ -145,16 +138,22 @@ def determine_zones(receiver):
     out = {"zone2": False, "zone3": False}
     try:
         _LOGGER.debug("Checking for zone 2 capability")
-        receiver.raw("ZPWQSTN")
-        out["zone2"] = True
+        response = receiver.raw("ZPWQSTN")
+        if response != "ZPWN/A":  # Zone 2 Available
+            out["zone2"] = True
+        else:
+            _LOGGER.debug("Zone 2 not available")
     except ValueError as error:
         if str(error) != TIMEOUT_MESSAGE:
             raise error
         _LOGGER.debug("Zone 2 timed out, assuming no functionality")
     try:
         _LOGGER.debug("Checking for zone 3 capability")
-        receiver.raw("PW3QSTN")
-        out["zone3"] = True
+        response = receiver.raw("PW3QSTN")
+        if response != "PW3N/A":
+            out["zone3"] = True
+        else:
+            _LOGGER.debug("Zone 3 not available")
     except ValueError as error:
         if str(error) != TIMEOUT_MESSAGE:
             raise error
@@ -165,19 +164,23 @@ def determine_zones(receiver):
     return out
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Onkyo platform."""
-    host = config.get(CONF_HOST)
-    hosts = []
+    hosts: list[OnkyoDevice] = []
 
-    def service_handle(service):
+    def service_handle(service: ServiceCall) -> None:
         """Handle for services."""
-        entity_ids = service.data.get(ATTR_ENTITY_ID)
+        entity_ids = service.data[ATTR_ENTITY_ID]
         devices = [d for d in hosts if d.entity_id in entity_ids]
 
         for device in devices:
             if service.service == SERVICE_SELECT_HDMI_OUTPUT:
-                device.select_output(service.data.get(ATTR_HDMI_OUTPUT))
+                device.select_output(service.data[ATTR_HDMI_OUTPUT])
 
     hass.services.register(
         DOMAIN,
@@ -186,7 +189,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         schema=ONKYO_SELECT_OUTPUT_SCHEMA,
     )
 
-    if CONF_HOST in config and host not in KNOWN_HOSTS:
+    if CONF_HOST in config and (host := config[CONF_HOST]) not in KNOWN_HOSTS:
         try:
             receiver = eiscp.eISCP(host)
             hosts.append(
@@ -240,6 +243,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 class OnkyoDevice(MediaPlayerEntity):
     """Representation of an Onkyo device."""
+
+    _attr_supported_features = SUPPORT_ONKYO
 
     def __init__(
         self,
@@ -319,8 +324,10 @@ class OnkyoDevice(MediaPlayerEntity):
         preset_raw = self.command("preset query")
         if self._audio_info_supported:
             audio_information_raw = self.command("audio-information query")
+            self._parse_audio_information(audio_information_raw)
         if self._video_info_supported:
             video_information_raw = self.command("video-information query")
+            self._parse_video_information(video_information_raw)
         if not (volume_raw and mute_raw and current_source_raw):
             return
 
@@ -342,9 +349,6 @@ class OnkyoDevice(MediaPlayerEntity):
         self._volume = volume_raw[1] / (
             self._receiver_max_volume * self._max_volume / 100
         )
-
-        self._parse_audio_information(audio_information_raw)
-        self._parse_video_information(video_information_raw)
 
         if not hdmi_out_raw:
             return
@@ -376,11 +380,6 @@ class OnkyoDevice(MediaPlayerEntity):
     def is_volume_muted(self):
         """Return boolean indicating mute status."""
         return self._muted
-
-    @property
-    def supported_features(self):
-        """Return media player features that are supported."""
-        return SUPPORT_ONKYO
 
     @property
     def source(self):

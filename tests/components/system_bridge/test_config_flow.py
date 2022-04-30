@@ -4,7 +4,8 @@ from unittest.mock import patch
 from aiohttp.client_exceptions import ClientConnectionError
 from systembridge.exceptions import BridgeAuthenticationException
 
-from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant import config_entries, data_entry_flow
+from homeassistant.components import zeroconf
 from homeassistant.components.system_bridge.const import DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
 
@@ -27,13 +28,14 @@ FIXTURE_ZEROCONF_INPUT = {
     CONF_PORT: "9170",
 }
 
-FIXTURE_ZEROCONF = {
-    CONF_HOST: "1.1.1.1",
-    CONF_PORT: 9170,
-    "hostname": "test-bridge.local.",
-    "type": "_system-bridge._udp.local.",
-    "name": "System Bridge - test-bridge._system-bridge._udp.local.",
-    "properties": {
+FIXTURE_ZEROCONF = zeroconf.ZeroconfServiceInfo(
+    host="1.1.1.1",
+    addresses=["1.1.1.1"],
+    port=9170,
+    hostname="test-bridge.local.",
+    type="_system-bridge._udp.local.",
+    name="System Bridge - test-bridge._system-bridge._udp.local.",
+    properties={
         "address": "http://test-bridge:9170",
         "fqdn": "test-bridge",
         "host": "test-bridge",
@@ -42,92 +44,38 @@ FIXTURE_ZEROCONF = {
         "port": "9170",
         "uuid": FIXTURE_UUID,
     },
-}
+)
 
-FIXTURE_ZEROCONF_BAD = {
-    CONF_HOST: "1.1.1.1",
-    CONF_PORT: 9170,
-    "hostname": "test-bridge.local.",
-    "type": "_system-bridge._udp.local.",
-    "name": "System Bridge - test-bridge._system-bridge._udp.local.",
-    "properties": {
+FIXTURE_ZEROCONF_BAD = zeroconf.ZeroconfServiceInfo(
+    host="1.1.1.1",
+    addresses=["1.1.1.1"],
+    port=9170,
+    hostname="test-bridge.local.",
+    type="_system-bridge._udp.local.",
+    name="System Bridge - test-bridge._system-bridge._udp.local.",
+    properties={
         "something": "bad",
     },
-}
-
-FIXTURE_OS = {
-    "platform": "linux",
-    "distro": "Ubuntu",
-    "release": "20.10",
-    "codename": "Groovy Gorilla",
-    "kernel": "5.8.0-44-generic",
-    "arch": "x64",
-    "hostname": "test-bridge",
-    "fqdn": "test-bridge.local",
-    "codepage": "UTF-8",
-    "logofile": "ubuntu",
-    "serial": "abcdefghijklmnopqrstuvwxyz",
-    "build": "",
-    "servicepack": "",
-    "uefi": True,
-    "users": [],
-}
+)
 
 
-FIXTURE_NETWORK = {
-    "connections": [],
-    "gatewayDefault": "192.168.1.1",
-    "interfaceDefault": "wlp2s0",
-    "interfaces": {
-        "wlp2s0": {
-            "iface": "wlp2s0",
-            "ifaceName": "wlp2s0",
-            "ip4": "1.1.1.1",
-            "mac": FIXTURE_MAC_ADDRESS,
-        },
+FIXTURE_INFORMATION = {
+    "address": "http://test-bridge:9170",
+    "apiPort": 9170,
+    "fqdn": "test-bridge",
+    "host": "test-bridge",
+    "ip": "1.1.1.1",
+    "mac": FIXTURE_MAC_ADDRESS,
+    "updates": {
+        "available": False,
+        "newer": False,
+        "url": "https://github.com/timmo001/system-bridge/releases/tag/v2.3.2",
+        "version": {"current": "2.3.2", "new": "2.3.2"},
     },
-    "stats": {},
-}
-
-FIXTURE_SYSTEM = {
-    "baseboard": {
-        "manufacturer": "System manufacturer",
-        "model": "Model",
-        "version": "Rev X.0x",
-        "serial": "1234567",
-        "assetTag": "",
-        "memMax": 134217728,
-        "memSlots": 4,
-    },
-    "bios": {
-        "vendor": "System vendor",
-        "version": "12345",
-        "releaseDate": "2019-11-13",
-        "revision": "",
-    },
-    "chassis": {
-        "manufacturer": "Default string",
-        "model": "",
-        "type": "Desktop",
-        "version": "Default string",
-        "serial": "Default string",
-        "assetTag": "",
-        "sku": "",
-    },
-    "system": {
-        "manufacturer": "System manufacturer",
-        "model": "System Product Name",
-        "version": "System Version",
-        "serial": "System Serial Number",
-        "uuid": "abc123-def456",
-        "sku": "SKU",
-        "virtual": False,
-    },
-    "uuid": {
-        "os": FIXTURE_UUID,
-        "hardware": "abc123-def456",
-        "macs": [FIXTURE_MAC_ADDRESS],
-    },
+    "uuid": FIXTURE_UUID,
+    "version": "2.3.2",
+    "websocketAddress": "ws://test-bridge:9172",
+    "websocketPort": 9172,
 }
 
 
@@ -135,9 +83,7 @@ FIXTURE_BASE_URL = (
     f"http://{FIXTURE_USER_INPUT[CONF_HOST]}:{FIXTURE_USER_INPUT[CONF_PORT]}"
 )
 
-FIXTURE_ZEROCONF_BASE_URL = (
-    f"http://{FIXTURE_ZEROCONF[CONF_HOST]}:{FIXTURE_ZEROCONF[CONF_PORT]}"
-)
+FIXTURE_ZEROCONF_BASE_URL = f"http://{FIXTURE_ZEROCONF.host}:{FIXTURE_ZEROCONF.port}"
 
 
 async def test_user_flow(
@@ -151,9 +97,11 @@ async def test_user_flow(
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] is None
 
-    aioclient_mock.get(f"{FIXTURE_BASE_URL}/os", json=FIXTURE_OS)
-    aioclient_mock.get(f"{FIXTURE_BASE_URL}/network", json=FIXTURE_NETWORK)
-    aioclient_mock.get(f"{FIXTURE_BASE_URL}/system", json=FIXTURE_SYSTEM)
+    aioclient_mock.get(
+        f"{FIXTURE_BASE_URL}/information",
+        headers={"Content-Type": "application/json"},
+        json=FIXTURE_INFORMATION,
+    )
 
     with patch(
         "homeassistant.components.system_bridge.async_setup_entry",
@@ -181,9 +129,9 @@ async def test_form_invalid_auth(
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] is None
 
-    aioclient_mock.get(f"{FIXTURE_BASE_URL}/os", exc=BridgeAuthenticationException)
-    aioclient_mock.get(f"{FIXTURE_BASE_URL}/network", exc=BridgeAuthenticationException)
-    aioclient_mock.get(f"{FIXTURE_BASE_URL}/system", exc=BridgeAuthenticationException)
+    aioclient_mock.get(
+        f"{FIXTURE_BASE_URL}/information", exc=BridgeAuthenticationException
+    )
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], FIXTURE_USER_INPUT
@@ -206,9 +154,7 @@ async def test_form_cannot_connect(
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] is None
 
-    aioclient_mock.get(f"{FIXTURE_BASE_URL}/os", exc=ClientConnectionError)
-    aioclient_mock.get(f"{FIXTURE_BASE_URL}/network", exc=ClientConnectionError)
-    aioclient_mock.get(f"{FIXTURE_BASE_URL}/system", exc=ClientConnectionError)
+    aioclient_mock.get(f"{FIXTURE_BASE_URL}/information", exc=ClientConnectionError)
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], FIXTURE_USER_INPUT
@@ -220,7 +166,7 @@ async def test_form_cannot_connect(
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_unknow_error(
+async def test_form_unknown_error(
     hass, aiohttp_client, aioclient_mock, current_request_with_host
 ) -> None:
     """Test we handle unknown error."""
@@ -232,10 +178,9 @@ async def test_form_unknow_error(
     assert result["errors"] is None
 
     with patch(
-        "homeassistant.components.system_bridge.config_flow.Bridge.async_get_os",
+        "homeassistant.components.system_bridge.config_flow.Bridge.async_get_information",
         side_effect=Exception("Boom"),
     ):
-
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], FIXTURE_USER_INPUT
         )
@@ -257,9 +202,9 @@ async def test_reauth_authorization_error(
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "authenticate"
 
-    aioclient_mock.get(f"{FIXTURE_BASE_URL}/network", exc=BridgeAuthenticationException)
-    aioclient_mock.get(f"{FIXTURE_BASE_URL}/os", exc=BridgeAuthenticationException)
-    aioclient_mock.get(f"{FIXTURE_BASE_URL}/system", exc=BridgeAuthenticationException)
+    aioclient_mock.get(
+        f"{FIXTURE_BASE_URL}/information", exc=BridgeAuthenticationException
+    )
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], FIXTURE_AUTH_INPUT
@@ -282,9 +227,7 @@ async def test_reauth_connection_error(
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "authenticate"
 
-    aioclient_mock.get(f"{FIXTURE_BASE_URL}/os", exc=ClientConnectionError)
-    aioclient_mock.get(f"{FIXTURE_BASE_URL}/network", exc=ClientConnectionError)
-    aioclient_mock.get(f"{FIXTURE_BASE_URL}/system", exc=ClientConnectionError)
+    aioclient_mock.get(f"{FIXTURE_BASE_URL}/information", exc=ClientConnectionError)
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], FIXTURE_AUTH_INPUT
@@ -312,9 +255,11 @@ async def test_reauth_flow(
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "authenticate"
 
-    aioclient_mock.get(f"{FIXTURE_BASE_URL}/os", json=FIXTURE_OS)
-    aioclient_mock.get(f"{FIXTURE_BASE_URL}/network", json=FIXTURE_NETWORK)
-    aioclient_mock.get(f"{FIXTURE_BASE_URL}/system", json=FIXTURE_SYSTEM)
+    aioclient_mock.get(
+        f"{FIXTURE_BASE_URL}/information",
+        headers={"Content-Type": "application/json"},
+        json=FIXTURE_INFORMATION,
+    )
 
     with patch(
         "homeassistant.components.system_bridge.async_setup_entry",
@@ -335,7 +280,7 @@ async def test_zeroconf_flow(
     hass, aiohttp_client, aioclient_mock, current_request_with_host
 ) -> None:
     """Test zeroconf flow."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
@@ -345,9 +290,11 @@ async def test_zeroconf_flow(
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert not result["errors"]
 
-    aioclient_mock.get(f"{FIXTURE_ZEROCONF_BASE_URL}/os", json=FIXTURE_OS)
-    aioclient_mock.get(f"{FIXTURE_ZEROCONF_BASE_URL}/network", json=FIXTURE_NETWORK)
-    aioclient_mock.get(f"{FIXTURE_ZEROCONF_BASE_URL}/system", json=FIXTURE_SYSTEM)
+    aioclient_mock.get(
+        f"{FIXTURE_ZEROCONF_BASE_URL}/information",
+        headers={"Content-Type": "application/json"},
+        json=FIXTURE_INFORMATION,
+    )
 
     with patch(
         "homeassistant.components.system_bridge.async_setup_entry",
@@ -368,7 +315,7 @@ async def test_zeroconf_cannot_connect(
     hass, aiohttp_client, aioclient_mock, current_request_with_host
 ) -> None:
     """Test zeroconf cannot connect flow."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
@@ -378,11 +325,9 @@ async def test_zeroconf_cannot_connect(
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert not result["errors"]
 
-    aioclient_mock.get(f"{FIXTURE_ZEROCONF_BASE_URL}/os", exc=ClientConnectionError)
     aioclient_mock.get(
-        f"{FIXTURE_ZEROCONF_BASE_URL}/network", exc=ClientConnectionError
+        f"{FIXTURE_ZEROCONF_BASE_URL}/information", exc=ClientConnectionError
     )
-    aioclient_mock.get(f"{FIXTURE_ZEROCONF_BASE_URL}/system", exc=ClientConnectionError)
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], FIXTURE_AUTH_INPUT
@@ -398,7 +343,7 @@ async def test_zeroconf_bad_zeroconf_info(
     hass, aiohttp_client, aioclient_mock, current_request_with_host
 ) -> None:
     """Test zeroconf cannot connect flow."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},

@@ -1,14 +1,21 @@
 """Support for the Hive devices and services."""
+from __future__ import annotations
+
+from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
 import logging
+from typing import Any, TypeVar
 
 from aiohttp.web_exceptions import HTTPException
 from apyhiveapi import Hive
 from apyhiveapi.helper.hive_exceptions import HiveReauthRequired
+from typing_extensions import Concatenate, ParamSpec
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.dispatcher import (
@@ -16,8 +23,12 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, PLATFORM_LOOKUP, PLATFORMS
+
+_HiveEntityT = TypeVar("_HiveEntityT", bound="HiveEntity")
+_P = ParamSpec("_P")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +49,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Hive configuration setup."""
     hass.data[DOMAIN] = {}
 
@@ -61,7 +72,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Hive from a config entry."""
 
     websession = aiohttp_client.async_get_clientsession(hass)
@@ -92,7 +103,7 @@ async def async_setup_entry(hass, entry):
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
@@ -101,11 +112,13 @@ async def async_unload_entry(hass, entry):
     return unload_ok
 
 
-def refresh_system(func):
+def refresh_system(
+    func: Callable[Concatenate[_HiveEntityT, _P], Awaitable[Any]]
+) -> Callable[Concatenate[_HiveEntityT, _P], Coroutine[Any, Any, None]]:
     """Force update all entities after state change."""
 
     @wraps(func)
-    async def wrapper(self, *args, **kwargs):
+    async def wrapper(self: _HiveEntityT, *args: _P.args, **kwargs: _P.kwargs) -> None:
         await func(self, *args, **kwargs)
         async_dispatcher_send(self.hass, DOMAIN)
 

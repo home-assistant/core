@@ -1,4 +1,5 @@
 """The tests for the mFi sensor platform."""
+from copy import deepcopy
 import unittest.mock as mock
 
 from mficlient.client import FailedToLogin
@@ -7,7 +8,8 @@ import requests
 
 import homeassistant.components.mfi.sensor as mfi
 import homeassistant.components.sensor as sensor_component
-from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.const import TEMP_CELSIUS
 from homeassistant.setup import async_setup_component
 
 PLATFORM = mfi
@@ -38,20 +40,20 @@ async def test_setup_failed_login(hass):
     """Test setup with login failure."""
     with mock.patch("homeassistant.components.mfi.sensor.MFiClient") as mock_client:
         mock_client.side_effect = FailedToLogin
-        assert not PLATFORM.setup_platform(hass, dict(GOOD_CONFIG), None)
+        assert not PLATFORM.setup_platform(hass, GOOD_CONFIG, None)
 
 
 async def test_setup_failed_connect(hass):
     """Test setup with connection failure."""
     with mock.patch("homeassistant.components.mfi.sensor.MFiClient") as mock_client:
         mock_client.side_effect = requests.exceptions.ConnectionError
-        assert not PLATFORM.setup_platform(hass, dict(GOOD_CONFIG), None)
+        assert not PLATFORM.setup_platform(hass, GOOD_CONFIG, None)
 
 
 async def test_setup_minimum(hass):
     """Test setup with minimum configuration."""
     with mock.patch("homeassistant.components.mfi.sensor.MFiClient") as mock_client:
-        config = dict(GOOD_CONFIG)
+        config = deepcopy(GOOD_CONFIG)
         del config[THING]["port"]
         assert await async_setup_component(hass, COMPONENT.DOMAIN, config)
         await hass.async_block_till_done()
@@ -64,9 +66,7 @@ async def test_setup_minimum(hass):
 async def test_setup_with_port(hass):
     """Test setup with port."""
     with mock.patch("homeassistant.components.mfi.sensor.MFiClient") as mock_client:
-        config = dict(GOOD_CONFIG)
-        config[THING]["port"] = 6123
-        assert await async_setup_component(hass, COMPONENT.DOMAIN, config)
+        assert await async_setup_component(hass, COMPONENT.DOMAIN, GOOD_CONFIG)
         await hass.async_block_till_done()
         assert mock_client.call_count == 1
         assert mock_client.call_args == mock.call(
@@ -77,7 +77,7 @@ async def test_setup_with_port(hass):
 async def test_setup_with_tls_disabled(hass):
     """Test setup without TLS."""
     with mock.patch("homeassistant.components.mfi.sensor.MFiClient") as mock_client:
-        config = dict(GOOD_CONFIG)
+        config = deepcopy(GOOD_CONFIG)
         del config[THING]["port"]
         config[THING]["ssl"] = False
         config[THING]["verify_ssl"] = False
@@ -121,7 +121,9 @@ def port_fixture():
 @pytest.fixture(name="sensor")
 def sensor_fixture(hass, port):
     """Sensor fixture."""
-    return mfi.MfiSensor(port, hass)
+    sensor = mfi.MfiSensor(port, hass)
+    sensor.hass = hass
+    return sensor
 
 
 async def test_name(port, sensor):
@@ -133,7 +135,7 @@ async def test_uom_temp(port, sensor):
     """Test the UOM temperature."""
     port.tag = "temperature"
     assert sensor.unit_of_measurement == TEMP_CELSIUS
-    assert sensor.device_class == DEVICE_CLASS_TEMPERATURE
+    assert sensor.device_class is SensorDeviceClass.TEMPERATURE
 
 
 async def test_uom_power(port, sensor):

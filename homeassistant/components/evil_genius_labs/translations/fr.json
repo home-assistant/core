@@ -1,0 +1,16 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "\u00c9chec de connexion",
+            "timeout": "D\u00e9lai d'attente pour \u00e9tablir la connexion expir\u00e9",
+            "unknown": "Erreur inattendue"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "H\u00f4te"
+                }
+            }
+        }
+    }
+}

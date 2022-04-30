@@ -1,0 +1,15 @@
+{
+    "config": {
+        "error": {
+            "invalid_response": "Respuesta no v\u00e1lida del dispositivo"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "rtsp_port": "Puerto RTSP",
+                    "stream": "Stream"
+                }
+            }
+        }
+    }
+}

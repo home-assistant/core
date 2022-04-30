@@ -14,14 +14,12 @@ from homeassistant.components.homekit.accessories import (
 from homeassistant.components.homekit.const import (
     ATTR_DISPLAY_NAME,
     ATTR_INTEGRATION,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_SOFTWARE_VERSION,
     ATTR_VALUE,
     BRIDGE_MODEL,
     BRIDGE_NAME,
     BRIDGE_SERIAL_NUMBER,
     CHAR_FIRMWARE_REVISION,
+    CHAR_HARDWARE_REVISION,
     CHAR_MANUFACTURER,
     CHAR_MODEL,
     CHAR_NAME,
@@ -36,11 +34,15 @@ from homeassistant.const import (
     ATTR_BATTERY_CHARGING,
     ATTR_BATTERY_LEVEL,
     ATTR_ENTITY_ID,
+    ATTR_HW_VERSION,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
     ATTR_SERVICE,
+    ATTR_SW_VERSION,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
-    __version__,
+    __version__ as hass_version,
 )
 from homeassistant.helpers.event import TRACK_STATE_CHANGE_CALLBACKS
 
@@ -59,14 +61,14 @@ async def test_accessory_cancels_track_state_change_on_stop(hass, hk_driver):
     ):
         await acc.run()
     assert len(hass.data[TRACK_STATE_CHANGE_CALLBACKS][entity_id]) == 1
-    acc.async_stop()
+    await acc.stop()
     assert entity_id not in hass.data[TRACK_STATE_CHANGE_CALLBACKS]
 
 
 async def test_home_accessory(hass, hk_driver):
     """Test HomeAccessory class."""
     entity_id = "sensor.accessory"
-    entity_id2 = "light.accessory"
+    entity_id2 = "light.accessory_that_exceeds_the_maximum_maximum_maximum_maximum_maximum_maximum_maximum_allowed_length"
 
     hass.states.async_set(entity_id, None)
     hass.states.async_set(entity_id2, STATE_UNAVAILABLE)
@@ -94,27 +96,78 @@ async def test_home_accessory(hass, hk_driver):
     assert serv.get_characteristic(CHAR_NAME).value == "Home Accessory"
     assert serv.get_characteristic(CHAR_MANUFACTURER).value == f"{MANUFACTURER} Light"
     assert serv.get_characteristic(CHAR_MODEL).value == "Light"
-    assert serv.get_characteristic(CHAR_SERIAL_NUMBER).value == "light.accessory"
+    assert (
+        serv.get_characteristic(CHAR_SERIAL_NUMBER).value
+        == "light.accessory_that_exceeds_the_maximum_maximum_maximum_maximum"
+    )
 
     acc3 = HomeAccessory(
         hass,
         hk_driver,
-        "Home Accessory",
+        "Home Accessory that exceeds the maximum maximum maximum maximum maximum maximum length",
         entity_id2,
         3,
         {
-            ATTR_MODEL: "Awesome",
-            ATTR_MANUFACTURER: "Lux Brands",
-            ATTR_SOFTWARE_VERSION: "0.4.3",
-            ATTR_INTEGRATION: "luxe",
+            ATTR_MODEL: "Awesome Model that exceeds the maximum maximum maximum maximum maximum maximum length",
+            ATTR_MANUFACTURER: "Lux Brands that exceeds the maximum maximum maximum maximum maximum maximum length",
+            ATTR_SW_VERSION: "0.4.3 that exceeds the maximum maximum maximum maximum maximum maximum length",
+            ATTR_INTEGRATION: "luxe that exceeds the maximum maximum maximum maximum maximum maximum length",
         },
     )
     assert acc3.available is False
     serv = acc3.services[0]  # SERV_ACCESSORY_INFO
-    assert serv.get_characteristic(CHAR_NAME).value == "Home Accessory"
-    assert serv.get_characteristic(CHAR_MANUFACTURER).value == "Lux Brands"
-    assert serv.get_characteristic(CHAR_MODEL).value == "Awesome"
-    assert serv.get_characteristic(CHAR_SERIAL_NUMBER).value == "light.accessory"
+    assert (
+        serv.get_characteristic(CHAR_NAME).value
+        == "Home Accessory that exceeds the maximum maximum maximum maximum "
+    )
+    assert (
+        serv.get_characteristic(CHAR_MANUFACTURER).value
+        == "Lux Brands that exceeds the maximum maximum maximum maximum maxi"
+    )
+    assert (
+        serv.get_characteristic(CHAR_MODEL).value
+        == "Awesome Model that exceeds the maximum maximum maximum maximum m"
+    )
+    assert (
+        serv.get_characteristic(CHAR_SERIAL_NUMBER).value
+        == "light.accessory_that_exceeds_the_maximum_maximum_maximum_maximum"
+    )
+    assert serv.get_characteristic(CHAR_FIRMWARE_REVISION).value == "0.4.3"
+
+    acc4 = HomeAccessory(
+        hass,
+        hk_driver,
+        "Home Accessory that exceeds the maximum maximum maximum maximum maximum maximum length",
+        entity_id2,
+        3,
+        {
+            ATTR_MODEL: "Awesome Model that exceeds the maximum maximum maximum maximum maximum maximum length",
+            ATTR_MANUFACTURER: "Lux Brands that exceeds the maximum maximum maximum maximum maximum maximum length",
+            ATTR_SW_VERSION: "will_not_match_regex",
+            ATTR_INTEGRATION: "luxe that exceeds the maximum maximum maximum maximum maximum maximum length",
+        },
+    )
+    assert acc4.available is False
+    serv = acc4.services[0]  # SERV_ACCESSORY_INFO
+    assert (
+        serv.get_characteristic(CHAR_NAME).value
+        == "Home Accessory that exceeds the maximum maximum maximum maximum "
+    )
+    assert (
+        serv.get_characteristic(CHAR_MANUFACTURER).value
+        == "Lux Brands that exceeds the maximum maximum maximum maximum maxi"
+    )
+    assert (
+        serv.get_characteristic(CHAR_MODEL).value
+        == "Awesome Model that exceeds the maximum maximum maximum maximum m"
+    )
+    assert (
+        serv.get_characteristic(CHAR_SERIAL_NUMBER).value
+        == "light.accessory_that_exceeds_the_maximum_maximum_maximum_maximum"
+    )
+    assert hass_version.startswith(
+        serv.get_characteristic(CHAR_FIRMWARE_REVISION).value
+    )
 
     hass.states.async_set(entity_id, "on")
     await hass.async_block_till_done()
@@ -140,6 +193,65 @@ async def test_home_accessory(hass, hk_driver):
     acc = HomeAccessory(hass, hk_driver, "test_name", entity_id, 2, None)
     serv = acc.services[0]  # SERV_ACCESSORY_INFO
     assert serv.get_characteristic(CHAR_MODEL).value == "Test Model"
+
+
+async def test_accessory_with_missing_basic_service_info(hass, hk_driver):
+    """Test HomeAccessory class."""
+    entity_id = "sensor.accessory"
+    hass.states.async_set(entity_id, "on")
+    acc = HomeAccessory(
+        hass,
+        hk_driver,
+        "Home Accessory",
+        entity_id,
+        3,
+        {
+            ATTR_MODEL: None,
+            ATTR_MANUFACTURER: None,
+            ATTR_SW_VERSION: None,
+            ATTR_INTEGRATION: None,
+        },
+    )
+    serv = acc.get_service(SERV_ACCESSORY_INFO)
+    assert serv.get_characteristic(CHAR_NAME).value == "Home Accessory"
+    assert serv.get_characteristic(CHAR_MANUFACTURER).value == "Home Assistant Sensor"
+    assert serv.get_characteristic(CHAR_MODEL).value == "Sensor"
+    assert serv.get_characteristic(CHAR_SERIAL_NUMBER).value == entity_id
+    assert hass_version.startswith(
+        serv.get_characteristic(CHAR_FIRMWARE_REVISION).value
+    )
+    assert isinstance(acc.to_HAP(), dict)
+
+
+async def test_accessory_with_hardware_revision(hass, hk_driver):
+    """Test HomeAccessory class with hardware revision."""
+    entity_id = "sensor.accessory"
+    hass.states.async_set(entity_id, "on")
+    acc = HomeAccessory(
+        hass,
+        hk_driver,
+        "Home Accessory",
+        entity_id,
+        3,
+        {
+            ATTR_MODEL: None,
+            ATTR_MANUFACTURER: None,
+            ATTR_SW_VERSION: None,
+            ATTR_HW_VERSION: "1.2.3",
+            ATTR_INTEGRATION: None,
+        },
+    )
+    acc.driver = hk_driver
+    serv = acc.get_service(SERV_ACCESSORY_INFO)
+    assert serv.get_characteristic(CHAR_NAME).value == "Home Accessory"
+    assert serv.get_characteristic(CHAR_MANUFACTURER).value == "Home Assistant Sensor"
+    assert serv.get_characteristic(CHAR_MODEL).value == "Sensor"
+    assert serv.get_characteristic(CHAR_SERIAL_NUMBER).value == entity_id
+    assert hass_version.startswith(
+        serv.get_characteristic(CHAR_FIRMWARE_REVISION).value
+    )
+    assert serv.get_characteristic(CHAR_HARDWARE_REVISION).value == "1.2.3"
+    assert isinstance(acc.to_HAP(), dict)
 
 
 async def test_battery_service(hass, hk_driver, caplog):
@@ -576,18 +688,20 @@ def test_home_bridge(hk_driver):
     assert bridge.hass == "hass"
     assert bridge.display_name == BRIDGE_NAME
     assert bridge.category == 2  # Category.BRIDGE
-    assert len(bridge.services) == 1
+    assert len(bridge.services) == 2
     serv = bridge.services[0]  # SERV_ACCESSORY_INFO
     assert serv.display_name == SERV_ACCESSORY_INFO
     assert serv.get_characteristic(CHAR_NAME).value == BRIDGE_NAME
-    assert serv.get_characteristic(CHAR_FIRMWARE_REVISION).value == __version__
+    assert hass_version.startswith(
+        serv.get_characteristic(CHAR_FIRMWARE_REVISION).value
+    )
     assert serv.get_characteristic(CHAR_MANUFACTURER).value == MANUFACTURER
     assert serv.get_characteristic(CHAR_MODEL).value == BRIDGE_MODEL
     assert serv.get_characteristic(CHAR_SERIAL_NUMBER).value == BRIDGE_SERIAL_NUMBER
 
     bridge = HomeBridge("hass", hk_driver, "test_name")
     assert bridge.display_name == "test_name"
-    assert len(bridge.services) == 1
+    assert len(bridge.services) == 2
     serv = bridge.services[0]  # SERV_ACCESSORY_INFO
 
     # setup_message
@@ -619,16 +733,16 @@ def test_home_driver():
 
     # pair
     with patch("pyhap.accessory_driver.AccessoryDriver.pair") as mock_pair, patch(
-        "homeassistant.components.homekit.accessories.dismiss_setup_message"
+        "homeassistant.components.homekit.accessories.async_dismiss_setup_message"
     ) as mock_dissmiss_msg:
-        driver.pair("client_uuid", "client_public")
+        driver.pair("client_uuid", "client_public", b"1")
 
-    mock_pair.assert_called_with("client_uuid", "client_public")
+    mock_pair.assert_called_with("client_uuid", "client_public", b"1")
     mock_dissmiss_msg.assert_called_with("hass", "entry_id")
 
     # unpair
     with patch("pyhap.accessory_driver.AccessoryDriver.unpair") as mock_unpair, patch(
-        "homeassistant.components.homekit.accessories.show_setup_message"
+        "homeassistant.components.homekit.accessories.async_show_setup_message"
     ) as mock_show_msg:
         driver.unpair("client_uuid")
 

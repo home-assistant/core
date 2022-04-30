@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
             "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
+            "ignore_ip6_link_local": "L'indirizzo locale del collegamento IPv6 non \u00e8 supportato.",
             "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente"
         },
         "error": {
@@ -10,7 +11,8 @@
             "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
             "cannot_connect": "Impossibile connettersi",
             "connection_error": "Impossibile connettersi",
-            "invalid_auth": "Autenticazione non valida"
+            "invalid_auth": "Autenticazione non valida",
+            "upnp_not_configured": "Impostazioni UPnP mancanti sul dispositivo."
         },
         "flow_title": "{name}",
         "step": {
@@ -56,7 +58,8 @@
         "step": {
             "init": {
                 "data": {
-                    "consider_home": "Secondi per considerare un dispositivo \"a casa\""
+                    "consider_home": "Secondi per considerare un dispositivo \"a casa\"",
+                    "old_discovery": "Abilita il vecchio metodo di rilevamento"
                 }
             }
         }

@@ -1,4 +1,6 @@
 """Platform for sensor integration."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
@@ -7,7 +9,10 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import ENERGY_KILO_WATT_HOUR
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,7 +26,12 @@ SENSOR_ICON = "mdi:counter"
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_METER_NUMBER): cv.string})
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the sensor platform."""
 
     meter_number = config[CONF_METER_NUMBER]
@@ -42,7 +52,7 @@ class CurrentEnergyUsageSensor(SensorEntity):
     """Representation of the sensor."""
 
     _attr_icon = SENSOR_ICON
-    _attr_unit_of_measurement = ENERGY_KILO_WATT_HOUR
+    _attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
 
     def __init__(self, meter):
         """Initialize the sensor."""
@@ -61,7 +71,7 @@ class CurrentEnergyUsageSensor(SensorEntity):
         return SENSOR_NAME
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 

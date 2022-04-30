@@ -1,35 +1,53 @@
 """Support for BMW car locks with BMW ConnectedDrive."""
-import logging
+from __future__ import annotations
 
-from bimmer_connected.state import LockState
+import logging
+from typing import Any
+
+from bimmer_connected.vehicle import ConnectedDriveVehicle
+from bimmer_connected.vehicle_status import LockState
 
 from homeassistant.components.lock import LockEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DOMAIN as BMW_DOMAIN, BMWConnectedDriveBaseEntity
-from .const import CONF_ACCOUNT, DATA_ENTRIES
+from . import BMWConnectedDriveBaseEntity
+from .const import DOMAIN
+from .coordinator import BMWDataUpdateCoordinator
 
 DOOR_LOCK_STATE = "door_lock_state"
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the BMW ConnectedDrive binary sensors from config entry."""
-    account = hass.data[BMW_DOMAIN][DATA_ENTRIES][config_entry.entry_id][CONF_ACCOUNT]
-    entities = []
+    coordinator: BMWDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    if not account.read_only:
-        for vehicle in account.account.vehicles:
-            device = BMWLock(account, vehicle, "lock", "BMW lock")
-            entities.append(device)
-    async_add_entities(entities, True)
+    entities: list[BMWLock] = []
+
+    for vehicle in coordinator.account.vehicles:
+        if not coordinator.read_only:
+            entities.append(BMWLock(coordinator, vehicle, "lock", "BMW lock"))
+    async_add_entities(entities)
 
 
 class BMWLock(BMWConnectedDriveBaseEntity, LockEntity):
     """Representation of a BMW vehicle lock."""
 
-    def __init__(self, account, vehicle, attribute: str, sensor_name):
+    def __init__(
+        self,
+        coordinator: BMWDataUpdateCoordinator,
+        vehicle: ConnectedDriveVehicle,
+        attribute: str,
+        sensor_name: str,
+    ) -> None:
         """Initialize the lock."""
-        super().__init__(account, vehicle)
+        super().__init__(coordinator, vehicle)
 
         self._attribute = attribute
         self._attr_name = f"{vehicle.name} {attribute}"
@@ -37,37 +55,45 @@ class BMWLock(BMWConnectedDriveBaseEntity, LockEntity):
         self._sensor_name = sensor_name
         self.door_lock_state_available = DOOR_LOCK_STATE in vehicle.available_attributes
 
-    def lock(self, **kwargs):
+    def lock(self, **kwargs: Any) -> None:
         """Lock the car."""
-        _LOGGER.debug("%s: locking doors", self._vehicle.name)
-        # Optimistic state set here because it takes some time before the
-        # update callback response
-        self._attr_is_locked = True
-        self.schedule_update_ha_state()
-        self._vehicle.remote_services.trigger_remote_door_lock()
-
-    def unlock(self, **kwargs):
-        """Unlock the car."""
-        _LOGGER.debug("%s: unlocking doors", self._vehicle.name)
-        # Optimistic state set here because it takes some time before the
-        # update callback response
-        self._attr_is_locked = False
-        self.schedule_update_ha_state()
-        self._vehicle.remote_services.trigger_remote_door_unlock()
-
-    def update(self):
-        """Update state of the lock."""
-        _LOGGER.debug("%s: updating data for %s", self._vehicle.name, self._attribute)
-        if self._vehicle.state.door_lock_state in [LockState.LOCKED, LockState.SECURED]:
-            self._attr_is_locked = True
-        else:
-            self._attr_is_locked = False
-        if not self.door_lock_state_available:
-            self._attr_is_locked = None
-
-        vehicle_state = self._vehicle.state
-        result = self._attrs.copy()
+        _LOGGER.debug("%s: locking doors", self.vehicle.name)
+        # Only update the HA state machine if the vehicle reliably reports its lock state
         if self.door_lock_state_available:
-            result["door_lock_state"] = vehicle_state.door_lock_state.value
-            result["last_update_reason"] = vehicle_state.last_update_reason
-        self._attr_extra_state_attributes = result
+            # Optimistic state set here because it takes some time before the
+            # update callback response
+            self._attr_is_locked = True
+            self.schedule_update_ha_state()
+        self.vehicle.remote_services.trigger_remote_door_lock()
+
+    def unlock(self, **kwargs: Any) -> None:
+        """Unlock the car."""
+        _LOGGER.debug("%s: unlocking doors", self.vehicle.name)
+        # Only update the HA state machine if the vehicle reliably reports its lock state
+        if self.door_lock_state_available:
+            # Optimistic state set here because it takes some time before the
+            # update callback response
+            self._attr_is_locked = False
+            self.schedule_update_ha_state()
+        self.vehicle.remote_services.trigger_remote_door_unlock()
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        _LOGGER.debug("Updating lock data of %s", self.vehicle.name)
+        # Only update the HA state machine if the vehicle reliably reports its lock state
+        if self.door_lock_state_available:
+            vehicle_state = self.vehicle.status
+            self._attr_is_locked = vehicle_state.door_lock_state in {
+                LockState.LOCKED,
+                LockState.SECURED,
+            }
+            self._attr_extra_state_attributes = dict(
+                self._attrs,
+                **{
+                    "door_lock_state": vehicle_state.door_lock_state.value,
+                    "last_update_reason": vehicle_state.last_update_reason,
+                },
+            )
+
+        super()._handle_coordinator_update()

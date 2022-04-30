@@ -6,7 +6,7 @@ import logging
 
 from async_timeout import timeout
 
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_entry_flow
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -16,7 +16,7 @@ from .discovery import async_start_discovery_service, async_stop_discovery_servi
 _LOGGER = logging.getLogger(__name__)
 
 
-async def _async_has_devices(hass):
+async def _async_has_devices(hass: HomeAssistant) -> bool:
 
     controller_ready = asyncio.Event()
 

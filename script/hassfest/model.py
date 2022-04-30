@@ -32,6 +32,7 @@ class Config:
     requirements: bool = attr.ib()
     errors: list[Error] = attr.ib(factory=list)
     cache: dict[str, Any] = attr.ib(factory=dict)
+    plugins: set[str] = attr.ib(factory=set)
 
     def add_error(self, *args: Any, **kwargs: Any) -> None:
         """Add an error."""
@@ -97,6 +98,11 @@ class Integration:
         return self.manifest.get("quality_scale")
 
     @property
+    def config_flow(self) -> str:
+        """Return if the integration has a config flow."""
+        return self.manifest.get("config_flow")
+
+    @property
     def requirements(self) -> list[str]:
         """List of requirements."""
         return self.manifest.get("requirements", [])
@@ -105,6 +111,11 @@ class Integration:
     def dependencies(self) -> list[str]:
         """List of dependencies."""
         return self.manifest.get("dependencies", [])
+
+    @property
+    def integration_type(self) -> str:
+        """Get integration_type."""
+        return self.manifest.get("integration_type", "integration")
 
     def add_error(self, *args: Any, **kwargs: Any) -> None:
         """Add an error."""

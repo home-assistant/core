@@ -12,13 +12,13 @@
             "invalid_key": "Kunci gateway tidak valid",
             "invalid_mac": "Alamat MAC Tidak Valid"
         },
-        "flow_title": "Xiaomi Aqara Gateway: {name}",
+        "flow_title": "{name}",
         "step": {
             "select": {
                 "data": {
                     "select_ip": "Alamat IP"
                 },
-                "description": "Jalankan penyiapan lagi jika Anda ingin menghubungkan gateway lainnya",
+                "description": "Pilih Gateway Xiaomi Aqara yang ingin disambungkan",
                 "title": "Pilih Gateway Xiaomi Aqara yang ingin dihubungkan"
             },
             "settings": {
@@ -27,7 +27,7 @@
                     "name": "Nama Gateway"
                 },
                 "description": "Kunci (kata sandi) dapat diambil menggunakan tutorial ini: https://www.domoticz.com/wiki/Xiaomi_Gateway_(Aqara)#Adding_the_Xiaomi_Gateway_to_Domoticz. Jika kunci tidak disediakan, hanya sensor yang akan dapat diakses",
-                "title": "Xiaomi Aqara Gateway, pengaturan opsional"
+                "title": "Pengaturan opsional"
             },
             "user": {
                 "data": {
@@ -35,7 +35,7 @@
                     "interface": "Antarmuka jaringan yang akan digunakan",
                     "mac": "Alamat MAC (opsional)"
                 },
-                "description": "Hubungkan ke Xiaomi Aqara Gateway Anda, jika alamat IP dan MAC dibiarkan kosong, penemuan otomatis digunakan",
+                "description": "Jika alamat IP dan MAC dikosongkan, penemuan otomatis digunakan",
                 "title": "Xiaomi Aqara Gateway"
             }
         }

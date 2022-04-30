@@ -1,25 +1,45 @@
 """Test configuration for the ZHA component."""
+import itertools
+import time
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 import pytest
 import zigpy
 from zigpy.application import ControllerApplication
 import zigpy.config
+from zigpy.const import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
+import zigpy.device
 import zigpy.group
+import zigpy.profiles
+from zigpy.state import State
 import zigpy.types
+import zigpy.zdo.types as zdo_t
 
 from homeassistant.components.zha import DOMAIN
 import homeassistant.components.zha.core.const as zha_const
 import homeassistant.components.zha.core.device as zha_core_device
 from homeassistant.setup import async_setup_component
 
-from .common import FakeDevice, FakeEndpoint, get_zha_gateway
-
 from tests.common import MockConfigEntry
 from tests.components.light.conftest import mock_light_profiles  # noqa: F401
+from tests.components.zha import common
 
 FIXTURE_GRP_ID = 0x1001
 FIXTURE_GRP_NAME = "fixture group"
+
+
+@pytest.fixture(scope="session", autouse=True)
+def globally_load_quirks():
+    """Load quirks automatically so that ZHA tests run deterministically in isolation.
+
+    If portions of the ZHA test suite that do not happen to load quirks are run
+    independently, bugs can emerge that will show up only when more of the test suite is
+    run.
+    """
+
+    import zhaquirks
+
+    zhaquirks.setup()
 
 
 @pytest.fixture
@@ -35,6 +55,7 @@ def zigpy_app_controller():
     app.ieee.return_value = zigpy.types.EUI64.convert("00:15:8d:00:02:32:4f:32")
     type(app).nwk = PropertyMock(return_value=zigpy.types.NWK(0x0000))
     type(app).devices = PropertyMock(return_value={})
+    type(app).state = PropertyMock(return_value=State())
     return app
 
 
@@ -112,25 +133,39 @@ def zigpy_device_mock(zigpy_app_controller):
         node_descriptor=b"\x02@\x807\x10\x7fd\x00\x00*d\x00\x00",
         nwk=0xB79C,
         patch_cluster=True,
+        quirk=None,
     ):
         """Make a fake device using the specified cluster classes."""
-        device = FakeDevice(
-            zigpy_app_controller, ieee, manufacturer, model, node_descriptor, nwk=nwk
+        device = zigpy.device.Device(
+            zigpy_app_controller, zigpy.types.EUI64.convert(ieee), nwk
         )
+        device.manufacturer = manufacturer
+        device.model = model
+        device.node_desc = zdo_t.NodeDescriptor.deserialize(node_descriptor)[0]
+        device.last_seen = time.time()
+
         for epid, ep in endpoints.items():
-            endpoint = FakeEndpoint(manufacturer, model, epid)
-            endpoint.device = device
-            device.endpoints[epid] = endpoint
-            endpoint.device_type = ep["device_type"]
-            profile_id = ep.get("profile_id")
-            if profile_id:
-                endpoint.profile_id = profile_id
+            endpoint = device.add_endpoint(epid)
+            endpoint.device_type = ep[SIG_EP_TYPE]
+            endpoint.profile_id = ep.get(SIG_EP_PROFILE)
+            endpoint.request = AsyncMock(return_value=[0])
 
-            for cluster_id in ep.get("in_clusters", []):
-                endpoint.add_input_cluster(cluster_id, _patch_cluster=patch_cluster)
+            for cluster_id in ep.get(SIG_EP_INPUT, []):
+                endpoint.add_input_cluster(cluster_id)
 
-            for cluster_id in ep.get("out_clusters", []):
-                endpoint.add_output_cluster(cluster_id, _patch_cluster=patch_cluster)
+            for cluster_id in ep.get(SIG_EP_OUTPUT, []):
+                endpoint.add_output_cluster(cluster_id)
+
+        if quirk:
+            device = quirk(zigpy_app_controller, device.ieee, device.nwk, device)
+
+        if patch_cluster:
+            for endpoint in (ep for epid, ep in device.endpoints.items() if epid):
+                endpoint.request = AsyncMock(return_value=[0])
+                for cluster in itertools.chain(
+                    endpoint.in_clusters.values(), endpoint.out_clusters.values()
+                ):
+                    common.patch_cluster(cluster)
 
         return device
 
@@ -142,8 +177,9 @@ def zha_device_joined(hass, setup_zha):
     """Return a newly joined ZHA device."""
 
     async def _zha_device(zigpy_dev):
+        zigpy_dev.last_seen = time.time()
         await setup_zha()
-        zha_gateway = get_zha_gateway(hass)
+        zha_gateway = common.get_zha_gateway(hass)
         await zha_gateway.async_device_initialized(zigpy_dev)
         await hass.async_block_till_done()
         return zha_gateway.get_device(zigpy_dev.ieee)

@@ -35,6 +35,16 @@
             }
         }
     },
+    "device_automation": {
+        "action_type": {
+            "send_command": "Befehl senden: {subtype}",
+            "send_status": "Statusaktualisierung senden: {subtype}"
+        },
+        "trigger_type": {
+            "command": "Empfangener Befehl: {subtype}",
+            "status": "Erhaltener Status: {subtype}"
+        }
+    },
     "options": {
         "error": {
             "already_configured_device": "Ger\u00e4t ist bereits konfiguriert",
@@ -51,6 +61,7 @@
                     "debug": "Debugging aktivieren",
                     "device": "Zu konfigurierendes Ger\u00e4t ausw\u00e4hlen",
                     "event_code": "Ereigniscode zum Hinzuf\u00fcgen eingeben",
+                    "protocols": "Protokolle",
                     "remove_device": "Zu l\u00f6schendes Ger\u00e4t ausw\u00e4hlen"
                 },
                 "title": "Rfxtrx Optionen"

@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El compte ja est\u00e0 configurat",
+            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "incorrect_api_key": "Clau API inv\u00e0lida per al compte seleccionat",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
+            "invalid_station": "No s'ha trobat cap estaci\u00f3 amb el nom especificat",
+            "invalid_time": "Hora proporcionada inv\u00e0lida",
+            "more_stations": "S'han trobat m\u00faltiples estacions amb el nom especificat"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "Clau API"
+                }
+            },
+            "user": {
+                "data": {
+                    "api_key": "Clau API",
+                    "from": "Des de l'estaci\u00f3",
+                    "time": "Hora (opcional)",
+                    "to": "A l'estaci\u00f3",
+                    "weekday": "Dies"
+                }
+            }
+        }
+    }
+}

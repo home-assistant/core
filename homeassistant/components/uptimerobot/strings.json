@@ -1,0 +1,32 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "You need to supply the 'main' API key from UptimeRobot",
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        }
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "You need to supply a new 'main' API key from UptimeRobot",
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "not_main_key": "Wrong API key type detected, use the 'main' API key",
+      "reauth_failed_matching_account": "The API key you provided does not match the account ID for existing configuration."
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reauth_failed_existing": "Could not update the config entry, please remove the integration and set it up again.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  }
+}

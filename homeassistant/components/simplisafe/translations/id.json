@@ -2,9 +2,11 @@
     "config": {
         "abort": {
             "already_configured": "Akun SimpliSafe ini sudah digunakan.",
-            "reauth_successful": "Autentikasi ulang berhasil"
+            "reauth_successful": "Autentikasi ulang berhasil",
+            "wrong_account": "Kredensial pengguna yang diberikan tidak cocok dengan akun SimpliSafe ini."
         },
         "error": {
+            "2fa_timed_out": "Tenggang waktu habis saat menunggu autentikasi dua faktor",
             "identifier_exists": "Akun sudah terdaftar",
             "invalid_auth": "Autentikasi tidak valid",
             "still_awaiting_mfa": "Masih menunggu pengeklikan dari email MFA",
@@ -12,22 +14,29 @@
         },
         "step": {
             "mfa": {
-                "description": "Periksa email Anda untuk mendapatkan tautan dari SimpliSafe. Setelah memverifikasi tautan, kembali ke sini untuk menyelesaikan instalasi integrasi.",
                 "title": "Autentikasi Multi-Faktor SimpliSafe"
             },
             "reauth_confirm": {
                 "data": {
                     "password": "Kata Sandi"
                 },
-                "description": "Token akses Anda telah kedaluwarsa atau dicabut. Masukkan kata sandi Anda untuk menautkan kembali akun Anda.",
+                "description": "Masukkan kembali kata sandi untuk {username}.",
                 "title": "Autentikasi Ulang Integrasi"
+            },
+            "sms_2fa": {
+                "data": {
+                    "code": "Kode"
+                },
+                "description": "Masukkan kode autentikasi dua faktor yang dikirimkan kepada Anda melalui SMS."
             },
             "user": {
                 "data": {
+                    "auth_code": "Kode Otorisasi",
                     "code": "Kode (digunakan di antarmuka Home Assistant)",
                     "password": "Kata Sandi",
-                    "username": "Email"
+                    "username": "Nama Pengguna"
                 },
+                "description": "Masukkan nama pengguna dan kata sandi Anda.",
                 "title": "Isi informasi Anda."
             }
         }

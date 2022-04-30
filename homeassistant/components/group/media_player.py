@@ -1,7 +1,7 @@
 """This platform allows several media players to be grouped into one media player."""
 from __future__ import annotations
 
-from typing import Any, Callable
+from typing import Any
 
 import voluptuous as vol
 
@@ -15,47 +15,36 @@ from homeassistant.components.media_player import (
     DOMAIN,
     PLATFORM_SCHEMA,
     SERVICE_CLEAR_PLAYLIST,
-    SERVICE_MEDIA_NEXT_TRACK,
-    SERVICE_MEDIA_PAUSE,
-    SERVICE_MEDIA_PLAY,
-    SERVICE_MEDIA_PREVIOUS_TRACK,
-    SERVICE_MEDIA_SEEK,
-    SERVICE_MEDIA_STOP,
     SERVICE_PLAY_MEDIA,
-    SERVICE_SHUFFLE_SET,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    SERVICE_VOLUME_MUTE,
-    SERVICE_VOLUME_SET,
-    SUPPORT_CLEAR_PLAYLIST,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SEEK,
-    SUPPORT_SHUFFLE_SET,
-    SUPPORT_STOP,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
     MediaPlayerEntity,
+    MediaPlayerEntityFeature,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     CONF_ENTITIES,
     CONF_NAME,
     CONF_UNIQUE_ID,
+    SERVICE_MEDIA_NEXT_TRACK,
+    SERVICE_MEDIA_PAUSE,
+    SERVICE_MEDIA_PLAY,
+    SERVICE_MEDIA_PREVIOUS_TRACK,
+    SERVICE_MEDIA_SEEK,
+    SERVICE_MEDIA_STOP,
+    SERVICE_SHUFFLE_SET,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    SERVICE_VOLUME_MUTE,
+    SERVICE_VOLUME_SET,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, State, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
 
@@ -82,20 +71,36 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    async_add_entities: Callable,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Media Group platform."""
+    """Set up the MediaPlayer Group platform."""
     async_add_entities(
         [
-            MediaGroup(
+            MediaPlayerGroup(
                 config.get(CONF_UNIQUE_ID), config[CONF_NAME], config[CONF_ENTITIES]
             )
         ]
     )
 
 
-class MediaGroup(MediaPlayerEntity):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Initialize MediaPlayer Group config entry."""
+    registry = er.async_get(hass)
+    entities = er.async_validate_entity_ids(
+        registry, config_entry.options[CONF_ENTITIES]
+    )
+
+    async_add_entities(
+        [MediaPlayerGroup(config_entry.entry_id, config_entry.title, entities)]
+    )
+
+
+class MediaPlayerGroup(MediaPlayerEntity):
     """Representation of a Media Group."""
 
     def __init__(self, unique_id: str | None, name: str, entities: list[str]) -> None:
@@ -122,7 +127,7 @@ class MediaGroup(MediaPlayerEntity):
         """Update supported features and state when a new state is received."""
         self.async_set_context(event.context)
         self.async_update_supported_features(
-            event.data.get("entity_id"), event.data.get("new_state")  # type: ignore
+            event.data.get("entity_id"), event.data.get("new_state")  # type: ignore[arg-type]
         )
         self.async_update_state()
 
@@ -139,36 +144,47 @@ class MediaGroup(MediaPlayerEntity):
             return
 
         new_features = new_state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-        if new_features & SUPPORT_CLEAR_PLAYLIST:
+        if new_features & MediaPlayerEntityFeature.CLEAR_PLAYLIST:
             self._features[KEY_CLEAR_PLAYLIST].add(entity_id)
         else:
             self._features[KEY_CLEAR_PLAYLIST].discard(entity_id)
-        if new_features & (SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK):
+        if new_features & (
+            MediaPlayerEntityFeature.NEXT_TRACK
+            | MediaPlayerEntityFeature.PREVIOUS_TRACK
+        ):
             self._features[KEY_TRACKS].add(entity_id)
         else:
             self._features[KEY_TRACKS].discard(entity_id)
-        if new_features & (SUPPORT_PAUSE | SUPPORT_PLAY | SUPPORT_STOP):
+        if new_features & (
+            MediaPlayerEntityFeature.PAUSE
+            | MediaPlayerEntityFeature.PLAY
+            | MediaPlayerEntityFeature.STOP
+        ):
             self._features[KEY_PAUSE_PLAY_STOP].add(entity_id)
         else:
             self._features[KEY_PAUSE_PLAY_STOP].discard(entity_id)
-        if new_features & SUPPORT_PLAY_MEDIA:
+        if new_features & MediaPlayerEntityFeature.PLAY_MEDIA:
             self._features[KEY_PLAY_MEDIA].add(entity_id)
         else:
             self._features[KEY_PLAY_MEDIA].discard(entity_id)
-        if new_features & SUPPORT_SEEK:
+        if new_features & MediaPlayerEntityFeature.SEEK:
             self._features[KEY_SEEK].add(entity_id)
         else:
             self._features[KEY_SEEK].discard(entity_id)
-        if new_features & SUPPORT_SHUFFLE_SET:
+        if new_features & MediaPlayerEntityFeature.SHUFFLE_SET:
             self._features[KEY_SHUFFLE].add(entity_id)
         else:
             self._features[KEY_SHUFFLE].discard(entity_id)
-        if new_features & (SUPPORT_TURN_ON | SUPPORT_TURN_OFF):
+        if new_features & (
+            MediaPlayerEntityFeature.TURN_ON | MediaPlayerEntityFeature.TURN_OFF
+        ):
             self._features[KEY_ON_OFF].add(entity_id)
         else:
             self._features[KEY_ON_OFF].discard(entity_id)
         if new_features & (
-            SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_STEP
+            MediaPlayerEntityFeature.VOLUME_MUTE
+            | MediaPlayerEntityFeature.VOLUME_SET
+            | MediaPlayerEntityFeature.VOLUME_STEP
         ):
             self._features[KEY_VOLUME].add(entity_id)
         else:
@@ -205,7 +221,7 @@ class MediaGroup(MediaPlayerEntity):
         return False
 
     @property
-    def device_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Return the state attributes for the media group."""
         return {ATTR_ENTITY_ID: self._entities}
 
@@ -360,14 +376,14 @@ class MediaGroup(MediaPlayerEntity):
     async def async_volume_up(self) -> None:
         """Turn volume up for media player(s)."""
         for entity in self._features[KEY_VOLUME]:
-            volume_level = self.hass.states.get(entity).attributes["volume_level"]  # type: ignore
+            volume_level = self.hass.states.get(entity).attributes["volume_level"]  # type: ignore[union-attr]
             if volume_level < 1:
                 await self.async_set_volume_level(min(1, volume_level + 0.1))
 
     async def async_volume_down(self) -> None:
         """Turn volume down for media player(s)."""
         for entity in self._features[KEY_VOLUME]:
-            volume_level = self.hass.states.get(entity).attributes["volume_level"]  # type: ignore
+            volume_level = self.hass.states.get(entity).attributes["volume_level"]  # type: ignore[union-attr]
             if volume_level > 0:
                 await self.async_set_volume_level(max(0, volume_level - 0.1))
 
@@ -389,32 +405,35 @@ class MediaGroup(MediaPlayerEntity):
             self._state = None
 
         supported_features = 0
-        supported_features |= (
-            SUPPORT_CLEAR_PLAYLIST if self._features[KEY_CLEAR_PLAYLIST] else 0
-        )
-        supported_features |= (
-            SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK
-            if self._features[KEY_TRACKS]
-            else 0
-        )
-        supported_features |= (
-            SUPPORT_PAUSE | SUPPORT_PLAY | SUPPORT_STOP
-            if self._features[KEY_PAUSE_PLAY_STOP]
-            else 0
-        )
-        supported_features |= (
-            SUPPORT_PLAY_MEDIA if self._features[KEY_PLAY_MEDIA] else 0
-        )
-        supported_features |= SUPPORT_SEEK if self._features[KEY_SEEK] else 0
-        supported_features |= SUPPORT_SHUFFLE_SET if self._features[KEY_SHUFFLE] else 0
-        supported_features |= (
-            SUPPORT_TURN_ON | SUPPORT_TURN_OFF if self._features[KEY_ON_OFF] else 0
-        )
-        supported_features |= (
-            SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_STEP
-            if self._features[KEY_VOLUME]
-            else 0
-        )
+        if self._features[KEY_CLEAR_PLAYLIST]:
+            supported_features |= MediaPlayerEntityFeature.CLEAR_PLAYLIST
+        if self._features[KEY_TRACKS]:
+            supported_features |= (
+                MediaPlayerEntityFeature.NEXT_TRACK
+                | MediaPlayerEntityFeature.PREVIOUS_TRACK
+            )
+        if self._features[KEY_PAUSE_PLAY_STOP]:
+            supported_features |= (
+                MediaPlayerEntityFeature.PAUSE
+                | MediaPlayerEntityFeature.PLAY
+                | MediaPlayerEntityFeature.STOP
+            )
+        if self._features[KEY_PLAY_MEDIA]:
+            supported_features |= MediaPlayerEntityFeature.PLAY_MEDIA
+        if self._features[KEY_SEEK]:
+            supported_features |= MediaPlayerEntityFeature.SEEK
+        if self._features[KEY_SHUFFLE]:
+            supported_features |= MediaPlayerEntityFeature.SHUFFLE_SET
+        if self._features[KEY_ON_OFF]:
+            supported_features |= (
+                MediaPlayerEntityFeature.TURN_ON | MediaPlayerEntityFeature.TURN_OFF
+            )
+        if self._features[KEY_VOLUME]:
+            supported_features |= (
+                MediaPlayerEntityFeature.VOLUME_MUTE
+                | MediaPlayerEntityFeature.VOLUME_SET
+                | MediaPlayerEntityFeature.VOLUME_STEP
+            )
 
         self._supported_features = supported_features
         self.async_write_ha_state()

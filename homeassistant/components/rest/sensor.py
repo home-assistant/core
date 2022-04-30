@@ -1,4 +1,6 @@
 """Support for RESTful API sensors."""
+from __future__ import annotations
+
 import json
 import logging
 from xml.parsers.expat import ExpatError
@@ -8,10 +10,13 @@ import voluptuous as vol
 import xmltodict
 
 from homeassistant.components.sensor import (
+    CONF_STATE_CLASS,
     DOMAIN as SENSOR_DOMAIN,
     PLATFORM_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
 )
+from homeassistant.components.sensor.helpers import async_parse_date_datetime
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_FORCE_UPDATE,
@@ -21,8 +26,11 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import async_get_config_and_coordinator, create_rest_data_from_config
 from .const import CONF_JSON_ATTRS, CONF_JSON_ATTRS_PATH
@@ -38,7 +46,12 @@ PLATFORM_SCHEMA = vol.All(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the RESTful sensor."""
     # Must update the sensor now (including fetching the rest resource) to
     # ensure it's updating its state.
@@ -60,6 +73,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     name = conf.get(CONF_NAME)
     unit = conf.get(CONF_UNIT_OF_MEASUREMENT)
     device_class = conf.get(CONF_DEVICE_CLASS)
+    state_class = conf.get(CONF_STATE_CLASS)
     json_attrs = conf.get(CONF_JSON_ATTRS)
     json_attrs_path = conf.get(CONF_JSON_ATTRS_PATH)
     value_template = conf.get(CONF_VALUE_TEMPLATE)
@@ -77,6 +91,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 name,
                 unit,
                 device_class,
+                state_class,
                 value_template,
                 json_attrs,
                 force_update,
@@ -97,6 +112,7 @@ class RestSensor(RestEntity, SensorEntity):
         name,
         unit_of_measurement,
         device_class,
+        state_class,
         value_template,
         json_attrs,
         force_update,
@@ -104,9 +120,7 @@ class RestSensor(RestEntity, SensorEntity):
         json_attrs_path,
     ):
         """Initialize the REST sensor."""
-        super().__init__(
-            coordinator, rest, name, device_class, resource_template, force_update
-        )
+        super().__init__(coordinator, rest, name, resource_template, force_update)
         self._state = None
         self._unit_of_measurement = unit_of_measurement
         self._value_template = value_template
@@ -114,13 +128,12 @@ class RestSensor(RestEntity, SensorEntity):
         self._attributes = None
         self._json_attrs_path = json_attrs_path
 
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return self._unit_of_measurement
+        self._attr_native_unit_of_measurement = self._unit_of_measurement
+        self._attr_device_class = device_class
+        self._attr_state_class = state_class
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
         return self._state
 
@@ -141,6 +154,7 @@ class RestSensor(RestEntity, SensorEntity):
                 content_type.startswith("text/xml")
                 or content_type.startswith("application/xml")
                 or content_type.startswith("application/xhtml+xml")
+                or content_type.startswith("application/rss+xml")
             ):
                 try:
                     value = json.dumps(xmltodict.parse(value))
@@ -185,4 +199,13 @@ class RestSensor(RestEntity, SensorEntity):
                 value, None
             )
 
-        self._state = value
+        if value is None or self.device_class not in (
+            SensorDeviceClass.DATE,
+            SensorDeviceClass.TIMESTAMP,
+        ):
+            self._state = value
+            return
+
+        self._state = async_parse_date_datetime(
+            value, self.entity_id, self.device_class
+        )

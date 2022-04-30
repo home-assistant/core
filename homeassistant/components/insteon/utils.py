@@ -4,7 +4,7 @@ import logging
 
 from pyinsteon import devices
 from pyinsteon.address import Address
-from pyinsteon.constants import ALDBStatus
+from pyinsteon.constants import ALDBStatus, DeviceAction
 from pyinsteon.events import OFF_EVENT, OFF_FAST_EVENT, ON_EVENT, ON_FAST_EVENT
 from pyinsteon.managers.link_manager import (
     async_enter_linking_mode,
@@ -27,7 +27,7 @@ from homeassistant.const import (
     CONF_PLATFORM,
     ENTITY_MATCH_ALL,
 )
-from homeassistant.core import callback
+from homeassistant.core import ServiceCall, callback
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -137,9 +137,10 @@ def register_new_device_callback(hass):
     """Register callback for new Insteon device."""
 
     @callback
-    def async_new_insteon_device(address=None):
+    def async_new_insteon_device(address, action: DeviceAction):
         """Detect device from transport to be delegated to platform."""
-        hass.async_create_task(async_create_new_entities(address))
+        if action == DeviceAction.ADDED:
+            hass.async_create_task(async_create_new_entities(address))
 
     async def async_create_new_entities(address):
         _LOGGER.debug(
@@ -166,19 +167,19 @@ def async_register_services(hass):
 
     save_lock = asyncio.Lock()
 
-    async def async_srv_add_all_link(service):
+    async def async_srv_add_all_link(service: ServiceCall) -> None:
         """Add an INSTEON All-Link between two devices."""
-        group = service.data.get(SRV_ALL_LINK_GROUP)
-        mode = service.data.get(SRV_ALL_LINK_MODE)
+        group = service.data[SRV_ALL_LINK_GROUP]
+        mode = service.data[SRV_ALL_LINK_MODE]
         link_mode = mode.lower() == SRV_CONTROLLER
         await async_enter_linking_mode(link_mode, group)
 
-    async def async_srv_del_all_link(service):
+    async def async_srv_del_all_link(service: ServiceCall) -> None:
         """Delete an INSTEON All-Link between two devices."""
         group = service.data.get(SRV_ALL_LINK_GROUP)
         await async_enter_unlinking_mode(group)
 
-    async def async_srv_load_aldb(service):
+    async def async_srv_load_aldb(service: ServiceCall) -> None:
         """Load the device All-Link database."""
         entity_id = service.data[CONF_ENTITY_ID]
         reload = service.data[SRV_LOAD_DB_RELOAD]
@@ -204,7 +205,7 @@ def async_register_services(hass):
             _LOGGER.debug("Saving Insteon devices")
             await devices.async_save(hass.config.config_dir)
 
-    def print_aldb(service):
+    def print_aldb(service: ServiceCall) -> None:
         """Print the All-Link Database for a device."""
         # For now this sends logs to the log file.
         # Future direction is to create an INSTEON control panel.
@@ -212,39 +213,39 @@ def async_register_services(hass):
         signal = f"{entity_id}_{SIGNAL_PRINT_ALDB}"
         dispatcher_send(hass, signal)
 
-    def print_im_aldb(service):
+    def print_im_aldb(service: ServiceCall) -> None:
         """Print the All-Link Database for a device."""
         # For now this sends logs to the log file.
         # Future direction is to create an INSTEON control panel.
         print_aldb_to_log(devices.modem.aldb)
 
-    async def async_srv_x10_all_units_off(service):
+    async def async_srv_x10_all_units_off(service: ServiceCall) -> None:
         """Send the X10 All Units Off command."""
         housecode = service.data.get(SRV_HOUSECODE)
         await async_x10_all_units_off(housecode)
 
-    async def async_srv_x10_all_lights_off(service):
+    async def async_srv_x10_all_lights_off(service: ServiceCall) -> None:
         """Send the X10 All Lights Off command."""
         housecode = service.data.get(SRV_HOUSECODE)
         await async_x10_all_lights_off(housecode)
 
-    async def async_srv_x10_all_lights_on(service):
+    async def async_srv_x10_all_lights_on(service: ServiceCall) -> None:
         """Send the X10 All Lights On command."""
         housecode = service.data.get(SRV_HOUSECODE)
         await async_x10_all_lights_on(housecode)
 
-    async def async_srv_scene_on(service):
+    async def async_srv_scene_on(service: ServiceCall) -> None:
         """Trigger an INSTEON scene ON."""
         group = service.data.get(SRV_ALL_LINK_GROUP)
         await async_trigger_scene_on(group)
 
-    async def async_srv_scene_off(service):
+    async def async_srv_scene_off(service: ServiceCall) -> None:
         """Trigger an INSTEON scene ON."""
         group = service.data.get(SRV_ALL_LINK_GROUP)
         await async_trigger_scene_off(group)
 
     @callback
-    def async_add_default_links(service):
+    def async_add_default_links(service: ServiceCall) -> None:
         """Add the default All-Link entries to a device."""
         entity_id = service.data[CONF_ENTITY_ID]
         signal = f"{entity_id}_{SIGNAL_ADD_DEFAULT_LINKS}"

@@ -5,18 +5,29 @@ from pymyq.garagedoor import (
     STATE_OPEN as MYQ_COVER_STATE_OPEN,
     STATE_OPENING as MYQ_COVER_STATE_OPENING,
 )
+from pymyq.lamp import STATE_OFF as MYQ_LIGHT_STATE_OFF, STATE_ON as MYQ_LIGHT_STATE_ON
 
-from homeassistant.const import STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_OPENING
+from homeassistant.const import (
+    STATE_CLOSED,
+    STATE_CLOSING,
+    STATE_OFF,
+    STATE_ON,
+    STATE_OPEN,
+    STATE_OPENING,
+    Platform,
+)
 
 DOMAIN = "myq"
 
-PLATFORMS = ["cover", "binary_sensor"]
+PLATFORMS = [Platform.COVER, Platform.BINARY_SENSOR, Platform.LIGHT]
 
 MYQ_TO_HASS = {
     MYQ_COVER_STATE_CLOSED: STATE_CLOSED,
     MYQ_COVER_STATE_CLOSING: STATE_CLOSING,
     MYQ_COVER_STATE_OPEN: STATE_OPEN,
     MYQ_COVER_STATE_OPENING: STATE_OPENING,
+    MYQ_LIGHT_STATE_ON: STATE_ON,
+    MYQ_LIGHT_STATE_OFF: STATE_OFF,
 }
 
 MYQ_GATEWAY = "myq_gateway"

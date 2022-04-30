@@ -1,4 +1,6 @@
 """Support for manual alarms controllable via MQTT."""
+from __future__ import annotations
+
 import copy
 import datetime
 import logging
@@ -8,12 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components import mqtt
 import homeassistant.components.alarm_control_panel as alarm
-from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_HOME,
-    SUPPORT_ALARM_ARM_NIGHT,
-    SUPPORT_ALARM_TRIGGER,
-)
+from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
 from homeassistant.const import (
     CONF_CODE,
     CONF_DELAY_TIME,
@@ -29,11 +26,14 @@ from homeassistant.const import (
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
     async_track_state_change_event,
     track_point_in_time,
 )
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -163,7 +163,12 @@ PLATFORM_SCHEMA = vol.Schema(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the manual MQTT alarm platform."""
     add_entities(
         [
@@ -198,6 +203,13 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
     the previous state or disarm if `disarm_after_trigger` is true.
     A trigger_time of zero disables the alarm_trigger service.
     """
+
+    _attr_supported_features = (
+        AlarmControlPanelEntityFeature.ARM_HOME
+        | AlarmControlPanelEntityFeature.ARM_AWAY
+        | AlarmControlPanelEntityFeature.ARM_NIGHT
+        | AlarmControlPanelEntityFeature.TRIGGER
+    )
 
     def __init__(
         self,
@@ -284,16 +296,6 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
         return self._state
 
     @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return (
-            SUPPORT_ALARM_ARM_HOME
-            | SUPPORT_ALARM_ARM_AWAY
-            | SUPPORT_ALARM_ARM_NIGHT
-            | SUPPORT_ALARM_TRIGGER
-        )
-
-    @property
     def _active_state(self):
         """Get the current state."""
         if self.state == STATE_ALARM_PENDING:
@@ -317,8 +319,8 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
         if self._code is None:
             return None
         if isinstance(self._code, str) and re.search("^\\d+$", self._code):
-            return alarm.FORMAT_NUMBER
-        return alarm.FORMAT_TEXT
+            return alarm.CodeFormat.NUMBER
+        return alarm.CodeFormat.TEXT
 
     @property
     def code_arm_required(self):
@@ -450,9 +452,8 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
 
     async def _async_state_changed_listener(self, event):
         """Publish state change to MQTT."""
-        new_state = event.data.get("new_state")
-        if new_state is None:
+        if (new_state := event.data.get("new_state")) is None:
             return
-        mqtt.async_publish(
+        await mqtt.async_publish(
             self.hass, self._state_topic, new_state.state, self._qos, True
         )

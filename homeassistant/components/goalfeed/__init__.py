@@ -6,7 +6,9 @@ import requests
 import voluptuous as vol
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 # Version downgraded due to regression in library
 # For details: https://github.com/nlsdfnbch/Pysher/issues/38
@@ -29,7 +31,7 @@ GOALFEED_AUTH_ENDPOINT = "https://goalfeed.ca/feed/auth"
 GOALFEED_APP_ID = "bfd4ed98c1ff22c04074"
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Goalfeed component."""
     conf = config[DOMAIN]
     username = conf.get(CONF_USERNAME)

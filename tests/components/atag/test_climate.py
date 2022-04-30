@@ -1,19 +1,24 @@
 """Tests for the Atag climate platform."""
 from unittest.mock import PropertyMock, patch
 
-from homeassistant.components.atag.climate import CLIMATE, DOMAIN, PRESET_MAP
+from homeassistant.components.atag.climate import DOMAIN, PRESET_MAP
 from homeassistant.components.climate import (
     ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
-    HVAC_MODE_HEAT,
+    DOMAIN as CLIMATE_DOMAIN,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,
     SERVICE_SET_TEMPERATURE,
 )
-from homeassistant.components.climate.const import CURRENT_HVAC_IDLE, PRESET_AWAY
+from homeassistant.components.climate.const import PRESET_AWAY, HVACAction, HVACMode
 from homeassistant.components.homeassistant import DOMAIN as HA_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_UNKNOWN
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_TEMPERATURE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -21,7 +26,7 @@ from homeassistant.setup import async_setup_component
 from tests.components.atag import UID, init_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
 
-CLIMATE_ID = f"{CLIMATE}.{DOMAIN}"
+CLIMATE_ID = f"{Platform.CLIMATE}.{DOMAIN}"
 
 
 async def test_climate(
@@ -33,8 +38,8 @@ async def test_climate(
 
     assert entity_registry.async_is_registered(CLIMATE_ID)
     entity = entity_registry.async_get(CLIMATE_ID)
-    assert entity.unique_id == f"{UID}-{CLIMATE}"
-    assert hass.states.get(CLIMATE_ID).attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_IDLE
+    assert entity.unique_id == f"{UID}-{Platform.CLIMATE}"
+    assert hass.states.get(CLIMATE_ID).attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
 
 
 async def test_setting_climate(
@@ -44,7 +49,7 @@ async def test_setting_climate(
     await init_integration(hass, aioclient_mock)
     with patch("pyatag.entities.Climate.set_temp") as mock_set_temp:
         await hass.services.async_call(
-            CLIMATE,
+            CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
             {ATTR_ENTITY_ID: CLIMATE_ID, ATTR_TEMPERATURE: 15},
             blocking=True,
@@ -54,7 +59,7 @@ async def test_setting_climate(
 
     with patch("pyatag.entities.Climate.set_preset_mode") as mock_set_preset:
         await hass.services.async_call(
-            CLIMATE,
+            CLIMATE_DOMAIN,
             SERVICE_SET_PRESET_MODE,
             {ATTR_ENTITY_ID: CLIMATE_ID, ATTR_PRESET_MODE: PRESET_AWAY},
             blocking=True,
@@ -64,13 +69,13 @@ async def test_setting_climate(
 
     with patch("pyatag.entities.Climate.set_hvac_mode") as mock_set_hvac:
         await hass.services.async_call(
-            CLIMATE,
+            CLIMATE_DOMAIN,
             SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: CLIMATE_ID, ATTR_HVAC_MODE: HVAC_MODE_HEAT},
+            {ATTR_ENTITY_ID: CLIMATE_ID, ATTR_HVAC_MODE: HVACMode.HEAT},
             blocking=True,
         )
         await hass.async_block_till_done()
-        mock_set_hvac.assert_called_once_with(HVAC_MODE_HEAT)
+        mock_set_hvac.assert_called_once_with(HVACMode.HEAT)
 
 
 async def test_incorrect_modes(
@@ -93,7 +98,7 @@ async def test_update_failed(
     """Test data is not destroyed on update failure."""
     entry = await init_integration(hass, aioclient_mock)
     await async_setup_component(hass, HA_DOMAIN, {})
-    assert hass.states.get(CLIMATE_ID).state == HVAC_MODE_HEAT
+    assert hass.states.get(CLIMATE_ID).state == HVACMode.HEAT
     coordinator = hass.data[DOMAIN][entry.entry_id]
     with patch("pyatag.AtagOne.update", side_effect=TimeoutError) as updater:
         await coordinator.async_refresh()

@@ -1,8 +1,9 @@
 """Constants for NuHeat thermostats."""
+from homeassistant.const import Platform
 
 DOMAIN = "nuheat"
 
-PLATFORMS = ["climate"]
+PLATFORMS = [Platform.CLIMATE]
 
 CONF_SERIAL_NUMBER = "serial_number"
 

@@ -1,0 +1,15 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Nepavyko prisijungti"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "Elektroninis pa\u0161tas",
+                    "password": "Slapta\u017eodis"
+                }
+            }
+        }
+    }
+}

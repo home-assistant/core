@@ -5,8 +5,15 @@ import logging
 import async_timeout
 from requests.exceptions import ConnectionError as ConnectError, HTTPError, Timeout
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION, ENERGY_KILO_WATT_HOUR
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -22,7 +29,9 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up the SRP Energy Usage sensor."""
     # API object stored here by __init__.py
     is_time_of_use = False
@@ -40,7 +49,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
             # Fetch srp_energy data
             start_date = datetime.now() + timedelta(days=-1)
             end_date = datetime.now()
-            with async_timeout.timeout(10):
+            async with async_timeout.timeout(10):
                 hourly_usage = await hass.async_add_executor_job(
                     api.usage,
                     start_date,
@@ -93,14 +102,14 @@ class SrpEntity(SensorEntity):
         return self.type
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
         if self._state:
             return f"{self._state:.2f}"
         return None
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
@@ -136,6 +145,16 @@ class SrpEntity(SensorEntity):
     def available(self):
         """Return if entity is available."""
         return self.coordinator.last_update_success
+
+    @property
+    def device_class(self):
+        """Return the device class."""
+        return SensorDeviceClass.ENERGY
+
+    @property
+    def state_class(self):
+        """Return the state class."""
+        return SensorStateClass.TOTAL_INCREASING
 
     async def async_added_to_hass(self):
         """When entity is added to hass."""

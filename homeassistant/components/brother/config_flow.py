@@ -9,9 +9,9 @@ from brother import Brother, SnmpError, UnsupportedModel
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
+from homeassistant.components import zeroconf
 from homeassistant.const import CONF_HOST, CONF_TYPE
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import DOMAIN, PRINTER_TYPES
 from .utils import get_snmp_engine
@@ -80,18 +80,24 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_zeroconf(
-        self, discovery_info: DiscoveryInfoType
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle zeroconf discovery."""
         # Hostname is format: brother.local.
-        self.host = discovery_info["hostname"].rstrip(".")
+        self.host = discovery_info.hostname.rstrip(".")
+
+        # Do not probe the device if the host is already configured
+        self._async_abort_entries_match({CONF_HOST: self.host})
 
         snmp_engine = get_snmp_engine(self.hass)
+        model = discovery_info.properties.get("product")
 
-        self.brother = Brother(self.host, snmp_engine=snmp_engine)
         try:
+            self.brother = Brother(self.host, snmp_engine=snmp_engine, model=model)
             await self.brother.async_update()
-        except (ConnectionError, SnmpError, UnsupportedModel):
+        except UnsupportedModel:
+            return self.async_abort(reason="unsupported_model")
+        except (ConnectionError, SnmpError):
             return self.async_abort(reason="cannot_connect")
 
         # Check if already configured

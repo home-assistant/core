@@ -9,7 +9,7 @@ from pysiaalarm.aio import CommunicationsProtocol, SIAAccount, SIAClient, SIAEve
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT, CONF_PROTOCOL, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -26,7 +26,6 @@ from .const import (
 from .utils import get_event_data_from_sia_event
 
 _LOGGER = logging.getLogger(__name__)
-
 
 DEFAULT_TIMEBAND = (80, 40)
 IGNORED_TIMEBAND = (3600, 1800)
@@ -50,10 +49,11 @@ class SIAHub:
         self.sia_accounts: list[SIAAccount] | None = None
         self.sia_client: SIAClient = None
 
-    async def async_setup_hub(self) -> None:
+    @callback
+    def async_setup_hub(self) -> None:
         """Add a device to the device_registry, register shutdown listener, load reactions."""
         self.update_accounts()
-        device_registry = await dr.async_get_registry(self._hass)
+        device_registry = dr.async_get(self._hass)
         for acc in self._accounts:
             account = acc[CONF_ACCOUNT]
             device_registry.async_get_or_create(

@@ -33,14 +33,20 @@
             "button": "Pulsante",
             "button1": "Primo pulsante",
             "button2": "Secondo pulsante",
-            "button3": "Terzo pulsante"
+            "button3": "Terzo pulsante",
+            "button4": "Quarto pulsante"
         },
         "trigger_type": {
+            "btn_down": "{subtype} pulsante in gi\u00f9",
+            "btn_up": "{subtype} pulsante in su",
             "double": "{subtype} premuto due volte",
+            "double_push": "{subtype} doppia pressione",
             "long": "{subtype} premuto a lungo",
+            "long_push": "{subtype} pressione prolungata",
             "long_single": "{subtype} premuto a lungo e poi singolarmente",
             "single": "{subtype} premuto singolarmente",
             "single_long": "{subtype} premuto singolarmente e poi a lungo",
+            "single_push": "{subtype} singola pressione",
             "triple": "{subtype} premuto tre volte"
         }
     }

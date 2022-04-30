@@ -1,5 +1,6 @@
 """Support for exposing regular REST commands as services."""
 import asyncio
+from http import HTTPStatus
 import logging
 
 import aiohttp
@@ -15,11 +16,11 @@ from homeassistant.const import (
     CONF_URL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
-    HTTP_BAD_REQUEST,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "rest_command"
 
@@ -54,7 +55,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the REST command component."""
 
     @callback
@@ -88,7 +89,7 @@ async def async_setup(hass, config):
         if CONF_CONTENT_TYPE in command_config:
             content_type = command_config[CONF_CONTENT_TYPE]
 
-        async def async_service_handler(service):
+        async def async_service_handler(service: ServiceCall) -> None:
             """Execute a shell command service."""
             payload = None
             if template_payload:
@@ -125,7 +126,7 @@ async def async_setup(hass, config):
                     timeout=timeout,
                 ) as response:
 
-                    if response.status < HTTP_BAD_REQUEST:
+                    if response.status < HTTPStatus.BAD_REQUEST:
                         _LOGGER.debug(
                             "Success. Url: %s. Status code: %d. Payload: %s",
                             response.url,
@@ -143,8 +144,12 @@ async def async_setup(hass, config):
             except asyncio.TimeoutError:
                 _LOGGER.warning("Timeout call %s", request_url)
 
-            except aiohttp.ClientError:
-                _LOGGER.error("Client error %s", request_url)
+            except aiohttp.ClientError as err:
+                _LOGGER.error(
+                    "Client error. Url: %s. Error: %s",
+                    request_url,
+                    err,
+                )
 
         # register services
         hass.services.async_register(DOMAIN, name, async_service_handler)

@@ -6,7 +6,7 @@ from homeassistant.components.coinbase.const import (
 )
 from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN
 
-from .const import GOOD_EXCHNAGE_RATE, GOOD_EXCHNAGE_RATE_2, MOCK_ACCOUNTS_RESPONSE
+from .const import GOOD_EXCHANGE_RATE, GOOD_EXCHANGE_RATE_2, MOCK_ACCOUNTS_RESPONSE
 
 from tests.common import MockConfigEntry
 
@@ -44,7 +44,7 @@ class MockGetAccounts:
 
 
 def mocked_get_accounts(_, **kwargs):
-    """Return simplied accounts using mock."""
+    """Return simplified accounts using mock."""
     return MockGetAccounts(**kwargs)
 
 
@@ -60,20 +60,20 @@ def mock_get_exchange_rates():
     """Return a heavily reduced mock list of exchange rates for testing."""
     return {
         "currency": "USD",
-        "rates": {GOOD_EXCHNAGE_RATE_2: "0.109", GOOD_EXCHNAGE_RATE: "0.00002"},
+        "rates": {GOOD_EXCHANGE_RATE_2: "0.109", GOOD_EXCHANGE_RATE: "0.00002"},
     }
 
 
-async def init_mock_coinbase(hass):
+async def init_mock_coinbase(hass, currencies=None, rates=None):
     """Init Coinbase integration for testing."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="abcde12345",
+        unique_id=None,
         title="Test User",
         data={CONF_API_KEY: "123456", CONF_API_TOKEN: "AbCDeF"},
         options={
-            CONF_CURRENCIES: [],
-            CONF_EXCHANGE_RATES: [],
+            CONF_CURRENCIES: currencies or [],
+            CONF_EXCHANGE_RATES: rates or [],
         },
     )
     config_entry.add_to_hass(hass)

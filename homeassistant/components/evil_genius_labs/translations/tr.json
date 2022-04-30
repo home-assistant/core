@@ -1,0 +1,16 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "timeout": "Ba\u011flant\u0131 kurulurken zaman a\u015f\u0131m\u0131",
+            "unknown": "Beklenmeyen hata"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Sunucu"
+                }
+            }
+        }
+    }
+}

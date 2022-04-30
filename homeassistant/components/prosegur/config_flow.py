@@ -25,11 +25,9 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 async def validate_input(hass: core.HomeAssistant, data):
     """Validate the user input allows us to connect."""
+    session = aiohttp_client.async_get_clientsession(hass)
+    auth = Auth(session, data[CONF_USERNAME], data[CONF_PASSWORD], data[CONF_COUNTRY])
     try:
-        session = aiohttp_client.async_get_clientsession(hass)
-        auth = Auth(
-            session, data[CONF_USERNAME], data[CONF_PASSWORD], data[CONF_COUNTRY]
-        )
         install = await Installation.retrieve(auth)
     except ConnectionRefusedError:
         raise InvalidAuth from ConnectionRefusedError
@@ -95,15 +93,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
-            except Exception as exception:  # pylint: disable=broad-except
-                _LOGGER.exception(exception)
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                data = self.entry.data.copy()
                 self.hass.config_entries.async_update_entry(
                     self.entry,
                     data={
-                        **data,
+                        **self.entry.data,
                         CONF_USERNAME: user_input[CONF_USERNAME],
                         CONF_PASSWORD: user_input[CONF_PASSWORD],
                     },

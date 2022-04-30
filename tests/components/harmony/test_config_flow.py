@@ -1,7 +1,10 @@
 """Test the Logitech Harmony Hub config flow."""
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from homeassistant import config_entries, data_entry_flow, setup
+import aiohttp
+
+from homeassistant import config_entries, data_entry_flow
+from homeassistant.components import ssdp
 from homeassistant.components.harmony.config_flow import CannotConnect
 from homeassistant.components.harmony.const import DOMAIN, PREVIOUS_ACTIVE_ACTIVITY
 from homeassistant.const import CONF_HOST, CONF_NAME
@@ -19,7 +22,7 @@ def _get_mock_harmonyapi(connect=None, close=None):
 
 async def test_user_form(hass):
     """Test we get the user form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -48,21 +51,22 @@ async def test_user_form(hass):
 
 async def test_form_ssdp(hass):
     """Test we get the form with ssdp source."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
-    harmonyapi = _get_mock_harmonyapi(connect=True)
 
     with patch(
-        "homeassistant.components.harmony.util.HarmonyAPI",
-        return_value=harmonyapi,
+        "homeassistant.components.harmony.config_flow.HubConnector.get_remote_id",
+        return_value=1234,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_SSDP},
-            data={
-                "friendlyName": "Harmony Hub",
-                "ssdp_location": "http://192.168.1.12:8088/description",
-            },
+            data=ssdp.SsdpServiceInfo(
+                ssdp_usn="mock_usn",
+                ssdp_st="mock_st",
+                ssdp_location="http://192.168.1.12:8088/description",
+                upnp={
+                    "friendlyName": "Harmony Hub",
+                },
+            ),
         )
     assert result["type"] == "form"
     assert result["step_id"] == "link"
@@ -75,6 +79,8 @@ async def test_form_ssdp(hass):
     assert len(progress) == 1
     assert progress[0]["flow_id"] == result["flow_id"]
     assert progress[0]["context"]["confirm_only"] is True
+
+    harmonyapi = _get_mock_harmonyapi(connect=True)
 
     with patch(
         "homeassistant.components.harmony.util.HarmonyAPI",
@@ -95,9 +101,32 @@ async def test_form_ssdp(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_form_ssdp_fails_to_get_remote_id(hass):
+    """Test we abort if we cannot get the remote id."""
+
+    with patch(
+        "homeassistant.components.harmony.config_flow.HubConnector.get_remote_id",
+        side_effect=aiohttp.ClientError,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_SSDP},
+            data=ssdp.SsdpServiceInfo(
+                ssdp_usn="mock_usn",
+                ssdp_st="mock_st",
+                ssdp_location="http://192.168.1.12:8088/description",
+                upnp={
+                    "friendlyName": "Harmony Hub",
+                },
+            ),
+        )
+    assert result["type"] == "abort"
+    assert result["reason"] == "cannot_connect"
+
+
 async def test_form_ssdp_aborts_before_checking_remoteid_if_host_known(hass):
     """Test we abort without connecting if the host is already known."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={"host": "2.2.2.2", "name": "any"},
@@ -119,10 +148,14 @@ async def test_form_ssdp_aborts_before_checking_remoteid_if_host_known(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_SSDP},
-            data={
-                "friendlyName": "Harmony Hub",
-                "ssdp_location": "http://2.2.2.2:8088/description",
-            },
+            data=ssdp.SsdpServiceInfo(
+                ssdp_usn="mock_usn",
+                ssdp_st="mock_st",
+                ssdp_location="http://2.2.2.2:8088/description",
+                upnp={
+                    "friendlyName": "Harmony Hub",
+                },
+            ),
         )
     assert result["type"] == "abort"
 

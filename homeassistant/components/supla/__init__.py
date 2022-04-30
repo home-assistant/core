@@ -8,10 +8,12 @@ import async_timeout
 from asyncpysupla import SuplaAPI
 import voluptuous as vol
 
-from homeassistant.const import CONF_ACCESS_TOKEN
+from homeassistant.const import CONF_ACCESS_TOKEN, Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -26,9 +28,9 @@ CONF_SERVERS = "servers"
 SCAN_INTERVAL = timedelta(seconds=10)
 
 SUPLA_FUNCTION_HA_CMP_MAP = {
-    "CONTROLLINGTHEROLLERSHUTTER": "cover",
-    "CONTROLLINGTHEGATE": "cover",
-    "LIGHTSWITCH": "switch",
+    "CONTROLLINGTHEROLLERSHUTTER": Platform.COVER,
+    "CONTROLLINGTHEGATE": Platform.COVER,
+    "LIGHTSWITCH": Platform.SWITCH,
 }
 SUPLA_FUNCTION_NONE = "NONE"
 SUPLA_SERVERS = "supla_servers"
@@ -51,7 +53,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, base_config):
+async def async_setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
     """Set up the Supla component."""
 
     server_confs = base_config[DOMAIN][CONF_SERVERS]
@@ -96,7 +98,7 @@ async def discover_devices(hass, hass_config):
 
     Currently it is only run at startup.
     """
-    component_configs = {}
+    component_configs: dict[Platform, dict[str, dict]] = {}
 
     for server_name, server in hass.data[DOMAIN][SUPLA_SERVERS].items():
 
@@ -104,7 +106,7 @@ async def discover_devices(hass, hass_config):
             async with async_timeout.timeout(SCAN_INTERVAL.total_seconds()):
                 channels = {
                     channel["id"]: channel
-                    for channel in await server.get_channels(
+                    for channel in await server.get_channels(  # pylint: disable=cell-var-from-loop
                         include=["iodevice", "state", "connected"]
                     )
                 }
@@ -144,13 +146,12 @@ async def discover_devices(hass, hass_config):
                 continue
 
             channel["server_name"] = server_name
-            component_configs.setdefault(component_name, []).append(
-                {
-                    "channel_id": channel_id,
-                    "server_name": server_name,
-                    "function_name": channel["function"]["name"],
-                }
-            )
+            component_config = component_configs.setdefault(component_name, {})
+            component_config[f"{server_name}_{channel_id}"] = {
+                "channel_id": channel_id,
+                "server_name": server_name,
+                "function_name": channel["function"]["name"],
+            }
 
     # Load discovered devices
     for component_name, config in component_configs.items():
@@ -190,8 +191,7 @@ class SuplaChannel(CoordinatorEntity):
         """Return True if entity is available."""
         if self.channel_data is None:
             return False
-        state = self.channel_data.get("state")
-        if state is None:
+        if (state := self.channel_data.get("state")) is None:
             return False
         return state.get("connected")
 

@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El compte ja ha estat configurat",
+            "already_configured": "El compte ja est\u00e0 configurat",
+            "cloud_not_connected": "No connectat a Home Assistant Cloud.",
             "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3.",
             "webhook_not_internet_accessible": "La teva inst\u00e0ncia de Home Assistant ha de ser accessible des d'Internet per poder rebre missatges webhook."
         },

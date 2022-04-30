@@ -1,0 +1,16 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken",
+            "timeout": "Time-out bij het maken van verbinding",
+            "unknown": "Onverwachte fout"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host"
+                }
+            }
+        }
+    }
+}

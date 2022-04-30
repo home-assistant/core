@@ -1,7 +1,203 @@
 {
+    "config": {
+        "step": {
+            "binary_sensor": {
+                "data": {
+                    "all": "T\u00fcm varl\u0131klar",
+                    "entities": "\u00dcyeler",
+                    "hide_members": "\u00dcyeleri gizle",
+                    "name": "Ad"
+                },
+                "description": "\"T\u00fcm varl\u0131klar\" etkinle\u015ftirilirse, grubun durumu yaln\u0131zca t\u00fcm \u00fcyeler a\u00e7\u0131ksa a\u00e7\u0131kt\u0131r. \"T\u00fcm varl\u0131klar\" devre d\u0131\u015f\u0131 b\u0131rak\u0131l\u0131rsa, herhangi bir \u00fcye a\u00e7\u0131ksa grubun durumu a\u00e7\u0131kt\u0131r.",
+                "title": "Grup Ekle"
+            },
+            "cover": {
+                "data": {
+                    "entities": "\u00dcyeler",
+                    "hide_members": "\u00dcyeleri gizle",
+                    "name": "Ad",
+                    "title": "Grup Ekle"
+                },
+                "description": "Grup se\u00e7eneklerini se\u00e7in",
+                "title": "Grup Ekle"
+            },
+            "cover_options": {
+                "data": {
+                    "entities": "Grup \u00fcyeleri"
+                },
+                "description": "Grup se\u00e7eneklerini se\u00e7in"
+            },
+            "fan": {
+                "data": {
+                    "entities": "\u00dcyeler",
+                    "hide_members": "\u00dcyeleri gizle",
+                    "name": "Ad",
+                    "title": "Grup Ekle"
+                },
+                "description": "Grup se\u00e7eneklerini se\u00e7in",
+                "title": "Grup Ekle"
+            },
+            "fan_options": {
+                "data": {
+                    "entities": "Grup \u00fcyeleri"
+                },
+                "description": "Grup se\u00e7eneklerini se\u00e7in"
+            },
+            "init": {
+                "data": {
+                    "group_type": "Grup t\u00fcr\u00fc"
+                },
+                "description": "Grup t\u00fcr\u00fcn\u00fc se\u00e7in"
+            },
+            "light": {
+                "data": {
+                    "all": "T\u00fcm varl\u0131klar",
+                    "entities": "\u00dcyeler",
+                    "hide_members": "\u00dcyeleri gizle",
+                    "name": "Ad",
+                    "title": "Grup Ekle"
+                },
+                "description": "\"T\u00fcm varl\u0131klar\" etkinle\u015ftirilirse, grubun durumu yaln\u0131zca t\u00fcm \u00fcyeler a\u00e7\u0131ksa a\u00e7\u0131kt\u0131r. \"T\u00fcm varl\u0131klar\" devre d\u0131\u015f\u0131 b\u0131rak\u0131l\u0131rsa, herhangi bir \u00fcye a\u00e7\u0131ksa grubun durumu a\u00e7\u0131kt\u0131r.",
+                "title": "Grup Ekle"
+            },
+            "light_options": {
+                "data": {
+                    "entities": "Grup \u00fcyeleri"
+                },
+                "description": "Grup se\u00e7eneklerini se\u00e7in"
+            },
+            "lock": {
+                "data": {
+                    "entities": "\u00dcyeler",
+                    "hide_members": "\u00dcyeleri gizle",
+                    "name": "Ad"
+                },
+                "title": "Grup Ekle"
+            },
+            "media_player": {
+                "data": {
+                    "entities": "\u00dcyeler",
+                    "hide_members": "\u00dcyeleri gizle",
+                    "name": "Ad",
+                    "title": "Grup Ekle"
+                },
+                "description": "Grup se\u00e7eneklerini se\u00e7in",
+                "title": "Grup Ekle"
+            },
+            "media_player_options": {
+                "data": {
+                    "entities": "Grup \u00fcyeleri"
+                },
+                "description": "Grup se\u00e7eneklerini se\u00e7in"
+            },
+            "switch": {
+                "data": {
+                    "entities": "\u00dcyeler",
+                    "hide_members": "\u00dcyeleri gizle",
+                    "name": "Ad"
+                },
+                "title": "Grup Ekle"
+            },
+            "user": {
+                "data": {
+                    "group_type": "Grup t\u00fcr\u00fc"
+                },
+                "description": "Gruplar, ayn\u0131 t\u00fcrden birden \u00e7ok varl\u0131\u011f\u0131 temsil eden yeni bir varl\u0131k olu\u015fturman\u0131za olanak tan\u0131r.",
+                "menu_options": {
+                    "binary_sensor": "\u0130kili sens\u00f6r grubu",
+                    "cover": "Kepenk grubu",
+                    "fan": "Fan grubu",
+                    "light": "I\u015f\u0131k grubu",
+                    "lock": "Grubu kilitle",
+                    "media_player": "Medya oynat\u0131c\u0131 grubu",
+                    "switch": "Grubu de\u011fi\u015ftir"
+                },
+                "title": "Grup Ekle"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "binary_sensor": {
+                "data": {
+                    "all": "T\u00fcm varl\u0131klar",
+                    "entities": "\u00dcyeler",
+                    "hide_members": "\u00dcyeleri gizle"
+                },
+                "description": "\"T\u00fcm varl\u0131klar\" etkinle\u015ftirilirse, grubun durumu yaln\u0131zca t\u00fcm \u00fcyeler a\u00e7\u0131ksa a\u00e7\u0131kt\u0131r. \"T\u00fcm varl\u0131klar\" devre d\u0131\u015f\u0131 b\u0131rak\u0131l\u0131rsa, herhangi bir \u00fcye a\u00e7\u0131ksa grubun durumu a\u00e7\u0131kt\u0131r."
+            },
+            "binary_sensor_options": {
+                "data": {
+                    "all": "T\u00fcm varl\u0131klar",
+                    "entities": "\u00dcyeler"
+                }
+            },
+            "cover": {
+                "data": {
+                    "entities": "\u00dcyeler",
+                    "hide_members": "\u00dcyeleri gizle"
+                }
+            },
+            "cover_options": {
+                "data": {
+                    "entities": "\u00dcyeler"
+                }
+            },
+            "fan": {
+                "data": {
+                    "entities": "\u00dcyeler",
+                    "hide_members": "\u00dcyeleri gizle"
+                }
+            },
+            "fan_options": {
+                "data": {
+                    "entities": "\u00dcyeler"
+                }
+            },
+            "light": {
+                "data": {
+                    "all": "T\u00fcm varl\u0131klar",
+                    "entities": "\u00dcyeler",
+                    "hide_members": "\u00dcyeleri gizle"
+                },
+                "description": "\"T\u00fcm varl\u0131klar\" etkinle\u015ftirilirse, grubun durumu yaln\u0131zca t\u00fcm \u00fcyeler a\u00e7\u0131ksa a\u00e7\u0131kt\u0131r. \"T\u00fcm varl\u0131klar\" devre d\u0131\u015f\u0131 b\u0131rak\u0131l\u0131rsa, herhangi bir \u00fcye a\u00e7\u0131ksa grubun durumu a\u00e7\u0131kt\u0131r."
+            },
+            "light_options": {
+                "data": {
+                    "all": "T\u00fcm varl\u0131klar",
+                    "entities": "\u00dcyeler"
+                }
+            },
+            "lock": {
+                "data": {
+                    "entities": "\u00dcyeler",
+                    "hide_members": "\u00dcyeleri gizle"
+                }
+            },
+            "media_player": {
+                "data": {
+                    "entities": "\u00dcyeler",
+                    "hide_members": "\u00dcyeleri gizle"
+                }
+            },
+            "media_player_options": {
+                "data": {
+                    "entities": "\u00dcyeler"
+                }
+            },
+            "switch": {
+                "data": {
+                    "all": "T\u00fcm varl\u0131klar",
+                    "entities": "\u00dcyeler",
+                    "hide_members": "\u00dcyeleri gizle"
+                },
+                "description": "\"T\u00fcm varl\u0131klar\" etkinle\u015ftirilirse, grubun durumu yaln\u0131zca t\u00fcm \u00fcyeler a\u00e7\u0131ksa a\u00e7\u0131kt\u0131r. \"T\u00fcm varl\u0131klar\" devre d\u0131\u015f\u0131 b\u0131rak\u0131l\u0131rsa, herhangi bir \u00fcye a\u00e7\u0131ksa grubun durumu a\u00e7\u0131kt\u0131r."
+            }
+        }
+    },
     "state": {
         "_": {
-            "closed": "Kapand\u0131",
+            "closed": "Kapal\u0131",
             "home": "Evde",
             "locked": "Kilitli",
             "not_home": "D\u0131\u015far\u0131da",
@@ -9,7 +205,7 @@
             "ok": "Tamam",
             "on": "A\u00e7\u0131k",
             "open": "A\u00e7\u0131k",
-            "problem": "Problem",
+            "problem": "Sorun",
             "unlocked": "Kilitli de\u011fil"
         }
     },

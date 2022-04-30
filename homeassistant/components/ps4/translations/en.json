@@ -25,6 +25,9 @@
                     "name": "Name",
                     "region": "Region"
                 },
+                "data_description": {
+                    "code": "Navigate to 'Settings' on your PlayStation 4 console. Then navigate to 'Mobile App Connection Settings' and select 'Add Device' to get the pin."
+                },
                 "description": "Enter your PlayStation 4 information. For PIN Code, navigate to 'Settings' on your PlayStation 4 console. Then navigate to 'Mobile App Connection Settings' and select 'Add Device'. Enter the PIN Code that is displayed. Refer to the [documentation](https://www.home-assistant.io/components/ps4/) for additional info.",
                 "title": "PlayStation 4"
             },
@@ -32,6 +35,9 @@
                 "data": {
                     "ip_address": "IP Address (Leave empty if using Auto Discovery).",
                     "mode": "Config Mode"
+                },
+                "data_description": {
+                    "ip_address": "Leave blank if selecting auto-discovery."
                 },
                 "description": "Select mode for configuration. The IP Address field can be left blank if selecting Auto Discovery, as devices will be automatically discovered.",
                 "title": "PlayStation 4"

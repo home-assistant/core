@@ -1,14 +1,14 @@
 {
     "config": {
         "abort": {
-            "already_configured": "L'appareil est d\u00e9ja configur\u00e9 ",
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
             "insufficient_permissions": "L'utilisateur ne dispose pas des autorisations n\u00e9cessaires pour acc\u00e9der aux param\u00e8tres d'AVM FRITZ! Box et \u00e0 ses r\u00e9pertoires.",
-            "no_devices_found": "Aucun appreil trouv\u00e9 sur le r\u00e9seau "
+            "no_devices_found": "Aucun appareil trouv\u00e9 sur le r\u00e9seau"
         },
         "error": {
-            "invalid_auth": "Authentification invalide"
+            "invalid_auth": "Authentification non valide"
         },
-        "flow_title": "Moniteur d'appels AVM FRITZ! Box: {name}",
+        "flow_title": "{name}",
         "step": {
             "phonebook": {
                 "data": {
@@ -17,10 +17,10 @@
             },
             "user": {
                 "data": {
-                    "host": "Hote",
+                    "host": "H\u00f4te",
                     "password": "Mot de passe",
                     "port": "Port",
-                    "username": "Nom d'utilisateur "
+                    "username": "Nom d'utilisateur"
                 }
             }
         }

@@ -33,9 +33,7 @@ class AgentFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 await agent_client.update()
-            except AgentConnectionError:
-                pass
-            except AgentError:
+            except (AgentConnectionError, AgentError):
                 pass
 
             await agent_client.close()

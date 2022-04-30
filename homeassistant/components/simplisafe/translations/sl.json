@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Ta ra\u010dun SimpliSafe je \u017ee v uporabi."
+            "already_configured": "Ta ra\u010dun SimpliSafe je \u017ee v uporabi.",
+            "wrong_account": "Navedene uporabni\u0161ke poverilnice se ne ujemajo s tem ra\u010dunom SimpliSafe."
         },
         "error": {
             "identifier_exists": "Ra\u010dun je \u017ee registriran"

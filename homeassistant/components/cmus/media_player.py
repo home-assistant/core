@@ -1,22 +1,19 @@
 """Support for interacting with and controlling the cmus music player."""
+from __future__ import annotations
+
 import logging
 
 from pycmus import exceptions, remote
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
+from homeassistant.components.media_player import (
+    PLATFORM_SCHEMA,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
+)
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_PLAYLIST,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SEEK,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_SET,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -27,24 +24,15 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_PLAYING,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "cmus"
 DEFAULT_PORT = 3000
-
-SUPPORT_CMUS = (
-    SUPPORT_PAUSE
-    | SUPPORT_VOLUME_SET
-    | SUPPORT_TURN_OFF
-    | SUPPORT_TURN_ON
-    | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_PLAY_MEDIA
-    | SUPPORT_SEEK
-    | SUPPORT_PLAY
-)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -56,7 +44,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discover_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discover_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the CMUS platform."""
 
     host = config.get(CONF_HOST)
@@ -98,6 +91,19 @@ class CmusRemote:
 class CmusDevice(MediaPlayerEntity):
     """Representation of a running cmus."""
 
+    _attr_media_content_type = MEDIA_TYPE_MUSIC
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.PREVIOUS_TRACK
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.PLAY_MEDIA
+        | MediaPlayerEntityFeature.SEEK
+        | MediaPlayerEntityFeature.PLAY
+    )
+
     def __init__(self, device, name, server):
         """Initialize the CMUS device."""
 
@@ -106,7 +112,7 @@ class CmusDevice(MediaPlayerEntity):
             auto_name = f"cmus-{server}"
         else:
             auto_name = "cmus-local"
-        self._name = name or auto_name
+        self._attr_name = name or auto_name
         self.status = {}
 
     def update(self):
@@ -120,79 +126,29 @@ class CmusDevice(MediaPlayerEntity):
             self._remote.connect()
         else:
             self.status = status
+            if self.status.get("status") == "playing":
+                self._attr_state = STATE_PLAYING
+            elif self.status.get("status") == "paused":
+                self._attr_state = STATE_PAUSED
+            else:
+                self._attr_state = STATE_OFF
+            self._attr_media_content_id = self.status.get("file")
+            self._attr_media_duration = self.status.get("duration")
+            self._attr_media_title = self.status["tag"].get("title")
+            self._attr_media_artist = self.status["tag"].get("artist")
+            self._attr_media_track = self.status["tag"].get("tracknumber")
+            self._attr_media_album_name = self.status["tag"].get("album")
+            self._attr_media_album_artist = self.status["tag"].get("albumartist")
+            left = self.status["set"].get("vol_left")[0]
+            right = self.status["set"].get("vol_right")[0]
+            if left != right:
+                volume = float(left + right) / 2
+            else:
+                volume = left
+            self._attr_volume_level = int(volume) / 100
             return
 
         _LOGGER.warning("Received no status from cmus")
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the media state."""
-        if self.status.get("status") == "playing":
-            return STATE_PLAYING
-        if self.status.get("status") == "paused":
-            return STATE_PAUSED
-        return STATE_OFF
-
-    @property
-    def media_content_id(self):
-        """Content ID of current playing media."""
-        return self.status.get("file")
-
-    @property
-    def content_type(self):
-        """Content type of the current playing media."""
-        return MEDIA_TYPE_MUSIC
-
-    @property
-    def media_duration(self):
-        """Duration of current playing media in seconds."""
-        return self.status.get("duration")
-
-    @property
-    def media_title(self):
-        """Title of current playing media."""
-        return self.status["tag"].get("title")
-
-    @property
-    def media_artist(self):
-        """Artist of current playing media, music track only."""
-        return self.status["tag"].get("artist")
-
-    @property
-    def media_track(self):
-        """Track number of current playing media, music track only."""
-        return self.status["tag"].get("tracknumber")
-
-    @property
-    def media_album_name(self):
-        """Album name of current playing media, music track only."""
-        return self.status["tag"].get("album")
-
-    @property
-    def media_album_artist(self):
-        """Album artist of current playing media, music track only."""
-        return self.status["tag"].get("albumartist")
-
-    @property
-    def volume_level(self):
-        """Return the volume level."""
-        left = self.status["set"].get("vol_left")[0]
-        right = self.status["set"].get("vol_right")[0]
-        if left != right:
-            volume = float(left + right) / 2
-        else:
-            volume = left
-        return int(volume) / 100
-
-    @property
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        return SUPPORT_CMUS
 
     def turn_off(self):
         """Service to send the CMUS the command to stop playing."""

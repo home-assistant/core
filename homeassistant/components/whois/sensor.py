@@ -1,141 +1,211 @@
 """Get WHOIS information for a given host."""
-from datetime import timedelta
-import logging
+from __future__ import annotations
 
-import voluptuous as vol
-import whois
+from collections.abc import Callable
+from dataclasses import dataclass
+from datetime import datetime, timezone
+from typing import cast
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import CONF_DOMAIN, CONF_NAME, TIME_DAYS
-import homeassistant.helpers.config_validation as cv
+from whois import Domain
 
-_LOGGER = logging.getLogger(__name__)
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_DOMAIN, TIME_DAYS
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
-DEFAULT_NAME = "Whois"
+from .const import ATTR_EXPIRES, ATTR_NAME_SERVERS, ATTR_REGISTRAR, ATTR_UPDATED, DOMAIN
 
-ATTR_EXPIRES = "expires"
-ATTR_NAME_SERVERS = "name_servers"
-ATTR_REGISTRAR = "registrar"
-ATTR_UPDATED = "updated"
 
-SCAN_INTERVAL = timedelta(hours=24)
+@dataclass
+class WhoisSensorEntityDescriptionMixin:
+    """Mixin for required keys."""
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_DOMAIN): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
+    value_fn: Callable[[Domain], datetime | int | str | None]
+
+
+@dataclass
+class WhoisSensorEntityDescription(
+    SensorEntityDescription, WhoisSensorEntityDescriptionMixin
+):
+    """Describes a Whois sensor entity."""
+
+
+def _days_until_expiration(domain: Domain) -> int | None:
+    """Calculate days left until domain expires."""
+    if domain.expiration_date is None:
+        return None
+    # We need to cast here, as (unlike Pyright) mypy isn't able to determine the type.
+    return cast(int, (domain.expiration_date - domain.expiration_date.utcnow()).days)
+
+
+def _ensure_timezone(timestamp: datetime | None) -> datetime | None:
+    """Calculate days left until domain expires."""
+    if timestamp is None:
+        return None
+
+    # If timezone info isn't provided by the Whois, assume UTC.
+    if timestamp.tzinfo is None:
+        return timestamp.replace(tzinfo=timezone.utc)
+
+    return timestamp
+
+
+SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
+    WhoisSensorEntityDescription(
+        key="admin",
+        name="Admin",
+        icon="mdi:account-star",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda domain: getattr(domain, "admin", None),
+    ),
+    WhoisSensorEntityDescription(
+        key="creation_date",
+        name="Created",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda domain: _ensure_timezone(domain.creation_date),
+    ),
+    WhoisSensorEntityDescription(
+        key="days_until_expiration",
+        name="Days Until Expiration",
+        icon="mdi:calendar-clock",
+        native_unit_of_measurement=TIME_DAYS,
+        value_fn=_days_until_expiration,
+    ),
+    WhoisSensorEntityDescription(
+        key="expiration_date",
+        name="Expires",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda domain: _ensure_timezone(domain.expiration_date),
+    ),
+    WhoisSensorEntityDescription(
+        key="last_updated",
+        name="Last Updated",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda domain: _ensure_timezone(domain.last_updated),
+    ),
+    WhoisSensorEntityDescription(
+        key="owner",
+        name="Owner",
+        icon="mdi:account",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda domain: getattr(domain, "owner", None),
+    ),
+    WhoisSensorEntityDescription(
+        key="registrant",
+        name="Registrant",
+        icon="mdi:account-edit",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda domain: getattr(domain, "registrant", None),
+    ),
+    WhoisSensorEntityDescription(
+        key="registrar",
+        name="Registrar",
+        icon="mdi:store",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda domain: domain.registrar if domain.registrar else None,
+    ),
+    WhoisSensorEntityDescription(
+        key="reseller",
+        name="Reseller",
+        icon="mdi:store",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda domain: getattr(domain, "reseller", None),
+    ),
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the WHOIS sensor."""
-    domain = config.get(CONF_DOMAIN)
-    name = config.get(CONF_NAME)
-
-    try:
-        if "expiration_date" in whois.whois(domain):
-            add_entities([WhoisSensor(name, domain)], True)
-        else:
-            _LOGGER.error(
-                "WHOIS lookup for %s didn't contain an expiration date", domain
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the platform from config_entry."""
+    coordinator = hass.data[DOMAIN][entry.entry_id]
+    async_add_entities(
+        [
+            WhoisSensorEntity(
+                coordinator=coordinator,
+                description=description,
+                domain=entry.data[CONF_DOMAIN],
             )
-            return
-    except whois.BaseException as ex:  # pylint: disable=broad-except
-        _LOGGER.error("Exception %s occurred during WHOIS lookup for %s", ex, domain)
-        return
+            for description in SENSORS
+        ],
+    )
 
 
-class WhoisSensor(SensorEntity):
+class WhoisSensorEntity(CoordinatorEntity, SensorEntity):
     """Implementation of a WHOIS sensor."""
 
-    def __init__(self, name, domain):
-        """Initialize the sensor."""
-        self.whois = whois.whois
+    entity_description: WhoisSensorEntityDescription
 
-        self._name = name
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator,
+        description: WhoisSensorEntityDescription,
+        domain: str,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator=coordinator)
+        self.entity_description = description
+        self._attr_name = f"{domain} {description.name}"
+        self._attr_unique_id = f"{domain}_{description.key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, domain)},
+            entry_type=DeviceEntryType.SERVICE,
+        )
         self._domain = domain
 
-        self._state = None
-        self._attributes = None
+    @property
+    def native_value(self) -> datetime | int | str | None:
+        """Return the state of the sensor."""
+        if self.coordinator.data is None:
+            return None
+        return self.entity_description.value_fn(self.coordinator.data)
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
+    def extra_state_attributes(self) -> dict[str, int | float | None] | None:
+        """Return the state attributes of the monitored installation."""
 
-    @property
-    def icon(self):
-        """Return the icon to represent this sensor."""
-        return "mdi:calendar-clock"
+        # Only add attributes to the original sensor
+        if self.entity_description.key != "days_until_expiration":
+            return None
 
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement to present the value in."""
-        return TIME_DAYS
+        if self.coordinator.data is None:
+            return None
 
-    @property
-    def state(self):
-        """Return the expiration days for hostname."""
-        return self._state
+        attrs = {}
+        if expiration_date := self.coordinator.data.expiration_date:
+            attrs[ATTR_EXPIRES] = expiration_date.isoformat()
 
-    @property
-    def extra_state_attributes(self):
-        """Get the more info attributes."""
-        return self._attributes
+        if name_servers := self.coordinator.data.name_servers:
+            attrs[ATTR_NAME_SERVERS] = " ".join(name_servers)
 
-    def _empty_state_and_attributes(self):
-        """Empty the state and attributes on an error."""
-        self._state = None
-        self._attributes = None
+        if last_updated := self.coordinator.data.last_updated:
+            attrs[ATTR_UPDATED] = last_updated.isoformat()
 
-    def update(self):
-        """Get the current WHOIS data for the domain."""
-        try:
-            response = self.whois(self._domain)
-        except whois.BaseException as ex:  # pylint: disable=broad-except
-            _LOGGER.error("Exception %s occurred during WHOIS lookup", ex)
-            self._empty_state_and_attributes()
-            return
+        if registrar := self.coordinator.data.registrar:
+            attrs[ATTR_REGISTRAR] = registrar
 
-        if response:
-            if "expiration_date" not in response:
-                _LOGGER.error(
-                    "Failed to find expiration_date in whois lookup response. "
-                    "Did find: %s",
-                    ", ".join(response.keys()),
-                )
-                self._empty_state_and_attributes()
-                return
+        if not attrs:
+            return None
 
-            if not response["expiration_date"]:
-                _LOGGER.error("Whois response contains empty expiration_date")
-                self._empty_state_and_attributes()
-                return
-
-            attrs = {}
-
-            expiration_date = response["expiration_date"]
-            if isinstance(expiration_date, list):
-                attrs[ATTR_EXPIRES] = expiration_date[0].isoformat()
-                expiration_date = expiration_date[0]
-            else:
-                attrs[ATTR_EXPIRES] = expiration_date.isoformat()
-
-            if "nameservers" in response:
-                attrs[ATTR_NAME_SERVERS] = " ".join(response["nameservers"])
-
-            if "updated_date" in response:
-                update_date = response["updated_date"]
-                if isinstance(update_date, list):
-                    attrs[ATTR_UPDATED] = update_date[0].isoformat()
-                else:
-                    attrs[ATTR_UPDATED] = update_date.isoformat()
-
-            if "registrar" in response:
-                attrs[ATTR_REGISTRAR] = response["registrar"]
-
-            time_delta = expiration_date - expiration_date.now()
-
-            self._attributes = attrs
-            self._state = time_delta.days
+        return attrs

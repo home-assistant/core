@@ -1,5 +1,6 @@
 """The binary_sensor tests for the august platform."""
 import datetime
+import time
 from unittest.mock import Mock, patch
 
 from yalexs.pubnub_async import AugustPubNub
@@ -24,6 +25,10 @@ from tests.components.august.mocks import (
     _mock_doorsense_enabled_august_lock_detail,
     _mock_lock_from_fixture,
 )
+
+
+def _timetoken():
+    return str(time.time_ns())[:-2]
 
 
 async def test_doorsense(hass):
@@ -85,6 +90,10 @@ async def test_create_doorbell(hass):
         "binary_sensor.k98gidt45gul_name_motion"
     )
     assert binary_sensor_k98gidt45gul_name_motion.state == STATE_OFF
+    binary_sensor_k98gidt45gul_name_image_capture = hass.states.get(
+        "binary_sensor.k98gidt45gul_name_image_capture"
+    )
+    assert binary_sensor_k98gidt45gul_name_image_capture.state == STATE_OFF
     binary_sensor_k98gidt45gul_name_online = hass.states.get(
         "binary_sensor.k98gidt45gul_name_online"
     )
@@ -97,6 +106,10 @@ async def test_create_doorbell(hass):
         "binary_sensor.k98gidt45gul_name_motion"
     )
     assert binary_sensor_k98gidt45gul_name_motion.state == STATE_OFF
+    binary_sensor_k98gidt45gul_name_image_capture = hass.states.get(
+        "binary_sensor.k98gidt45gul_name_image_capture"
+    )
+    assert binary_sensor_k98gidt45gul_name_image_capture.state == STATE_OFF
 
 
 async def test_create_doorbell_offline(hass):
@@ -171,7 +184,7 @@ async def test_doorbell_update_via_pubnub(hass):
         pubnub,
         Mock(
             channel=doorbell_one.pubsub_channel,
-            timetoken=dt_util.utcnow().timestamp() * 10000000,
+            timetoken=_timetoken(),
             message={
                 "status": "imagecapture",
                 "data": {
@@ -186,10 +199,46 @@ async def test_doorbell_update_via_pubnub(hass):
 
     await hass.async_block_till_done()
 
+    binary_sensor_k98gidt45gul_name_image_capture = hass.states.get(
+        "binary_sensor.k98gidt45gul_name_image_capture"
+    )
+    assert binary_sensor_k98gidt45gul_name_image_capture.state == STATE_ON
+
+    pubnub.message(
+        pubnub,
+        Mock(
+            channel=doorbell_one.pubsub_channel,
+            timetoken=_timetoken(),
+            message={
+                "status": "doorbell_motion_detected",
+                "data": {
+                    "event": "doorbell_motion_detected",
+                    "image": {
+                        "height": 640,
+                        "width": 480,
+                        "format": "jpg",
+                        "created_at": "2021-03-16T02:36:26.886Z",
+                        "bytes": 14061,
+                        "secure_url": "https://dyu7azbnaoi74.cloudfront.net/images/1f8.jpeg",
+                        "url": "https://dyu7azbnaoi74.cloudfront.net/images/1f8.jpeg",
+                        "etag": "09e839331c4ea59eef28081f2caa0e90",
+                    },
+                    "doorbellName": "Front Door",
+                    "callID": None,
+                    "origin": "mars-api",
+                    "mutableContent": True,
+                },
+            },
+        ),
+    )
+
+    await hass.async_block_till_done()
+
     binary_sensor_k98gidt45gul_name_motion = hass.states.get(
         "binary_sensor.k98gidt45gul_name_motion"
     )
     assert binary_sensor_k98gidt45gul_name_motion.state == STATE_ON
+
     binary_sensor_k98gidt45gul_name_ding = hass.states.get(
         "binary_sensor.k98gidt45gul_name_ding"
     )
@@ -204,16 +253,16 @@ async def test_doorbell_update_via_pubnub(hass):
         async_fire_time_changed(hass, new_time)
         await hass.async_block_till_done()
 
-    binary_sensor_k98gidt45gul_name_motion = hass.states.get(
-        "binary_sensor.k98gidt45gul_name_motion"
+    binary_sensor_k98gidt45gul_name_image_capture = hass.states.get(
+        "binary_sensor.k98gidt45gul_name_image_capture"
     )
-    assert binary_sensor_k98gidt45gul_name_motion.state == STATE_OFF
+    assert binary_sensor_k98gidt45gul_name_image_capture.state == STATE_OFF
 
     pubnub.message(
         pubnub,
         Mock(
             channel=doorbell_one.pubsub_channel,
-            timetoken=dt_util.utcnow().timestamp() * 10000000,
+            timetoken=_timetoken(),
             message={
                 "status": "buttonpush",
             },
@@ -274,7 +323,7 @@ async def test_door_sense_update_via_pubnub(hass):
         pubnub,
         Mock(
             channel=lock_one.pubsub_channel,
-            timetoken=dt_util.utcnow().timestamp() * 10000000,
+            timetoken=_timetoken(),
             message={"status": "kAugLockState_Unlocking", "doorState": "closed"},
         ),
     )
@@ -289,11 +338,10 @@ async def test_door_sense_update_via_pubnub(hass):
         pubnub,
         Mock(
             channel=lock_one.pubsub_channel,
-            timetoken=dt_util.utcnow().timestamp() * 10000000,
+            timetoken=_timetoken(),
             message={"status": "kAugLockState_Locking", "doorState": "open"},
         ),
     )
-
     await hass.async_block_till_done()
     binary_sensor_online_with_doorsense_name = hass.states.get(
         "binary_sensor.online_with_doorsense_name_open"
@@ -327,7 +375,7 @@ async def test_door_sense_update_via_pubnub(hass):
         pubnub,
         Mock(
             channel=lock_one.pubsub_channel,
-            timetoken=dt_util.utcnow().timestamp() * 10000000,
+            timetoken=_timetoken(),
             message={"status": "kAugLockState_Unlocking", "doorState": "open"},
         ),
     )

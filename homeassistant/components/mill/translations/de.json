@@ -7,11 +7,25 @@
             "cannot_connect": "Verbindung fehlgeschlagen"
         },
         "step": {
-            "user": {
+            "cloud": {
                 "data": {
                     "password": "Passwort",
                     "username": "Benutzername"
                 }
+            },
+            "local": {
+                "data": {
+                    "ip_address": "IP-Adresse"
+                },
+                "description": "Lokale IP-Adresse des Ger\u00e4ts."
+            },
+            "user": {
+                "data": {
+                    "connection_type": "Verbindungstyp ausw\u00e4hlen",
+                    "password": "Passwort",
+                    "username": "Benutzername"
+                },
+                "description": "W\u00e4hle die Anschlussart. Lokal erfordert Heizger\u00e4te der Generation 3"
             }
         }
     }

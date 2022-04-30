@@ -17,8 +17,12 @@ from homeassistant.components.panasonic_viera.const import (
     DEFAULT_MODEL_NUMBER,
     DEFAULT_NAME,
     DEFAULT_PORT,
+    DOMAIN,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.core import HomeAssistant
+
+from tests.common import MockConfigEntry
 
 MOCK_BASIC_DATA = {
     CONF_HOST: "0.0.0.0",
@@ -74,20 +78,11 @@ def get_mock_remote(
 
     mock_remote.authorize_pin_code = authorize_pin_code
 
-    def get_device_info():
-        return device_info
+    mock_remote.get_device_info = Mock(return_value=device_info)
 
-    mock_remote.get_device_info = get_device_info
+    mock_remote.send_key = Mock()
 
-    def send_key(key):
-        return
-
-    mock_remote.send_key = Mock(send_key)
-
-    def get_volume(key):
-        return 100
-
-    mock_remote.get_volume = Mock(get_volume)
+    mock_remote.get_volume = Mock(return_value=100)
 
     return mock_remote
 
@@ -102,3 +97,21 @@ def mock_remote_fixture():
         return_value=mock_remote,
     ):
         yield mock_remote
+
+
+@pytest.fixture
+async def init_integration(hass: HomeAssistant, mock_remote: Mock) -> MockConfigEntry:
+    """Set up the Panasonic Viera integration for testing."""
+
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=MOCK_DEVICE_INFO[ATTR_UDN],
+        data={**MOCK_CONFIG_DATA, **MOCK_ENCRYPTION_DATA, **MOCK_DEVICE_INFO},
+    )
+
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    return mock_entry

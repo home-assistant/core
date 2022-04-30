@@ -8,7 +8,7 @@
         "flow_title": "{name}",
         "step": {
             "confirm": {
-                "description": "Be szeretn\u00e9 \u00e1ll\u00edtani a WiLight {name} ? \n\n T\u00e1mogatja: {components}",
+                "description": "A k\u00f6vetkez\u0151 komponensek t\u00e1mogatottak: {components}",
                 "title": "WiLight"
             }
         }

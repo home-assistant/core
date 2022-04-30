@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "L'account \u00e8 gi\u00e0 configurato",
+            "cloud_not_connected": "Non connesso a Home Assistant Cloud.",
             "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione.",
             "webhook_not_internet_accessible": "L'istanza di Home Assistant deve essere accessibile da Internet per ricevere messaggi webhook."
         },
@@ -31,7 +32,7 @@
                 "title": "Imposta i dispositivi Plaato"
             },
             "webhook": {
-                "description": "Per inviare eventi a Home Assistant, dovrai configurare la funzione webhook in Plaato Airlock. \n\n Compila le seguenti informazioni: \n\n - URL: \"{webhook_url}\"\n - Metodo: POST \n\n Vedere [la documentazione] ({docs_url}) per ulteriori dettagli.",
+                "description": "Per inviare eventi a Home Assistant, dovrai configurare la funzione webhook in Plaato Airlock. \n\n Compila le seguenti informazioni: \n\n - URL: \"{webhook_url}\"\n - Metodo: POST \n\n Vedi [la documentazione] ({docs_url}) per ulteriori dettagli.",
                 "title": "Webhook da utilizzare"
             }
         }

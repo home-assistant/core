@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections import OrderedDict
-from typing import Callable
+from collections.abc import Callable
 
 import voluptuous as vol
 

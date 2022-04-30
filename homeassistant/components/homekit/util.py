@@ -1,4 +1,6 @@
 """Collection of useful functions for the HomeKit component."""
+from __future__ import annotations
+
 import io
 import ipaddress
 import logging
@@ -6,18 +8,26 @@ import os
 import re
 import secrets
 import socket
+from typing import Any, cast
 
+from pyhap.accessory import Accessory
 import pyqrcode
 import voluptuous as vol
 
-from homeassistant.components import binary_sensor, media_player, sensor
+from homeassistant.components import (
+    binary_sensor,
+    media_player,
+    persistent_notification,
+    sensor,
+)
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.components.media_player import (
-    DEVICE_CLASS_TV,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
+    MediaPlayerDeviceClass,
+    MediaPlayerEntityFeature,
 )
-from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN, SUPPORT_ACTIVITY
+from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN, RemoteEntityFeature
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_DEVICE_CLASS,
@@ -27,7 +37,7 @@ from homeassistant.const import (
     CONF_TYPE,
     TEMP_CELSIUS,
 )
-from homeassistant.core import HomeAssistant, split_entity_id
+from homeassistant.core import HomeAssistant, State, callback, split_entity_id
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.storage import STORAGE_DIR
 import homeassistant.util.temperature as temp_util
@@ -76,6 +86,7 @@ from .const import (
     FEATURE_TOGGLE_MUTE,
     HOMEKIT_PAIRING_QR,
     HOMEKIT_PAIRING_QR_SECRET,
+    MAX_NAME_LENGTH,
     TYPE_FAUCET,
     TYPE_OUTLET,
     TYPE_SHOWER,
@@ -88,6 +99,12 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+NUMBERS_ONLY_RE = re.compile(r"[^\d.]+")
+VERSION_RE = re.compile(r"([0-9]+)(\.[0-9]+)?(\.[0-9]+)?")
+MAX_VERSION_PART = 2**32 - 1
+
 
 MAX_PORT = 65535
 VALID_VIDEO_CODECS = [VIDEO_CODEC_LIBX264, VIDEO_CODEC_H264_OMX, AUDIO_CODEC_COPY]
@@ -228,7 +245,7 @@ HOMEKIT_CHAR_TRANSLATIONS = {
 }
 
 
-def validate_entity_config(values):
+def validate_entity_config(values: dict) -> dict[str, dict]:
     """Validate config entry for CONF_ENTITY."""
     if not isinstance(values, dict):
         raise vol.Invalid("expected a dictionary")
@@ -274,29 +291,27 @@ def validate_entity_config(values):
     return entities
 
 
-def get_media_player_features(state):
+def get_media_player_features(state: State) -> list[str]:
     """Determine features for media players."""
     features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
     supported_modes = []
     if features & (
-        media_player.const.SUPPORT_TURN_ON | media_player.const.SUPPORT_TURN_OFF
+        MediaPlayerEntityFeature.TURN_ON | MediaPlayerEntityFeature.TURN_OFF
     ):
         supported_modes.append(FEATURE_ON_OFF)
-    if features & (media_player.const.SUPPORT_PLAY | media_player.const.SUPPORT_PAUSE):
+    if features & (MediaPlayerEntityFeature.PLAY | MediaPlayerEntityFeature.PAUSE):
         supported_modes.append(FEATURE_PLAY_PAUSE)
-    if features & (media_player.const.SUPPORT_PLAY | media_player.const.SUPPORT_STOP):
+    if features & (MediaPlayerEntityFeature.PLAY | MediaPlayerEntityFeature.STOP):
         supported_modes.append(FEATURE_PLAY_STOP)
-    if features & media_player.const.SUPPORT_VOLUME_MUTE:
+    if features & MediaPlayerEntityFeature.VOLUME_MUTE:
         supported_modes.append(FEATURE_TOGGLE_MUTE)
     return supported_modes
 
 
-def validate_media_player_features(state, feature_list):
+def validate_media_player_features(state: State, feature_list: str) -> bool:
     """Validate features for media players."""
-    supported_modes = get_media_player_features(state)
-
-    if not supported_modes:
+    if not (supported_modes := get_media_player_features(state)):
         _LOGGER.error("%s does not support any media_player features", state.entity_id)
         return False
 
@@ -317,7 +332,9 @@ def validate_media_player_features(state, feature_list):
     return True
 
 
-def show_setup_message(hass, entry_id, bridge_name, pincode, uri):
+def async_show_setup_message(
+    hass: HomeAssistant, entry_id: str, bridge_name: str, pincode: bytes, uri: str
+) -> None:
     """Display persistent notification with setup information."""
     pin = pincode.decode()
     _LOGGER.info("Pincode: %s", pin)
@@ -336,15 +353,15 @@ def show_setup_message(hass, entry_id, bridge_name, pincode, uri):
         f"### {pin}\n"
         f"![image](/api/homekit/pairingqr?{entry_id}-{pairing_secret})"
     )
-    hass.components.persistent_notification.create(message, "HomeKit Pairing", entry_id)
+    persistent_notification.async_create(hass, message, "HomeKit Pairing", entry_id)
 
 
-def dismiss_setup_message(hass, entry_id):
+def async_dismiss_setup_message(hass: HomeAssistant, entry_id: str) -> None:
     """Dismiss persistent notification and remove QR code."""
-    hass.components.persistent_notification.dismiss(entry_id)
+    persistent_notification.async_dismiss(hass, entry_id)
 
 
-def convert_to_float(state):
+def convert_to_float(state: Any) -> float | None:
     """Return float of state, catch errors."""
     try:
         return float(state)
@@ -352,27 +369,37 @@ def convert_to_float(state):
         return None
 
 
-def cleanup_name_for_homekit(name):
+def coerce_int(state: str) -> int:
+    """Return int."""
+    try:
+        return int(state)
+    except (ValueError, TypeError):
+        return 0
+
+
+def cleanup_name_for_homekit(name: str | None) -> str:
     """Ensure the name of the device will not crash homekit."""
     #
     # This is not a security measure.
     #
     # UNICODE_EMOJI is also not allowed but that
     # likely isn't a problem
-    return name.translate(HOMEKIT_CHAR_TRANSLATIONS)
+    if name is None:
+        return "None"  # None crashes apple watches
+    return name.translate(HOMEKIT_CHAR_TRANSLATIONS)[:MAX_NAME_LENGTH]
 
 
-def temperature_to_homekit(temperature, unit):
+def temperature_to_homekit(temperature: float | int, unit: str) -> float:
     """Convert temperature to Celsius for HomeKit."""
     return round(temp_util.convert(temperature, unit, TEMP_CELSIUS), 1)
 
 
-def temperature_to_states(temperature, unit):
+def temperature_to_states(temperature: float | int, unit: str) -> float:
     """Convert temperature back from Celsius to Home Assistant unit."""
     return round(temp_util.convert(temperature, TEMP_CELSIUS, unit) * 2) / 2
 
 
-def density_to_air_quality(density):
+def density_to_air_quality(density: float) -> int:
     """Map PM2.5 density to HomeKit AirQuality level."""
     if density <= 35:
         return 1
@@ -385,37 +412,74 @@ def density_to_air_quality(density):
     return 5
 
 
-def get_persist_filename_for_entry_id(entry_id: str):
+def density_to_air_quality_pm10(density: float) -> int:
+    """Map PM10 density to HomeKit AirQuality level."""
+    if density <= 40:
+        return 1
+    if density <= 80:
+        return 2
+    if density <= 120:
+        return 3
+    if density <= 300:
+        return 4
+    return 5
+
+
+def density_to_air_quality_pm25(density: float) -> int:
+    """Map PM2.5 density to HomeKit AirQuality level."""
+    if density <= 25:
+        return 1
+    if density <= 50:
+        return 2
+    if density <= 100:
+        return 3
+    if density <= 300:
+        return 4
+    return 5
+
+
+def get_persist_filename_for_entry_id(entry_id: str) -> str:
     """Determine the filename of the homekit state file."""
     return f"{DOMAIN}.{entry_id}.state"
 
 
-def get_aid_storage_filename_for_entry_id(entry_id: str):
+def get_aid_storage_filename_for_entry_id(entry_id: str) -> str:
     """Determine the ilename of homekit aid storage file."""
     return f"{DOMAIN}.{entry_id}.aids"
 
 
-def get_persist_fullpath_for_entry_id(hass: HomeAssistant, entry_id: str):
+def get_persist_fullpath_for_entry_id(hass: HomeAssistant, entry_id: str) -> str:
     """Determine the path to the homekit state file."""
     return hass.config.path(STORAGE_DIR, get_persist_filename_for_entry_id(entry_id))
 
 
-def get_aid_storage_fullpath_for_entry_id(hass: HomeAssistant, entry_id: str):
+def get_aid_storage_fullpath_for_entry_id(hass: HomeAssistant, entry_id: str) -> str:
     """Determine the path to the homekit aid storage file."""
     return hass.config.path(
         STORAGE_DIR, get_aid_storage_filename_for_entry_id(entry_id)
     )
 
 
-def format_sw_version(version):
+def _format_version_part(version_part: str) -> str:
+    return str(max(0, min(MAX_VERSION_PART, coerce_int(version_part))))
+
+
+def format_version(version: str) -> str | None:
     """Extract the version string in a format homekit can consume."""
-    match = re.search(r"([0-9]+)(\.[0-9]+)?(\.[0-9]+)?", str(version).replace("-", "."))
-    if match:
-        return match.group(0)
-    return None
+    split_ver = str(version).replace("-", ".").replace(" ", ".")
+    num_only = NUMBERS_ONLY_RE.sub("", split_ver)
+    if (match := VERSION_RE.search(num_only)) is None:
+        return None
+    value = ".".join(map(_format_version_part, match.group(0).split(".")))
+    return None if _is_zero_but_true(value) else value
 
 
-def remove_state_files_for_entry_id(hass: HomeAssistant, entry_id: str):
+def _is_zero_but_true(value: Any) -> bool:
+    """Zero but true values can crash apple watches."""
+    return convert_to_float(value) == 0
+
+
+def remove_state_files_for_entry_id(hass: HomeAssistant, entry_id: str) -> bool:
     """Remove the state files from disk."""
     persist_file_path = get_persist_fullpath_for_entry_id(hass, entry_id)
     aid_storage_path = get_aid_storage_fullpath_for_entry_id(hass, entry_id)
@@ -425,7 +489,7 @@ def remove_state_files_for_entry_id(hass: HomeAssistant, entry_id: str):
     return True
 
 
-def _get_test_socket():
+def _get_test_socket() -> socket.socket:
     """Create a socket to test binding ports."""
     test_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     test_socket.setblocking(False)
@@ -433,34 +497,32 @@ def _get_test_socket():
     return test_socket
 
 
-def port_is_available(port: int) -> bool:
+@callback
+def async_port_is_available(port: int) -> bool:
     """Check to see if a port is available."""
-    test_socket = _get_test_socket()
     try:
-        test_socket.bind(("", port))
+        _get_test_socket().bind(("", port))
     except OSError:
         return False
-
     return True
 
 
-async def async_find_next_available_port(hass: HomeAssistant, start_port: int) -> int:
+@callback
+def async_find_next_available_port(hass: HomeAssistant, start_port: int) -> int:
     """Find the next available port not assigned to a config entry."""
     exclude_ports = {
         entry.data[CONF_PORT]
         for entry in hass.config_entries.async_entries(DOMAIN)
         if CONF_PORT in entry.data
     }
-
-    return await hass.async_add_executor_job(
-        _find_next_available_port, start_port, exclude_ports
-    )
+    return _async_find_next_available_port(start_port, exclude_ports)
 
 
-def _find_next_available_port(start_port: int, exclude_ports: set) -> int:
+@callback
+def _async_find_next_available_port(start_port: int, exclude_ports: set) -> int:
     """Find the next available port starting with the given port."""
     test_socket = _get_test_socket()
-    for port in range(start_port, MAX_PORT):
+    for port in range(start_port, MAX_PORT + 1):
         if port in exclude_ports:
             continue
         try:
@@ -470,9 +532,10 @@ def _find_next_available_port(start_port: int, exclude_ports: set) -> int:
             if port == MAX_PORT:
                 raise
             continue
+    raise RuntimeError("unreachable")
 
 
-def pid_is_alive(pid) -> bool:
+def pid_is_alive(pid: int) -> bool:
     """Check to see if a process is alive."""
     try:
         os.kill(pid, 0)
@@ -482,14 +545,14 @@ def pid_is_alive(pid) -> bool:
     return False
 
 
-def accessory_friendly_name(hass_name, accessory):
+def accessory_friendly_name(hass_name: str, accessory: Accessory) -> str:
     """Return the combined name for the accessory.
 
     The mDNS name and the Home Assistant config entry
     name are usually different which means they need to
     see both to identify the accessory.
     """
-    accessory_mdns_name = accessory.display_name
+    accessory_mdns_name = cast(str, accessory.display_name)
     if hass_name.casefold().startswith(accessory_mdns_name.casefold()):
         return hass_name
     if accessory_mdns_name.casefold().startswith(hass_name.casefold()):
@@ -497,14 +560,15 @@ def accessory_friendly_name(hass_name, accessory):
     return f"{hass_name} ({accessory_mdns_name})"
 
 
-def state_needs_accessory_mode(state):
+def state_needs_accessory_mode(state: State) -> bool:
     """Return if the entity represented by the state must be paired in accessory mode."""
     if state.domain in (CAMERA_DOMAIN, LOCK_DOMAIN):
         return True
 
     return (
         state.domain == MEDIA_PLAYER_DOMAIN
-        and state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_TV
+        and state.attributes.get(ATTR_DEVICE_CLASS) == MediaPlayerDeviceClass.TV
         or state.domain == REMOTE_DOMAIN
-        and state.attributes.get(ATTR_SUPPORTED_FEATURES, 0) & SUPPORT_ACTIVITY
+        and state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        & RemoteEntityFeature.ACTIVITY
     )

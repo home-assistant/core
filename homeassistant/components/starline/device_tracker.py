@@ -1,6 +1,9 @@
 """StarLine device tracker."""
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.components.device_tracker.const import SOURCE_TYPE_GPS
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .account import StarlineAccount, StarlineDevice
@@ -8,7 +11,9 @@ from .const import DOMAIN
 from .entity import StarlineEntity
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up StarLine entry."""
     account: StarlineAccount = hass.data[DOMAIN][entry.entry_id]
     entities = []

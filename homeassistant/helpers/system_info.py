@@ -1,6 +1,7 @@
 """Helper to gather system info."""
 from __future__ import annotations
 
+from getpass import getuser
 import os
 import platform
 from typing import Any
@@ -28,16 +29,23 @@ async def async_get_system_info(hass: HomeAssistant) -> dict[str, Any]:
         "os_version": platform.release(),
     }
 
-    if platform.system() == "Windows":
-        info_object["os_version"] = platform.win32_ver()[0]
-    elif platform.system() == "Darwin":
+    try:
+        info_object["user"] = getuser()
+    except KeyError:
+        info_object["user"] = None
+
+    if platform.system() == "Darwin":
         info_object["os_version"] = platform.mac_ver()[0]
     elif platform.system() == "Linux":
         info_object["docker"] = os.path.isfile("/.dockerenv")
 
     # Determine installation type on current data
     if info_object["docker"]:
-        info_object["installation_type"] = "Home Assistant Container"
+        if info_object["user"] == "root" and os.path.isfile("/OFFICIAL_IMAGE"):
+            info_object["installation_type"] = "Home Assistant Container"
+        else:
+            info_object["installation_type"] = "Unsupported Third Party Container"
+
     elif is_virtual_env():
         info_object["installation_type"] = "Home Assistant Core"
 

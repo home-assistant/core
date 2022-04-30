@@ -1,27 +1,21 @@
 """Support for MySensors sensors."""
 from __future__ import annotations
 
-from datetime import datetime
+from typing import Any
 
 from awesomeversion import AwesomeVersion
 
 from homeassistant.components import mysensors
 from homeassistant.components.sensor import (
-    DOMAIN,
-    STATE_CLASS_MEASUREMENT,
+    SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONDUCTIVITY,
     DEGREE,
-    DEVICE_CLASS_CURRENT,
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_VOLTAGE,
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_MILLIVOLT,
     ELECTRIC_POTENTIAL_VOLT,
@@ -37,72 +31,158 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     VOLUME_CUBIC_METERS,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util.dt import utc_from_timestamp
 
 from .const import MYSENSORS_DISCOVERY, DiscoveryInfo
 from .helpers import on_unload
 
-SENSORS: dict[str, list[str | None] | dict[str, list[str | None]]] = {
-    "V_TEMP": [None, None, DEVICE_CLASS_TEMPERATURE, STATE_CLASS_MEASUREMENT],
-    "V_HUM": [
-        PERCENTAGE,
-        "mdi:water-percent",
-        DEVICE_CLASS_HUMIDITY,
-        STATE_CLASS_MEASUREMENT,
-    ],
-    "V_DIMMER": [PERCENTAGE, "mdi:percent", None, None],
-    "V_PERCENTAGE": [PERCENTAGE, "mdi:percent", None, None],
-    "V_PRESSURE": [None, "mdi:gauge", None, None],
-    "V_FORECAST": [None, "mdi:weather-partly-cloudy", None, None],
-    "V_RAIN": [None, "mdi:weather-rainy", None, None],
-    "V_RAINRATE": [None, "mdi:weather-rainy", None, None],
-    "V_WIND": [None, "mdi:weather-windy", None, None],
-    "V_GUST": [None, "mdi:weather-windy", None, None],
-    "V_DIRECTION": [DEGREE, "mdi:compass", None, None],
-    "V_WEIGHT": [MASS_KILOGRAMS, "mdi:weight-kilogram", None, None],
-    "V_DISTANCE": [LENGTH_METERS, "mdi:ruler", None, None],
-    "V_IMPEDANCE": ["ohm", None, None, None],
-    "V_WATT": [POWER_WATT, None, DEVICE_CLASS_POWER, STATE_CLASS_MEASUREMENT],
-    "V_KWH": [
-        ENERGY_KILO_WATT_HOUR,
-        None,
-        DEVICE_CLASS_ENERGY,
-        STATE_CLASS_MEASUREMENT,
-    ],
-    "V_LIGHT_LEVEL": [PERCENTAGE, "mdi:white-balance-sunny", None, None],
-    "V_FLOW": [LENGTH_METERS, "mdi:gauge", None, None],
-    "V_VOLUME": [VOLUME_CUBIC_METERS, None, None, None],
-    "V_LEVEL": {
-        "S_SOUND": [SOUND_PRESSURE_DB, "mdi:volume-high", None, None],
-        "S_VIBRATION": [FREQUENCY_HERTZ, None, None, None],
-        "S_LIGHT_LEVEL": [
-            LIGHT_LUX,
-            "mdi:white-balance-sunny",
-            DEVICE_CLASS_ILLUMINANCE,
-            STATE_CLASS_MEASUREMENT,
-        ],
-    },
-    "V_VOLTAGE": [
-        ELECTRIC_POTENTIAL_VOLT,
-        "mdi:flash",
-        DEVICE_CLASS_VOLTAGE,
-        STATE_CLASS_MEASUREMENT,
-    ],
-    "V_CURRENT": [
-        ELECTRIC_CURRENT_AMPERE,
-        "mdi:flash-auto",
-        DEVICE_CLASS_CURRENT,
-        STATE_CLASS_MEASUREMENT,
-    ],
-    "V_PH": ["pH", None, None, None],
-    "V_ORP": [ELECTRIC_POTENTIAL_MILLIVOLT, None, None, None],
-    "V_EC": [CONDUCTIVITY, None, None, None],
-    "V_VAR": ["var", None, None, None],
-    "V_VA": [POWER_VOLT_AMPERE, None, None, None],
+SENSORS: dict[str, SensorEntityDescription] = {
+    "V_TEMP": SensorEntityDescription(
+        key="V_TEMP",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "V_HUM": SensorEntityDescription(
+        key="V_HUM",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "V_DIMMER": SensorEntityDescription(
+        key="V_DIMMER",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:percent",
+    ),
+    "V_PERCENTAGE": SensorEntityDescription(
+        key="V_PERCENTAGE",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:percent",
+    ),
+    "V_PRESSURE": SensorEntityDescription(
+        key="V_PRESSURE",
+        icon="mdi:gauge",
+    ),
+    "V_FORECAST": SensorEntityDescription(
+        key="V_FORECAST",
+        icon="mdi:weather-partly-cloudy",
+    ),
+    "V_RAIN": SensorEntityDescription(
+        key="V_RAIN",
+        icon="mdi:weather-rainy",
+    ),
+    "V_RAINRATE": SensorEntityDescription(
+        key="V_RAINRATE",
+        icon="mdi:weather-rainy",
+    ),
+    "V_WIND": SensorEntityDescription(
+        key="V_WIND",
+        icon="mdi:weather-windy",
+    ),
+    "V_GUST": SensorEntityDescription(
+        key="V_GUST",
+        icon="mdi:weather-windy",
+    ),
+    "V_DIRECTION": SensorEntityDescription(
+        key="V_DIRECTION",
+        native_unit_of_measurement=DEGREE,
+        icon="mdi:compass",
+    ),
+    "V_WEIGHT": SensorEntityDescription(
+        key="V_WEIGHT",
+        native_unit_of_measurement=MASS_KILOGRAMS,
+        icon="mdi:weight-kilogram",
+    ),
+    "V_DISTANCE": SensorEntityDescription(
+        key="V_DISTANCE",
+        native_unit_of_measurement=LENGTH_METERS,
+        icon="mdi:ruler",
+    ),
+    "V_IMPEDANCE": SensorEntityDescription(
+        key="V_IMPEDANCE",
+        native_unit_of_measurement="ohm",
+    ),
+    "V_WATT": SensorEntityDescription(
+        key="V_WATT",
+        native_unit_of_measurement=POWER_WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "V_KWH": SensorEntityDescription(
+        key="V_KWH",
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    "V_LIGHT_LEVEL": SensorEntityDescription(
+        key="V_LIGHT_LEVEL",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:white-balance-sunny",
+    ),
+    "V_FLOW": SensorEntityDescription(
+        key="V_FLOW",
+        native_unit_of_measurement=LENGTH_METERS,
+        icon="mdi:gauge",
+    ),
+    "V_VOLUME": SensorEntityDescription(
+        key="V_VOLUME",
+        native_unit_of_measurement=VOLUME_CUBIC_METERS,
+    ),
+    "V_LEVEL_S_SOUND": SensorEntityDescription(
+        key="V_LEVEL_S_SOUND",
+        native_unit_of_measurement=SOUND_PRESSURE_DB,
+        icon="mdi:volume-high",
+    ),
+    "V_LEVEL_S_VIBRATION": SensorEntityDescription(
+        key="V_LEVEL_S_VIBRATION",
+        native_unit_of_measurement=FREQUENCY_HERTZ,
+    ),
+    "V_LEVEL_S_LIGHT_LEVEL": SensorEntityDescription(
+        key="V_LEVEL_S_LIGHT_LEVEL",
+        native_unit_of_measurement=LIGHT_LUX,
+        device_class=SensorDeviceClass.ILLUMINANCE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "V_LEVEL_S_MOISTURE": SensorEntityDescription(
+        key="V_LEVEL_S_MOISTURE",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:water-percent",
+    ),
+    "V_VOLTAGE": SensorEntityDescription(
+        key="V_VOLTAGE",
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "V_CURRENT": SensorEntityDescription(
+        key="V_CURRENT",
+        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "V_PH": SensorEntityDescription(
+        key="V_PH",
+        native_unit_of_measurement="pH",
+    ),
+    "V_ORP": SensorEntityDescription(
+        key="V_ORP",
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_MILLIVOLT,
+    ),
+    "V_EC": SensorEntityDescription(
+        key="V_EC",
+        native_unit_of_measurement=CONDUCTIVITY,
+    ),
+    "V_VAR": SensorEntityDescription(
+        key="V_VAR",
+        native_unit_of_measurement="var",
+    ),
+    "V_VA": SensorEntityDescription(
+        key="V_VA",
+        native_unit_of_measurement=POWER_VOLT_AMPERE,
+    ),
 }
 
 
@@ -117,7 +197,7 @@ async def async_setup_entry(
         """Discover and add a MySensors sensor."""
         mysensors.setup_mysensors_platform(
             hass,
-            DOMAIN,
+            Platform.SENSOR,
             discovery_info,
             MySensorsSensor,
             async_add_entities=async_add_entities,
@@ -128,7 +208,7 @@ async def async_setup_entry(
         config_entry.entry_id,
         async_dispatcher_connect(
             hass,
-            MYSENSORS_DISCOVERY.format(config_entry.entry_id, DOMAIN),
+            MYSENSORS_DISCOVERY.format(config_entry.entry_id, Platform.SENSOR),
             async_discover,
         ),
     )
@@ -137,46 +217,21 @@ async def async_setup_entry(
 class MySensorsSensor(mysensors.device.MySensorsEntity, SensorEntity):
     """Representation of a MySensors Sensor child node."""
 
-    @property
-    def force_update(self) -> bool:
-        """Return True if state updates should be forced.
+    _attr_force_update = True
 
-        If True, a state change will be triggered anytime the state property is
-        updated, not just when the value changes.
-        """
-        return True
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Set up the instance."""
+        super().__init__(*args, **kwargs)
+        if entity_description := self._get_entity_description():
+            self.entity_description = entity_description
 
     @property
-    def state(self) -> str | None:
-        """Return the state of this entity."""
+    def native_value(self) -> str | None:
+        """Return the state of the sensor."""
         return self._values.get(self.value_type)
 
     @property
-    def device_class(self) -> str | None:
-        """Return the device class of this entity."""
-        return self._get_sensor_type()[2]
-
-    @property
-    def icon(self) -> str | None:
-        """Return the icon to use in the frontend, if any."""
-        return self._get_sensor_type()[1]
-
-    @property
-    def last_reset(self) -> datetime | None:
-        """Return the time when the sensor was last reset, if any."""
-        set_req = self.gateway.const.SetReq
-
-        if set_req(self.value_type).name == "V_KWH":
-            return utc_from_timestamp(0)
-        return None
-
-    @property
-    def state_class(self) -> str | None:
-        """Return the state class of this entity."""
-        return self._get_sensor_type()[3]
-
-    @property
-    def unit_of_measurement(self) -> str | None:
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of this entity."""
         set_req = self.gateway.const.SetReq
         if (
@@ -191,21 +246,19 @@ class MySensorsSensor(mysensors.device.MySensorsEntity, SensorEntity):
                 return TEMP_CELSIUS
             return TEMP_FAHRENHEIT
 
-        unit = self._get_sensor_type()[0]
-        return unit
+        if hasattr(self, "entity_description"):
+            return self.entity_description.native_unit_of_measurement
+        return None
 
-    def _get_sensor_type(self) -> list[str | None]:
-        """Return list with unit and icon of sensor type."""
-        pres = self.gateway.const.Presentation
+    def _get_entity_description(self) -> SensorEntityDescription | None:
+        """Return the sensor entity description."""
         set_req = self.gateway.const.SetReq
+        entity_description = SENSORS.get(set_req(self.value_type).name)
 
-        _sensor_type = SENSORS.get(
-            set_req(self.value_type).name, [None, None, None, None]
-        )
-        if isinstance(_sensor_type, dict):
-            sensor_type = _sensor_type.get(
-                pres(self.child_type).name, [None, None, None, None]
+        if not entity_description:
+            pres = self.gateway.const.Presentation
+            entity_description = SENSORS.get(
+                f"{set_req(self.value_type).name}_{pres(self.child_type).name}"
             )
-        else:
-            sensor_type = _sensor_type
-        return sensor_type
+
+        return entity_description

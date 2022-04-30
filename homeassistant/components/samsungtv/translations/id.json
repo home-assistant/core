@@ -3,20 +3,35 @@
         "abort": {
             "already_configured": "Perangkat sudah dikonfigurasi",
             "already_in_progress": "Alur konfigurasi sedang berlangsung",
-            "auth_missing": "Home Assistant tidak diizinkan untuk tersambung ke TV Samsung ini. Periksa setelan TV Anda untuk mengotorisasi Home Assistant.",
+            "auth_missing": "Home Assistant tidak diizinkan untuk tersambung ke TV Samsung ini. Periksa Manajer Perangkat Eksternal TV Anda untuk mengotorisasi Home Assistant.",
             "cannot_connect": "Gagal terhubung",
+            "id_missing": "Perangkat Samsung ini tidak memiliki SerialNumber.",
+            "missing_config_entry": "Perangkat Samsung ini tidak memiliki entri konfigurasi.",
             "not_supported": "Perangkat TV Samsung ini saat ini tidak didukung.",
             "reauth_successful": "Autentikasi ulang berhasil",
             "unknown": "Kesalahan yang tidak diharapkan"
         },
         "error": {
-            "auth_missing": "Home Assistant tidak diizinkan untuk tersambung ke TV Samsung ini. Periksa setelan TV Anda untuk mengotorisasi Home Assistant."
+            "auth_missing": "Home Assistant tidak diizinkan untuk tersambung ke TV Samsung ini. Periksa Manajer Perangkat Eksternal TV Anda untuk mengotorisasi Home Assistant.",
+            "invalid_pin": "PIN tidak valid, silakan coba lagi."
         },
-        "flow_title": "TV Samsung: {model}",
+        "flow_title": "{device}",
         "step": {
             "confirm": {
-                "description": "Apakah Anda ingin menyiapkan TV Samsung {model}? Jika Anda belum pernah menyambungkan Home Assistant sebelumnya, Anda akan melihat dialog di TV yang meminta otorisasi. Konfigurasi manual untuk TV ini akan ditimpa.",
+                "description": "Apakah Anda ingin menyiapkan {device}? Jika Anda belum pernah menyambungkan Home Assistant sebelumnya, Anda akan melihat dialog di TV yang meminta otorisasi.",
                 "title": "TV Samsung"
+            },
+            "encrypted_pairing": {
+                "description": "Masukkan PIN yang ditampilkan di {device} ."
+            },
+            "pairing": {
+                "description": "Apakah Anda ingin menyiapkan {device}? Jika Anda belum pernah menyambungkan Home Assistant sebelumnya, Anda akan melihat dialog di TV yang meminta otorisasi."
+            },
+            "reauth_confirm": {
+                "description": "Setelah mengirimkan, setujui pada popup di {device} yang meminta otorisasi dalam waktu 30 detik atau masukkan PIN."
+            },
+            "reauth_confirm_encrypted": {
+                "description": "Masukkan PIN yang ditampilkan di {device} ."
             },
             "user": {
                 "data": {

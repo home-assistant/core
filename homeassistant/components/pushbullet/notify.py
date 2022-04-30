@@ -41,7 +41,7 @@ def get_service(hass, config, discovery_info=None):
 class PushBulletNotificationService(BaseNotificationService):
     """Implement the notification service for Pushbullet."""
 
-    def __init__(self, pb):
+    def __init__(self, pb):  # pylint: disable=invalid-name
         """Initialize the service."""
         self.pushbullet = pb
         self.pbtargets = {}

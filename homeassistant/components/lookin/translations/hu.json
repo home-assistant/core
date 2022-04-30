@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "already_in_progress": "A be\u00e1ll\u00edt\u00e1si folyamat m\u00e1r el lett kezdve",
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "no_devices_found": "Nem tal\u00e1lhat\u00f3 eszk\u00f6z a h\u00e1l\u00f3zaton"
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "no_devices_found": "Nem tal\u00e1lhat\u00f3 eszk\u00f6z a h\u00e1l\u00f3zaton",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "flow_title": "{name} ({host})",
+        "step": {
+            "device_name": {
+                "data": {
+                    "name": "Elnevez\u00e9s"
+                }
+            },
+            "discovery_confirm": {
+                "description": "Szeretn\u00e9 be\u00e1ll\u00edtani: {name} ({host})?"
+            },
+            "user": {
+                "data": {
+                    "ip_address": "IP c\u00edm"
+                }
+            }
+        }
+    }
+}

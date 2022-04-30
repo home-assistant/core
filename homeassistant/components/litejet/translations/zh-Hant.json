@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u88dd\u7f6e\u3002"
+            "single_instance_allowed": "\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210\u3001\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u88dd\u7f6e\u3002"
         },
         "error": {
             "open_failed": "\u7121\u6cd5\u958b\u555f\u6307\u5b9a\u7684\u5e8f\u5217\u57e0"

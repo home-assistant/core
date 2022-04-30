@@ -1,7 +1,9 @@
 """Define constants for the Slide component."""
 
+from homeassistant.const import Platform
+
 API = "api"
-COMPONENT = "cover"
+COMPONENT_PLATFORM = Platform.COVER
 CONF_INVERT_POSITION = "invert_position"
 DOMAIN = "slide"
 SLIDES = "slides"

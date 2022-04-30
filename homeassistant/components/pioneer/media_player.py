@@ -1,19 +1,15 @@
 """Support for Pioneer Network Receivers."""
+from __future__ import annotations
+
 import logging
 import telnetlib
 
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
+from homeassistant.components.media_player import (
+    PLATFORM_SCHEMA,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -23,7 +19,10 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,18 +31,8 @@ CONF_SOURCES = "sources"
 DEFAULT_NAME = "Pioneer AVR"
 DEFAULT_PORT = 23  # telnet default. Some Pioneer AVRs use 8102
 DEFAULT_TIMEOUT = None
-DEFAULT_SOURCES = {}
+DEFAULT_SOURCES: dict[str, str] = {}
 
-SUPPORT_PIONEER = (
-    SUPPORT_PAUSE
-    | SUPPORT_VOLUME_SET
-    | SUPPORT_VOLUME_STEP
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-    | SUPPORT_SELECT_SOURCE
-    | SUPPORT_PLAY
-)
 
 MAX_VOLUME = 185
 MAX_SOURCE_NUMBERS = 60
@@ -59,7 +48,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Pioneer platform."""
     pioneer = PioneerDevice(
         config[CONF_NAME],
@@ -75,6 +69,17 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 class PioneerDevice(MediaPlayerEntity):
     """Representation of a Pioneer device."""
+
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.VOLUME_STEP
+        | MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.SELECT_SOURCE
+        | MediaPlayerEntityFeature.PLAY
+    )
 
     def __init__(self, name, host, port, timeout, sources):
         """Initialize the Pioneer device."""
@@ -189,11 +194,6 @@ class PioneerDevice(MediaPlayerEntity):
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
         return self._muted
-
-    @property
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        return SUPPORT_PIONEER
 
     @property
     def source(self):

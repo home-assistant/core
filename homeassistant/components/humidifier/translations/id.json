@@ -13,7 +13,9 @@
             "is_on": "{entity_name} nyala"
         },
         "trigger_type": {
+            "changed_states": "{entity_name} diaktifkan atau dinonaktifkan",
             "target_humidity_changed": "Kelembapan target {entity_name} berubah",
+            "toggled": "{entity_name} diaktifkan atau dinonaktifkan",
             "turned_off": "{entity_name} dimatikan",
             "turned_on": "{entity_name} dinyalakan"
         }

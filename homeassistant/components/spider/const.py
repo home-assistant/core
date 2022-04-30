@@ -1,6 +1,7 @@
 """Constants for the Spider integration."""
+from homeassistant.const import Platform
 
 DOMAIN = "spider"
 DEFAULT_SCAN_INTERVAL = 300
 
-PLATFORMS = ["climate", "switch", "sensor"]
+PLATFORMS = [Platform.CLIMATE, Platform.SWITCH, Platform.SENSOR]

@@ -1,4 +1,6 @@
 """Support for Proxmox VE."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
@@ -15,15 +17,17 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
 
-PLATFORMS = ["binary_sensor"]
+PLATFORMS = [Platform.BINARY_SENSOR]
 DOMAIN = "proxmoxve"
 PROXMOX_CLIENTS = "proxmox_clients"
 CONF_REALM = "realm"
@@ -84,7 +88,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the platform."""
     hass.data.setdefault(DOMAIN, {})
 
@@ -132,7 +136,8 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
     await hass.async_add_executor_job(build_client)
 
-    coordinators = hass.data[DOMAIN][COORDINATORS] = {}
+    coordinators: dict[str, dict[str, dict[int, DataUpdateCoordinator]]] = {}
+    hass.data[DOMAIN][COORDINATORS] = coordinators
 
     # Create a coordinator for each vm/container
     for host_config in config[DOMAIN]:

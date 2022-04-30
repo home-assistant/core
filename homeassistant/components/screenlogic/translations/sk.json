@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "gateway_entry": {
+                "data": {
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}

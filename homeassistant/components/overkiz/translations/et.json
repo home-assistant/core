@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto on juba h\u00e4\u00e4lestatud",
+            "reauth_successful": "Taastuvastamine \u00f5nnestus",
+            "reauth_wrong_account": "Seda kirjet saab uuesti autentida ainult sama Overkiz'i konto ja keskuse abil."
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_auth": "Tuvastamine nurjus",
+            "server_in_maintenance": "Server on hoolduse t\u00f5ttu maas",
+            "too_many_attempts": "Liiga palju katseid kehtetu v\u00f5tmega, ajutiselt keelatud",
+            "too_many_requests": "Liiga palju p\u00e4ringuid, proovi hiljem uuesti",
+            "unknown": "Ootamatu t\u00f5rge"
+        },
+        "flow_title": "L\u00fc\u00fcs: {gateway_id}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "hub": "Hub",
+                    "password": "Salas\u00f5na",
+                    "username": "Kasutajanimi"
+                },
+                "description": "Overkizi platvormi kasutavad erinevad m\u00fc\u00fcjad, nagu Somfy (Connexoon / TaHoma), Hitachi (Hi Kumo), Rexel (Energeasy Connect) ja Atlantic (Cozytouch). Sisesta oma rakenduse mandaadid ja vali hub."
+            }
+        }
+    }
+}

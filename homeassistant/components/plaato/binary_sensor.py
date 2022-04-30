@@ -1,22 +1,25 @@
 """Support for Plaato Airlock sensors."""
-
-import logging
+from __future__ import annotations
 
 from pyplaato.plaato import PlaatoKeg
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_OPENING,
-    DEVICE_CLASS_PROBLEM,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import CONF_USE_WEBHOOK, COORDINATOR, DOMAIN
 from .entity import PlaatoEntity
 
-_LOGGER = logging.getLogger(__name__)
 
-
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up Plaato from a config entry."""
 
     if config_entry.data[CONF_USE_WEBHOOK]:
@@ -44,11 +47,12 @@ class PlaatoBinarySensor(PlaatoEntity, BinarySensorEntity):
         return False
 
     @property
-    def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
+    def device_class(self) -> BinarySensorDeviceClass | None:
+        """Return the class of this device, from BinarySensorDeviceClass."""
         if self._coordinator is None:
             return None
         if self._sensor_type is PlaatoKeg.Pins.LEAK_DETECTION:
-            return DEVICE_CLASS_PROBLEM
+            return BinarySensorDeviceClass.PROBLEM
         if self._sensor_type is PlaatoKeg.Pins.POURING:
-            return DEVICE_CLASS_OPENING
+            return BinarySensorDeviceClass.OPENING
+        return None

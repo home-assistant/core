@@ -1,5 +1,6 @@
 """The tests for the rest command platform."""
 import asyncio
+from http import HTTPStatus
 
 import aiohttp
 
@@ -104,7 +105,7 @@ class TestRestCommandComponent:
         with assert_setup_component(5):
             setup_component(self.hass, rc.DOMAIN, self.config)
 
-        aioclient_mock.get(self.url, status=400)
+        aioclient_mock.get(self.url, status=HTTPStatus.BAD_REQUEST)
 
         self.hass.services.call(rc.DOMAIN, "get_test", {})
         self.hass.block_till_done()

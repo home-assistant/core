@@ -65,6 +65,6 @@ class ScriptVariables:
 
         return rendered_variables
 
-    def as_dict(self) -> dict:
+    def as_dict(self) -> dict[str, Any]:
         """Return dict version of this class."""
         return self.variables

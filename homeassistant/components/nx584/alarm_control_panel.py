@@ -1,4 +1,6 @@
 """Support for NX584 alarm control panels."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
@@ -9,10 +11,7 @@ import voluptuous as vol
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.alarm_control_panel import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
-)
-from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_HOME,
+    AlarmControlPanelEntityFeature,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -23,8 +22,11 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,7 +48,12 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the NX584 platform."""
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
@@ -85,6 +92,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class NX584Alarm(alarm.AlarmControlPanelEntity):
     """Representation of a NX584-based alarm panel."""
 
+    _attr_supported_features = (
+        AlarmControlPanelEntityFeature.ARM_HOME
+        | AlarmControlPanelEntityFeature.ARM_AWAY
+    )
+
     def __init__(self, name, alarm_client, url):
         """Init the nx584 alarm panel."""
         self._name = name
@@ -100,17 +112,12 @@ class NX584Alarm(alarm.AlarmControlPanelEntity):
     @property
     def code_format(self):
         """Return one or more digits/characters."""
-        return alarm.FORMAT_NUMBER
+        return alarm.CodeFormat.NUMBER
 
     @property
     def state(self):
         """Return the state of the device."""
         return self._state
-
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
 
     def update(self):
         """Process new events from panel."""

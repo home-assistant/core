@@ -1,6 +1,13 @@
 """Nexia constants."""
+from homeassistant.const import Platform
 
-PLATFORMS = ["sensor", "binary_sensor", "climate", "scene"]
+PLATFORMS = [
+    Platform.SENSOR,
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.SCENE,
+    Platform.SWITCH,
+]
 
 ATTRIBUTION = "Data provided by mynexia.com"
 
@@ -9,7 +16,6 @@ NOTIFICATION_TITLE = "Nexia Setup"
 
 CONF_BRAND = "brand"
 
-NEXIA_DEVICE = "device"
 NEXIA_SCAN_INTERVAL = "scan_interval"
 
 DOMAIN = "nexia"
@@ -19,13 +25,14 @@ ATTR_DESCRIPTION = "description"
 
 ATTR_AIRCLEANER_MODE = "aircleaner_mode"
 
+ATTR_RUN_MODE = "run_mode"
+
 ATTR_ZONE_STATUS = "zone_status"
 ATTR_HUMIDIFY_SUPPORTED = "humidify_supported"
 ATTR_DEHUMIDIFY_SUPPORTED = "dehumidify_supported"
 ATTR_HUMIDIFY_SETPOINT = "humidify_setpoint"
 ATTR_DEHUMIDIFY_SETPOINT = "dehumidify_setpoint"
 
-UPDATE_COORDINATOR = "update_coordinator"
 
 MANUFACTURER = "Trane"
 

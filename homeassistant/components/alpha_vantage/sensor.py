@@ -1,4 +1,6 @@
 """Stock market information from Alpha Vantage."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
@@ -6,9 +8,13 @@ from alpha_vantage.foreignexchange import ForeignExchange
 from alpha_vantage.timeseries import TimeSeries
 import voluptuous as vol
 
+from homeassistant.components import persistent_notification
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY, CONF_CURRENCY, CONF_NAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,7 +67,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Alpha Vantage sensor."""
     api_key = config[CONF_API_KEY]
     symbols = config.get(CONF_SYMBOLS, [])
@@ -69,13 +80,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     if not symbols and not conversions:
         msg = "No symbols or currencies configured."
-        hass.components.persistent_notification.create(msg, "Sensor alpha_vantage")
+        persistent_notification.create(hass, msg, "Sensor alpha_vantage")
         _LOGGER.warning(msg)
         return
 
     timeseries = TimeSeries(key=api_key)
 
-    dev = []
+    dev: list[SensorEntity] = []
     for symbol in symbols:
         try:
             _LOGGER.debug("Configuring timeseries for symbols: %s", symbol[CONF_SYMBOL])
@@ -112,7 +123,7 @@ class AlphaVantageSensor(SensorEntity):
         self._symbol = symbol[CONF_SYMBOL]
         self._attr_name = symbol.get(CONF_NAME, self._symbol)
         self._timeseries = timeseries
-        self._attr_unit_of_measurement = symbol.get(CONF_CURRENCY, self._symbol)
+        self._attr_native_unit_of_measurement = symbol.get(CONF_CURRENCY, self._symbol)
         self._attr_icon = ICONS.get(symbol.get(CONF_CURRENCY, "USD"))
 
     def update(self):
@@ -120,7 +131,10 @@ class AlphaVantageSensor(SensorEntity):
         _LOGGER.debug("Requesting new data for symbol %s", self._symbol)
         all_values, _ = self._timeseries.get_intraday(self._symbol)
         values = next(iter(all_values.values()))
-        self._attr_state = values["1. open"]
+        if isinstance(values, dict) and "1. open" in values:
+            self._attr_native_value = values["1. open"]
+        else:
+            self._attr_native_value = None
         self._attr_extra_state_attributes = (
             {
                 ATTR_ATTRIBUTION: ATTRIBUTION,
@@ -128,7 +142,7 @@ class AlphaVantageSensor(SensorEntity):
                 ATTR_HIGH: values["2. high"],
                 ATTR_LOW: values["3. low"],
             }
-            if values is not None
+            if isinstance(values, dict)
             else None
         )
         _LOGGER.debug("Received new values for symbol %s", self._symbol)
@@ -148,7 +162,7 @@ class AlphaVantageForeignExchange(SensorEntity):
             else f"{self._to_currency}/{self._from_currency}"
         )
         self._attr_icon = ICONS.get(self._from_currency, "USD")
-        self._attr_unit_of_measurement = self._to_currency
+        self._attr_native_unit_of_measurement = self._to_currency
 
     def update(self):
         """Get the latest data and updates the states."""
@@ -160,7 +174,10 @@ class AlphaVantageForeignExchange(SensorEntity):
         values, _ = self._foreign_exchange.get_currency_exchange_rate(
             from_currency=self._from_currency, to_currency=self._to_currency
         )
-        self._attr_state = round(float(values["5. Exchange Rate"]), 4)
+        if isinstance(values, dict) and "5. Exchange Rate" in values:
+            self._attr_native_value = round(float(values["5. Exchange Rate"]), 4)
+        else:
+            self._attr_native_value = None
         self._attr_extra_state_attributes = (
             {
                 ATTR_ATTRIBUTION: ATTRIBUTION,

@@ -1,6 +1,9 @@
 """Test integration platform helpers."""
 from unittest.mock import Mock
 
+from homeassistant.helpers.integration_platform import (
+    async_process_integration_platform_for_component,
+)
 from homeassistant.setup import ATTR_COMPONENT, EVENT_COMPONENT_LOADED
 
 from tests.common import mock_platform
@@ -35,3 +38,16 @@ async def test_process_integration_platforms(hass):
     assert len(processed) == 2
     assert processed[1][0] == "event"
     assert processed[1][1] == event_platform
+
+    # Verify we only process the platform once if we call it manually
+    await hass.helpers.integration_platform.async_process_integration_platform_for_component(
+        hass, "event"
+    )
+    assert len(processed) == 2
+
+
+async def test_process_integration_platforms_none_loaded(hass):
+    """Test processing integrations with none loaded."""
+    # Verify we can call async_process_integration_platform_for_component
+    # when there are none loaded and it does not throw
+    await async_process_integration_platform_for_component(hass, "any")

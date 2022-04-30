@@ -1,16 +1,17 @@
 """The Nmap Tracker integration."""
+from typing import Final
 
-DOMAIN = "nmap_tracker"
+from homeassistant.const import Platform
 
-PLATFORMS = ["device_tracker"]
+DOMAIN: Final = "nmap_tracker"
 
-NMAP_TRACKED_DEVICES = "nmap_tracked_devices"
+PLATFORMS: Final = [Platform.DEVICE_TRACKER]
+
+NMAP_TRACKED_DEVICES: Final = "nmap_tracked_devices"
 
 # Interval in minutes to exclude devices from a scan while they are home
-CONF_HOME_INTERVAL = "home_interval"
-CONF_OPTIONS = "scan_options"
-DEFAULT_OPTIONS = "-F --host-timeout 5s"
+CONF_HOME_INTERVAL: Final = "home_interval"
+CONF_OPTIONS: Final = "scan_options"
+DEFAULT_OPTIONS: Final = "-F -T4 --min-rate 10 --host-timeout 5s"
 
-TRACKER_SCAN_INTERVAL = 120
-
-DEFAULT_TRACK_NEW_DEVICES = True
+TRACKER_SCAN_INTERVAL: Final = 120

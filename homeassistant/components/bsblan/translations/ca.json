@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El dispositiu ja est\u00e0 configurat"
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "cannot_connect": "Ha fallat la connexi\u00f3"
         },
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3"
@@ -16,7 +17,7 @@
                     "port": "Port",
                     "username": "Nom d'usuari"
                 },
-                "description": "Configura un dispositiu BSB-Lan per a integrar-lo amb Home Assistant.",
+                "description": "Configura la integraci\u00f3 d'un dispositiu BSB-Lan amb Home Assistant.",
                 "title": "Connexi\u00f3 amb dispositiu BSB-Lan"
             }
         }

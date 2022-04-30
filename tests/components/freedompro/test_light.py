@@ -1,4 +1,8 @@
 """Tests for the Freedompro light."""
+from unittest.mock import patch
+
+import pytest
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_HS_COLOR,
@@ -7,6 +11,13 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, STATE_OFF, STATE_ON
 from homeassistant.helpers import entity_registry as er
+
+
+@pytest.fixture(autouse=True)
+def mock_freedompro_put_state():
+    """Mock freedompro put_state."""
+    with patch("homeassistant.components.freedompro.light.put_state"):
+        yield
 
 
 async def test_light_get_state(hass, init_integration):

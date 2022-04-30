@@ -1,4 +1,6 @@
 """Support for information about the German train system."""
+from __future__ import annotations
+
 from datetime import timedelta
 
 import schiene
@@ -6,7 +8,10 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_OFFSET
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 CONF_DESTINATION = "to"
@@ -29,7 +34,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Deutsche Bahn Sensor."""
     start = config.get(CONF_START)
     destination = config[CONF_DESTINATION]
@@ -59,7 +69,7 @@ class DeutscheBahnSensor(SensorEntity):
         return ICON
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the departure time of the next train."""
         return self._state
 

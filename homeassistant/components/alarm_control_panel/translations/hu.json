@@ -9,7 +9,12 @@
             "trigger": "{entity_name} riaszt\u00e1si esem\u00e9ny ind\u00edt\u00e1sa"
         },
         "condition_type": {
-            "is_armed_vacation": "{entity_name} nyaral\u00e1s \u00e9les\u00edtve"
+            "is_armed_away": "{entity_name} \u00e9les\u00edtve van",
+            "is_armed_home": "{entity_name} \u00e9les\u00edtett otthoni m\u00f3dban",
+            "is_armed_night": "{entity_name} \u00e9les\u00edtett \u00e9jszaka m\u00f3dban",
+            "is_armed_vacation": "{entity_name} nyaral\u00e1s \u00e9les\u00edtve",
+            "is_disarmed": "{entity_name} hat\u00e1stalan\u00edtva",
+            "is_triggered": "{entity_name} aktiv\u00e1lva van"
         },
         "trigger_type": {
             "armed_away": "{entity_name} t\u00e1voz\u00f3 m\u00f3dban lett \u00e9les\u00edtve",

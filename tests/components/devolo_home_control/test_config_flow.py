@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.devolo_home_control.const import DEFAULT_MYDEVOLO, DOMAIN
 
 from .const import (
@@ -17,7 +17,7 @@ from tests.common import MockConfigEntry
 
 async def test_form(hass):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -31,7 +31,7 @@ async def test_form(hass):
 @pytest.mark.credentials_invalid
 async def test_form_invalid_credentials_user(hass):
     """Test if we get the error message on invalid credentials."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -117,7 +117,7 @@ async def test_form_zeroconf(hass):
 @pytest.mark.credentials_invalid
 async def test_form_invalid_credentials_zeroconf(hass):
     """Test if we get the error message on invalid credentials."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},

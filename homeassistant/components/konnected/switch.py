@@ -1,6 +1,8 @@
 """Support for wired switches attached to a Konnected device."""
 import logging
 
+from homeassistant.components.switch import SwitchEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_STATE,
     CONF_DEVICES,
@@ -9,9 +11,10 @@ from homeassistant.const import (
     CONF_SWITCHES,
     CONF_ZONE,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     CONF_ACTIVATION,
@@ -25,7 +28,11 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up switches attached to a Konnected device from a config entry."""
     data = hass.data[KONNECTED_DOMAIN]
     device_id = config_entry.data["id"]
@@ -36,7 +43,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(switches)
 
 
-class KonnectedSwitch(ToggleEntity):
+class KonnectedSwitch(SwitchEntity):
     """Representation of a Konnected switch."""
 
     def __init__(self, device_id, zone_num, data):
@@ -77,11 +84,9 @@ class KonnectedSwitch(ToggleEntity):
         return device_data.get("panel")
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        return {
-            "identifiers": {(KONNECTED_DOMAIN, self._device_id)},
-        }
+        return DeviceInfo(identifiers={(KONNECTED_DOMAIN, self._device_id)})
 
     @property
     def available(self):

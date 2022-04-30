@@ -1,5 +1,5 @@
 """Test the Z-Wave JS lock platform."""
-from zwave_js_server.const import ATTR_CODE_SLOT, ATTR_USERCODE
+from zwave_js_server.const.command_class.lock import ATTR_CODE_SLOT, ATTR_USERCODE
 from zwave_js_server.event import Event
 from zwave_js_server.model.node import NodeStatus
 
@@ -222,3 +222,8 @@ async def test_door_lock(hass, client, lock_schlage_be469, integration):
 
     assert node.status == NodeStatus.DEAD
     assert hass.states.get(SCHLAGE_BE469_LOCK_ENTITY).state == STATE_UNAVAILABLE
+
+
+async def test_only_one_lock(hass, client, lock_home_connect_620, integration):
+    """Test node with both Door Lock and Lock CC values only gets one lock entity."""
+    assert len(hass.states.async_entity_ids("lock")) == 1

@@ -35,6 +35,16 @@
             }
         }
     },
+    "device_automation": {
+        "action_type": {
+            "send_command": "Enviar comando: {subtype}",
+            "send_status": "Enviar actualizaci\u00f3n de estado: {subtype}"
+        },
+        "trigger_type": {
+            "command": "Comando recibido: {subtype}",
+            "status": "Estado recibido: {subtype}"
+        }
+    },
     "options": {
         "error": {
             "already_configured_device": "El dispositivo ya est\u00e1 configurado",

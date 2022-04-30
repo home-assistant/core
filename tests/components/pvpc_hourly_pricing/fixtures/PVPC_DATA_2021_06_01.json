@@ -1,0 +1,154 @@
+{
+  "data": {
+    "type": "Precios mercado peninsular en tiempo real",
+    "id": "mer13",
+    "attributes": {
+      "title": "Precios mercado peninsular en tiempo real",
+      "last-update": "2021-05-31T20:19:18.000+02:00",
+      "description": null
+    },
+    "meta": {
+      "cache-control": {
+        "cache": "MISS"
+      }
+    }
+  },
+  "included": [
+    {
+      "type": "PVPC (\u20ac/MWh)",
+      "id": "1001",
+      "groupId": null,
+      "attributes": {
+        "title": "PVPC (\u20ac/MWh)",
+        "description": null,
+        "color": "#ffcf09",
+        "type": null,
+        "magnitude": "price",
+        "composite": false,
+        "last-update": "2021-05-31T20:19:18.000+02:00",
+        "values": [
+          {
+            "value": 116.33,
+            "percentage": 1,
+            "datetime": "2021-06-01T00:00:00.000+02:00"
+          },
+          {
+            "value": 115.95,
+            "percentage": 1,
+            "datetime": "2021-06-01T01:00:00.000+02:00"
+          },
+          {
+            "value": 114.89,
+            "percentage": 1,
+            "datetime": "2021-06-01T02:00:00.000+02:00"
+          },
+          {
+            "value": 114.96,
+            "percentage": 1,
+            "datetime": "2021-06-01T03:00:00.000+02:00"
+          },
+          {
+            "value": 114.84,
+            "percentage": 1,
+            "datetime": "2021-06-01T04:00:00.000+02:00"
+          },
+          {
+            "value": 116.03,
+            "percentage": 1,
+            "datetime": "2021-06-01T05:00:00.000+02:00"
+          },
+          {
+            "value": 116.29,
+            "percentage": 1,
+            "datetime": "2021-06-01T06:00:00.000+02:00"
+          },
+          {
+            "value": 115.7,
+            "percentage": 1,
+            "datetime": "2021-06-01T07:00:00.000+02:00"
+          },
+          {
+            "value": 152.89,
+            "percentage": 1,
+            "datetime": "2021-06-01T08:00:00.000+02:00"
+          },
+          {
+            "value": 150.83,
+            "percentage": 1,
+            "datetime": "2021-06-01T09:00:00.000+02:00"
+          },
+          {
+            "value": 149.28,
+            "percentage": 1,
+            "datetime": "2021-06-01T10:00:00.000+02:00"
+          },
+          {
+            "value": 240.5,
+            "percentage": 1,
+            "datetime": "2021-06-01T11:00:00.000+02:00"
+          },
+          {
+            "value": 238.09,
+            "percentage": 1,
+            "datetime": "2021-06-01T12:00:00.000+02:00"
+          },
+          {
+            "value": 235.3,
+            "percentage": 1,
+            "datetime": "2021-06-01T13:00:00.000+02:00"
+          },
+          {
+            "value": 231.28,
+            "percentage": 1,
+            "datetime": "2021-06-01T14:00:00.000+02:00"
+          },
+          {
+            "value": 132.88,
+            "percentage": 1,
+            "datetime": "2021-06-01T15:00:00.000+02:00"
+          },
+          {
+            "value": 131.93,
+            "percentage": 1,
+            "datetime": "2021-06-01T16:00:00.000+02:00"
+          },
+          {
+            "value": 135.99,
+            "percentage": 1,
+            "datetime": "2021-06-01T17:00:00.000+02:00"
+          },
+          {
+            "value": 138.13,
+            "percentage": 1,
+            "datetime": "2021-06-01T18:00:00.000+02:00"
+          },
+          {
+            "value": 240.4,
+            "percentage": 1,
+            "datetime": "2021-06-01T19:00:00.000+02:00"
+          },
+          {
+            "value": 246.2,
+            "percentage": 1,
+            "datetime": "2021-06-01T20:00:00.000+02:00"
+          },
+          {
+            "value": 248.08,
+            "percentage": 1,
+            "datetime": "2021-06-01T21:00:00.000+02:00"
+          },
+          {
+            "value": 249.41,
+            "percentage": 1,
+            "datetime": "2021-06-01T22:00:00.000+02:00"
+          },
+          {
+            "value": 156.5,
+            "percentage": 1,
+            "datetime": "2021-06-01T23:00:00.000+02:00"
+          }
+        ]
+      }
+    }
+  ]
+}

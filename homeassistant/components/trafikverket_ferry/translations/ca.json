@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El compte ja est\u00e0 configurat",
+            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "Clau API"
+                }
+            },
+            "user": {
+                "data": {
+                    "api_key": "Clau API",
+                    "from": "Des del port",
+                    "to": "Al port",
+                    "weekday": "Laborables"
+                }
+            }
+        }
+    }
+}

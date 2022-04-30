@@ -1,0 +1,12 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Select location to use for weather forecasting",
+        "data": {
+          "zone": "Zone"
+        }
+      }
+    }
+  }
+}

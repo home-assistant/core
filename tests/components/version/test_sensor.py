@@ -1,26 +1,33 @@
 """The test for the version sensor platform."""
-from unittest.mock import patch
+from __future__ import annotations
 
-from homeassistant.setup import async_setup_component
+from pyhaversion.exceptions import HaVersionException
+import pytest
 
-MOCK_VERSION = "10.0"
+from homeassistant.core import HomeAssistant
 
-
-async def test_version_sensor(hass):
-    """Test the Version sensor."""
-    config = {"sensor": {"platform": "version"}}
-
-    assert await async_setup_component(hass, "sensor", config)
+from .common import MOCK_VERSION, mock_get_version_update, setup_version_integration
 
 
-async def test_version(hass):
-    """Test the Version sensor."""
-    config = {"sensor": {"platform": "version", "name": "test"}}
+async def test_version_sensor(hass: HomeAssistant):
+    """Test the Version sensor with different sources."""
+    await setup_version_integration(hass)
 
-    with patch("homeassistant.const.__version__", MOCK_VERSION):
-        assert await async_setup_component(hass, "sensor", config)
-        await hass.async_block_till_done()
+    state = hass.states.get("sensor.local_installation")
+    assert state.state == MOCK_VERSION
+    assert "source" not in state.attributes
+    assert "channel" not in state.attributes
 
-    state = hass.states.get("sensor.test")
 
-    assert state.state == "10.0"
+async def test_update(hass: HomeAssistant, caplog: pytest.LogCaptureFixture):
+    """Test updates."""
+    await setup_version_integration(hass)
+    assert hass.states.get("sensor.local_installation").state == MOCK_VERSION
+
+    await mock_get_version_update(hass, version="1970.1.1")
+    assert hass.states.get("sensor.local_installation").state == "1970.1.1"
+
+    assert "Error fetching version data" not in caplog.text
+    await mock_get_version_update(hass, side_effect=HaVersionException)
+    assert hass.states.get("sensor.local_installation").state == "unavailable"
+    assert "Error fetching version data" in caplog.text

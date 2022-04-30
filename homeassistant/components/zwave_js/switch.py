@@ -5,7 +5,10 @@ import logging
 from typing import Any
 
 from zwave_js_server.client import Client as ZwaveClient
-from zwave_js_server.const import BarrierEventSignalingSubsystemState
+from zwave_js_server.const import TARGET_VALUE_PROPERTY
+from zwave_js_server.const.command_class.barrier_operator import (
+    BarrierEventSignalingSubsystemState,
+)
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -53,8 +56,16 @@ async def async_setup_entry(
 class ZWaveSwitch(ZWaveBaseEntity, SwitchEntity):
     """Representation of a Z-Wave switch."""
 
+    def __init__(
+        self, config_entry: ConfigEntry, client: ZwaveClient, info: ZwaveDiscoveryInfo
+    ) -> None:
+        """Initialize the switch."""
+        super().__init__(config_entry, client, info)
+
+        self._target_value = self.get_zwave_value(TARGET_VALUE_PROPERTY)
+
     @property
-    def is_on(self) -> bool | None:  # type: ignore
+    def is_on(self) -> bool | None:
         """Return a boolean for the state of the switch."""
         if self.info.primary_value.value is None:
             # guard missing value
@@ -63,15 +74,13 @@ class ZWaveSwitch(ZWaveBaseEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        target_value = self.get_zwave_value("targetValue")
-        if target_value is not None:
-            await self.info.node.async_set_value(target_value, True)
+        if self._target_value is not None:
+            await self.info.node.async_set_value(self._target_value, True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        target_value = self.get_zwave_value("targetValue")
-        if target_value is not None:
-            await self.info.node.async_set_value(target_value, False)
+        if self._target_value is not None:
+            await self.info.node.async_set_value(self._target_value, False)
 
 
 class ZWaveBarrierEventSignalingSwitch(ZWaveBaseEntity, SwitchEntity):
@@ -98,7 +107,7 @@ class ZWaveBarrierEventSignalingSwitch(ZWaveBaseEntity, SwitchEntity):
         self._update_state()
 
     @property
-    def is_on(self) -> bool | None:  # type: ignore
+    def is_on(self) -> bool | None:
         """Return a boolean for the state of the switch."""
         return self._state
 

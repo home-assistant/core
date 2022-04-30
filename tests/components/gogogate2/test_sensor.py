@@ -17,6 +17,7 @@ from ismartgate.common import (
 )
 
 from homeassistant.components.gogogate2.const import DEVICE_TYPE_ISMARTGATE, DOMAIN
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -25,8 +26,6 @@ from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_PASSWORD,
     CONF_USERNAME,
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_TEMPERATURE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -171,6 +170,8 @@ async def test_sensor_update(gogogate2api_mock, hass: HomeAssistant) -> None:
         "door_id": 1,
         "friendly_name": "Door1 battery",
         "sensor_id": "ABCD",
+        "state_class": "measurement",
+        "unit_of_measurement": "%",
     }
     temp_attributes = {
         "device_class": "temperature",
@@ -178,6 +179,7 @@ async def test_sensor_update(gogogate2api_mock, hass: HomeAssistant) -> None:
         "friendly_name": "Door1 temperature",
         "sensor_id": "ABCD",
         "unit_of_measurement": "°C",
+        "state_class": "measurement",
     }
 
     api = MagicMock(GogoGate2Api)
@@ -245,6 +247,8 @@ async def test_availability(ismartgateapi_mock, hass: HomeAssistant) -> None:
         "door_id": 1,
         "friendly_name": "Door1 battery",
         "sensor_id": "ABCD",
+        "state_class": "measurement",
+        "unit_of_measurement": "%",
     }
     temp_attributes = {
         "device_class": "temperature",
@@ -252,6 +256,7 @@ async def test_availability(ismartgateapi_mock, hass: HomeAssistant) -> None:
         "friendly_name": "Door1 temperature",
         "sensor_id": "ABCD",
         "unit_of_measurement": "°C",
+        "state_class": "measurement",
     }
 
     sensor_response = _mocked_ismartgate_sensor_response(35, -4.0)
@@ -290,11 +295,11 @@ async def test_availability(ismartgateapi_mock, hass: HomeAssistant) -> None:
     assert hass.states.get("sensor.door3_temperature") is None
     assert (
         hass.states.get("sensor.door1_battery").attributes[ATTR_DEVICE_CLASS]
-        == DEVICE_CLASS_BATTERY
+        == SensorDeviceClass.BATTERY
     )
     assert (
         hass.states.get("sensor.door1_temperature").attributes[ATTR_DEVICE_CLASS]
-        == DEVICE_CLASS_TEMPERATURE
+        == SensorDeviceClass.TEMPERATURE
     )
     assert (
         hass.states.get("sensor.door1_temperature").attributes[ATTR_UNIT_OF_MEASUREMENT]

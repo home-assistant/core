@@ -1,12 +1,10 @@
 """The iCloud component."""
-
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType, ServiceDataType
 from homeassistant.util import slugify
 
 from .account import IcloudAccount
@@ -14,9 +12,6 @@ from .const import (
     CONF_GPS_ACCURACY_THRESHOLD,
     CONF_MAX_INTERVAL,
     CONF_WITH_FAMILY,
-    DEFAULT_GPS_ACCURACY_THRESHOLD,
-    DEFAULT_MAX_INTERVAL,
-    DEFAULT_WITH_FAMILY,
     DOMAIN,
     PLATFORMS,
     STORAGE_KEY,
@@ -68,39 +63,7 @@ SERVICE_SCHEMA_LOST_DEVICE = vol.Schema(
     }
 )
 
-ACCOUNT_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_WITH_FAMILY, default=DEFAULT_WITH_FAMILY): cv.boolean,
-        vol.Optional(CONF_MAX_INTERVAL, default=DEFAULT_MAX_INTERVAL): cv.positive_int,
-        vol.Optional(
-            CONF_GPS_ACCURACY_THRESHOLD, default=DEFAULT_GPS_ACCURACY_THRESHOLD
-        ): cv.positive_int,
-    }
-)
-
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema(vol.All(cv.ensure_list, [ACCOUNT_SCHEMA]))},
-    extra=vol.ALLOW_EXTRA,
-)
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up iCloud from legacy config file."""
-
-    conf = config.get(DOMAIN)
-    if conf is None:
-        return True
-
-    for account_conf in conf:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=account_conf
-            )
-        )
-
-    return True
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -136,7 +99,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
-    def play_sound(service: ServiceDataType) -> None:
+    def play_sound(service: ServiceCall) -> None:
         """Play sound on the device."""
         account = service.data[ATTR_ACCOUNT]
         device_name = service.data.get(ATTR_DEVICE_NAME)
@@ -145,7 +108,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         for device in _get_account(account).get_devices_with_name(device_name):
             device.play_sound()
 
-    def display_message(service: ServiceDataType) -> None:
+    def display_message(service: ServiceCall) -> None:
         """Display a message on the device."""
         account = service.data[ATTR_ACCOUNT]
         device_name = service.data.get(ATTR_DEVICE_NAME)
@@ -156,7 +119,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         for device in _get_account(account).get_devices_with_name(device_name):
             device.display_message(message, sound)
 
-    def lost_device(service: ServiceDataType) -> None:
+    def lost_device(service: ServiceCall) -> None:
         """Make the device in lost state."""
         account = service.data[ATTR_ACCOUNT]
         device_name = service.data.get(ATTR_DEVICE_NAME)
@@ -167,11 +130,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         for device in _get_account(account).get_devices_with_name(device_name):
             device.lost_device(number, message)
 
-    def update_account(service: ServiceDataType) -> None:
+    def update_account(service: ServiceCall) -> None:
         """Call the update function of an iCloud account."""
-        account = service.data.get(ATTR_ACCOUNT)
-
-        if account is None:
+        if (account := service.data.get(ATTR_ACCOUNT)) is None:
             for account in hass.data[DOMAIN].values():
                 account.keep_alive()
         else:
@@ -218,7 +179,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:

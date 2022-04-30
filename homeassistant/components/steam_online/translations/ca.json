@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El servei ja est\u00e0 configurat",
+            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_account": "ID del compte inv\u00e0lid",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
+            "unknown": "Error inesperat"
+        },
+        "step": {
+            "reauth_confirm": {
+                "title": "Reautenticaci\u00f3 de la integraci\u00f3"
+            },
+            "user": {
+                "data": {
+                    "account": "ID del compte de Steam",
+                    "api_key": "Clau API"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "accounts": "Noms dels comptes a controlar"
+                }
+            }
+        }
+    }
+}

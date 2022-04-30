@@ -7,46 +7,23 @@ import pytest
 
 
 @pytest.fixture()
-def dial_mock():
+def get_multizone_status_mock():
     """Mock pychromecast dial."""
-    dial_mock = MagicMock()
-    dial_mock.get_device_status.return_value.uuid = "fake_uuid"
-    dial_mock.get_device_status.return_value.manufacturer = "fake_manufacturer"
-    dial_mock.get_device_status.return_value.model_name = "fake_model_name"
-    dial_mock.get_device_status.return_value.friendly_name = "fake_friendly_name"
-    dial_mock.get_multizone_status.return_value.dynamic_groups = []
-    return dial_mock
+    mock = MagicMock(spec_set=pychromecast.dial.get_multizone_status)
+    mock.return_value.dynamic_groups = []
+    return mock
 
 
 @pytest.fixture()
 def castbrowser_mock():
     """Mock pychromecast CastBrowser."""
-    return MagicMock()
-
-
-@pytest.fixture()
-def castbrowser_constructor_mock():
-    """Mock pychromecast CastBrowser constructor."""
-    return MagicMock()
+    return MagicMock(spec=pychromecast.discovery.CastBrowser)
 
 
 @pytest.fixture()
 def mz_mock():
     """Mock pychromecast MultizoneManager."""
-    return MagicMock()
-
-
-@pytest.fixture()
-def pycast_mock(castbrowser_mock, castbrowser_constructor_mock):
-    """Mock pychromecast."""
-    pycast_mock = MagicMock()
-    pycast_mock.IGNORE_CEC = []
-    pycast_mock.discovery.CastBrowser = castbrowser_constructor_mock
-    pycast_mock.discovery.CastBrowser.return_value = castbrowser_mock
-    pycast_mock.discovery.AbstractCastListener = (
-        pychromecast.discovery.AbstractCastListener
-    )
-    return pycast_mock
+    return MagicMock(spec_set=pychromecast.controllers.multizone.MultizoneManager)
 
 
 @pytest.fixture()
@@ -55,15 +32,29 @@ def quick_play_mock():
     return MagicMock()
 
 
+@pytest.fixture()
+def get_chromecast_mock():
+    """Mock pychromecast get_chromecast_from_cast_info."""
+    return MagicMock()
+
+
 @pytest.fixture(autouse=True)
-def cast_mock(dial_mock, mz_mock, pycast_mock, quick_play_mock):
+def cast_mock(
+    mz_mock,
+    quick_play_mock,
+    castbrowser_mock,
+    get_chromecast_mock,
+    get_multizone_status_mock,
+):
     """Mock pychromecast."""
+    ignore_cec_orig = list(pychromecast.IGNORE_CEC)
+
     with patch(
-        "homeassistant.components.cast.media_player.pychromecast", pycast_mock
+        "homeassistant.components.cast.discovery.pychromecast.discovery.CastBrowser",
+        castbrowser_mock,
     ), patch(
-        "homeassistant.components.cast.discovery.pychromecast", pycast_mock
-    ), patch(
-        "homeassistant.components.cast.helpers.dial", dial_mock
+        "homeassistant.components.cast.helpers.dial.get_multizone_status",
+        get_multizone_status_mock,
     ), patch(
         "homeassistant.components.cast.media_player.MultizoneManager",
         return_value=mz_mock,
@@ -73,5 +64,10 @@ def cast_mock(dial_mock, mz_mock, pycast_mock, quick_play_mock):
     ), patch(
         "homeassistant.components.cast.media_player.quick_play",
         quick_play_mock,
+    ), patch(
+        "homeassistant.components.cast.media_player.pychromecast.get_chromecast_from_cast_info",
+        get_chromecast_mock,
     ):
         yield
+
+    pychromecast.IGNORE_CEC = list(ignore_cec_orig)

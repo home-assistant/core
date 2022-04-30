@@ -289,6 +289,8 @@ def scene_factory_fixture(location):
         scene = Mock(SceneEntity)
         scene.scene_id = str(uuid4())
         scene.name = name
+        scene.icon = None
+        scene.color = None
         scene.location_id = location.location_id
         return scene
 

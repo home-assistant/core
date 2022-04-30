@@ -1,11 +1,11 @@
 """Support for Firmata sensor input."""
-
 import logging
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_PIN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import CONF_DIFFERENTIAL, CONF_PIN_MODE, DOMAIN
 from .entity import FirmataPinEntity
@@ -15,7 +15,9 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Firmata sensors."""
     new_entities = []
@@ -54,6 +56,6 @@ class FirmataSensor(FirmataPinEntity, SensorEntity):
         await self._api.stop_pin()
 
     @property
-    def state(self) -> int:
+    def native_value(self) -> int:
         """Return sensor state."""
         return self._api.state

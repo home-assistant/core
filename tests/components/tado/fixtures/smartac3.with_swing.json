@@ -1,0 +1,64 @@
+{
+  "tadoMode": "HOME",
+  "geolocationOverride": false,
+  "geolocationOverrideDisableTime": null,
+  "preparation": null,
+  "setting": {
+    "type": "AIR_CONDITIONING",
+    "power": "ON",
+    "mode": "HEAT",
+    "temperature": {
+      "celsius": 20.0,
+      "fahrenheit": 68.0
+    },
+    "fanSpeed": "AUTO",
+    "swing": "ON"
+  },
+  "overlayType": null,
+  "overlay": null,
+  "openWindow": null,
+  "nextScheduleChange": {
+    "start": "2020-03-28T04:30:00Z",
+    "setting": {
+      "type": "AIR_CONDITIONING",
+      "power": "ON",
+      "mode": "HEAT",
+      "temperature": {
+        "celsius": 23.0,
+        "fahrenheit": 73.4
+      },
+      "fanSpeed": "AUTO",
+      "swing": "ON"
+    }
+  },
+  "nextTimeBlock": {
+    "start": "2020-03-28T04:30:00.000Z"
+  },
+  "link": {
+    "state": "ONLINE"
+  },
+  "activityDataPoints": {
+    "acPower": {
+      "timestamp": "2020-03-27T23:02:22.260Z",
+      "type": "POWER",
+      "value": "ON"
+    }
+  },
+  "sensorDataPoints": {
+    "insideTemperature": {
+      "celsius": 20.88,
+      "fahrenheit": 69.58,
+      "timestamp": "2020-03-28T02:09:27.830Z",
+      "type": "TEMPERATURE",
+      "precision": {
+        "celsius": 0.1,
+        "fahrenheit": 0.1
+      }
+    },
+    "humidity": {
+      "type": "PERCENTAGE",
+      "percentage": 42.3,
+      "timestamp": "2020-03-28T02:09:27.830Z"
+    }
+  }
+}

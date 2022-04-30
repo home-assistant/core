@@ -6,9 +6,11 @@ from contextlib import suppress
 from transmissionrpc.torrent import Torrent
 
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, DATA_RATE_MEGABYTES_PER_SECOND, STATE_IDLE
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TransmissionClient
 from .const import (
@@ -20,7 +22,11 @@ from .const import (
 )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Transmission sensors."""
 
     tm_client = hass.data[DOMAIN][config_entry.entry_id]
@@ -62,7 +68,7 @@ class TransmissionSensor(SensorEntity):
         return f"{self._tm_client.api.host}-{self.name}"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
@@ -95,14 +101,13 @@ class TransmissionSpeedSensor(TransmissionSensor):
     """Representation of a Transmission speed sensor."""
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return DATA_RATE_MEGABYTES_PER_SECOND
 
     def update(self):
         """Get the latest data from Transmission and updates the state."""
-        data = self._tm_client.api.data
-        if data:
+        if data := self._tm_client.api.data:
             mb_spd = (
                 float(data.downloadSpeed)
                 if self._sub_type == "download"
@@ -117,8 +122,7 @@ class TransmissionStatusSensor(TransmissionSensor):
 
     def update(self):
         """Get the latest data from Transmission and updates the state."""
-        data = self._tm_client.api.data
-        if data:
+        if data := self._tm_client.api.data:
             upload = data.uploadSpeed
             download = data.downloadSpeed
             if upload > 0 and download > 0:
@@ -145,7 +149,7 @@ class TransmissionTorrentsSensor(TransmissionSensor):
     }
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return "Torrents"
 

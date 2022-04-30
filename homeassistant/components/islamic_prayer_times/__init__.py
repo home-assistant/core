@@ -6,11 +6,14 @@ from prayer_times_calculator import PrayerTimesCalculator, exceptions
 from requests.exceptions import ConnectionError as ConnError
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later, async_track_point_in_time
+from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
 from .const import (
@@ -23,7 +26,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.SENSOR]
 
 CONFIG_SCHEMA = vol.Schema(
     vol.All(
@@ -40,7 +43,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Import the Islamic Prayer component from config."""
     if DOMAIN in config:
         hass.async_create_task(
@@ -52,7 +55,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up the Islamic Prayer Component."""
     client = IslamicPrayerClient(hass, config_entry)
 
@@ -63,7 +66,7 @@ async def async_setup_entry(hass, config_entry):
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload Islamic Prayer entry from config_entry."""
     if hass.data[DOMAIN].event_unsub:
         hass.data[DOMAIN].event_unsub()
@@ -198,7 +201,7 @@ class IslamicPrayerClient:
             )
 
     @staticmethod
-    async def async_options_updated(hass, entry):
+    async def async_options_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Triggered by config entry options updates."""
         if hass.data[DOMAIN].event_unsub:
             hass.data[DOMAIN].event_unsub()

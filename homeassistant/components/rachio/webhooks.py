@@ -1,6 +1,7 @@
 """Webhooks used by rachio."""
 from aiohttp import web
 
+from homeassistant.components import cloud, webhook
 from homeassistant.const import URL_API
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -97,8 +98,8 @@ def async_register_webhook(hass, webhook_id, entry_id):
 
         return web.Response(status=web.HTTPNoContent.status_code)
 
-    hass.components.webhook.async_register(
-        DOMAIN, "Rachio", webhook_id, _async_handle_rachio_webhook
+    webhook.async_register(
+        hass, DOMAIN, "Rachio", webhook_id, _async_handle_rachio_webhook
     )
 
 
@@ -109,24 +110,20 @@ async def async_get_or_create_registered_webhook_id_and_url(hass, entry):
     updated_config = False
     webhook_url = None
 
-    webhook_id = config.get(CONF_WEBHOOK_ID)
-    if not webhook_id:
-        webhook_id = hass.components.webhook.async_generate_id()
+    if not (webhook_id := config.get(CONF_WEBHOOK_ID)):
+        webhook_id = webhook.async_generate_id()
         config[CONF_WEBHOOK_ID] = webhook_id
         updated_config = True
 
-    if hass.components.cloud.async_active_subscription():
-        cloudhook_url = config.get(CONF_CLOUDHOOK_URL)
-        if not cloudhook_url:
-            cloudhook_url = await hass.components.cloud.async_create_cloudhook(
-                webhook_id
-            )
+    if cloud.async_active_subscription(hass):
+        if not (cloudhook_url := config.get(CONF_CLOUDHOOK_URL)):
+            cloudhook_url = await cloud.async_create_cloudhook(hass, webhook_id)
             config[CONF_CLOUDHOOK_URL] = cloudhook_url
             updated_config = True
         webhook_url = cloudhook_url
 
     if not webhook_url:
-        webhook_url = hass.components.webhook.async_generate_url(webhook_id)
+        webhook_url = webhook.async_generate_url(hass, webhook_id)
 
     if updated_config:
         hass.config_entries.async_update_entry(entry, data=config)

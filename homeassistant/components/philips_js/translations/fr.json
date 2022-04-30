@@ -5,7 +5,7 @@
         },
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
-            "invalid_pin": "NIP invalide",
+            "invalid_pin": "PIN non valide",
             "pairing_failure": "Association impossible: {error_id}",
             "unknown": "Erreur inattendue"
         },
@@ -28,6 +28,15 @@
     "device_automation": {
         "trigger_type": {
             "turn_on": "Il a \u00e9t\u00e9 demand\u00e9 \u00e0 l'appareil de s'allumer"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "allow_notify": "Autoriser l'utilisation du service de notification de donn\u00e9es."
+                }
+            }
         }
     }
 }

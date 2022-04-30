@@ -1,8 +1,13 @@
 """Support for Ebusd sensors."""
+from __future__ import annotations
+
 import datetime
 import logging
 
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
 
@@ -19,8 +24,15 @@ MIN_TIME_BETWEEN_UPDATES = datetime.timedelta(seconds=15)
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Ebus sensor."""
+    if not discovery_info:
+        return
     ebusd_api = hass.data[DOMAIN]
     monitored_conditions = discovery_info["monitored_conditions"]
     name = discovery_info["client_name"]
@@ -56,7 +68,7 @@ class EbusdSensor(SensorEntity):
         return f"{self._client_name} {self._name}"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
@@ -94,7 +106,7 @@ class EbusdSensor(SensorEntity):
         return self._icon
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._unit_of_measurement
 

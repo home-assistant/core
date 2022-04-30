@@ -1,11 +1,12 @@
 """The tests for the REST switch platform."""
 import asyncio
+from http import HTTPStatus
 
 import aiohttp
 
 from homeassistant.components.rest import DOMAIN
 import homeassistant.components.rest.switch as rest
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import SwitchDeviceClass
 from homeassistant.const import (
     CONF_HEADERS,
     CONF_NAME,
@@ -13,22 +14,18 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_RESOURCE,
     CONTENT_TYPE_JSON,
-    HTTP_INTERNAL_SERVER_ERROR,
-    HTTP_NOT_FOUND,
-    HTTP_OK,
+    Platform,
 )
 from homeassistant.helpers.template import Template
 from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component
 
-"""Tests for setting up the REST switch platform."""
-
 NAME = "foo"
+DEVICE_CLASS = SwitchDeviceClass.SWITCH
 METHOD = "post"
 RESOURCE = "http://localhost/"
 STATE_RESOURCE = RESOURCE
-HEADERS = {"Content-type": CONTENT_TYPE_JSON}
 AUTH = None
 PARAMS = None
 
@@ -69,13 +66,13 @@ async def test_setup_timeout(hass, aioclient_mock):
 
 async def test_setup_minimum(hass, aioclient_mock):
     """Test setup with minimum configuration."""
-    aioclient_mock.get("http://localhost", status=HTTP_OK)
-    with assert_setup_component(1, SWITCH_DOMAIN):
+    aioclient_mock.get("http://localhost", status=HTTPStatus.OK)
+    with assert_setup_component(1, Platform.SWITCH):
         assert await async_setup_component(
             hass,
-            SWITCH_DOMAIN,
+            Platform.SWITCH,
             {
-                SWITCH_DOMAIN: {
+                Platform.SWITCH: {
                     CONF_PLATFORM: DOMAIN,
                     CONF_RESOURCE: "http://localhost",
                 }
@@ -87,13 +84,13 @@ async def test_setup_minimum(hass, aioclient_mock):
 
 async def test_setup_query_params(hass, aioclient_mock):
     """Test setup with query params."""
-    aioclient_mock.get("http://localhost/?search=something", status=HTTP_OK)
-    with assert_setup_component(1, SWITCH_DOMAIN):
+    aioclient_mock.get("http://localhost/?search=something", status=HTTPStatus.OK)
+    with assert_setup_component(1, Platform.SWITCH):
         assert await async_setup_component(
             hass,
-            SWITCH_DOMAIN,
+            Platform.SWITCH,
             {
-                SWITCH_DOMAIN: {
+                Platform.SWITCH: {
                     CONF_PLATFORM: DOMAIN,
                     CONF_RESOURCE: "http://localhost",
                     CONF_PARAMS: {"search": "something"},
@@ -102,18 +99,17 @@ async def test_setup_query_params(hass, aioclient_mock):
         )
         await hass.async_block_till_done()
 
-    print(aioclient_mock)
     assert aioclient_mock.call_count == 1
 
 
 async def test_setup(hass, aioclient_mock):
     """Test setup with valid configuration."""
-    aioclient_mock.get("http://localhost", status=HTTP_OK)
+    aioclient_mock.get("http://localhost", status=HTTPStatus.OK)
     assert await async_setup_component(
         hass,
-        SWITCH_DOMAIN,
+        Platform.SWITCH,
         {
-            SWITCH_DOMAIN: {
+            Platform.SWITCH: {
                 CONF_PLATFORM: DOMAIN,
                 CONF_NAME: "foo",
                 CONF_RESOURCE: "http://localhost",
@@ -125,18 +121,18 @@ async def test_setup(hass, aioclient_mock):
     )
     await hass.async_block_till_done()
     assert aioclient_mock.call_count == 1
-    assert_setup_component(1, SWITCH_DOMAIN)
+    assert_setup_component(1, Platform.SWITCH)
 
 
 async def test_setup_with_state_resource(hass, aioclient_mock):
     """Test setup with valid configuration."""
-    aioclient_mock.get("http://localhost", status=HTTP_NOT_FOUND)
-    aioclient_mock.get("http://localhost/state", status=HTTP_OK)
+    aioclient_mock.get("http://localhost", status=HTTPStatus.NOT_FOUND)
+    aioclient_mock.get("http://localhost/state", status=HTTPStatus.OK)
     assert await async_setup_component(
         hass,
-        SWITCH_DOMAIN,
+        Platform.SWITCH,
         {
-            SWITCH_DOMAIN: {
+            Platform.SWITCH: {
                 CONF_PLATFORM: DOMAIN,
                 CONF_NAME: "foo",
                 CONF_RESOURCE: "http://localhost",
@@ -149,7 +145,38 @@ async def test_setup_with_state_resource(hass, aioclient_mock):
     )
     await hass.async_block_till_done()
     assert aioclient_mock.call_count == 1
-    assert_setup_component(1, SWITCH_DOMAIN)
+    assert_setup_component(1, Platform.SWITCH)
+
+
+async def test_setup_with_templated_headers_params(hass, aioclient_mock):
+    """Test setup with valid configuration."""
+    aioclient_mock.get("http://localhost", status=HTTPStatus.OK)
+    assert await async_setup_component(
+        hass,
+        Platform.SWITCH,
+        {
+            Platform.SWITCH: {
+                CONF_PLATFORM: DOMAIN,
+                CONF_NAME: "foo",
+                CONF_RESOURCE: "http://localhost",
+                CONF_HEADERS: {
+                    "Accept": CONTENT_TYPE_JSON,
+                    "User-Agent": "Mozilla/{{ 3 + 2 }}.0",
+                },
+                CONF_PARAMS: {
+                    "start": 0,
+                    "end": "{{ 3 + 2 }}",
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert aioclient_mock.call_count == 1
+    assert aioclient_mock.mock_calls[-1][3].get("Accept") == CONTENT_TYPE_JSON
+    assert aioclient_mock.mock_calls[-1][3].get("User-Agent") == "Mozilla/5.0"
+    assert aioclient_mock.mock_calls[-1][1].query["start"] == "0"
+    assert aioclient_mock.mock_calls[-1][1].query["end"] == "5"
+    assert_setup_component(1, Platform.SWITCH)
 
 
 """Tests for REST switch platform."""
@@ -158,12 +185,14 @@ async def test_setup_with_state_resource(hass, aioclient_mock):
 def _setup_test_switch(hass):
     body_on = Template("on", hass)
     body_off = Template("off", hass)
+    headers = {"Content-type": Template(CONTENT_TYPE_JSON, hass)}
     switch = rest.RestSwitch(
         NAME,
+        DEVICE_CLASS,
         RESOURCE,
         STATE_RESOURCE,
         METHOD,
-        HEADERS,
+        headers,
         PARAMS,
         AUTH,
         body_on,
@@ -182,6 +211,12 @@ def test_name(hass):
     assert switch.name == NAME
 
 
+def test_device_class(hass):
+    """Test the name."""
+    switch, body_on, body_off = _setup_test_switch(hass)
+    assert switch.device_class == DEVICE_CLASS
+
+
 def test_is_on_before_update(hass):
     """Test is_on in initial state."""
     switch, body_on, body_off = _setup_test_switch(hass)
@@ -190,7 +225,7 @@ def test_is_on_before_update(hass):
 
 async def test_turn_on_success(hass, aioclient_mock):
     """Test turn_on."""
-    aioclient_mock.post(RESOURCE, status=HTTP_OK)
+    aioclient_mock.post(RESOURCE, status=HTTPStatus.OK)
     switch, body_on, body_off = _setup_test_switch(hass)
     await switch.async_turn_on()
 
@@ -200,7 +235,7 @@ async def test_turn_on_success(hass, aioclient_mock):
 
 async def test_turn_on_status_not_ok(hass, aioclient_mock):
     """Test turn_on when error status returned."""
-    aioclient_mock.post(RESOURCE, status=HTTP_INTERNAL_SERVER_ERROR)
+    aioclient_mock.post(RESOURCE, status=HTTPStatus.INTERNAL_SERVER_ERROR)
     switch, body_on, body_off = _setup_test_switch(hass)
     await switch.async_turn_on()
 
@@ -210,7 +245,7 @@ async def test_turn_on_status_not_ok(hass, aioclient_mock):
 
 async def test_turn_on_timeout(hass, aioclient_mock):
     """Test turn_on when timeout occurs."""
-    aioclient_mock.post(RESOURCE, status=HTTP_INTERNAL_SERVER_ERROR)
+    aioclient_mock.post(RESOURCE, status=HTTPStatus.INTERNAL_SERVER_ERROR)
     switch, body_on, body_off = _setup_test_switch(hass)
     await switch.async_turn_on()
 
@@ -219,7 +254,7 @@ async def test_turn_on_timeout(hass, aioclient_mock):
 
 async def test_turn_off_success(hass, aioclient_mock):
     """Test turn_off."""
-    aioclient_mock.post(RESOURCE, status=HTTP_OK)
+    aioclient_mock.post(RESOURCE, status=HTTPStatus.OK)
     switch, body_on, body_off = _setup_test_switch(hass)
     await switch.async_turn_off()
 
@@ -229,7 +264,7 @@ async def test_turn_off_success(hass, aioclient_mock):
 
 async def test_turn_off_status_not_ok(hass, aioclient_mock):
     """Test turn_off when error status returned."""
-    aioclient_mock.post(RESOURCE, status=HTTP_INTERNAL_SERVER_ERROR)
+    aioclient_mock.post(RESOURCE, status=HTTPStatus.INTERNAL_SERVER_ERROR)
     switch, body_on, body_off = _setup_test_switch(hass)
     await switch.async_turn_off()
 

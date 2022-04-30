@@ -1,4 +1,6 @@
 """Support for Transport NSW (AU) to query next leave event."""
+from __future__ import annotations
+
 from datetime import timedelta
 
 from TransportNSW import TransportNSW
@@ -12,7 +14,10 @@ from homeassistant.const import (
     CONF_NAME,
     TIME_MINUTES,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 ATTR_STOP_ID = "stop_id"
 ATTR_ROUTE = "route"
@@ -52,7 +57,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Transport NSW sensor."""
     stop_id = config[CONF_STOP_ID]
     api_key = config[CONF_API_KEY]
@@ -81,7 +91,7 @@ class TransportNSWSensor(SensorEntity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
@@ -101,7 +111,7 @@ class TransportNSWSensor(SensorEntity):
             }
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit this state is expressed in."""
         return TIME_MINUTES
 

@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Kontoen er allerede konfigurert",
+            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_auth": "Ugyldig godkjenning",
+            "unknown": "Uventet feil"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Passord"
+                },
+                "description": "Skriv inn passordet p\u00e5 nytt for: {username}",
+                "title": "Godkjenne integrering p\u00e5 nytt"
+            },
+            "user": {
+                "data": {
+                    "password": "Passord",
+                    "username": "Brukernavn"
+                },
+                "title": "Konfigurer Brunt-integrasjonen"
+            }
+        }
+    }
+}

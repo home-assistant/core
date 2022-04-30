@@ -1,7 +1,7 @@
 """Test the Profiler config flow."""
 from unittest.mock import patch
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries
 from homeassistant.components.profiler.const import DOMAIN
 
 from tests.common import MockConfigEntry
@@ -9,7 +9,7 @@ from tests.common import MockConfigEntry
 
 async def test_form_user(hass):
     """Test we can setup by the user."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -35,7 +35,7 @@ async def test_form_user(hass):
 async def test_form_user_only_once(hass):
     """Test we can setup by the user only once."""
     MockConfigEntry(domain=DOMAIN).add_to_hass(hass)
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )

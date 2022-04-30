@@ -33,6 +33,10 @@ def mock_venstar_devices(f):
                     f"http://venstar-{model}.localdomain/query/sensors",
                     text=load_fixture(f"venstar/{model}_sensors.json"),
                 )
+                m.get(
+                    f"http://venstar-{model}.localdomain/query/alerts",
+                    text=load_fixture(f"venstar/{model}_alerts.json"),
+                )
             return await f(hass)
 
     return wrapper

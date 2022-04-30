@@ -18,7 +18,7 @@ from homeassistant.helpers import entity_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import get_supported_features
 
-from . import DOMAIN, SUPPORT_OPEN
+from . import DOMAIN, LockEntityFeature
 
 ACTION_TYPES = {"lock", "unlock", "open"}
 
@@ -30,7 +30,9 @@ ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
 )
 
 
-async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict]:
+async def async_get_actions(
+    hass: HomeAssistant, device_id: str
+) -> list[dict[str, str]]:
     """List device actions for Lock devices."""
     registry = await entity_registry.async_get_registry(hass)
     actions = []
@@ -52,7 +54,7 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict]:
         actions.append({**base_action, CONF_TYPE: "lock"})
         actions.append({**base_action, CONF_TYPE: "unlock"})
 
-        if supported_features & (SUPPORT_OPEN):
+        if supported_features & (LockEntityFeature.OPEN):
             actions.append({**base_action, CONF_TYPE: "open"})
 
     return actions

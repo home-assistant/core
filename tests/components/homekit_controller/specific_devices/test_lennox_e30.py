@@ -8,10 +8,12 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
-from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.components.homekit_controller.common import (
-    Helper,
+    HUB_TEST_ACCESSORY_ID,
+    DeviceTestInfo,
+    EntityTestInfo,
+    assert_devices_and_entities_created,
     setup_accessories_from_file,
     setup_test_accessories,
 )
@@ -20,30 +22,34 @@ from tests.components.homekit_controller.common import (
 async def test_lennox_e30_setup(hass):
     """Test that a Lennox E30 can be correctly setup in HA."""
     accessories = await setup_accessories_from_file(hass, "lennox_e30.json")
-    config_entry, pairing = await setup_test_accessories(hass, accessories)
+    await setup_test_accessories(hass, accessories)
 
-    entity_registry = er.async_get(hass)
-
-    climate = entity_registry.async_get("climate.lennox")
-    assert climate.unique_id == "homekit-XXXXXXXX-100"
-
-    climate_helper = Helper(
-        hass, "climate.lennox", pairing, accessories[0], config_entry
+    await assert_devices_and_entities_created(
+        hass,
+        DeviceTestInfo(
+            unique_id=HUB_TEST_ACCESSORY_ID,
+            name="Lennox",
+            model="E30 2B",
+            manufacturer="Lennox",
+            sw_version="3.40.XX",
+            hw_version="3.0.XX",
+            serial_number="XXXXXXXX",
+            devices=[],
+            entities=[
+                EntityTestInfo(
+                    entity_id="climate.lennox",
+                    friendly_name="Lennox",
+                    unique_id="homekit-XXXXXXXX-100",
+                    supported_features=(
+                        SUPPORT_TARGET_TEMPERATURE | SUPPORT_TARGET_TEMPERATURE_RANGE
+                    ),
+                    capabilities={
+                        "hvac_modes": ["off", "heat", "cool", "heat_cool"],
+                        "max_temp": 37,
+                        "min_temp": 4.5,
+                    },
+                    state="heat_cool",
+                ),
+            ],
+        ),
     )
-    climate_state = await climate_helper.poll_and_get_state()
-    assert climate_state.attributes["friendly_name"] == "Lennox"
-    assert climate_state.attributes["supported_features"] == (
-        SUPPORT_TARGET_TEMPERATURE | SUPPORT_TARGET_TEMPERATURE_RANGE
-    )
-
-    device_registry = dr.async_get(hass)
-
-    device = device_registry.async_get(climate.device_id)
-    assert device.manufacturer == "Lennox"
-    assert device.name == "Lennox"
-    assert device.model == "E30 2B"
-    assert device.sw_version == "3.40.XX"
-
-    # The fixture contains a single accessory - so its a single device
-    # and no bridge
-    assert device.via_device_id is None

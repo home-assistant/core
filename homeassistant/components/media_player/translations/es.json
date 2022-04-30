@@ -8,6 +8,7 @@
             "is_playing": "{entity_name} est\u00e1 reproduciendo"
         },
         "trigger_type": {
+            "changed_states": "{entity_name} ha cambiado de estado",
             "idle": "{entity_name} est\u00e1 inactivo",
             "paused": "{entity_name} est\u00e1 en pausa",
             "playing": "{entity_name} comienza a reproducirse",

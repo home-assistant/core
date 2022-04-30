@@ -1,4 +1,6 @@
 """Support for Open Hardware Monitor Sensor Platform."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
@@ -7,8 +9,11 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 from homeassistant.util.dt import utcnow
 
@@ -35,7 +40,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Open Hardware Monitor platform."""
     data = OpenHardwareMonitorData(config, hass)
     if data.data is None:
@@ -62,12 +72,12 @@ class OpenHardwareMonitorDevice(SensorEntity):
         return self._name
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._unit_of_measurement
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
         return self.value
 

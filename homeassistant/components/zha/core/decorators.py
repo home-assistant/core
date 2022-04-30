@@ -1,37 +1,33 @@
 """Decorators for ZHA core registries."""
 from __future__ import annotations
 
-from typing import Callable, TypeVar
+from collections.abc import Callable
+from typing import Any, TypeVar, Union
 
-CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable)  # pylint: disable=invalid-name
+_TypeT = TypeVar("_TypeT", bound=type[Any])
 
 
-class DictRegistry(dict):
+class DictRegistry(dict[Union[int, str], _TypeT]):
     """Dict Registry of items."""
 
-    def register(
-        self, name: int | str, item: str | CALLABLE_T = None
-    ) -> Callable[[CALLABLE_T], CALLABLE_T]:
+    def register(self, name: int | str) -> Callable[[_TypeT], _TypeT]:
         """Return decorator to register item with a specific name."""
 
-        def decorator(channel: CALLABLE_T) -> CALLABLE_T:
+        def decorator(channel: _TypeT) -> _TypeT:
             """Register decorated channel or item."""
-            if item is None:
-                self[name] = channel
-            else:
-                self[name] = item
+            self[name] = channel
             return channel
 
         return decorator
 
 
-class SetRegistry(set):
+class SetRegistry(set[Union[int, str]]):
     """Set Registry of items."""
 
-    def register(self, name: int | str) -> Callable[[CALLABLE_T], CALLABLE_T]:
+    def register(self, name: int | str) -> Callable[[_TypeT], _TypeT]:
         """Return decorator to register item with a specific name."""
 
-        def decorator(channel: CALLABLE_T) -> CALLABLE_T:
+        def decorator(channel: _TypeT) -> _TypeT:
             """Register decorated channel or item."""
             self.add(name)
             return channel

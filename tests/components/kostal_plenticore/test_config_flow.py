@@ -4,7 +4,7 @@ from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 from kostal.plenticore import PlenticoreAuthenticationException
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries
 from homeassistant.components.kostal_plenticore.const import DOMAIN
 
 from tests.common import MockConfigEntry
@@ -12,7 +12,7 @@ from tests.common import MockConfigEntry
 
 async def test_formx(hass):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )

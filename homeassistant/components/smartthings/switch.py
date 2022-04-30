@@ -3,15 +3,22 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from pysmartthings import Attribute, Capability
+from pysmartthings import Capability
 
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Add switches for a config entry."""
     broker = hass.data[DOMAIN][DATA_BROKERS][config_entry.entry_id]
     async_add_entities(
@@ -47,16 +54,6 @@ class SmartThingsSwitch(SmartThingsEntity, SwitchEntity):
         # State is set optimistically in the command above, therefore update
         # the entity state ahead of receiving the confirming push updates
         self.async_write_ha_state()
-
-    @property
-    def current_power_w(self):
-        """Return the current power usage in W."""
-        return self._device.status.attributes[Attribute.power].value
-
-    @property
-    def today_energy_kwh(self):
-        """Return the today total energy usage in kWh."""
-        return self._device.status.attributes[Attribute.energy].value
 
     @property
     def is_on(self) -> bool:

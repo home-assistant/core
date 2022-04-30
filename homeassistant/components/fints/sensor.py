@@ -1,8 +1,10 @@
 """Read the balance of your bank accounts via FinTS."""
+from __future__ import annotations
 
 from collections import namedtuple
 from datetime import timedelta
 import logging
+from typing import Any
 
 from fints.client import FinTS3PinTanClient
 from fints.dialog import FinTSDialogError
@@ -10,7 +12,10 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_NAME, CONF_PIN, CONF_URL, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,7 +54,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the sensors.
 
     Login to the bank and get a list of existing accounts. Create a
@@ -70,15 +80,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     client = FinTsClient(credentials, fints_name)
     balance_accounts, holdings_accounts = client.detect_accounts()
-    accounts = []
+    accounts: list[SensorEntity] = []
 
     for account in balance_accounts:
         if config[CONF_ACCOUNTS] and account.iban not in account_config:
             _LOGGER.info("Skipping account %s for bank %s", account.iban, fints_name)
             continue
 
-        account_name = account_config.get(account.iban)
-        if not account_name:
+        if not (account_name := account_config.get(account.iban)):
             account_name = f"{fints_name} - {account.iban}"
         accounts.append(FinTsAccount(client, account, account_name))
         _LOGGER.debug("Creating account %s for bank %s", account.iban, fints_name)
@@ -164,45 +173,22 @@ class FinTsAccount(SensorEntity):
         """Initialize a FinTs balance account."""
         self._client = client
         self._account = account
-        self._name = name
-        self._balance: float = None
-        self._currency: str = None
+        self._attr_name = name
+        self._attr_icon = ICON
+        self._attr_extra_state_attributes = {
+            ATTR_ACCOUNT: self._account.iban,
+            ATTR_ACCOUNT_TYPE: "balance",
+        }
+        if self._client.name:
+            self._attr_extra_state_attributes[ATTR_BANK] = self._client.name
 
     def update(self) -> None:
         """Get the current balance and currency for the account."""
         bank = self._client.client
         balance = bank.get_balance(self._account)
-        self._balance = balance.amount.amount
-        self._currency = balance.amount.currency
+        self._attr_native_value = balance.amount.amount
+        self._attr_native_unit_of_measurement = balance.amount.currency
         _LOGGER.debug("updated balance of account %s", self.name)
-
-    @property
-    def name(self) -> str:
-        """Friendly name of the sensor."""
-        return self._name
-
-    @property
-    def state(self) -> float:
-        """Return the balance of the account as state."""
-        return self._balance
-
-    @property
-    def unit_of_measurement(self) -> str:
-        """Use the currency as unit of measurement."""
-        return self._currency
-
-    @property
-    def extra_state_attributes(self) -> dict:
-        """Additional attributes of the sensor."""
-        attributes = {ATTR_ACCOUNT: self._account.iban, ATTR_ACCOUNT_TYPE: "balance"}
-        if self._client.name:
-            attributes[ATTR_BANK] = self._client.name
-        return attributes
-
-    @property
-    def icon(self) -> str:
-        """Set the icon for the sensor."""
-        return ICON
 
 
 class FinTsHoldingsAccount(SensorEntity):
@@ -215,26 +201,17 @@ class FinTsHoldingsAccount(SensorEntity):
     def __init__(self, client: FinTsClient, account, name: str) -> None:
         """Initialize a FinTs holdings account."""
         self._client = client
-        self._name = name
+        self._attr_name = name
         self._account = account
-        self._holdings = []
-        self._total: float = None
+        self._holdings: list[Any] = []
+        self._attr_icon = ICON
+        self._attr_native_unit_of_measurement = "EUR"
 
     def update(self) -> None:
         """Get the current holdings for the account."""
         bank = self._client.client
         self._holdings = bank.get_holdings(self._account)
-        self._total = sum(h.total_value for h in self._holdings)
-
-    @property
-    def state(self) -> float:
-        """Return total market value as state."""
-        return self._total
-
-    @property
-    def icon(self) -> str:
-        """Set the icon for the sensor."""
-        return ICON
+        self._attr_native_value = sum(h.total_value for h in self._holdings)
 
     @property
     def extra_state_attributes(self) -> dict:
@@ -257,18 +234,3 @@ class FinTsHoldingsAccount(SensorEntity):
             attributes[price_name] = holding.market_value
 
         return attributes
-
-    @property
-    def name(self) -> str:
-        """Friendly name of the sensor."""
-        return self._name
-
-    @property
-    def unit_of_measurement(self) -> str:
-        """Get the unit of measurement.
-
-        Hardcoded to EUR, as the library does not provide the currency for the
-        holdings. And as FinTS is only used in Germany, most accounts will be
-        in EUR anyways.
-        """
-        return "EUR"

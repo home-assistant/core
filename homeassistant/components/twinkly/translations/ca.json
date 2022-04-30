@@ -7,12 +7,13 @@
             "cannot_connect": "Ha fallat la connexi\u00f3"
         },
         "step": {
+            "discovery_confirm": {
+                "description": "Vols configurar {name} - {model} ({host})?"
+            },
             "user": {
                 "data": {
-                    "host": "Amfitri\u00f3 (o adre\u00e7a IP) del dispositiu Twinkly"
-                },
-                "description": "Configura la teva tira LED de Twinkly",
-                "title": "Twinkly"
+                    "host": "Amfitri\u00f3"
+                }
             }
         }
     }

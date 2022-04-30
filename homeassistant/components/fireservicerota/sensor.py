@@ -1,10 +1,12 @@
 """Sensor platform for FireServiceRota integration."""
 import logging
+from typing import Any
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import DATA_CLIENT, DOMAIN as FIRESERVICEROTA_DOMAIN
@@ -13,7 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up FireServiceRota sensor based on a config entry."""
     client = hass.data[FIRESERVICEROTA_DOMAIN][entry.entry_id][DATA_CLIENT]
@@ -49,7 +51,7 @@ class IncidentsSensor(RestoreEntity, SensorEntity):
         return "mdi:fire-truck"
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> str:
         """Return the state of the sensor."""
         return self._state
 
@@ -64,12 +66,11 @@ class IncidentsSensor(RestoreEntity, SensorEntity):
         return False
 
     @property
-    def extra_state_attributes(self) -> object:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return available attributes for sensor."""
-        attr = {}
-        data = self._state_attributes
+        attr: dict[str, Any] = {}
 
-        if not data:
+        if not (data := self._state_attributes):
             return attr
 
         for value in (
@@ -103,8 +104,7 @@ class IncidentsSensor(RestoreEntity, SensorEntity):
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
 
-        state = await self.async_get_last_state()
-        if state:
+        if state := await self.async_get_last_state():
             self._state = state.state
             self._state_attributes = state.attributes
             if "id" in self._state_attributes:

@@ -6,14 +6,16 @@ from pydanfossair.commands import ReadCommand
 from pydanfossair.danfossclient import DanfossClient
 import voluptuous as vol
 
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["sensor", "binary_sensor", "switch"]
+PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR, Platform.SWITCH]
 DOMAIN = "danfoss_air"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
@@ -23,7 +25,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Danfoss Air component."""
     conf = config[DOMAIN]
 

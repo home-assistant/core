@@ -12,7 +12,7 @@
         },
         "error": {
             "follow_link": "V\u00e9s a l'enlla\u00e7 i autentica't abans de pr\u00e9mer Envia",
-            "no_token": "Token d'acc\u00e9s no v\u00e0lid"
+            "no_token": "Token d'acc\u00e9s inv\u00e0lid"
         },
         "step": {
             "auth": {

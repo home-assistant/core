@@ -6,12 +6,14 @@
             "auth_missing": "Home Assistant nie ma uprawnie\u0144 do po\u0142\u0105czenia si\u0119 z tym telewizorem Samsung. Sprawd\u017a ustawienia \"Mened\u017cera urz\u0105dze\u0144 zewn\u0119trznych\", aby autoryzowa\u0107 Home Assistant.",
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
             "id_missing": "To urz\u0105dzenie Samsung nie ma numeru seryjnego.",
+            "missing_config_entry": "To urz\u0105dzenie Samsung nie ma wpisu konfiguracyjnego.",
             "not_supported": "To urz\u0105dzenie Samsung nie jest obecnie obs\u0142ugiwane",
             "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119",
             "unknown": "Nieoczekiwany b\u0142\u0105d"
         },
         "error": {
-            "auth_missing": "[%key::component::samsungtv::config::abort::auth_missing%]"
+            "auth_missing": "Home Assistant nie ma uprawnie\u0144 do po\u0142\u0105czenia si\u0119 z tym telewizorem Samsung. Sprawd\u017a ustawienia \"Mened\u017cera urz\u0105dze\u0144 zewn\u0119trznych\", aby autoryzowa\u0107 Home Assistant.",
+            "invalid_pin": "Nieprawid\u0142owy kod PIN, spr\u00f3buj ponownie."
         },
         "flow_title": "{device}",
         "step": {
@@ -19,8 +21,17 @@
                 "description": "Czy chcesz skonfigurowa\u0107 {device}? Je\u015bli nigdy wcze\u015bniej nie \u0142\u0105czy\u0142e\u015b go z Home Assistantem, na jego ekranie powinna pojawi\u0107 si\u0119 pro\u015bba o uwierzytelnienie.",
                 "title": "Samsung TV"
             },
+            "encrypted_pairing": {
+                "description": "Wprowad\u017a kod PIN wy\u015bwietlony na {device}."
+            },
+            "pairing": {
+                "description": "Czy chcesz skonfigurowa\u0107 {device}? Je\u015bli nigdy wcze\u015bniej nie \u0142\u0105czy\u0142e\u015b go z Home Assistantem, na jego ekranie powinna pojawi\u0107 si\u0119 pro\u015bba o uwierzytelnienie."
+            },
             "reauth_confirm": {
-                "description": "Po wys\u0142aniu \u017c\u0105dania, zaakceptuj wyskakuj\u0105ce okienko na {device} z pro\u015bb\u0105 o autoryzacj\u0119 w ci\u0105gu 30 sekund."
+                "description": "Po wys\u0142aniu \u017c\u0105dania, zaakceptuj wyskakuj\u0105ce okienko na {device} z pro\u015bb\u0105 o autoryzacj\u0119 w ci\u0105gu 30 sekund lub wprowad\u017a PIN."
+            },
+            "reauth_confirm_encrypted": {
+                "description": "Wprowad\u017a kod PIN wy\u015bwietlony na {device}."
             },
             "user": {
                 "data": {

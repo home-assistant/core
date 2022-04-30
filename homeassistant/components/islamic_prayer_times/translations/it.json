@@ -5,8 +5,8 @@
         },
         "step": {
             "user": {
-                "description": "Vuoi impostare gli Orari di Preghiera Islamici?",
-                "title": "Impostare gli Orari di Preghiera Islamici"
+                "description": "Vuoi configurare gli orari di preghiera islamici?",
+                "title": "Imposta gli orari di preghiera islamici"
             }
         }
     },

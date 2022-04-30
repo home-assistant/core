@@ -6,21 +6,15 @@ import logging
 from omnilogic import OmniLogic, OmniLogicException
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
     UpdateFailed,
 )
 
-from .const import (
-    ALL_ITEM_KINDS,
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    DOMAIN,
-)
+from .const import ALL_ITEM_KINDS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -79,7 +73,7 @@ class OmniLogicUpdateCoordinator(DataUpdateCoordinator):
         return parsed_data
 
 
-class OmniLogicEntity(CoordinatorEntity):
+class OmniLogicEntity(CoordinatorEntity[OmniLogicUpdateCoordinator]):
     """Defines the base OmniLogic entity."""
 
     def __init__(
@@ -153,15 +147,14 @@ class OmniLogicEntity(CoordinatorEntity):
         return self._attrs
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Define the device as back yard/MSP System."""
-
-        return {
-            ATTR_IDENTIFIERS: {(DOMAIN, self._msp_system_id)},
-            ATTR_NAME: self._backyard_name,
-            ATTR_MANUFACTURER: "Hayward",
-            ATTR_MODEL: "OmniLogic",
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._msp_system_id)},
+            manufacturer="Hayward",
+            model="OmniLogic",
+            name=self._backyard_name,
+        )
 
 
 def check_guard(state_key, item, entity_setting):

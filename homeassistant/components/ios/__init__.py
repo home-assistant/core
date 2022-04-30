@@ -1,15 +1,18 @@
 """Native Home Assistant iOS app component."""
 import datetime
+from http import HTTPStatus
+from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.const import HTTP_BAD_REQUEST, HTTP_INTERNAL_SERVER_ERROR
-from homeassistant.core import callback
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.json import load_json, save_json
 
 from .const import (
@@ -149,10 +152,13 @@ ACTION_LIST_SCHEMA = vol.All(cv.ensure_list, [ACTION_SCHEMA])
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN: {
-            CONF_PUSH: {CONF_PUSH_CATEGORIES: PUSH_CATEGORY_LIST_SCHEMA},
-            CONF_ACTIONS: ACTION_LIST_SCHEMA,
-        }
+        DOMAIN: vol.All(
+            cv.deprecated(CONF_PUSH),
+            {
+                CONF_PUSH: {CONF_PUSH_CATEGORIES: PUSH_CATEGORY_LIST_SCHEMA},
+                CONF_ACTIONS: ACTION_LIST_SCHEMA,
+            },
+        )
     },
     extra=vol.ALLOW_EXTRA,
 )
@@ -209,6 +215,8 @@ IDENTIFY_SCHEMA = vol.Schema(
 
 CONFIGURATION_FILE = ".ios.conf"
 
+PLATFORMS = [Platform.SENSOR]
+
 
 def devices_with_push(hass):
     """Return a dictionary of push enabled targets."""
@@ -241,13 +249,16 @@ def device_name_for_push_id(hass, push_id):
     return None
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the iOS component."""
     conf = config.get(DOMAIN)
 
     ios_config = await hass.async_add_executor_job(
         load_json, hass.config.path(CONFIGURATION_FILE)
     )
+
+    if TYPE_CHECKING:
+        assert isinstance(ios_config, dict)
 
     if ios_config == {}:
         ios_config[ATTR_DEVICES] = {}
@@ -260,7 +271,7 @@ async def async_setup(hass, config):
     hass.data[DOMAIN] = ios_config
 
     # No entry support for notify component yet
-    discovery.load_platform(hass, "notify", DOMAIN, {}, config)
+    discovery.load_platform(hass, Platform.NOTIFY, DOMAIN, {}, config)
 
     if conf is not None:
         hass.async_create_task(
@@ -272,11 +283,11 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: config_entries.ConfigEntry
+) -> bool:
     """Set up an iOS entry."""
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, "sensor")
-    )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     hass.http.register_view(iOSIdentifyDeviceView(hass.config.path(CONFIGURATION_FILE)))
     hass.http.register_view(iOSPushConfigView(hass.data[DOMAIN][CONF_USER][CONF_PUSH]))
@@ -333,7 +344,7 @@ class iOSIdentifyDeviceView(HomeAssistantView):
         try:
             data = await request.json()
         except ValueError:
-            return self.json_message("Invalid JSON", HTTP_BAD_REQUEST)
+            return self.json_message("Invalid JSON", HTTPStatus.BAD_REQUEST)
 
         hass = request.app["hass"]
 
@@ -348,6 +359,8 @@ class iOSIdentifyDeviceView(HomeAssistantView):
         try:
             save_json(self._config_path, hass.data[DOMAIN])
         except HomeAssistantError:
-            return self.json_message("Error saving device.", HTTP_INTERNAL_SERVER_ERROR)
+            return self.json_message(
+                "Error saving device.", HTTPStatus.INTERNAL_SERVER_ERROR
+            )
 
         return self.json({"status": "registered"})

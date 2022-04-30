@@ -1,21 +1,14 @@
 """Entities for The Internet Printing Protocol (IPP) integration."""
 from __future__ import annotations
 
-from homeassistant.const import ATTR_NAME
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_SOFTWARE_VERSION,
-    DOMAIN,
-)
+from .const import DOMAIN
 from .coordinator import IPPDataUpdateCoordinator
 
 
-class IPPEntity(CoordinatorEntity):
+class IPPEntity(CoordinatorEntity[IPPDataUpdateCoordinator]):
     """Defines a base IPP entity."""
 
     def __init__(
@@ -37,15 +30,15 @@ class IPPEntity(CoordinatorEntity):
         self._attr_entity_registry_enabled_default = enabled_default
 
     @property
-    def device_info(self) -> DeviceInfo:
+    def device_info(self) -> DeviceInfo | None:
         """Return device information about this IPP device."""
         if self._device_id is None:
             return None
 
-        return {
-            ATTR_IDENTIFIERS: {(DOMAIN, self._device_id)},
-            ATTR_NAME: self.coordinator.data.info.name,
-            ATTR_MANUFACTURER: self.coordinator.data.info.manufacturer,
-            ATTR_MODEL: self.coordinator.data.info.model,
-            ATTR_SOFTWARE_VERSION: self.coordinator.data.info.version,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._device_id)},
+            manufacturer=self.coordinator.data.info.manufacturer,
+            model=self.coordinator.data.info.model,
+            name=self.coordinator.data.info.name,
+            sw_version=self.coordinator.data.info.version,
+        )

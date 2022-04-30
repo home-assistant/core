@@ -1,10 +1,15 @@
 """Support for binary sensor using RPi GPIO."""
+from __future__ import annotations
+
 import requests
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
 from homeassistant.const import CONF_HOST
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import (
     CONF_BOUNCETIME,
@@ -31,7 +36,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Raspberry PI GPIO devices."""
     address = config["host"]
     invert_logic = config[CONF_INVERT_LOGIC]

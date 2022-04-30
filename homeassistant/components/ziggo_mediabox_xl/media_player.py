@@ -1,19 +1,16 @@
 """Support for interface with a Ziggo Mediabox XL."""
+from __future__ import annotations
+
 import logging
 import socket
 
 import voluptuous as vol
 from ziggo_mediabox_xl import ZiggoMediaboxXL
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
+from homeassistant.components.media_player import (
+    PLATFORM_SCHEMA,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -22,39 +19,36 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_PLAYING,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
 DATA_KNOWN_DEVICES = "ziggo_mediabox_xl_known_devices"
-
-SUPPORT_ZIGGO = (
-    SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_PAUSE
-    | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_SELECT_SOURCE
-    | SUPPORT_PLAY
-)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_HOST): cv.string, vol.Optional(CONF_NAME): cv.string}
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Ziggo Mediabox XL platform."""
 
     hass.data[DATA_KNOWN_DEVICES] = known_devices = set()
 
     # Is this a manual configuration?
-    if config.get(CONF_HOST) is not None:
-        host = config.get(CONF_HOST)
+    if (host := config.get(CONF_HOST)) is not None:
         name = config.get(CONF_NAME)
         manual_config = True
     elif discovery_info is not None:
-        host = discovery_info.get("host")
+        host = discovery_info["host"]
         name = discovery_info.get("name")
         manual_config = False
     else:
@@ -94,6 +88,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 class ZiggoMediaboxXLDevice(MediaPlayerEntity):
     """Representation of a Ziggo Mediabox XL Device."""
+
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.PREVIOUS_TRACK
+        | MediaPlayerEntityFeature.SELECT_SOURCE
+        | MediaPlayerEntityFeature.PLAY
+    )
 
     def __init__(self, mediabox, host, name, available):
         """Initialize the device."""
@@ -148,11 +152,6 @@ class ZiggoMediaboxXLDevice(MediaPlayerEntity):
             self._mediabox.channels()[c]
             for c in sorted(self._mediabox.channels().keys())
         ]
-
-    @property
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        return SUPPORT_ZIGGO
 
     def turn_on(self):
         """Turn the media player on."""

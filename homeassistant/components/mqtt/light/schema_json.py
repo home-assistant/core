@@ -18,23 +18,17 @@ from homeassistant.components.light import (
     ATTR_TRANSITION,
     ATTR_WHITE_VALUE,
     ATTR_XY_COLOR,
-    COLOR_MODE_COLOR_TEMP,
-    COLOR_MODE_HS,
-    COLOR_MODE_RGB,
-    COLOR_MODE_RGBW,
-    COLOR_MODE_RGBWW,
-    COLOR_MODE_XY,
+    ENTITY_ID_FORMAT,
     FLASH_LONG,
     FLASH_SHORT,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
-    SUPPORT_EFFECT,
-    SUPPORT_FLASH,
-    SUPPORT_TRANSITION,
     SUPPORT_WHITE_VALUE,
     VALID_COLOR_MODES,
+    ColorMode,
     LightEntity,
+    LightEntityFeature,
     legacy_supported_features,
     valid_supported_color_modes,
 )
@@ -56,8 +50,15 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.color as color_util
 
-from .. import CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC, subscription
+from .. import subscription
 from ... import mqtt
+from ..const import (
+    CONF_COMMAND_TOPIC,
+    CONF_ENCODING,
+    CONF_QOS,
+    CONF_RETAIN,
+    CONF_STATE_TOPIC,
+)
 from ..debug_info import log_messages
 from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity
 from .schema import MQTT_LIGHT_SCHEMA_SCHEMA
@@ -101,7 +102,7 @@ def valid_color_configuration(config):
     return config
 
 
-PLATFORM_SCHEMA_JSON = vol.All(
+_PLATFORM_SCHEMA_BASE = (
     mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
         {
             vol.Optional(CONF_BRIGHTNESS, default=DEFAULT_BRIGHTNESS): cv.boolean,
@@ -142,7 +143,20 @@ PLATFORM_SCHEMA_JSON = vol.All(
         },
     )
     .extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
-    .extend(MQTT_LIGHT_SCHEMA_SCHEMA.schema),
+    .extend(MQTT_LIGHT_SCHEMA_SCHEMA.schema)
+)
+
+PLATFORM_SCHEMA_JSON = vol.All(
+    # CONF_WHITE_VALUE is deprecated, support will be removed in release 2022.9
+    cv.deprecated(CONF_WHITE_VALUE),
+    _PLATFORM_SCHEMA_BASE,
+    valid_color_configuration,
+)
+
+DISCOVERY_SCHEMA_JSON = vol.All(
+    # CONF_WHITE_VALUE is deprecated, support will be removed in release 2022.9
+    cv.deprecated(CONF_WHITE_VALUE),
+    _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
     valid_color_configuration,
 )
 
@@ -157,11 +171,12 @@ async def async_setup_entity_json(
 class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
     """Representation of a MQTT JSON light."""
 
+    _entity_id_format = ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_LIGHT_ATTRIBUTES_BLOCKED
 
     def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize MQTT JSON light."""
-        self._state = False
+        self._state = None
         self._supported_features = 0
 
         self._topic = None
@@ -183,7 +198,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
     @staticmethod
     def config_schema():
         """Return the config schema."""
-        return PLATFORM_SCHEMA_JSON
+        return DISCOVERY_SCHEMA_JSON
 
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""
@@ -198,8 +213,10 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             for key in (CONF_FLASH_TIME_SHORT, CONF_FLASH_TIME_LONG)
         }
 
-        self._supported_features = SUPPORT_TRANSITION | SUPPORT_FLASH
-        self._supported_features |= config[CONF_EFFECT] and SUPPORT_EFFECT
+        self._supported_features = (
+            LightEntityFeature.TRANSITION | LightEntityFeature.FLASH
+        )
+        self._supported_features |= config[CONF_EFFECT] and LightEntityFeature.EFFECT
         if not self._config[CONF_COLOR_MODE]:
             self._supported_features |= config[CONF_BRIGHTNESS] and SUPPORT_BRIGHTNESS
             self._supported_features |= config[CONF_COLOR_TEMP] and SUPPORT_COLOR_TEMP
@@ -249,46 +266,45 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                 _LOGGER.warning("Invalid color mode received")
                 return
             try:
-                if color_mode == COLOR_MODE_COLOR_TEMP:
+                if color_mode == ColorMode.COLOR_TEMP:
                     self._color_temp = int(values["color_temp"])
-                    self._color_mode = COLOR_MODE_COLOR_TEMP
-                elif color_mode == COLOR_MODE_HS:
+                    self._color_mode = ColorMode.COLOR_TEMP
+                elif color_mode == ColorMode.HS:
                     hue = float(values["color"]["h"])
                     saturation = float(values["color"]["s"])
-                    self._color_mode = COLOR_MODE_HS
+                    self._color_mode = ColorMode.HS
                     self._hs = (hue, saturation)
-                elif color_mode == COLOR_MODE_RGB:
+                elif color_mode == ColorMode.RGB:
                     r = int(values["color"]["r"])  # pylint: disable=invalid-name
                     g = int(values["color"]["g"])  # pylint: disable=invalid-name
                     b = int(values["color"]["b"])  # pylint: disable=invalid-name
-                    self._color_mode = COLOR_MODE_RGB
+                    self._color_mode = ColorMode.RGB
                     self._rgb = (r, g, b)
-                elif color_mode == COLOR_MODE_RGBW:
+                elif color_mode == ColorMode.RGBW:
                     r = int(values["color"]["r"])  # pylint: disable=invalid-name
                     g = int(values["color"]["g"])  # pylint: disable=invalid-name
                     b = int(values["color"]["b"])  # pylint: disable=invalid-name
                     w = int(values["color"]["w"])  # pylint: disable=invalid-name
-                    self._color_mode = COLOR_MODE_RGBW
+                    self._color_mode = ColorMode.RGBW
                     self._rgbw = (r, g, b, w)
-                elif color_mode == COLOR_MODE_RGBWW:
+                elif color_mode == ColorMode.RGBWW:
                     r = int(values["color"]["r"])  # pylint: disable=invalid-name
                     g = int(values["color"]["g"])  # pylint: disable=invalid-name
                     b = int(values["color"]["b"])  # pylint: disable=invalid-name
                     c = int(values["color"]["c"])  # pylint: disable=invalid-name
                     w = int(values["color"]["w"])  # pylint: disable=invalid-name
-                    self._color_mode = COLOR_MODE_RGBWW
+                    self._color_mode = ColorMode.RGBWW
                     self._rgbww = (r, g, b, c, w)
-                elif color_mode == COLOR_MODE_XY:
+                elif color_mode == ColorMode.XY:
                     x = float(values["color"]["x"])  # pylint: disable=invalid-name
                     y = float(values["color"]["y"])  # pylint: disable=invalid-name
-                    self._color_mode = COLOR_MODE_XY
+                    self._color_mode = ColorMode.XY
                     self._xy = (x, y)
             except (KeyError, ValueError):
                 _LOGGER.warning("Invalid or incomplete color value received")
 
-    async def _subscribe_topics(self):
+    def _prepare_subscribe_topics(self):
         """(Re)Subscribe to topics."""
-        last_state = await self.async_get_last_state()
 
         @callback
         @log_messages(self.hass, self.entity_id)
@@ -300,6 +316,8 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                 self._state = True
             elif values["state"] == "OFF":
                 self._state = False
+            elif values["state"] is None:
+                self._state = None
 
             if self._supported_features and SUPPORT_COLOR and "color" in values:
                 if values["color"] is None:
@@ -337,7 +355,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                 except ValueError:
                     _LOGGER.warning("Invalid color temp value received")
 
-            if self._supported_features and SUPPORT_EFFECT:
+            if self._supported_features and LightEntityFeature.EFFECT:
                 with suppress(KeyError):
                     self._effect = values["effect"]
 
@@ -352,7 +370,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             self.async_write_ha_state()
 
         if self._topic[CONF_STATE_TOPIC] is not None:
-            self._sub_state = await subscription.async_subscribe_topics(
+            self._sub_state = subscription.async_prepare_subscribe_topics(
                 self.hass,
                 self._sub_state,
                 {
@@ -360,10 +378,16 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                         "topic": self._topic[CONF_STATE_TOPIC],
                         "msg_callback": state_received,
                         "qos": self._config[CONF_QOS],
+                        "encoding": self._config[CONF_ENCODING] or None,
                     }
                 },
             )
 
+    async def _subscribe_topics(self):
+        """(Re)Subscribe to topics."""
+        await subscription.async_subscribe_topics(self.hass, self._sub_state)
+
+        last_state = await self.async_get_last_state()
         if self._optimistic and last_state:
             self._state = last_state.state == STATE_ON
             last_attributes = last_state.attributes
@@ -528,31 +552,31 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                 self._hs = kwargs[ATTR_HS_COLOR]
                 should_update = True
 
-        if ATTR_HS_COLOR in kwargs and self._supports_color_mode(COLOR_MODE_HS):
+        if ATTR_HS_COLOR in kwargs and self._supports_color_mode(ColorMode.HS):
             hs_color = kwargs[ATTR_HS_COLOR]
             message["color"] = {"h": hs_color[0], "s": hs_color[1]}
             if self._optimistic:
-                self._color_mode = COLOR_MODE_HS
+                self._color_mode = ColorMode.HS
                 self._hs = hs_color
                 should_update = True
 
-        if ATTR_RGB_COLOR in kwargs and self._supports_color_mode(COLOR_MODE_RGB):
+        if ATTR_RGB_COLOR in kwargs and self._supports_color_mode(ColorMode.RGB):
             rgb = self._scale_rgbxx(kwargs[ATTR_RGB_COLOR], kwargs)
             message["color"] = {"r": rgb[0], "g": rgb[1], "b": rgb[2]}
             if self._optimistic:
-                self._color_mode = COLOR_MODE_RGB
+                self._color_mode = ColorMode.RGB
                 self._rgb = rgb
                 should_update = True
 
-        if ATTR_RGBW_COLOR in kwargs and self._supports_color_mode(COLOR_MODE_RGBW):
+        if ATTR_RGBW_COLOR in kwargs and self._supports_color_mode(ColorMode.RGBW):
             rgb = self._scale_rgbxx(kwargs[ATTR_RGBW_COLOR], kwargs)
             message["color"] = {"r": rgb[0], "g": rgb[1], "b": rgb[2], "w": rgb[3]}
             if self._optimistic:
-                self._color_mode = COLOR_MODE_RGBW
+                self._color_mode = ColorMode.RGBW
                 self._rgbw = rgb
                 should_update = True
 
-        if ATTR_RGBWW_COLOR in kwargs and self._supports_color_mode(COLOR_MODE_RGBWW):
+        if ATTR_RGBWW_COLOR in kwargs and self._supports_color_mode(ColorMode.RGBWW):
             rgb = self._scale_rgbxx(kwargs[ATTR_RGBWW_COLOR], kwargs)
             message["color"] = {
                 "r": rgb[0],
@@ -562,15 +586,15 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                 "w": rgb[4],
             }
             if self._optimistic:
-                self._color_mode = COLOR_MODE_RGBWW
+                self._color_mode = ColorMode.RGBWW
                 self._rgbww = rgb
                 should_update = True
 
-        if ATTR_XY_COLOR in kwargs and self._supports_color_mode(COLOR_MODE_XY):
+        if ATTR_XY_COLOR in kwargs and self._supports_color_mode(ColorMode.XY):
             xy = kwargs[ATTR_XY_COLOR]  # pylint: disable=invalid-name
             message["color"] = {"x": xy[0], "y": xy[1]}
             if self._optimistic:
-                self._color_mode = COLOR_MODE_XY
+                self._color_mode = ColorMode.XY
                 self._xy = xy
                 should_update = True
 
@@ -611,12 +635,12 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                 self._white_value = kwargs[ATTR_WHITE_VALUE]
                 should_update = True
 
-        mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._topic[CONF_COMMAND_TOPIC],
             json.dumps(message),
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
 
         if self._optimistic:
@@ -636,12 +660,12 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
 
         self._set_flash_and_transition(message, **kwargs)
 
-        mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._topic[CONF_COMMAND_TOPIC],
             json.dumps(message),
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
 
         if self._optimistic:

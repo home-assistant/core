@@ -17,9 +17,9 @@
             },
             "user": {
                 "data": {
-                    "admin_password": "Amministratore Password",
+                    "admin_password": "Password di amministrazione",
                     "admin_username": "Amministratore Nome utente",
-                    "surveillance_password": "Sorveglianza Password",
+                    "surveillance_password": "Password di sorveglianza",
                     "surveillance_username": "Sorveglianza Nome utente",
                     "url": "URL"
                 }
@@ -30,7 +30,8 @@
         "step": {
             "init": {
                 "data": {
-                    "webhook_set": "Configura i webhooks di motionEye per segnalare gli eventi a Home Assistant",
+                    "stream_url_template": "Modello URL streaming",
+                    "webhook_set": "Configura i webhook di motionEye per segnalare gli eventi a Home Assistant",
                     "webhook_set_overwrite": "Sovrascrivi webhook non riconosciuti"
                 }
             }

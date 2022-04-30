@@ -1,17 +1,26 @@
 """Support for Dexcom sensors."""
+from __future__ import annotations
+
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_UNIT_OF_MEASUREMENT, CONF_USERNAME
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import COORDINATOR, DOMAIN, GLUCOSE_TREND_ICON, GLUCOSE_VALUE_ICON, MG_DL
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Dexcom sensors."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id][COORDINATOR]
     username = config_entry.data[CONF_USERNAME]
     unit_of_measurement = config_entry.options[CONF_UNIT_OF_MEASUREMENT]
-    sensors = []
+    sensors: list[SensorEntity] = []
     sensors.append(DexcomGlucoseTrendSensor(coordinator, username))
     sensors.append(DexcomGlucoseValueSensor(coordinator, username, unit_of_measurement))
     async_add_entities(sensors, False)
@@ -42,12 +51,12 @@ class DexcomGlucoseValueSensor(CoordinatorEntity, SensorEntity):
         return GLUCOSE_VALUE_ICON
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of the device."""
         return self._unit_of_measurement
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         if self.coordinator.data:
             return getattr(self.coordinator.data, self._attribute_unit_of_measurement)
@@ -82,7 +91,7 @@ class DexcomGlucoseTrendSensor(CoordinatorEntity, SensorEntity):
         return GLUCOSE_TREND_ICON[0]
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         if self.coordinator.data:
             return self.coordinator.data.trend_description

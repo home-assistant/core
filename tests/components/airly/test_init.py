@@ -66,7 +66,7 @@ async def test_config_without_unique_id(hass, aioclient_mock):
         },
     )
 
-    aioclient_mock.get(API_POINT_URL, text=load_fixture("airly_valid_station.json"))
+    aioclient_mock.get(API_POINT_URL, text=load_fixture("valid_station.json", "airly"))
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     assert entry.state is ConfigEntryState.LOADED
@@ -87,7 +87,7 @@ async def test_config_with_turned_off_station(hass, aioclient_mock):
         },
     )
 
-    aioclient_mock.get(API_POINT_URL, text=load_fixture("airly_no_station.json"))
+    aioclient_mock.get(API_POINT_URL, text=load_fixture("no_station.json", "airly"))
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     assert entry.state is ConfigEntryState.SETUP_RETRY
@@ -95,10 +95,10 @@ async def test_config_with_turned_off_station(hass, aioclient_mock):
 
 async def test_update_interval(hass, aioclient_mock):
     """Test correct update interval when the number of configured instances changes."""
-    REMAINING_RQUESTS = 15
+    REMAINING_REQUESTS = 15
     HEADERS = {
         "X-RateLimit-Limit-day": "100",
-        "X-RateLimit-Remaining-day": str(REMAINING_RQUESTS),
+        "X-RateLimit-Remaining-day": str(REMAINING_REQUESTS),
     }
 
     entry = MockConfigEntry(
@@ -115,7 +115,7 @@ async def test_update_interval(hass, aioclient_mock):
 
     aioclient_mock.get(
         API_POINT_URL,
-        text=load_fixture("airly_valid_station.json"),
+        text=load_fixture("valid_station.json", "airly"),
         headers=HEADERS,
     )
     entry.add_to_hass(hass)
@@ -127,7 +127,7 @@ async def test_update_interval(hass, aioclient_mock):
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert entry.state is ConfigEntryState.LOADED
 
-    update_interval = set_update_interval(instances, REMAINING_RQUESTS)
+    update_interval = set_update_interval(instances, REMAINING_REQUESTS)
     future = utcnow() + update_interval
     with patch("homeassistant.util.dt.utcnow") as mock_utcnow:
         mock_utcnow.return_value = future
@@ -152,7 +152,7 @@ async def test_update_interval(hass, aioclient_mock):
 
         aioclient_mock.get(
             "https://airapi.airly.eu/v2/measurements/point?lat=66.660000&lng=111.110000",
-            text=load_fixture("airly_valid_station.json"),
+            text=load_fixture("valid_station.json", "airly"),
             headers=HEADERS,
         )
         entry.add_to_hass(hass)
@@ -164,7 +164,7 @@ async def test_update_interval(hass, aioclient_mock):
         assert len(hass.config_entries.async_entries(DOMAIN)) == 2
         assert entry.state is ConfigEntryState.LOADED
 
-        update_interval = set_update_interval(instances, REMAINING_RQUESTS)
+        update_interval = set_update_interval(instances, REMAINING_REQUESTS)
         future = utcnow() + update_interval
         mock_utcnow.return_value = future
         async_fire_time_changed(hass, future)
@@ -203,7 +203,7 @@ async def test_migrate_device_entry(hass, aioclient_mock, old_identifier):
         },
     )
 
-    aioclient_mock.get(API_POINT_URL, text=load_fixture("airly_valid_station.json"))
+    aioclient_mock.get(API_POINT_URL, text=load_fixture("valid_station.json", "airly"))
     config_entry.add_to_hass(hass)
 
     device_reg = mock_device_registry(hass)

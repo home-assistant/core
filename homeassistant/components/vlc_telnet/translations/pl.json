@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Us\u0142uga jest ju\u017c skonfigurowana",
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "invalid_auth": "Niepoprawne uwierzytelnienie",
+            "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119",
+            "unknown": "Nieoczekiwany b\u0142\u0105d"
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "invalid_auth": "Niepoprawne uwierzytelnienie",
+            "unknown": "Nieoczekiwany b\u0142\u0105d"
+        },
+        "flow_title": "{host}",
+        "step": {
+            "hassio_confirm": {
+                "description": "Czy chcesz si\u0119 po\u0142\u0105czy\u0107 z dodatkiem {addon}?"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Has\u0142o"
+                },
+                "description": "Prosz\u0119 wpisa\u0107 prawid\u0142owe has\u0142o dla hosta: {host}."
+            },
+            "user": {
+                "data": {
+                    "host": "Nazwa hosta lub adres IP",
+                    "name": "Nazwa",
+                    "password": "Has\u0142o",
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}

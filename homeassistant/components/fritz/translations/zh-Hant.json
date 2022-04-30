@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
             "already_in_progress": "\u8a2d\u5b9a\u5df2\u7d93\u9032\u884c\u4e2d",
+            "ignore_ip6_link_local": "\u4e0d\u652f\u63f4\u9023\u7d50\u672c\u5730\u7aef IPv6 \u4f4d\u5740",
             "reauth_successful": "\u91cd\u65b0\u8a8d\u8b49\u6210\u529f"
         },
         "error": {
@@ -10,7 +11,8 @@
             "already_in_progress": "\u8a2d\u5b9a\u5df2\u7d93\u9032\u884c\u4e2d",
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
             "connection_error": "\u9023\u7dda\u5931\u6557",
-            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548"
+            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
+            "upnp_not_configured": "\u672a\u8a2d\u5b9a\u88dd\u7f6e UPnP \u8a2d\u5b9a\u3002"
         },
         "flow_title": "{name}",
         "step": {
@@ -56,7 +58,8 @@
         "step": {
             "init": {
                 "data": {
-                    "consider_home": "\u8996\u70ba\u5728\u5bb6\u7684\u7b49\u5019\u79d2\u6578"
+                    "consider_home": "\u8996\u70ba\u5728\u5bb6\u7684\u7b49\u5019\u79d2\u6578",
+                    "old_discovery": "\u958b\u555f\u820a\u641c\u7d22\u6a21\u5f0f"
                 }
             }
         }

@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Kontot \u00e4r redan konfigurerat"
+        },
+        "error": {
+            "cannot_connect": "Kunde inte ansluta",
+            "invalid_auth": "Ogiltig autentisering",
+            "unknown": "Ov\u00e4ntat fel"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "L\u00f6senord",
+                    "username": "Anv\u00e4ndarnamn"
+                }
+            }
+        }
+    }
+}

@@ -6,11 +6,12 @@ from blebox_uniapi.error import BadOnValueError
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_RGBW_COLOR,
-    COLOR_MODE_BRIGHTNESS,
-    COLOR_MODE_ONOFF,
-    COLOR_MODE_RGBW,
+    ColorMode,
     LightEntity,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.color import color_rgb_to_hex, rgb_hex_to_rgb_list
 
 from . import BleBoxEntity, create_blebox_entities
@@ -18,7 +19,11 @@ from . import BleBoxEntity, create_blebox_entities
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up a BleBox entry."""
 
     create_blebox_entities(
@@ -48,16 +53,15 @@ class BleBoxLightEntity(BleBoxEntity, LightEntity):
     def color_mode(self):
         """Return the color mode."""
         if self._feature.supports_white and self._feature.supports_color:
-            return COLOR_MODE_RGBW
+            return ColorMode.RGBW
         if self._feature.supports_brightness:
-            return COLOR_MODE_BRIGHTNESS
-        return COLOR_MODE_ONOFF
+            return ColorMode.BRIGHTNESS
+        return ColorMode.ONOFF
 
     @property
     def rgbw_color(self):
         """Return the hue and saturation."""
-        rgbw_hex = self._feature.rgbw_hex
-        if rgbw_hex is None:
+        if (rgbw_hex := self._feature.rgbw_hex) is None:
             return None
 
         return tuple(rgb_hex_to_rgb_list(rgbw_hex)[0:4])

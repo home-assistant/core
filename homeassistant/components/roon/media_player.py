@@ -4,24 +4,11 @@ import logging
 from roonapi import split_media_path
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    SUPPORT_BROWSE_MEDIA,
-    SUPPORT_GROUPING,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SEEK,
-    SUPPORT_SHUFFLE_SET,
-    SUPPORT_STOP,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
+from homeassistant.components.media_player import (
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEVICE_DEFAULT_NAME,
     STATE_IDLE,
@@ -29,35 +16,19 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_PLAYING,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import convert
 from homeassistant.util.dt import utcnow
 
 from .const import DOMAIN
 from .media_browser import browse_media
-
-SUPPORT_ROON = (
-    SUPPORT_BROWSE_MEDIA
-    | SUPPORT_GROUPING
-    | SUPPORT_PAUSE
-    | SUPPORT_VOLUME_SET
-    | SUPPORT_STOP
-    | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_SHUFFLE_SET
-    | SUPPORT_SEEK
-    | SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_PLAY
-    | SUPPORT_PLAY_MEDIA
-    | SUPPORT_VOLUME_STEP
-)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,7 +37,11 @@ SERVICE_TRANSFER = "transfer"
 ATTR_TRANSFER = "transfer_id"
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up Roon MediaPlayer from Config Entry."""
     roon_server = hass.data[DOMAIN][config_entry.entry_id]
     media_players = set()
@@ -100,6 +75,24 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 class RoonDevice(MediaPlayerEntity):
     """Representation of an Roon device."""
+
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.BROWSE_MEDIA
+        | MediaPlayerEntityFeature.GROUPING
+        | MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.STOP
+        | MediaPlayerEntityFeature.PREVIOUS_TRACK
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.SHUFFLE_SET
+        | MediaPlayerEntityFeature.SEEK
+        | MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.PLAY
+        | MediaPlayerEntityFeature.PLAY_MEDIA
+        | MediaPlayerEntityFeature.VOLUME_STEP
+    )
 
     def __init__(self, server, player_data):
         """Initialize Roon device object."""
@@ -148,11 +141,6 @@ class RoonDevice(MediaPlayerEntity):
         return self._available
 
     @property
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        return SUPPORT_ROON
-
-    @property
     def group_members(self):
         """Return the grouped players."""
 
@@ -160,18 +148,17 @@ class RoonDevice(MediaPlayerEntity):
         return [self._server.entity_id(roon_name) for roon_name in roon_names]
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        dev_model = "player"
         if self.player_data.get("source_controls"):
             dev_model = self.player_data["source_controls"][0].get("display_name")
-        return {
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "name": self.name,
-            "manufacturer": "RoonLabs",
-            "model": dev_model,
-            "via_device": (DOMAIN, self._server.roon_id),
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.unique_id)},
+            name=self.name,
+            manufacturer="RoonLabs",
+            model=dev_model,
+            via_device=(DOMAIN, self._server.roon_id),
+        )
 
     def update_data(self, player_data=None):
         """Update session object."""
@@ -552,8 +539,7 @@ class RoonDevice(MediaPlayerEntity):
             if output["display_name"] != self.name
         }
 
-        transfer_id = zone_ids.get(name)
-        if transfer_id is None:
+        if (transfer_id := zone_ids.get(name)) is None:
             _LOGGER.error(
                 "Can't transfer from %s to %s because destination is not known %s",
                 self.name,

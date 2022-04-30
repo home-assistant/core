@@ -25,9 +25,9 @@
                     "path_zms": "Percorso ZMS",
                     "ssl": "Utilizza un certificato SSL",
                     "username": "Nome utente",
-                    "verify_ssl": "Verificare il certificato SSL"
+                    "verify_ssl": "Verifica il certificato SSL"
                 },
-                "title": "Aggiungi Server ZoneMinder."
+                "title": "Aggiungi server ZoneMinder."
             }
         }
     }

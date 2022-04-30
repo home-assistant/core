@@ -8,7 +8,11 @@ import pytest
 
 from homeassistant.components.cloud import DOMAIN
 from homeassistant.components.cloud.client import CloudClient
-from homeassistant.components.cloud.const import PREF_ENABLE_ALEXA, PREF_ENABLE_GOOGLE
+from homeassistant.components.cloud.const import (
+    PREF_ALEXA_REPORT_STATE,
+    PREF_ENABLE_ALEXA,
+    PREF_ENABLE_GOOGLE,
+)
 from homeassistant.const import CONTENT_TYPE_JSON
 from homeassistant.core import State
 from homeassistant.setup import async_setup_component
@@ -47,7 +51,7 @@ async def test_handler_alexa(hass):
         },
     )
 
-    mock_cloud_prefs(hass)
+    mock_cloud_prefs(hass, {PREF_ALEXA_REPORT_STATE: False})
     cloud = hass.data["cloud"]
 
     resp = await cloud.client.async_alexa_message(
@@ -134,7 +138,7 @@ async def test_handler_google_actions_disabled(hass, mock_cloud_fixture):
     """Test handler Google Actions when user has disabled it."""
     mock_cloud_fixture._prefs[PREF_ENABLE_GOOGLE] = False
 
-    with patch("hass_nabucasa.Cloud.start"):
+    with patch("hass_nabucasa.Cloud.initialize"):
         assert await async_setup_component(hass, "cloud", {})
 
     reqid = "5711642932632160983"
@@ -149,7 +153,7 @@ async def test_handler_google_actions_disabled(hass, mock_cloud_fixture):
 
 async def test_webhook_msg(hass, caplog):
     """Test webhook msg."""
-    with patch("hass_nabucasa.Cloud.start"):
+    with patch("hass_nabucasa.Cloud.initialize"):
         setup = await async_setup_component(hass, "cloud", {"cloud": {}})
         assert setup
     cloud = hass.data["cloud"]
@@ -261,7 +265,7 @@ async def test_set_username(hass):
     )
     client = CloudClient(hass, prefs, None, {}, {})
     client.cloud = MagicMock(is_logged_in=True, username="mock-username")
-    await client.logged_in()
+    await client.cloud_started()
 
     assert len(prefs.async_set_username.mock_calls) == 1
     assert prefs.async_set_username.mock_calls[0][1][0] == "mock-username"
@@ -279,7 +283,7 @@ async def test_login_recovers_bad_internet(hass, caplog):
     client._alexa_config = Mock(
         async_enable_proactive_mode=Mock(side_effect=aiohttp.ClientError)
     )
-    await client.logged_in()
+    await client.cloud_started()
     assert len(client._alexa_config.async_enable_proactive_mode.mock_calls) == 1
     assert "Unable to activate Alexa Report State" in caplog.text
 

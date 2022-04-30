@@ -3,10 +3,21 @@
   "name": "TP-Link Kasa Smart",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/tplink",
-  "requirements": ["pyHS100==0.3.5.2"],
-  "codeowners": ["@rytilahti", "@thegardenmonkey"],
+  "requirements": ["python-kasa==0.5.0"],
+  "codeowners": ["@rytilahti", "@thegardenmonkey", "@bdraco"],
+  "dependencies": ["network"],
+  "quality_scale": "platinum",
   "iot_class": "local_polling",
   "dhcp": [
+    { "registered_devices": true },
+    {
+      "hostname": "ep*",
+      "macaddress": "E848B8*"
+    },
+    {
+      "hostname": "ep*",
+      "macaddress": "003192*"
+    },
     {
       "hostname": "hs*",
       "macaddress": "1C3BF3*"
@@ -28,24 +39,8 @@
       "macaddress": "B09575*"
     },
     {
-      "hostname": "k[lp]*",
-      "macaddress": "1C3BF3*"
-    },
-    {
-      "hostname": "k[lp]*",
-      "macaddress": "50C7BF*"
-    },
-    {
-      "hostname": "k[lp]*",
-      "macaddress": "68FF7B*"
-    },
-    {
-      "hostname": "k[lp]*",
-      "macaddress": "98DAC4*"
-    },
-    {
-      "hostname": "k[lp]*",
-      "macaddress": "B09575*"
+      "hostname": "hs*",
+      "macaddress": "C006C3*"
     },
     {
       "hostname": "lb*",
@@ -66,6 +61,71 @@
     {
       "hostname": "lb*",
       "macaddress": "B09575*"
-    }     
-  ]
+    },
+    {
+      "hostname": "k[lp]*",
+      "macaddress": "60A4B7*"
+    },
+    {
+      "hostname": "k[lp]*",
+      "macaddress": "005F67*"
+    },
+    {
+      "hostname": "k[lp]*",
+      "macaddress": "1027F5*"
+    },
+    {
+      "hostname": "k[lp]*",
+      "macaddress": "B0A7B9*"
+    },
+    {
+      "hostname": "k[lp]*",
+      "macaddress": "403F8C*"
+    },
+    {
+      "hostname": "k[lp]*",
+      "macaddress": "C0C9E3*"
+    },
+    {
+      "hostname": "k[lp]*",
+      "macaddress": "909A4A*"
+    },
+    {
+      "hostname": "k[lp]*",
+      "macaddress": "E848B8*"
+    },
+    {
+      "hostname": "k[lp]*",
+      "macaddress": "003192*"
+    },
+    {
+      "hostname": "k[lp]*",
+      "macaddress": "1C3BF3*"
+    },
+    {
+      "hostname": "k[lp]*",
+      "macaddress": "50C7BF*"
+    },
+    {
+      "hostname": "k[lp]*",
+      "macaddress": "68FF7B*"
+    },
+    {
+      "hostname": "k[lp]*",
+      "macaddress": "98DAC4*"
+    },
+    {
+      "hostname": "k[lp]*",
+      "macaddress": "B09575*"
+    },
+    {
+      "hostname": "k[lp]*",
+      "macaddress": "C006C3*"
+    },
+    {
+      "hostname": "k[lp]*",
+      "macaddress": "6C5AB0*"
+    }
+  ],
+  "loggers": ["kasa"]
 }

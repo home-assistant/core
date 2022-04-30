@@ -28,20 +28,26 @@
       "unsupported_firmware": "The device is using an unsupported firmware version."
     }
   },
-  "device_automation":{
-      "trigger_subtype": {
-          "button": "Button",
-          "button1": "First button",
-          "button2": "Second button",
-          "button3": "Third button"
-      },
-      "trigger_type": {
-          "single": "{subtype} single clicked",
-          "double": "{subtype} double clicked",
-          "triple": "{subtype} triple clicked",
-          "long": " {subtype} long clicked",
-          "single_long": "{subtype} single clicked and then long clicked",
-          "long_single": "{subtype} long clicked and then single clicked"
-      }
+  "device_automation": {
+    "trigger_subtype": {
+      "button": "Button",
+      "button1": "First button",
+      "button2": "Second button",
+      "button3": "Third button",
+      "button4": "Fourth button"
+    },
+    "trigger_type": {
+      "single": "{subtype} single clicked",
+      "double": "{subtype} double clicked",
+      "triple": "{subtype} triple clicked",
+      "long": "{subtype} long clicked",
+      "single_long": "{subtype} single clicked and then long clicked",
+      "long_single": "{subtype} long clicked and then single clicked",
+      "btn_down": "{subtype} button down",
+      "btn_up": "{subtype} button up",
+      "single_push": "{subtype} single push",
+      "double_push": "{subtype} double push",
+      "long_push": "{subtype} long push"
+    }
   }
 }

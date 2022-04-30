@@ -4,6 +4,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 import asyncio
 import logging
+from typing import Any
 
 from aiohttp import StreamReader, web
 from aiohttp.hdrs import istr
@@ -17,6 +18,7 @@ import attr
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_per_platform, discovery
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_prepare_setup_platform
 
 from .const import (
@@ -34,7 +36,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistant, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up STT."""
     providers = {}
 
@@ -184,7 +186,7 @@ class SpeechToTextView(HomeAssistantView):
             return None
 
         # Convert Header data
-        args = {}
+        args: dict[str, Any] = {}
         for value in data:
             value = value.strip()
             args[value.partition("=")[0]] = value.partition("=")[2]

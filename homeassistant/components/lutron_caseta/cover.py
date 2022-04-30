@@ -3,14 +3,14 @@ import logging
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    DEVICE_CLASS_SHADE,
     DOMAIN,
-    SUPPORT_CLOSE,
-    SUPPORT_OPEN,
-    SUPPORT_SET_POSITION,
-    SUPPORT_STOP,
+    CoverDeviceClass,
     CoverEntity,
+    CoverEntityFeature,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import LutronCasetaDevice
 from .const import BRIDGE_DEVICE, BRIDGE_LEAP, DOMAIN as CASETA_DOMAIN
@@ -18,7 +18,11 @@ from .const import BRIDGE_DEVICE, BRIDGE_LEAP, DOMAIN as CASETA_DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Lutron Caseta cover platform.
 
     Adds shades from the Caseta bridge associated with the config_entry as
@@ -40,10 +44,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class LutronCasetaCover(LutronCasetaDevice, CoverEntity):
     """Representation of a Lutron shade."""
 
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP | SUPPORT_SET_POSITION
+    _attr_supported_features = (
+        CoverEntityFeature.OPEN
+        | CoverEntityFeature.CLOSE
+        | CoverEntityFeature.STOP
+        | CoverEntityFeature.SET_POSITION
+    )
 
     @property
     def is_closed(self):
@@ -58,7 +64,7 @@ class LutronCasetaCover(LutronCasetaDevice, CoverEntity):
     @property
     def device_class(self):
         """Return the device class."""
-        return DEVICE_CLASS_SHADE
+        return CoverDeviceClass.SHADE
 
     async def async_stop_cover(self, **kwargs):
         """Top the cover."""

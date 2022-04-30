@@ -1,17 +1,13 @@
 """Media Player component to integrate TVs exposing the Joint Space API."""
 from __future__ import annotations
 
-from typing import Any
-
 from haphilipsjs import ConnectionFailure
-import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components.media_player import (
-    DEVICE_CLASS_TV,
-    PLATFORM_SCHEMA,
     BrowseMedia,
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
+    MediaPlayerEntityFeature,
 )
 from homeassistant.components.media_player.const import (
     MEDIA_CLASS_APP,
@@ -21,124 +17,84 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_APPS,
     MEDIA_TYPE_CHANNEL,
     MEDIA_TYPE_CHANNELS,
-    SUPPORT_BROWSE_MEDIA,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_STOP,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
 )
 from homeassistant.components.media_player.errors import BrowseError
-from homeassistant.const import (
-    CONF_API_VERSION,
-    CONF_HOST,
-    CONF_NAME,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import LOGGER as _LOGGER, PhilipsTVDataUpdateCoordinator
-from .const import CONF_SYSTEM, DOMAIN
+from .const import DOMAIN
 
 SUPPORT_PHILIPS_JS = (
-    SUPPORT_TURN_OFF
-    | SUPPORT_VOLUME_STEP
-    | SUPPORT_VOLUME_SET
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_SELECT_SOURCE
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_PLAY_MEDIA
-    | SUPPORT_BROWSE_MEDIA
-    | SUPPORT_PLAY
-    | SUPPORT_PAUSE
-    | SUPPORT_STOP
+    MediaPlayerEntityFeature.TURN_OFF
+    | MediaPlayerEntityFeature.VOLUME_STEP
+    | MediaPlayerEntityFeature.VOLUME_SET
+    | MediaPlayerEntityFeature.VOLUME_MUTE
+    | MediaPlayerEntityFeature.SELECT_SOURCE
+    | MediaPlayerEntityFeature.NEXT_TRACK
+    | MediaPlayerEntityFeature.PREVIOUS_TRACK
+    | MediaPlayerEntityFeature.PLAY_MEDIA
+    | MediaPlayerEntityFeature.BROWSE_MEDIA
+    | MediaPlayerEntityFeature.PLAY
+    | MediaPlayerEntityFeature.PAUSE
+    | MediaPlayerEntityFeature.STOP
 )
 
 CONF_ON_ACTION = "turn_on_action"
-
-DEFAULT_API_VERSION = 1
-
-PLATFORM_SCHEMA = vol.All(
-    cv.deprecated(CONF_HOST),
-    cv.deprecated(CONF_NAME),
-    cv.deprecated(CONF_API_VERSION),
-    cv.deprecated(CONF_ON_ACTION),
-    PLATFORM_SCHEMA.extend(
-        {
-            vol.Required(CONF_HOST): cv.string,
-            vol.Remove(CONF_NAME): cv.string,
-            vol.Optional(CONF_API_VERSION, default=DEFAULT_API_VERSION): vol.Coerce(
-                int
-            ),
-            vol.Remove(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
-        }
-    ),
-)
 
 
 def _inverted(data):
     return {v: k for k, v in data.items()}
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Philips TV platform."""
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=config,
-        )
-    )
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: config_entries.ConfigEntry,
-    async_add_entities,
-):
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the configuration entry."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
     async_add_entities(
         [
             PhilipsTVMediaPlayer(
                 coordinator,
-                config_entry.data[CONF_SYSTEM],
-                config_entry.unique_id,
             )
         ]
     )
 
 
-class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
+class PhilipsTVMediaPlayer(
+    CoordinatorEntity[PhilipsTVDataUpdateCoordinator], MediaPlayerEntity
+):
     """Representation of a Philips TV exposing the JointSpace API."""
 
-    _attr_device_class = DEVICE_CLASS_TV
+    _attr_device_class = MediaPlayerDeviceClass.TV
 
     def __init__(
         self,
         coordinator: PhilipsTVDataUpdateCoordinator,
-        system: dict[str, Any],
-        unique_id: str,
     ) -> None:
         """Initialize the Philips TV."""
         self._tv = coordinator.api
-        self._coordinator = coordinator
         self._sources = {}
         self._channels = {}
         self._supports = SUPPORT_PHILIPS_JS
-        self._system = system
-        self._unique_id = unique_id
+        self._system = coordinator.system
+        self._attr_name = coordinator.system["name"]
+        self._attr_unique_id = coordinator.unique_id
+        self._attr_device_info = DeviceInfo(
+            identifiers={
+                (DOMAIN, coordinator.unique_id),
+            },
+            manufacturer="Philips",
+            model=coordinator.system.get("model"),
+            sw_version=coordinator.system.get("softwareversion"),
+            name=coordinator.system["name"],
+        )
         self._state = STATE_OFF
         self._media_content_type: str | None = None
         self._media_content_id: str | None = None
@@ -154,18 +110,13 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         await self.coordinator.async_request_refresh()
 
     @property
-    def name(self):
-        """Return the device name."""
-        return self._system["name"]
-
-    @property
     def supported_features(self):
         """Flag media player features that are supported."""
         supports = self._supports
-        if self._coordinator.turn_on or (
+        if self.coordinator.turn_on or (
             self._tv.on and self._tv.powerstate is not None
         ):
-            supports |= SUPPORT_TURN_ON
+            supports |= MediaPlayerEntityFeature.TURN_ON
         return supports
 
     @property
@@ -187,8 +138,7 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
 
     async def async_select_source(self, source):
         """Set the input source."""
-        source_id = _inverted(self._sources).get(source)
-        if source_id:
+        if source_id := _inverted(self._sources).get(source):
             await self._tv.setSource(source_id)
         await self._async_update_soon()
 
@@ -208,14 +158,17 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
             await self._tv.setPowerState("On")
             self._state = STATE_ON
         else:
-            await self._coordinator.turn_on.async_run(self.hass, self._context)
+            await self.coordinator.turn_on.async_run(self.hass, self._context)
         await self._async_update_soon()
 
     async def async_turn_off(self):
         """Turn off the device."""
-        await self._tv.sendKey("Standby")
-        self._state = STATE_OFF
-        await self._async_update_soon()
+        if self._state == STATE_ON:
+            await self._tv.sendKey("Standby")
+            self._state = STATE_OFF
+            await self._async_update_soon()
+        else:
+            _LOGGER.debug("Ignoring turn off when already in expected state")
 
     async def async_volume_up(self):
         """Send volume up command."""
@@ -313,27 +266,8 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     @property
     def app_name(self):
         """Name of the current running app."""
-        app = self._tv.applications.get(self._tv.application_id)
-        if app:
+        if app := self._tv.applications.get(self._tv.application_id):
             return app.get("label")
-
-    @property
-    def unique_id(self):
-        """Return unique identifier if known."""
-        return self._unique_id
-
-    @property
-    def device_info(self):
-        """Return a device description for device registry."""
-        return {
-            "name": self._system["name"],
-            "identifiers": {
-                (DOMAIN, self._unique_id),
-            },
-            "model": self._system.get("model"),
-            "manufacturer": "Philips",
-            "sw_version": self._system.get("softwareversion"),
-        }
 
     async def async_play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
@@ -347,8 +281,7 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
             else:
                 _LOGGER.error("Unable to find channel <%s>", media_id)
         elif media_type == MEDIA_TYPE_APP:
-            app = self._tv.applications.get(media_id)
-            if app:
+            if app := self._tv.applications.get(media_id):
                 await self._tv.setApplication(app["intent"])
                 await self._async_update_soon()
             else:
@@ -480,7 +413,7 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         """Return root media objects."""
 
         return BrowseMedia(
-            title="Library",
+            title="Philips TV",
             media_class=MEDIA_CLASS_DIRECTORY,
             media_content_id="",
             media_content_type="",
@@ -513,8 +446,11 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         raise BrowseError(f"Media not found: {media_content_type} / {media_content_id}")
 
     async def async_get_browse_image(
-        self, media_content_type, media_content_id, media_image_id=None
-    ):
+        self,
+        media_content_type: str,
+        media_content_id: str,
+        media_image_id: str | None = None,
+    ) -> tuple[bytes | None, str | None]:
         """Serve album art. Returns (content, content_type)."""
         try:
             if media_content_type == MEDIA_TYPE_APP and media_content_id:

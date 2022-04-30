@@ -7,13 +7,13 @@
         },
         "error": {
             "one": "Vuoto",
-            "other": "Vuoto"
+            "other": "Vuoti"
         },
         "flow_title": "{name}",
         "step": {
             "init": {
-                "one": "Pi\u00f9",
-                "other": "Altri"
+                "one": "Vuoto",
+                "other": "Vuoti"
             },
             "ssdp_confirm": {
                 "description": "Vuoi configurare questo dispositivo UPnP/IGD?"

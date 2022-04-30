@@ -1,4 +1,6 @@
 """Legacy Works with Nest climate implementation."""
+# mypy: ignore-errors
+
 import logging
 
 from nest.nest import APIError
@@ -8,22 +10,14 @@ from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
-    CURRENT_HVAC_COOL,
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
     FAN_AUTO,
     FAN_ON,
-    HVAC_MODE_AUTO,
-    HVAC_MODE_COOL,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
     PRESET_AWAY,
     PRESET_ECO,
     PRESET_NONE,
-    SUPPORT_FAN_MODE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_RANGE,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
@@ -32,6 +26,7 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
 
 from .const import DATA_NEST, DOMAIN, SIGNAL_NEST_UPDATE
 
@@ -48,18 +43,18 @@ NEST_MODE_COOL = "cool"
 NEST_MODE_OFF = "off"
 
 MODE_HASS_TO_NEST = {
-    HVAC_MODE_AUTO: NEST_MODE_HEAT_COOL,
-    HVAC_MODE_HEAT: NEST_MODE_HEAT,
-    HVAC_MODE_COOL: NEST_MODE_COOL,
-    HVAC_MODE_OFF: NEST_MODE_OFF,
+    HVACMode.AUTO: NEST_MODE_HEAT_COOL,
+    HVACMode.HEAT: NEST_MODE_HEAT,
+    HVACMode.COOL: NEST_MODE_COOL,
+    HVACMode.OFF: NEST_MODE_OFF,
 }
 
 MODE_NEST_TO_HASS = {v: k for k, v in MODE_HASS_TO_NEST.items()}
 
 ACTION_NEST_TO_HASS = {
-    "off": CURRENT_HVAC_IDLE,
-    "heating": CURRENT_HVAC_HEAT,
-    "cooling": CURRENT_HVAC_COOL,
+    "off": HVACAction.IDLE,
+    "heating": HVACAction.HEATING,
+    "cooling": HVACAction.COOLING,
 }
 
 PRESET_AWAY_AND_ECO = "Away and Eco"
@@ -99,28 +94,30 @@ class NestThermostat(ClimateEntity):
         self._fan_modes = [FAN_ON, FAN_AUTO]
 
         # Set the default supported features
-        self._support_flags = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
+        self._support_flags = (
+            ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+        )
 
         # Not all nest devices support cooling and heating remove unused
         self._operation_list = []
 
         if self.device.can_heat and self.device.can_cool:
-            self._operation_list.append(HVAC_MODE_AUTO)
-            self._support_flags |= SUPPORT_TARGET_TEMPERATURE_RANGE
+            self._operation_list.append(HVACMode.AUTO)
+            self._support_flags |= ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
 
         # Add supported nest thermostat features
         if self.device.can_heat:
-            self._operation_list.append(HVAC_MODE_HEAT)
+            self._operation_list.append(HVACMode.HEAT)
 
         if self.device.can_cool:
-            self._operation_list.append(HVAC_MODE_COOL)
+            self._operation_list.append(HVACMode.COOL)
 
-        self._operation_list.append(HVAC_MODE_OFF)
+        self._operation_list.append(HVACMode.OFF)
 
         # feature of device
         self._has_fan = self.device.has_fan
         if self._has_fan:
-            self._support_flags |= SUPPORT_FAN_MODE
+            self._support_flags |= ClimateEntityFeature.FAN_MODE
 
         # data attributes
         self._away = None
@@ -166,15 +163,15 @@ class NestThermostat(ClimateEntity):
         return self.device.serial
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return information about the device."""
-        return {
-            "identifiers": {(DOMAIN, self.device.device_id)},
-            "name": self.device.name_long,
-            "manufacturer": "Nest Labs",
-            "model": "Thermostat",
-            "sw_version": self.device.software_version,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.device.device_id)},
+            manufacturer="Nest Labs",
+            model="Thermostat",
+            name=self.device.name_long,
+            sw_version=self.device.software_version,
+        )
 
     @property
     def name(self):
@@ -192,7 +189,7 @@ class NestThermostat(ClimateEntity):
         return self._temperature
 
     @property
-    def hvac_mode(self):
+    def hvac_mode(self) -> HVACMode:
         """Return current operation ie. heat, cool, idle."""
         if self._mode == NEST_MODE_ECO:
             if self.device.previous_mode in MODE_NEST_TO_HASS:
@@ -204,7 +201,7 @@ class NestThermostat(ClimateEntity):
         return MODE_NEST_TO_HASS[self._mode]
 
     @property
-    def hvac_action(self):
+    def hvac_action(self) -> HVACAction:
         """Return the current hvac action."""
         return ACTION_NEST_TO_HASS[self._action]
 
@@ -254,12 +251,12 @@ class NestThermostat(ClimateEntity):
             # restore target temperature
             self.schedule_update_ha_state(True)
 
-    def set_hvac_mode(self, hvac_mode):
+    def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set operation mode."""
         self.device.mode = MODE_HASS_TO_NEST[hvac_mode]
 
     @property
-    def hvac_modes(self):
+    def hvac_modes(self) -> list[HVACMode]:
         """List of available operation modes."""
         return self._operation_list
 

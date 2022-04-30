@@ -1,0 +1,14 @@
+{
+  "adaptiveLearning": false,
+  "awayModeEnabled": false,
+  "clientId": "MF_000000000000",
+  "decommission": false,
+  "factoryReset": false,
+  "fanDirection": "forward",
+  "fanOn": true,
+  "fanSleepTimer": 0,
+  "fanSpeed": 3,
+  "resetRfPairList": false,
+  "rfPairModeActive": false,
+  "schedule": ""
+}

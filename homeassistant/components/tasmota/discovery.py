@@ -1,8 +1,8 @@
 """Support for Tasmota device discovery."""
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
 import logging
-from typing import Callable
 
 from hatasmota.discovery import (
     TasmotaDiscovery,
@@ -21,7 +21,7 @@ from hatasmota.sensor import TasmotaBaseSensorConfig
 from homeassistant.components import sensor
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dev_reg
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_registry import async_entries_for_device
 
@@ -34,7 +34,7 @@ TASMOTA_DISCOVERY_ENTITY_NEW = "tasmota_discovery_entity_new_{}"
 TASMOTA_DISCOVERY_ENTITY_UPDATED = "tasmota_discovery_entity_updated_{}_{}_{}_{}"
 TASMOTA_DISCOVERY_INSTANCE = "tasmota_discovery_instance"
 
-SetupDeviceCallback = Callable[[TasmotaDeviceConfig, str], None]
+SetupDeviceCallback = Callable[[TasmotaDeviceConfig, str], Awaitable[None]]
 
 
 def clear_discovery_hash(
@@ -61,7 +61,7 @@ async def async_start(
 ) -> None:
     """Start Tasmota device discovery."""
 
-    async def _discover_entity(
+    def _discover_entity(
         tasmota_entity_config: TasmotaEntityConfig | None,
         discovery_hash: DiscoveryHashType,
         platform: str,
@@ -69,7 +69,7 @@ async def async_start(
         """Handle adding or updating a discovered entity."""
         if not tasmota_entity_config:
             # Entity disabled, clean up entity registry
-            entity_registry = await hass.helpers.entity_registry.async_get_registry()
+            entity_registry = er.async_get(hass)
             unique_id = unique_id_from_hash(discovery_hash)
             entity_id = entity_registry.async_get_entity_id(platform, DOMAIN, unique_id)
             if entity_id:
@@ -119,7 +119,7 @@ async def async_start(
 
         _LOGGER.debug("Received discovery data for tasmota device: %s", mac)
         tasmota_device_config = tasmota_get_device_config(payload)
-        setup_device(tasmota_device_config, mac)
+        await setup_device(tasmota_device_config, mac)
 
         if not payload:
             return
@@ -158,7 +158,7 @@ async def async_start(
         for platform in PLATFORMS:
             tasmota_entities = tasmota_get_entities_for_platform(payload, platform)
             for (tasmota_entity_config, discovery_hash) in tasmota_entities:
-                await _discover_entity(tasmota_entity_config, discovery_hash, platform)
+                _discover_entity(tasmota_entity_config, discovery_hash, platform)
 
     async def async_sensors_discovered(
         sensors: list[tuple[TasmotaBaseSensorConfig, DiscoveryHashType]], mac: str
@@ -166,10 +166,10 @@ async def async_start(
         """Handle discovery of (additional) sensors."""
         platform = sensor.DOMAIN
 
-        device_registry = await hass.helpers.device_registry.async_get_registry()
-        entity_registry = await hass.helpers.entity_registry.async_get_registry()
+        device_registry = dr.async_get(hass)
+        entity_registry = er.async_get(hass)
         device = device_registry.async_get_device(
-            set(), {(dev_reg.CONNECTION_NETWORK_MAC, mac)}
+            set(), {(dr.CONNECTION_NETWORK_MAC, mac)}
         )
 
         if device is None:
@@ -186,7 +186,7 @@ async def async_start(
         for (tasmota_sensor_config, discovery_hash) in sensors:
             if tasmota_sensor_config:
                 orphaned_entities.discard(tasmota_sensor_config.unique_id)
-            await _discover_entity(tasmota_sensor_config, discovery_hash, platform)
+            _discover_entity(tasmota_sensor_config, discovery_hash, platform)
         for unique_id in orphaned_entities:
             entity_id = entity_registry.async_get_entity_id(platform, DOMAIN, unique_id)
             if entity_id:

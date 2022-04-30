@@ -1,4 +1,6 @@
 """Support for the Torque OBD application."""
+from __future__ import annotations
+
 import re
 
 import voluptuous as vol
@@ -6,8 +8,10 @@ import voluptuous as vol
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_EMAIL, CONF_NAME, DEGREE
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 API_PATH = "/api/torque"
 
@@ -38,16 +42,20 @@ def convert_pid(value):
     return int(value, 16)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Torque platform."""
     vehicle = config.get(CONF_NAME)
     email = config.get(CONF_EMAIL)
-    sensors = {}
+    sensors: dict[int, TorqueSensor] = {}
 
     hass.http.register_view(
         TorqueReceiveDataView(email, vehicle, sensors, add_entities)
     )
-    return True
 
 
 class TorqueReceiveDataView(HomeAssistantView):
@@ -120,12 +128,12 @@ class TorqueSensor(SensorEntity):
         return self._name
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._unit
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 

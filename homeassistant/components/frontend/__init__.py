@@ -5,17 +5,16 @@ from collections.abc import Iterator
 from functools import lru_cache
 import json
 import logging
-import mimetypes
 import os
 import pathlib
-from typing import Any, TypedDict, cast
+from typing import Any, TypedDict
 
 from aiohttp import hdrs, web, web_urldispatcher
 import jinja2
 import voluptuous as vol
 from yarl import URL
 
-from homeassistant.components import websocket_api
+from homeassistant.components import onboarding, websocket_api
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.config import async_hass_config_yaml
@@ -28,12 +27,6 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration, bind_hass
 
 from .storage import async_setup_frontend_storage
-
-# Fix mimetypes for borked Windows machines
-# https://github.com/home-assistant/frontend/issues/3336
-mimetypes.add_type("text/css", ".css")
-mimetypes.add_type("application/javascript", ".js")
-
 
 DOMAIN = "frontend"
 CONF_THEMES = "themes"
@@ -320,16 +313,16 @@ def _frontend_root(dev_repo_path: str | None) -> pathlib.Path:
     # pylint: disable=import-outside-toplevel
     import hass_frontend
 
-    return cast(pathlib.Path, hass_frontend.where())
+    return hass_frontend.where()
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the serving of the frontend."""
     await async_setup_frontend_storage(hass)
-    hass.components.websocket_api.async_register_command(websocket_get_panels)
-    hass.components.websocket_api.async_register_command(websocket_get_themes)
-    hass.components.websocket_api.async_register_command(websocket_get_translations)
-    hass.components.websocket_api.async_register_command(websocket_get_version)
+    websocket_api.async_register_command(hass, websocket_get_panels)
+    websocket_api.async_register_command(hass, websocket_get_themes)
+    websocket_api.async_register_command(hass, websocket_get_translations)
+    websocket_api.async_register_command(hass, websocket_get_version)
     hass.http.register_view(ManifestJSONView())
 
     conf = config.get(DOMAIN, {})
@@ -367,19 +360,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if os.path.isdir(local):
         hass.http.register_static_path("/local", local, not is_dev)
 
+    # Can be removed in 2023
+    hass.http.register_redirect("/config/server_control", "/developer-tools/yaml")
+
     hass.http.app.router.register_resource(IndexView(repo_path, hass))
 
     async_register_built_in_panel(hass, "profile")
-
-    # To smooth transition to new urls, add redirects to new urls of dev tools
-    # Added June 27, 2019. Can be removed in 2021.
-    for panel in ("event", "service", "state", "template"):
-        hass.http.register_redirect(f"/dev-{panel}", f"/developer-tools/{panel}")
-    for panel in ("logs", "info", "mqtt"):
-        # Can be removed in 2021.
-        hass.http.register_redirect(f"/dev-{panel}", f"/config/{panel}")
-        # Added June 20 2020. Can be removed in 2022.
-        hass.http.register_redirect(f"/developer-tools/{panel}", f"/config/{panel}")
 
     async_register_built_in_panel(
         hass,
@@ -540,6 +526,7 @@ class IndexView(web_urldispatcher.AbstractResource):
         """
         if (
             request.path != "/"
+            and len(request.url.parts) > 1
             and request.url.parts[1] not in self.hass.data[DATA_PANELS]
         ):
             return None, set()
@@ -567,8 +554,7 @@ class IndexView(web_urldispatcher.AbstractResource):
 
     def get_template(self) -> jinja2.Template:
         """Get template."""
-        tpl = self._template_cache
-        if tpl is None:
+        if (tpl := self._template_cache) is None:
             with (_frontend_root(self.repo_path) / "index.html").open(
                 encoding="utf8"
             ) as file:
@@ -584,7 +570,7 @@ class IndexView(web_urldispatcher.AbstractResource):
         """Serve the index page for panel pages."""
         hass = request.app["hass"]
 
-        if not hass.components.onboarding.async_is_onboarded():
+        if not onboarding.async_is_onboarded(hass):
             return web.Response(status=302, headers={"location": "/onboarding.html"})
 
         template = self._template_cache or await hass.async_add_executor_job(
@@ -618,7 +604,7 @@ class ManifestJSONView(HomeAssistantView):
     name = "manifestjson"
 
     @callback
-    def get(self, request: web.Request) -> web.Response:  # pylint: disable=no-self-use
+    def get(self, request: web.Request) -> web.Response:
         """Return the manifest.json."""
         return web.Response(
             text=MANIFEST_JSON.json, content_type="application/manifest+json"

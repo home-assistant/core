@@ -8,7 +8,7 @@
         "error": {
             "cannot_connect": "\u00c9chec de connexion"
         },
-        "flow_title": "Roku: {name}",
+        "flow_title": "{name}",
         "step": {
             "discovery_confirm": {
                 "data": {
@@ -28,7 +28,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Nom d'h\u00f4te ou adresse IP"
+                    "host": "H\u00f4te"
                 },
                 "description": "Entrez vos informations Roku."
             }

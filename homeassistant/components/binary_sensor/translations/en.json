@@ -2,6 +2,7 @@
     "device_automation": {
         "condition_type": {
             "is_bat_low": "{entity_name} battery is low",
+            "is_co": "{entity_name} is detecting carbon monoxide",
             "is_cold": "{entity_name} is cold",
             "is_connected": "{entity_name} is connected",
             "is_gas": "{entity_name} is detecting gas",
@@ -11,12 +12,14 @@
             "is_moist": "{entity_name} is moist",
             "is_motion": "{entity_name} is detecting motion",
             "is_moving": "{entity_name} is moving",
+            "is_no_co": "{entity_name} is not detecting carbon monoxide",
             "is_no_gas": "{entity_name} is not detecting gas",
             "is_no_light": "{entity_name} is not detecting light",
             "is_no_motion": "{entity_name} is not detecting motion",
             "is_no_problem": "{entity_name} is not detecting problem",
             "is_no_smoke": "{entity_name} is not detecting smoke",
             "is_no_sound": "{entity_name} is not detecting sound",
+            "is_no_update": "{entity_name} is up-to-date",
             "is_no_vibration": "{entity_name} is not detecting vibration",
             "is_not_bat_low": "{entity_name} battery is normal",
             "is_not_cold": "{entity_name} is not cold",
@@ -30,6 +33,8 @@
             "is_not_plugged_in": "{entity_name} is unplugged",
             "is_not_powered": "{entity_name} is not powered",
             "is_not_present": "{entity_name} is not present",
+            "is_not_running": "{entity_name} is not running",
+            "is_not_tampered": "{entity_name} is not detecting tampering",
             "is_not_unsafe": "{entity_name} is safe",
             "is_occupied": "{entity_name} is occupied",
             "is_off": "{entity_name} is off",
@@ -39,28 +44,36 @@
             "is_powered": "{entity_name} is powered",
             "is_present": "{entity_name} is present",
             "is_problem": "{entity_name} is detecting problem",
+            "is_running": "{entity_name} is running",
             "is_smoke": "{entity_name} is detecting smoke",
             "is_sound": "{entity_name} is detecting sound",
+            "is_tampered": "{entity_name} is detecting tampering",
             "is_unsafe": "{entity_name} is unsafe",
+            "is_update": "{entity_name} has an update available",
             "is_vibration": "{entity_name} is detecting vibration"
         },
         "trigger_type": {
             "bat_low": "{entity_name} battery low",
+            "co": "{entity_name} started detecting carbon monoxide",
             "cold": "{entity_name} became cold",
             "connected": "{entity_name} connected",
             "gas": "{entity_name} started detecting gas",
             "hot": "{entity_name} became hot",
+            "is_not_tampered": "{entity_name} stopped detecting tampering",
+            "is_tampered": "{entity_name} started detecting tampering",
             "light": "{entity_name} started detecting light",
             "locked": "{entity_name} locked",
             "moist": "{entity_name} became moist",
             "motion": "{entity_name} started detecting motion",
             "moving": "{entity_name} started moving",
+            "no_co": "{entity_name} stopped detecting carbon monoxide",
             "no_gas": "{entity_name} stopped detecting gas",
             "no_light": "{entity_name} stopped detecting light",
             "no_motion": "{entity_name} stopped detecting motion",
             "no_problem": "{entity_name} stopped detecting problem",
             "no_smoke": "{entity_name} stopped detecting smoke",
             "no_sound": "{entity_name} stopped detecting sound",
+            "no_update": "{entity_name} became up-to-date",
             "no_vibration": "{entity_name} stopped detecting vibration",
             "not_bat_low": "{entity_name} battery normal",
             "not_cold": "{entity_name} became not cold",
@@ -74,6 +87,8 @@
             "not_plugged_in": "{entity_name} unplugged",
             "not_powered": "{entity_name} not powered",
             "not_present": "{entity_name} not present",
+            "not_running": "{entity_name} is no longer running",
+            "not_tampered": "{entity_name} stopped detecting tampering",
             "not_unsafe": "{entity_name} became safe",
             "occupied": "{entity_name} became occupied",
             "opened": "{entity_name} opened",
@@ -81,13 +96,30 @@
             "powered": "{entity_name} powered",
             "present": "{entity_name} present",
             "problem": "{entity_name} started detecting problem",
+            "running": "{entity_name} started running",
             "smoke": "{entity_name} started detecting smoke",
             "sound": "{entity_name} started detecting sound",
+            "tampered": "{entity_name} started detecting tampering",
             "turned_off": "{entity_name} turned off",
             "turned_on": "{entity_name} turned on",
             "unsafe": "{entity_name} became unsafe",
+            "update": "{entity_name} got an update available",
             "vibration": "{entity_name} started detecting vibration"
         }
+    },
+    "device_class": {
+        "co": "carbon_monoxide",
+        "cold": "cold",
+        "gas": "gas",
+        "heat": "heat",
+        "moisture": "moisture",
+        "motion": "motion",
+        "occupancy": "occupancy",
+        "power": "power",
+        "problem": "problem",
+        "smoke": "smoke",
+        "sound": "sound",
+        "vibration": "vibration"
     },
     "state": {
         "_": {
@@ -101,6 +133,14 @@
         "battery_charging": {
             "off": "Not charging",
             "on": "Charging"
+        },
+        "carbon_monoxide": {
+            "off": "Clear",
+            "on": "Detected"
+        },
+        "co": {
+            "off": "Clear",
+            "on": "Detected"
         },
         "cold": {
             "off": "Normal",
@@ -166,6 +206,10 @@
             "off": "OK",
             "on": "Problem"
         },
+        "running": {
+            "off": "Not running",
+            "on": "Running"
+        },
         "safety": {
             "off": "Safe",
             "on": "Unsafe"
@@ -177,6 +221,10 @@
         "sound": {
             "off": "Clear",
             "on": "Detected"
+        },
+        "update": {
+            "off": "Up-to-date",
+            "on": "Update available"
         },
         "vibration": {
             "off": "Clear",

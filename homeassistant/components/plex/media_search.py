@@ -1,116 +1,95 @@
 """Helper methods to search for Plex media."""
+from __future__ import annotations
+
 import logging
 
+from plexapi.base import PlexObject
 from plexapi.exceptions import BadRequest, NotFound
+from plexapi.library import LibrarySection
 
 from .errors import MediaNotFound
+
+LEGACY_PARAM_MAPPING = {
+    "show_name": "show.title",
+    "season_number": "season.index",
+    "episode_name": "episode.title",
+    "episode_number": "episode.index",
+    "artist_name": "artist.title",
+    "album_name": "album.title",
+    "track_name": "track.title",
+    "track_number": "track.index",
+    "video_name": "movie.title",
+}
+
+PREFERRED_LIBTYPE_ORDER = (
+    "episode",
+    "season",
+    "show",
+    "track",
+    "album",
+    "artist",
+)
+
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def lookup_movie(library_section, **kwargs):
-    """Find a specific movie and return a Plex media object."""
-    try:
-        title = kwargs["title"]
-    except KeyError:
-        _LOGGER.error("Must specify 'title' for this search")
-        return None
+def search_media(
+    media_type: str,
+    library_section: LibrarySection,
+    allow_multiple: bool = False,
+    **kwargs,
+) -> PlexObject | list[PlexObject]:
+    """Search for specified Plex media in the provided library section.
+
+    Returns a media item or a list of items if `allow_multiple` is set.
+
+    Raises MediaNotFound if the search was unsuccessful.
+    """
+    original_query = kwargs.copy()
+    search_query = {}
+    libtype = kwargs.pop("libtype", None)
+
+    # Preserve legacy service parameters
+    for legacy_key, key in LEGACY_PARAM_MAPPING.items():
+        if value := kwargs.pop(legacy_key, None):
+            _LOGGER.debug(
+                "Legacy parameter '%s' used, consider using '%s'", legacy_key, key
+            )
+            search_query[key] = value
+
+    search_query.update(**kwargs)
+
+    if not libtype:
+        # Default to a sane libtype if not explicitly provided
+        for preferred_libtype in PREFERRED_LIBTYPE_ORDER:
+            if any(key.startswith(preferred_libtype) for key in search_query):
+                libtype = preferred_libtype
+                break
+
+    search_query.update(libtype=libtype)
+    _LOGGER.debug("Processed search query: %s", search_query)
 
     try:
-        movies = library_section.search(**kwargs, libtype="movie", maxresults=3)
-    except BadRequest as err:
-        _LOGGER.error("Invalid search payload provided: %s", err)
-        return None
+        results = library_section.search(**search_query)
+    except (BadRequest, NotFound) as exc:
+        raise MediaNotFound(f"Problem in query {original_query}: {exc}") from exc
 
-    if not movies:
-        raise MediaNotFound(f"Movie {title}") from None
+    if not results:
+        raise MediaNotFound(
+            f"No {media_type} results in '{library_section.title}' for {original_query}"
+        )
 
-    if len(movies) > 1:
-        exact_matches = [x for x in movies if x.title.lower() == title.lower()]
-        if len(exact_matches) == 1:
-            return exact_matches[0]
-        match_list = [f"{x.title} ({x.year})" for x in movies]
-        _LOGGER.warning("Multiple matches found during search: %s", match_list)
-        return None
+    if len(results) > 1:
+        if allow_multiple:
+            return results
 
-    return movies[0]
+        if title := search_query.get("title") or search_query.get("movie.title"):
+            exact_matches = [x for x in results if x.title.lower() == title.lower()]
+            if len(exact_matches) == 1:
+                return exact_matches[0]
+        raise MediaNotFound(
+            f"Multiple matches, make content_id more specific or use `allow_multiple`: {results}"
+        )
 
-
-def lookup_tv(library_section, **kwargs):
-    """Find TV media and return a Plex media object."""
-    season_number = kwargs.get("season_number")
-    episode_number = kwargs.get("episode_number")
-
-    try:
-        show_name = kwargs["show_name"]
-        show = library_section.get(show_name)
-    except KeyError:
-        _LOGGER.error("Must specify 'show_name' for this search")
-        return None
-    except NotFound as err:
-        raise MediaNotFound(f"Show {show_name}") from err
-
-    if not season_number:
-        return show
-
-    try:
-        season = show.season(int(season_number))
-    except NotFound as err:
-        raise MediaNotFound(f"Season {season_number} of {show_name}") from err
-
-    if not episode_number:
-        return season
-
-    try:
-        return season.episode(episode=int(episode_number))
-    except NotFound as err:
-        episode = f"S{str(season_number).zfill(2)}E{str(episode_number).zfill(2)}"
-        raise MediaNotFound(f"Episode {episode} of {show_name}") from err
-
-
-def lookup_music(library_section, **kwargs):
-    """Search for music and return a Plex media object."""
-    album_name = kwargs.get("album_name")
-    track_name = kwargs.get("track_name")
-    track_number = kwargs.get("track_number")
-
-    try:
-        artist_name = kwargs["artist_name"]
-        artist = library_section.get(artist_name)
-    except KeyError:
-        _LOGGER.error("Must specify 'artist_name' for this search")
-        return None
-    except NotFound as err:
-        raise MediaNotFound(f"Artist {artist_name}") from err
-
-    if album_name:
-        try:
-            album = artist.album(album_name)
-        except NotFound as err:
-            raise MediaNotFound(f"Album {album_name} by {artist_name}") from err
-
-        if track_name:
-            try:
-                return album.track(track_name)
-            except NotFound as err:
-                raise MediaNotFound(
-                    f"Track {track_name} on {album_name} by {artist_name}"
-                ) from err
-
-        if track_number:
-            for track in album.tracks():
-                if int(track.index) == int(track_number):
-                    return track
-
-            raise MediaNotFound(
-                f"Track {track_number} on {album_name} by {artist_name}"
-            ) from None
-        return album
-
-    if track_name:
-        try:
-            return artist.get(track_name)
-        except NotFound as err:
-            raise MediaNotFound(f"Track {track_name} by {artist_name}") from err
-
-    return artist
+    return results[0]

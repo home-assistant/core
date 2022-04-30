@@ -1,19 +1,28 @@
 """Light/LED support for the Skybell HD Doorbell."""
+from __future__ import annotations
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_HS_COLOR,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
+    ColorMode,
     LightEntity,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.color as color_util
 
 from . import DOMAIN as SKYBELL_DOMAIN, SkybellDevice
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the platform for a Skybell device."""
-    skybell = hass.data.get(SKYBELL_DOMAIN)
+    skybell = hass.data[SKYBELL_DOMAIN]
 
     sensors = []
     for device in skybell.get_devices():
@@ -35,15 +44,13 @@ def _to_hass_level(level):
 class SkybellLight(SkybellDevice, LightEntity):
     """A binary sensor implementation for Skybell devices."""
 
+    _attr_color_mode = ColorMode.HS
+    _attr_supported_color_modes = {ColorMode.HS}
+
     def __init__(self, device):
         """Initialize a light for a Skybell device."""
         super().__init__(device)
-        self._name = self._device.name
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
+        self._attr_name = device.name
 
     def turn_on(self, **kwargs):
         """Turn on the light."""
@@ -73,8 +80,3 @@ class SkybellLight(SkybellDevice, LightEntity):
     def hs_color(self):
         """Return the color of the light."""
         return color_util.color_RGB_to_hs(*self._device.led_rgb)
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_BRIGHTNESS | SUPPORT_COLOR

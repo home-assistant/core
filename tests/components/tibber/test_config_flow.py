@@ -7,8 +7,6 @@ from homeassistant import config_entries
 from homeassistant.components.tibber.const import DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN
 
-from tests.common import MockConfigEntry
-
 
 @pytest.fixture(name="tibber_setup", autouse=True)
 def tibber_setup_fixture():
@@ -17,7 +15,7 @@ def tibber_setup_fixture():
         yield
 
 
-async def test_show_config_form(hass):
+async def test_show_config_form(hass, recorder_mock):
     """Test show configuration form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -27,7 +25,7 @@ async def test_show_config_form(hass):
     assert result["step_id"] == "user"
 
 
-async def test_create_entry(hass):
+async def test_create_entry(hass, recorder_mock):
     """Test create entry from user input."""
     test_data = {
         CONF_ACCESS_TOKEN: "valid",
@@ -51,15 +49,8 @@ async def test_create_entry(hass):
     assert result["data"] == test_data
 
 
-async def test_flow_entry_already_exists(hass):
+async def test_flow_entry_already_exists(hass, recorder_mock, config_entry):
     """Test user input for config_entry that already exists."""
-    first_entry = MockConfigEntry(
-        domain="tibber",
-        data={CONF_ACCESS_TOKEN: "valid"},
-        unique_id="tibber",
-    )
-    first_entry.add_to_hass(hass)
-
     test_data = {
         CONF_ACCESS_TOKEN: "valid",
     }

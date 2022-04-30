@@ -2,19 +2,24 @@
     "config": {
         "abort": {
             "cannot_connect": "Impossibile connettersi",
+            "not_insteon_device": "Dispositivo rilevato non \u00e8 un dispositivo Insteon",
             "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione."
         },
         "error": {
             "cannot_connect": "Impossibile connettersi",
-            "select_single": "Selezionare un'opzione."
+            "select_single": "Seleziona un'opzione."
         },
+        "flow_title": "{name}",
         "step": {
+            "confirm_usb": {
+                "description": "Vuoi configurare {name}?"
+            },
             "hubv1": {
                 "data": {
                     "host": "Indirizzo IP",
                     "port": "Porta"
                 },
-                "description": "Configurare la versione 1 di Insteon Hub (precedente al 2014).",
+                "description": "Configura la versione 1 di Insteon Hub (precedente al 2014).",
                 "title": "Insteon Hub Versione 1"
             },
             "hubv2": {
@@ -46,8 +51,8 @@
     "options": {
         "error": {
             "cannot_connect": "Impossibile connettersi",
-            "input_error": "Voci non valide, si prega di controllare i valori.",
-            "select_single": "Selezionare un'opzione."
+            "input_error": "Voci non valide, controlla i valori.",
+            "select_single": "Seleziona un'opzione."
         },
         "step": {
             "add_override": {
@@ -76,30 +81,30 @@
                     "port": "Porta",
                     "username": "Nome utente"
                 },
-                "description": "Modificare le informazioni di connessione di Insteon Hub. \u00c8 necessario riavviare Home Assistant dopo aver apportato questa modifica. Ci\u00f2 non modifica la configurazione dell'Hub stesso. Per modificare la configurazione nell'Hub, utilizzare l'app Hub.",
+                "description": "Modifica le informazioni di connessione di Insteon Hub. \u00c8 necessario riavviare Home Assistant dopo aver apportato questa modifica. Ci\u00f2 non modifica la configurazione dell'Hub stesso. Per modificare la configurazione nell'Hub, utilizza l'app Hub.",
                 "title": "Insteon"
             },
             "init": {
                 "data": {
                     "add_override": "Aggiungi una sostituzione del dispositivo.",
                     "add_x10": "Aggiungi un dispositivo X10.",
-                    "change_hub_config": "Modificare la configurazione dell'hub.",
+                    "change_hub_config": "Modifica la configurazione dell'hub.",
                     "remove_override": "Rimuovere una sostituzione del dispositivo.",
                     "remove_x10": "Rimuovi un dispositivo X10."
                 },
-                "description": "Selezionare un'opzione da configurare.",
+                "description": "Seleziona un'opzione da configurare.",
                 "title": "Insteon"
             },
             "remove_override": {
                 "data": {
-                    "address": "Selezionare un indirizzo del dispositivo da rimuovere"
+                    "address": "Seleziona un indirizzo del dispositivo da rimuovere"
                 },
                 "description": "Rimuovere una sostituzione del dispositivo",
                 "title": "Insteon"
             },
             "remove_x10": {
                 "data": {
-                    "address": "Selezionare un indirizzo del dispositivo da rimuovere"
+                    "address": "Seleziona un indirizzo del dispositivo da rimuovere"
                 },
                 "description": "Rimuovi un dispositivo X10",
                 "title": "Insteon"
