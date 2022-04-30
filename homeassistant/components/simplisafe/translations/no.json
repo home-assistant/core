@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Denne SimpliSafe-kontoen er allerede i bruk.",
+            "email_2fa_timed_out": "Tidsavbrudd mens du ventet p\u00e5 e-postbasert tofaktorautentisering.",
             "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket",
             "wrong_account": "Brukerlegitimasjonen som er oppgitt, samsvarer ikke med denne SimpliSafe -kontoen."
         },
@@ -11,6 +12,9 @@
             "invalid_auth": "Ugyldig godkjenning",
             "still_awaiting_mfa": "Forventer fortsatt MFA-e-postklikk",
             "unknown": "Uventet feil"
+        },
+        "progress": {
+            "email_2fa": "Skriv inn tofaktorautentiseringskoden\n sendt til deg via e-post."
         },
         "step": {
             "mfa": {

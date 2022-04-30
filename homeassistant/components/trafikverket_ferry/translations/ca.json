@@ -17,6 +17,8 @@
             "user": {
                 "data": {
                     "api_key": "Clau API",
+                    "from": "Des del port",
+                    "to": "Al port",
                     "weekday": "Laborables"
                 }
             }
