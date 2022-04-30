@@ -66,7 +66,7 @@ async def async_setup_entry(
     acc = AladdinConnectClient(username, password)
     try:
         if not await hass.async_add_executor_job(acc.login):
-            raise ConfigEntryAuthFailed
+            raise ConfigEntryAuthFailed("Incorrect Password")
 
         doors = await hass.async_add_executor_job(acc.get_doors)
         async_add_entities(
