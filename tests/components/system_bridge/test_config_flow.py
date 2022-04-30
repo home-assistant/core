@@ -12,6 +12,7 @@ from systembridgeconnector.const import (
     TYPE_ERROR,
 )
 from systembridgeconnector.exceptions import (
+    AuthenticationException,
     ConnectionClosedException,
     ConnectionErrorException,
 )
@@ -194,7 +195,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
         "systembridgeconnector.websocket_client.WebSocketClient.get_data"
     ), patch(
         "systembridgeconnector.websocket_client.WebSocketClient.receive_message",
-        return_value=FIXTURE_DATA_AUTH_ERROR,
+        side_effect=AuthenticationException,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], FIXTURE_USER_INPUT
@@ -244,7 +245,7 @@ async def test_reauth_authorization_error(hass: HomeAssistant) -> None:
         "systembridgeconnector.websocket_client.WebSocketClient.get_data"
     ), patch(
         "systembridgeconnector.websocket_client.WebSocketClient.receive_message",
-        return_value=FIXTURE_DATA_AUTH_ERROR,
+        side_effect=AuthenticationException,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], FIXTURE_AUTH_INPUT

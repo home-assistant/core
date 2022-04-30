@@ -58,12 +58,12 @@ async def validate_input(data: dict[str, Any]) -> dict[str, str]:
     try:
         while True:
             message = await websocket_client.receive_message()
+            _LOGGER.debug("Message: %s", message)
             if (
                 message[EVENT_TYPE] == TYPE_DATA_UPDATE
                 and message[EVENT_MODULE] == "system"
             ):
                 break
-            _LOGGER.info("Message: %s", message)
     except AuthenticationException as exception:
         _LOGGER.info(exception)
         raise InvalidAuth from exception
