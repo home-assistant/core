@@ -87,6 +87,7 @@ FLOWS = {
         "ecobee",
         "econet",
         "efergy",
+        "eight_sleep",
         "elgato",
         "elkm1",
         "elmax",

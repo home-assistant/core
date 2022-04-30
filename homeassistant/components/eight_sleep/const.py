@@ -15,5 +15,5 @@ NAME_MAP = {
 
 SERVICE_HEAT_SET = "heat_set"
 
-ATTR_TARGET_HEAT = "target"
-ATTR_HEAT_DURATION = "duration"
+ATTR_TARGET = "target"
+ATTR_DURATION = "duration"

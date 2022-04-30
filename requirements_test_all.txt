@@ -976,6 +976,9 @@ pyeconet==0.1.15
 # homeassistant.components.efergy
 pyefergy==22.1.1
 
+# homeassistant.components.eight_sleep
+pyeight==0.2.0
+
 # homeassistant.components.everlights
 pyeverlights==0.1.0
 

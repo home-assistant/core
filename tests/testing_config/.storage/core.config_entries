@@ -1,0 +1,25 @@
+{
+    "version": 1,
+    "minor_version": 1,
+    "key": "core.config_entries",
+    "data": {
+        "entries": [
+            {
+                "entry_id": "d2bfc0208216b35e457fecdf407061df",
+                "version": 1,
+                "domain": "eight_sleep",
+                "title": "test-username",
+                "data": {
+                    "username": "test-username",
+                    "password": "test-password"
+                },
+                "options": {},
+                "pref_disable_new_entities": false,
+                "pref_disable_polling": false,
+                "source": "user",
+                "unique_id": "deviceid",
+                "disabled_by": null
+            }
+        ]
+    }
+}
