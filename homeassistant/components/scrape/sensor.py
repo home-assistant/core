@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from bs4 import BeautifulSoup, FeatureNotFound
+from bs4 import BeautifulSoup
 import httpx
 import voluptuous as vol
 
@@ -154,10 +154,7 @@ class ScrapeSensor(SensorEntity):
 
     def _extract_value(self) -> Any:
         """Parse the html extraction in the executor."""
-        try:
-            raw_data = BeautifulSoup(self.rest.data, "lxml")
-        except FeatureNotFound:
-            raw_data = BeautifulSoup(self.rest.data, "lxml")
+        raw_data = BeautifulSoup(self.rest.data, "lxml")
         _LOGGER.debug(raw_data)
 
         try:
