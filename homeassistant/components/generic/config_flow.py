@@ -130,10 +130,9 @@ async def async_test_still(hass, info) -> tuple[dict[str, str], str | None]:
     fmt = None
     if not (url := info.get(CONF_STILL_IMAGE_URL)):
         return {}, info.get(CONF_CONTENT_TYPE, "image/jpeg")
-    if not isinstance(url, template_helper.Template) and url:
-        url = cv.template(url)
-        url.hass = hass
     try:
+        if not isinstance(url, template_helper.Template):
+            url = template_helper.Template(url, hass)
         url = url.async_render(parse_result=False)
     except TemplateError as err:
         _LOGGER.warning("Problem rendering template %s: %s", url, err)
@@ -269,11 +268,11 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
             ):
                 errors["base"] = "no_still_image_or_stream_url"
             else:
-                errors, still_format = await async_test_still(self.hass, user_input)
-                errors = errors | await async_test_stream(self.hass, user_input)
                 still_url = user_input.get(CONF_STILL_IMAGE_URL)
                 stream_url = user_input.get(CONF_STREAM_SOURCE)
                 name = slug(hass, still_url) or slug(hass, stream_url) or DEFAULT_NAME
+                errors, still_format = await async_test_still(self.hass, user_input)
+                errors = errors | await async_test_stream(self.hass, user_input)
                 if not errors:
                     user_input[CONF_CONTENT_TYPE] = still_format
                     user_input[CONF_LIMIT_REFETCH_TO_URL_CHANGE] = False
