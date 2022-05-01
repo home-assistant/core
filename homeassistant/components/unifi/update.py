@@ -1,0 +1,139 @@
+"""Update entities for Ubiquiti network devices."""
+from __future__ import annotations
+
+import logging
+
+from homeassistant.components.update import (
+    DOMAIN,
+    UpdateDeviceClass,
+    UpdateEntity,
+    UpdateEntityFeature,
+)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_NAME
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from .const import ATTR_MANUFACTURER, DOMAIN as UNIFI_DOMAIN
+from .unifi_entity_base import UniFiBase
+
+LOGGER = logging.getLogger(__name__)
+
+DEVICE_UPDATE = "device_update"
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up update entities for UniFi Network integration."""
+    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    controller.entities[DOMAIN] = {DEVICE_UPDATE: set()}
+
+    @callback
+    def items_added(
+        clients: set = controller.api.clients, devices: set = controller.api.devices
+    ) -> None:
+        """Add device update entities if enabled."""
+        if controller.option_device_updates:
+            add_device_update_entities(controller, async_add_entities, devices)
+
+    for signal in (controller.signal_update, controller.signal_options_update):
+        config_entry.async_on_unload(
+            async_dispatcher_connect(hass, signal, items_added)
+        )
+
+    items_added()
+
+
+@callback
+def add_device_update_entities(controller, async_add_entities, devices):
+    """Add new device update entities from the controller."""
+    entities = []
+
+    for mac in devices:
+        if mac in controller.entities[DOMAIN][UniFiDeviceUpdateEntity.TYPE]:
+            continue
+
+        device = controller.api.devices[mac]
+        entities.append(UniFiDeviceUpdateEntity(device, controller))
+
+    if entities:
+        async_add_entities(entities)
+
+
+class UniFiDeviceUpdateEntity(UniFiBase, UpdateEntity):
+    """Update entity for a UniFi network infrastructure device."""
+
+    DOMAIN = DOMAIN
+    TYPE = DEVICE_UPDATE
+
+    def __init__(self, device, controller):
+        """Set up tracked device."""
+        super().__init__(device, controller)
+
+        self.device = self._item
+
+    @property
+    def name(self) -> str:
+        """Return the name of the device."""
+        return self.device.name or self.device.model
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique identifier for this device."""
+        return f"{self.TYPE}-{self.device.mac}"
+
+    @property
+    def device_class(self) -> UpdateDeviceClass | str | None:
+        """Return the class of this entity."""
+        return UpdateDeviceClass.FIRMWARE
+
+    @property
+    def available(self) -> bool:
+        """Return if controller is available."""
+        return not self.device.disabled and self.controller.available
+
+    @property
+    def in_progress(self) -> bool:
+        """Update installation in progress."""
+        return self.device.state == 4
+
+    @property
+    def installed_version(self) -> str | None:
+        """Version currently in use."""
+        return self.device.version
+
+    @property
+    def latest_version(self) -> str | None:
+        """Latest version available for install."""
+        return self.device.upgrade_to_firmware or self.device.version
+
+    @property
+    def supported_features(self) -> int:
+        """Flag supported features."""
+        return UpdateEntityFeature.PROGRESS
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return a device description for device registry."""
+        info = DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, self.device.mac)},
+            manufacturer=ATTR_MANUFACTURER,
+            model=self.device.model,
+            sw_version=self.device.version,
+        )
+
+        if self.device.name:
+            info[ATTR_NAME] = self.device.name
+
+        return info
+
+    async def options_updated(self) -> None:
+        """Config entry options are updated, remove entity if option is disabled."""
+        if not self.controller.option_device_updates:
+            await self.remove_item({self.device.mac})

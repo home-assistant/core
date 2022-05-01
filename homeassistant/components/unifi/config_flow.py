@@ -30,6 +30,7 @@ from .const import (
     CONF_BLOCK_CLIENT,
     CONF_CONTROLLER,
     CONF_DETECTION_TIME,
+    CONF_DEVICE_UPDATES,
     CONF_DPI_RESTRICTIONS,
     CONF_IGNORE_WIRED_BUG,
     CONF_POE_CLIENTS,
@@ -340,6 +341,10 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
                     vol.Optional(
                         CONF_TRACK_DEVICES,
                         default=self.controller.option_track_devices,
+                    ): bool,
+                    vol.Optional(
+                        CONF_DEVICE_UPDATES,
+                        default=self.controller.option_device_updates,
                     ): bool,
                     vol.Optional(
                         CONF_SSID_FILTER, default=selected_ssids_to_filter
