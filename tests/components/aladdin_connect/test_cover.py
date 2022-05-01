@@ -74,23 +74,6 @@ DEVICE_CONFIG_BAD_NO_DOOR = {
 }
 
 
-async def test_setup_component_authfailed(hass: HomeAssistant) -> None:
-    """Test component setup."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=YAML_CONFIG,
-        unique_id="test-id",
-    )
-    config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.aladdin_connect.cover.AladdinConnectClient.login",
-        return_value=False,
-    ):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-        assert len(hass.states.async_all()) == 0
-
-
 async def test_setup_component_typeerror(hass: HomeAssistant) -> None:
     """Test component setup TypeError."""
     config_entry = MockConfigEntry(
@@ -101,6 +84,9 @@ async def test_setup_component_typeerror(hass: HomeAssistant) -> None:
     config_entry.add_to_hass(hass)
     with patch(
         "homeassistant.components.aladdin_connect.cover.AladdinConnectClient.login",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.aladdin_connect.cover.AladdinConnectClient.get_doors",
         side_effect=TypeError,
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -120,7 +106,7 @@ async def test_setup_component_keyerror(hass: HomeAssistant) -> None:
         "homeassistant.components.aladdin_connect.cover.AladdinConnectClient.login",
         side_effect=KeyError,
     ):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        assert await hass.config_entries.async_setup(config_entry.entry_id) is False
         await hass.async_block_till_done()
         assert len(hass.states.async_all()) == 0
 
@@ -137,7 +123,7 @@ async def test_setup_component_nameerror(hass: HomeAssistant) -> None:
         "homeassistant.components.aladdin_connect.cover.AladdinConnectClient.login",
         side_effect=NameError,
     ):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        assert await hass.config_entries.async_setup(config_entry.entry_id) is False
         await hass.async_block_till_done()
         assert len(hass.states.async_all()) == 0
 
@@ -154,7 +140,7 @@ async def test_setup_component_valueerror(hass: HomeAssistant) -> None:
         "homeassistant.components.aladdin_connect.cover.AladdinConnectClient.login",
         side_effect=ValueError,
     ):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        assert await hass.config_entries.async_setup(config_entry.entry_id) is False
         await hass.async_block_till_done()
         assert len(hass.states.async_all()) == 0
 
@@ -167,9 +153,13 @@ async def test_setup_component_noerror(hass: HomeAssistant) -> None:
         unique_id="test-id",
     )
     config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.aladdin_connect.cover.AladdinConnectClient.login",
+        return_value=True,
+    ):
 
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
 
     assert config_entry.state == ConfigEntryState.LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
@@ -183,9 +173,13 @@ async def test_load_and_unload(hass: HomeAssistant) -> None:
         unique_id="test-id",
     )
     config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.aladdin_connect.cover.AladdinConnectClient.login",
+        return_value=True,
+    ):
 
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
 
     assert config_entry.state == ConfigEntryState.LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1

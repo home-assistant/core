@@ -21,7 +21,7 @@ from homeassistant.const import (
     STATE_OPENING,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -61,13 +61,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Aladdin Connect platform."""
-    username: str = config_entry.data[CONF_USERNAME]
-    password: str = config_entry.data[CONF_PASSWORD]
-    acc = AladdinConnectClient(username, password)
+    acc = hass.data[DOMAIN][config_entry.entry_id]
     try:
-        if not await hass.async_add_executor_job(acc.login):
-            raise ConfigEntryAuthFailed("Incorrect Password")
-
         doors = await hass.async_add_executor_job(acc.get_doors)
         async_add_entities(
             (AladdinDevice(acc, door) for door in doors),
