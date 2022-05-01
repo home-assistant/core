@@ -15,7 +15,7 @@
                     "longitude": "Longitude",
                     "name": "Name"
                 },
-                "description": "Set up Airly air quality integration. To generate API key go to https://developer.airly.eu/register",
+                "description": "To generate API key go to https://developer.airly.eu/register",
                 "title": "Airly"
             }
         }

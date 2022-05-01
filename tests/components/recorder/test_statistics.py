@@ -35,13 +35,9 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import setup_component
 import homeassistant.util.dt as dt_util
 
-from .common import async_wait_recording_done_without_instance
+from .common import async_wait_recording_done
 
-from tests.common import (
-    async_init_recorder_component,
-    get_test_home_assistant,
-    mock_registry,
-)
+from tests.common import get_test_home_assistant, mock_registry
 from tests.components.recorder.common import wait_recording_done
 
 ORIG_TZ = dt_util.DEFAULT_TIME_ZONE
@@ -357,10 +353,9 @@ def test_statistics_duplicated(hass_recorder, caplog):
         caplog.clear()
 
 
-async def test_external_statistics(hass, hass_ws_client, caplog):
+async def test_external_statistics(hass, hass_ws_client, recorder_mock, caplog):
     """Test inserting external statistics."""
     client = await hass_ws_client()
-    await async_init_recorder_component(hass)
 
     assert "Compiling statistics for" not in caplog.text
     assert "Statistics already compiled" not in caplog.text
@@ -394,7 +389,7 @@ async def test_external_statistics(hass, hass_ws_client, caplog):
     async_add_external_statistics(
         hass, external_metadata, (external_statistics1, external_statistics2)
     )
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
     stats = statistics_during_period(hass, zero, period="hour")
     assert stats == {
         "test:total_energy_import": [
@@ -472,7 +467,7 @@ async def test_external_statistics(hass, hass_ws_client, caplog):
         "sum": 6,
     }
     async_add_external_statistics(hass, external_metadata, (external_statistics,))
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
     stats = statistics_during_period(hass, zero, period="hour")
     assert stats == {
         "test:total_energy_import": [
@@ -512,7 +507,7 @@ async def test_external_statistics(hass, hass_ws_client, caplog):
         "sum": 5,
     }
     async_add_external_statistics(hass, external_metadata, (external_statistics,))
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
     stats = statistics_during_period(hass, zero, period="hour")
     assert stats == {
         "test:total_energy_import": [
@@ -553,7 +548,7 @@ async def test_external_statistics(hass, hass_ws_client, caplog):
     response = await client.receive_json()
     assert response["success"]
 
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
     stats = statistics_during_period(hass, zero, period="hour")
     assert stats == {
         "test:total_energy_import": [

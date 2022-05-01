@@ -1136,16 +1136,20 @@ def get_latest_short_term_statistics(
         ]
         most_recent_statistic_row = (
             session.query(
-                StatisticsShortTerm.id,
-                func.max(StatisticsShortTerm.start),
+                StatisticsShortTerm.metadata_id,
+                func.max(StatisticsShortTerm.start).label("start_max"),
             )
+            .filter(StatisticsShortTerm.metadata_id.in_(metadata_ids))
             .group_by(StatisticsShortTerm.metadata_id)
-            .having(StatisticsShortTerm.metadata_id.in_(metadata_ids))
         ).subquery()
         stats = execute(
             session.query(*QUERY_STATISTICS_SHORT_TERM).join(
                 most_recent_statistic_row,
-                StatisticsShortTerm.id == most_recent_statistic_row.c.id,
+                (
+                    StatisticsShortTerm.metadata_id  # pylint: disable=comparison-with-callable
+                    == most_recent_statistic_row.c.metadata_id
+                )
+                & (StatisticsShortTerm.start == most_recent_statistic_row.c.start_max),
             )
         )
         if not stats:

@@ -52,6 +52,7 @@ DEVICE_TRIGGER_BASE_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
         vol.Required(CONF_PLATFORM): "device",
         vol.Required(CONF_DOMAIN): str,
         vol.Required(CONF_DEVICE_ID): str,
+        vol.Remove("metadata"): dict,
     }
 )
 

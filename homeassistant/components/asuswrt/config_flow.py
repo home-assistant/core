@@ -80,24 +80,25 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             user_input = {}
 
+        adv_schema = {}
+        conf_password = vol.Required(CONF_PASSWORD)
+        if self.show_advanced_options:
+            conf_password = vol.Optional(CONF_PASSWORD)
+            adv_schema[vol.Optional(CONF_PORT)] = cv.port
+            adv_schema[vol.Optional(CONF_SSH_KEY)] = str
+
         schema = {
             vol.Required(CONF_HOST, default=user_input.get(CONF_HOST, "")): str,
             vol.Required(CONF_USERNAME, default=user_input.get(CONF_USERNAME, "")): str,
-            vol.Optional(CONF_PASSWORD)
-            if self.show_advanced_options
-            else vol.Required(CONF_PASSWORD): str,
+            conf_password: str,
             vol.Required(CONF_PROTOCOL, default=PROTOCOL_SSH): vol.In(
                 {PROTOCOL_SSH: "SSH", PROTOCOL_TELNET: "Telnet"}
             ),
+            **adv_schema,
+            vol.Required(CONF_MODE, default=MODE_ROUTER): vol.In(
+                {MODE_ROUTER: "Router", MODE_AP: "Access Point"}
+            ),
         }
-
-        if self.show_advanced_options:
-            schema[vol.Optional(CONF_PORT)] = cv.port
-            schema[vol.Optional(CONF_SSH_KEY)] = str
-
-        schema[vol.Required(CONF_MODE, default=MODE_ROUTER)] = vol.In(
-            {MODE_ROUTER: "Router", MODE_AP: "Access Point"}
-        )
 
         return self.async_show_form(
             step_id="user",

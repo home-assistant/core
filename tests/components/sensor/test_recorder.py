@@ -23,17 +23,13 @@ from homeassistant.components.recorder.statistics import (
 )
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import STATE_UNAVAILABLE
-from homeassistant.setup import setup_component
+from homeassistant.setup import async_setup_component, setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
 
-from tests.common import (
-    async_init_recorder_component,
-    async_setup_component,
-    init_recorder_component,
-)
 from tests.components.recorder.common import (
-    async_wait_recording_done_without_instance,
+    async_recorder_block_till_done,
+    async_wait_recording_done,
     wait_recording_done,
 )
 
@@ -347,6 +343,7 @@ def test_compile_hourly_statistics_unsupported(hass_recorder, caplog, attributes
 async def test_compile_hourly_sum_statistics_amount(
     hass,
     hass_ws_client,
+    recorder_mock,
     caplog,
     units,
     state_class,
@@ -361,12 +358,11 @@ async def test_compile_hourly_sum_statistics_amount(
     period1_end = period2 = period0 + timedelta(minutes=10)
     period2_end = period0 + timedelta(minutes=15)
     client = await hass_ws_client()
-    await async_init_recorder_component(hass)
     hass.config.units = units
     recorder = hass.data[DATA_INSTANCE]
     await async_setup_component(hass, "sensor", {})
     # Wait for the sensor recorder platform to be added
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await async_recorder_block_till_done(hass)
     attributes = {
         "device_class": device_class,
         "state_class": state_class,
@@ -378,7 +374,7 @@ async def test_compile_hourly_sum_statistics_amount(
     four, eight, states = await hass.async_add_executor_job(
         record_meter_states, hass, period0, "sensor.test1", attributes, seq
     )
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
     hist = history.get_significant_states(
         hass, period0 - timedelta.resolution, eight + timedelta.resolution
     )
@@ -387,15 +383,15 @@ async def test_compile_hourly_sum_statistics_amount(
     await hass.async_add_executor_job(
         partial(recorder.do_adhoc_statistics, start=period0)
     )
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
     await hass.async_add_executor_job(
         partial(recorder.do_adhoc_statistics, start=period1)
     )
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
     await hass.async_add_executor_job(
         partial(recorder.do_adhoc_statistics, start=period2)
     )
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
     statistic_ids = await hass.async_add_executor_job(list_statistic_ids, hass)
     assert statistic_ids == [
         {
@@ -482,7 +478,7 @@ async def test_compile_hourly_sum_statistics_amount(
     )
     response = await client.receive_json()
     assert response["success"]
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
 
     expected_stats["sensor.test1"][1]["sum"] = approx(factor * 40.0 + 100)
     expected_stats["sensor.test1"][2]["sum"] = approx(factor * 70.0 + 100)
@@ -501,7 +497,7 @@ async def test_compile_hourly_sum_statistics_amount(
     )
     response = await client.receive_json()
     assert response["success"]
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
 
     expected_stats["sensor.test1"][1]["sum"] = approx(factor * 40.0 + 100)
     expected_stats["sensor.test1"][2]["sum"] = approx(factor * 70.0 - 300)
@@ -2781,7 +2777,7 @@ def record_states(hass, zero, entity_id, attributes, seq=None):
     ],
 )
 async def test_validate_statistics_supported_device_class(
-    hass, hass_ws_client, units, attributes, unit
+    hass, hass_ws_client, recorder_mock, units, attributes, unit
 ):
     """Test validate_statistics."""
     id = 1
@@ -2802,9 +2798,8 @@ async def test_validate_statistics_supported_device_class(
     now = dt_util.utcnow()
 
     hass.config.units = units
-    await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(hass, "sensor", {})
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await async_recorder_block_till_done(hass)
     client = await hass_ws_client()
 
     # No statistics, no state - empty response
@@ -2814,14 +2809,14 @@ async def test_validate_statistics_supported_device_class(
     hass.states.async_set(
         "sensor.test", 10, attributes={**attributes, **{"unit_of_measurement": unit}}
     )
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await async_recorder_block_till_done(hass)
     await assert_validation_result(client, {})
 
     # No statistics, invalid state - expect error
     hass.states.async_set(
         "sensor.test", 11, attributes={**attributes, **{"unit_of_measurement": "dogs"}}
     )
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await async_recorder_block_till_done(hass)
     expected = {
         "sensor.test": [
             {
@@ -2837,24 +2832,24 @@ async def test_validate_statistics_supported_device_class(
     await assert_validation_result(client, expected)
 
     # Statistics has run, invalid state - expect error
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await async_recorder_block_till_done(hass)
     hass.data[DATA_INSTANCE].do_adhoc_statistics(start=now)
     hass.states.async_set(
         "sensor.test", 12, attributes={**attributes, **{"unit_of_measurement": "dogs"}}
     )
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await async_recorder_block_till_done(hass)
     await assert_validation_result(client, expected)
 
     # Valid state - empty response
     hass.states.async_set(
         "sensor.test", 13, attributes={**attributes, **{"unit_of_measurement": unit}}
     )
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await async_recorder_block_till_done(hass)
     await assert_validation_result(client, {})
 
     # Valid state, statistic runs again - empty response
     hass.data[DATA_INSTANCE].do_adhoc_statistics(start=now)
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await async_recorder_block_till_done(hass)
     await assert_validation_result(client, {})
 
     # Remove the state - empty response
@@ -2877,7 +2872,7 @@ async def test_validate_statistics_supported_device_class(
     ],
 )
 async def test_validate_statistics_supported_device_class_2(
-    hass, hass_ws_client, units, attributes, unit
+    hass, hass_ws_client, recorder_mock, units, attributes, unit
 ):
     """Test validate_statistics."""
     id = 1
@@ -2898,9 +2893,8 @@ async def test_validate_statistics_supported_device_class_2(
     now = dt_util.utcnow()
 
     hass.config.units = units
-    await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(hass, "sensor", {})
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await async_recorder_block_till_done(hass)
     client = await hass_ws_client()
 
     # No statistics, no state - empty response
@@ -2914,7 +2908,7 @@ async def test_validate_statistics_supported_device_class_2(
 
     # Statistics has run, device class set - expect error
     hass.data[DATA_INSTANCE].do_adhoc_statistics(start=now)
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await async_recorder_block_till_done(hass)
     hass.states.async_set("sensor.test", 12, attributes=attributes)
     await hass.async_block_till_done()
     expected = {
@@ -2936,7 +2930,7 @@ async def test_validate_statistics_supported_device_class_2(
     hass.states.async_set(
         "sensor.test", 13, attributes={**attributes, **{"unit_of_measurement": "dogs"}}
     )
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await async_recorder_block_till_done(hass)
     expected = {
         "sensor.test": [
             {
@@ -2968,7 +2962,7 @@ async def test_validate_statistics_supported_device_class_2(
     ],
 )
 async def test_validate_statistics_unsupported_state_class(
-    hass, hass_ws_client, units, attributes, unit
+    hass, hass_ws_client, recorder_mock, units, attributes, unit
 ):
     """Test validate_statistics."""
     id = 1
@@ -2989,9 +2983,8 @@ async def test_validate_statistics_unsupported_state_class(
     now = dt_util.utcnow()
 
     hass.config.units = units
-    await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(hass, "sensor", {})
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await async_recorder_block_till_done(hass)
     client = await hass_ws_client()
 
     # No statistics, no state - empty response
@@ -3004,7 +2997,7 @@ async def test_validate_statistics_unsupported_state_class(
 
     # Statistics has run, empty response
     hass.data[DATA_INSTANCE].do_adhoc_statistics(start=now)
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await async_recorder_block_till_done(hass)
     await assert_validation_result(client, {})
 
     # State update with invalid state class, expect error
@@ -3033,7 +3026,7 @@ async def test_validate_statistics_unsupported_state_class(
     ],
 )
 async def test_validate_statistics_sensor_no_longer_recorded(
-    hass, hass_ws_client, units, attributes, unit
+    hass, hass_ws_client, recorder_mock, units, attributes, unit
 ):
     """Test validate_statistics."""
     id = 1
@@ -3054,9 +3047,8 @@ async def test_validate_statistics_sensor_no_longer_recorded(
     now = dt_util.utcnow()
 
     hass.config.units = units
-    await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(hass, "sensor", {})
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await async_recorder_block_till_done(hass)
     client = await hass_ws_client()
 
     # No statistics, no state - empty response
@@ -3069,7 +3061,7 @@ async def test_validate_statistics_sensor_no_longer_recorded(
 
     # Statistics has run, empty response
     hass.data[DATA_INSTANCE].do_adhoc_statistics(start=now)
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await async_recorder_block_till_done(hass)
     await assert_validation_result(client, {})
 
     # Sensor no longer recorded, expect error
@@ -3095,7 +3087,7 @@ async def test_validate_statistics_sensor_no_longer_recorded(
     ],
 )
 async def test_validate_statistics_sensor_not_recorded(
-    hass, hass_ws_client, units, attributes, unit
+    hass, hass_ws_client, recorder_mock, units, attributes, unit
 ):
     """Test validate_statistics."""
     id = 1
@@ -3116,9 +3108,8 @@ async def test_validate_statistics_sensor_not_recorded(
     now = dt_util.utcnow()
 
     hass.config.units = units
-    await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(hass, "sensor", {})
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await async_recorder_block_till_done(hass)
     client = await hass_ws_client()
 
     # No statistics, no state - empty response
@@ -3143,7 +3134,7 @@ async def test_validate_statistics_sensor_not_recorded(
 
         # Statistics has run, expect same error
         hass.data[DATA_INSTANCE].do_adhoc_statistics(start=now)
-        await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+        await async_recorder_block_till_done(hass)
         await assert_validation_result(client, expected)
 
 
@@ -3154,7 +3145,7 @@ async def test_validate_statistics_sensor_not_recorded(
     ],
 )
 async def test_validate_statistics_sensor_removed(
-    hass, hass_ws_client, units, attributes, unit
+    hass, hass_ws_client, recorder_mock, units, attributes, unit
 ):
     """Test validate_statistics."""
     id = 1
@@ -3175,9 +3166,8 @@ async def test_validate_statistics_sensor_removed(
     now = dt_util.utcnow()
 
     hass.config.units = units
-    await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(hass, "sensor", {})
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await async_recorder_block_till_done(hass)
     client = await hass_ws_client()
 
     # No statistics, no state - empty response
@@ -3190,7 +3180,7 @@ async def test_validate_statistics_sensor_removed(
 
     # Statistics has run, empty response
     hass.data[DATA_INSTANCE].do_adhoc_statistics(start=now)
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await async_recorder_block_till_done(hass)
     await assert_validation_result(client, {})
 
     # Sensor removed, expect error
@@ -3211,7 +3201,7 @@ async def test_validate_statistics_sensor_removed(
     [BATTERY_SENSOR_ATTRIBUTES, NONE_SENSOR_ATTRIBUTES],
 )
 async def test_validate_statistics_unsupported_device_class(
-    hass, hass_ws_client, attributes
+    hass, recorder_mock, hass_ws_client, attributes
 ):
     """Test validate_statistics."""
     id = 1
@@ -3242,9 +3232,8 @@ async def test_validate_statistics_unsupported_device_class(
 
     now = dt_util.utcnow()
 
-    await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(hass, "sensor", {})
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await async_recorder_block_till_done(hass)
     client = await hass_ws_client()
     rec = hass.data[DATA_INSTANCE]
 
@@ -3262,9 +3251,9 @@ async def test_validate_statistics_unsupported_device_class(
     await assert_validation_result(client, {})
 
     # Run statistics, no statistics will be generated because of conflicting units
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await async_recorder_block_till_done(hass)
     rec.do_adhoc_statistics(start=now)
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await async_recorder_block_till_done(hass)
     await assert_statistic_ids([])
 
     # No statistics, changed unit - empty response
@@ -3274,9 +3263,9 @@ async def test_validate_statistics_unsupported_device_class(
     await assert_validation_result(client, {})
 
     # Run statistics one hour later, only the "dogs" state will be considered
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await async_recorder_block_till_done(hass)
     rec.do_adhoc_statistics(start=now + timedelta(hours=1))
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await async_recorder_block_till_done(hass)
     await assert_statistic_ids(
         [{"statistic_id": "sensor.test", "unit_of_measurement": "dogs"}]
     )
@@ -3284,7 +3273,7 @@ async def test_validate_statistics_unsupported_device_class(
 
     # Change back to original unit - expect error
     hass.states.async_set("sensor.test", 13, attributes=attributes)
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await async_recorder_block_till_done(hass)
     expected = {
         "sensor.test": [
             {
@@ -3303,13 +3292,13 @@ async def test_validate_statistics_unsupported_device_class(
     hass.states.async_set(
         "sensor.test", 14, attributes={**attributes, **{"unit_of_measurement": "dogs"}}
     )
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await async_recorder_block_till_done(hass)
     await assert_validation_result(client, {})
 
     # Valid state, statistic runs again - empty response
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await async_recorder_block_till_done(hass)
     hass.data[DATA_INSTANCE].do_adhoc_statistics(start=now)
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await async_recorder_block_till_done(hass)
     await assert_validation_result(client, {})
 
     # Remove the state - empty response

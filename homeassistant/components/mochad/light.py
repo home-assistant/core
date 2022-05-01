@@ -9,8 +9,8 @@ import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    COLOR_MODE_BRIGHTNESS,
     PLATFORM_SCHEMA,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.const import CONF_ADDRESS, CONF_DEVICES, CONF_NAME, CONF_PLATFORM
@@ -56,8 +56,8 @@ def setup_platform(
 class MochadLight(LightEntity):
     """Representation of a X10 dimmer over Mochad."""
 
-    _attr_color_mode = COLOR_MODE_BRIGHTNESS
-    _attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
+    _attr_color_mode = ColorMode.BRIGHTNESS
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
     def __init__(self, hass, ctrl, dev):
         """Initialize a Mochad Light Device."""

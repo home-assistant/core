@@ -16,9 +16,9 @@
                 "data": {
                     "host": "C\u00edm",
                     "mode": "M\u00f3d",
-                    "name": "N\u00e9v",
+                    "name": "Elnevez\u00e9s",
                     "password": "Jelsz\u00f3",
-                    "port": "Port",
+                    "port": "Port (hagyja \u00fcresen az alap\u00e9rtelmezetthez)",
                     "protocol": "Haszn\u00e1lhat\u00f3 kommunik\u00e1ci\u00f3s protokoll",
                     "ssh_key": "Az SSH kulcsf\u00e1jl el\u00e9r\u00e9si \u00fatja (jelsz\u00f3 helyett)",
                     "username": "Felhaszn\u00e1l\u00f3n\u00e9v"

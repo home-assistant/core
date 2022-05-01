@@ -6,9 +6,7 @@ from homeassistant.components.homekit_controller.const import KNOWN_DEVICES
 from homeassistant.components.light import (
     ATTR_COLOR_MODE,
     ATTR_SUPPORTED_COLOR_MODES,
-    COLOR_MODE_BRIGHTNESS,
-    COLOR_MODE_COLOR_TEMP,
-    COLOR_MODE_HS,
+    ColorMode,
 )
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, STATE_UNAVAILABLE
 
@@ -113,7 +111,7 @@ async def test_switch_read_light_state_dimmer(hass, utcnow):
     state = await helper.poll_and_get_state()
     assert state.state == "off"
     assert ATTR_COLOR_MODE not in state.attributes
-    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [COLOR_MODE_BRIGHTNESS]
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.BRIGHTNESS]
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
 
     # Simulate that someone switched on the device in the real world not via HA
@@ -126,8 +124,8 @@ async def test_switch_read_light_state_dimmer(hass, utcnow):
     )
     assert state.state == "on"
     assert state.attributes["brightness"] == 255
-    assert state.attributes[ATTR_COLOR_MODE] == COLOR_MODE_BRIGHTNESS
-    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [COLOR_MODE_BRIGHTNESS]
+    assert state.attributes[ATTR_COLOR_MODE] == ColorMode.BRIGHTNESS
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.BRIGHTNESS]
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
 
     # Simulate that device switched off in the real world not via HA
@@ -176,7 +174,7 @@ async def test_switch_read_light_state_hs(hass, utcnow):
     state = await helper.poll_and_get_state()
     assert state.state == "off"
     assert ATTR_COLOR_MODE not in state.attributes
-    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [COLOR_MODE_HS]
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.HS]
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
 
     # Simulate that someone switched on the device in the real world not via HA
@@ -192,8 +190,8 @@ async def test_switch_read_light_state_hs(hass, utcnow):
     assert state.state == "on"
     assert state.attributes["brightness"] == 255
     assert state.attributes["hs_color"] == (4, 5)
-    assert state.attributes[ATTR_COLOR_MODE] == COLOR_MODE_HS
-    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [COLOR_MODE_HS]
+    assert state.attributes[ATTR_COLOR_MODE] == ColorMode.HS
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.HS]
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
 
     # Simulate that device switched off in the real world not via HA
@@ -245,7 +243,7 @@ async def test_switch_read_light_state_color_temp(hass, utcnow):
     state = await helper.poll_and_get_state()
     assert state.state == "off"
     assert ATTR_COLOR_MODE not in state.attributes
-    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [COLOR_MODE_COLOR_TEMP]
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.COLOR_TEMP]
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
 
     # Simulate that someone switched on the device in the real world not via HA
@@ -260,8 +258,8 @@ async def test_switch_read_light_state_color_temp(hass, utcnow):
     assert state.state == "on"
     assert state.attributes["brightness"] == 255
     assert state.attributes["color_temp"] == 400
-    assert state.attributes[ATTR_COLOR_MODE] == COLOR_MODE_COLOR_TEMP
-    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [COLOR_MODE_COLOR_TEMP]
+    assert state.attributes[ATTR_COLOR_MODE] == ColorMode.COLOR_TEMP
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.COLOR_TEMP]
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
 
 
