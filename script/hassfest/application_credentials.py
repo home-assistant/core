@@ -18,7 +18,7 @@ APPLICATION_CREDENTIALS = {}
 
 
 def generate_and_validate(integrations: dict[str, Integration], config: Config) -> str:
-    """Validate and generate config flow data."""
+    """Validate and generate application_credentials data."""
 
     match_list = []
 

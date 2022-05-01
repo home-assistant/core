@@ -689,7 +689,7 @@ gTTS==2.2.4
 garages-amsterdam==3.0.0
 
 # homeassistant.components.google
-gcal-sync==0.7.0
+gcal-sync==0.7.1
 
 # homeassistant.components.geniushub
 geniushub-client==0.6.30
@@ -1783,7 +1783,7 @@ pysaj==0.0.16
 pysdcp==1
 
 # homeassistant.components.sensibo
-pysensibo==1.0.13
+pysensibo==1.0.14
 
 # homeassistant.components.serial
 # homeassistant.components.zha
@@ -1934,7 +1934,7 @@ python-qbittorrent==0.4.2
 python-ripple-api==0.0.3
 
 # homeassistant.components.smarttub
-python-smarttub==0.0.31
+python-smarttub==0.0.32
 
 # homeassistant.components.songpal
 python-songpal==0.14.1
@@ -2445,7 +2445,7 @@ xbox-webapi==2.0.11
 xboxapi==2.0.1
 
 # homeassistant.components.knx
-xknx==0.21.0
+xknx==0.21.1
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz
@@ -2480,7 +2480,7 @@ youtube_dl==2021.12.17
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.38.4
+zeroconf==0.38.5
 
 # homeassistant.components.zha
 zha-quirks==0.0.73
