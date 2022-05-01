@@ -26,17 +26,17 @@ from . import init_integration
 
 async def test_entity(hass: HomeAssistant) -> None:
     """Test the Sensibo climate."""
-    entry = await init_integration(hass)
+    entry = await init_integration(hass, name=["Hall1", "Kitchen1"], entry_id="hall1")
 
-    state1 = hass.states.get("climate.hallway")
+    state1 = hass.states.get("climate.hall1")
     assert state1
 
     dr_reg = dr.async_get(hass)
     dr_entries = dr.async_entries_for_config_entry(dr_reg, entry.entry_id)
     dr_entry: dr.DeviceEntry
     for dr_entry in dr_entries:
-        if dr_entry.name == "Hallway":
-            assert dr_entry.identifiers == {("sensibo", "ABC999111")}
+        if dr_entry.name == "Hall1":
+            assert dr_entry.identifiers == {("sensibo", "Hall1")}
             device_id = dr_entry.id
 
     er_reg = er.async_get(hass)
@@ -45,16 +45,16 @@ async def test_entity(hass: HomeAssistant) -> None:
     )
     er_entry: er.RegistryEntry
     for er_entry in er_entries:
-        if er_entry.name == "Hallway":
-            assert er_entry.unique_id == "ABC999111"
+        if er_entry.name == "Hall1":
+            assert er_entry.unique_id == "Hall1"
 
 
 @pytest.mark.parametrize("p_error", SENSIBO_ERRORS)
 async def test_entity_send_command(hass: HomeAssistant, p_error: Exception) -> None:
     """Test the Sensibo send command with error."""
-    await init_integration(hass)
+    await init_integration(hass, name=["Hall2", "Kitchen2"], entry_id="hall2")
 
-    state = hass.states.get("climate.hallway")
+    state = hass.states.get("climate.hall2")
     assert state
 
     with patch(
@@ -69,7 +69,7 @@ async def test_entity_send_command(hass: HomeAssistant, p_error: Exception) -> N
         )
     await hass.async_block_till_done()
 
-    state = hass.states.get("climate.hallway")
+    state = hass.states.get("climate.hall2")
     assert state.attributes["fan_mode"] == "low"
 
     with patch(
@@ -84,7 +84,7 @@ async def test_entity_send_command(hass: HomeAssistant, p_error: Exception) -> N
                 blocking=True,
             )
 
-    state = hass.states.get("climate.hallway")
+    state = hass.states.get("climate.hall2")
     assert state.attributes["fan_mode"] == "low"
 
 
@@ -92,10 +92,10 @@ async def test_entity_send_command_calibration(
     hass: HomeAssistant, entity_registry_enabled_by_default
 ) -> None:
     """Test the Sensibo send command for calibration."""
-    await init_integration(hass)
+    await init_integration(hass, name=["Hall3", "Kitchen3"], entry_id="hall3")
 
     registry = er.async_get(hass)
-    entity = registry.async_get("number.hallway_temperature_calibration")
+    entity = registry.async_get("number.hall3_temperature_calibration")
 
     entity_updated = registry.async_update_entity(
         entity.entity_id, **{"disabled_by": None}
@@ -103,7 +103,7 @@ async def test_entity_send_command_calibration(
     assert entity_updated.disabled is False
     assert entity_updated.disabled_by is None
 
-    state = hass.states.get("number.hallway_temperature_calibration")
+    state = hass.states.get("number.hall3_temperature_calibration")
     assert state.state == "0.1"
 
     with patch(
@@ -117,5 +117,5 @@ async def test_entity_send_command_calibration(
             blocking=True,
         )
 
-    state = hass.states.get("number.hallway_temperature_calibration")
+    state = hass.states.get("number.hall3_temperature_calibration")
     assert state.state == "0.2"

@@ -19,7 +19,7 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
         "homeassistant.components.sensibo.util.SensiboClient.async_get_me",
         return_value={"result": {"username": "username"}},
     ):
-        config_entry = await init_integration(hass)
+        config_entry = await init_integration(hass, entry_id="setup_init")
     assert config_entry.state == config_entries.ConfigEntryState.LOADED
 
 
@@ -63,7 +63,7 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
         "homeassistant.components.sensibo.util.SensiboClient.async_get_me",
         return_value={"result": {"username": "username"}},
     ):
-        config_entry = await init_integration(hass)
+        config_entry = await init_integration(hass, entry_id="unload_entry")
     assert config_entry.state == config_entries.ConfigEntryState.LOADED
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
