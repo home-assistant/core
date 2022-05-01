@@ -442,7 +442,7 @@ def _apply_update(instance, new_version, old_version):  # noqa: C901
         # and we would have to move to something like
         # sqlalchemy alembic to make that work
         #
-        _drop_index(instance, "states", "ix_states_context_id")
+        # no longer dropping ix_states_context_id since its recreated in 28
         _drop_index(instance, "states", "ix_states_context_user_id")
         # This index won't be there if they were not running
         # nightly but we don't treat that as a critical issue
@@ -652,6 +652,18 @@ def _apply_update(instance, new_version, old_version):  # noqa: C901
     elif new_version == 27:
         _add_columns(instance, "events", [f"data_id {big_int}"])
         _create_index(instance, "events", "ix_events_data_id")
+    elif new_version == 28:
+        _add_columns(instance, "events", ["origin_idx INTEGER"])
+        # We never use the user_id or parent_id index
+        _drop_index(instance, "events", "ix_events_context_user_id")
+        _drop_index(instance, "events", "ix_events_context_parent_id")
+        _add_columns(instance, "states", ["origin_idx INTEGER"])
+        _add_columns(instance, "states", ["context_id VARCHAR(36)"])
+        _add_columns(instance, "states", ["context_user_id VARCHAR(36)"])
+        _add_columns(instance, "states", ["context_parent_id VARCHAR(36)"])
+        _create_index(instance, "states", "ix_states_context_id")
+        # Once there are no longer any state_changed events
+        # in the events table we can drop the index on states.event_id
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
 

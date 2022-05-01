@@ -39,9 +39,6 @@ def test_from_event_to_db_state():
         {"entity_id": "sensor.temperature", "old_state": None, "new_state": state},
         context=state.context,
     )
-    # We don't restore context unless we need it by joining the
-    # events table on the event_id for state_changed events
-    state.context = ha.Context(id=None)
     assert state == States.from_event(event).to_native()
 
 
