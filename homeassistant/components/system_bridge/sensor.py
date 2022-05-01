@@ -58,7 +58,9 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=FREQUENCY_GIGAHERTZ,
         icon="mdi:speedometer",
-        value=lambda data: round(data["cpu"]["frequency_current"] / 1000, 2),
+        value=lambda data: round(data["cpu"]["frequency_current"] / 1000, 2)
+        if data["cpu"].get("frequency_current") is not None
+        else None,
     ),
     SystemBridgeSensorEntityDescription(
         key="cpu_temperature",
@@ -67,7 +69,7 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=TEMP_CELSIUS,
-        value=lambda data: data["cpu"]["temperature"],
+        value=lambda data: data["cpu"].get("temperature"),
     ),
     SystemBridgeSensorEntityDescription(
         key="cpu_voltage",
@@ -76,14 +78,14 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        value=lambda data: data["cpu"]["voltage"],
+        value=lambda data: data["cpu"].get("voltage"),
     ),
     SystemBridgeSensorEntityDescription(
         key="kernel",
         name="Kernel",
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:devices",
-        value=lambda data: data["system"]["platform"],
+        value=lambda data: data["system"].get("platform"),
     ),
     SystemBridgeSensorEntityDescription(
         key="memory_free",
@@ -91,7 +93,9 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=DATA_GIGABYTES,
         icon="mdi:memory",
-        value=lambda data: round(data["memory"]["virtual_free"] / 1000**3, 2),
+        value=lambda data: round(data["memory"]["virtual_free"] / 1000**3, 2)
+        if data["memory"].get("virtual_free") is not None
+        else None,
     ),
     SystemBridgeSensorEntityDescription(
         key="memory_used_percentage",
@@ -99,7 +103,7 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:memory",
-        value=lambda data: data["memory"]["virtual_percent"],
+        value=lambda data: data["memory"].get("virtual_percent"),
     ),
     SystemBridgeSensorEntityDescription(
         key="memory_used",
@@ -108,14 +112,16 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=DATA_GIGABYTES,
         icon="mdi:memory",
-        value=lambda data: round(data["memory"]["virtual_used"] / 1000**3, 2),
+        value=lambda data: round(data["memory"].get("virtual_used") / 1000**3, 2)
+        if data["memory"].get("virtual_used") is not None
+        else None,
     ),
     SystemBridgeSensorEntityDescription(
         key="os",
         name="Operating System",
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:devices",
-        value=lambda data: f"{data['system']['platform']} {data['system']['platform_version']}",
+        value=lambda data: f"{data['system'].get('platform')} {data['system'].get('platform_version')}",
     ),
     SystemBridgeSensorEntityDescription(
         key="processes_load",
@@ -123,19 +129,19 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:percent",
-        value=lambda data: data["cpu"]["usage"],
+        value=lambda data: data["cpu"].get("usage"),
     ),
     SystemBridgeSensorEntityDescription(
         key="version",
         name="Version",
         icon="mdi:counter",
-        value=lambda data: data["system"]["version"],
+        value=lambda data: data["system"].get("version"),
     ),
     SystemBridgeSensorEntityDescription(
         key="version_latest",
         name="Latest Version",
         icon="mdi:counter",
-        value=lambda data: data["system"]["version_latest"],
+        value=lambda data: data["system"].get("version_latest"),
     ),
 )
 
@@ -146,7 +152,7 @@ BATTERY_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
-        value=lambda data: data["battery"]["percentage"],
+        value=lambda data: data["battery"].get("percentage"),
     ),
     SystemBridgeSensorEntityDescription(
         key="battery_time_remaining",
@@ -154,7 +160,9 @@ BATTERY_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TIMESTAMP,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: utcnow()
-        + timedelta(seconds=data["battery"]["sensors_secsleft"]),
+        + timedelta(seconds=data["battery"]["sensors_secsleft"])
+        if data["battery"].get("sensors_secsleft") is not None
+        else None,
     ),
 )
 
@@ -183,7 +191,7 @@ async def async_setup_entry(
                         state_class=SensorStateClass.MEASUREMENT,
                         native_unit_of_measurement=PERCENTAGE,
                         icon="mdi:harddisk",
-                        value=lambda data, i=key: data["disk"][i],
+                        value=lambda data, i=key: data["disk"].get(i),
                     ),
                     entry.data[CONF_PORT],
                 )
@@ -235,9 +243,9 @@ async def async_setup_entry(
                     state_class=SensorStateClass.MEASUREMENT,
                     native_unit_of_measurement=PIXELS,
                     icon="mdi:monitor",
-                    value=lambda data, k=display["key"]: data["display"][
+                    value=lambda data, k=display["key"]: data["display"].get(
                         f"{k}_resolution_horizontal"
-                    ],
+                    ),
                 ),
                 entry.data[CONF_PORT],
             ),
@@ -249,9 +257,9 @@ async def async_setup_entry(
                     state_class=SensorStateClass.MEASUREMENT,
                     native_unit_of_measurement=PIXELS,
                     icon="mdi:monitor",
-                    value=lambda data, k=display["key"]: data["display"][
+                    value=lambda data, k=display["key"]: data["display"].get(
                         f"{k}_resolution_vertical"
-                    ],
+                    ),
                 ),
                 entry.data[CONF_PORT],
             ),
@@ -263,9 +271,9 @@ async def async_setup_entry(
                     state_class=SensorStateClass.MEASUREMENT,
                     native_unit_of_measurement=FREQUENCY_HERTZ,
                     icon="mdi:monitor",
-                    value=lambda data, k=display["key"]: data["display"][
+                    value=lambda data, k=display["key"]: data["display"].get(
                         f"{k}_refresh_rate"
-                    ],
+                    ),
                 ),
                 entry.data[CONF_PORT],
             ),
@@ -295,7 +303,9 @@ async def async_setup_entry(
                     icon="mdi:speedometer",
                     value=lambda data, k=gpu["key"]: round(
                         data["gpu"][f"{k}_core_clock"]
-                    ),
+                    )
+                    if data["gpu"].get(f"{k}_core_clock") is not None
+                    else None,
                 ),
                 entry.data[CONF_PORT],
             ),
@@ -310,7 +320,9 @@ async def async_setup_entry(
                     icon="mdi:speedometer",
                     value=lambda data, k=gpu["key"]: round(
                         data["gpu"][f"{k}_memory_clock"]
-                    ),
+                    )
+                    if data["gpu"].get(f"{k}_memory_clock") is not None
+                    else None,
                 ),
                 entry.data[CONF_PORT],
             ),
@@ -324,7 +336,9 @@ async def async_setup_entry(
                     icon="mdi:memory",
                     value=lambda data, k=gpu["key"]: round(
                         data["gpu"][f"{k}_memory_free"] / 10**3, 2
-                    ),
+                    )
+                    if data["gpu"].get(f"{k}_memory_free") is not None
+                    else None,
                 ),
                 entry.data[CONF_PORT],
             ),
@@ -343,7 +357,10 @@ async def async_setup_entry(
                         )
                         * 100,
                         2,
-                    ),
+                    )
+                    if data["gpu"].get(f"{k}_memory_used") is not None
+                    and data["gpu"].get(f"{k}_memory_total") is not None
+                    else None,
                 ),
                 entry.data[CONF_PORT],
             ),
@@ -358,7 +375,9 @@ async def async_setup_entry(
                     icon="mdi:memory",
                     value=lambda data, k=gpu["key"]: round(
                         data["gpu"][f"{k}_memory_used"] / 10**3, 2
-                    ),
+                    )
+                    if data["gpu"].get(f"{k}_memory_used") is not None
+                    else None,
                 ),
                 entry.data[CONF_PORT],
             ),
@@ -371,7 +390,7 @@ async def async_setup_entry(
                     state_class=SensorStateClass.MEASUREMENT,
                     native_unit_of_measurement=RPM,
                     icon="mdi:fan",
-                    value=lambda data, k=gpu["key"]: data["gpu"][f"{k}_fan_speed"],
+                    value=lambda data, k=gpu["key"]: data["gpu"].get(f"{k}_fan_speed"),
                 ),
                 entry.data[CONF_PORT],
             ),
@@ -384,7 +403,7 @@ async def async_setup_entry(
                     device_class=SensorDeviceClass.POWER,
                     state_class=SensorStateClass.MEASUREMENT,
                     native_unit_of_measurement=POWER_WATT,
-                    value=lambda data, k=gpu["key"]: data["gpu"][f"{k}_power"],
+                    value=lambda data, k=gpu["key"]: data["gpu"].get(f"{k}_power"),
                 ),
                 entry.data[CONF_PORT],
             ),
@@ -397,7 +416,9 @@ async def async_setup_entry(
                     device_class=SensorDeviceClass.TEMPERATURE,
                     state_class=SensorStateClass.MEASUREMENT,
                     native_unit_of_measurement=TEMP_CELSIUS,
-                    value=lambda data, k=gpu["key"]: data["gpu"][f"{k}_temperature"],
+                    value=lambda data, k=gpu["key"]: data["gpu"].get(
+                        f"{k}_temperature"
+                    ),
                 ),
                 entry.data[CONF_PORT],
             ),
@@ -409,7 +430,7 @@ async def async_setup_entry(
                     state_class=SensorStateClass.MEASUREMENT,
                     native_unit_of_measurement=PERCENTAGE,
                     icon="mdi:percent",
-                    value=lambda data, k=gpu["key"]: data["gpu"][f"{k}_core_load"],
+                    value=lambda data, k=gpu["key"]: data["gpu"].get(f"{k}_core_load"),
                 ),
                 entry.data[CONF_PORT],
             ),
@@ -427,7 +448,7 @@ async def async_setup_entry(
                     state_class=SensorStateClass.MEASUREMENT,
                     native_unit_of_measurement=PERCENTAGE,
                     icon="mdi:percent",
-                    value=lambda data, index=index: data["cpu"][f"usage_{index}"],
+                    value=lambda data, index=index: data["cpu"].get(f"usage_{index}"),
                 ),
                 entry.data[CONF_PORT],
             ),
