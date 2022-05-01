@@ -795,7 +795,7 @@ class LazyEventPartialState:
             return self._event_data.get(ATTR_ENTITY_ID)
 
         result = ENTITY_ID_JSON_EXTRACT.search(
-            self._row.shared_data or self._row.event_data
+            self._row.shared_data or self._row.event_data or ""
         )
         return result.group(1) if result else None
 
@@ -803,7 +803,7 @@ class LazyEventPartialState:
     def data_domain(self):
         """Extract the domain from the decoded data or json."""
         result = DOMAIN_JSON_EXTRACT.search(
-            self._row.shared_data or self._row.event_data
+            self._row.shared_data or self._row.event_data or ""
         )
         return result.group(1) if result else None
 
@@ -821,9 +821,9 @@ class LazyEventPartialState:
     @property
     def data(self):
         """Event data."""
-        if not self._event_data:
+        if self._event_data is None:
             source: str = self._row.shared_data or self._row.event_data
-            self._event_data = json.loads(source)
+            self._event_data = json.loads(source) if source else {}
         return self._event_data
 
     @property

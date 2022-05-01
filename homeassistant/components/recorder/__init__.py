@@ -1197,7 +1197,7 @@ class Recorder(threading.Thread):
         assert self.event_session is not None
         dbevent = Events.from_event(event)
 
-        if event.event_type != EVENT_STATE_CHANGED:
+        if event.event_type != EVENT_STATE_CHANGED and event.data:
             try:
                 shared_data = EventData.shared_data_from_event(event)
             except (TypeError, ValueError):

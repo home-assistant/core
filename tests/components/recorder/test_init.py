@@ -448,7 +448,8 @@ def _add_events(hass, events):
             event_data = cast(EventData, event_data)
 
             native_event = event.to_native()
-            native_event.data = event_data.to_native()
+            if event_data:
+                native_event.data = event_data.to_native()
             events.append(native_event)
         return events
 
