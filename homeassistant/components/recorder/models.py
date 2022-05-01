@@ -43,7 +43,7 @@ from .const import ALL_DOMAIN_EXCLUDE_ATTRS, JSON_DUMP
 # pylint: disable=invalid-name
 Base = declarative_base()
 
-SCHEMA_VERSION = 27
+SCHEMA_VERSION = 28
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -86,6 +86,8 @@ DOUBLE_TYPE = (
     .with_variant(oracle.DOUBLE_PRECISION(), "oracle")
     .with_variant(postgresql.DOUBLE_PRECISION(), "postgresql")
 )
+EVENT_ORIGIN_ORDER = [EventOrigin.local, EventOrigin.remote]
+EVENT_ORIGIN_TO_IDX = {origin: idx for idx, origin in enumerate(EVENT_ORIGIN_ORDER)}
 
 
 class Events(Base):  # type: ignore[misc,valid-type]
@@ -98,10 +100,11 @@ class Events(Base):  # type: ignore[misc,valid-type]
         {"mysql_default_charset": "utf8mb4", "mysql_collate": "utf8mb4_unicode_ci"},
     )
     __tablename__ = TABLE_EVENTS
-    event_id = Column(Integer, Identity(), primary_key=True)
+    event_id = Column(Integer, Identity(), primary_key=True)  # no longer used
     event_type = Column(String(MAX_LENGTH_EVENT_EVENT_TYPE))
     event_data = Column(Text().with_variant(mysql.LONGTEXT, "mysql"))
-    origin = Column(String(MAX_LENGTH_EVENT_ORIGIN))
+    origin = Column(String(MAX_LENGTH_EVENT_ORIGIN))  # no longer used
+    origin_idx = Column(Integer)
     time_fired = Column(DATETIME_TYPE, index=True)
     context_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
     context_user_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
@@ -114,7 +117,7 @@ class Events(Base):  # type: ignore[misc,valid-type]
         return (
             f"<recorder.Events("
             f"id={self.event_id}, type='{self.event_type}', "
-            f"origin='{self.origin}', time_fired='{self.time_fired}'"
+            f"origin_idx='{self.origin_idx}', time_fired='{self.time_fired}'"
             f", data_id={self.data_id})>"
         )
 
@@ -124,7 +127,7 @@ class Events(Base):  # type: ignore[misc,valid-type]
         return Events(
             event_type=event.event_type,
             event_data=None,
-            origin=str(event.origin.value),
+            origin_idx=EVENT_ORIGIN_TO_IDX.get(event.origin),
             time_fired=event.time_fired,
             context_id=event.context.id,
             context_user_id=event.context.user_id,
@@ -142,7 +145,9 @@ class Events(Base):  # type: ignore[misc,valid-type]
             return Event(
                 self.event_type,
                 json.loads(self.event_data) if self.event_data else {},
-                EventOrigin(self.origin),
+                EventOrigin(self.origin)
+                if self.origin
+                else EVENT_ORIGIN_ORDER[self.origin_idx],
                 process_timestamp(self.time_fired),
                 context=context,
             )
@@ -222,7 +227,10 @@ class States(Base):  # type: ignore[misc,valid-type]
     attributes_id = Column(
         Integer, ForeignKey("state_attributes.attributes_id"), index=True
     )
-    event = relationship("Events", uselist=False)
+    context_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
+    context_user_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
+    context_parent_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
+    origin_idx = Column(Integer)  # 0 is local, 1 is remote
     old_state = relationship("States", remote_side=[state_id])
     state_attributes = relationship("StateAttributes")
 
@@ -242,7 +250,14 @@ class States(Base):  # type: ignore[misc,valid-type]
         """Create object from a state_changed event."""
         entity_id = event.data["entity_id"]
         state: State | None = event.data.get("new_state")
-        dbstate = States(entity_id=entity_id, attributes=None)
+        dbstate = States(
+            entity_id=entity_id,
+            attributes=None,
+            context_id=event.context.id,
+            context_user_id=event.context.user_id,
+            context_parent_id=event.context.parent_id,
+            origin_idx=EVENT_ORIGIN_TO_IDX.get(event.origin),
+        )
 
         # None state means the state was removed from the state machine
         if state is None:
@@ -258,6 +273,11 @@ class States(Base):  # type: ignore[misc,valid-type]
 
     def to_native(self, validate_entity_id: bool = True) -> State | None:
         """Convert to an HA state object."""
+        context = Context(
+            id=self.context_id,
+            user_id=self.context_user_id,
+            parent_id=self.context_parent_id,
+        )
         try:
             return State(
                 self.entity_id,
@@ -267,9 +287,7 @@ class States(Base):  # type: ignore[misc,valid-type]
                 json.loads(self.attributes) if self.attributes else {},
                 process_timestamp(self.last_changed),
                 process_timestamp(self.last_updated),
-                # Join the events table on event_id to get the context instead
-                # as it will always be there for state_changed events
-                context=Context(id=None),  # type: ignore[arg-type]
+                context=context,
                 validate_entity_id=validate_entity_id,
             )
         except ValueError:
