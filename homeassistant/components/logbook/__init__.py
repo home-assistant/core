@@ -470,6 +470,7 @@ def _get_events(
 
     with session_scope(hass=hass) as session:
         old_state = aliased(States, name="old_state")
+        query: Query
 
         if entity_ids is not None:
             query = _generate_events_query_without_states(session)
