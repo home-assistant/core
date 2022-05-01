@@ -442,6 +442,11 @@ def _apply_update(instance, new_version, old_version):  # noqa: C901
         # and we would have to move to something like
         # sqlalchemy alembic to make that work
         #
+        # no longer dropping ix_states_context_id since its recreated in 28
+        _drop_index(instance, "states", "ix_states_context_user_id")
+        # This index won't be there if they were not running
+        # nightly but we don't treat that as a critical issue
+        _drop_index(instance, "states", "ix_states_context_parent_id")
         # Redundant keys on composite index:
         # We already have ix_states_entity_id_last_updated
         _drop_index(instance, "states", "ix_states_entity_id")
