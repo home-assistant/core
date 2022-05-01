@@ -615,8 +615,7 @@ async def test_websocket_integration_list(ws_client: ClientFixture):
     """Test websocket integration list command."""
     client = await ws_client()
     with patch(
-        "homeassistant.generated.application_credentials.APPLICATION_CREDENTIALS",
-        ["example1", "example2"],
+        "homeassistant.loader.APPLICATION_CREDENTIALS", ["example1", "example2"]
     ):
         assert await client.cmd_result("config") == {
             "domains": ["example1", "example2"]
