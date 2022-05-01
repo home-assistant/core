@@ -565,6 +565,13 @@ def _get_events(
             query: Query = query.union_all(states_query)
 
         query = query.order_by(Events.time_fired)
+        raw = query.statement.compile(compile_kwargs={"literal_binds": True})
+        import logging
+        import pprint
+
+        _LOGGER = logging.getLogger(__name__)
+        _LOGGER.warning("RAW QUERY: %s", raw)
+        pprint.pprint(["**query**", str(raw)])
 
         return list(
             humanify(hass, yield_events(query), entity_attr_cache, context_lookup)
