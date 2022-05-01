@@ -10,6 +10,8 @@ from homeassistant.components.climate.const import (
     ATTR_FAN_MODE,
     ATTR_HVAC_MODE,
     ATTR_SWING_MODE,
+    ATTR_TARGET_TEMP_HIGH,
+    ATTR_TARGET_TEMP_LOW,
     DOMAIN as CLIMATE_DOMAIN,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
@@ -299,6 +301,45 @@ async def test_climate_temperature(hass: HomeAssistant) -> None:
                 {ATTR_ENTITY_ID: state1.entity_id, ATTR_TEMPERATURE: 20},
                 blocking=True,
             )
+    await hass.async_block_till_done()
+
+    state2 = hass.states.get("climate.hallway")
+    assert state2.attributes["temperature"] == 20
+
+
+async def test_climate_temperature_is_none(hass: HomeAssistant) -> None:
+    """Test the Sensibo climate temperature service no temperature provided."""
+    entry = await init_integration(hass)
+
+    coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator.data.parsed["ABC999111"].active_features = [
+        "timestamp",
+        "on",
+        "mode",
+        "fanLevel",
+        "targetTemperature",
+        "swing",
+        "horizontalSwing",
+        "light",
+    ]
+
+    state1 = hass.states.get("climate.hallway")
+    assert state1.attributes["temperature"] == 20
+
+    with patch(
+        "homeassistant.components.sensibo.util.SensiboClient.async_set_ac_state_property",
+        return_value={"result": {"status": "Success"}},
+    ):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {
+                ATTR_ENTITY_ID: state1.entity_id,
+                ATTR_TARGET_TEMP_HIGH: 30,
+                ATTR_TARGET_TEMP_LOW: 20,
+            },
+            blocking=True,
+        )
     await hass.async_block_till_done()
 
     state2 = hass.states.get("climate.hallway")
