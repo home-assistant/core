@@ -18,9 +18,7 @@ from . import init_integration
 
 async def test_coordinator(hass: HomeAssistant) -> None:
     """Test the Sensibo coordinator."""
-    entry = await init_integration(
-        hass, name=["HallCD", "KitchenCD"], entry_id="hallcd"
-    )
+    entry = await init_integration(hass, entry_id="hallcd")
 
     coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     assert coordinator.data.parsed["ABC999111"].state == "heat"
@@ -28,9 +26,7 @@ async def test_coordinator(hass: HomeAssistant) -> None:
 
 async def test_coordinator_errors(hass: HomeAssistant) -> None:
     """Test the Sensibo coordinator errors."""
-    entry = await init_integration(
-        hass, name=["HallCD2", "KitchenCD2"], entry_id="hallcd2"
-    )
+    entry = await init_integration(hass, entry_id="hallcd2")
 
     coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     coordinator.data.parsed["ABC999111"].state = "heat"

@@ -12,9 +12,7 @@ from tests.components.diagnostics import get_diagnostics_for_config_entry
 
 async def test_diagnostics(hass: HomeAssistant, hass_client: aiohttp.client):
     """Test generating diagnostics for a config entry."""
-    entry = await init_integration(
-        hass, name=["HallDIAG", "KitchenDIAG"], entry_id="halldiag"
-    )
+    entry = await init_integration(hass, entry_id="halldiag")
     diag = await get_diagnostics_for_config_entry(hass, hass_client, entry)
 
     assert diag == {

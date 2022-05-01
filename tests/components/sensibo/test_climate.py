@@ -31,15 +31,16 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from . import DATA_FROM_API, init_integration
+from . import init_integration
+from .response import DATA_FROM_API
 
 
 async def test_climate(hass: HomeAssistant) -> None:
     """Test the Sensibo climate."""
-    await init_integration(hass, name=["Clima1", "Pure1"], entry_id="clima1")
+    await init_integration(hass, entry_id="clima1")
 
-    state1 = hass.states.get("climate.clima1")
-    state2 = hass.states.get("climate.pure1")
+    state1 = hass.states.get("climate.hallway")
+    state2 = hass.states.get("climate.kitchen")
 
     assert state1.state == "heat"
     assert state1.attributes == {
@@ -65,7 +66,7 @@ async def test_climate(hass: HomeAssistant) -> None:
         "current_humidity": 38,
         "fan_mode": "high",
         "swing_mode": "stopped",
-        "friendly_name": "Clima1",
+        "friendly_name": "Hallway",
         "supported_features": 41,
     }
 
@@ -74,9 +75,9 @@ async def test_climate(hass: HomeAssistant) -> None:
 
 async def test_climate_fan(hass: HomeAssistant) -> None:
     """Test the Sensibo climate fan service."""
-    entry = await init_integration(hass, name=["Clima2", "Pure2"], entry_id="clima2")
+    entry = await init_integration(hass, entry_id="clima2")
 
-    state1 = hass.states.get("climate.clima2")
+    state1 = hass.states.get("climate.hallway")
     assert state1.attributes["fan_mode"] == "high"
 
     with patch(
@@ -91,7 +92,7 @@ async def test_climate_fan(hass: HomeAssistant) -> None:
         )
     await hass.async_block_till_done()
 
-    state2 = hass.states.get("climate.clima2")
+    state2 = hass.states.get("climate.hallway")
     assert state2.attributes["fan_mode"] == "low"
 
     coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
@@ -117,15 +118,15 @@ async def test_climate_fan(hass: HomeAssistant) -> None:
             )
     await hass.async_block_till_done()
 
-    state3 = hass.states.get("climate.clima2")
+    state3 = hass.states.get("climate.hallway")
     assert state3.attributes["fan_mode"] == "low"
 
 
 async def test_climate_swing(hass: HomeAssistant) -> None:
     """Test the Sensibo climate swing service."""
-    entry = await init_integration(hass, name=["Clima3", "Pure3"], entry_id="clima3")
+    entry = await init_integration(hass, entry_id="clima3")
 
-    state1 = hass.states.get("climate.clima3")
+    state1 = hass.states.get("climate.hallway")
     assert state1.attributes["swing_mode"] == "stopped"
 
     with patch(
@@ -140,7 +141,7 @@ async def test_climate_swing(hass: HomeAssistant) -> None:
         )
     await hass.async_block_till_done()
 
-    state2 = hass.states.get("climate.clima3")
+    state2 = hass.states.get("climate.hallway")
     assert state2.attributes["swing_mode"] == "fixedTop"
 
     coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
@@ -165,13 +166,13 @@ async def test_climate_swing(hass: HomeAssistant) -> None:
             )
     await hass.async_block_till_done()
 
-    state3 = hass.states.get("climate.clima3")
+    state3 = hass.states.get("climate.hallway")
     assert state3.attributes["swing_mode"] == "fixedTop"
 
 
-async def test_climate_temperature(hass: HomeAssistant) -> None:
+async def test_climate_temperatures(hass: HomeAssistant) -> None:
     """Test the Sensibo climate temperature service."""
-    entry = await init_integration(hass, name=["Clima4", "Pure4"], entry_id="clima4")
+    entry = await init_integration(hass, entry_id="clima4")
 
     coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     coordinator.data.parsed["ABC999111"].active_features = [
@@ -185,7 +186,7 @@ async def test_climate_temperature(hass: HomeAssistant) -> None:
         "light",
     ]
 
-    state1 = hass.states.get("climate.clima4")
+    state1 = hass.states.get("climate.hallway")
     assert state1.attributes["temperature"] == 25
 
     with patch(
@@ -200,7 +201,7 @@ async def test_climate_temperature(hass: HomeAssistant) -> None:
         )
     await hass.async_block_till_done()
 
-    state2 = hass.states.get("climate.clima4")
+    state2 = hass.states.get("climate.hallway")
     assert state2.attributes["temperature"] == 20
 
     with patch(
@@ -215,22 +216,23 @@ async def test_climate_temperature(hass: HomeAssistant) -> None:
         )
     await hass.async_block_till_done()
 
-    state2 = hass.states.get("climate.clima4")
+    state2 = hass.states.get("climate.hallway")
     assert state2.attributes["temperature"] == 18
 
     with patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_set_ac_state_property",
         return_value={"result": {"status": "Success"}},
     ):
-        await hass.services.async_call(
-            CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: state1.entity_id, ATTR_TEMPERATURE: 18.5},
-            blocking=True,
-        )
+        with pytest.raises(ValueError):
+            await hass.services.async_call(
+                CLIMATE_DOMAIN,
+                SERVICE_SET_TEMPERATURE,
+                {ATTR_ENTITY_ID: state1.entity_id, ATTR_TEMPERATURE: 18.5},
+                blocking=True,
+            )
     await hass.async_block_till_done()
 
-    state2 = hass.states.get("climate.clima4")
+    state2 = hass.states.get("climate.hallway")
     assert state2.attributes["temperature"] == 18
 
     with patch(
@@ -245,7 +247,7 @@ async def test_climate_temperature(hass: HomeAssistant) -> None:
         )
     await hass.async_block_till_done()
 
-    state2 = hass.states.get("climate.clima4")
+    state2 = hass.states.get("climate.hallway")
     assert state2.attributes["temperature"] == 20
 
     with patch(
@@ -260,7 +262,7 @@ async def test_climate_temperature(hass: HomeAssistant) -> None:
         )
     await hass.async_block_till_done()
 
-    state2 = hass.states.get("climate.clima4")
+    state2 = hass.states.get("climate.hallway")
     assert state2.attributes["temperature"] == 20
 
     with patch(
@@ -276,7 +278,7 @@ async def test_climate_temperature(hass: HomeAssistant) -> None:
             )
     await hass.async_block_till_done()
 
-    state2 = hass.states.get("climate.clima4")
+    state2 = hass.states.get("climate.hallway")
     assert state2.attributes["temperature"] == 20
 
     coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
@@ -303,13 +305,13 @@ async def test_climate_temperature(hass: HomeAssistant) -> None:
             )
     await hass.async_block_till_done()
 
-    state2 = hass.states.get("climate.clima4")
+    state2 = hass.states.get("climate.hallway")
     assert state2.attributes["temperature"] == 20
 
 
 async def test_climate_temperature_is_none(hass: HomeAssistant) -> None:
     """Test the Sensibo climate temperature service no temperature provided."""
-    entry = await init_integration(hass, name=["Clima5", "Pure5"], entry_id="clima5")
+    entry = await init_integration(hass, entry_id="clima5")
 
     coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     coordinator.data.parsed["ABC999111"].active_features = [
@@ -323,32 +325,33 @@ async def test_climate_temperature_is_none(hass: HomeAssistant) -> None:
         "light",
     ]
 
-    state1 = hass.states.get("climate.clima5")
-    assert state1.attributes["temperature"] == 20
+    state1 = hass.states.get("climate.hallway")
+    assert state1.attributes["temperature"] == 25
 
     with patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_set_ac_state_property",
         return_value={"result": {"status": "Success"}},
     ):
-        await hass.services.async_call(
-            CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {
-                ATTR_ENTITY_ID: state1.entity_id,
-                ATTR_TARGET_TEMP_HIGH: 30,
-                ATTR_TARGET_TEMP_LOW: 20,
-            },
-            blocking=True,
-        )
+        with pytest.raises(ValueError):
+            await hass.services.async_call(
+                CLIMATE_DOMAIN,
+                SERVICE_SET_TEMPERATURE,
+                {
+                    ATTR_ENTITY_ID: state1.entity_id,
+                    ATTR_TARGET_TEMP_HIGH: 30,
+                    ATTR_TARGET_TEMP_LOW: 20,
+                },
+                blocking=True,
+            )
     await hass.async_block_till_done()
 
-    state2 = hass.states.get("climate.clima5")
-    assert state2.attributes["temperature"] == 20
+    state2 = hass.states.get("climate.hallway")
+    assert state2.attributes["temperature"] == 25
 
 
 async def test_climate_hvac_mode(hass: HomeAssistant) -> None:
     """Test the Sensibo climate hvac mode service."""
-    entry = await init_integration(hass, name=["Clima6", "Pure6"], entry_id="clima6")
+    entry = await init_integration(hass, entry_id="clima6")
 
     coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     coordinator.data.parsed["ABC999111"].active_features = [
@@ -362,7 +365,7 @@ async def test_climate_hvac_mode(hass: HomeAssistant) -> None:
         "light",
     ]
 
-    state1 = hass.states.get("climate.clima6")
+    state1 = hass.states.get("climate.hallway")
     assert state1.state == "heat"
 
     with patch(
@@ -380,7 +383,7 @@ async def test_climate_hvac_mode(hass: HomeAssistant) -> None:
         )
     await hass.async_block_till_done()
 
-    state2 = hass.states.get("climate.clima6")
+    state2 = hass.states.get("climate.hallway")
     assert state2.state == "off"
 
     coordinator.data.parsed["ABC999111"].device_on = False
@@ -400,15 +403,15 @@ async def test_climate_hvac_mode(hass: HomeAssistant) -> None:
         )
     await hass.async_block_till_done()
 
-    state2 = hass.states.get("climate.clima6")
+    state2 = hass.states.get("climate.hallway")
     assert state2.state == "heat"
 
 
 async def test_climate_on_off(hass: HomeAssistant) -> None:
     """Test the Sensibo climate on/off service."""
-    await init_integration(hass, name=["Clima7", "Pure7"], entry_id="clima7")
+    await init_integration(hass, entry_id="clima7")
 
-    state1 = hass.states.get("climate.clima7")
+    state1 = hass.states.get("climate.hallway")
     assert state1.state == "heat"
 
     with patch(
@@ -423,7 +426,7 @@ async def test_climate_on_off(hass: HomeAssistant) -> None:
         )
     await hass.async_block_till_done()
 
-    state2 = hass.states.get("climate.clima7")
+    state2 = hass.states.get("climate.hallway")
     assert state2.state == "off"
 
     with patch(
@@ -438,15 +441,15 @@ async def test_climate_on_off(hass: HomeAssistant) -> None:
         )
     await hass.async_block_till_done()
 
-    state2 = hass.states.get("climate.clima7")
+    state2 = hass.states.get("climate.hallway")
     assert state2.state == "heat"
 
 
 async def test_climate_service_failed(hass: HomeAssistant) -> None:
     """Test the Sensibo climate service failed."""
-    await init_integration(hass, name=["Clima8", "Pure8"], entry_id="clima8")
+    await init_integration(hass, entry_id="clima8")
 
-    state1 = hass.states.get("climate.clima8")
+    state1 = hass.states.get("climate.hallway")
     assert state1.state == "heat"
 
     with patch(
@@ -462,15 +465,15 @@ async def test_climate_service_failed(hass: HomeAssistant) -> None:
             )
     await hass.async_block_till_done()
 
-    state2 = hass.states.get("climate.clima8")
+    state2 = hass.states.get("climate.hallway")
     assert state2.state == "heat"
 
 
 async def test_climate_assumed_state(hass: HomeAssistant) -> None:
     """Test the Sensibo climate assumed state service."""
-    await init_integration(hass, name=["Clima9", "Pure9"], entry_id="clima9")
+    await init_integration(hass, entry_id="clima9")
 
-    state1 = hass.states.get("climate.clima9")
+    state1 = hass.states.get("climate.hallway")
     assert state1.state == "heat"
 
     with patch(
@@ -488,5 +491,5 @@ async def test_climate_assumed_state(hass: HomeAssistant) -> None:
         )
     await hass.async_block_till_done()
 
-    state2 = hass.states.get("climate.clima9")
+    state2 = hass.states.get("climate.hallway")
     assert state2.state == "off"
