@@ -1,8 +1,6 @@
 """Test the Aladdin Connect config flow."""
 from unittest.mock import patch
 
-import pytest
-
 from homeassistant import config_entries
 from homeassistant.components.aladdin_connect.config_flow import InvalidAuth
 from homeassistant.components.aladdin_connect.const import DOMAIN
@@ -206,7 +204,7 @@ async def test_reconfig_flow(hass: HomeAssistant) -> None:
             "unique_id": mock_entry.unique_id,
             "entry_id": mock_entry.entry_id,
         },
-        data=mock_entry.data,
+        data={"username": "test-username", "password": "new-password"},
     )
 
     assert result["step_id"] == "reauth_confirm"
@@ -225,7 +223,7 @@ async def test_reconfig_flow(hass: HomeAssistant) -> None:
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_USERNAME: "test-username", CONF_PASSWORD: "test-password"},
+            {CONF_PASSWORD: "new-password"},
         )
         await hass.async_block_till_done()
 
@@ -233,100 +231,5 @@ async def test_reconfig_flow(hass: HomeAssistant) -> None:
     assert result2["reason"] == "reauth_successful"
     assert mock_entry.data == {
         CONF_USERNAME: "test-username",
-        CONF_PASSWORD: "test-password",
+        CONF_PASSWORD: "new-password",
     }
-
-
-@pytest.mark.parametrize(
-    "sideeffect,p_error",
-    [
-        (InvalidAuth, "invalid_auth"),
-        (ConnectionError, "cannot_connect"),
-    ],
-)
-async def test_reconfig_flow_error(
-    hass: HomeAssistant, sideeffect: Exception, p_error: str
-) -> None:
-    """Test errors for reconfig flow."""
-
-    mock_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={"username": "test-username", "password": "test-password"},
-        unique_id="test-username",
-    )
-    mock_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "unique_id": mock_entry.unique_id,
-            "entry_id": mock_entry.entry_id,
-        },
-        data=mock_entry.data,
-    )
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["step_id"] == "reauth_confirm"
-
-    with patch(
-        "homeassistant.components.aladdin_connect.cover.async_setup_platform",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.aladdin_connect.config_flow.AladdinConnectClient.login",
-        side_effect=sideeffect,
-    ), patch(
-        "homeassistant.components.aladdin_connect.cover.async_setup_entry",
-        return_value=True,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_USERNAME: "test-username", CONF_PASSWORD: "test-password"},
-        )
-        await hass.async_block_till_done()
-
-        assert result2["step_id"] == "reauth_confirm"
-    assert result2["type"] == RESULT_TYPE_FORM
-    assert result2["errors"] == {"base": p_error}
-
-
-async def test_reconfig_flow_uniqeeid_mismatch(hass: HomeAssistant) -> None:
-    """Test a bad unique reconfig flow."""
-
-    mock_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={"username": "test-username", "password": "test-password"},
-        unique_id="test-username",
-    )
-    mock_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "unique_id": mock_entry.unique_id,
-            "entry_id": mock_entry.entry_id,
-        },
-        data=mock_entry.data,
-    )
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["step_id"] == "reauth_confirm"
-
-    with patch(
-        "homeassistant.components.aladdin_connect.cover.async_setup_platform",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.aladdin_connect.config_flow.AladdinConnectClient.login",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.aladdin_connect.cover.async_setup_entry",
-        return_value=True,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_USERNAME: "bad-test-username", CONF_PASSWORD: "test-password"},
-        )
-        await hass.async_block_till_done()
-
-    assert result2["step_id"] == "reauth_confirm"
-    assert result2["type"] == RESULT_TYPE_FORM
-    assert result2["errors"] == {"base": "invalid_auth"}

@@ -24,6 +24,8 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     }
 )
 
+REAUTH_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
+
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     """Validate the user input allows us to connect.
@@ -61,30 +63,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input:
-            try:
-                await validate_input(self.hass, user_input)
-            except ConnectionError:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-            else:
-                assert self.entry is not None
-
-                if user_input[CONF_USERNAME].lower() == self.entry.unique_id:
-                    self.hass.config_entries.async_update_entry(
-                        self.entry,
-                        data={
-                            **self.entry.data,
-                            CONF_PASSWORD: user_input[CONF_PASSWORD],
-                        },
-                    )
-                    await self.hass.config_entries.async_reload(self.entry.entry_id)
-                    return self.async_abort(reason="reauth_successful")
-                errors["base"] = "invalid_auth"
+            password = user_input[CONF_PASSWORD]
+            assert self.entry is not None
+            if self.entry:
+                self.hass.config_entries.async_update_entry(
+                    self.entry,
+                    data={
+                        CONF_USERNAME: self.entry.data[CONF_USERNAME],
+                        CONF_PASSWORD: password,
+                    },
+                )
+                await self.hass.config_entries.async_reload(self.entry.entry_id)
+                return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=STEP_USER_DATA_SCHEMA,
+            data_schema=REAUTH_SCHEMA,
             errors=errors,
         )
 
