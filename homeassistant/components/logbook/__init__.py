@@ -508,14 +508,14 @@ def _get_events(
 
             states_query = _generate_states_query(
                 session, start_day, end_day, old_state, entity_ids
-            ).filter(States.context_id is not None)
+            ).filter(States.context_id.is_not(None))
 
             if context_id is not None:
                 states_query = states_query.filter(States.context_id == context_id)
             if filters:
                 states_query = states_query.filter(filters.entity_filter())
 
-            query: Query = query.union_all(states_query)
+            query = query.union_all(states_query)
 
         query = query.order_by(Events.time_fired)
 
