@@ -64,13 +64,15 @@ async def async_setup_entry(
     acc = hass.data[DOMAIN][config_entry.entry_id]
     try:
         doors = await hass.async_add_executor_job(acc.get_doors)
-        async_add_entities(
-            (AladdinDevice(acc, door) for door in doors),
-            update_before_add=True,
-        )
+
     except (TypeError, KeyError, NameError, ValueError) as ex:
         _LOGGER.error("%s", ex)
         raise ConfigEntryNotReady from ex
+
+    async_add_entities(
+        (AladdinDevice(acc, door) for door in doors),
+        update_before_add=True,
+    )
 
 
 class AladdinDevice(CoverEntity):

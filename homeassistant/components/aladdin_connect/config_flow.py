@@ -63,9 +63,21 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input:
-            password = user_input[CONF_PASSWORD]
             assert self.entry is not None
-            if self.entry:
+            password = user_input[CONF_PASSWORD]
+            data = {
+                CONF_USERNAME: self.entry.data[CONF_USERNAME],
+                CONF_PASSWORD: password,
+            }
+
+            try:
+                await validate_input(self.hass, data)
+            except ConnectionError:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            else:
+
                 self.hass.config_entries.async_update_entry(
                     self.entry,
                     data={
