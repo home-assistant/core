@@ -138,11 +138,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Jewish calendar sensor platform."""
     sensors = [
-        JewishCalendarSensor(hass.data[DOMAIN], description)
+        JewishCalendarSensor(hass.data[DOMAIN][config_entry.entry_id], description)
         for description in INFO_SENSORS
     ]
     sensors.extend(
-        JewishCalendarTimeSensor(hass.data[DOMAIN], description)
+        JewishCalendarTimeSensor(hass.data[DOMAIN][config_entry.entry_id], description)
         for description in TIME_SENSORS
     )
 
