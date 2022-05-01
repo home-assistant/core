@@ -178,7 +178,7 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
             )
 
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
-            raise ValueError("No Target Temperature provided")
+            raise ValueError("No target temperature provided")
 
         if temperature == self.target_temperature:
             return
@@ -193,7 +193,7 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
 
             else:
                 raise ValueError(
-                    f"Target Temperature has to be one off {str(self.device_data.temp_list)}"
+                    f"Target temperature has to be one off {str(self.device_data.temp_list)}"
                 )
 
         await self._async_set_ac_state_property("targetTemperature", int(temperature))
