@@ -96,7 +96,7 @@ class JewishCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
                     ): selector.SelectSelector(
                         selector.SelectSelectorConfig(options=LANGUAGE)
                     ),
-                    # Default is empty, unless user wants to override
+                    # Default is Hass defaults, unless user wants to override
                     vol.Optional(
                         CONF_LATITUDE, default=self.hass.config.latitude
                     ): cv.latitude,
