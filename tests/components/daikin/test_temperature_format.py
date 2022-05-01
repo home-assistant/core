@@ -8,13 +8,13 @@ def test_int_conversion():
     assert formatted == "16"
 
 
-def test_decimal_conversion():
+def test_rounding():
     """Check 1 decimal is kept when target temp is a decimal."""
     formatted = format_target_temperature("16.1")
-    assert formatted == "16.1"
-
-
-def test_decimal_conversion_more_digits():
-    """Check at most 1 decimal is kept when target temp is a decimal with more than 1 decimal."""
-    formatted = format_target_temperature("16.09")
-    assert formatted == "16.1"
+    assert formatted == "16"
+    formatted = format_target_temperature("16.3")
+    assert formatted == "16.5"
+    formatted = format_target_temperature("16.65")
+    assert formatted == "16.5"
+    formatted = format_target_temperature("16.9")
+    assert formatted == "17"

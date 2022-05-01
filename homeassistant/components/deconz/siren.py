@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from pydeconz.light import Siren
+from pydeconz.models.light.siren import Siren
 
 from homeassistant.components.siren import (
     ATTR_DURATION,

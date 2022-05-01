@@ -13,13 +13,11 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_FLASH,
     ATTR_TRANSITION,
-    COLOR_MODE_BRIGHTNESS,
-    COLOR_MODE_ONOFF,
     FLASH_LONG,
     FLASH_SHORT,
-    SUPPORT_FLASH,
-    SUPPORT_TRANSITION,
+    ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -50,9 +48,9 @@ class VelbusLight(VelbusEntity, LightEntity):
     """Representation of a Velbus light."""
 
     _channel: VelbusDimmer
-    _attr_color_mode = COLOR_MODE_BRIGHTNESS
-    _attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
-    _attr_supported_features = SUPPORT_TRANSITION
+    _attr_color_mode = ColorMode.BRIGHTNESS
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+    _attr_supported_features = LightEntityFeature.TRANSITION
 
     @property
     def is_on(self) -> bool:
@@ -100,9 +98,9 @@ class VelbusButtonLight(VelbusEntity, LightEntity):
     _channel: VelbusButton
     _attr_entity_registry_enabled_default = False
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_color_mode = COLOR_MODE_ONOFF
-    _attr_supported_color_modes = {COLOR_MODE_ONOFF}
-    _attr_supported_features = SUPPORT_FLASH
+    _attr_color_mode = ColorMode.ONOFF
+    _attr_supported_color_modes = {ColorMode.ONOFF}
+    _attr_supported_features = LightEntityFeature.FLASH
 
     def __init__(self, channel: VelbusChannel) -> None:
         """Initialize the button light (led)."""

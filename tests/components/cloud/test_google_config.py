@@ -10,7 +10,7 @@ from homeassistant.components.cloud.google_config import CloudGoogleConfig
 from homeassistant.components.google_assistant import helpers as ga_helpers
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, State
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.util.dt import utcnow
 
@@ -189,6 +189,66 @@ async def test_google_entity_registry_sync(hass, mock_cloud_login, cloud_prefs):
         await hass.async_block_till_done()
 
         assert len(mock_sync.mock_calls) == 3
+
+
+async def test_google_device_registry_sync(hass, mock_cloud_login, cloud_prefs):
+    """Test Google config responds to device registry."""
+    config = CloudGoogleConfig(
+        hass, GACTIONS_SCHEMA({}), "mock-user-id", cloud_prefs, hass.data["cloud"]
+    )
+    ent_reg = er.async_get(hass)
+    entity_entry = ent_reg.async_get_or_create(
+        "light", "hue", "1234", device_id="1234", area_id="ABCD"
+    )
+
+    with patch.object(config, "async_sync_entities_all"):
+        await config.async_initialize()
+        await hass.async_block_till_done()
+    await config.async_connect_agent_user("mock-user-id")
+
+    with patch.object(config, "async_schedule_google_sync_all") as mock_sync:
+        # Device registry updated with non-relevant changes
+        hass.bus.async_fire(
+            dr.EVENT_DEVICE_REGISTRY_UPDATED,
+            {
+                "action": "update",
+                "device_id": "1234",
+                "changes": ["manufacturer"],
+            },
+        )
+        await hass.async_block_till_done()
+
+        assert len(mock_sync.mock_calls) == 0
+
+        # Device registry updated with relevant changes
+        # but entity has area ID so not impacted
+        hass.bus.async_fire(
+            dr.EVENT_DEVICE_REGISTRY_UPDATED,
+            {
+                "action": "update",
+                "device_id": "1234",
+                "changes": ["area_id"],
+            },
+        )
+        await hass.async_block_till_done()
+
+        assert len(mock_sync.mock_calls) == 0
+
+        ent_reg.async_update_entity(entity_entry.entity_id, area_id=None)
+
+        # Device registry updated with relevant changes
+        # but entity has area ID so not impacted
+        hass.bus.async_fire(
+            dr.EVENT_DEVICE_REGISTRY_UPDATED,
+            {
+                "action": "update",
+                "device_id": "1234",
+                "changes": ["area_id"],
+            },
+        )
+        await hass.async_block_till_done()
+
+        assert len(mock_sync.mock_calls) == 1
 
 
 async def test_sync_google_when_started(hass, mock_cloud_login, cloud_prefs):

@@ -4,17 +4,15 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from pydeconz.sensor import (
-    Alarm,
-    CarbonMonoxide,
-    Fire,
-    GenericFlag,
-    OpenClose,
-    Presence,
-    SensorResources,
-    Vibration,
-    Water,
-)
+from pydeconz.interfaces.sensors import SensorResources
+from pydeconz.models.sensor.alarm import Alarm
+from pydeconz.models.sensor.carbon_monoxide import CarbonMonoxide
+from pydeconz.models.sensor.fire import Fire
+from pydeconz.models.sensor.generic_flag import GenericFlag
+from pydeconz.models.sensor.open_close import OpenClose
+from pydeconz.models.sensor.presence import Presence
+from pydeconz.models.sensor.vibration import Vibration
+from pydeconz.models.sensor.water import Water
 
 from homeassistant.components.binary_sensor import (
     DOMAIN,

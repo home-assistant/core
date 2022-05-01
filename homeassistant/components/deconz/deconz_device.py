@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from pydeconz.group import Group as DeconzGroup, Scene as PydeconzScene
-from pydeconz.light import LightBase as DeconzLight
-from pydeconz.sensor import SensorBase as DeconzSensor
+from pydeconz.models.group import Group as DeconzGroup
+from pydeconz.models.light import LightBase as DeconzLight
+from pydeconz.models.scene import Scene as PydeconzScene
+from pydeconz.models.sensor import SensorBase as DeconzSensor
 
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
