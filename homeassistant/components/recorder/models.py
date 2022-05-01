@@ -107,8 +107,8 @@ class Events(Base):  # type: ignore[misc,valid-type]
     origin_idx = Column(Integer)
     time_fired = Column(DATETIME_TYPE, index=True)
     context_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
-    context_user_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
-    context_parent_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
+    context_user_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID))
+    context_parent_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID))
     data_id = Column(Integer, ForeignKey("event_data.data_id"), index=True)
     event_data_rel = relationship("EventData")
 
@@ -228,8 +228,8 @@ class States(Base):  # type: ignore[misc,valid-type]
         Integer, ForeignKey("state_attributes.attributes_id"), index=True
     )
     context_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
-    context_user_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
-    context_parent_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
+    context_user_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID))
+    context_parent_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID))
     origin_idx = Column(Integer)  # 0 is local, 1 is remote
     old_state = relationship("States", remote_side=[state_id])
     state_attributes = relationship("StateAttributes")
