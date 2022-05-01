@@ -151,7 +151,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 async def async_import_client_credential(
-    hass: HomeAssistant, domain: str, credential: ClientCredential
+    hass: HomeAssistant,
+    domain: str,
+    credential: ClientCredential,
+    auth_domain: str | None = None,
 ) -> None:
     """Import an existing credential from configuration.yaml."""
     if DOMAIN not in hass.data:
@@ -161,7 +164,7 @@ async def async_import_client_credential(
         CONF_DOMAIN: domain,
         CONF_CLIENT_ID: credential.client_id,
         CONF_CLIENT_SECRET: credential.client_secret,
-        CONF_AUTH_DOMAIN: domain,
+        CONF_AUTH_DOMAIN: auth_domain if auth_domain else domain,
     }
     await storage_collection.async_import_item(item)
 
