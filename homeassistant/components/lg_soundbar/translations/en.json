@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured",
+            "existing_instance_updated": "Updated existing configuration."
+        },
+        "error": {
+            "cannot_connect": "Failed to connect"
+        },
+        "step": {
+            "details": {
+                "data": {
+                    "host": "Host",
+                    "name": "Name",
+                    "port": "Port"
+                },
+                "description": "Enter your Connection details.",
+                "title": "LG Soundbar Connection details"
+            }
+        }
+    }
+}

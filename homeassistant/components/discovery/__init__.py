@@ -64,7 +64,6 @@ SERVICE_HANDLERS = {
     "openhome": ServiceDetails("media_player", "openhome"),
     "bose_soundtouch": ServiceDetails("media_player", "soundtouch"),
     "bluesound": ServiceDetails("media_player", "bluesound"),
-    "lg_smart_device": ServiceDetails("media_player", "lg_soundbar"),
 }
 
 OPTIONAL_SERVICE_HANDLERS: dict[str, tuple[str, str | None]] = {}
@@ -98,6 +97,7 @@ MIGRATED_SERVICE_HANDLERS = [
     "volumio",
     SERVICE_YEELIGHT,
     "nanoleaf_aurora",
+    "lg_smart_device",
 ]
 
 DEFAULT_ENABLED = (

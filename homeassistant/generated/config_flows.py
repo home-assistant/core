@@ -183,6 +183,7 @@ FLOWS = {
         "kraken",
         "kulersky",
         "launch_library",
+        "lg_soundbar",
         "life360",
         "lifx",
         "litejet",

@@ -1,27 +1,49 @@
 """Support for LG soundbars."""
 from __future__ import annotations
 
+import logging
+
 import temescal
 
 from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
 )
-from homeassistant.const import STATE_ON
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PORT,
+    CONF_UNIQUE_ID,
+    STATE_ON,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the LG platform."""
-    if discovery_info is not None:
-        add_entities([LGDevice(discovery_info)])
+    """Set up media_player from a config entry created in the integrations UI."""
+    config = hass.data[DOMAIN][config_entry.entry_id]
+    # Update our config.
+    if config_entry.options:
+        config.update(config_entry.options)
+    if config[CONF_HOST] is not None and config[CONF_PORT] is not None:
+        info = {
+            CONF_UNIQUE_ID: config[CONF_UNIQUE_ID],
+            CONF_HOST: config[CONF_HOST],
+            CONF_PORT: config[CONF_PORT],
+            CONF_NAME: config[CONF_NAME],
+        }
+        entities = [LGDevice(info)]
+        async_add_entities(entities)
 
 
 class LGDevice(MediaPlayerEntity):
@@ -34,13 +56,16 @@ class LGDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.SELECT_SOUND_MODE
     )
 
-    def __init__(self, discovery_info):
+    def __init__(self, info):
         """Initialize the LG speakers."""
-        self._host = discovery_info["host"]
-        self._port = discovery_info["port"]
-        self._hostname = discovery_info["hostname"]
+        self._host = info[CONF_HOST]
+        self._port = info[CONF_PORT]
+        self._hostname = info[CONF_NAME]
+        self._attr_unique_id = info[CONF_UNIQUE_ID]
 
-        self._name = self._hostname.split(".")[0]
+        self._name = (
+            self._hostname.split(".")[0] if info[CONF_NAME] is None else info[CONF_NAME]
+        )
         self._volume = 0
         self._volume_min = 0
         self._volume_max = 0
@@ -85,8 +110,6 @@ class LGDevice(MediaPlayerEntity):
         elif response["msg"] == "SPK_LIST_VIEW_INFO":
             if "i_vol" in data:
                 self._volume = data["i_vol"]
-            if "s_user_name" in data:
-                self._name = data["s_user_name"]
             if "i_vol_min" in data:
                 self._volume_min = data["i_vol_min"]
             if "i_vol_max" in data:
@@ -117,6 +140,7 @@ class LGDevice(MediaPlayerEntity):
                 self._equaliser = data["i_curr_eq"]
             if "s_user_name" in data:
                 self._name = data["s_user_name"]
+
         self.schedule_update_ha_state()
 
     def update(self):
@@ -126,6 +150,7 @@ class LGDevice(MediaPlayerEntity):
         self._device.get_func()
         self._device.get_settings()
         self._device.get_product_info()
+        self._device.get_mac_info()
 
     @property
     def should_poll(self):

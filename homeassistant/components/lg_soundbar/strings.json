@@ -1,0 +1,22 @@
+{
+  "config": {
+    "step": {
+      "details": {
+        "title": "LG Soundbar Connection details",
+        "description": "Enter your Connection details.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "name": "[%key:common::config_flow::data::name%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "abort": {
+      "existing_instance_updated": "Updated existing configuration.",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    }
+  }
+}
