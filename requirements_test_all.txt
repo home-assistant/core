@@ -1269,7 +1269,7 @@ python-nest==4.2.0
 python-picnic-api==1.1.0
 
 # homeassistant.components.smarttub
-python-smarttub==0.0.31
+python-smarttub==0.0.32
 
 # homeassistant.components.songpal
 python-songpal==0.14.1
