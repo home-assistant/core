@@ -3,7 +3,11 @@ from unittest.mock import patch
 
 from androidtv.constants import CMD_DEVICE_PROPERTIES, CMD_MAC_ETH0, CMD_MAC_WLAN0
 
-from homeassistant.components.androidtv.const import DEVICE_ANDROIDTV, DEVICE_FIRETV
+from homeassistant.components.androidtv.const import (
+    DEFAULT_ADB_SERVER_PORT,
+    DEVICE_ANDROIDTV,
+    DEVICE_FIRETV,
+)
 
 ADB_SERVER_HOST = "127.0.0.1"
 KEY_PYTHON = "python"
@@ -39,7 +43,7 @@ class AdbDeviceTcpAsyncFake:
 class ClientAsyncFakeSuccess:
     """A fake of the `ClientAsync` class when the connection and shell commands succeed."""
 
-    def __init__(self, host=ADB_SERVER_HOST, port=5037):
+    def __init__(self, host=ADB_SERVER_HOST, port=DEFAULT_ADB_SERVER_PORT):
         """Initialize a `ClientAsyncFakeSuccess` instance."""
         self._devices = []
 
@@ -53,7 +57,7 @@ class ClientAsyncFakeSuccess:
 class ClientAsyncFakeFail:
     """A fake of the `ClientAsync` class when the connection and shell commands fail."""
 
-    def __init__(self, host=ADB_SERVER_HOST, port=5037):
+    def __init__(self, host=ADB_SERVER_HOST, port=DEFAULT_ADB_SERVER_PORT):
         """Initialize a `ClientAsyncFakeFail` instance."""
         self._devices = []
 

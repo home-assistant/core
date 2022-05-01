@@ -1,6 +1,5 @@
 """The tests for the androidtv platform."""
 import base64
-import copy
 import logging
 from unittest.mock import Mock, patch
 
@@ -73,15 +72,14 @@ from . import patchers
 
 from tests.common import MockConfigEntry
 
-CONF_OPTIONS = "options"
 HOST = "127.0.0.1"
 
 ADB_PATCH_KEY = "patch_key"
 TEST_ENTITY_NAME = "entity_name"
 
 MSG_RECONNECT = {
-    patchers.KEY_PYTHON: f"ADB connection to {HOST}:5555 successfully established",
-    patchers.KEY_SERVER: f"ADB connection to {HOST}:5555 via ADB server {patchers.ADB_SERVER_HOST}:5037 successfully established",
+    patchers.KEY_PYTHON: f"ADB connection to {HOST}:{DEFAULT_PORT} successfully established",
+    patchers.KEY_SERVER: f"ADB connection to {HOST}:{DEFAULT_PORT} via ADB server {patchers.ADB_SERVER_HOST}:{DEFAULT_ADB_SERVER_PORT} successfully established",
 }
 
 PATCH_ACCESS = patch("homeassistant.components.androidtv.os.access", return_value=True)
@@ -113,6 +111,16 @@ CONFIG_ANDROIDTV_PYTHON_ADB_YAML = {
     },
 }
 
+# Android TV device with Python ADB implementation with custom adbkey
+CONFIG_ANDROIDTV_PYTHON_ADB_KEY = {
+    ADB_PATCH_KEY: patchers.KEY_PYTHON,
+    TEST_ENTITY_NAME: CONFIG_ANDROIDTV_PYTHON_ADB[TEST_ENTITY_NAME],
+    DOMAIN: {
+        **CONFIG_ANDROIDTV_PYTHON_ADB[DOMAIN],
+        CONF_ADBKEY: "user_provided_adbkey",
+    },
+}
+
 # Android TV device with ADB server
 CONFIG_ANDROIDTV_ADB_SERVER = {
     ADB_PATCH_KEY: patchers.KEY_SERVER,
@@ -121,7 +129,7 @@ CONFIG_ANDROIDTV_ADB_SERVER = {
         CONF_HOST: HOST,
         CONF_PORT: DEFAULT_PORT,
         CONF_DEVICE_CLASS: DEVICE_ANDROIDTV,
-        CONF_ADB_SERVER_IP: HOST,
+        CONF_ADB_SERVER_IP: patchers.ADB_SERVER_HOST,
         CONF_ADB_SERVER_PORT: DEFAULT_ADB_SERVER_PORT,
     },
 }
@@ -145,7 +153,7 @@ CONFIG_FIRETV_ADB_SERVER = {
         CONF_HOST: HOST,
         CONF_PORT: DEFAULT_PORT,
         CONF_DEVICE_CLASS: DEVICE_FIRETV,
-        CONF_ADB_SERVER_IP: HOST,
+        CONF_ADB_SERVER_IP: patchers.ADB_SERVER_HOST,
         CONF_ADB_SERVER_PORT: DEFAULT_ADB_SERVER_PORT,
     },
 }
@@ -192,7 +200,6 @@ def _setup(config):
         domain=DOMAIN,
         data=config[DOMAIN],
         unique_id="a1:b1:c1:d1:e1:f1",
-        options=config[DOMAIN].get(CONF_OPTIONS),
     )
 
     return patch_key, entity_id, config_entry
@@ -297,9 +304,7 @@ async def test_adb_shell_returns_none(hass, config):
 
 async def test_setup_with_adbkey(hass):
     """Test that setup succeeds when using an ADB key."""
-    config = copy.deepcopy(CONFIG_ANDROIDTV_DEFAULT)
-    config[DOMAIN][CONF_ADBKEY] = hass.config.path("user_provided_adbkey")
-    patch_key, entity_id, config_entry = _setup(config)
+    patch_key, entity_id, config_entry = _setup(CONFIG_ANDROIDTV_PYTHON_ADB_KEY)
     config_entry.add_to_hass(hass)
 
     with patchers.patch_connect(True)[patch_key], patchers.patch_shell(
@@ -1005,13 +1010,15 @@ async def test_services_androidtv(hass):
 
 async def test_services_firetv(hass):
     """Test media player services for a Fire TV device."""
-    config = copy.deepcopy(CONFIG_FIRETV_DEFAULT)
-    config[DOMAIN][CONF_OPTIONS] = {
-        CONF_TURN_OFF_COMMAND: "test off",
-        CONF_TURN_ON_COMMAND: "test on",
-    }
-    patch_key, entity_id, config_entry = _setup(config)
+    patch_key, entity_id, config_entry = _setup(CONFIG_FIRETV_DEFAULT)
     config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        config_entry,
+        options={
+            CONF_TURN_OFF_COMMAND: "test off",
+            CONF_TURN_ON_COMMAND: "test on",
+        },
+    )
 
     with patchers.patch_connect(True)[patch_key]:
         with patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key]:
