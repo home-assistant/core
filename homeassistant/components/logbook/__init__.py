@@ -617,6 +617,7 @@ def _generate_states_query(
 ) -> Query:
     query = (
         _generate_events_query_without_data(session)
+        .filter(States.context_id is not None)
         .outerjoin(old_state, (States.old_state_id == old_state.state_id))
         .filter(_missing_state_matcher(old_state))
         .filter(_not_continuous_entity_matcher())
