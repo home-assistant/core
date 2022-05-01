@@ -1,5 +1,5 @@
 """Fixtures for Eight Sleep."""
-from unittest.mock import PropertyMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -20,7 +20,7 @@ def bypass_fixture():
         return_value=True,
     ), patch(
         "homeassistant.components.eight_sleep.config_flow.EightSleep.deviceid",
-        new_callable=PropertyMock(return_value="deviceid"),
+        "deviceid",
     ):
         yield
 
@@ -29,8 +29,7 @@ def bypass_fixture():
 def valid_token_fixture():
     """Return a valid token."""
     with patch(
-        "homeassistant.components.eight_sleep.config_flow.EightSleep.token",
-        new_callable=PropertyMock(return_value="token"),
+        "homeassistant.components.eight_sleep.config_flow.EightSleep.token", "token"
     ):
         yield
 
@@ -39,7 +38,6 @@ def valid_token_fixture():
 def invalid_token_fixture():
     """Return an invalid token."""
     with patch(
-        "homeassistant.components.eight_sleep.config_flow.EightSleep.token",
-        new_callable=PropertyMock(return_value=None),
+        "homeassistant.components.eight_sleep.config_flow.EightSleep.token", None
     ):
         yield
