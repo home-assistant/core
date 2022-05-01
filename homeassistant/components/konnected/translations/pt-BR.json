@@ -102,7 +102,7 @@
                     "repeat": "Intervalo para repetir (-1=infinito) (opcional)"
                 },
                 "description": "Selecione as op\u00e7\u00f5es para o switch conectado a {zone}: estado {state}",
-                "title": "Configurar o switch de sa\u00edda"
+                "title": "Configure o interruptor de sa\u00edda"
             }
         }
     }

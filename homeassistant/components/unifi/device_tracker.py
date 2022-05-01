@@ -107,10 +107,10 @@ def add_client_entities(controller, async_add_entities, clients):
     trackers = []
 
     for mac in clients:
-        if mac in controller.entities[DOMAIN][UniFiClientTracker.TYPE]:
+        if mac in controller.entities[DOMAIN][UniFiClientTracker.TYPE] or not (
+            client := controller.api.clients.get(mac)
+        ):
             continue
-
-        client = controller.api.clients[mac]
 
         if mac not in controller.wireless_clients:
             if not controller.option_track_wired_clients:

@@ -6,9 +6,12 @@
         },
         "error": {
             "bad_pin_format": "Il PIN deve essere di 4 cifre",
+            "bad_validation_code_format": "Il codice di convalida deve essere di 6 cifre",
             "cannot_connect": "Impossibile connettersi",
             "incorrect_pin": "PIN errato",
-            "invalid_auth": "Autenticazione non valida"
+            "incorrect_validation_code": "Codice di convalida errato",
+            "invalid_auth": "Autenticazione non valida",
+            "two_factor_request_failed": "Richiesta di codice 2FA non riuscita, riprova"
         },
         "step": {
             "pin": {
@@ -16,6 +19,20 @@
                     "pin": "PIN"
                 },
                 "description": "Inserisci il tuo PIN MySubaru\nNOTA: tutti i veicoli nell'account devono avere lo stesso PIN",
+                "title": "Configurazione Subaru Starlink"
+            },
+            "two_factor": {
+                "data": {
+                    "contact_method": "Seleziona un metodo di contatto:"
+                },
+                "description": "Autenticazione a due fattori richiesta",
+                "title": "Configurazione Subaru Starlink"
+            },
+            "two_factor_validate": {
+                "data": {
+                    "validation_code": "Codice di validazione"
+                },
+                "description": "Inserisci il codice di convalida ricevuto",
                 "title": "Configurazione Subaru Starlink"
             },
             "user": {
