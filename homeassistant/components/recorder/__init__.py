@@ -1223,8 +1223,8 @@ class Recorder(threading.Thread):
                     ] = dbevent_data
                     self.event_session.add(dbevent_data)
 
-        self.event_session.add(dbevent)
         if event.event_type != EVENT_STATE_CHANGED:
+            self.event_session.add(dbevent)
             return
 
         try:
@@ -1272,7 +1272,6 @@ class Recorder(threading.Thread):
             self._pending_expunge.append(dbstate)
         else:
             dbstate.state = None
-        dbstate.event = dbevent
         self.event_session.add(dbstate)
 
     def _handle_database_error(self, err: Exception) -> bool:
