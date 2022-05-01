@@ -1324,6 +1324,90 @@ def test_today_at(mock_is_safe, hass, now, expected, expected_midnight, timezone
     freezer.stop()
 
 
+@pytest.mark.parametrize(
+    "now, test_input, expected, timezone_str",
+    [
+        # Host clock in UTC, input UTC
+        (
+            "2022-04-28 03:00:00+00:00",
+            "2022-04-28T05:50:50+00:00",
+            True,
+            "Etc/UTC",
+        ),
+        (
+            "2022-04-27 03:00:00+00:00",
+            "2022-04-28T05:50:50+00:00",
+            False,
+            "Etc/UTC",
+        ),
+        (
+            "2022-04-29 03:00:00+00:00",
+            "2022-04-28T05:50:50+00:00",
+            False,
+            "Etc/UTC",
+        ),
+        (
+            "2021-04-28 03:00:00+00:00",
+            "2022-04-28T05:50:50+00:00",
+            False,
+            "Etc/UTC",
+        ),
+        # Host clock in local time, input UTC
+        (
+            "2022-04-29 12:00:00-07:00",
+            "2022-04-29T10:00:00+00:00",
+            True,
+            "America/Los_Angeles",
+        ),
+        (
+            "2022-04-29 01:05:10+00:00",
+            "2022-04-29T10:00:00+00:00",
+            False,
+            "America/Los_Angeles",
+        ),
+        (
+            "2022-04-23 12:00:00+03:00",
+            "2022-04-23T10:00:00+00:00",
+            True,
+            "Europe/Helsinki",
+        ),
+        (
+            "2022-04-22 23:40:34+00:00",
+            "2022-04-22T10:00:00+00:00",
+            False,
+            "Europe/Helsinki",
+        ),
+    ],
+)
+@patch(
+    "homeassistant.helpers.template.TemplateEnvironment.is_safe_callable",
+    return_value=True,
+)
+def test_is_today(mock_is_safe, hass, now, test_input, expected, timezone_str):
+    """Test is_today method."""
+    freezer = freeze_time(now)
+    freezer.start()
+
+    hass.config.set_time_zone(timezone_str)
+
+    result = template.Template(
+        f"{{{{ is_today('{test_input}') }}}}",
+        hass,
+    ).async_render()
+    assert result == expected
+
+    result = template.Template(
+        f"{{{{ '{test_input}' | is_today }}}}",
+        hass,
+    ).async_render()
+    assert result == expected
+
+    with pytest.raises(TemplateError):
+        template.Template("{{ is_today('bad') }}", hass).async_render()
+
+    freezer.stop()
+
+
 @patch(
     "homeassistant.helpers.template.TemplateEnvironment.is_safe_callable",
     return_value=True,

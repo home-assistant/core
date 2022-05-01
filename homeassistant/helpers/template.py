@@ -1791,6 +1791,22 @@ def today_at(time_str: str = "") -> datetime:
     return datetime.combine(today, time_today, today.tzinfo)
 
 
+def is_today(value: Any) -> bool:
+    """Return true if the given datetime is today in the local time zone."""
+    if not isinstance(value, datetime):
+        if (value_dt := dt_util.parse_datetime(value)) is None:
+            raise ValueError(
+                f"could not convert {type(value).__name__} to datetime: '{value}'"
+            )
+    else:
+        value_dt = value
+
+    local_dt = dt_util.as_local(value_dt)
+    now_dt = dt_util.now()
+
+    return now_dt.date() == local_dt.date()
+
+
 def relative_time(value):
     """
     Take a datetime and return its "age" as a string.
@@ -1925,6 +1941,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["as_datetime"] = as_datetime
         self.filters["as_timestamp"] = forgiving_as_timestamp
         self.filters["today_at"] = today_at
+        self.filters["is_today"] = is_today
         self.filters["as_local"] = dt_util.as_local
         self.filters["timestamp_custom"] = timestamp_custom
         self.filters["timestamp_local"] = timestamp_local
@@ -1970,6 +1987,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["as_local"] = dt_util.as_local
         self.globals["as_timestamp"] = forgiving_as_timestamp
         self.globals["today_at"] = today_at
+        self.globals["is_today"] = is_today
         self.globals["relative_time"] = relative_time
         self.globals["timedelta"] = timedelta
         self.globals["strptime"] = strptime
