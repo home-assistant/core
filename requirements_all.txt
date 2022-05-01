@@ -1934,7 +1934,7 @@ python-qbittorrent==0.4.2
 python-ripple-api==0.0.3
 
 # homeassistant.components.smarttub
-python-smarttub==0.0.31
+python-smarttub==0.0.32
 
 # homeassistant.components.songpal
 python-songpal==0.14.1
