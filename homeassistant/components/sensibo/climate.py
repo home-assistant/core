@@ -176,7 +176,9 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
             raise HomeAssistantError(
                 "Current mode doesn't support setting Target Temperature"
             )
-        temperature = kwargs.get(ATTR_TEMPERATURE)
+
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
+            raise ValueError("No Target Temperature provided")
 
         if temperature == self.target_temperature:
             return
@@ -190,9 +192,10 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
                 temperature = self.device_data.temp_list[0]
 
             else:
-                return
+                raise ValueError(
+                    f"Target Temperature has to be one off {str(self.device_data.temp_list)}"
+                )
 
-        assert temperature is not None
         await self._async_set_ac_state_property("targetTemperature", int(temperature))
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
