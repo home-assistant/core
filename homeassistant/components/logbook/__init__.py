@@ -517,6 +517,7 @@ def _get_events(
 
     with session_scope(hass=hass) as session:
         old_state = aliased(States, name="old_state")
+        query: Query
 
         if entity_ids is not None:
             query = _generate_events_query_without_states(session)
@@ -562,7 +563,7 @@ def _get_events(
             if filters:
                 states_query = states_query.filter(filters.entity_filter())
 
-            query: Query = query.union_all(states_query)
+            query = query.union_all(states_query)
 
         query = query.order_by(Events.time_fired)
         raw = query.statement.compile(compile_kwargs={"literal_binds": True})
