@@ -37,7 +37,13 @@ from .response import DATA_FROM_API
 
 async def test_climate(hass: HomeAssistant) -> None:
     """Test the Sensibo climate."""
-    await init_integration(hass, entry_id="clima1")
+    entry = await init_integration(hass, entry_id="clima1")
+    with patch(
+        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
+        return_value=DATA_FROM_API,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     state1 = hass.states.get("climate.hallway")
     state2 = hass.states.get("climate.kitchen")
@@ -76,6 +82,12 @@ async def test_climate(hass: HomeAssistant) -> None:
 async def test_climate_fan(hass: HomeAssistant) -> None:
     """Test the Sensibo climate fan service."""
     entry = await init_integration(hass, entry_id="clima2")
+    with patch(
+        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
+        return_value=DATA_FROM_API,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     state1 = hass.states.get("climate.hallway")
     assert state1.attributes["fan_mode"] == "high"
@@ -125,6 +137,12 @@ async def test_climate_fan(hass: HomeAssistant) -> None:
 async def test_climate_swing(hass: HomeAssistant) -> None:
     """Test the Sensibo climate swing service."""
     entry = await init_integration(hass, entry_id="clima3")
+    with patch(
+        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
+        return_value=DATA_FROM_API,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     state1 = hass.states.get("climate.hallway")
     assert state1.attributes["swing_mode"] == "stopped"
@@ -173,6 +191,12 @@ async def test_climate_swing(hass: HomeAssistant) -> None:
 async def test_climate_temperatures(hass: HomeAssistant) -> None:
     """Test the Sensibo climate temperature service."""
     entry = await init_integration(hass, entry_id="clima4")
+    with patch(
+        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
+        return_value=DATA_FROM_API,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     coordinator.data.parsed["ABC999111"].active_features = [
@@ -312,6 +336,12 @@ async def test_climate_temperatures(hass: HomeAssistant) -> None:
 async def test_climate_temperature_is_none(hass: HomeAssistant) -> None:
     """Test the Sensibo climate temperature service no temperature provided."""
     entry = await init_integration(hass, entry_id="clima5")
+    with patch(
+        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
+        return_value=DATA_FROM_API,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     coordinator.data.parsed["ABC999111"].active_features = [
@@ -326,7 +356,7 @@ async def test_climate_temperature_is_none(hass: HomeAssistant) -> None:
     ]
 
     state1 = hass.states.get("climate.hallway")
-    assert state1.attributes["temperature"] == 25
+    assert state1.attributes["temperature"] == 20
 
     with patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_set_ac_state_property",
@@ -346,12 +376,18 @@ async def test_climate_temperature_is_none(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     state2 = hass.states.get("climate.hallway")
-    assert state2.attributes["temperature"] == 25
+    assert state2.attributes["temperature"] == 20
 
 
 async def test_climate_hvac_mode(hass: HomeAssistant) -> None:
     """Test the Sensibo climate hvac mode service."""
     entry = await init_integration(hass, entry_id="clima6")
+    with patch(
+        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
+        return_value=DATA_FROM_API,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     coordinator.data.parsed["ABC999111"].active_features = [
@@ -409,7 +445,13 @@ async def test_climate_hvac_mode(hass: HomeAssistant) -> None:
 
 async def test_climate_on_off(hass: HomeAssistant) -> None:
     """Test the Sensibo climate on/off service."""
-    await init_integration(hass, entry_id="clima7")
+    entry = await init_integration(hass, entry_id="clima7")
+    with patch(
+        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
+        return_value=DATA_FROM_API,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     state1 = hass.states.get("climate.hallway")
     assert state1.state == "heat"
@@ -447,7 +489,13 @@ async def test_climate_on_off(hass: HomeAssistant) -> None:
 
 async def test_climate_service_failed(hass: HomeAssistant) -> None:
     """Test the Sensibo climate service failed."""
-    await init_integration(hass, entry_id="clima8")
+    entry = await init_integration(hass, entry_id="clima8")
+    with patch(
+        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
+        return_value=DATA_FROM_API,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     state1 = hass.states.get("climate.hallway")
     assert state1.state == "heat"
@@ -471,7 +519,13 @@ async def test_climate_service_failed(hass: HomeAssistant) -> None:
 
 async def test_climate_assumed_state(hass: HomeAssistant) -> None:
     """Test the Sensibo climate assumed state service."""
-    await init_integration(hass, entry_id="clima9")
+    entry = await init_integration(hass, entry_id="clima9")
+    with patch(
+        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
+        return_value=DATA_FROM_API,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     state1 = hass.states.get("climate.hallway")
     assert state1.state == "heat"
