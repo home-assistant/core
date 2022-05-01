@@ -9,8 +9,7 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_RGBW_COLOR,
     ATTR_SUPPORTED_COLOR_MODES,
-    COLOR_MODE_BRIGHTNESS,
-    COLOR_MODE_RGBW,
+    ColorMode,
 )
 from homeassistant.const import (
     SERVICE_TURN_OFF,
@@ -58,7 +57,7 @@ async def test_dimmer_init(dimmer, hass, config):
     assert state.name == "dimmerBox-brightness"
 
     color_modes = state.attributes[ATTR_SUPPORTED_COLOR_MODES]
-    assert color_modes == [COLOR_MODE_BRIGHTNESS]
+    assert color_modes == [ColorMode.BRIGHTNESS]
 
     assert state.attributes[ATTR_BRIGHTNESS] == 65
     assert state.state == STATE_ON
@@ -229,7 +228,7 @@ async def test_wlightbox_s_init(wlightbox_s, hass, config):
     assert state.name == "wLightBoxS-color"
 
     color_modes = state.attributes[ATTR_SUPPORTED_COLOR_MODES]
-    assert color_modes == [COLOR_MODE_BRIGHTNESS]
+    assert color_modes == [ColorMode.BRIGHTNESS]
 
     assert ATTR_BRIGHTNESS not in state.attributes
     assert state.state == STATE_UNKNOWN
@@ -329,7 +328,7 @@ async def test_wlightbox_init(wlightbox, hass, config):
     assert state.name == "wLightBox-color"
 
     color_modes = state.attributes[ATTR_SUPPORTED_COLOR_MODES]
-    assert color_modes == [COLOR_MODE_RGBW]
+    assert color_modes == [ColorMode.RGBW]
 
     assert ATTR_BRIGHTNESS not in state.attributes
     assert ATTR_RGBW_COLOR not in state.attributes

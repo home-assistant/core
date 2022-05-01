@@ -75,6 +75,8 @@ build.json @home-assistant/supervisor
 /tests/components/api/ @home-assistant/core
 /homeassistant/components/apple_tv/ @postlund
 /tests/components/apple_tv/ @postlund
+/homeassistant/components/application_credentials/ @home-assistant/core
+/tests/components/application_credentials/ @home-assistant/core
 /homeassistant/components/apprise/ @caronc
 /tests/components/apprise/ @caronc
 /homeassistant/components/aprs/ @PhilRW
@@ -349,6 +351,8 @@ build.json @home-assistant/supervisor
 /tests/components/fritz/ @mammuth @AaronDavidSchneider @chemelli74 @mib1185
 /homeassistant/components/fritzbox/ @mib1185 @flabbamann
 /tests/components/fritzbox/ @mib1185 @flabbamann
+/homeassistant/components/fritzbox_callmonitor/ @cdce8p
+/tests/components/fritzbox_callmonitor/ @cdce8p
 /homeassistant/components/fronius/ @nielstron @farmio
 /tests/components/fronius/ @nielstron @farmio
 /homeassistant/components/frontend/ @home-assistant/frontend
@@ -794,6 +798,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/qbittorrent/ @geoffreylagaisse
 /homeassistant/components/qld_bushfire/ @exxamalte
 /tests/components/qld_bushfire/ @exxamalte
+/homeassistant/components/qnap_qsw/ @Noltari
+/tests/components/qnap_qsw/ @Noltari
 /homeassistant/components/quantum_gateway/ @cisasteelersfan
 /homeassistant/components/qvr_pro/ @oblogic7
 /homeassistant/components/qwikswitch/ @kellerza
@@ -851,6 +857,8 @@ build.json @home-assistant/supervisor
 /tests/components/rtsp_to_webrtc/ @allenporter
 /homeassistant/components/ruckus_unleashed/ @gabe565
 /tests/components/ruckus_unleashed/ @gabe565
+/homeassistant/components/sabnzbd/ @shaiu
+/tests/components/sabnzbd/ @shaiu
 /homeassistant/components/safe_mode/ @home-assistant/core
 /tests/components/safe_mode/ @home-assistant/core
 /homeassistant/components/saj/ @fredericvl
@@ -911,6 +919,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/sleepiq/ @mfugate1 @kbickar
 /tests/components/sleepiq/ @mfugate1 @kbickar
 /homeassistant/components/slide/ @ualex73
+/homeassistant/components/slimproto/ @marcelveldt
+/tests/components/slimproto/ @marcelveldt
 /homeassistant/components/sma/ @kellerza @rklomp
 /tests/components/sma/ @kellerza @rklomp
 /homeassistant/components/smappee/ @bsmappee
@@ -961,6 +971,8 @@ build.json @home-assistant/supervisor
 /tests/components/starline/ @anonym-tsk
 /homeassistant/components/statistics/ @fabaff @ThomDietrich
 /tests/components/statistics/ @fabaff @ThomDietrich
+/homeassistant/components/steam_online/ @tkdrob
+/tests/components/steam_online/ @tkdrob
 /homeassistant/components/steamist/ @bdraco
 /tests/components/steamist/ @bdraco
 /homeassistant/components/stiebel_eltron/ @fucm
@@ -1009,7 +1021,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/tapsaff/ @bazwilliams
 /homeassistant/components/tasmota/ @emontnemery
 /tests/components/tasmota/ @emontnemery
-/homeassistant/components/tautulli/ @ludeeus
+/homeassistant/components/tautulli/ @ludeeus @tkdrob
+/tests/components/tautulli/ @ludeeus @tkdrob
 /homeassistant/components/tellduslive/ @fredrike
 /tests/components/tellduslive/ @fredrike
 /homeassistant/components/template/ @PhracturedBlue @tetienne @home-assistant/core
@@ -1043,6 +1056,8 @@ build.json @home-assistant/supervisor
 /tests/components/trace/ @home-assistant/core
 /homeassistant/components/tractive/ @Danielhiversen @zhulik @bieniu
 /tests/components/tractive/ @Danielhiversen @zhulik @bieniu
+/homeassistant/components/trafikverket_ferry/ @gjohansson-ST
+/tests/components/trafikverket_ferry/ @gjohansson-ST
 /homeassistant/components/trafikverket_train/ @endor-force @gjohansson-ST
 /tests/components/trafikverket_train/ @endor-force @gjohansson-ST
 /homeassistant/components/trafikverket_weatherstation/ @endor-force @gjohansson-ST
@@ -1051,8 +1066,8 @@ build.json @home-assistant/supervisor
 /tests/components/transmission/ @engrbm87 @JPHutchins
 /homeassistant/components/tts/ @pvizeli
 /tests/components/tts/ @pvizeli
-/homeassistant/components/tuya/ @Tuya @zlinoliver @METISU @frenck
-/tests/components/tuya/ @Tuya @zlinoliver @METISU @frenck
+/homeassistant/components/tuya/ @Tuya @zlinoliver @frenck
+/tests/components/tuya/ @Tuya @zlinoliver @frenck
 /homeassistant/components/twentemilieu/ @frenck
 /tests/components/twentemilieu/ @frenck
 /homeassistant/components/twinkly/ @dr1rrb @Robbie1221

@@ -111,8 +111,8 @@ class TrackTemplateResult:
 
 
 def threaded_listener_factory(
-    async_factory: Callable[Concatenate[HomeAssistant, _P], Any]  # type: ignore[misc]
-) -> Callable[Concatenate[HomeAssistant, _P], CALLBACK_TYPE]:  # type: ignore[misc]
+    async_factory: Callable[Concatenate[HomeAssistant, _P], Any]
+) -> Callable[Concatenate[HomeAssistant, _P], CALLBACK_TYPE]:
     """Convert an async event helper to a threaded one."""
 
     @ft.wraps(async_factory)
@@ -558,7 +558,7 @@ class _TrackStateChangeFiltered:
         self._setup_entities_listener(track_states.domains, track_states.entities)
 
     @property
-    def listeners(self) -> dict:
+    def listeners(self) -> dict[str, bool | set[str]]:
         """State changes that will cause a re-render."""
         track_states = self._last_track_states
         return {
@@ -853,7 +853,7 @@ class _TrackTemplateResultInfo:
         )
 
     @property
-    def listeners(self) -> dict:
+    def listeners(self) -> dict[str, bool | set[str]]:
         """State changes that will cause a re-render."""
         assert self._track_state_changes
         return {

@@ -59,6 +59,10 @@
             },
             "usb_confirm": {
                 "description": "Z-Wave JS\u30a2\u30c9\u30aa\u30f3\u3067 {name} \u3092\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7\u3057\u307e\u3059\u304b\uff1f"
+            },
+            "zeroconf_confirm": {
+                "description": "{url} \u306b\u3042\u308b\u30db\u30fc\u30e0ID {home_id} \u306eZ-Wave JS\u30b5\u30fc\u30d0\u30fc\u3092Home Assistant\u306b\u8ffd\u52a0\u3057\u307e\u3059\u304b\uff1f",
+                "title": "Z-Wave JS\u30b5\u30fc\u30d0\u30fc\u3092\u767a\u898b"
             }
         }
     },
