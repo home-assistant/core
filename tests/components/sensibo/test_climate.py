@@ -356,7 +356,7 @@ async def test_climate_temperature_is_none(hass: HomeAssistant) -> None:
     ]
 
     state1 = hass.states.get("climate.hallway")
-    assert state1.attributes["temperature"] == 20
+    assert state1.attributes["temperature"] == 25
 
     with patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_set_ac_state_property",
@@ -376,7 +376,7 @@ async def test_climate_temperature_is_none(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     state2 = hass.states.get("climate.hallway")
-    assert state2.attributes["temperature"] == 20
+    assert state2.attributes["temperature"] == 25
 
 
 async def test_climate_hvac_mode(hass: HomeAssistant) -> None:
