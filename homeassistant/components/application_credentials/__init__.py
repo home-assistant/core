@@ -17,12 +17,15 @@ from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_DOMAIN, CONF_ID
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.generated.application_credentials import APPLICATION_CREDENTIALS
 from homeassistant.helpers import collection, config_entry_oauth2_flow
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import IntegrationNotFound, async_get_integration
+from homeassistant.loader import (
+    IntegrationNotFound,
+    async_get_application_credentials,
+    async_get_integration,
+)
 from homeassistant.util import slugify
 
 __all__ = ["ClientCredential", "AuthorizationServer", "async_import_client_credential"]
@@ -234,9 +237,11 @@ async def _get_platform(
 @websocket_api.websocket_command(
     {vol.Required("type"): "application_credentials/config"}
 )
-@callback
-def handle_integration_list(
+@websocket_api.async_response
+async def handle_integration_list(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle integrations command."""
-    connection.send_result(msg["id"], {"domains": APPLICATION_CREDENTIALS})
+    connection.send_result(
+        msg["id"], {"domains": await async_get_application_credentials(hass)}
+    )
