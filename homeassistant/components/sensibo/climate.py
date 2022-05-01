@@ -193,7 +193,7 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
                 return
 
         assert temperature is not None
-        await self._async_set_ac_state_property("targetTemperature", temperature)
+        await self._async_set_ac_state_property("targetTemperature", int(temperature))
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
