@@ -213,10 +213,7 @@ class SAJsensor(SensorEntity):
             return SensorDeviceClass.POWER
         if self.native_unit_of_measurement == ENERGY_KILO_WATT_HOUR:
             return SensorDeviceClass.ENERGY
-        if (
-            self.native_unit_of_measurement == TEMP_CELSIUS
-            or self.native_unit_of_measurement == TEMP_FAHRENHEIT
-        ):
+        if self.native_unit_of_measurement in (TEMP_CELSIUS, TEMP_FAHRENHEIT):
             return SensorDeviceClass.TEMPERATURE
 
     @property
