@@ -12,6 +12,7 @@ from homeassistant.const import CONF_API_KEY, CONF_MODE, CONF_NAME, CONF_UNIT_SY
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.selector import EntitySelector, LocationSelector, selector
 
 from .const import (
     ARRIVAL_TIME,
@@ -57,10 +58,20 @@ def is_dupe_import(
     """Return whether imported config already exists."""
     # Check the main data keys
     if any(
-        entry.data[key] != user_input[key]
-        for key in (CONF_API_KEY, CONF_DESTINATION, CONF_ORIGIN, CONF_MODE, CONF_NAME)
+        user_input[key] != entry.data[key]
+        for key in (CONF_API_KEY, CONF_MODE, CONF_NAME)
     ):
         return False
+
+    # Check origin
+    for key in (
+        CONF_DESTINATION,
+        CONF_ORIGIN,
+        CONF_DESTINATION_ENTITY_ID,
+        CONF_ORIGIN_ENTITY_ID,
+    ):
+        if user_input.get(key) != entry.data.get(key):
+            return False
 
     # We have to check for options that don't have defaults
     for key in (
@@ -76,11 +87,11 @@ def is_dupe_import(
     return True
 
 
-def validate_input(data: dict[str, Any]) -> None:
+def validate_api_key(api_key: str) -> None:
     """Validate the user input allows us to connect."""
     known_working_origin = [38.9, -77.04833]
     known_working_destination = [39.0, -77.1]
-    RoutingApi(data[CONF_API_KEY]).public_transport_timetable(
+    RoutingApi(api_key).public_transport_timetable(
         known_working_origin,
         known_working_destination,
         True,
@@ -103,10 +114,6 @@ def get_user_step_schema(data: dict[str, Any]) -> vol.Schema:
         {
             vol.Optional(CONF_NAME, default=name): cv.string,
             vol.Required(CONF_API_KEY, default=data.get(CONF_API_KEY)): cv.string,
-            vol.Required(
-                CONF_DESTINATION, default=data.get(CONF_DESTINATION)
-            ): cv.string,
-            vol.Required(CONF_ORIGIN, default=data.get(CONF_ORIGIN)): cv.string,
             vol.Optional(CONF_MODE, default=mode): vol.In(TRAVEL_MODES),
         }
     )
@@ -116,6 +123,8 @@ class HERETravelTimeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for HERE Travel Time."""
 
     VERSION = 1
+
+    _config: dict[str, Any] | None
 
     @staticmethod
     @callback
@@ -130,35 +139,119 @@ class HERETravelTimeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the initial step."""
         errors = {}
-        options: dict[str, Any] = {}
         user_input = user_input or {}
         if user_input:
             if self.source == config_entries.SOURCE_IMPORT:
-                user_input, options = self._transform_import_input(user_input)
-                # We need to prevent duplicate imports
-                if any(
-                    is_dupe_import(entry, user_input, options)
-                    for entry in self.hass.config_entries.async_entries(DOMAIN)
-                    if entry.source == config_entries.SOURCE_IMPORT
-                ):
-                    return self.async_abort(reason="already_configured")
+                return await self.async_import(user_input)
             try:
-                await self.hass.async_add_executor_job(validate_input, user_input)
+                await self.hass.async_add_executor_job(
+                    validate_api_key, user_input[CONF_API_KEY]
+                )
+                self._config = user_input
+                return self.async_show_menu(
+                    step_id="user",
+                    menu_options=["origin_coordinates", "origin_entity"],
+                )
             except InvalidCredentialsError:
                 errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
+            except Exception as error:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception: %s", error)
                 errors["base"] = "unknown"
-            else:
-                return self.async_create_entry(
-                    title=user_input["name"], data=user_input, options=options
-                )
-
         return self.async_show_form(
             step_id="user", data_schema=get_user_step_schema(user_input), errors=errors
         )
 
+    async def async_step_origin_coordinates(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Configure origin by using gps coordinates."""
+        if user_input is not None:
+            assert self._config is not None
+            self._config[
+                CONF_ORIGIN
+            ] = f"{user_input[CONF_ORIGIN]['latitude']},{user_input[CONF_ORIGIN]['longitude']}"
+            return self.async_show_menu(
+                step_id="origin_coordinates",
+                menu_options=["destination_coordinates", "destination_entity"],
+            )
+        schema = vol.Schema(
+            {CONF_ORIGIN: selector({LocationSelector.selector_type: {}})}
+        )
+        return self.async_show_form(step_id="origin_coordinates", data_schema=schema)
+
+    async def async_step_origin_entity(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Configure origin by using an entity."""
+        if user_input is not None:
+            assert self._config is not None
+            self._config[CONF_ORIGIN_ENTITY_ID] = user_input[CONF_ORIGIN_ENTITY_ID]
+            return self.async_show_menu(
+                step_id="origin_entity",
+                menu_options=["destination_coordinates", "destination_entity"],
+            )
+        schema = vol.Schema(
+            {CONF_ORIGIN_ENTITY_ID: selector({EntitySelector.selector_type: {}})}
+        )
+        return self.async_show_form(step_id="origin_entity", data_schema=schema)
+
+    async def async_step_destination_coordinates(
+        self,
+        user_input: dict[str, Any] | None = None,
+    ) -> FlowResult:
+        """Configure destination by using gps coordinates."""
+        user_input = user_input or {}
+        if user_input:
+            assert self._config is not None
+            self._config[
+                CONF_DESTINATION
+            ] = f"{user_input[CONF_DESTINATION]['latitude']},{user_input[CONF_DESTINATION]['longitude']}"
+            return self.async_create_entry(
+                title=self._config[CONF_NAME], data=self._config
+            )
+        schema = vol.Schema(
+            {CONF_DESTINATION: selector({LocationSelector.selector_type: {}})}
+        )
+        return self.async_show_form(
+            step_id="destination_coordinates", data_schema=schema
+        )
+
+    async def async_step_destination_entity(
+        self,
+        user_input: dict[str, Any] | None = None,
+    ) -> FlowResult:
+        """Configure destination by using an entity."""
+        if user_input is not None:
+            assert self._config is not None
+            self._config[CONF_DESTINATION_ENTITY_ID] = user_input[
+                CONF_DESTINATION_ENTITY_ID
+            ]
+            return self.async_create_entry(
+                title=self._config[CONF_NAME], data=self._config
+            )
+        schema = vol.Schema(
+            {CONF_DESTINATION_ENTITY_ID: selector({EntitySelector.selector_type: {}})}
+        )
+        return self.async_show_form(step_id="destination_entity", data_schema=schema)
+
     async_step_import = async_step_user
+
+    async def async_import(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Import from configuration.yaml."""
+        options: dict[str, Any] = {}
+        user_input, options = self._transform_import_input(user_input)
+        # We need to prevent duplicate imports
+        if any(
+            is_dupe_import(entry, user_input, options)
+            for entry in self.hass.config_entries.async_entries(DOMAIN)
+            if entry.source == config_entries.SOURCE_IMPORT
+        ):
+            return self.async_abort(reason="already_configured")
+        return self.async_create_entry(
+            title=user_input[CONF_NAME], data=user_input, options=options
+        )
 
     def _transform_import_input(
         self, user_input
@@ -170,14 +263,16 @@ class HERETravelTimeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_ORIGIN
             ] = f"{user_input.pop(CONF_ORIGIN_LATITUDE)},{user_input.pop(CONF_ORIGIN_LONGITUDE)}"
         else:
-            user_input[CONF_ORIGIN] = user_input.pop(CONF_ORIGIN_ENTITY_ID)
+            user_input[CONF_ORIGIN_ENTITY_ID] = user_input.pop(CONF_ORIGIN_ENTITY_ID)
 
         if user_input.get(CONF_DESTINATION_LATITUDE) is not None:
             user_input[
                 CONF_DESTINATION
             ] = f"{user_input.pop(CONF_DESTINATION_LATITUDE)},{user_input.pop(CONF_DESTINATION_LONGITUDE)}"
         else:
-            user_input[CONF_DESTINATION] = user_input.pop(CONF_DESTINATION_ENTITY_ID)
+            user_input[CONF_DESTINATION_ENTITY_ID] = user_input.pop(
+                CONF_DESTINATION_ENTITY_ID
+            )
 
         options[CONF_TRAFFIC_MODE] = (
             TRAFFIC_MODE_ENABLED
@@ -214,10 +309,10 @@ class HERETravelTimeOptionsFlow(config_entries.OptionsFlow):
         errors = {}
 
         def convert_time(user_input: dict[str, Any]) -> None:
-            """Validate and convert time since cv.time cannot be used in schema."""
+            """Validate time since cv.time cannot be used in schema or stored in entity config."""
             if user_input[CONF_TIME] != "":
                 try:
-                    user_input[CONF_TIME] = cv.time(user_input[CONF_TIME])
+                    cv.time(user_input[CONF_TIME])
                 except vol.Invalid:
                     errors["base"] = "invalid_time"
             else:

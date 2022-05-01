@@ -34,7 +34,9 @@ from .const import (
     ATTR_ORIGIN_NAME,
     ATTR_ROUTE,
     CONF_DESTINATION,
+    CONF_DESTINATION_ENTITY_ID,
     CONF_ORIGIN,
+    CONF_ORIGIN_ENTITY_ID,
     CONF_ROUTE_MODE,
     CONF_TIME,
     CONF_TIME_TYPE,
@@ -61,19 +63,21 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     setup_options(hass, config_entry)
 
     arrival = (
-        config_entry.options[CONF_TIME]
+        dt.parse_time(config_entry.options[CONF_TIME])
         if config_entry.options[CONF_TIME_TYPE] == ARRIVAL_TIME
         else None
     )
     departure = (
-        config_entry.options[CONF_TIME]
+        dt.parse_time(config_entry.options[CONF_TIME])
         if config_entry.options[CONF_TIME_TYPE] == DEPARTURE_TIME
         else None
     )
 
     here_travel_time_config = HERETravelTimeConfig(
-        origin=config_entry.data[CONF_ORIGIN],
-        destination=config_entry.data[CONF_DESTINATION],
+        origin=config_entry.data.get(CONF_ORIGIN),
+        destination=config_entry.data.get(CONF_DESTINATION),
+        origin_entity_id=config_entry.data.get(CONF_ORIGIN_ENTITY_ID),
+        destination_entity_id=config_entry.data.get(CONF_DESTINATION_ENTITY_ID),
         travel_mode=config_entry.data[CONF_MODE],
         route_mode=config_entry.options[CONF_ROUTE_MODE],
         units=config_entry.options[CONF_UNIT_SYSTEM],
@@ -216,29 +220,32 @@ class HereTravelTimeDataUpdateCoordinator(DataUpdateCoordinator):
     ) -> tuple[list[str], list[str], str | None, str | None]:
         """Prepare parameters for the HERE api."""
 
-        origin = find_coordinates(self.hass, self.config.origin)
-        if origin is None:
-            raise InvalidCoordinatesException(
-                f"Could not resolve coordinates from {self.config.origin}"
-            )
-        try:
-            here_formatted_origin = origin.split(",")
-            vol.Schema(cv.gps(here_formatted_origin))
-        except (AttributeError, vol.Invalid) as ex:
-            raise InvalidCoordinatesException(
-                f"{origin} are not valid coordinates"
-            ) from ex
-        destination = find_coordinates(self.hass, self.config.destination)
+        if self.config.origin_entity_id is not None:
+            origin = find_coordinates(self.hass, self.config.origin_entity_id)
+        else:
+            origin = self.config.origin
+
+        if self.config.destination_entity_id is not None:
+            destination = find_coordinates(self.hass, self.config.destination_entity_id)
+        else:
+            destination = self.config.destination
         if destination is None:
-            raise InvalidCoordinatesException(
-                f"Could not resolve coordinates from {self.config.destination}"
-            )
+            raise InvalidCoordinatesException("Destination must be configured")
         try:
             here_formatted_destination = destination.split(",")
             vol.Schema(cv.gps(here_formatted_destination))
         except (vol.Invalid) as ex:
             raise InvalidCoordinatesException(
                 f"{destination} are not valid coordinates"
+            ) from ex
+        if origin is None:
+            raise InvalidCoordinatesException("Origin must be configured")
+        try:
+            here_formatted_origin = origin.split(",")
+            vol.Schema(cv.gps(here_formatted_origin))
+        except (AttributeError, vol.Invalid) as ex:
+            raise InvalidCoordinatesException(
+                f"{origin} are not valid coordinates"
             ) from ex
         arrival: str | None = None
         departure: str | None = None

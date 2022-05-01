@@ -32,6 +32,8 @@ from .const import (
     ATTR_UNIT_SYSTEM,
     CONF_ARRIVAL,
     CONF_DEPARTURE,
+    CONF_DESTINATION_ENTITY_ID,
+    CONF_ORIGIN_ENTITY_ID,
     CONF_ROUTE_MODE,
     CONF_TRAFFIC_MODE,
     DEFAULT_NAME,
@@ -59,10 +61,8 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_DESTINATION_LATITUDE = "destination_latitude"
 CONF_DESTINATION_LONGITUDE = "destination_longitude"
-CONF_DESTINATION_ENTITY_ID = "destination_entity_id"
 CONF_ORIGIN_LATITUDE = "origin_latitude"
 CONF_ORIGIN_LONGITUDE = "origin_longitude"
-CONF_ORIGIN_ENTITY_ID = "origin_entity_id"
 
 SCAN_INTERVAL = timedelta(minutes=5)
 

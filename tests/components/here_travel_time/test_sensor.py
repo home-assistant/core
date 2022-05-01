@@ -15,7 +15,9 @@ from homeassistant.components.here_travel_time.const import (
     ATTR_ORIGIN_NAME,
     ATTR_ROUTE,
     CONF_DESTINATION,
+    CONF_DESTINATION_ENTITY_ID,
     CONF_ORIGIN,
+    CONF_ORIGIN_ENTITY_ID,
     CONF_ROUTE_MODE,
     CONF_TIME,
     CONF_TIME_TYPE,
@@ -48,6 +50,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     TIME_MINUTES,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -112,8 +115,9 @@ from tests.common import MockConfigEntry
         ),
     ],
 )
+@pytest.mark.usefixtures("valid_response")
 async def test_sensor(
-    hass,
+    hass: HomeAssistant,
     mode,
     icon,
     traffic_mode,
@@ -121,7 +125,6 @@ async def test_sensor(
     expected_state,
     expected_distance,
     expected_duration_in_traffic,
-    valid_response,
 ):
     """Test that sensor works."""
     entry = MockConfigEntry(
@@ -188,7 +191,7 @@ async def test_sensor(
         )
 
 
-async def test_entity_ids(hass, valid_response: MagicMock):
+async def test_entity_ids(hass: HomeAssistant, valid_response: MagicMock):
     """Test that origin/destination supplied by entities works."""
     utcnow = dt_util.utcnow()
     # Patching 'utcnow' to gain more control over the timed update.
@@ -217,8 +220,8 @@ async def test_entity_ids(hass, valid_response: MagicMock):
             domain=DOMAIN,
             unique_id="0123456789",
             data={
-                CONF_ORIGIN: "zone.origin",
-                CONF_DESTINATION: "device_tracker.test",
+                CONF_ORIGIN_ENTITY_ID: "zone.origin",
+                CONF_DESTINATION_ENTITY_ID: "device_tracker.test",
                 CONF_API_KEY: API_KEY,
                 CONF_MODE: TRAVEL_MODE_TRUCK,
                 CONF_NAME: "test",
@@ -248,7 +251,8 @@ async def test_entity_ids(hass, valid_response: MagicMock):
         )
 
 
-async def test_destination_entity_not_found(hass, caplog, valid_response: MagicMock):
+@pytest.mark.usefixtures("valid_response")
+async def test_destination_entity_not_found(hass: HomeAssistant, caplog):
     """Test that a not existing destination_entity_id is caught."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -271,7 +275,8 @@ async def test_destination_entity_not_found(hass, caplog, valid_response: MagicM
     assert "device_tracker.test are not valid coordinates" in caplog.text
 
 
-async def test_origin_entity_not_found(hass, caplog, valid_response: MagicMock):
+@pytest.mark.usefixtures("valid_response")
+async def test_origin_entity_not_found(hass: HomeAssistant, caplog):
     """Test that a not existing origin_entity_id is caught."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -294,9 +299,8 @@ async def test_origin_entity_not_found(hass, caplog, valid_response: MagicMock):
     assert "device_tracker.test are not valid coordinates" in caplog.text
 
 
-async def test_invalid_destination_entity_state(
-    hass, caplog, valid_response: MagicMock
-):
+@pytest.mark.usefixtures("valid_response")
+async def test_invalid_destination_entity_state(hass: HomeAssistant, caplog):
     """Test that an invalid state of the destination_entity_id is caught."""
     hass.states.async_set(
         "device_tracker.test",
@@ -307,7 +311,7 @@ async def test_invalid_destination_entity_state(
         unique_id="0123456789",
         data={
             CONF_ORIGIN: f"{CAR_ORIGIN_LATITUDE}, {CAR_ORIGIN_LONGITUDE}",
-            CONF_DESTINATION: "device_tracker.test",
+            CONF_DESTINATION_ENTITY_ID: "device_tracker.test",
             CONF_API_KEY: API_KEY,
             CONF_MODE: TRAVEL_MODE_TRUCK,
             CONF_NAME: "test",
@@ -323,7 +327,8 @@ async def test_invalid_destination_entity_state(
     assert "test_state are not valid coordinates" in caplog.text
 
 
-async def test_invalid_origin_entity_state(hass, caplog, valid_response: MagicMock):
+@pytest.mark.usefixtures("valid_response")
+async def test_invalid_origin_entity_state(hass: HomeAssistant, caplog):
     """Test that an invalid state of the origin_entity_id is caught."""
     hass.states.async_set(
         "device_tracker.test",
@@ -333,7 +338,7 @@ async def test_invalid_origin_entity_state(hass, caplog, valid_response: MagicMo
         domain=DOMAIN,
         unique_id="0123456789",
         data={
-            CONF_ORIGIN: "device_tracker.test",
+            CONF_ORIGIN_ENTITY_ID: "device_tracker.test",
             CONF_DESTINATION: f"{CAR_ORIGIN_LATITUDE}, {CAR_ORIGIN_LONGITUDE}",
             CONF_API_KEY: API_KEY,
             CONF_MODE: TRAVEL_MODE_TRUCK,
@@ -350,10 +355,10 @@ async def test_invalid_origin_entity_state(hass, caplog, valid_response: MagicMo
     assert "test_state are not valid coordinates" in caplog.text
 
 
-async def test_route_not_found(hass, caplog):
+async def test_route_not_found(hass: HomeAssistant, caplog):
     """Test that route not found error is correctly handled."""
     with patch(
-        "homeassistant.components.here_travel_time.config_flow.validate_input",
+        "homeassistant.components.here_travel_time.config_flow.validate_api_key",
         return_value=None,
     ), patch(
         "herepy.RoutingApi.public_transport_timetable",
@@ -379,7 +384,8 @@ async def test_route_not_found(hass, caplog):
         assert NO_ROUTE_ERROR_MESSAGE in caplog.text
 
 
-async def test_setup_platform(hass, caplog):
+@pytest.mark.usefixtures("valid_response")
+async def test_setup_platform(hass: HomeAssistant, caplog):
     """Test that setup platform migration works."""
     config = {
         "sensor": {

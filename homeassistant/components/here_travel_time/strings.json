@@ -2,13 +2,46 @@
   "config": {
     "step": {
       "user": {
-        "description": "When specifying the origin and destination, you can supply the location in the form of an address, latitude/longitude coordinates, or an entity id.",
         "data": {
-          "destination": "Destination as GPS coordinates or an entity id",
-          "origin": "Origin as GPS coordinates or an entity id",
           "name": "[%key:common::config_flow::data::name%]",
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "mode": "Travel Mode"
+        },
+        "menu_options": {
+          "origin_coordinates": "Configure origin by using GPS coordinates",
+          "origin_entity": "Configure origin by using an entity"
+        }
+      },
+      "origin_coordinates": {
+        "description": "Origin as GPS coordinates",
+        "data": {
+          "origin": "Origin as GPS coordinates"
+        },
+        "menu_options": {
+          "destination_coordinates": "Configure destination by using GPS coordinates",
+          "destination_entity": "Configure destination by using an entity"
+        }
+      },
+      "origin_entity_id": {
+        "description": "Origin using an entity",
+        "data": {
+          "origin_entity_id": "Origin using an entity"
+        },
+        "menu_options": {
+          "destination_coordinates": "Configure destination by using GPS coordinates",
+          "destination_entity": "Configure destination by using an entity"
+        }
+      },
+      "destination_coordinates": {
+        "description": "Destination as GPS coordinates",
+        "data": {
+          "destination": "Destination as GPS coordinates"
+        }
+      },
+      "destination_entity_id": {
+        "description": "Destination using an entity",
+        "data": {
+          "destination_entity_id": "Destination using an entity"
         }
       }
     },

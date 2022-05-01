@@ -1,5 +1,7 @@
 """The test for the HERE Travel Time integration."""
 
+import pytest
+
 from homeassistant.components.here_travel_time.const import (
     CONF_DESTINATION,
     CONF_ORIGIN,
@@ -20,7 +22,8 @@ from .const import (
 from tests.common import MockConfigEntry
 
 
-async def test_unload_entry(hass: HomeAssistant, valid_response):
+@pytest.mark.usefixtures("valid_response")
+async def test_unload_entry(hass: HomeAssistant) -> None:
     """Test that unloading an entry works."""
     entry = MockConfigEntry(
         domain=DOMAIN,
