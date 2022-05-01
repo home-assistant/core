@@ -1,64 +1,45 @@
 """Test the Kostal Plenticore Solar Inverter select platform."""
-from unittest.mock import Mock
+from kostal.plenticore import SettingsData
 
-from kostal.plenticore import PlenticoreApiClient, SettingsData
-
-from homeassistant.components.kostal_plenticore.const import DOMAIN
 from homeassistant.components.kostal_plenticore.helper import Plenticore
-from homeassistant.components.kostal_plenticore.select import async_setup_entry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers import entity_registry
 
 from tests.common import MockConfigEntry
 
 
-async def test_select(hass: HomeAssistant, mock_config_entry: MockConfigEntry):
-    """Test that select entities are added."""
+async def test_select_battery_charging_usage_available(
+    hass: HomeAssistant, mock_plenticore: Plenticore, mock_config_entry: MockConfigEntry
+):
+    """Test that the battery charging usage select entity is added if the settings are available."""
 
-    plenticore: Plenticore = Mock(spec=Plenticore)
-    hass.data[DOMAIN] = {mock_config_entry.entry_id: plenticore}
-    plenticore.device_info = DeviceInfo()
-
-    plenticore_client: PlenticoreApiClient = Mock(spec=PlenticoreApiClient)
-    plenticore.client = plenticore_client
-
-    # return all data ids which are needed by select platform
-    plenticore_client.get_settings.return_value = {
+    mock_plenticore.client.get_settings.return_value = {
         "devices:local": [
             SettingsData({"id": "Battery:SmartBatteryControl:Enable"}),
             SettingsData({"id": "Battery:TimeControl:Enable"}),
         ]
     }
 
-    async_add_entities = Mock()
+    mock_config_entry.add_to_hass(hass)
 
-    await async_setup_entry(hass, mock_config_entry, async_add_entities)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    async_add_entities.assert_called_once()
-    assert len(async_add_entities.call_args.args[0]) == 1
+    assert entity_registry.async_get(hass).async_is_registered(
+        "select.battery_charging_usage_mode"
+    )
 
 
-async def test_select_not_available(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+async def test_select_battery_charging_usage_not_available(
+    hass: HomeAssistant, mock_plenticore: Plenticore, mock_config_entry: MockConfigEntry
 ):
-    """Test that select entities are not added if data ids are not available."""
+    """Test that the battery charging usage select entity is not added if the settings are unavailable."""
 
-    plenticore: Plenticore = Mock(spec=Plenticore)
-    hass.data[DOMAIN] = {mock_config_entry.entry_id: plenticore}
-    plenticore.device_info = DeviceInfo()
+    mock_config_entry.add_to_hass(hass)
 
-    plenticore_client: PlenticoreApiClient = Mock(spec=PlenticoreApiClient)
-    plenticore.client = plenticore_client
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    plenticore_client.get_settings.return_value = {
-        "devices:local": [
-            SettingsData({"id": "Battery:SmartBatteryControl:Enable"}),
-        ]
-    }
-
-    async_add_entities = Mock()
-
-    await async_setup_entry(hass, mock_config_entry, async_add_entities)
-
-    async_add_entities.assert_called_once()
-    assert len(async_add_entities.call_args.args[0]) == 0
+    assert not entity_registry.async_get(hass).async_is_registered(
+        "select.battery_charging_usage_mode"
+    )
