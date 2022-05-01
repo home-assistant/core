@@ -649,13 +649,14 @@ def _apply_update(instance, new_version, old_version):  # noqa: C901
         _create_index(instance, "events", "ix_events_data_id")
     elif new_version == 28:
         _add_columns(instance, "events", ["origin_idx INTEGER"])
+        # We never use the user_id or parent_id index
+        _drop_index(instance, "events", "ix_events_context_user_id")
+        _drop_index(instance, "events", "ix_events_context_parent_id")
         _add_columns(instance, "states", ["origin_idx INTEGER"])
         _add_columns(instance, "states", ["context_id VARCHAR(36)"])
         _add_columns(instance, "states", ["context_user_id VARCHAR(36)"])
         _add_columns(instance, "states", ["context_parent_id VARCHAR(36)"])
         _create_index(instance, "states", "ix_states_context_id")
-        _create_index(instance, "states", "ix_states_context_user_id")
-        _create_index(instance, "states", "ix_states_context_parent_id")
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
 
