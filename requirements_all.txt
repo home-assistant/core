@@ -1783,7 +1783,7 @@ pysaj==0.0.16
 pysdcp==1
 
 # homeassistant.components.sensibo
-pysensibo==1.0.13
+pysensibo==1.0.14
 
 # homeassistant.components.serial
 # homeassistant.components.zha
@@ -2445,7 +2445,7 @@ xbox-webapi==2.0.11
 xboxapi==2.0.1
 
 # homeassistant.components.knx
-xknx==0.21.0
+xknx==0.21.1
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz

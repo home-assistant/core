@@ -6,7 +6,8 @@
   "requirements": ["pydeconz==91"],
   "ssdp": [
     {
-      "manufacturer": "Royal Philips Electronics"
+      "manufacturer": "Royal Philips Electronics",
+      "manufacturerURL": "http://www.dresden-elektronik.de"
     }
   ],
   "codeowners": ["@Kane610"],

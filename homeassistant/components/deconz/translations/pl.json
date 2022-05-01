@@ -9,6 +9,7 @@
             "updated_instance": "Zaktualizowano instancj\u0119 deCONZ o nowy adres hosta"
         },
         "error": {
+            "linking_not_possible": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z bramk\u0105",
             "no_key": "Nie mo\u017cna uzyska\u0107 klucza API"
         },
         "flow_title": "{host}",
