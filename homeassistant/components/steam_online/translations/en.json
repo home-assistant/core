@@ -12,7 +12,7 @@
         },
         "step": {
             "reauth_confirm": {
-                "description": "The Steam integration needs to be manually re-authenticated\n\nYou can find your key here: https://steamcommunity.com/dev/apikey",
+                "description": "The Steam integration needs to be manually re-authenticated\n\nYou can find your key here: {api_key_url}",
                 "title": "Reauthenticate Integration"
             },
             "user": {
@@ -20,7 +20,7 @@
                     "account": "Steam account ID",
                     "api_key": "API Key"
                 },
-                "description": "Use https://steamid.io to find your Steam account ID"
+                "description": "Use {account_id_url} to find your Steam account ID"
             }
         }
     },

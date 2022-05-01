@@ -1,0 +1,8 @@
+{
+    "system_health": {
+        "info": {
+            "current_recorder_run": "Hora d'inici de l'execuci\u00f3 actual",
+            "oldest_recorder_run": "Hora d'inici de l'execuci\u00f3 m\u00e9s antiga"
+        }
+    }
+}
