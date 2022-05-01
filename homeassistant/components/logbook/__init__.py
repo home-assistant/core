@@ -103,13 +103,28 @@ ALL_EVENT_TYPES = [
     *ALL_EVENT_TYPES_EXCEPT_STATE_CHANGED,
 ]
 
+
 EVENT_COLUMNS = [
-    Events.event_type,
-    Events.event_data,
-    Events.time_fired,
-    Events.context_id,
-    Events.context_user_id,
-    Events.context_parent_id,
+    Events.event_type.label("event_type"),
+    Events.event_data.label("event_data"),
+    Events.time_fired.label("time_fired"),
+    Events.context_id.label("context_id"),
+    Events.context_user_id.label("context_user_id"),
+    Events.context_parent_id.label("context_parent_id"),
+]
+
+STATE_COLUMNS = [
+    States.state.label("state"),
+    States.entity_id.label("entity_id"),
+    States.attributes.label("attributes"),
+    StateAttributes.shared_attrs.label("shared_attrs"),
+]
+
+EMPTY_STATE_COLUMNS = [
+    literal(value=None, type_=sqlalchemy.String).label("state"),
+    literal(value=None, type_=sqlalchemy.String).label("entity_id"),
+    literal(value=None, type_=sqlalchemy.Text).label("attributes"),
+    literal(value=None, type_=sqlalchemy.Text).label("shared_attrs"),
 ]
 
 SCRIPT_AUTOMATION_EVENTS = [EVENT_AUTOMATION_TRIGGERED, EVENT_SCRIPT_STARTED]
@@ -467,7 +482,6 @@ def _get_events(
                 # contain the entity_ids are not included in the logbook response.
                 query = _apply_event_entity_id_matchers(query, entity_ids)
             query = query.outerjoin(EventData, (Events.data_id == EventData.data_id))
-
             query = query.union_all(
                 _generate_states_query(
                     session, start_day, end_day, old_state, entity_ids
@@ -492,6 +506,17 @@ def _get_events(
 
             query = query.outerjoin(EventData, (Events.data_id == EventData.data_id))
 
+            states_query = _generate_states_query(
+                session, start_day, end_day, old_state, entity_ids
+            ).filter(States.context_id is not None)
+
+            if context_id is not None:
+                states_query = states_query.filter(States.context_id == context_id)
+            if filters:
+                states_query = states_query.filter(filters.entity_filter())
+
+            query: Query = query.union_all(states_query)
+
         query = query.order_by(Events.time_fired)
 
         return list(
@@ -500,35 +525,32 @@ def _get_events(
 
 
 def _generate_events_query(session: Session) -> Query:
+    """Generate an events query that also joins states.
+
+    Once we no longer have event_ids in the states table
+    we can switch STATE_COLUMNS to EMPTY_STATE_COLUMNS
+    """
     return session.query(
-        *EVENT_COLUMNS,
-        EventData.shared_data,
-        States.state,
-        States.entity_id,
-        States.attributes,
-        StateAttributes.shared_attrs,
+        *EVENT_COLUMNS, EventData.shared_data.label("shared_data"), *STATE_COLUMNS
     )
 
 
 def _generate_events_query_without_data(session: Session) -> Query:
     return session.query(
-        *EVENT_COLUMNS,
+        literal(value=EVENT_STATE_CHANGED, type_=sqlalchemy.String).label("event_type"),
+        literal(value=None, type_=sqlalchemy.Text).label("event_data"),
+        States.last_changed.label("time_fired"),
+        States.context_id.label("context_id"),
+        States.context_user_id.label("context_user_id"),
+        States.context_parent_id.label("context_parent_id"),
         literal(value=None, type_=sqlalchemy.Text).label("shared_data"),
-        States.state,
-        States.entity_id,
-        States.attributes,
-        StateAttributes.shared_attrs,
+        *STATE_COLUMNS,
     )
 
 
 def _generate_events_query_without_states(session: Session) -> Query:
     return session.query(
-        *EVENT_COLUMNS,
-        EventData.shared_data,
-        literal(value=None, type_=sqlalchemy.String).label("state"),
-        literal(value=None, type_=sqlalchemy.String).label("entity_id"),
-        literal(value=None, type_=sqlalchemy.Text).label("attributes"),
-        literal(value=None, type_=sqlalchemy.Text).label("shared_attrs"),
+        *EVENT_COLUMNS, EventData.shared_data.label("shared_data"), *EMPTY_STATE_COLUMNS
     )
 
 
@@ -537,22 +559,20 @@ def _generate_states_query(
     start_day: dt,
     end_day: dt,
     old_state: States,
-    entity_ids: Iterable[str],
+    entity_ids: Iterable[str] | None,
 ) -> Query:
-    return (
+    query = (
         _generate_events_query_without_data(session)
-        .outerjoin(Events, (States.event_id == Events.event_id))
         .outerjoin(old_state, (States.old_state_id == old_state.state_id))
         .filter(_missing_state_matcher(old_state))
         .filter(_not_continuous_entity_matcher())
         .filter((States.last_updated > start_day) & (States.last_updated < end_day))
-        .filter(
-            (States.last_updated == States.last_changed)
-            & States.entity_id.in_(entity_ids)
-        )
-        .outerjoin(
-            StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
-        )
+        .filter(States.last_updated == States.last_changed)
+    )
+    if entity_ids:
+        query = query.filter(States.entity_id.in_(entity_ids))
+    return query.outerjoin(
+        StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
     )
 
 
