@@ -358,15 +358,11 @@ def async_get_node_status_sensor_entity_id(
 
     client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
     node = async_get_node_from_device_id(hass, device_id, dev_reg)
-    entity_id = ent_reg.async_get_entity_id(
+    return ent_reg.async_get_entity_id(
         SENSOR_DOMAIN,
         DOMAIN,
         f"{client.driver.controller.home_id}.{node.node_id}.node_status",
     )
-    if not entity_id:
-        return None
-
-    return entity_id
 
 
 def remove_keys_with_empty_values(config: ConfigType) -> ConfigType:
