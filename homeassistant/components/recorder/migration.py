@@ -662,6 +662,8 @@ def _apply_update(instance, new_version, old_version):  # noqa: C901
         _add_columns(instance, "states", ["context_user_id VARCHAR(36)"])
         _add_columns(instance, "states", ["context_parent_id VARCHAR(36)"])
         _create_index(instance, "states", "ix_states_context_id")
+        # Once there are no longer any state_changed events
+        # in the events table we can drop the index on states.event_id
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
 
