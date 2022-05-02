@@ -81,7 +81,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self.hass.config_entries.async_update_entry(
                     self.entry,
                     data={
-                        CONF_USERNAME: self.entry.data[CONF_USERNAME],
+                        **self.entry.data,
                         CONF_PASSWORD: password,
                     },
                 )
