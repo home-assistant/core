@@ -1331,7 +1331,7 @@ def warn_no_default(function, value, default):
         (
             "Template warning: '%s' got invalid input '%s' when %s template '%s' "
             "but no default was specified. Currently '%s' will return '%s', however this template will fail "
-            "to render in Home Assistant core 2022.1"
+            "to render in Home Assistant core 2022.6"
         ),
         function,
         value,
