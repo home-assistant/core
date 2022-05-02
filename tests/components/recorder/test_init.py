@@ -27,7 +27,6 @@ from homeassistant.components.recorder import (
     SERVICE_PURGE,
     SERVICE_PURGE_ENTITIES,
     SQLITE_URL_PREFIX,
-    STATE_ATTRIBUTES_ID_CACHE_SIZE,
     Recorder,
     get_instance,
 )
@@ -1483,6 +1482,9 @@ def test_deduplication_event_data_inside_commit_interval(hass_recorder, caplog):
         assert all(event.data_id == first_data_id for event in events)
 
 
+# Patch STATE_ATTRIBUTES_ID_CACHE_SIZE since otherwise
+# the CI can fail because the test takes too long to run
+@patch("homeassistant.components.recorder.STATE_ATTRIBUTES_ID_CACHE_SIZE", 5)
 def test_deduplication_state_attributes_inside_commit_interval(hass_recorder, caplog):
     """Test deduplication of state attributes inside the commit interval."""
     hass = hass_recorder()
@@ -1494,7 +1496,7 @@ def test_deduplication_state_attributes_inside_commit_interval(hass_recorder, ca
     hass.states.set(entity_id, "off", attributes)
 
     # Now exaust the cache to ensure we go back to the db
-    for attr_id in range(STATE_ATTRIBUTES_ID_CACHE_SIZE):
+    for attr_id in range(5):
         hass.states.set(entity_id, "on", {"test_attr": attr_id})
         hass.states.set(entity_id, "off", {"test_attr": attr_id})
 
@@ -1512,7 +1514,7 @@ def test_deduplication_state_attributes_inside_commit_interval(hass_recorder, ca
                 StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
             )
         )
-        assert len(states) == 4108
+        assert len(states) == 22
         first_attributes_id = states[0].attributes_id
         last_attributes_id = states[-1].attributes_id
         assert first_attributes_id == last_attributes_id
