@@ -49,7 +49,7 @@ async def async_get_device_config(hass, config_entry):
         with suppress(AttributeError):
             await devices[address].async_status()
 
-    load_aldb = devices.modem.read_write_mode == ReadWriteMode.UNKNOWN
+    load_aldb = devices.modem.aldb.read_write_mode == ReadWriteMode.UNKNOWN
     await devices.async_load(id_devices=1, load_modem_aldb=load_aldb)
     for addr in devices:
         device = devices[addr]
