@@ -329,13 +329,22 @@ def get_zwave_value_from_config(node: ZwaveNode, config: ConfigType) -> ZwaveVal
     return node.values[value_id]
 
 
+def _zwave_js_config_entry(hass: HomeAssistant, device: dr.DeviceEntry) -> str | None:
+    """Find zwave_js config entry from a device."""
+    for entry_id in device.config_entries:
+        entry = hass.config_entries.async_get_entry(entry_id)
+        if entry and entry.domain == DOMAIN:
+            return entry_id
+    return None
+
+
 @callback
 def async_get_node_status_sensor_entity_id(
     hass: HomeAssistant,
     device_id: str,
     ent_reg: er.EntityRegistry | None = None,
     dev_reg: dr.DeviceRegistry | None = None,
-) -> str:
+) -> str | None:
     """Get the node status sensor entity ID for a given Z-Wave JS device."""
     if not ent_reg:
         ent_reg = er.async_get(hass)
@@ -344,7 +353,9 @@ def async_get_node_status_sensor_entity_id(
     if not (device := dev_reg.async_get(device_id)):
         raise HomeAssistantError("Invalid Device ID provided")
 
-    entry_id = next(entry_id for entry_id in device.config_entries)
+    if not (entry_id := _zwave_js_config_entry(hass, device)):
+        return None
+
     client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
     node = async_get_node_from_device_id(hass, device_id, dev_reg)
     entity_id = ent_reg.async_get_entity_id(
@@ -353,9 +364,7 @@ def async_get_node_status_sensor_entity_id(
         f"{client.driver.controller.home_id}.{node.node_id}.node_status",
     )
     if not entity_id:
-        raise HomeAssistantError(
-            "Node status sensor entity not found. Device may not be a zwave_js device"
-        )
+        return None
 
     return entity_id
 
