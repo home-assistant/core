@@ -1,17 +1,34 @@
 """Config flow to configure the LG Soundbar integration."""
+from queue import Queue
+
 import temescal
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_UNIQUE_ID
 
-from .const import DEFAULT_HOST, DEFAULT_PORT, DOMAIN
+from .const import DEFAULT_PORT, DOMAIN
 
 DATA_SCHEMA = {
-    vol.Required(CONF_HOST, default=DEFAULT_HOST): str,
+    vol.Required(CONF_HOST): str,
     vol.Required(CONF_PORT, default=DEFAULT_PORT): vol.Coerce(int),
     vol.Optional(CONF_NAME): str,
 }
+
+
+def test_connect(host, port):
+    """LG Soundbar config flow test_connect."""
+    uuid_q = Queue(maxsize=1)
+
+    def msg_callback(response):
+        if response["msg"] == "MAC_INFO_DEV" and "s_uuid" in response["data"]:
+            uuid_q.put_nowait(response["data"]["s_uuid"])
+
+    try:
+        temescal.temescal(host, port=port, callback=msg_callback).get_mac_info()
+        return uuid_q.get(timeout=10)
+    except Exception as err:
+        raise ConnectionError("Connection failed.") from err
 
 
 class LGSoundbarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -19,14 +36,16 @@ class LGSoundbarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_details(self, user_input=None):
         """Handle a flow initiated by the user."""
         errors = {}
         if user_input is None:
             return await self._show_form(user_input)
         if not errors:
             try:
-                uuid = self.test_connect(user_input[CONF_HOST], user_input[CONF_PORT])
+                uuid = await self.hass.async_add_executor_job(
+                    user_input[CONF_HOST], user_input[CONF_PORT]
+                )
             except ConnectionError:
                 errors["base"] = "cannot_connect"
             else:
@@ -53,24 +72,3 @@ class LGSoundbarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(DATA_SCHEMA),
             errors=errors if errors else {},
         )
-
-    _uuid = None
-
-    def get_uuid(self, response):
-        """LG Soundbar get uuid."""
-        data = response["data"]
-        # we use the s_uuid not the MAC as s_bt_mac can responed with '00:00:00:00:00:00'
-        if response["msg"] == "MAC_INFO_DEV":
-            if "s_uuid" in data:
-                self._uuid = data["s_uuid"]
-
-    def test_connect(self, host, port):
-        """LG Soundbar config flow test_connect."""
-        try:
-            temescal.temescal(host, port=port, callback=self.get_uuid).get_mac_info()
-            while True:
-                if self._uuid:
-                    break
-            return self._uuid
-        except Exception as err:
-            raise ConnectionError("Connection failed.") from err

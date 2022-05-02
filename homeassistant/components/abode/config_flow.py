@@ -119,7 +119,7 @@ class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             title=cast(str, self._username), data=config_data
         )
 
-    async def async_step_user(
+    async def async_step_details(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a flow initialized by the user."""

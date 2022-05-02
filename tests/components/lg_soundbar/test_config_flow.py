@@ -1,7 +1,6 @@
 """Test the lg_soundbar config flow."""
 from unittest.mock import patch
 
-from homeassistant import config_entries
 from homeassistant.components.lg_soundbar.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_UNIQUE_ID
 
@@ -12,7 +11,7 @@ async def test_form(hass):
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": "details"}
     )
     assert result["type"] == "form"
     assert result["errors"] == {}
@@ -47,7 +46,7 @@ async def test_form(hass):
 async def test_form_cannot_connect(hass):
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": "details"}
     )
 
     with patch(
@@ -81,7 +80,7 @@ async def test_form_already_configured(hass):
     mock_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": "details"}
     )
 
     with patch(
