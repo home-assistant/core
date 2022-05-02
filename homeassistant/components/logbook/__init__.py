@@ -549,7 +549,7 @@ def _get_events(
                 )
                 states_query = states_query.filter(
                     (States.context_id == context_id)
-                    | (Events.context_id == context_id)
+                    | (States.context_id.is_(None) & (Events.context_id == context_id))
                 )
             if filters:
                 states_query = states_query.filter(filters.entity_filter())  # type: ignore[no-untyped-call]
