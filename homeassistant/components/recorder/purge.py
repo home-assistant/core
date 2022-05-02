@@ -83,7 +83,7 @@ def purge_old_data(
         if short_term_statistics:
             _purge_short_term_statistics(session, short_term_statistics)
 
-        if event_ids or statistics_runs or short_term_statistics:
+        if state_ids or event_ids or statistics_runs or short_term_statistics:
             # Return false, as we might not be done yet.
             _LOGGER.debug("Purging hasn't fully completed yet")
             return False
@@ -103,27 +103,31 @@ def _select_event_state_attributes_ids_data_ids_to_purge(
 ) -> tuple[set[int], set[int], set[int], set[int]]:
     """Return a list of event, state, and attribute ids to purge."""
     events = (
-        session.query(
-            Events.event_id, Events.data_id, States.state_id, States.attributes_id
-        )
-        .outerjoin(States, Events.event_id == States.event_id)
+        session.query(Events.event_id, Events.data_id)
         .filter(Events.time_fired < purge_before)
         .limit(MAX_ROWS_TO_PURGE)
         .all()
     )
     _LOGGER.debug("Selected %s event ids to remove", len(events))
+    states = (
+        session.query(States.state_id, States.attributes_id)
+        .filter(States.last_updated < purge_before)
+        .limit(MAX_ROWS_TO_PURGE)
+        .all()
+    )
+    _LOGGER.debug("Selected %s state ids to remove", len(states))
     event_ids = set()
     state_ids = set()
     attributes_ids = set()
     data_ids = set()
     for event in events:
         event_ids.add(event.event_id)
-        if event.state_id:
-            state_ids.add(event.state_id)
-        if event.attributes_id:
-            attributes_ids.add(event.attributes_id)
         if event.data_id:
             data_ids.add(event.data_id)
+    for state in states:
+        state_ids.add(state.state_id)
+        if state.attributes_id:
+            attributes_ids.add(state.attributes_id)
     return event_ids, state_ids, attributes_ids, data_ids
 
 
