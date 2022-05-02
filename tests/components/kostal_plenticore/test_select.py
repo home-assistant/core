@@ -32,7 +32,7 @@ async def test_select_battery_charging_usage_available(
 
 async def test_select_battery_charging_usage_not_available(
     hass: HomeAssistant, mock_plenticore: Plenticore, mock_config_entry: MockConfigEntry
-):
+) -> None:
     """Test that the battery charging usage select entity is not added if the settings are unavailable."""
 
     mock_config_entry.add_to_hass(hass)
