@@ -20,7 +20,6 @@ from homeassistant.components.recorder import (
     CONF_DB_URL,
     CONFIG_SCHEMA,
     DOMAIN,
-    KEEPALIVE_TIME,
     SERVICE_DISABLE,
     SERVICE_ENABLE,
     SERVICE_PURGE,
@@ -29,7 +28,7 @@ from homeassistant.components.recorder import (
     Recorder,
     get_instance,
 )
-from homeassistant.components.recorder.const import DATA_INSTANCE
+from homeassistant.components.recorder.const import DATA_INSTANCE, KEEPALIVE_TIME
 from homeassistant.components.recorder.models import (
     EventData,
     Events,
@@ -196,7 +195,7 @@ async def test_saving_many_states(
 
     with patch.object(
         hass.data[DATA_INSTANCE].event_session, "expire_all"
-    ) as expire_all, patch.object(recorder, "EXPIRE_AFTER_COMMITS", 2):
+    ) as expire_all, patch.object(recorder.recorder, "EXPIRE_AFTER_COMMITS", 2):
         for _ in range(3):
             hass.states.async_set(entity_id, "on", attributes)
             await async_wait_recording_done(hass)
@@ -611,7 +610,7 @@ def test_saving_state_and_removing_entity(hass, hass_recorder):
 def test_recorder_setup_failure(hass):
     """Test some exceptions."""
     with patch.object(Recorder, "_setup_connection") as setup, patch(
-        "homeassistant.components.recorder.time.sleep"
+        "homeassistant.components.recorder.recorder.time.sleep"
     ):
         setup.side_effect = ImportError("driver not found")
         rec = _default_recorder(hass)
@@ -625,7 +624,7 @@ def test_recorder_setup_failure(hass):
 def test_recorder_setup_failure_without_event_listener(hass):
     """Test recorder setup failure when the event listener is not setup."""
     with patch.object(Recorder, "_setup_connection") as setup, patch(
-        "homeassistant.components.recorder.time.sleep"
+        "homeassistant.components.recorder.recorder.time.sleep"
     ):
         setup.side_effect = ImportError("driver not found")
         rec = _default_recorder(hass)
@@ -685,7 +684,7 @@ def test_auto_purge(hass_recorder):
     with patch(
         "homeassistant.components.recorder.purge.purge_old_data", return_value=True
     ) as purge_old_data, patch(
-        "homeassistant.components.recorder.periodic_db_cleanups"
+        "homeassistant.components.recorder.tasks.periodic_db_cleanups"
     ) as periodic_db_cleanups:
         # Advance one day, and the purge task should run
         test_time = test_time + timedelta(days=1)
@@ -741,11 +740,11 @@ def test_auto_purge_auto_repack_on_second_sunday(hass_recorder):
     run_tasks_at_time(hass, test_time)
 
     with patch(
-        "homeassistant.components.recorder.is_second_sunday", return_value=True
+        "homeassistant.components.recorder.recorder.is_second_sunday", return_value=True
     ), patch(
         "homeassistant.components.recorder.purge.purge_old_data", return_value=True
     ) as purge_old_data, patch(
-        "homeassistant.components.recorder.periodic_db_cleanups"
+        "homeassistant.components.recorder.tasks.periodic_db_cleanups"
     ) as periodic_db_cleanups:
         # Advance one day, and the purge task should run
         test_time = test_time + timedelta(days=1)
@@ -779,11 +778,11 @@ def test_auto_purge_auto_repack_disabled_on_second_sunday(hass_recorder):
     run_tasks_at_time(hass, test_time)
 
     with patch(
-        "homeassistant.components.recorder.is_second_sunday", return_value=True
+        "homeassistant.components.recorder.recorder.is_second_sunday", return_value=True
     ), patch(
         "homeassistant.components.recorder.purge.purge_old_data", return_value=True
     ) as purge_old_data, patch(
-        "homeassistant.components.recorder.periodic_db_cleanups"
+        "homeassistant.components.recorder.tasks.periodic_db_cleanups"
     ) as periodic_db_cleanups:
         # Advance one day, and the purge task should run
         test_time = test_time + timedelta(days=1)
@@ -817,11 +816,12 @@ def test_auto_purge_no_auto_repack_on_not_second_sunday(hass_recorder):
     run_tasks_at_time(hass, test_time)
 
     with patch(
-        "homeassistant.components.recorder.is_second_sunday", return_value=False
+        "homeassistant.components.recorder.recorder.is_second_sunday",
+        return_value=False,
     ), patch(
         "homeassistant.components.recorder.purge.purge_old_data", return_value=True
     ) as purge_old_data, patch(
-        "homeassistant.components.recorder.periodic_db_cleanups"
+        "homeassistant.components.recorder.tasks.periodic_db_cleanups"
     ) as periodic_db_cleanups:
         # Advance one day, and the purge task should run
         test_time = test_time + timedelta(days=1)
@@ -856,7 +856,7 @@ def test_auto_purge_disabled(hass_recorder):
     with patch(
         "homeassistant.components.recorder.purge.purge_old_data", return_value=True
     ) as purge_old_data, patch(
-        "homeassistant.components.recorder.periodic_db_cleanups"
+        "homeassistant.components.recorder.tasks.periodic_db_cleanups"
     ) as periodic_db_cleanups:
         # Advance one day, and the purge task should run
         test_time = test_time + timedelta(days=1)
@@ -924,7 +924,9 @@ def test_auto_statistics(hass_recorder):
 def test_statistics_runs_initiated(hass_recorder):
     """Test statistics_runs is initiated when DB is created."""
     now = dt_util.utcnow()
-    with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=now):
+    with patch(
+        "homeassistant.components.recorder.recorder.dt_util.utcnow", return_value=now
+    ):
         hass = hass_recorder()
 
         wait_recording_done(hass)
@@ -944,7 +946,9 @@ def test_compile_missing_statistics(tmpdir):
     test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
     dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
 
-    with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=now):
+    with patch(
+        "homeassistant.components.recorder.recorder.dt_util.utcnow", return_value=now
+    ):
 
         hass = get_test_home_assistant()
         setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: dburl}})
@@ -963,7 +967,7 @@ def test_compile_missing_statistics(tmpdir):
         hass.stop()
 
     with patch(
-        "homeassistant.components.recorder.dt_util.utcnow",
+        "homeassistant.components.recorder.recorder.dt_util.utcnow",
         return_value=now + timedelta(hours=1),
     ):
 
@@ -1356,8 +1360,8 @@ async def test_database_lock_and_overflow(
 
     instance: Recorder = hass.data[DATA_INSTANCE]
 
-    with patch.object(recorder, "MAX_QUEUE_BACKLOG", 1), patch.object(
-        recorder, "DB_LOCK_QUEUE_CHECK_TIMEOUT", 0.1
+    with patch.object(recorder.recorder, "MAX_QUEUE_BACKLOG", 1), patch.object(
+        recorder.recorder, "DB_LOCK_QUEUE_CHECK_TIMEOUT", 0.1
     ):
         await instance.lock_database()
 
@@ -1382,7 +1386,7 @@ async def test_database_lock_timeout(hass, recorder_mock):
 
     instance: Recorder = hass.data[DATA_INSTANCE]
 
-    class BlockQueue(recorder.RecorderTask):
+    class BlockQueue(recorder.tasks.RecorderTask):
         event: threading.Event = threading.Event()
 
         def run(self, instance: Recorder) -> None:
@@ -1390,7 +1394,7 @@ async def test_database_lock_timeout(hass, recorder_mock):
 
     block_task = BlockQueue()
     instance.queue.put(block_task)
-    with patch.object(recorder, "DB_LOCK_TIMEOUT", 0.1):
+    with patch.object(recorder.recorder, "DB_LOCK_TIMEOUT", 0.1):
         try:
             with pytest.raises(TimeoutError):
                 await instance.lock_database()
@@ -1435,7 +1439,7 @@ async def test_database_connection_keep_alive(
         await instance.async_recorder_ready.wait()
 
     async_fire_time_changed(
-        hass, dt_util.utcnow() + timedelta(seconds=recorder.KEEPALIVE_TIME)
+        hass, dt_util.utcnow() + timedelta(seconds=recorder.recorder.KEEPALIVE_TIME)
     )
     await async_wait_recording_done(hass)
     assert "Sending keepalive" in caplog.text
@@ -1452,7 +1456,7 @@ async def test_database_connection_keep_alive_disabled_on_sqlite(
     await instance.async_recorder_ready.wait()
 
     async_fire_time_changed(
-        hass, dt_util.utcnow() + timedelta(seconds=recorder.KEEPALIVE_TIME)
+        hass, dt_util.utcnow() + timedelta(seconds=recorder.recorder.KEEPALIVE_TIME)
     )
     await async_wait_recording_done(hass)
     assert "Sending keepalive" not in caplog.text
@@ -1482,7 +1486,7 @@ def test_deduplication_event_data_inside_commit_interval(hass_recorder, caplog):
 
 # Patch STATE_ATTRIBUTES_ID_CACHE_SIZE since otherwise
 # the CI can fail because the test takes too long to run
-@patch("homeassistant.components.recorder.STATE_ATTRIBUTES_ID_CACHE_SIZE", 5)
+@patch("homeassistant.components.recorder.recorder.STATE_ATTRIBUTES_ID_CACHE_SIZE", 5)
 def test_deduplication_state_attributes_inside_commit_interval(hass_recorder, caplog):
     """Test deduplication of state attributes inside the commit interval."""
     hass = hass_recorder()

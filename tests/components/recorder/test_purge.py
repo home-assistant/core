@@ -9,7 +9,6 @@ from sqlalchemy.exc import DatabaseError, OperationalError
 from sqlalchemy.orm.session import Session
 
 from homeassistant.components import recorder
-from homeassistant.components.recorder import PurgeTask
 from homeassistant.components.recorder.const import MAX_ROWS_TO_PURGE
 from homeassistant.components.recorder.models import (
     Events,
@@ -20,6 +19,7 @@ from homeassistant.components.recorder.models import (
     StatisticsShortTerm,
 )
 from homeassistant.components.recorder.purge import purge_old_data
+from homeassistant.components.recorder.tasks import PurgeTask
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import EVENT_STATE_CHANGED, STATE_ON
 from homeassistant.core import HomeAssistant
@@ -128,7 +128,7 @@ async def test_purge_old_states_encouters_database_corruption(
     sqlite3_exception.__cause__ = sqlite3.DatabaseError()
 
     with patch(
-        "homeassistant.components.recorder.move_away_broken_database"
+        "homeassistant.components.recorder.recorder.move_away_broken_database"
     ) as move_away, patch(
         "homeassistant.components.recorder.purge.purge_old_data",
         side_effect=sqlite3_exception,
@@ -406,7 +406,7 @@ async def test_purge_edge_case(
     """Test states and events are purged even if they occurred shortly before purge_before."""
 
     async def _add_db_entries(hass: HomeAssistant, timestamp: datetime) -> None:
-        with recorder.session_scope(hass=hass) as session:
+        with session_scope(hass=hass) as session:
             session.add(
                 Events(
                     event_id=1001,
@@ -477,7 +477,7 @@ async def test_purge_cutoff_date(
         timestamp_keep = cutoff
         timestamp_purge = cutoff - timedelta(microseconds=1)
 
-        with recorder.session_scope(hass=hass) as session:
+        with session_scope(hass=hass) as session:
             session.add(
                 Events(
                     event_id=1000,
@@ -626,7 +626,7 @@ async def test_purge_filtered_states(
     assert instance.entity_filter("sensor.excluded") is False
 
     def _add_db_entries(hass: HomeAssistant) -> None:
-        with recorder.session_scope(hass=hass) as session:
+        with session_scope(hass=hass) as session:
             # Add states and state_changed events that should be purged
             for days in range(1, 4):
                 timestamp = dt_util.utcnow() - timedelta(days=days)
@@ -820,7 +820,7 @@ async def test_purge_filtered_states_to_empty(
     assert instance.entity_filter("sensor.excluded") is False
 
     def _add_db_entries(hass: HomeAssistant) -> None:
-        with recorder.session_scope(hass=hass) as session:
+        with session_scope(hass=hass) as session:
             # Add states and state_changed events that should be purged
             for days in range(1, 4):
                 timestamp = dt_util.utcnow() - timedelta(days=days)
@@ -877,7 +877,7 @@ async def test_purge_without_state_attributes_filtered_states_to_empty(
     assert instance.entity_filter("sensor.old_format") is False
 
     def _add_db_entries(hass: HomeAssistant) -> None:
-        with recorder.session_scope(hass=hass) as session:
+        with session_scope(hass=hass) as session:
             # Add states and state_changed events that should be purged
             # in the legacy format
             timestamp = dt_util.utcnow() - timedelta(days=5)
@@ -944,7 +944,7 @@ async def test_purge_filtered_events(
     await async_setup_recorder_instance(hass, config)
 
     def _add_db_entries(hass: HomeAssistant) -> None:
-        with recorder.session_scope(hass=hass) as session:
+        with session_scope(hass=hass) as session:
             # Add events that should be purged
             for days in range(1, 4):
                 timestamp = dt_util.utcnow() - timedelta(days=days)
@@ -1038,7 +1038,7 @@ async def test_purge_filtered_events_state_changed(
     assert instance.entity_filter("sensor.excluded") is True
 
     def _add_db_entries(hass: HomeAssistant) -> None:
-        with recorder.session_scope(hass=hass) as session:
+        with session_scope(hass=hass) as session:
             # Add states and state_changed events that should be purged
             for days in range(1, 4):
                 timestamp = dt_util.utcnow() - timedelta(days=days)
@@ -1154,7 +1154,7 @@ async def test_purge_entities(
         await async_wait_purge_done(hass)
 
     def _add_purge_records(hass: HomeAssistant) -> None:
-        with recorder.session_scope(hass=hass) as session:
+        with session_scope(hass=hass) as session:
             # Add states and state_changed events that should be purged
             for days in range(1, 4):
                 timestamp = dt_util.utcnow() - timedelta(days=days)
@@ -1186,7 +1186,7 @@ async def test_purge_entities(
                     )
 
     def _add_keep_records(hass: HomeAssistant) -> None:
-        with recorder.session_scope(hass=hass) as session:
+        with session_scope(hass=hass) as session:
             # Add states and state_changed events that should be kept
             timestamp = dt_util.utcnow() - timedelta(days=2)
             for event_id in range(200, 210):
@@ -1289,7 +1289,8 @@ async def _add_test_states(hass: HomeAssistant):
             attributes = {"dontpurgeme": True, **base_attributes}
 
         with patch(
-            "homeassistant.components.recorder.dt_util.utcnow", return_value=timestamp
+            "homeassistant.components.recorder.recorder.dt_util.utcnow",
+            return_value=timestamp,
         ):
             await set_state("test.recorder2", state, attributes=attributes)
 
@@ -1304,7 +1305,7 @@ async def _add_test_events(hass: HomeAssistant):
     await hass.async_block_till_done()
     await async_wait_recording_done(hass)
 
-    with recorder.session_scope(hass=hass) as session:
+    with session_scope(hass=hass) as session:
         for event_id in range(6):
             if event_id < 2:
                 timestamp = eleven_days_ago
@@ -1335,7 +1336,7 @@ async def _add_test_statistics(hass: HomeAssistant):
     await hass.async_block_till_done()
     await async_wait_recording_done(hass)
 
-    with recorder.session_scope(hass=hass) as session:
+    with session_scope(hass=hass) as session:
         for event_id in range(6):
             if event_id < 2:
                 timestamp = eleven_days_ago
@@ -1364,7 +1365,7 @@ async def _add_test_recorder_runs(hass: HomeAssistant):
     await hass.async_block_till_done()
     await async_wait_recording_done(hass)
 
-    with recorder.session_scope(hass=hass) as session:
+    with session_scope(hass=hass) as session:
         for rec_id in range(6):
             if rec_id < 2:
                 timestamp = eleven_days_ago
@@ -1391,7 +1392,7 @@ async def _add_test_statistics_runs(hass: HomeAssistant):
     await hass.async_block_till_done()
     await async_wait_recording_done(hass)
 
-    with recorder.session_scope(hass=hass) as session:
+    with session_scope(hass=hass) as session:
         for rec_id in range(6):
             if rec_id < 2:
                 timestamp = eleven_days_ago
