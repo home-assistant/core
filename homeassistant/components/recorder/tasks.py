@@ -17,7 +17,7 @@ from .models import StatisticData, StatisticMetaData
 from .util import periodic_db_cleanups
 
 if TYPE_CHECKING:
-    from .recorder import Recorder
+    from .core import Recorder
 
 
 class RecorderTask(abc.ABC):

@@ -44,7 +44,7 @@ async def test_schema_update_calls(hass):
     assert recorder.util.async_migration_in_progress(hass) is False
 
     with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True), patch(
-        "homeassistant.components.recorder.recorder.create_engine",
+        "homeassistant.components.recorder.core.create_engine",
         new=create_engine_test,
     ), patch(
         "homeassistant.components.recorder.migration._apply_update",
@@ -69,7 +69,7 @@ async def test_migration_in_progress(hass):
     assert recorder.util.async_migration_in_progress(hass) is False
 
     with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True,), patch(
-        "homeassistant.components.recorder.recorder.create_engine",
+        "homeassistant.components.recorder.core.create_engine",
         new=create_engine_test,
     ):
         await async_setup_component(
@@ -87,7 +87,7 @@ async def test_database_migration_failed(hass):
     assert recorder.util.async_migration_in_progress(hass) is False
 
     with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True), patch(
-        "homeassistant.components.recorder.recorder.create_engine",
+        "homeassistant.components.recorder.core.create_engine",
         new=create_engine_test,
     ), patch(
         "homeassistant.components.recorder.migration._apply_update",
@@ -127,7 +127,7 @@ async def test_database_migration_encounters_corruption(hass):
         "homeassistant.components.recorder.migration.migrate_schema",
         side_effect=sqlite3_exception,
     ), patch(
-        "homeassistant.components.recorder.recorder.move_away_broken_database"
+        "homeassistant.components.recorder.core.move_away_broken_database"
     ) as move_away:
         await async_setup_component(
             hass, "recorder", {"recorder": {"db_url": "sqlite://"}}
@@ -151,7 +151,7 @@ async def test_database_migration_encounters_corruption_not_sqlite(hass):
         "homeassistant.components.recorder.migration.migrate_schema",
         side_effect=DatabaseError("statement", {}, []),
     ), patch(
-        "homeassistant.components.recorder.recorder.move_away_broken_database"
+        "homeassistant.components.recorder.core.move_away_broken_database"
     ) as move_away, patch(
         "homeassistant.components.persistent_notification.create", side_effect=pn.create
     ) as mock_create, patch(
@@ -179,7 +179,7 @@ async def test_events_during_migration_are_queued(hass):
     assert recorder.util.async_migration_in_progress(hass) is False
 
     with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True,), patch(
-        "homeassistant.components.recorder.recorder.create_engine",
+        "homeassistant.components.recorder.core.create_engine",
         new=create_engine_test,
     ):
         await async_setup_component(
@@ -209,9 +209,9 @@ async def test_events_during_migration_queue_exhausted(hass):
     assert recorder.util.async_migration_in_progress(hass) is False
 
     with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True), patch(
-        "homeassistant.components.recorder.recorder.create_engine",
+        "homeassistant.components.recorder.core.create_engine",
         new=create_engine_test,
-    ), patch.object(recorder.recorder, "MAX_QUEUE_BACKLOG", 1):
+    ), patch.object(recorder.core, "MAX_QUEUE_BACKLOG", 1):
         await async_setup_component(
             hass,
             "recorder",
@@ -299,7 +299,7 @@ async def test_schema_migrate(hass, start_version):
         migration_done.set()
 
     with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True), patch(
-        "homeassistant.components.recorder.recorder.create_engine",
+        "homeassistant.components.recorder.core.create_engine",
         new=_create_engine_test,
     ), patch(
         "homeassistant.components.recorder.Recorder._setup_run",

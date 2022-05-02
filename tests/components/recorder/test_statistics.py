@@ -840,7 +840,7 @@ def record_states(hass):
 
     states = {mp: [], sns1: [], sns2: [], sns3: [], sns4: []}
     with patch(
-        "homeassistant.components.recorder.recorder.dt_util.utcnow", return_value=one
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=one
     ):
         states[mp].append(
             set_state(mp, "idle", attributes={"media_title": str(sentinel.mt1)})
@@ -854,7 +854,7 @@ def record_states(hass):
         states[sns4].append(set_state(sns4, "10", attributes=sns4_attr))
 
     with patch(
-        "homeassistant.components.recorder.recorder.dt_util.utcnow", return_value=two
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=two
     ):
         states[sns1].append(set_state(sns1, "15", attributes=sns1_attr))
         states[sns2].append(set_state(sns2, "15", attributes=sns2_attr))
@@ -862,7 +862,7 @@ def record_states(hass):
         states[sns4].append(set_state(sns4, "15", attributes=sns4_attr))
 
     with patch(
-        "homeassistant.components.recorder.recorder.dt_util.utcnow", return_value=three
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=three
     ):
         states[sns1].append(set_state(sns1, "20", attributes=sns1_attr))
         states[sns2].append(set_state(sns2, "20", attributes=sns2_attr))

@@ -88,7 +88,7 @@ def _setup_get_states(hass):
     states = []
     now = dt_util.utcnow()
     with patch(
-        "homeassistant.components.recorder.recorder.dt_util.utcnow", return_value=now
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=now
     ):
         for i in range(5):
             state = ha.State(
@@ -105,7 +105,7 @@ def _setup_get_states(hass):
 
     future = now + timedelta(seconds=1)
     with patch(
-        "homeassistant.components.recorder.recorder.dt_util.utcnow", return_value=future
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=future
     ):
         for i in range(5):
             state = ha.State(
@@ -202,13 +202,13 @@ def test_state_changes_during_period(hass_recorder, attributes, no_attributes, l
     end = point + timedelta(seconds=1)
 
     with patch(
-        "homeassistant.components.recorder.recorder.dt_util.utcnow", return_value=start
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=start
     ):
         set_state("idle")
         set_state("YouTube")
 
     with patch(
-        "homeassistant.components.recorder.recorder.dt_util.utcnow", return_value=point
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=point
     ):
         states = [
             set_state("idle"),
@@ -218,7 +218,7 @@ def test_state_changes_during_period(hass_recorder, attributes, no_attributes, l
         ]
 
     with patch(
-        "homeassistant.components.recorder.recorder.dt_util.utcnow", return_value=end
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=end
     ):
         set_state("Netflix")
         set_state("Plex")
@@ -246,13 +246,13 @@ def test_state_changes_during_period_descending(hass_recorder):
     end = point + timedelta(seconds=1)
 
     with patch(
-        "homeassistant.components.recorder.recorder.dt_util.utcnow", return_value=start
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=start
     ):
         set_state("idle")
         set_state("YouTube")
 
     with patch(
-        "homeassistant.components.recorder.recorder.dt_util.utcnow", return_value=point
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=point
     ):
         states = [
             set_state("idle"),
@@ -262,7 +262,7 @@ def test_state_changes_during_period_descending(hass_recorder):
         ]
 
     with patch(
-        "homeassistant.components.recorder.recorder.dt_util.utcnow", return_value=end
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=end
     ):
         set_state("Netflix")
         set_state("Plex")
@@ -294,18 +294,18 @@ def test_get_last_state_changes(hass_recorder):
     point2 = point + timedelta(minutes=1)
 
     with patch(
-        "homeassistant.components.recorder.recorder.dt_util.utcnow", return_value=start
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=start
     ):
         set_state("1")
 
     states = []
     with patch(
-        "homeassistant.components.recorder.recorder.dt_util.utcnow", return_value=point
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=point
     ):
         states.append(set_state("2"))
 
     with patch(
-        "homeassistant.components.recorder.recorder.dt_util.utcnow", return_value=point2
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=point2
     ):
         states.append(set_state("3"))
 
@@ -333,12 +333,12 @@ def test_ensure_state_can_be_copied(hass_recorder):
     point = start + timedelta(minutes=1)
 
     with patch(
-        "homeassistant.components.recorder.recorder.dt_util.utcnow", return_value=start
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=start
     ):
         set_state("1")
 
     with patch(
-        "homeassistant.components.recorder.recorder.dt_util.utcnow", return_value=point
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=point
     ):
         set_state("2")
 
@@ -513,26 +513,26 @@ def test_get_significant_states_only(hass_recorder):
 
     states = []
     with patch(
-        "homeassistant.components.recorder.recorder.dt_util.utcnow", return_value=start
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=start
     ):
         set_state("123", attributes={"attribute": 10.64})
 
     with patch(
-        "homeassistant.components.recorder.recorder.dt_util.utcnow",
+        "homeassistant.components.recorder.core.dt_util.utcnow",
         return_value=points[0],
     ):
         # Attributes are different, state not
         states.append(set_state("123", attributes={"attribute": 21.42}))
 
     with patch(
-        "homeassistant.components.recorder.recorder.dt_util.utcnow",
+        "homeassistant.components.recorder.core.dt_util.utcnow",
         return_value=points[1],
     ):
         # state is different, attributes not
         states.append(set_state("32", attributes={"attribute": 21.42}))
 
     with patch(
-        "homeassistant.components.recorder.recorder.dt_util.utcnow",
+        "homeassistant.components.recorder.core.dt_util.utcnow",
         return_value=points[2],
     ):
         # everything is different
@@ -579,7 +579,7 @@ def record_states(hass):
 
     states = {therm: [], therm2: [], mp: [], mp2: [], mp3: [], script_c: []}
     with patch(
-        "homeassistant.components.recorder.recorder.dt_util.utcnow", return_value=one
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=one
     ):
         states[mp].append(
             set_state(mp, "idle", attributes={"media_title": str(sentinel.mt1)})
@@ -598,7 +598,7 @@ def record_states(hass):
         )
 
     with patch(
-        "homeassistant.components.recorder.recorder.dt_util.utcnow", return_value=two
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=two
     ):
         # This state will be skipped only different in time
         set_state(mp, "YouTube", attributes={"media_title": str(sentinel.mt3)})
@@ -615,7 +615,7 @@ def record_states(hass):
         )
 
     with patch(
-        "homeassistant.components.recorder.recorder.dt_util.utcnow", return_value=three
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=three
     ):
         states[mp].append(
             set_state(mp, "Netflix", attributes={"media_title": str(sentinel.mt4)})

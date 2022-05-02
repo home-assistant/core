@@ -460,26 +460,26 @@ def test_get_significant_states_only(hass_history):
 
     states = []
     with patch(
-        "homeassistant.components.recorder.recorder.dt_util.utcnow", return_value=start
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=start
     ):
         set_state("123", attributes={"attribute": 10.64})
 
     with patch(
-        "homeassistant.components.recorder.recorder.dt_util.utcnow",
+        "homeassistant.components.recorder.core.dt_util.utcnow",
         return_value=points[0],
     ):
         # Attributes are different, state not
         states.append(set_state("123", attributes={"attribute": 21.42}))
 
     with patch(
-        "homeassistant.components.recorder.recorder.dt_util.utcnow",
+        "homeassistant.components.recorder.core.dt_util.utcnow",
         return_value=points[1],
     ):
         # state is different, attributes not
         states.append(set_state("32", attributes={"attribute": 21.42}))
 
     with patch(
-        "homeassistant.components.recorder.recorder.dt_util.utcnow",
+        "homeassistant.components.recorder.core.dt_util.utcnow",
         return_value=points[2],
     ):
         # everything is different
@@ -542,7 +542,7 @@ def record_states(hass):
 
     states = {therm: [], therm2: [], mp: [], mp2: [], mp3: [], script_c: []}
     with patch(
-        "homeassistant.components.recorder.recorder.dt_util.utcnow", return_value=one
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=one
     ):
         states[mp].append(
             set_state(mp, "idle", attributes={"media_title": str(sentinel.mt1)})
@@ -561,7 +561,7 @@ def record_states(hass):
         )
 
     with patch(
-        "homeassistant.components.recorder.recorder.dt_util.utcnow", return_value=two
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=two
     ):
         # This state will be skipped only different in time
         set_state(mp, "YouTube", attributes={"media_title": str(sentinel.mt3)})
@@ -578,7 +578,7 @@ def record_states(hass):
         )
 
     with patch(
-        "homeassistant.components.recorder.recorder.dt_util.utcnow", return_value=three
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=three
     ):
         states[mp].append(
             set_state(mp, "Netflix", attributes={"media_title": str(sentinel.mt4)})
