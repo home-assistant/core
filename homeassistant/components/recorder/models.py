@@ -230,7 +230,7 @@ class States(Base):  # type: ignore[misc,valid-type]
     context_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
     context_user_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID))
     context_parent_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID))
-    origin_idx = Column(Integer)  # 0 is local, 1 is remote
+    origin_idx = Column(SmallInteger)  # 0 is local, 1 is remote
     old_state = relationship("States", remote_side=[state_id])
     state_attributes = relationship("StateAttributes")
 
