@@ -80,6 +80,7 @@ from .const import (
 from .executor import DBInterruptibleThreadPoolExecutor
 from .models import (
     Base,
+    EventData,
     Events,
     StateAttributes,
     States,
@@ -158,6 +159,7 @@ EXPIRE_AFTER_COMMITS = 120
 # - How frequently states with overlapping attributes will change
 # - How much memory our low end hardware has
 STATE_ATTRIBUTES_ID_CACHE_SIZE = 2048
+EVENT_DATA_ID_CACHE_SIZE = 2048
 
 SHUTDOWN_TASK = object()
 
@@ -639,10 +641,13 @@ class Recorder(threading.Thread):
         self._commits_without_expire = 0
         self._old_states: dict[str, States] = {}
         self._state_attributes_ids: LRU = LRU(STATE_ATTRIBUTES_ID_CACHE_SIZE)
+        self._event_data_ids: LRU = LRU(EVENT_DATA_ID_CACHE_SIZE)
         self._pending_state_attributes: dict[str, StateAttributes] = {}
+        self._pending_event_data: dict[str, EventData] = {}
         self._pending_expunge: list[States] = []
         self._bakery = bakery
         self._find_shared_attr_query: Query | None = None
+        self._find_shared_data_query: Query | None = None
         self.event_session: Session | None = None
         self.get_session: Callable[[], Session] | None = None
         self._completed_first_database_setup: bool | None = None
@@ -1162,17 +1167,61 @@ class Recorder(threading.Thread):
                 return cast(int, attributes[0])
         return None
 
+    def _find_shared_data_in_db(self, data_hash: int, shared_data: str) -> int | None:
+        """Find shared event data in the db from the hash and shared_attrs."""
+        #
+        # Avoid the event session being flushed since it will
+        # commit all the pending events and states to the database.
+        #
+        # The lookup has already have checked to see if the data is cached
+        # or going to be written in the next commit so there is no
+        # need to flush before checking the database.
+        #
+        assert self.event_session is not None
+        if self._find_shared_data_query is None:
+            self._find_shared_data_query = self._bakery(
+                lambda session: session.query(EventData.data_id)
+                .filter(EventData.hash == bindparam("data_hash"))
+                .filter(EventData.shared_data == bindparam("shared_data"))
+            )
+        with self.event_session.no_autoflush:
+            if (
+                data_id := self._find_shared_data_query(self.event_session)
+                .params(data_hash=data_hash, shared_data=shared_data)
+                .first()
+            ):
+                return cast(int, data_id[0])
+        return None
+
     def _process_event_into_session(self, event: Event) -> None:
         assert self.event_session is not None
+        dbevent = Events.from_event(event)
 
-        try:
-            if event.event_type == EVENT_STATE_CHANGED:
-                dbevent = Events.from_event(event, event_data=None)
+        if event.event_type != EVENT_STATE_CHANGED and event.data:
+            try:
+                shared_data = EventData.shared_data_from_event(event)
+            except (TypeError, ValueError):
+                _LOGGER.warning("Event is not JSON serializable: %s", event)
+                return
+
+            # Matching attributes found in the pending commit
+            if pending_event_data := self._pending_event_data.get(shared_data):
+                dbevent.event_data_rel = pending_event_data
+            # Matching attributes id found in the cache
+            elif data_id := self._event_data_ids.get(shared_data):
+                dbevent.data_id = data_id
             else:
-                dbevent = Events.from_event(event)
-        except (TypeError, ValueError):
-            _LOGGER.warning("Event is not JSON serializable: %s", event)
-            return
+                data_hash = EventData.hash_shared_data(shared_data)
+                # Matching attributes found in the database
+                if data_id := self._find_shared_data_in_db(data_hash, shared_data):
+                    self._event_data_ids[shared_data] = dbevent.data_id = data_id
+                # No matching attributes found, save them in the DB
+                else:
+                    dbevent_data = EventData(shared_data=shared_data, hash=data_hash)
+                    dbevent.event_data_rel = self._pending_event_data[
+                        shared_data
+                    ] = dbevent_data
+                    self.event_session.add(dbevent_data)
 
         self.event_session.add(dbevent)
         if event.event_type != EVENT_STATE_CHANGED:
@@ -1286,6 +1335,9 @@ class Recorder(threading.Thread):
                 state_attr.shared_attrs
             ] = state_attr.attributes_id
         self._pending_state_attributes = {}
+        for event_data in self._pending_event_data.values():
+            self._event_data_ids[event_data.shared_data] = event_data.data_id
+        self._pending_event_data = {}
 
         # Expire is an expensive operation (frequently more expensive
         # than the flush and commit itself) so we only
@@ -1307,7 +1359,9 @@ class Recorder(threading.Thread):
         """Close the event session."""
         self._old_states = {}
         self._state_attributes_ids = {}
+        self._event_data_ids = {}
         self._pending_state_attributes = {}
+        self._pending_event_data = {}
 
         if not self.event_session:
             return

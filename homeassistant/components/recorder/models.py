@@ -35,7 +35,6 @@ from homeassistant.const import (
     MAX_LENGTH_STATE_STATE,
 )
 from homeassistant.core import Context, Event, EventOrigin, State, split_entity_id
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 import homeassistant.util.dt as dt_util
 
 from .const import ALL_DOMAIN_EXCLUDE_ATTRS, JSON_DUMP
@@ -44,13 +43,14 @@ from .const import ALL_DOMAIN_EXCLUDE_ATTRS, JSON_DUMP
 # pylint: disable=invalid-name
 Base = declarative_base()
 
-SCHEMA_VERSION = 26
+SCHEMA_VERSION = 27
 
 _LOGGER = logging.getLogger(__name__)
 
 DB_TIMEZONE = "+00:00"
 
 TABLE_EVENTS = "events"
+TABLE_EVENT_DATA = "event_data"
 TABLE_STATES = "states"
 TABLE_STATE_ATTRIBUTES = "state_attributes"
 TABLE_RECORDER_RUNS = "recorder_runs"
@@ -60,6 +60,9 @@ TABLE_STATISTICS_META = "statistics_meta"
 TABLE_STATISTICS_RUNS = "statistics_runs"
 TABLE_STATISTICS_SHORT_TERM = "statistics_short_term"
 
+# Only add TABLE_STATE_ATTRIBUTES and TABLE_EVENT_DATA
+# to the below list once we want to check for their
+# instance in the sanity check.
 ALL_TABLES = [
     TABLE_STATES,
     TABLE_EVENTS,
@@ -103,24 +106,24 @@ class Events(Base):  # type: ignore[misc,valid-type]
     context_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
     context_user_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
     context_parent_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
+    data_id = Column(Integer, ForeignKey("event_data.data_id"), index=True)
+    event_data_rel = relationship("EventData")
 
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
         return (
             f"<recorder.Events("
-            f"id={self.event_id}, type='{self.event_type}', data='{self.event_data}', "
+            f"id={self.event_id}, type='{self.event_type}', "
             f"origin='{self.origin}', time_fired='{self.time_fired}'"
-            f")>"
+            f", data_id={self.data_id})>"
         )
 
     @staticmethod
-    def from_event(
-        event: Event, event_data: UndefinedType | None = UNDEFINED
-    ) -> Events:
+    def from_event(event: Event) -> Events:
         """Create an event database object from a native event."""
         return Events(
             event_type=event.event_type,
-            event_data=JSON_DUMP(event.data) if event_data is UNDEFINED else event_data,
+            event_data=None,
             origin=str(event.origin.value),
             time_fired=event.time_fired,
             context_id=event.context.id,
@@ -138,7 +141,7 @@ class Events(Base):  # type: ignore[misc,valid-type]
         try:
             return Event(
                 self.event_type,
-                json.loads(self.event_data),
+                json.loads(self.event_data) if self.event_data else {},
                 EventOrigin(self.origin),
                 process_timestamp(self.time_fired),
                 context=context,
@@ -147,6 +150,53 @@ class Events(Base):  # type: ignore[misc,valid-type]
             # When json.loads fails
             _LOGGER.exception("Error converting to event: %s", self)
             return None
+
+
+class EventData(Base):  # type: ignore[misc,valid-type]
+    """Event data history."""
+
+    __table_args__ = (
+        {"mysql_default_charset": "utf8mb4", "mysql_collate": "utf8mb4_unicode_ci"},
+    )
+    __tablename__ = TABLE_EVENT_DATA
+    data_id = Column(Integer, Identity(), primary_key=True)
+    hash = Column(BigInteger, index=True)
+    # Note that this is not named attributes to avoid confusion with the states table
+    shared_data = Column(Text().with_variant(mysql.LONGTEXT, "mysql"))
+
+    def __repr__(self) -> str:
+        """Return string representation of instance for debugging."""
+        return (
+            f"<recorder.EventData("
+            f"id={self.data_id}, hash='{self.hash}', data='{self.shared_data}'"
+            f")>"
+        )
+
+    @staticmethod
+    def from_event(event: Event) -> EventData:
+        """Create object from an event."""
+        shared_data = JSON_DUMP(event.data)
+        return EventData(
+            shared_data=shared_data, hash=EventData.hash_shared_data(shared_data)
+        )
+
+    @staticmethod
+    def shared_data_from_event(event: Event) -> str:
+        """Create shared_attrs from an event."""
+        return JSON_DUMP(event.data)
+
+    @staticmethod
+    def hash_shared_data(shared_data: str) -> int:
+        """Return the hash of json encoded shared data."""
+        return cast(int, fnv1a_32(shared_data.encode("utf-8")))
+
+    def to_native(self) -> dict[str, Any]:
+        """Convert to an HA state object."""
+        try:
+            return cast(dict[str, Any], json.loads(self.shared_data))
+        except ValueError:
+            _LOGGER.exception("Error converting row to event data: %s", self)
+            return {}
 
 
 class States(Base):  # type: ignore[misc,valid-type]

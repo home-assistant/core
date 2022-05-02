@@ -28,6 +28,7 @@ from homeassistant.components.history import (
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.models import (
+    EventData,
     Events,
     StateAttributes,
     States,
@@ -512,6 +513,7 @@ def _get_events(
                 # When entity_matches_only is provided, contexts and events that do not
                 # contain the entity_ids are not included in the logbook response.
                 query = _apply_event_entity_id_matchers(query, entity_ids)
+            query = query.outerjoin(EventData, (Events.data_id == EventData.data_id))
 
             query = query.union_all(
                 _generate_states_query(
@@ -535,6 +537,8 @@ def _get_events(
             if context_id is not None:
                 query = query.filter(Events.context_id == context_id)
 
+            query = query.outerjoin(EventData, (Events.data_id == EventData.data_id))
+
         query = query.order_by(Events.time_fired)
 
         return list(
@@ -545,6 +549,18 @@ def _get_events(
 def _generate_events_query(session: Session) -> Query:
     return session.query(
         *EVENT_COLUMNS,
+        EventData.shared_data,
+        States.state,
+        States.entity_id,
+        States.attributes,
+        StateAttributes.shared_attrs,
+    )
+
+
+def _generate_events_query_without_data(session: Session) -> Query:
+    return session.query(
+        *EVENT_COLUMNS,
+        literal(value=None, type_=sqlalchemy.Text).label("shared_data"),
         States.state,
         States.entity_id,
         States.attributes,
@@ -555,6 +571,7 @@ def _generate_events_query(session: Session) -> Query:
 def _generate_events_query_without_states(session: Session) -> Query:
     return session.query(
         *EVENT_COLUMNS,
+        EventData.shared_data,
         literal(value=None, type_=sqlalchemy.String).label("state"),
         literal(value=None, type_=sqlalchemy.String).label("entity_id"),
         literal(value=None, type_=sqlalchemy.Text).label("attributes"),
@@ -570,7 +587,7 @@ def _generate_states_query(
     entity_ids: Iterable[str],
 ) -> Query:
     return (
-        _generate_events_query(session)
+        _generate_events_query_without_data(session)
         .outerjoin(Events, (States.event_id == Events.event_id))
         .outerjoin(old_state, (States.old_state_id == old_state.state_id))
         .filter(_missing_state_matcher(old_state))
@@ -671,14 +688,12 @@ def _apply_event_types_filter(
 def _apply_event_entity_id_matchers(
     events_query: Query, entity_ids: Iterable[str]
 ) -> Query:
-    return events_query.filter(
-        sqlalchemy.or_(
-            *(
-                Events.event_data.like(ENTITY_ID_JSON_TEMPLATE.format(entity_id))
-                for entity_id in entity_ids
-            )
-        )
-    )
+    ors = []
+    for entity_id in entity_ids:
+        like = ENTITY_ID_JSON_TEMPLATE.format(entity_id)
+        ors.append(Events.event_data.like(like))
+        ors.append(EventData.shared_data.like(like))
+    return events_query.filter(sqlalchemy.or_(*ors))
 
 
 def _keep_event(
@@ -840,7 +855,17 @@ class LazyEventPartialState:
         if self._event_data:
             return self._event_data.get(ATTR_ENTITY_ID)
 
-        result = ENTITY_ID_JSON_EXTRACT.search(self._row.event_data)
+        result = ENTITY_ID_JSON_EXTRACT.search(
+            self._row.shared_data or self._row.event_data or ""
+        )
+        return result.group(1) if result else None
+
+    @property
+    def data_domain(self) -> str | None:
+        """Extract the domain from the decoded data or json."""
+        result = DOMAIN_JSON_EXTRACT.search(
+            self._row.shared_data or self._row.event_data or ""
+        )
         return result.group(1) if result else None
 
     @property
@@ -852,17 +877,13 @@ class LazyEventPartialState:
         return result.group(1) if result else None
 
     @property
-    def data_domain(self) -> str | None:
-        """Extract the domain from the decoded data or json."""
-        result = DOMAIN_JSON_EXTRACT.search(self._row.event_data)
-        return result.group(1) if result else None
-
-    @property
     def data(self) -> dict[str, Any]:
         """Event data."""
-        if not self._event_data:
-            source: str = self._row.event_data
-            if event_data := self._event_data_cache.get(source):
+        if self._event_data is None:
+            source: str = self._row.shared_data or self._row.event_data
+            if not source:
+                self._event_data = {}
+            elif event_data := self._event_data_cache.get(source):
                 self._event_data = event_data
             else:
                 self._event_data = self._event_data_cache[source] = cast(
