@@ -17,6 +17,7 @@ from sqlalchemy import (
     Identity,
     Index,
     Integer,
+    SmallInteger,
     String,
     Text,
     distinct,
@@ -104,7 +105,7 @@ class Events(Base):  # type: ignore[misc,valid-type]
     event_type = Column(String(MAX_LENGTH_EVENT_EVENT_TYPE))
     event_data = Column(Text().with_variant(mysql.LONGTEXT, "mysql"))
     origin = Column(String(MAX_LENGTH_EVENT_ORIGIN))  # no longer used
-    origin_idx = Column(Integer)
+    origin_idx = Column(SmallInteger)
     time_fired = Column(DATETIME_TYPE, index=True)
     context_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
     context_user_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID))
@@ -230,7 +231,7 @@ class States(Base):  # type: ignore[misc,valid-type]
     context_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
     context_user_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID))
     context_parent_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID))
-    origin_idx = Column(Integer)  # 0 is local, 1 is remote
+    origin_idx = Column(SmallInteger)  # 0 is local, 1 is remote
     old_state = relationship("States", remote_side=[state_id])
     state_attributes = relationship("StateAttributes")
 
