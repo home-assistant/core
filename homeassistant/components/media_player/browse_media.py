@@ -20,6 +20,9 @@ from homeassistant.helpers.network import (
 
 from .const import CONTENT_AUTH_EXPIRY_TIME, MEDIA_CLASS_DIRECTORY
 
+# Paths that we don't need to sign
+PATHS_WITHOUT_AUTH = ("/api/tts_proxy/",)
+
 
 @callback
 def async_process_play_media_url(
@@ -46,6 +49,10 @@ def async_process_play_media_url(
         logging.getLogger(__name__).debug(
             "Not signing path for content with query param"
         )
+    elif parsed.path.startswith(PATHS_WITHOUT_AUTH):
+        # We don't sign this path if it doesn't need auth. Although signing itself can't hurt,
+        # some devices are unable to handle long URLs and the auth signature might push it over.
+        pass
     else:
         signed_path = async_sign_path(
             hass,
