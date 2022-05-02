@@ -150,11 +150,6 @@ def patch_shell(response=None, error=False, mac_eth=False):
     }
 
 
-def isfile(filepath):
-    """Mock `os.path.isfile`."""
-    return filepath.endswith("adbkey")
-
-
 def patch_androidtv_update(
     state,
     current_app,
@@ -185,6 +180,17 @@ def patch_androidtv_update(
     }
 
 
+def isfile(filepath):
+    """Mock `os.path.isfile`."""
+    return filepath.endswith("adbkey")
+
+
+PATCH_SETUP_ENTRY = patch(
+    "homeassistant.components.androidtv.async_setup_entry",
+    return_value=True,
+)
+PATCH_ACCESS = patch("homeassistant.components.androidtv.os.access", return_value=True)
+PATCH_ISFILE = patch("homeassistant.components.androidtv.os.path.isfile", isfile)
 PATCH_LAUNCH_APP = patch("androidtv.basetv.basetv_async.BaseTVAsync.launch_app")
 PATCH_STOP_APP = patch("androidtv.basetv.basetv_async.BaseTVAsync.stop_app")
 

@@ -84,11 +84,6 @@ MSG_RECONNECT = {
     patchers.KEY_SERVER: f"ADB connection to {HOST}:{DEFAULT_PORT} via ADB server {patchers.ADB_SERVER_HOST}:{DEFAULT_ADB_SERVER_PORT} successfully established",
 }
 
-PATCH_ACCESS = patch("homeassistant.components.androidtv.os.access", return_value=True)
-PATCH_ISFILE = patch(
-    "homeassistant.components.androidtv.os.path.isfile", patchers.isfile
-)
-
 SHELL_RESPONSE_OFF = ""
 SHELL_RESPONSE_STANDBY = "1"
 
@@ -311,7 +306,7 @@ async def test_setup_with_adbkey(hass):
 
     with patchers.patch_connect(True)[patch_key], patchers.patch_shell(
         SHELL_RESPONSE_OFF
-    )[patch_key], PATCH_ISFILE, PATCH_ACCESS:
+    )[patch_key], patchers.PATCH_ISFILE:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -1142,20 +1137,20 @@ async def test_options_reload(hass):
         assert state is not None
         assert state.state == STATE_OFF
 
-        # change an option that not require integration reload
-        hass.config_entries.async_update_entry(
-            config_entry, options={CONF_SCREENCAP: False}
-        )
-        await hass.async_block_till_done()
+        with patchers.PATCH_SETUP_ENTRY as setup_entry_call:
+            # change an option that not require integration reload
+            hass.config_entries.async_update_entry(
+                config_entry, options={CONF_SCREENCAP: False}
+            )
+            await hass.async_block_till_done()
 
-        # change an option that require integration reload
-        hass.config_entries.async_update_entry(
-            config_entry, options={CONF_STATE_DETECTION_RULES: {}}
-        )
-        await hass.async_block_till_done()
-        assert config_entry.state is ConfigEntryState.LOADED
+            assert not setup_entry_call.called
 
-        await async_update_entity(hass, entity_id)
-        state = hass.states.get(entity_id)
-        assert state is not None
-        assert state.state == STATE_OFF
+            # change an option that require integration reload
+            hass.config_entries.async_update_entry(
+                config_entry, options={CONF_STATE_DETECTION_RULES: {}}
+            )
+            await hass.async_block_till_done()
+
+            assert setup_entry_call.called
+            assert config_entry.state is ConfigEntryState.LOADED
