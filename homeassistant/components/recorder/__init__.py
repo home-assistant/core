@@ -32,7 +32,7 @@ from .const import (
     EXCLUDE_ATTRIBUTES,
     SQLITE_URL_PREFIX,
 )
-from .recorder import Recorder
+from .core import Recorder
 from .tasks import AddRecorderPlatformTask
 
 _LOGGER = logging.getLogger(__name__)

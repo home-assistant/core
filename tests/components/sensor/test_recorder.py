@@ -173,7 +173,7 @@ def test_compile_hourly_statistics_purged_state_changes(
 
     # Purge all states from the database
     with patch(
-        "homeassistant.components.recorder.recorder.dt_util.utcnow", return_value=four
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=four
     ):
         hass.services.call("recorder", "purge", {"keep_days": 0})
         hass.block_till_done()
@@ -2750,21 +2750,21 @@ def record_states(hass, zero, entity_id, attributes, seq=None):
 
     states = {entity_id: []}
     with patch(
-        "homeassistant.components.recorder.recorder.dt_util.utcnow", return_value=one
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=one
     ):
         states[entity_id].append(
             set_state(entity_id, str(seq[0]), attributes=attributes)
         )
 
     with patch(
-        "homeassistant.components.recorder.recorder.dt_util.utcnow", return_value=two
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=two
     ):
         states[entity_id].append(
             set_state(entity_id, str(seq[1]), attributes=attributes)
         )
 
     with patch(
-        "homeassistant.components.recorder.recorder.dt_util.utcnow", return_value=three
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=three
     ):
         states[entity_id].append(
             set_state(entity_id, str(seq[2]), attributes=attributes)
@@ -3348,22 +3348,22 @@ def record_meter_states(hass, zero, entity_id, _attributes, seq):
 
     states = {entity_id: []}
     with patch(
-        "homeassistant.components.recorder.recorder.dt_util.utcnow", return_value=zero
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=zero
     ):
         states[entity_id].append(set_state(entity_id, seq[0], attributes=attributes))
 
     with patch(
-        "homeassistant.components.recorder.recorder.dt_util.utcnow", return_value=one
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=one
     ):
         states[entity_id].append(set_state(entity_id, seq[1], attributes=attributes))
 
     with patch(
-        "homeassistant.components.recorder.recorder.dt_util.utcnow", return_value=two
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=two
     ):
         states[entity_id].append(set_state(entity_id, seq[2], attributes=attributes))
 
     with patch(
-        "homeassistant.components.recorder.recorder.dt_util.utcnow", return_value=three
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=three
     ):
         states[entity_id].append(set_state(entity_id, seq[3], attributes=attributes))
 
@@ -3372,27 +3372,27 @@ def record_meter_states(hass, zero, entity_id, _attributes, seq):
         attributes["last_reset"] = four.isoformat()
 
     with patch(
-        "homeassistant.components.recorder.recorder.dt_util.utcnow", return_value=four
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=four
     ):
         states[entity_id].append(set_state(entity_id, seq[4], attributes=attributes))
 
     with patch(
-        "homeassistant.components.recorder.recorder.dt_util.utcnow", return_value=five
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=five
     ):
         states[entity_id].append(set_state(entity_id, seq[5], attributes=attributes))
 
     with patch(
-        "homeassistant.components.recorder.recorder.dt_util.utcnow", return_value=six
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=six
     ):
         states[entity_id].append(set_state(entity_id, seq[6], attributes=attributes))
 
     with patch(
-        "homeassistant.components.recorder.recorder.dt_util.utcnow", return_value=seven
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=seven
     ):
         states[entity_id].append(set_state(entity_id, seq[7], attributes=attributes))
 
     with patch(
-        "homeassistant.components.recorder.recorder.dt_util.utcnow", return_value=eight
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=eight
     ):
         states[entity_id].append(set_state(entity_id, seq[8], attributes=attributes))
 
@@ -3413,7 +3413,7 @@ def record_meter_state(hass, zero, entity_id, attributes, seq):
 
     states = {entity_id: []}
     with patch(
-        "homeassistant.components.recorder.recorder.dt_util.utcnow", return_value=zero
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=zero
     ):
         states[entity_id].append(set_state(entity_id, seq[0], attributes=attributes))
 
@@ -3439,17 +3439,17 @@ def record_states_partially_unavailable(hass, zero, entity_id, attributes):
 
     states = {entity_id: []}
     with patch(
-        "homeassistant.components.recorder.recorder.dt_util.utcnow", return_value=one
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=one
     ):
         states[entity_id].append(set_state(entity_id, "10", attributes=attributes))
 
     with patch(
-        "homeassistant.components.recorder.recorder.dt_util.utcnow", return_value=two
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=two
     ):
         states[entity_id].append(set_state(entity_id, "25", attributes=attributes))
 
     with patch(
-        "homeassistant.components.recorder.recorder.dt_util.utcnow", return_value=three
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=three
     ):
         states[entity_id].append(
             set_state(entity_id, STATE_UNAVAILABLE, attributes=attributes)

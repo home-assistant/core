@@ -128,7 +128,7 @@ async def test_purge_old_states_encouters_database_corruption(
     sqlite3_exception.__cause__ = sqlite3.DatabaseError()
 
     with patch(
-        "homeassistant.components.recorder.recorder.move_away_broken_database"
+        "homeassistant.components.recorder.core.move_away_broken_database"
     ) as move_away, patch(
         "homeassistant.components.recorder.purge.purge_old_data",
         side_effect=sqlite3_exception,
@@ -1289,7 +1289,7 @@ async def _add_test_states(hass: HomeAssistant):
             attributes = {"dontpurgeme": True, **base_attributes}
 
         with patch(
-            "homeassistant.components.recorder.recorder.dt_util.utcnow",
+            "homeassistant.components.recorder.core.dt_util.utcnow",
             return_value=timestamp,
         ):
             await set_state("test.recorder2", state, attributes=attributes)
