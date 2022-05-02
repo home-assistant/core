@@ -44,8 +44,6 @@ from .entity import ShadeEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-HD_MAX_TILT = 32767
-
 # Estimated time it takes to complete a transition
 # from one state to another
 TRANSITION_COMPLETE_DURATION = 40
@@ -53,6 +51,12 @@ TRANSITION_COMPLETE_DURATION = 40
 PARALLEL_UPDATES = 1
 
 RESYNC_DELAY = 60
+
+POSKIND_NONE = 0
+POSKIND_PRIMARY = 1
+POSKIND_SECONDARY = 2
+POSKIND_VANE = 3
+POSKIND_ERROR = 4
 
 
 async def async_setup_entry(
@@ -211,7 +215,7 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
                     ATTR_POSITION1: hass_position_to_hd(
                         target_hass_position, MAX_POSITION
                     ),
-                    ATTR_POSKIND1: 1,
+                    ATTR_POSKIND1: POSKIND_PRIMARY,
                 }
             )
         )
@@ -357,6 +361,8 @@ class SilhouettePowerViewShade(PowerViewShade):
         | CoverEntityFeature.SET_TILT_POSITION
     )
 
+    _max_tilt = 32767
+
     def __init__(self, coordinator, device_info, room_name, shade, name):
         """Initialize the shade."""
         super().__init__(coordinator, device_info, room_name, shade, name)
@@ -384,9 +390,9 @@ class SilhouettePowerViewShade(PowerViewShade):
             await self._shade.move(
                 {
                     ATTR_POSITION1: hass_position_to_hd(
-                        target_hass_tilt_position, HD_MAX_TILT
+                        target_hass_tilt_position, self._max_tilt
                     ),
-                    ATTR_POSKIND1: 3,
+                    ATTR_POSKIND1: POSKIND_VANE,
                 }
             )
         )
@@ -401,11 +407,11 @@ class SilhouettePowerViewShade(PowerViewShade):
         """Process position data."""
         if ATTR_POSKIND1 not in position_data:
             return
-        if int(position_data[ATTR_POSKIND1]) == 1:
+        if int(position_data[ATTR_POSKIND1]) == POSKIND_PRIMARY:
             self._current_hd_cover_position = int(position_data[ATTR_POSITION1])
             self._attr_current_cover_tilt_position = 0
-        if int(position_data[ATTR_POSKIND1]) == 3:
+        if int(position_data[ATTR_POSKIND1]) == POSKIND_VANE:
             self._current_hd_cover_position = MIN_POSITION
             self._attr_current_cover_tilt_position = hd_position_to_hass(
-                int(position_data[ATTR_POSITION1]), HD_MAX_TILT
+                int(position_data[ATTR_POSITION1]), self._max_tilt
             )
