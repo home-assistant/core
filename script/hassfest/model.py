@@ -98,9 +98,9 @@ class Integration:
         return self.manifest.get("quality_scale")
 
     @property
-    def config_flow(self) -> str:
+    def config_flow(self) -> bool:
         """Return if the integration has a config flow."""
-        return self.manifest.get("config_flow")
+        return self.manifest.get("config_flow", False)
 
     @property
     def requirements(self) -> list[str]:

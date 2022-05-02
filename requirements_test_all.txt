@@ -486,7 +486,7 @@ gTTS==2.2.4
 garages-amsterdam==3.0.0
 
 # homeassistant.components.google
-gcal-sync==0.7.0
+gcal-sync==0.7.1
 
 # homeassistant.components.usgs_earthquakes_feed
 geojson_client==0.6
@@ -662,6 +662,9 @@ lru-dict==1.1.7
 
 # homeassistant.components.luftdaten
 luftdaten==0.7.2
+
+# homeassistant.components.scrape
+lxml==4.8.0
 
 # homeassistant.components.nmap_tracker
 mac-vendor-lookup==0.1.11
@@ -1029,7 +1032,7 @@ pyialarm==1.9.0
 pyicloud==1.0.0
 
 # homeassistant.components.insteon
-pyinsteon==1.1.0b3
+pyinsteon==1.1.0
 
 # homeassistant.components.ipma
 pyipma==2.0.5
@@ -1269,7 +1272,7 @@ python-nest==4.2.0
 python-picnic-api==1.1.0
 
 # homeassistant.components.smarttub
-python-smarttub==0.0.31
+python-smarttub==0.0.32
 
 # homeassistant.components.songpal
 python-songpal==0.14.1
@@ -1404,7 +1407,7 @@ sharkiq==0.0.1
 simplehound==0.3
 
 # homeassistant.components.simplisafe
-simplisafe-python==2022.04.1
+simplisafe-python==2022.05.0
 
 # homeassistant.components.slack
 slackclient==2.5.0
