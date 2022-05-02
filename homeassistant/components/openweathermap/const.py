@@ -31,6 +31,7 @@ from homeassistant.components.weather import (
 )
 from homeassistant.const import (
     DEGREE,
+    LENGTH_KILOMETERS,
     LENGTH_MILLIMETERS,
     PERCENTAGE,
     PRESSURE_HPA,
@@ -65,6 +66,7 @@ ATTR_API_CLOUDS = "clouds"
 ATTR_API_RAIN = "rain"
 ATTR_API_SNOW = "snow"
 ATTR_API_UV_INDEX = "uv_index"
+ATTR_API_VISIBILITY_DISTANCE = "visibility_distance"
 ATTR_API_WEATHER_CODE = "weather_code"
 ATTR_API_FORECAST = "forecast"
 UPDATE_LISTENER = "update_listener"
@@ -241,6 +243,12 @@ WEATHER_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key=ATTR_API_UV_INDEX,
         name="UV Index",
         native_unit_of_measurement=UV_INDEX,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_VISIBILITY_DISTANCE,
+        name="Visibility",
+        native_unit_of_measurement=LENGTH_KILOMETERS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(

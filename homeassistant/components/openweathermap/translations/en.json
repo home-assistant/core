@@ -15,9 +15,9 @@
                     "latitude": "Latitude",
                     "longitude": "Longitude",
                     "mode": "Mode",
-                    "name": "Name of the integration"
+                    "name": "Name"
                 },
-                "description": "Set up OpenWeatherMap integration. To generate API key go to https://openweathermap.org/appid",
+                "description": "To generate API key go to https://openweathermap.org/appid",
                 "title": "OpenWeatherMap"
             }
         }

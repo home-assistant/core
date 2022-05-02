@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van"
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "import_plugins": "Import\u00e1ln\u00e1 az entit\u00e1sokat a fibaro be\u00e9p\u00fcl\u0151 modulokb\u00f3l?",
+                    "password": "Jelsz\u00f3",
+                    "url": "URL a k\u00f6vetkez\u0151 form\u00e1tumban: http://C\u00cdM/api/",
+                    "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
+                }
+            }
+        }
+    }
+}

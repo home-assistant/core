@@ -17,10 +17,8 @@
                     "password": "Passwort",
                     "region": "Region"
                 },
-                "description": "Bitte gib die E-Mail-Adresse und das Passwort ein, die du f\u00fcr die Anmeldung bei der MyMazda Mobile App verwendest.",
-                "title": "Mazda Connected Services - Konto hinzuf\u00fcgen"
+                "description": "Bitte gib die E-Mail-Adresse und das Passwort ein, die du f\u00fcr die Anmeldung bei der MyMazda Mobile App verwendest."
             }
         }
-    },
-    "title": "Mazda Connected Services"
+    }
 }

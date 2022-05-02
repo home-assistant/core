@@ -6,6 +6,7 @@ import asyncio
 from datetime import datetime, timedelta
 import sqlite3
 import threading
+from typing import cast
 from unittest.mock import Mock, patch
 
 import pytest
@@ -31,6 +32,7 @@ from homeassistant.components.recorder import (
 )
 from homeassistant.components.recorder.const import DATA_INSTANCE
 from homeassistant.components.recorder.models import (
+    EventData,
     Events,
     RecorderRuns,
     StateAttributes,
@@ -47,7 +49,7 @@ from homeassistant.const import (
     STATE_LOCKED,
     STATE_UNLOCKED,
 )
-from homeassistant.core import Context, CoreState, HomeAssistant, callback
+from homeassistant.core import CoreState, Event, HomeAssistant, callback
 from homeassistant.setup import async_setup_component, setup_component
 from homeassistant.util import dt as dt_util
 
@@ -160,7 +162,7 @@ async def test_state_gets_saved_when_set_before_start_event(
     with session_scope(hass=hass) as session:
         db_states = list(session.query(States))
         assert len(db_states) == 1
-        assert db_states[0].event_id > 0
+        assert db_states[0].event_id is None
 
 
 async def test_saving_state(hass: HomeAssistant, recorder_mock):
@@ -180,9 +182,9 @@ async def test_saving_state(hass: HomeAssistant, recorder_mock):
             state = db_state.to_native()
             state.attributes = db_state_attributes.to_native()
         assert len(db_states) == 1
-        assert db_states[0].event_id > 0
+        assert db_states[0].event_id is None
 
-    assert state == _state_empty_context(hass, entity_id)
+    assert state == _state_with_context(hass, entity_id)
 
 
 async def test_saving_many_states(
@@ -208,7 +210,7 @@ async def test_saving_many_states(
     with session_scope(hass=hass) as session:
         db_states = list(session.query(States))
         assert len(db_states) == 6
-        assert db_states[0].event_id > 0
+        assert db_states[0].event_id is None
 
 
 async def test_saving_state_with_intermixed_time_changes(
@@ -232,7 +234,7 @@ async def test_saving_state_with_intermixed_time_changes(
     with session_scope(hass=hass) as session:
         db_states = list(session.query(States))
         assert len(db_states) == 2
-        assert db_states[0].event_id > 0
+        assert db_states[0].event_id is None
 
 
 def test_saving_state_with_exception(hass, hass_recorder, caplog):
@@ -363,14 +365,25 @@ def test_saving_event(hass, hass_recorder):
     wait_recording_done(hass)
 
     assert len(events) == 1
-    event = events[0]
+    event: Event = events[0]
 
     hass.data[DATA_INSTANCE].block_till_done()
+    events: list[Event] = []
 
     with session_scope(hass=hass) as session:
-        db_events = list(session.query(Events).filter_by(event_type=event_type))
-        assert len(db_events) == 1
-        db_event = db_events[0].to_native()
+        for select_event, event_data in (
+            session.query(Events, EventData)
+            .filter_by(event_type=event_type)
+            .outerjoin(EventData, Events.data_id == EventData.data_id)
+        ):
+            select_event = cast(Events, select_event)
+            event_data = cast(EventData, event_data)
+
+            native_event = select_event.to_native()
+            native_event.data = event_data.to_native()
+            events.append(native_event)
+
+    db_event = events[0]
 
     assert event.event_type == db_event.event_type
     assert event.data == db_event.data
@@ -398,7 +411,7 @@ def test_saving_state_with_commit_interval_zero(hass_recorder):
     with session_scope(hass=hass) as session:
         db_states = list(session.query(States))
         assert len(db_states) == 1
-        assert db_states[0].event_id > 0
+        assert db_states[0].event_id is None
 
 
 def _add_entities(hass, entity_ids):
@@ -427,15 +440,24 @@ def _add_events(hass, events):
     wait_recording_done(hass)
 
     with session_scope(hass=hass) as session:
-        return [ev.to_native() for ev in session.query(Events)]
+        events = []
+        for event, event_data in session.query(Events, EventData).outerjoin(
+            EventData, Events.data_id == EventData.data_id
+        ):
+            event = cast(Events, event)
+            event_data = cast(EventData, event_data)
+
+            native_event = event.to_native()
+            if event_data:
+                native_event.data = event_data.to_native()
+            events.append(native_event)
+        return events
 
 
-def _state_empty_context(hass, entity_id):
+def _state_with_context(hass, entity_id):
     # We don't restore context unless we need it by joining the
     # events table on the event_id for state_changed events
-    state = hass.states.get(entity_id)
-    state.context = Context(id=None)
-    return state
+    return hass.states.get(entity_id)
 
 
 # pylint: disable=redefined-outer-name,invalid-name
@@ -444,7 +466,7 @@ def test_saving_state_include_domains(hass_recorder):
     hass = hass_recorder({"include": {"domains": "test2"}})
     states = _add_entities(hass, ["test.recorder", "test2.recorder"])
     assert len(states) == 1
-    assert _state_empty_context(hass, "test2.recorder") == states[0]
+    assert _state_with_context(hass, "test2.recorder") == states[0]
 
 
 def test_saving_state_include_domains_globs(hass_recorder):
@@ -456,8 +478,8 @@ def test_saving_state_include_domains_globs(hass_recorder):
         hass, ["test.recorder", "test2.recorder", "test3.included_entity"]
     )
     assert len(states) == 2
-    assert _state_empty_context(hass, "test2.recorder") == states[0]
-    assert _state_empty_context(hass, "test3.included_entity") == states[1]
+    assert _state_with_context(hass, "test2.recorder") == states[0]
+    assert _state_with_context(hass, "test3.included_entity") == states[1]
 
 
 def test_saving_state_incl_entities(hass_recorder):
@@ -465,7 +487,7 @@ def test_saving_state_incl_entities(hass_recorder):
     hass = hass_recorder({"include": {"entities": "test2.recorder"}})
     states = _add_entities(hass, ["test.recorder", "test2.recorder"])
     assert len(states) == 1
-    assert _state_empty_context(hass, "test2.recorder") == states[0]
+    assert _state_with_context(hass, "test2.recorder") == states[0]
 
 
 def test_saving_event_exclude_event_type(hass_recorder):
@@ -494,7 +516,7 @@ def test_saving_state_exclude_domains(hass_recorder):
     hass = hass_recorder({"exclude": {"domains": "test"}})
     states = _add_entities(hass, ["test.recorder", "test2.recorder"])
     assert len(states) == 1
-    assert _state_empty_context(hass, "test2.recorder") == states[0]
+    assert _state_with_context(hass, "test2.recorder") == states[0]
 
 
 def test_saving_state_exclude_domains_globs(hass_recorder):
@@ -506,7 +528,7 @@ def test_saving_state_exclude_domains_globs(hass_recorder):
         hass, ["test.recorder", "test2.recorder", "test2.excluded_entity"]
     )
     assert len(states) == 1
-    assert _state_empty_context(hass, "test2.recorder") == states[0]
+    assert _state_with_context(hass, "test2.recorder") == states[0]
 
 
 def test_saving_state_exclude_entities(hass_recorder):
@@ -514,7 +536,7 @@ def test_saving_state_exclude_entities(hass_recorder):
     hass = hass_recorder({"exclude": {"entities": "test.recorder"}})
     states = _add_entities(hass, ["test.recorder", "test2.recorder"])
     assert len(states) == 1
-    assert _state_empty_context(hass, "test2.recorder") == states[0]
+    assert _state_with_context(hass, "test2.recorder") == states[0]
 
 
 def test_saving_state_exclude_domain_include_entity(hass_recorder):
@@ -547,8 +569,8 @@ def test_saving_state_include_domain_exclude_entity(hass_recorder):
     )
     states = _add_entities(hass, ["test.recorder", "test2.recorder", "test.ok"])
     assert len(states) == 1
-    assert _state_empty_context(hass, "test.ok") == states[0]
-    assert _state_empty_context(hass, "test.ok").state == "state2"
+    assert _state_with_context(hass, "test.ok") == states[0]
+    assert _state_with_context(hass, "test.ok").state == "state2"
 
 
 def test_saving_state_include_domain_glob_exclude_entity(hass_recorder):
@@ -563,8 +585,8 @@ def test_saving_state_include_domain_glob_exclude_entity(hass_recorder):
         hass, ["test.recorder", "test2.recorder", "test.ok", "test2.included_entity"]
     )
     assert len(states) == 1
-    assert _state_empty_context(hass, "test.ok") == states[0]
-    assert _state_empty_context(hass, "test.ok").state == "state2"
+    assert _state_with_context(hass, "test.ok") == states[0]
+    assert _state_with_context(hass, "test.ok").state == "state2"
 
 
 def test_saving_state_and_removing_entity(hass, hass_recorder):
@@ -1073,11 +1095,22 @@ def test_service_disable_events_not_recording(hass, hass_recorder):
     assert events[0] != events[1]
     assert events[0].data != events[1].data
 
+    db_events = []
     with session_scope(hass=hass) as session:
-        db_events = list(session.query(Events).filter_by(event_type=event_type))
-        assert len(db_events) == 1
-        db_event = db_events[0].to_native()
+        for select_event, event_data in (
+            session.query(Events, EventData)
+            .filter_by(event_type=event_type)
+            .outerjoin(EventData, Events.data_id == EventData.data_id)
+        ):
+            select_event = cast(Events, select_event)
+            event_data = cast(EventData, event_data)
 
+            native_event = select_event.to_native()
+            native_event.data = event_data.to_native()
+            db_events.append(native_event)
+
+    assert len(db_events) == 1
+    db_event = db_events[0]
     event = events[1]
 
     assert event.event_type == db_event.event_type
@@ -1118,8 +1151,8 @@ def test_service_disable_states_not_recording(hass, hass_recorder):
     with session_scope(hass=hass) as session:
         db_states = list(session.query(States))
         assert len(db_states) == 1
-        assert db_states[0].event_id > 0
-        assert db_states[0].to_native() == _state_empty_context(hass, "test.two")
+        assert db_states[0].event_id is None
+        assert db_states[0].to_native() == _state_with_context(hass, "test.two")
 
 
 def test_service_disable_run_information_recorded(tmpdir):
@@ -1222,7 +1255,7 @@ async def test_database_corruption_while_running(hass, tmpdir, caplog):
         with session_scope(hass=hass) as session:
             db_states = list(session.query(States))
             assert len(db_states) == 1
-            assert db_states[0].event_id > 0
+            assert db_states[0].event_id is None
             return db_states[0].to_native()
 
     state = await hass.async_add_executor_job(_get_last_state)
