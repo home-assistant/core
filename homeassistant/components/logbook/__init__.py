@@ -518,13 +518,13 @@ def _get_events(
     with session_scope(hass=hass) as session:
         old_state = aliased(States, name="old_state")
         query: Query
+        query = _generate_events_query_without_states(session)
+        query = _apply_event_time_filter(query, start_day, end_day)
+        query = _apply_event_types_filter(
+            hass, query, ALL_EVENT_TYPES_EXCEPT_STATE_CHANGED
+        )
 
         if entity_ids is not None:
-            query = _generate_events_query_without_states(session)
-            query = _apply_event_time_filter(query, start_day, end_day)
-            query = _apply_event_types_filter(
-                hass, query, ALL_EVENT_TYPES_EXCEPT_STATE_CHANGED
-            )
             if entity_matches_only:
                 # When entity_matches_only is provided, contexts and events that do not
                 # contain the entity_ids are not included in the logbook response.
@@ -536,33 +536,23 @@ def _get_events(
                 )
             )
         else:
-            query = _generate_events_query(session)
-            query = _apply_event_time_filter(query, start_day, end_day)
-            query = _apply_events_types_and_states_filter(
-                hass, query, old_state
-            ).filter(
-                (States.last_updated == States.last_changed)
-                | (Events.event_type != EVENT_STATE_CHANGED)
-            )
-            if filters:
-                query = query.filter(
-                    filters.entity_filter() | (Events.event_type != EVENT_STATE_CHANGED)  # type: ignore[no-untyped-call]
-                )
-
             if context_id is not None:
                 query = query.filter(Events.context_id == context_id)
-
             query = query.outerjoin(EventData, (Events.data_id == EventData.data_id))
 
             states_query = _generate_states_query(
                 session, start_day, end_day, old_state, entity_ids
-            ).filter(States.context_id.is_not(None))
-
+            )
             if context_id is not None:
-                states_query = states_query.filter(States.context_id == context_id)
+                states_query = states_query.outerjoin(
+                    Events, (States.event_id == Events.event_id)
+                )
+                states_query = states_query.filter(
+                    (States.context_id == context_id)
+                    | (Events.context_id == context_id)
+                )
             if filters:
                 states_query = states_query.filter(filters.entity_filter())  # type: ignore[no-untyped-call]
-
             query = query.union_all(states_query)
 
         query = query.order_by(Events.time_fired)
@@ -570,17 +560,6 @@ def _get_events(
         return list(
             humanify(hass, yield_events(query), entity_attr_cache, context_lookup)
         )
-
-
-def _generate_events_query(session: Session) -> Query:
-    """Generate an events query that also joins states.
-
-    Once we no longer have event_ids in the states table
-    we can switch STATE_COLUMNS to EMPTY_STATE_COLUMNS
-    """
-    return session.query(
-        *EVENT_COLUMNS, EventData.shared_data.label("shared_data"), *STATE_COLUMNS
-    )
 
 
 def _generate_events_query_without_data(session: Session) -> Query:
@@ -620,26 +599,6 @@ def _generate_states_query(
     if entity_ids:
         query = query.filter(States.entity_id.in_(entity_ids))
     return query.outerjoin(
-        StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
-    )
-
-
-def _apply_events_types_and_states_filter(
-    hass: HomeAssistant, query: Query, old_state: States
-) -> Query:
-    events_query = (
-        query.outerjoin(States, (Events.event_id == States.event_id))
-        .outerjoin(old_state, (States.old_state_id == old_state.state_id))
-        .filter(
-            (Events.event_type != EVENT_STATE_CHANGED)
-            | _missing_state_matcher(old_state)
-        )
-        .filter(
-            (Events.event_type != EVENT_STATE_CHANGED)
-            | _not_continuous_entity_matcher()
-        )
-    )
-    return _apply_event_types_filter(hass, events_query, ALL_EVENT_TYPES).outerjoin(
         StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
     )
 
