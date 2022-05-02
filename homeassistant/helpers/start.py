@@ -24,4 +24,4 @@ def async_at_start(
         """Call the callback when Home Assistant started."""
         hass.async_run_hass_job(at_start_job, hass)
 
-    return hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _matched_event)
+    return hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _matched_event).cancel

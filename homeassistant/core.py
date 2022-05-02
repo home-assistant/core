@@ -180,6 +180,28 @@ class HassJobType(enum.Enum):
     Executor = 3
 
 
+class Cancel:
+    """Helper to manage cancelling subscriptions etc."""
+
+    def __init__(self, cancel: CALLBACK_TYPE) -> None:
+        """Initialize the cancel object."""
+        self._cancel = cancel
+        self.cancelled = False
+
+    @callback
+    def __call__(self) -> None:
+        """Backwards compatibility."""
+        self._cancel()
+
+    @callback
+    def cancel(self) -> None:
+        """Cancel."""
+        if self.cancelled:
+            return
+        self.cancelled = True
+        self._cancel()
+
+
 class HassJob(Generic[_R_co]):
     """Represent a job to be run later.
 
@@ -895,19 +917,19 @@ class EventBus:
             raise HomeAssistantError(f"Event filter {event_filter} is not a callback")
         return self._async_listen_filterable_job(
             event_type, _FilterableJob(HassJob(listener), event_filter)
-        )
+        ).cancel
 
     @callback
     def _async_listen_filterable_job(
         self, event_type: str, filterable_job: _FilterableJob
-    ) -> CALLBACK_TYPE:
+    ) -> Cancel:
         self._listeners.setdefault(event_type, []).append(filterable_job)
 
         def remove_listener() -> None:
             """Remove the listener."""
             self._async_remove_listener(event_type, filterable_job)
 
-        return remove_listener
+        return Cancel(remove_listener)
 
     def listen_once(
         self, event_type: str, listener: Callable[[Event], None | Awaitable[None]]
@@ -932,7 +954,7 @@ class EventBus:
     @callback
     def async_listen_once(
         self, event_type: str, listener: Callable[[Event], None | Awaitable[None]]
-    ) -> CALLBACK_TYPE:
+    ) -> Cancel:
         """Listen once for event of a specific type.
 
         To listen to all events specify the constant ``MATCH_ALL``
@@ -957,7 +979,7 @@ class EventBus:
             # This will make sure the second time it does nothing.
             setattr(_onetime_listener, "run", True)
             assert filterable_job is not None
-            self._async_remove_listener(event_type, filterable_job)
+            cancel.cancel()
             self._hass.async_run_job(listener, event)
 
         functools.update_wrapper(
@@ -965,8 +987,9 @@ class EventBus:
         )
 
         filterable_job = _FilterableJob(HassJob(_onetime_listener), None)
+        cancel = self._async_listen_filterable_job(event_type, filterable_job)
 
-        return self._async_listen_filterable_job(event_type, filterable_job)
+        return cancel
 
     @callback
     def _async_remove_listener(
