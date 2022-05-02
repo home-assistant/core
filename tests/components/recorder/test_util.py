@@ -45,7 +45,7 @@ def test_recorder_bad_commit(hass_recorder):
         session.execute(text("select * from notthere"))
 
     with patch(
-        "homeassistant.components.recorder.time.sleep"
+        "homeassistant.components.recorder.recorder.time.sleep"
     ) as e_mock, util.session_scope(hass=hass) as session:
         res = util.commit(session, work)
     assert res is False
@@ -66,7 +66,7 @@ def test_recorder_bad_execute(hass_recorder):
     mck1.to_native = to_native
 
     with pytest.raises(SQLAlchemyError), patch(
-        "homeassistant.components.recorder.time.sleep"
+        "homeassistant.components.recorder.recorder.time.sleep"
     ) as e_mock:
         util.execute((mck1,), to_native=True)
 
@@ -148,7 +148,7 @@ async def test_last_run_was_recently_clean(
         "homeassistant.components.recorder.util.last_run_was_recently_clean",
         wraps=_last_run_was_recently_clean,
     ) as last_run_was_recently_clean_mock, patch(
-        "homeassistant.components.recorder.dt_util.utcnow",
+        "homeassistant.components.recorder.recorder.dt_util.utcnow",
         return_value=thirty_min_future_time,
     ):
         hass = await async_test_home_assistant(None)
