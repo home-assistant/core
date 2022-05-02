@@ -8,6 +8,7 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 
 from homeassistant.components.recorder.models import (
     Base,
+    EventData,
     Events,
     LazyState,
     RecorderRuns,
@@ -25,7 +26,9 @@ from homeassistant.util import dt, dt as dt_util
 def test_from_event_to_db_event():
     """Test converting event to db event."""
     event = ha.Event("test_event", {"some_data": 15})
-    assert event == Events.from_event(event).to_native()
+    db_event = Events.from_event(event)
+    db_event.event_data = EventData.from_event(event).shared_data
+    assert event == db_event.to_native()
 
 
 def test_from_event_to_db_state():
@@ -231,10 +234,12 @@ async def test_event_to_db_model():
     event = ha.Event(
         "state_changed", {"some": "attr"}, ha.EventOrigin.local, dt_util.utcnow()
     )
-    native = Events.from_event(event).to_native()
+    db_event = Events.from_event(event)
+    db_event.event_data = EventData.from_event(event).shared_data
+    native = db_event.to_native()
     assert native == event
 
-    native = Events.from_event(event, event_data="{}").to_native()
+    native = Events.from_event(event).to_native()
     event.data = {}
     assert native == event
 
