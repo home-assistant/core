@@ -15,7 +15,7 @@ async def test_entry_diagnostics(
     hass_client: ClientSession,
     mock_plenticore: Plenticore,
     init_integration: MockConfigEntry,
-):
+) -> None:
     """Test config entry diagnostics."""
 
     # set some test process and settings data for the diagnostics output

@@ -78,7 +78,7 @@ def mock_plenticore() -> Generator[Plenticore, None, None]:
 @pytest.fixture
 async def init_integration(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> Generator[MockConfigEntry, None, None]:
+) -> MockConfigEntry:
     """Set up Kostal Plenticore integration for testing."""
 
     mock_config_entry.add_to_hass(hass)
@@ -86,4 +86,4 @@ async def init_integration(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    yield mock_config_entry
+    return mock_config_entry

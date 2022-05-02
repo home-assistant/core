@@ -36,30 +36,32 @@ async def async_setup_entry(
 
     entities = []
     for select in SELECT_SETTINGS_DATA:
-        if select.module_id in available_settings_data:
-            needed_data_ids = {
-                data_id for data_id in select.options if data_id != "None"
-            }
-            available_data_ids = {
-                setting.id for setting in available_settings_data[select.module_id]
-            }
-            if needed_data_ids <= available_data_ids:
-                entities.append(
-                    PlenticoreDataSelect(
-                        select_data_update_coordinator,
-                        entry_id=entry.entry_id,
-                        platform_name=entry.title,
-                        device_class="kostal_plenticore__battery",
-                        module_id=select.module_id,
-                        data_id=select.data_id,
-                        name=select.name,
-                        current_option="None",
-                        options=select.options,
-                        is_on=select.is_on,
-                        device_info=plenticore.device_info,
-                        unique_id=f"{entry.entry_id}_{select.module_id}",
-                    )
-                )
+        if select.module_id not in available_settings_data:
+            continue
+        needed_data_ids = {
+            data_id for data_id in select.options if data_id != "None"
+        }
+        available_data_ids = {
+            setting.id for setting in available_settings_data[select.module_id]
+        }
+        if not needed_data_ids <= available_data_ids:
+            continue
+        entities.append(
+            PlenticoreDataSelect(
+                select_data_update_coordinator,
+                entry_id=entry.entry_id,
+                platform_name=entry.title,
+                device_class="kostal_plenticore__battery",
+                module_id=select.module_id,
+                data_id=select.data_id,
+                name=select.name,
+                current_option="None",
+                options=select.options,
+                is_on=select.is_on,
+                device_info=plenticore.device_info,
+                unique_id=f"{entry.entry_id}_{select.module_id}",
+            )
+        )
 
     async_add_entities(entities)
 

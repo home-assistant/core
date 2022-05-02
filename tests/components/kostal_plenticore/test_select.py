@@ -10,7 +10,7 @@ from tests.common import MockConfigEntry
 
 async def test_select_battery_charging_usage_available(
     hass: HomeAssistant, mock_plenticore: Plenticore, mock_config_entry: MockConfigEntry
-):
+) -> None:
     """Test that the battery charging usage select entity is added if the settings are available."""
 
     mock_plenticore.client.get_settings.return_value = {
