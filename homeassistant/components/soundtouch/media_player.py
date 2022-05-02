@@ -1,6 +1,7 @@
 """Support for interface with a Bose Soundtouch."""
 from __future__ import annotations
 
+from functools import partial
 import logging
 import re
 
@@ -360,7 +361,7 @@ class SoundTouchDevice(MediaPlayerEntity):
             media_id = async_process_play_media_url(self.hass, play_item.url)
 
         await self.hass.async_add_executor_job(
-            self.play_media, media_type, media_id, **kwargs
+            partial(self.play_media, media_type, media_id, **kwargs)
         )
 
     def play_media(self, media_type, media_id, **kwargs):
