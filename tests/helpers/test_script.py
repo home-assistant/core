@@ -3012,7 +3012,7 @@ async def test_parallel(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
 
     expected_trace = {
         "0": [{"result": {}}],
-        "0/parallel/0/sequence/0": [
+        "0/parallel/0/0": [
             {
                 "result": {
                     "wait": {
@@ -3025,7 +3025,7 @@ async def test_parallel(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
                 }
             }
         ],
-        "0/parallel/1/sequence/0": [
+        "0/parallel/1/0": [
             {
                 "variables": {"wait": {"remaining": None}},
                 "result": {
@@ -3034,7 +3034,7 @@ async def test_parallel(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
                 },
             }
         ],
-        "0/parallel/0/sequence/1": [
+        "0/parallel/0/1": [
             {
                 "variables": {"wait": {"remaining": None}},
                 "result": {
@@ -3068,7 +3068,7 @@ async def test_parallel_error(
 
     expected_trace = {
         "0": [{"error_type": ServiceNotFound, "result": {}}],
-        "0/parallel/0/sequence/0": [
+        "0/parallel/0/0": [
             {
                 "error_type": ServiceNotFound,
                 "result": {
