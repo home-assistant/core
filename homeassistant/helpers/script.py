@@ -395,8 +395,14 @@ class _ScriptRun:
                 script_execution_set("finished")
         except _StopScript:
             script_execution_set("finished")
+            # Let the _StopScript bubble up if this is a sub-script
+            if not self._script.top_level:
+                raise
         except _AbortScript:
             script_execution_set("aborted")
+            # Let the _AbortScript bubble up if this is a sub-script
+            if not self._script.top_level:
+                raise
         except Exception:
             script_execution_set("error")
             raise
@@ -1143,7 +1149,7 @@ class Script:
             hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_STOP, partial(_async_stop_scripts_at_shutdown, hass)
             )
-        self._top_level = top_level
+        self.top_level = top_level
         if top_level:
             all_scripts.append(
                 {"instance": self, "started_before_shutdown": not hass.is_stopping}
@@ -1431,7 +1437,7 @@ class Script:
         # If this is a top level Script then make a copy of the variables in case they
         # are read-only, but more importantly, so as not to leak any variables created
         # during the run back to the caller.
-        if self._top_level:
+        if self.top_level:
             if self.variables:
                 try:
                     variables = self.variables.async_render(
