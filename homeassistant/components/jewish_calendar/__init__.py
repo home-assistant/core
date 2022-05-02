@@ -32,29 +32,42 @@ from .const import (
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
-JEWISH_CALENDAR_SCHEMA = {
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_DIASPORA, default=DEFAULT_DIASPORA): cv.boolean,
-    vol.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): vol.In(
-        ["hebrew", "english"]
-    ),
-    vol.Optional(CONF_CANDLE_LIGHT_MINUTES, default=DEFAULT_CANDLE_LIGHT): int,
-    # Default of 0 means use 8.5 degrees / 'three_stars' time.
-    vol.Optional(
-        CONF_HAVDALAH_OFFSET_MINUTES, default=DEFAULT_HAVDALAH_OFFSET_MINUTES
-    ): int,
-    vol.Inclusive(
-        CONF_LATITUDE, "coordinates", "Latitude and longitude must exist together"
-    ): cv.latitude,
-    vol.Inclusive(
-        CONF_LONGITUDE, "coordinates", "Latitude and longitude must exist together"
-    ): cv.longitude,
-    vol.Optional(CONF_ELEVATION): int,
-    vol.Optional(CONF_TIME_ZONE): cv.time_zone,
-}
-
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.All(cv.ensure_list, [JEWISH_CALENDAR_SCHEMA])}, extra=vol.ALLOW_EXTRA
+    {
+        DOMAIN: vol.All(
+            cv.ensure_list,
+            [
+                {
+                    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+                    vol.Optional(CONF_DIASPORA, default=DEFAULT_DIASPORA): cv.boolean,
+                    vol.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): vol.In(
+                        ["hebrew", "english"]
+                    ),
+                    vol.Optional(
+                        CONF_CANDLE_LIGHT_MINUTES, default=DEFAULT_CANDLE_LIGHT
+                    ): int,
+                    # Default of 0 means use 8.5 degrees / 'three_stars' time.
+                    vol.Optional(
+                        CONF_HAVDALAH_OFFSET_MINUTES,
+                        default=DEFAULT_HAVDALAH_OFFSET_MINUTES,
+                    ): int,
+                    vol.Inclusive(
+                        CONF_LATITUDE,
+                        "coordinates",
+                        "Latitude and longitude must exist together",
+                    ): cv.latitude,
+                    vol.Inclusive(
+                        CONF_LONGITUDE,
+                        "coordinates",
+                        "Latitude and longitude must exist together",
+                    ): cv.longitude,
+                    vol.Optional(CONF_ELEVATION): int,
+                    vol.Optional(CONF_TIME_ZONE): cv.time_zone,
+                }
+            ],
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
 )
 
 

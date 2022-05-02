@@ -1,4 +1,7 @@
 """Constants for the Jewish Calendar integration."""
+
+DOMAIN = "jewish_calendar"
+
 CONF_DIASPORA = "diaspora"
 CONF_LANGUAGE = "language"
 CONF_CANDLE_LIGHT_MINUTES = "candle_lighting_minutes_before_sunset"
@@ -9,5 +12,3 @@ DEFAULT_CANDLE_LIGHT = 18
 DEFAULT_DIASPORA = False
 DEFAULT_HAVDALAH_OFFSET_MINUTES = 0
 DEFAULT_LANGUAGE = "english"
-
-DOMAIN = "jewish_calendar"
