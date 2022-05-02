@@ -71,7 +71,7 @@ async def test_purge_old_states(
 
         # run purge_old_data()
         finished = purge_old_data(instance, purge_before, repack=False)
-        # assert not finished
+        assert not finished
         assert states.count() == 2
         assert state_attributes.count() == 1
 
