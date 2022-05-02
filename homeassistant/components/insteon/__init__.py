@@ -4,6 +4,7 @@ from contextlib import suppress
 import logging
 
 from pyinsteon import async_close, async_connect, devices
+from pyinsteon.constants import ReadWriteMode
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_PLATFORM, EVENT_HOMEASSISTANT_STOP
@@ -48,7 +49,8 @@ async def async_get_device_config(hass, config_entry):
         with suppress(AttributeError):
             await devices[address].async_status()
 
-    await devices.async_load(id_devices=1)
+    load_aldb = devices.modem.aldb.read_write_mode == ReadWriteMode.UNKNOWN
+    await devices.async_load(id_devices=1, load_modem_aldb=load_aldb)
     for addr in devices:
         device = devices[addr]
         flags = True
