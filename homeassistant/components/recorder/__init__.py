@@ -14,19 +14,10 @@ import time
 from typing import Any, TypeVar, cast
 
 from lru import LRU  # pylint: disable=no-name-in-module
-from sqlalchemy import (
-    bindparam,
-    create_engine,
-    event as sqlalchemy_event,
-    exc,
-    func,
-    select,
-)
+from sqlalchemy import create_engine, event as sqlalchemy_event, exc, func, select
 from sqlalchemy.engine import Engine
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.ext import baked
 from sqlalchemy.orm import scoped_session, sessionmaker
-from sqlalchemy.orm.query import Query
 from sqlalchemy.orm.session import Session
 import voluptuous as vol
 
@@ -90,6 +81,7 @@ from .models import (
     process_timestamp,
 )
 from .pool import POOL_SIZE, MutexPool, RecorderPool
+from .queries import find_shared_attributes_id, find_shared_data_id
 from .run_history import RunHistory
 from .util import (
     dburl_to_path,
@@ -292,7 +284,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         entity_filter=entity_filter,
         exclude_t=exclude_t,
         exclude_attributes_by_domain=exclude_attributes_by_domain,
-        bakery=baked.bakery(),
     )
     instance.async_initialize()
     instance.async_register()
@@ -614,7 +605,6 @@ class Recorder(threading.Thread):
         entity_filter: Callable[[str], bool],
         exclude_t: list[str],
         exclude_attributes_by_domain: dict[str, set[str]],
-        bakery: baked.bakery,
     ) -> None:
         """Initialize the recorder."""
         threading.Thread.__init__(self, name="Recorder")
@@ -645,9 +635,6 @@ class Recorder(threading.Thread):
         self._pending_state_attributes: dict[str, StateAttributes] = {}
         self._pending_event_data: dict[str, EventData] = {}
         self._pending_expunge: list[States] = []
-        self._bakery = bakery
-        self._find_shared_attr_query: Query | None = None
-        self._find_shared_data_query: Query | None = None
         self.event_session: Session | None = None
         self.get_session: Callable[[], Session] | None = None
         self._completed_first_database_setup: bool | None = None
@@ -1155,19 +1142,11 @@ class Recorder(threading.Thread):
         # need to flush before checking the database.
         #
         assert self.event_session is not None
-        if self._find_shared_attr_query is None:
-            self._find_shared_attr_query = self._bakery(
-                lambda session: session.query(StateAttributes.attributes_id)
-                .filter(StateAttributes.hash == bindparam("attr_hash"))
-                .filter(StateAttributes.shared_attrs == bindparam("shared_attrs"))
-            )
         with self.event_session.no_autoflush:
-            if (
-                attributes := self._find_shared_attr_query(self.event_session)
-                .params(attr_hash=attr_hash, shared_attrs=shared_attrs)
-                .first()
-            ):
-                return cast(int, attributes[0])
+            if attributes_id := self.event_session.execute(
+                find_shared_attributes_id(attr_hash, shared_attrs)
+            ).first():
+                return cast(int, attributes_id[0])
         return None
 
     def _find_shared_data_in_db(self, data_hash: int, shared_data: str) -> int | None:
@@ -1181,18 +1160,10 @@ class Recorder(threading.Thread):
         # need to flush before checking the database.
         #
         assert self.event_session is not None
-        if self._find_shared_data_query is None:
-            self._find_shared_data_query = self._bakery(
-                lambda session: session.query(EventData.data_id)
-                .filter(EventData.hash == bindparam("data_hash"))
-                .filter(EventData.shared_data == bindparam("shared_data"))
-            )
         with self.event_session.no_autoflush:
-            if (
-                data_id := self._find_shared_data_query(self.event_session)
-                .params(data_hash=data_hash, shared_data=shared_data)
-                .first()
-            ):
+            if data_id := self.event_session.execute(
+                find_shared_data_id(data_hash, shared_data)
+            ).first():
                 return cast(int, data_id[0])
         return None
 

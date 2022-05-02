@@ -11,7 +11,6 @@ from unittest.mock import Mock, patch
 
 import pytest
 from sqlalchemy.exc import DatabaseError, OperationalError, SQLAlchemyError
-from sqlalchemy.ext import baked
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder import (
@@ -83,7 +82,6 @@ def _default_recorder(hass):
         entity_filter=CONFIG_SCHEMA({DOMAIN: {}}),
         exclude_t=[],
         exclude_attributes_by_domain={},
-        bakery=baked.bakery(),
     )
 
 
