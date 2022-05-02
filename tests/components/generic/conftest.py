@@ -7,7 +7,7 @@ from PIL import Image
 import pytest
 import respx
 
-from homeassistant import config_entries
+from homeassistant import config_entries, setup
 from homeassistant.components.generic.const import DOMAIN
 
 from tests.common import MockConfigEntry
@@ -78,7 +78,7 @@ def mock_create_stream():
 @pytest.fixture
 async def user_flow(hass):
     """Initiate a user flow."""
-
+    await setup.async_setup_component(hass, "http", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
