@@ -593,7 +593,7 @@ def _generate_legacy_events_context_id_query(
     # This can be removed once we no longer have event_ids in the states table
     legacy_context_id_query = session.query(
         *EVENT_COLUMNS,
-        EventData.shared_data,
+        literal(value=None, type_=sqlalchemy.String).label("shared_data"),
         States.state,
         States.entity_id,
         States.attributes,
