@@ -543,20 +543,24 @@ def _get_events(
             states_query = _generate_states_query(
                 session, start_day, end_day, old_state, entity_ids
             )
+            unions: list[Query] = []
             if context_id is not None:
                 # Once all the old `state_changed` events
-                # are gone from the database this query can
-                # be simplified to filter only on States.context_id == context_id
+                # are gone from the database remove the
+                # _generate_legacy_events_context_id_query
+                unions.append(
+                    _generate_legacy_events_context_id_query(
+                        session, context_id, start_day, end_day
+                    )
+                )
                 states_query = states_query.outerjoin(
                     Events, (States.event_id == Events.event_id)
                 )
-                states_query = states_query.filter(
-                    (States.context_id == context_id)
-                    | (States.context_id.is_(None) & (Events.context_id == context_id))
-                )
-            if filters:
+                states_query = states_query.filter(States.context_id == context_id)
+            elif filters:
                 states_query = states_query.filter(filters.entity_filter())  # type: ignore[no-untyped-call]
-            query = query.union_all(states_query)
+            unions.append(states_query)
+            query = query.union_all(*unions)
 
         query = query.order_by(Events.time_fired)
 
@@ -575,6 +579,36 @@ def _generate_events_query_without_data(session: Session) -> Query:
         States.context_parent_id.label("context_parent_id"),
         literal(value=None, type_=sqlalchemy.Text).label("shared_data"),
         *STATE_COLUMNS,
+    )
+
+
+def _generate_legacy_events_context_id_query(
+    session: Session,
+    context_id: str,
+    start_day: dt,
+    end_day: dt,
+) -> Query:
+    """Generate a legacy events context id query that also joins states."""
+    # This can be removed once we no longer have event_ids in the states table
+    legacy_context_id_query = session.query(
+        *EVENT_COLUMNS,
+        literal(value=None, type_=sqlalchemy.String).label("shared_data"),
+        States.state,
+        States.entity_id,
+        States.attributes,
+        StateAttributes.shared_attrs,
+    )
+    legacy_context_id_query = _apply_event_time_filter(
+        legacy_context_id_query, start_day, end_day
+    )
+    return (
+        legacy_context_id_query.filter(Events.context_id == context_id)
+        .outerjoin(States, (Events.event_id == States.event_id))
+        .filter(States.last_updated == States.last_changed)
+        .filter(_not_continuous_entity_matcher())
+        .outerjoin(
+            StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
+        )
     )
 
 
