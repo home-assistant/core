@@ -13,8 +13,16 @@ from typing_extensions import Concatenate, ParamSpec
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_SCAN_INTERVAL,
+    CONF_USERNAME,
+    POWER_WATT,
+    TEMP_CELSIUS,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
@@ -22,7 +30,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, PLATFORM_LOOKUP, PLATFORMS
@@ -132,8 +140,25 @@ class HiveEntity(Entity):
         """Initialize the instance."""
         self.hive = hive
         self.device = hive_device
+        self._attr_name = self.device["haName"]
+        self._attr_unique_id = f'{self.device["hiveID"]}-{self.device["hiveType"]}'
+        self._attr_entity_category = self.device.get("category")
+        self._attr_device_class = DEVICETYPE.get(self.device["hiveType"])
+        self._attr_state_class = DEVICETYPE[self.device.get("hiveType")].get(
+            "state_class"
+        )
+        self._attr_native_unit_of_measurement = DEVICETYPE[
+            self.device.get("hiveType")
+        ].get("unit")
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self.device["device_id"])},
+            model=self.device["deviceData"]["model"],
+            manufacturer=self.device["deviceData"]["manufacturer"],
+            name=self.device["device_name"],
+            sw_version=self.device["deviceData"]["version"],
+            via_device=(DOMAIN, self.device["parentDevice"]),
+        )
         self.attributes = {}
-        self._unique_id = f'{self.device["hiveID"]}-{self.device["hiveType"]}'
 
     async def async_added_to_hass(self):
         """When entity is added to Home Assistant."""

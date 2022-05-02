@@ -12,7 +12,6 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.color as color_util
 
@@ -83,11 +82,8 @@ class HiveDeviceLight(HiveEntity, LightEntity):
         if self.device["hiveType"] == "warmwhitelight":
             self._attr_supported_features = ColorMode.BRIGHTNESS
         elif self.device["hiveType"] == "tuneablelight":
-            self._attr_supported_features = {ColorMode.BRIGHTNESS, ColorMode.COLOR_TEMP}
+            self._attr_supported_features = {ColorMode.COLOR_TEMP}
         elif self.device["hiveType"] == "colourtuneablelight":
             self._attr_supported_features = {ColorMode.COLOR_TEMP, ColorMode.HS}
             rgb = self.device["status"].get("hs_color")
             self._attr_hs_color = color_util.color_RGB_to_hs(*rgb)
-            self._attr_supported_features = (
-                SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_COLOR
-            )
