@@ -544,6 +544,9 @@ def _get_events(
                 session, start_day, end_day, old_state, entity_ids
             )
             if context_id is not None:
+                # Once all the old `state_changed` events
+                # are gone from the database this query can
+                # be simplified to filter only on States.context_id == context_id
                 states_query = states_query.outerjoin(
                     Events, (States.event_id == Events.event_id)
                 )
