@@ -561,7 +561,7 @@ def _get_events(
             if context_id is not None:
                 states_query = states_query.filter(States.context_id == context_id)
             if filters:
-                states_query = states_query.filter(filters.entity_filter())
+                states_query = states_query.filter(filters.entity_filter())  # type: ignore[no-untyped-call]
 
             query = query.union_all(states_query)
 
