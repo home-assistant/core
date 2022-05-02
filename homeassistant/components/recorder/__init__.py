@@ -1136,7 +1136,10 @@ class Recorder(threading.Thread):
     def _process_one_event(self, event: Event) -> None:
         if not self.enabled:
             return
-        self._process_event_into_session(event)
+        if event.event_type == EVENT_STATE_CHANGED:
+            self._process_state_changed_event_into_session(event)
+        else:
+            self._process_non_state_changed_event_into_session(event)
         # Commit if the commit interval is zero
         if not self.commit_interval:
             self._commit_event_session_or_retry()
@@ -1193,40 +1196,44 @@ class Recorder(threading.Thread):
                 return cast(int, data_id[0])
         return None
 
-    def _process_event_into_session(self, event: Event) -> None:
+    def _process_non_state_changed_event_into_session(self, event: Event) -> None:
+        """Process any event into the session except state changed."""
         assert self.event_session is not None
         dbevent = Events.from_event(event)
-
-        if event.event_type != EVENT_STATE_CHANGED and event.data:
-            try:
-                shared_data = EventData.shared_data_from_event(event)
-            except (TypeError, ValueError):
-                _LOGGER.warning("Event is not JSON serializable: %s", event)
-                return
-
-            # Matching attributes found in the pending commit
-            if pending_event_data := self._pending_event_data.get(shared_data):
-                dbevent.event_data_rel = pending_event_data
-            # Matching attributes id found in the cache
-            elif data_id := self._event_data_ids.get(shared_data):
-                dbevent.data_id = data_id
-            else:
-                data_hash = EventData.hash_shared_data(shared_data)
-                # Matching attributes found in the database
-                if data_id := self._find_shared_data_in_db(data_hash, shared_data):
-                    self._event_data_ids[shared_data] = dbevent.data_id = data_id
-                # No matching attributes found, save them in the DB
-                else:
-                    dbevent_data = EventData(shared_data=shared_data, hash=data_hash)
-                    dbevent.event_data_rel = self._pending_event_data[
-                        shared_data
-                    ] = dbevent_data
-                    self.event_session.add(dbevent_data)
-
-        if event.event_type != EVENT_STATE_CHANGED:
+        if not event.data:
             self.event_session.add(dbevent)
             return
 
+        try:
+            shared_data = EventData.shared_data_from_event(event)
+        except (TypeError, ValueError) as ex:
+            _LOGGER.warning("Event is not JSON serializable: %s: %s", event, ex)
+            return
+
+        # Matching attributes found in the pending commit
+        if pending_event_data := self._pending_event_data.get(shared_data):
+            dbevent.event_data_rel = pending_event_data
+        # Matching attributes id found in the cache
+        elif data_id := self._event_data_ids.get(shared_data):
+            dbevent.data_id = data_id
+        else:
+            data_hash = EventData.hash_shared_data(shared_data)
+            # Matching attributes found in the database
+            if data_id := self._find_shared_data_in_db(data_hash, shared_data):
+                self._event_data_ids[shared_data] = dbevent.data_id = data_id
+            # No matching attributes found, save them in the DB
+            else:
+                dbevent_data = EventData(shared_data=shared_data, hash=data_hash)
+                dbevent.event_data_rel = self._pending_event_data[
+                    shared_data
+                ] = dbevent_data
+                self.event_session.add(dbevent_data)
+
+        self.event_session.add(dbevent)
+
+    def _process_state_changed_event_into_session(self, event: Event) -> None:
+        """Process a state_changed event into the session."""
+        assert self.event_session is not None
         try:
             dbstate = States.from_event(event)
             shared_attrs = StateAttributes.shared_attrs_from_event(
