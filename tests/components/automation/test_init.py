@@ -1079,6 +1079,7 @@ async def test_automation_restore_last_triggered_with_initial_state(hass):
 
 async def test_extraction_functions(hass):
     """Test extraction functions."""
+    await async_setup_component(hass, "calendar", {"calendar": {"platform": "demo"}})
     assert await async_setup_component(
         hass,
         DOMAIN,
@@ -1086,7 +1087,24 @@ async def test_extraction_functions(hass):
             DOMAIN: [
                 {
                     "alias": "test1",
-                    "trigger": {"platform": "state", "entity_id": "sensor.trigger_1"},
+                    "trigger": [
+                        {"platform": "state", "entity_id": "sensor.trigger_state"},
+                        {
+                            "platform": "numeric_state",
+                            "entity_id": "sensor.trigger_numeric_state",
+                            "above": 10,
+                        },
+                        {
+                            "platform": "calendar",
+                            "entity_id": "calendar.trigger_calendar",
+                            "event": "start",
+                        },
+                        {
+                            "platform": "event",
+                            "event_type": "state_changed",
+                            "event_data": {"entity_id": "sensor.trigger_event"},
+                        },
+                    ],
                     "condition": {
                         "condition": "state",
                         "entity_id": "light.condition_state",
@@ -1111,13 +1129,30 @@ async def test_extraction_functions(hass):
                 },
                 {
                     "alias": "test2",
-                    "trigger": {
-                        "platform": "device",
-                        "domain": "light",
-                        "type": "turned_on",
-                        "entity_id": "light.trigger_2",
-                        "device_id": "trigger-device-2",
-                    },
+                    "trigger": [
+                        {
+                            "platform": "device",
+                            "domain": "light",
+                            "type": "turned_on",
+                            "entity_id": "light.trigger_2",
+                            "device_id": "trigger-device-2",
+                        },
+                        {
+                            "platform": "tag",
+                            "tag_id": "1234",
+                            "device_id": "device-trigger-tag1",
+                        },
+                        {
+                            "platform": "tag",
+                            "tag_id": "1234",
+                            "device_id": ["device-trigger-tag2", "device-trigger-tag3"],
+                        },
+                        {
+                            "platform": "event",
+                            "event_type": "esphome.button_pressed",
+                            "event_data": {"device_id": "device-trigger-event"},
+                        },
+                    ],
                     "condition": {
                         "condition": "device",
                         "device_id": "condition-device",
@@ -1159,7 +1194,10 @@ async def test_extraction_functions(hass):
         "automation.test2",
     }
     assert set(automation.entities_in_automation(hass, "automation.test1")) == {
-        "sensor.trigger_1",
+        "calendar.trigger_calendar",
+        "sensor.trigger_state",
+        "sensor.trigger_numeric_state",
+        "sensor.trigger_event",
         "light.condition_state",
         "light.in_both",
         "light.in_first",
@@ -1173,6 +1211,10 @@ async def test_extraction_functions(hass):
         "condition-device",
         "device-in-both",
         "device-in-last",
+        "device-trigger-event",
+        "device-trigger-tag1",
+        "device-trigger-tag2",
+        "device-trigger-tag3",
     }
 
 
