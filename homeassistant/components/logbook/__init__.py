@@ -111,13 +111,28 @@ ALL_EVENT_TYPES = [
     *ALL_EVENT_TYPES_EXCEPT_STATE_CHANGED,
 ]
 
+
 EVENT_COLUMNS = [
-    Events.event_type,
-    Events.event_data,
-    Events.time_fired,
-    Events.context_id,
-    Events.context_user_id,
-    Events.context_parent_id,
+    Events.event_type.label("event_type"),
+    Events.event_data.label("event_data"),
+    Events.time_fired.label("time_fired"),
+    Events.context_id.label("context_id"),
+    Events.context_user_id.label("context_user_id"),
+    Events.context_parent_id.label("context_parent_id"),
+]
+
+STATE_COLUMNS = [
+    States.state.label("state"),
+    States.entity_id.label("entity_id"),
+    States.attributes.label("attributes"),
+    StateAttributes.shared_attrs.label("shared_attrs"),
+]
+
+EMPTY_STATE_COLUMNS = [
+    literal(value=None, type_=sqlalchemy.String).label("state"),
+    literal(value=None, type_=sqlalchemy.String).label("entity_id"),
+    literal(value=None, type_=sqlalchemy.Text).label("attributes"),
+    literal(value=None, type_=sqlalchemy.Text).label("shared_attrs"),
 ]
 
 SCRIPT_AUTOMATION_EVENTS = {EVENT_AUTOMATION_TRIGGERED, EVENT_SCRIPT_STARTED}
@@ -502,42 +517,46 @@ def _get_events(
 
     with session_scope(hass=hass) as session:
         old_state = aliased(States, name="old_state")
+        query: Query
+        query = _generate_events_query_without_states(session)
+        query = _apply_event_time_filter(query, start_day, end_day)
+        query = _apply_event_types_filter(
+            hass, query, ALL_EVENT_TYPES_EXCEPT_STATE_CHANGED
+        )
 
         if entity_ids is not None:
-            query = _generate_events_query_without_states(session)
-            query = _apply_event_time_filter(query, start_day, end_day)
-            query = _apply_event_types_filter(
-                hass, query, ALL_EVENT_TYPES_EXCEPT_STATE_CHANGED
-            )
             if entity_matches_only:
                 # When entity_matches_only is provided, contexts and events that do not
                 # contain the entity_ids are not included in the logbook response.
                 query = _apply_event_entity_id_matchers(query, entity_ids)
             query = query.outerjoin(EventData, (Events.data_id == EventData.data_id))
-
             query = query.union_all(
                 _generate_states_query(
                     session, start_day, end_day, old_state, entity_ids
                 )
             )
         else:
-            query = _generate_events_query(session)
-            query = _apply_event_time_filter(query, start_day, end_day)
-            query = _apply_events_types_and_states_filter(
-                hass, query, old_state
-            ).filter(
-                (States.last_updated == States.last_changed)
-                | (Events.event_type != EVENT_STATE_CHANGED)
-            )
-            if filters:
-                query = query.filter(
-                    filters.entity_filter() | (Events.event_type != EVENT_STATE_CHANGED)  # type: ignore[no-untyped-call]
-                )
-
             if context_id is not None:
                 query = query.filter(Events.context_id == context_id)
-
             query = query.outerjoin(EventData, (Events.data_id == EventData.data_id))
+
+            states_query = _generate_states_query(
+                session, start_day, end_day, old_state, entity_ids
+            )
+            if context_id is not None:
+                # Once all the old `state_changed` events
+                # are gone from the database this query can
+                # be simplified to filter only on States.context_id == context_id
+                states_query = states_query.outerjoin(
+                    Events, (States.event_id == Events.event_id)
+                )
+                states_query = states_query.filter(
+                    (States.context_id == context_id)
+                    | (States.context_id.is_(None) & (Events.context_id == context_id))
+                )
+            if filters:
+                states_query = states_query.filter(filters.entity_filter())  # type: ignore[no-untyped-call]
+            query = query.union_all(states_query)
 
         query = query.order_by(Events.time_fired)
 
@@ -546,36 +565,22 @@ def _get_events(
         )
 
 
-def _generate_events_query(session: Session) -> Query:
-    return session.query(
-        *EVENT_COLUMNS,
-        EventData.shared_data,
-        States.state,
-        States.entity_id,
-        States.attributes,
-        StateAttributes.shared_attrs,
-    )
-
-
 def _generate_events_query_without_data(session: Session) -> Query:
     return session.query(
-        *EVENT_COLUMNS,
+        literal(value=EVENT_STATE_CHANGED, type_=sqlalchemy.String).label("event_type"),
+        literal(value=None, type_=sqlalchemy.Text).label("event_data"),
+        States.last_changed.label("time_fired"),
+        States.context_id.label("context_id"),
+        States.context_user_id.label("context_user_id"),
+        States.context_parent_id.label("context_parent_id"),
         literal(value=None, type_=sqlalchemy.Text).label("shared_data"),
-        States.state,
-        States.entity_id,
-        States.attributes,
-        StateAttributes.shared_attrs,
+        *STATE_COLUMNS,
     )
 
 
 def _generate_events_query_without_states(session: Session) -> Query:
     return session.query(
-        *EVENT_COLUMNS,
-        EventData.shared_data,
-        literal(value=None, type_=sqlalchemy.String).label("state"),
-        literal(value=None, type_=sqlalchemy.String).label("entity_id"),
-        literal(value=None, type_=sqlalchemy.Text).label("attributes"),
-        literal(value=None, type_=sqlalchemy.Text).label("shared_attrs"),
+        *EVENT_COLUMNS, EventData.shared_data.label("shared_data"), *EMPTY_STATE_COLUMNS
     )
 
 
@@ -584,41 +589,19 @@ def _generate_states_query(
     start_day: dt,
     end_day: dt,
     old_state: States,
-    entity_ids: Iterable[str],
+    entity_ids: Iterable[str] | None,
 ) -> Query:
-    return (
+    query = (
         _generate_events_query_without_data(session)
-        .outerjoin(Events, (States.event_id == Events.event_id))
         .outerjoin(old_state, (States.old_state_id == old_state.state_id))
         .filter(_missing_state_matcher(old_state))
         .filter(_not_continuous_entity_matcher())
         .filter((States.last_updated > start_day) & (States.last_updated < end_day))
-        .filter(
-            (States.last_updated == States.last_changed)
-            & States.entity_id.in_(entity_ids)
-        )
-        .outerjoin(
-            StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
-        )
+        .filter(States.last_updated == States.last_changed)
     )
-
-
-def _apply_events_types_and_states_filter(
-    hass: HomeAssistant, query: Query, old_state: States
-) -> Query:
-    events_query = (
-        query.outerjoin(States, (Events.event_id == States.event_id))
-        .outerjoin(old_state, (States.old_state_id == old_state.state_id))
-        .filter(
-            (Events.event_type != EVENT_STATE_CHANGED)
-            | _missing_state_matcher(old_state)
-        )
-        .filter(
-            (Events.event_type != EVENT_STATE_CHANGED)
-            | _not_continuous_entity_matcher()
-        )
-    )
-    return _apply_event_types_filter(hass, events_query, ALL_EVENT_TYPES).outerjoin(
+    if entity_ids:
+        query = query.filter(States.entity_id.in_(entity_ids))
+    return query.outerjoin(
         StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
     )
 
