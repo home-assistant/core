@@ -550,14 +550,14 @@ def _get_events(
                 # _generate_legacy_events_context_id_query
                 unions.append(
                     _generate_legacy_events_context_id_query(
-                        session, context_id, start_day, end_day, filters
+                        session, context_id, start_day, end_day
                     )
                 )
                 states_query = states_query.outerjoin(
                     Events, (States.event_id == Events.event_id)
                 )
                 states_query = states_query.filter(States.context_id == context_id)
-            if filters:
+            elif filters:
                 states_query = states_query.filter(filters.entity_filter())  # type: ignore[no-untyped-call]
             unions.append(states_query)
             query = query.union_all(*unions)
@@ -587,7 +587,6 @@ def _generate_legacy_events_context_id_query(
     context_id: str,
     start_day: dt,
     end_day: dt,
-    filters: Filters | None = None,
 ) -> Query:
     """Generate a legacy events context id query that also joins states."""
     # This can be removed once we no longer have event_ids in the states table
@@ -602,7 +601,7 @@ def _generate_legacy_events_context_id_query(
     legacy_context_id_query = _apply_event_time_filter(
         legacy_context_id_query, start_day, end_day
     )
-    legacy_context_id_query = (
+    return (
         legacy_context_id_query.filter(Events.context_id == context_id)
         .outerjoin(States, (Events.event_id == States.event_id))
         .filter(States.last_updated == States.last_changed)
@@ -611,11 +610,6 @@ def _generate_legacy_events_context_id_query(
             StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
         )
     )
-    if filters:
-        legacy_context_id_query = legacy_context_id_query.filter(
-            filters.entity_filter()  # type: ignore[no-untyped-call]
-        )
-    return legacy_context_id_query
 
 
 def _generate_events_query_without_states(session: Session) -> Query:
