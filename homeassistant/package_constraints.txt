@@ -4,7 +4,7 @@ aiodiscover==1.4.11
 aiohttp==3.8.1
 aiohttp_cors==0.7.0
 astral==2.2
-async-upnp-client==0.27.0
+async-upnp-client==0.29.0
 async_timeout==4.0.2
 atomicwrites==1.4.0
 attrs==21.2.0
@@ -15,7 +15,7 @@ ciso8601==2.2.0
 cryptography==36.0.2
 fnvhash==0.1.0
 hass-nabucasa==0.54.0
-home-assistant-frontend==20220420.0
+home-assistant-frontend==20220429.0
 httpx==0.22.0
 ifaddr==0.1.7
 jinja2==3.1.1
@@ -29,7 +29,7 @@ pyudev==0.22.0
 pyyaml==6.0
 requests==2.27.1
 scapy==2.4.5
-sqlalchemy==1.4.35
+sqlalchemy==1.4.36
 typing-extensions>=3.10.0.2,<5.0
 voluptuous-serialize==2.5.0
 voluptuous==0.13.1
@@ -101,3 +101,7 @@ multidict>=6.0.2
 # Required for compatibility with point integration - ensure_active_token
 # https://github.com/home-assistant/core/pull/68176
 authlib<1.0
+
+# Pin backoff for compatibility until most libraries have been updated
+# https://github.com/home-assistant/core/pull/70817
+backoff<2.0

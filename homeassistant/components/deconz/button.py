@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from pydeconz.group import Scene as PydeconzScene
+from pydeconz.models.event import EventType
+from pydeconz.models.scene import Scene as PydeconzScene
 
 from homeassistant.components.button import (
     DOMAIN,
@@ -13,7 +14,6 @@ from homeassistant.components.button import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -57,34 +57,23 @@ async def async_setup_entry(
     gateway.entities[DOMAIN] = set()
 
     @callback
-    def async_add_scene(scenes: list[PydeconzScene] | None = None) -> None:
+    def async_add_scene(_: EventType, scene_id: str) -> None:
         """Add scene button from deCONZ."""
-        entities = []
-
-        if scenes is None:
-            scenes = list(gateway.api.scenes.values())
-
-        for scene in scenes:
-
-            known_entities = set(gateway.entities[DOMAIN])
-            for description in ENTITY_DESCRIPTIONS.get(PydeconzScene, []):
-
-                new_entity = DeconzButton(scene, gateway, description)
-                if new_entity.unique_id not in known_entities:
-                    entities.append(new_entity)
-
-        if entities:
-            async_add_entities(entities)
+        scene = gateway.api.scenes[scene_id]
+        async_add_entities(
+            DeconzButton(scene, gateway, description)
+            for description in ENTITY_DESCRIPTIONS.get(PydeconzScene, [])
+        )
 
     config_entry.async_on_unload(
-        async_dispatcher_connect(
-            hass,
-            gateway.signal_new_scene,
+        gateway.api.scenes.subscribe(
             async_add_scene,
+            EventType.ADDED,
         )
     )
 
-    async_add_scene()
+    for scene_id in gateway.api.scenes:
+        async_add_scene(EventType.ADDED, scene_id)
 
 
 class DeconzButton(DeconzSceneMixin, ButtonEntity):

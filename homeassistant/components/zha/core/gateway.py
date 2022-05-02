@@ -239,29 +239,25 @@ class ZHAGateway:
 
     async def async_initialize_devices_and_entities(self) -> None:
         """Initialize devices and load entities."""
-        semaphore = asyncio.Semaphore(2)
 
-        async def _throttle(zha_device: ZHADevice, cached: bool) -> None:
-            async with semaphore:
-                await zha_device.async_initialize(from_cache=cached)
-
-        _LOGGER.debug("Loading battery powered devices")
+        _LOGGER.debug("Loading all devices")
         await asyncio.gather(
-            *(
-                _throttle(dev, cached=True)
-                for dev in self.devices.values()
-                if not dev.is_mains_powered
-            )
+            *(dev.async_initialize(from_cache=True) for dev in self.devices.values())
         )
 
-        _LOGGER.debug("Loading mains powered devices")
-        await asyncio.gather(
-            *(
-                _throttle(dev, cached=False)
-                for dev in self.devices.values()
-                if dev.is_mains_powered
+        async def fetch_updated_state() -> None:
+            """Fetch updated state for mains powered devices."""
+            _LOGGER.debug("Fetching current state for mains powered devices")
+            await asyncio.gather(
+                *(
+                    dev.async_initialize(from_cache=False)
+                    for dev in self.devices.values()
+                    if dev.is_mains_powered
+                )
             )
-        )
+
+        # background the fetching of state for mains powered devices
+        asyncio.create_task(fetch_updated_state())
 
     def device_joined(self, device: zigpy.device.Device) -> None:
         """Handle device joined.

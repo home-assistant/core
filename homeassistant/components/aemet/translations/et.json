@@ -14,7 +14,7 @@
                     "longitude": "Pikkuskraad",
                     "name": "Sidumise nimi"
                 },
-                "description": "Seadista AEMET OpenData sidumine. API v\u00f5tme loomiseks mine aadressile https://opendata.aemet.es/centrodedescargas/altaUsuario",
+                "description": "API-v\u00f5tme loomiseks mine aadressile https://opendata.aemet.es/centrodedescargas/altaUsuario",
                 "title": "AEMET OpenData"
             }
         }

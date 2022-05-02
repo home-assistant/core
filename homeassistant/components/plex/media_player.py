@@ -1,11 +1,14 @@
 """Support to interface with the Plex API."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from functools import wraps
 import logging
+from typing import TypeVar
 
 import plexapi.exceptions
 import requests.exceptions
+from typing_extensions import Concatenate, ParamSpec
 
 from homeassistant.components.media_player import (
     DOMAIN as MP_DOMAIN,
@@ -43,17 +46,25 @@ from .const import (
 from .media_browser import browse_media
 from .services import process_plex_payload
 
+_PlexMediaPlayerT = TypeVar("_PlexMediaPlayerT", bound="PlexMediaPlayer")
+_R = TypeVar("_R")
+_P = ParamSpec("_P")
+
 _LOGGER = logging.getLogger(__name__)
 
 
-def needs_session(func):
+def needs_session(
+    func: Callable[Concatenate[_PlexMediaPlayerT, _P], _R]
+) -> Callable[Concatenate[_PlexMediaPlayerT, _P], _R | None]:
     """Ensure session is available for certain attributes."""
 
     @wraps(func)
-    def get_session_attribute(self, *args):
+    def get_session_attribute(
+        self: _PlexMediaPlayerT, *args: _P.args, **kwargs: _P.kwargs
+    ) -> _R | None:
         if self.session is None:
             return None
-        return func(self, *args)
+        return func(self, *args, **kwargs)
 
     return get_session_attribute
 

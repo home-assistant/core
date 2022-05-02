@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "already_configured": "El dispositiu ja est\u00e0 configurat, la configuraci\u00f3 de connexi\u00f3 s'ha actualitzat",
             "already_in_progress": "El flux de configuraci\u00f3 ja est\u00e0 en curs",
             "connection_error": "Ha fallat la connexi\u00f3"
         },
@@ -9,7 +9,7 @@
             "discovery_error": "No s'ha pogut descobrir cap Motion Gateway",
             "invalid_interface": "Interf\u00edcie de xarxa no v\u00e0lida"
         },
-        "flow_title": "Motion Blinds",
+        "flow_title": "{short_mac} ({ip_address})",
         "step": {
             "connect": {
                 "data": {
