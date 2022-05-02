@@ -102,7 +102,7 @@ class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEnt
     @property
     def changed_method(self) -> str | None:
         """Last change method."""
-        return self.coordinator.data["locks"][self.serial_number].get("method")
+        return self.coordinator.data["locks"][self.serial_number]["method"]
 
     @property
     def code_format(self) -> str:
