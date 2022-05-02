@@ -100,8 +100,8 @@ class SlimProtoPlayer(MediaPlayerEntity):
             name=self.player.name,
             hw_version=self.player.firmware,
         )
-        # PiCore player has web interface
-        if "-pCP" in self.player.firmware:
+        # PiCore + SqueezeESP32 player has web interface
+        if "-pCP" in self.player.firmware or self.player.device_model == "SqueezeESP32":
             self._attr_device_info[
                 "configuration_url"
             ] = f"http://{self.player.device_address}"
