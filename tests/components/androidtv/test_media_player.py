@@ -14,6 +14,7 @@ from homeassistant.components.androidtv.const import (
     CONF_APPS,
     CONF_EXCLUDE_UNNAMED_APPS,
     CONF_SCREENCAP,
+    CONF_STATE_DETECTION_RULES,
     CONF_TURN_OFF_COMMAND,
     CONF_TURN_ON_COMMAND,
     DEFAULT_ADB_SERVER_PORT,
@@ -52,6 +53,7 @@ from homeassistant.components.media_player import (
     SERVICE_VOLUME_UP,
 )
 from homeassistant.components.websocket_api.const import TYPE_RESULT
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_COMMAND,
     ATTR_ENTITY_ID,
@@ -1118,6 +1120,41 @@ async def test_exception(hass):
             assert state.state == STATE_UNAVAILABLE
 
         # On the next update, HA will reconnect to the device
+        await async_update_entity(hass, entity_id)
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == STATE_OFF
+
+
+async def test_options_reload(hass):
+    """Test changing an option that will cause integration reload."""
+    patch_key, entity_id, config_entry = _setup(CONFIG_ANDROIDTV_DEFAULT)
+    config_entry.add_to_hass(hass)
+
+    with patchers.patch_connect(True)[patch_key], patchers.patch_shell(
+        SHELL_RESPONSE_OFF
+    )[patch_key]:
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        await async_update_entity(hass, entity_id)
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == STATE_OFF
+
+        # change an option that not require integration reload
+        hass.config_entries.async_update_entry(
+            config_entry, options={CONF_SCREENCAP: False}
+        )
+        await hass.async_block_till_done()
+
+        # change an option that require integration reload
+        hass.config_entries.async_update_entry(
+            config_entry, options={CONF_STATE_DETECTION_RULES: {}}
+        )
+        await hass.async_block_till_done()
+        assert config_entry.state is ConfigEntryState.LOADED
+
         await async_update_entity(hass, entity_id)
         state = hass.states.get(entity_id)
         assert state is not None
