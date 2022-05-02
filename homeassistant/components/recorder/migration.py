@@ -657,10 +657,16 @@ def _apply_update(instance, new_version, old_version):  # noqa: C901
         # We never use the user_id or parent_id index
         _drop_index(instance, "events", "ix_events_context_user_id")
         _drop_index(instance, "events", "ix_events_context_parent_id")
-        _add_columns(instance, "states", ["origin_idx INTEGER"])
-        _add_columns(instance, "states", ["context_id VARCHAR(36)"])
-        _add_columns(instance, "states", ["context_user_id VARCHAR(36)"])
-        _add_columns(instance, "states", ["context_parent_id VARCHAR(36)"])
+        _add_columns(
+            instance,
+            "states",
+            [
+                "origin_idx INTEGER",
+                "context_id VARCHAR(36)",
+                "context_user_id VARCHAR(36)",
+                "context_parent_id VARCHAR(36)",
+            ],
+        )
         _create_index(instance, "states", "ix_states_context_id")
         # Once there are no longer any state_changed events
         # in the events table we can drop the index on states.event_id
