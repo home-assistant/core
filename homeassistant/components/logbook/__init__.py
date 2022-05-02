@@ -597,7 +597,7 @@ def _generate_legacy_events_context_id_query(
         States.state,
         States.entity_id,
         States.attributes,
-        StateAttributes.shared_attrs,
+        literal(value=None, type_=sqlalchemy.String).label("shared_data"),
     )
     legacy_context_id_query = _apply_event_time_filter(
         legacy_context_id_query, start_day, end_day
