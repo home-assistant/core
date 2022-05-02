@@ -94,7 +94,7 @@ def assert_element(trace_element, expected_element, path):
     # Check for unexpected items in trace_element
     assert not set(trace_element._result or {}) - set(expected_result)
 
-    if "error_type" in expected_element:
+    if "error_type" in expected_element and expected_element["error_type"] is not None:
         assert isinstance(trace_element._error, expected_element["error_type"])
     else:
         assert trace_element._error is None
@@ -4482,6 +4482,65 @@ async def test_stop_action(hass, caplog):
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
             "1": [{"result": {"stop": "In the name of love", "error": False}}],
         }
+    )
+
+
+@pytest.mark.parametrize(
+    "error,error_type,logmsg,script_execution",
+    (
+        (True, script._AbortScript, "Error", "aborted"),
+        (False, None, "Stop", "finished"),
+    ),
+)
+async def test_stop_action_subscript(
+    hass, caplog, error, error_type, logmsg, script_execution
+):
+    """Test if automation stops on calling the stop action from a sub-script."""
+    event = "test_event"
+    events = async_capture_events(hass, event)
+
+    alias = "stop step"
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {"event": event},
+            {
+                "if": {
+                    "alias": "if condition",
+                    "condition": "template",
+                    "value_template": "{{ 1 == 1 }}",
+                },
+                "then": {
+                    "alias": alias,
+                    "stop": "In the name of love",
+                    "error": error,
+                },
+            },
+            {"event": event},
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert f"{logmsg} script sequence: In the name of love" in caplog.text
+    caplog.clear()
+    assert len(events) == 1
+
+    assert_action_trace(
+        {
+            "0": [{"result": {"event": "test_event", "event_data": {}}}],
+            "1": [{"error_type": error_type, "result": {"choice": "then"}}],
+            "1/if": [{"result": {"result": True}}],
+            "1/if/condition/0": [{"result": {"result": True, "entities": []}}],
+            "1/then/0": [
+                {
+                    "error_type": error_type,
+                    "result": {"stop": "In the name of love", "error": error},
+                }
+            ],
+        },
+        expected_script_execution=script_execution,
     )
 
 
