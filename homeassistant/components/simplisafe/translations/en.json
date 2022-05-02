@@ -3,23 +3,16 @@
         "abort": {
             "already_configured": "This SimpliSafe account is already in use.",
             "email_2fa_timed_out": "Timed out while waiting for email-based two-factor authentication.",
-            "reauth_successful": "Re-authentication was successful",
-            "wrong_account": "The user credentials provided do not match this SimpliSafe account."
+            "reauth_successful": "Re-authentication was successful"
         },
         "error": {
-            "2fa_timed_out": "Timed out while waiting for two-factor authentication",
-            "identifier_exists": "Account already registered",
             "invalid_auth": "Invalid authentication",
-            "still_awaiting_mfa": "Still awaiting MFA email click",
             "unknown": "Unexpected error"
         },
         "progress": {
-            "email_2fa": "Input the two-factor authentication code\nsent to you via email."
+            "email_2fa": "Check your email for a verification link from Simplisafe."
         },
         "step": {
-            "mfa": {
-                "title": "SimpliSafe Multi-Factor Authentication"
-            },
             "reauth_confirm": {
                 "data": {
                     "password": "Password"
@@ -35,13 +28,10 @@
             },
             "user": {
                 "data": {
-                    "auth_code": "Authorization Code",
-                    "code": "Code (used in Home Assistant UI)",
                     "password": "Password",
                     "username": "Username"
                 },
-                "description": "Input your username and password.",
-                "title": "Fill in your information."
+                "description": "Input your username and password."
             }
         }
     },
