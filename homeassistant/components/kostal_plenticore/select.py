@@ -38,9 +38,7 @@ async def async_setup_entry(
     for select in SELECT_SETTINGS_DATA:
         if select.module_id not in available_settings_data:
             continue
-        needed_data_ids = {
-            data_id for data_id in select.options if data_id != "None"
-        }
+        needed_data_ids = {data_id for data_id in select.options if data_id != "None"}
         available_data_ids = {
             setting.id for setting in available_settings_data[select.module_id]
         }
