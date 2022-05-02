@@ -561,18 +561,11 @@ def _get_events(
             if context_id is not None:
                 states_query = states_query.filter(States.context_id == context_id)
             if filters:
-                states_query = states_query.filter(filters.entity_filter())
+                states_query = states_query.filter(filters.entity_filter())  # type: ignore[no-untyped-call]
 
             query = query.union_all(states_query)
 
         query = query.order_by(Events.time_fired)
-        raw = query.statement.compile(compile_kwargs={"literal_binds": True})
-        import logging
-        import pprint
-
-        _LOGGER = logging.getLogger(__name__)
-        _LOGGER.warning("RAW QUERY: %s", raw)
-        pprint.pprint(["**query**", str(raw)])
 
         return list(
             humanify(hass, yield_events(query), entity_attr_cache, context_lookup)
@@ -878,14 +871,6 @@ class LazyEventPartialState:
         return result.group(1) if result else None
 
     @property
-    def attributes_friendly_name(self) -> str | None:
-        """Extract the friendly name from the decoded attributes or json."""
-        result = FRIENDLY_NAME_JSON_EXTRACT.search(
-            self._row.shared_attrs or self._row.attributes or ""
-        )
-        return result.group(1) if result else None
-
-    @property
     def data_entity_id(self) -> str | None:
         """Extract the entity id from the decoded data or json."""
         if self._event_data:
@@ -905,18 +890,26 @@ class LazyEventPartialState:
         return result.group(1) if result else None
 
     @property
+    def attributes_friendly_name(self) -> str | None:
+        """Extract the friendly name from the decoded attributes or json."""
+        result = FRIENDLY_NAME_JSON_EXTRACT.search(
+            self._row.shared_attrs or self._row.attributes or ""
+        )
+        return result.group(1) if result else None
+
+    @property
     def data(self) -> dict[str, Any]:
         """Event data."""
-        if self._event_data is None:
+        if not self._event_data:
             source: str = self._row.shared_data or self._row.event_data
-            if event_data := self._event_data_cache.get(source):
+            if not source:
+                self._event_data = {}
+            elif event_data := self._event_data_cache.get(source):
                 self._event_data = event_data
-            elif source:
+            else:
                 self._event_data = self._event_data_cache[source] = cast(
                     dict[str, Any], json.loads(source)
                 )
-            else:
-                self._event_data = {}
         return self._event_data
 
     @property

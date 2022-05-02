@@ -1,0 +1,8 @@
+{
+    "system_health": {
+        "info": {
+            "current_recorder_run": "\u76ee\u524d\u57f7\u884c\u958b\u59cb\u6642\u9593",
+            "oldest_recorder_run": "\u6700\u65e9\u57f7\u884c\u958b\u59cb\u6642\u9593"
+        }
+    }
+}

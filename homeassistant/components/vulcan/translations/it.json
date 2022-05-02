@@ -9,7 +9,7 @@
             "cannot_connect": "Errore di connessione: controlla la tua connessione Internet",
             "expired_credentials": "Credenziali scadute: creane una nuova nella pagina di registrazione dell'applicazione mobile Vulcan",
             "expired_token": "Token scaduto: genera un nuovo token",
-            "invalid_pin": "Pin non valido",
+            "invalid_pin": "PIN non valido",
             "invalid_symbol": "Simbolo non valido",
             "invalid_token": "Token non valido",
             "unknown": "Si \u00e8 verificato un errore sconosciuto"
