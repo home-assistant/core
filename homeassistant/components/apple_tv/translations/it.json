@@ -19,7 +19,7 @@
             "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
             "invalid_auth": "Autenticazione non valida",
             "no_devices_found": "Nessun dispositivo trovato sulla rete",
-            "no_usable_service": "\u00c8 stato trovato un dispositivo ma non \u00e8 stato possibile identificare alcun modo per stabilire una connessione ad esso. Se continui a vedere questo messaggio, prova a specificarne l'indirizzo IP o a riavviare l'Apple TV.",
+            "no_usable_service": "\u00c8 stato trovato un dispositivo, ma non \u00e8 stato possibile identificare alcun modo per stabilire una connessione con esso. Se continui a vedere questo messaggio, prova a specificarne l'indirizzo IP o a riavviare l'Apple TV.",
             "unknown": "Errore imprevisto"
         },
         "flow_title": "{name} ({type})",
