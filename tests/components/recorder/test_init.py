@@ -1456,3 +1456,63 @@ async def test_database_connection_keep_alive_disabled_on_sqlite(
     )
     await async_wait_recording_done(hass)
     assert "Sending keepalive" not in caplog.text
+
+
+def test_deduplication_event_data_inside_commit_interval(hass_recorder, caplog):
+    """Test deduplication of event data inside the commit interval."""
+    hass = hass_recorder()
+
+    for _ in range(10):
+        hass.bus.fire("this_event", {"de": "dupe"})
+    wait_recording_done(hass)
+    for _ in range(10):
+        hass.bus.fire("this_event", {"de": "dupe"})
+    wait_recording_done(hass)
+
+    with session_scope(hass=hass) as session:
+        events = list(
+            session.query(Events)
+            .filter(Events.event_type == "this_event")
+            .outerjoin(EventData, (Events.data_id == EventData.data_id))
+        )
+        assert len(events) == 20
+        first_data_id = events[0].data_id
+        assert all(event.data_id == first_data_id for event in events)
+
+
+# Patch STATE_ATTRIBUTES_ID_CACHE_SIZE since otherwise
+# the CI can fail because the test takes too long to run
+@patch("homeassistant.components.recorder.STATE_ATTRIBUTES_ID_CACHE_SIZE", 5)
+def test_deduplication_state_attributes_inside_commit_interval(hass_recorder, caplog):
+    """Test deduplication of state attributes inside the commit interval."""
+    hass = hass_recorder()
+
+    entity_id = "test.recorder"
+    attributes = {"test_attr": 5, "test_attr_10": "nice"}
+
+    hass.states.set(entity_id, "on", attributes)
+    hass.states.set(entity_id, "off", attributes)
+
+    # Now exaust the cache to ensure we go back to the db
+    for attr_id in range(5):
+        hass.states.set(entity_id, "on", {"test_attr": attr_id})
+        hass.states.set(entity_id, "off", {"test_attr": attr_id})
+
+    wait_recording_done(hass)
+    for _ in range(5):
+        hass.states.set(entity_id, "on", attributes)
+        hass.states.set(entity_id, "off", attributes)
+    wait_recording_done(hass)
+
+    with session_scope(hass=hass) as session:
+        states = list(
+            session.query(States)
+            .filter(States.entity_id == entity_id)
+            .outerjoin(
+                StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
+            )
+        )
+        assert len(states) == 22
+        first_attributes_id = states[0].attributes_id
+        last_attributes_id = states[-1].attributes_id
+        assert first_attributes_id == last_attributes_id
