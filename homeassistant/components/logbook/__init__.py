@@ -879,7 +879,7 @@ class LazyEventPartialState:
     @property
     def data(self) -> dict[str, Any]:
         """Event data."""
-        if not self._event_data:
+        if self._event_data is None:
             source: str = self._row.shared_data or self._row.event_data
             if not source:
                 self._event_data = {}
