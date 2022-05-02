@@ -177,10 +177,6 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         """Return the name of the shade."""
         return self._shade_name
 
-    @callback
-    def _async_finish_update_current_cover_position(self):
-        """Finish a position update."""
-
     async def async_close_cover(self, **kwargs):
         """Close the cover."""
         await self._async_move(0)
