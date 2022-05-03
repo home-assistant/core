@@ -12,9 +12,11 @@ from homeassistant.components.androidtv.const import (
     CONF_ADB_SERVER_PORT,
     CONF_ADBKEY,
     CONF_APPS,
+    CONF_CUSTOM_COMMANDS,
     CONF_EXCLUDE_UNNAMED_APPS,
     CONF_SCREENCAP,
     CONF_STATE_DETECTION_RULES,
+    CONF_TURN_ON_COMMAND,
     DEFAULT_ADB_SERVER_PORT,
     DEFAULT_PORT,
     DEVICE_ANDROIDTV,
@@ -1145,3 +1147,27 @@ async def test_options_reload(hass):
 
             assert setup_entry_call.called
             assert config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_migrate_options_key(hass):
+    """Test migrating old CONF_TURN_ON_COMMAND to CONF_CUSTOM_COMMANDS."""
+    patch_key, entity_id, config_entry = _setup(CONFIG_ANDROIDTV_DEFAULT)
+    config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        config_entry,
+        options={CONF_TURN_ON_COMMAND: "test on"},
+    )
+
+    with patchers.patch_connect(True)[patch_key], patchers.patch_shell(
+        SHELL_RESPONSE_OFF
+    )[patch_key]:
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        await async_update_entity(hass, entity_id)
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == STATE_OFF
+        entry = hass.config_entries.async_get_entry(config_entry.entry_id)
+        assert CONF_TURN_ON_COMMAND not in entry.options
+        assert CONF_CUSTOM_COMMANDS in entry.options
