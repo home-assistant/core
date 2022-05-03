@@ -1538,7 +1538,7 @@ pyefergy==22.1.1
 pyeight==0.3.0
 
 # homeassistant.components.electrasmart
-pyelectra==0.0.3
+pyelectra==0.0.5
 
 # homeassistant.components.emby
 pyemby==1.8
