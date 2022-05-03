@@ -130,7 +130,7 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             hostname = cast(str, hostname)
             updated_data[CONF_HOST] = hostname
 
-        if not is_ipv4_address(hostname):
+        if not is_ipv4_address(str(hostname)):
             return self.async_abort(reason="not_ipv4_address")
 
         _LOGGER.debug("Netgear ssdp discovery info: %s", discovery_info)
