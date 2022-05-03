@@ -83,14 +83,11 @@ async def async_setup_entry(
 
     for node in hass_isy_data[ISY994_NODES][SENSOR]:
         _LOGGER.debug("Loading %s", node.name)
-        entities.extend(
-            [
-                ISYSensorEntity(node),
-                ISYAuxSensorEntity(node, PROP_COMMS_ERROR, False),
-            ]
-        )
+        entities.append(ISYSensorEntity(node))
 
+    aux_nodes = set()
     for node, control in hass_isy_data[ISY994_NODES][SENSOR_AUX]:
+        aux_nodes.add(node)
         if control in SKIP_AUX_PROPERTIES:
             continue
         _LOGGER.debug("Loading %s %s", node.name, node.aux_properties[control])
@@ -98,6 +95,10 @@ async def async_setup_entry(
             control.startswith(match) for match in AUX_DISABLED_BY_DEFAULT_MATCH
         )
         entities.append(ISYAuxSensorEntity(node, control, enabled_default))
+
+    for node in aux_nodes:
+        # Anything a node in SENSOR_AUX can potentially have communication errors
+        entities.append(ISYAuxSensorEntity(node, PROP_COMMS_ERROR, False))
 
     for vname, vobj in hass_isy_data[ISY994_VARIABLES]:
         entities.append(ISYSensorVariableEntity(vname, vobj))
