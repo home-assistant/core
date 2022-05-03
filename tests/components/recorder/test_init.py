@@ -1395,7 +1395,7 @@ async def test_database_lock_timeout(hass, recorder_mock):
             self.event.wait()
 
     block_task = BlockQueue()
-    instance.queue.put(block_task)
+    instance.queue_task(block_task)
     with patch.object(recorder.core, "DB_LOCK_TIMEOUT", 0.1):
         try:
             with pytest.raises(TimeoutError):
