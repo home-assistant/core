@@ -124,7 +124,7 @@ class ElroConnectsSiren(ElroConnectsEntity, SirenEntity):
 
     async def async_turn_on(self, **kwargs) -> None:
         """Send a test alarm request."""
-        _LOGGER.info("Sending test alarm request for entity %s", self.entity_id)
+        _LOGGER.debug("Sending test alarm request for entity %s", self.entity_id)
         await self._elro_connects_api.async_connect()
         await self._elro_connects_api.async_process_command(
             TEST_ALARM, device_ID=self._device_id
@@ -135,7 +135,7 @@ class ElroConnectsSiren(ElroConnectsEntity, SirenEntity):
 
     async def async_turn_off(self, **kwargs) -> None:
         """Send a silence alarm request."""
-        _LOGGER.info("Sending silence alarm request for entity %s", self.entity_id)
+        _LOGGER.debug("Sending silence alarm request for entity %s", self.entity_id)
         await self._elro_connects_api.async_connect()
         await self._elro_connects_api.async_process_command(
             SILENCE_ALARM, device_ID=self._device_id

@@ -4,11 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant.components.elro_connects.const import (
-    CONF_CONNECTOR_ID,
-    CONF_UPDATE_INTERVAL,
-    DOMAIN,
-)
+from homeassistant.components.elro_connects.const import CONF_CONNECTOR_ID, DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
@@ -70,7 +66,6 @@ def mock_entry(hass: HomeAssistant) -> ConfigEntry:
             CONF_HOST: "1.1.1.1",
             CONF_CONNECTOR_ID: "ST_deadbeef0000",
             CONF_PORT: 1025,
-            CONF_UPDATE_INTERVAL: 15,
         },
     )
     entry.add_to_hass(hass)

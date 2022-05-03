@@ -11,7 +11,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT, SERVICE_RELOAD, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_CONNECTOR_ID, CONF_UPDATE_INTERVAL, DOMAIN
+from .const import CONF_CONNECTOR_ID, DEFAULT_INTERVAL, DOMAIN
 from .device import ElroConnectsK1
 
 _LOGGER = logging.getLogger(__name__)
@@ -55,7 +55,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER,
         name=DOMAIN.title(),
         update_method=_async_update_data,
-        update_interval=timedelta(seconds=entry.data[CONF_UPDATE_INTERVAL]),
+        update_interval=timedelta(seconds=DEFAULT_INTERVAL),
     )
     elro_connects_api = ElroConnectsK1(
         coordinator,

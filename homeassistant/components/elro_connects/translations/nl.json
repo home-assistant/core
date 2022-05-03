@@ -12,7 +12,6 @@
                 "data": {
                     "connector_id": "Connector ID",
                     "host": "Hostnaam of IP adres",
-                    "interval": "Update interval in seconden",
                     "port": "Poort"
                 }
             }
@@ -22,8 +21,7 @@
         "step": {
             "init": {
                 "data": {
-                    "host": "Host",
-                    "interval": "Update interval in seconden",
+                    "host": "Hostnaam of IP adres",
                     "port": "Poort"
                 }
             }

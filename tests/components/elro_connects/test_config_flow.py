@@ -5,11 +5,7 @@ from elro.api import K1
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.elro_connects.const import (
-    CONF_CONNECTOR_ID,
-    CONF_UPDATE_INTERVAL,
-    DOMAIN,
-)
+from homeassistant.components.elro_connects.const import CONF_CONNECTOR_ID, DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
@@ -39,7 +35,6 @@ async def test_form(hass: HomeAssistant, mock_k1_api: dict[AsyncMock]) -> None:
                 "host": "1.1.1.1",
                 "connector_id": "ST_deadbeef0000",
                 "port": 1025,
-                "interval": 15,
             },
         )
         await hass.async_block_till_done()
@@ -50,7 +45,6 @@ async def test_form(hass: HomeAssistant, mock_k1_api: dict[AsyncMock]) -> None:
         CONF_HOST: "1.1.1.1",
         CONF_CONNECTOR_ID: "ST_deadbeef0000",
         CONF_PORT: 1025,
-        CONF_UPDATE_INTERVAL: 15,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -109,7 +103,6 @@ async def test_already_setup(hass: HomeAssistant, mock_k1_api: dict[AsyncMock]) 
                 CONF_HOST: "1.1.1.2",
                 CONF_CONNECTOR_ID: "ST_deadbeef0000",
                 CONF_PORT: 1024,
-                CONF_UPDATE_INTERVAL: 10,
             },
         )
         await hass.async_block_till_done()
@@ -146,7 +139,6 @@ async def test_update_options(
             user_input={
                 CONF_HOST: "1.1.1.2",
                 CONF_PORT: 1024,
-                CONF_UPDATE_INTERVAL: 10,
             },
         )
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
@@ -154,7 +146,6 @@ async def test_update_options(
     assert config_entry.data.get(CONF_HOST) == "1.1.1.2"
     assert config_entry.data.get(CONF_CONNECTOR_ID) == "ST_deadbeef0000"
     assert config_entry.data.get(CONF_PORT) == 1024
-    assert config_entry.data.get(CONF_UPDATE_INTERVAL) == 10
 
 
 @pytest.mark.parametrize(
@@ -190,7 +181,6 @@ async def test_update_options_cannot_connect_handling(
             user_input={
                 CONF_HOST: "1.1.1.2",
                 CONF_PORT: 1024,
-                CONF_UPDATE_INTERVAL: 10,
             },
         )
     assert result["type"] == RESULT_TYPE_FORM

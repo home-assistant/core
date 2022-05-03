@@ -12,7 +12,6 @@
                 "data": {
                     "connector_id": "Connector ID",
                     "host": "Hostname or IP address",
-                    "interval": "Update interval in seconds",
                     "port": "Port"
                 }
             }
@@ -23,7 +22,6 @@
             "init": {
                 "data": {
                     "host": "Host",
-                    "interval": "Update interval in seconds",
                     "port": "Port"
                 }
             }

@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import timedelta
 import logging
 from typing import Any
 
@@ -20,7 +19,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import CONF_UPDATE_INTERVAL, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,10 +51,6 @@ class ElroConnectsK1(K1):
         self, hass: HomeAssistant, entry: ConfigEntry
     ) -> None:
         """Process updated settings."""
-
-        self._coordinator.update_interval = timedelta(
-            seconds=entry.data[CONF_UPDATE_INTERVAL]
-        )
         await self.async_configure(entry.data[CONF_HOST], entry.data[CONF_PORT])
 
     @property
@@ -116,7 +111,7 @@ class ElroConnectsEntity(CoordinatorEntity):
             self.data = self.coordinator.data[self._device_id]
         else:
             # device removed, remove entity
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Entity %s was removed from the connector, cleaning up", self.entity_id
             )
             entity_registry = er.async_get(self.hass)

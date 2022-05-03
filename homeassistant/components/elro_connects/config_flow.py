@@ -15,24 +15,15 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 
-from .const import (
-    CONF_CONNECTOR_ID,
-    CONF_UPDATE_INTERVAL,
-    DEFAULT_INTERVAL,
-    DEFAULT_PORT,
-    DOMAIN,
-)
+from .const import CONF_CONNECTOR_ID, DEFAULT_PORT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 ELRO_CONNECTS_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_HOST): str,
         vol.Required(CONF_CONNECTOR_ID): str,
+        vol.Required(CONF_HOST): str,
         vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Required(CONF_UPDATE_INTERVAL, default=DEFAULT_INTERVAL): vol.All(
-            vol.Coerce(int), vol.Range(min=10, max=60)
-        ),
     }
 )
 
@@ -145,10 +136,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 {
                     vol.Required(CONF_HOST, default=entry_data.get(CONF_HOST)): str,
                     vol.Required(CONF_PORT, default=entry_data.get(CONF_PORT)): cv.port,
-                    vol.Required(
-                        CONF_UPDATE_INTERVAL,
-                        default=entry_data.get(CONF_UPDATE_INTERVAL),
-                    ): vol.All(vol.Coerce(int), vol.Range(min=10, max=60)),
                 }
             ),
         )
