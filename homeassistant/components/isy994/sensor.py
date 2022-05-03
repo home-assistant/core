@@ -24,6 +24,7 @@ from homeassistant.components.sensor import (
     DOMAIN as SENSOR,
     SensorDeviceClass,
     SensorEntity,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
@@ -66,6 +67,9 @@ ISY_CONTROL_TO_DEVICE_CLASS = {
     "CV": SensorDeviceClass.VOLTAGE,
     "LUMIN": SensorDeviceClass.ILLUMINANCE,
     "PF": SensorDeviceClass.POWER_FACTOR,
+}
+ISY_CONTROL_TO_STATE_CLASS = {
+    control: SensorStateClass.MEASUREMENT for control in ISY_CONTROL_TO_DEVICE_CLASS
 }
 ISY_CONTROL_TO_ENTITY_CATEGORY = {
     PROP_RAMP_RATE: EntityCategory.CONFIG,
@@ -200,6 +204,7 @@ class ISYAuxSensorEntity(ISYSensorEntity):
         self._attr_entity_registry_enabled_default = enabled_default
         self._attr_entity_category = ISY_CONTROL_TO_ENTITY_CATEGORY.get(control)
         self._attr_device_class = ISY_CONTROL_TO_DEVICE_CLASS.get(control)
+        self._attr_state_class = ISY_CONTROL_TO_STATE_CLASS.get(control)
 
     @property
     def target(self) -> Node | NodeProperty | None:
