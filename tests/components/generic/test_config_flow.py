@@ -76,6 +76,7 @@ async def test_form(hass, fakeimg_png, mock_av_open, user_flow):
         CONF_CONTENT_TYPE: "image/png",
         CONF_FRAMERATE: 5,
         CONF_VERIFY_SSL: False,
+        CONF_USE_WALLCLOCK_AS_TIMESTAMPS: True,
     }
 
     await hass.async_block_till_done()
@@ -109,6 +110,7 @@ async def test_form_only_stillimage(hass, fakeimg_png, user_flow):
         CONF_CONTENT_TYPE: "image/png",
         CONF_FRAMERATE: 5,
         CONF_VERIFY_SSL: False,
+        CONF_USE_WALLCLOCK_AS_TIMESTAMPS: True,
     }
 
     await hass.async_block_till_done()
@@ -233,6 +235,7 @@ async def test_form_rtsp_mode(hass, fakeimg_png, mock_av_open, user_flow):
         CONF_CONTENT_TYPE: "image/png",
         CONF_FRAMERATE: 5,
         CONF_VERIFY_SSL: False,
+        CONF_USE_WALLCLOCK_AS_TIMESTAMPS: True,
     }
 
     await hass.async_block_till_done()
@@ -265,6 +268,7 @@ async def test_form_only_stream(hass, mock_av_open, fakeimgbytes_jpg):
         CONF_CONTENT_TYPE: "image/jpeg",
         CONF_FRAMERATE: 5,
         CONF_VERIFY_SSL: False,
+        CONF_USE_WALLCLOCK_AS_TIMESTAMPS: True,
     }
 
     await hass.async_block_till_done()
