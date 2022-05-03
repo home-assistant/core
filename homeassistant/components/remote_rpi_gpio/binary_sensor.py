@@ -5,7 +5,7 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -14,21 +14,21 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from . import (
     CONF_BOUNCETIME,
     CONF_INVERT_LOGIC,
+    CONF_PINS,
     CONF_PULL_MODE,
     DEFAULT_BOUNCETIME,
     DEFAULT_INVERT_LOGIC,
+    DEFAULT_PORT,
     DEFAULT_PULL_MODE,
+    PINS_SCHEMA,
 )
 from .. import remote_rpi_gpio
-
-CONF_PORTS = "ports"
-
-_SENSORS_SCHEMA = vol.Schema({cv.positive_int: cv.string})
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_PORTS): _SENSORS_SCHEMA,
+        vol.Required(CONF_PINS): PINS_SCHEMA,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.positive_int,
         vol.Optional(CONF_INVERT_LOGIC, default=DEFAULT_INVERT_LOGIC): cv.boolean,
         vol.Optional(CONF_BOUNCETIME, default=DEFAULT_BOUNCETIME): cv.positive_int,
         vol.Optional(CONF_PULL_MODE, default=DEFAULT_PULL_MODE): cv.string,
@@ -43,21 +43,22 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Raspberry PI GPIO devices."""
-    address = config["host"]
+    address = config[CONF_HOST]
     invert_logic = config[CONF_INVERT_LOGIC]
     pull_mode = config[CONF_PULL_MODE]
-    ports = config["ports"]
+    port_num = config[CONF_PORT]
     bouncetime = config[CONF_BOUNCETIME] / 1000
+    pins = config[CONF_PINS]
 
     devices = []
-    for port_num, port_name in ports.items():
+    for pin_num, pin_name in pins.items():
         try:
             remote_sensor = remote_rpi_gpio.setup_input(
-                address, port_num, pull_mode, bouncetime
+                address, port_num, pin_num, pull_mode, bouncetime
             )
         except (ValueError, IndexError, KeyError, OSError):
             return
-        new_sensor = RemoteRPiGPIOBinarySensor(port_name, remote_sensor, invert_logic)
+        new_sensor = RemoteRPiGPIOBinarySensor(pin_name, remote_sensor, invert_logic)
         devices.append(new_sensor)
 
     add_entities(devices, True)

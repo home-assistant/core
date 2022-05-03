@@ -1,17 +1,23 @@
 """Support for controlling GPIO pins of a Raspberry Pi."""
 from gpiozero import LED, DigitalInputDevice
 from gpiozero.pins.pigpio import PiGPIOFactory
+import voluptuous as vol
 
 from homeassistant.core import HomeAssistant
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 CONF_BOUNCETIME = "bouncetime"
 CONF_INVERT_LOGIC = "invert_logic"
 CONF_PULL_MODE = "pull_mode"
+CONF_PINS = "pins"
+
+PINS_SCHEMA = vol.Schema({cv.positive_int: cv.string})
 
 DEFAULT_BOUNCETIME = 50
 DEFAULT_INVERT_LOGIC = False
 DEFAULT_PULL_MODE = "UP"
+DEFAULT_PORT = 8888
 
 DOMAIN = "remote_rpi_gpio"
 
@@ -21,18 +27,18 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-def setup_output(address, port, invert_logic):
+def setup_output(address, port, pin, invert_logic):
     """Set up a GPIO as output."""
 
     try:
         return LED(
-            port, active_high=not invert_logic, pin_factory=PiGPIOFactory(address)
+            pin, active_high=not invert_logic, pin_factory=PiGPIOFactory(address, port)
         )
     except (ValueError, IndexError, KeyError):
         return None
 
 
-def setup_input(address, port, pull_mode, bouncetime):
+def setup_input(address, port, pin, pull_mode, bouncetime):
     """Set up a GPIO as input."""
 
     if pull_mode == "UP":
@@ -42,10 +48,10 @@ def setup_input(address, port, pull_mode, bouncetime):
 
     try:
         return DigitalInputDevice(
-            port,
+            pin,
             pull_up=pull_gpio_up,
             bounce_time=bouncetime,
-            pin_factory=PiGPIOFactory(address),
+            pin_factory=PiGPIOFactory(address, port),
         )
     except (ValueError, IndexError, KeyError, OSError):
         return None
