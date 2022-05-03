@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from pydeconz.sensor import PRESENCE_DELAY, Presence
+from pydeconz.models.sensor.presence import PRESENCE_DELAY, Presence
 
 from homeassistant.components.number import (
     DOMAIN,

@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "alread_configured": "Ya configurado. Solo es posible una \u00fanica configuraci\u00f3n.",
             "already_configured": "Ya configurado. Solo es posible una \u00fanica configuraci\u00f3n.",
             "not_compatible": "No se puede obtener informaci\u00f3n de la CPU, esta integraci\u00f3n no es compatible con su sistema"
         },

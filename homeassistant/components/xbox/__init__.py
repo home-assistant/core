@@ -20,6 +20,7 @@ from xbox.webapi.api.provider.smartglass.models import (
     SmartglassConsoleStatus,
 )
 
+from homeassistant.components import application_credentials
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, Platform
 from homeassistant.core import HomeAssistant
@@ -31,8 +32,8 @@ from homeassistant.helpers import (
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import api, config_flow
-from .const import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
+from . import api
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,15 +64,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if DOMAIN not in config:
         return True
 
-    config_flow.OAuth2FlowHandler.async_register_implementation(
+    await application_credentials.async_import_client_credential(
         hass,
-        config_entry_oauth2_flow.LocalOAuth2Implementation(
-            hass,
-            DOMAIN,
-            config[DOMAIN][CONF_CLIENT_ID],
-            config[DOMAIN][CONF_CLIENT_SECRET],
-            OAUTH2_AUTHORIZE,
-            OAUTH2_TOKEN,
+        DOMAIN,
+        application_credentials.ClientCredential(
+            config[DOMAIN][CONF_CLIENT_ID], config[DOMAIN][CONF_CLIENT_SECRET]
         ),
     )
 

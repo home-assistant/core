@@ -417,7 +417,7 @@ class Template:
 
         return self._parse_result(render_result)
 
-    def _parse_result(self, render_result: str) -> Any:  # pylint: disable=no-self-use
+    def _parse_result(self, render_result: str) -> Any:
         """Parse the result."""
         try:
             result = literal_eval(render_result)
@@ -1331,7 +1331,7 @@ def warn_no_default(function, value, default):
         (
             "Template warning: '%s' got invalid input '%s' when %s template '%s' "
             "but no default was specified. Currently '%s' will return '%s', however this template will fail "
-            "to render in Home Assistant core 2022.1"
+            "to render in Home Assistant core 2022.6"
         ),
         function,
         value,

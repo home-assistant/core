@@ -16,13 +16,18 @@ homeassistant.auth.providers.*
 homeassistant.helpers.area_registry
 homeassistant.helpers.condition
 homeassistant.helpers.discovery
+homeassistant.helpers.entity
 homeassistant.helpers.entity_values
+homeassistant.helpers.event
 homeassistant.helpers.reload
 homeassistant.helpers.script_variables
+homeassistant.helpers.sun
 homeassistant.helpers.translation
 homeassistant.util.async_
 homeassistant.util.color
 homeassistant.util.decorator
+homeassistant.util.location
+homeassistant.util.logging
 homeassistant.util.process
 homeassistant.util.unit_system
 
@@ -86,6 +91,7 @@ homeassistant.components.flunearyou.*
 homeassistant.components.flux_led.*
 homeassistant.components.forecast_solar.*
 homeassistant.components.fritzbox.*
+homeassistant.components.fritzbox_callmonitor.*
 homeassistant.components.fronius.*
 homeassistant.components.frontend.*
 homeassistant.components.fritz.*
@@ -133,6 +139,7 @@ homeassistant.components.lcn.*
 homeassistant.components.light.*
 homeassistant.components.local_ip.*
 homeassistant.components.lock.*
+homeassistant.components.logbook.*
 homeassistant.components.lookin.*
 homeassistant.components.luftdaten.*
 homeassistant.components.mailbox.*
@@ -172,6 +179,7 @@ homeassistant.components.rdw.*
 homeassistant.components.recollect_waste.*
 homeassistant.components.recorder
 homeassistant.components.recorder.const
+homeassistant.components.recorder.core
 homeassistant.components.recorder.backup
 homeassistant.components.recorder.executor
 homeassistant.components.recorder.history
@@ -179,7 +187,10 @@ homeassistant.components.recorder.models
 homeassistant.components.recorder.pool
 homeassistant.components.recorder.purge
 homeassistant.components.recorder.repack
+homeassistant.components.recorder.run_history
 homeassistant.components.recorder.statistics
+homeassistant.components.recorder.system_health
+homeassistant.components.recorder.tasks
 homeassistant.components.recorder.util
 homeassistant.components.recorder.websocket_api
 homeassistant.components.remote.*

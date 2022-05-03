@@ -226,9 +226,9 @@ class EventManager:
 
             self._events[event.uid] = event
 
-    def get_uid(self, uid) -> Event:
+    def get_uid(self, uid) -> Event | None:
         """Retrieve event for given id."""
-        return self._events[uid]
+        return self._events.get(uid)
 
     def get_platform(self, platform) -> list[Event]:
         """Retrieve events for given platform."""

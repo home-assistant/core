@@ -58,7 +58,6 @@ omit =
     homeassistant/components/amcrest/*
     homeassistant/components/ampio/*
     homeassistant/components/android_ip_webcam/*
-    homeassistant/components/androidtv/__init__.py
     homeassistant/components/androidtv/diagnostics.py
     homeassistant/components/anel_pwrctrl/switch.py
     homeassistant/components/anthemav/media_player.py
@@ -73,7 +72,6 @@ omit =
     homeassistant/components/arest/binary_sensor.py
     homeassistant/components/arest/sensor.py
     homeassistant/components/arest/switch.py
-    homeassistant/components/arlo/*
     homeassistant/components/arris_tg2492lg/*
     homeassistant/components/aruba/device_tracker.py
     homeassistant/components/arwn/sensor.py
@@ -993,7 +991,8 @@ omit =
     homeassistant/components/rtorrent/sensor.py
     homeassistant/components/russound_rio/media_player.py
     homeassistant/components/russound_rnet/media_player.py
-    homeassistant/components/sabnzbd/*
+    homeassistant/components/sabnzbd/__init__.py
+    homeassistant/components/sabnzbd/sensor.py
     homeassistant/components/saj/sensor.py
     homeassistant/components/satel_integra/*
     homeassistant/components/schluter/*
@@ -1129,6 +1128,8 @@ omit =
     homeassistant/components/spotify/media_player.py
     homeassistant/components/spotify/system_health.py
     homeassistant/components/spotify/util.py
+    homeassistant/components/slimproto/__init__.py
+    homeassistant/components/slimproto/media_player.py
     homeassistant/components/squeezebox/__init__.py
     homeassistant/components/squeezebox/browse_media.py
     homeassistant/components/squeezebox/media_player.py
@@ -1178,6 +1179,7 @@ omit =
     homeassistant/components/synology_dsm/camera.py
     homeassistant/components/synology_dsm/diagnostics.py
     homeassistant/components/synology_dsm/common.py
+    homeassistant/components/synology_dsm/entity.py
     homeassistant/components/synology_dsm/sensor.py
     homeassistant/components/synology_dsm/service.py
     homeassistant/components/synology_dsm/switch.py
@@ -1202,7 +1204,7 @@ omit =
     homeassistant/components/tankerkoenig/const.py
     homeassistant/components/tankerkoenig/sensor.py
     homeassistant/components/tapsaff/binary_sensor.py
-    homeassistant/components/tautulli/const.py
+    homeassistant/components/tautulli/__init__.py
     homeassistant/components/tautulli/coordinator.py
     homeassistant/components/tautulli/sensor.py
     homeassistant/components/ted5000/sensor.py
@@ -1278,6 +1280,9 @@ omit =
     homeassistant/components/tradfri/light.py
     homeassistant/components/tradfri/sensor.py
     homeassistant/components/tradfri/switch.py
+    homeassistant/components/trafikverket_ferry/__init__.py
+    homeassistant/components/trafikverket_ferry/coordinator.py
+    homeassistant/components/trafikverket_ferry/sensor.py
     homeassistant/components/trafikverket_train/__init__.py
     homeassistant/components/trafikverket_train/sensor.py
     homeassistant/components/trafikverket_weatherstation/__init__.py
@@ -1447,6 +1452,7 @@ omit =
     homeassistant/components/yale_smart_alarm/__init__.py
     homeassistant/components/yale_smart_alarm/alarm_control_panel.py
     homeassistant/components/yale_smart_alarm/binary_sensor.py
+    homeassistant/components/yale_smart_alarm/button.py
     homeassistant/components/yale_smart_alarm/const.py
     homeassistant/components/yale_smart_alarm/coordinator.py
     homeassistant/components/yale_smart_alarm/diagnostics.py
@@ -1456,6 +1462,7 @@ omit =
     homeassistant/components/yamaha_musiccast/media_player.py
     homeassistant/components/yamaha_musiccast/number.py
     homeassistant/components/yamaha_musiccast/select.py
+    homeassistant/components/yamaha_musiccast/switch.py
     homeassistant/components/yandex_transport/*
     homeassistant/components/yeelightsunflower/light.py
     homeassistant/components/yi/camera.py

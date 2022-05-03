@@ -29,6 +29,10 @@
         },
         "step": {
             "ack_no_options": {
+                "data": {
+                    "one": "Leeg",
+                    "other": "Ander"
+                },
                 "description": "Er zijn geen opties voor de SysBus implementatie",
                 "title": "OneWire SysBus opties"
             },

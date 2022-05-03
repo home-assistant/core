@@ -79,20 +79,6 @@ def get_last_state_changes(hass, number_of_states, entity_id):
     return history.get_last_state_changes(hass, number_of_states, entity_id)
 
 
-@deprecated_function("homeassistant.components.recorder.history.get_states")
-def get_states(hass, utc_point_in_time, entity_ids=None, run=None, filters=None):
-    """Return the states at a specific point in time."""
-    return history.get_states(
-        hass, utc_point_in_time, entity_ids=None, run=None, filters=None
-    )
-
-
-@deprecated_function("homeassistant.components.recorder.history.get_state")
-def get_state(hass, utc_point_in_time, entity_id, run=None):
-    """Return a state at a specific point in time."""
-    return history.get_state(hass, utc_point_in_time, entity_id, run=None)
-
-
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the history hooks."""
     conf = config.get(DOMAIN, {})

@@ -9,7 +9,7 @@ from sqlalchemy import text
 from sqlalchemy.sql.elements import TextClause
 
 from homeassistant.components import recorder
-from homeassistant.components.recorder import run_information_with_session, util
+from homeassistant.components.recorder import util
 from homeassistant.components.recorder.const import DATA_INSTANCE, SQLITE_URL_PREFIX
 from homeassistant.components.recorder.models import RecorderRuns
 from homeassistant.components.recorder.util import (
@@ -18,11 +18,12 @@ from homeassistant.components.recorder.util import (
     session_scope,
 )
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from .common import corrupt_db_file
+from .common import corrupt_db_file, run_information_with_session
 
-from tests.common import async_init_recorder_component, async_test_home_assistant
+from tests.common import SetupRecorderInstanceT, async_test_home_assistant
 
 
 def test_session_scope_not_setup(hass_recorder):
@@ -44,7 +45,7 @@ def test_recorder_bad_commit(hass_recorder):
         session.execute(text("select * from notthere"))
 
     with patch(
-        "homeassistant.components.recorder.time.sleep"
+        "homeassistant.components.recorder.core.time.sleep"
     ) as e_mock, util.session_scope(hass=hass) as session:
         res = util.commit(session, work)
     assert res is False
@@ -65,7 +66,7 @@ def test_recorder_bad_execute(hass_recorder):
     mck1.to_native = to_native
 
     with pytest.raises(SQLAlchemyError), patch(
-        "homeassistant.components.recorder.time.sleep"
+        "homeassistant.components.recorder.core.time.sleep"
     ) as e_mock:
         util.execute((mck1,), to_native=True)
 
@@ -96,7 +97,9 @@ def test_validate_or_move_away_sqlite_database(hass, tmpdir, caplog):
     assert util.validate_or_move_away_sqlite_database(dburl) is True
 
 
-async def test_last_run_was_recently_clean(hass, tmp_path):
+async def test_last_run_was_recently_clean(
+    loop, async_setup_recorder_instance: SetupRecorderInstanceT, tmp_path
+):
     """Test we can check if the last recorder run was recently clean."""
     config = {
         recorder.CONF_DB_URL: "sqlite:///" + str(tmp_path / "pytest.db"),
@@ -116,7 +119,7 @@ async def test_last_run_was_recently_clean(hass, tmp_path):
         "homeassistant.components.recorder.util.last_run_was_recently_clean",
         wraps=_last_run_was_recently_clean,
     ) as last_run_was_recently_clean_mock:
-        await async_init_recorder_component(hass, config)
+        await async_setup_recorder_instance(hass, config)
         await hass.async_block_till_done()
         last_run_was_recently_clean_mock.assert_not_called()
 
@@ -130,7 +133,7 @@ async def test_last_run_was_recently_clean(hass, tmp_path):
         wraps=_last_run_was_recently_clean,
     ) as last_run_was_recently_clean_mock:
         hass = await async_test_home_assistant(None)
-        await async_init_recorder_component(hass, config)
+        await async_setup_recorder_instance(hass, config)
         last_run_was_recently_clean_mock.assert_called_once()
         assert return_values[-1] is True
 
@@ -145,11 +148,11 @@ async def test_last_run_was_recently_clean(hass, tmp_path):
         "homeassistant.components.recorder.util.last_run_was_recently_clean",
         wraps=_last_run_was_recently_clean,
     ) as last_run_was_recently_clean_mock, patch(
-        "homeassistant.components.recorder.dt_util.utcnow",
+        "homeassistant.components.recorder.core.dt_util.utcnow",
         return_value=thirty_min_future_time,
     ):
         hass = await async_test_home_assistant(None)
-        await async_init_recorder_component(hass, config)
+        await async_setup_recorder_instance(hass, config)
         last_run_was_recently_clean_mock.assert_called_once()
         assert return_values[-1] is False
 
@@ -594,7 +597,9 @@ def test_periodic_db_cleanups(hass_recorder):
     assert str(text_obj) == "PRAGMA wal_checkpoint(TRUNCATE);"
 
 
-async def test_write_lock_db(hass, tmp_path):
+async def test_write_lock_db(
+    hass: HomeAssistant, async_setup_recorder_instance: SetupRecorderInstanceT, tmp_path
+):
     """Test database write lock."""
     from sqlalchemy.exc import OperationalError
 
@@ -602,7 +607,7 @@ async def test_write_lock_db(hass, tmp_path):
     config = {
         recorder.CONF_DB_URL: "sqlite:///" + str(tmp_path / "pytest.db?timeout=0.1")
     }
-    await async_init_recorder_component(hass, config)
+    await async_setup_recorder_instance(hass, config)
     await hass.async_block_till_done()
 
     instance = hass.data[DATA_INSTANCE]

@@ -2,12 +2,15 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable, Callable, Coroutine
 import functools
 import logging
+from typing import Any, TypeVar
 
 import aiohttp
 from async_upnp_client.client import UpnpError
 from openhomedevice.device import Device
+from typing_extensions import Concatenate, ParamSpec
 import voluptuous as vol
 
 from homeassistant.components import media_source
@@ -26,6 +29,10 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import ATTR_PIN_INDEX, DATA_OPENHOME, SERVICE_INVOKE_PIN
+
+_OpenhomeDeviceT = TypeVar("_OpenhomeDeviceT", bound="OpenhomeDevice")
+_R = TypeVar("_R")
+_P = ParamSpec("_P")
 
 SUPPORT_OPENHOME = (
     MediaPlayerEntityFeature.SELECT_SOURCE
@@ -74,19 +81,27 @@ async def async_setup_platform(
     )
 
 
-def catch_request_errors():
+def catch_request_errors() -> Callable[
+    [Callable[Concatenate[_OpenhomeDeviceT, _P], Awaitable[_R]]],
+    Callable[Concatenate[_OpenhomeDeviceT, _P], Coroutine[Any, Any, _R | None]],
+]:
     """Catch asyncio.TimeoutError, aiohttp.ClientError, UpnpError errors."""
 
-    def call_wrapper(func):
+    def call_wrapper(
+        func: Callable[Concatenate[_OpenhomeDeviceT, _P], Awaitable[_R]]
+    ) -> Callable[Concatenate[_OpenhomeDeviceT, _P], Coroutine[Any, Any, _R | None]]:
         """Call wrapper for decorator."""
 
         @functools.wraps(func)
-        async def wrapper(self, *args, **kwargs):
+        async def wrapper(
+            self: _OpenhomeDeviceT, *args: _P.args, **kwargs: _P.kwargs
+        ) -> _R | None:
             """Catch asyncio.TimeoutError, aiohttp.ClientError, UpnpError errors."""
             try:
                 return await func(self, *args, **kwargs)
             except (asyncio.TimeoutError, aiohttp.ClientError, UpnpError):
                 _LOGGER.error("Error during call %s", func.__name__)
+            return None
 
         return wrapper
 
