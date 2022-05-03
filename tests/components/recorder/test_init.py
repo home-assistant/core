@@ -20,10 +20,6 @@ from homeassistant.components.recorder import (
     CONF_DB_URL,
     CONFIG_SCHEMA,
     DOMAIN,
-    SERVICE_DISABLE,
-    SERVICE_ENABLE,
-    SERVICE_PURGE,
-    SERVICE_PURGE_ENTITIES,
     SQLITE_URL_PREFIX,
     Recorder,
     get_instance,
@@ -37,6 +33,12 @@ from homeassistant.components.recorder.models import (
     States,
     StatisticsRuns,
     process_timestamp,
+)
+from homeassistant.components.recorder.services import (
+    SERVICE_DISABLE,
+    SERVICE_ENABLE,
+    SERVICE_PURGE,
+    SERVICE_PURGE_ENTITIES,
 )
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import (
