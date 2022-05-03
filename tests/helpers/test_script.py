@@ -1445,7 +1445,7 @@ async def test_condition_warning(hass, caplog):
     assert_action_trace(
         {
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
-            "1": [{"error_type": script._AbortScript, "result": {"result": False}}],
+            "1": [{"result": {"result": False}}],
             "1/entity_id/0": [{"error_type": ConditionError}],
         },
         expected_script_execution="aborted",
@@ -1499,7 +1499,6 @@ async def test_condition_basic(hass, caplog):
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
             "1": [
                 {
-                    "error_type": script._AbortScript,
                     "result": {"entities": ["test.entity"], "result": False},
                 }
             ],
@@ -1590,7 +1589,6 @@ async def test_shorthand_template_condition(hass, caplog):
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
             "1": [
                 {
-                    "error_type": script._AbortScript,
                     "result": {"entities": ["test.entity"], "result": False},
                 }
             ],
@@ -1656,7 +1654,6 @@ async def test_condition_validation(hass, caplog):
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
             "1": [
                 {
-                    "error_type": script._AbortScript,
                     "result": {"result": False},
                 }
             ],
