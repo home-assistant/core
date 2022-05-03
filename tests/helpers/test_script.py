@@ -3047,6 +3047,150 @@ async def test_parallel(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
     assert_action_trace(expected_trace)
 
 
+async def test_parallel_loop(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test parallel loops do not affect each other."""
+    events_loop1 = async_capture_events(hass, "loop1")
+    events_loop2 = async_capture_events(hass, "loop2")
+    hass.states.async_set("switch.trigger", "off")
+
+    sequence = cv.SCRIPT_SCHEMA(
+        {
+            "parallel": [
+                {
+                    "alias": "Loop1",
+                    "sequence": [
+                        {
+                            "repeat": {
+                                "for_each": ["loop1_a", "loop1_b", "loop1_c"],
+                                "sequence": [
+                                    {
+                                        "event": "loop1",
+                                        "event_data": {"hello1": "{{ repeat.item }}"},
+                                    }
+                                ],
+                            },
+                        },
+                    ],
+                },
+                {
+                    "alias": "Loop2",
+                    "sequence": [
+                        {
+                            "repeat": {
+                                "for_each": ["loop2_a", "loop2_b", "loop2_c"],
+                                "sequence": [
+                                    {
+                                        "event": "loop2",
+                                        "event_data": {"hello2": "{{ repeat.item }}"},
+                                    }
+                                ],
+                            },
+                        },
+                    ],
+                },
+            ]
+        }
+    )
+
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    hass.async_create_task(
+        script_obj.async_run(MappingProxyType({"what": "world"}), Context())
+    )
+    await hass.async_block_till_done()
+
+    assert len(events_loop1) == 3
+    assert events_loop1[0].data["hello1"] == "loop1_a"
+    assert events_loop1[1].data["hello1"] == "loop1_b"
+    assert events_loop1[2].data["hello1"] == "loop1_c"
+    assert events_loop2[0].data["hello2"] == "loop2_a"
+    assert events_loop2[1].data["hello2"] == "loop2_b"
+    assert events_loop2[2].data["hello2"] == "loop2_c"
+
+    expected_trace = {
+        "0": [{"result": {}}],
+        "0/parallel/0/sequence/0": [{"result": {}}],
+        "0/parallel/1/sequence/0": [
+            {
+                "result": {},
+            }
+        ],
+        "0/parallel/0/sequence/0/repeat/sequence/0": [
+            {
+                "variables": {
+                    "repeat": {
+                        "first": True,
+                        "index": 1,
+                        "last": False,
+                        "item": "loop1_a",
+                    }
+                },
+                "result": {"event": "loop1", "event_data": {"hello1": "loop1_a"}},
+            },
+            {
+                "variables": {
+                    "repeat": {
+                        "first": False,
+                        "index": 2,
+                        "last": False,
+                        "item": "loop1_b",
+                    }
+                },
+                "result": {"event": "loop1", "event_data": {"hello1": "loop1_b"}},
+            },
+            {
+                "variables": {
+                    "repeat": {
+                        "first": False,
+                        "index": 3,
+                        "last": True,
+                        "item": "loop1_c",
+                    }
+                },
+                "result": {"event": "loop1", "event_data": {"hello1": "loop1_c"}},
+            },
+        ],
+        "0/parallel/1/sequence/0/repeat/sequence/0": [
+            {
+                "variables": {
+                    "repeat": {
+                        "first": True,
+                        "index": 1,
+                        "last": False,
+                        "item": "loop2_a",
+                    }
+                },
+                "result": {"event": "loop2", "event_data": {"hello2": "loop2_a"}},
+            },
+            {
+                "variables": {
+                    "repeat": {
+                        "first": False,
+                        "index": 2,
+                        "last": False,
+                        "item": "loop2_b",
+                    }
+                },
+                "result": {"event": "loop2", "event_data": {"hello2": "loop2_b"}},
+            },
+            {
+                "variables": {
+                    "repeat": {
+                        "first": False,
+                        "index": 3,
+                        "last": True,
+                        "item": "loop2_c",
+                    }
+                },
+                "result": {"event": "loop2", "event_data": {"hello2": "loop2_c"}},
+            },
+        ],
+    }
+    assert_action_trace(expected_trace)
+
+
 async def test_parallel_error(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
