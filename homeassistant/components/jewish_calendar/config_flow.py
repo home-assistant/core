@@ -7,17 +7,16 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
-from homeassistant.const import (
-    CONF_ELEVATION,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    CONF_NAME,
-    CONF_TIME_ZONE,
-)
+from homeassistant.const import CONF_ELEVATION, CONF_LOCATION, CONF_NAME, CONF_TIME_ZONE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers import selector
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.selector import (
+    BooleanSelector,
+    LocationSelector,
+    SelectOptionDict,
+    SelectSelector,
+    SelectSelectorConfig,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -34,8 +33,8 @@ from .const import (
 )
 
 LANGUAGE = [
-    selector.SelectOptionDict(value="hebrew", label="Hebrew"),
-    selector.SelectOptionDict(value="english", label="English"),
+    SelectOptionDict(value="hebrew", label="Hebrew"),
+    SelectOptionDict(value="english", label="English"),
 ]
 
 _LOGGER = logging.getLogger(__name__)
@@ -90,19 +89,18 @@ class JewishCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
                     vol.Required(
                         CONF_DIASPORA, default=DEFAULT_DIASPORA
-                    ): selector.BooleanSelector(),
+                    ): BooleanSelector(),
                     vol.Required(
                         CONF_LANGUAGE, default=DEFAULT_LANGUAGE
-                    ): selector.SelectSelector(
-                        selector.SelectSelectorConfig(options=LANGUAGE)
-                    ),
+                    ): SelectSelector(SelectSelectorConfig(options=LANGUAGE)),
                     # Default is Hass defaults, unless user wants to override
-                    vol.Optional(
-                        CONF_LATITUDE, default=self.hass.config.latitude
-                    ): cv.latitude,
-                    vol.Optional(
-                        CONF_LONGITUDE, default=self.hass.config.longitude
-                    ): cv.longitude,
+                    vol.Required(
+                        CONF_LOCATION,
+                        default={
+                            "latitude": self.hass.config.latitude,
+                            "longitude": self.hass.config.longitude,
+                        },
+                    ): LocationSelector(),
                     vol.Optional(
                         CONF_ELEVATION, default=self.hass.config.elevation
                     ): int,
