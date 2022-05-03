@@ -152,10 +152,6 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
         # if exist one entry without unique ID, we abort config flow
         for unique_id in self._async_current_ids():
             if unique_id is None:
-                _LOGGER.warning(
-                    "A device without a valid UniqueID is already configured."
-                    " Configuration of multiple instance is not possible"
-                )
                 return self.async_abort(reason="not_unique_id_exist")
 
         if user_input is None:
