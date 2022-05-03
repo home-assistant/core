@@ -1,5 +1,4 @@
 """Tests for 1-Wire config flow."""
-import logging
 from unittest.mock import MagicMock
 
 from pyownet import protocol
@@ -48,35 +47,4 @@ async def test_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.NOT_LOADED
-    assert not hass.data.get(DOMAIN)
-
-
-@pytest.mark.usefixtures("sysbus")
-async def test_warning_no_devices(
-    hass: HomeAssistant,
-    sysbus_config_entry: ConfigEntry,
-    caplog: pytest.LogCaptureFixture,
-):
-    """Test warning is generated when no sysbus devices found."""
-    with caplog.at_level(logging.WARNING, logger="homeassistant.components.onewire"):
-        await hass.config_entries.async_setup(sysbus_config_entry.entry_id)
-        await hass.async_block_till_done()
-        assert "No onewire sensor found. Check if dtoverlay=w1-gpio" in caplog.text
-
-
-@pytest.mark.usefixtures("sysbus")
-async def test_unload_sysbus_entry(
-    hass: HomeAssistant, sysbus_config_entry: ConfigEntry
-):
-    """Test being able to unload an entry."""
-    await hass.config_entries.async_setup(sysbus_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert sysbus_config_entry.state is ConfigEntryState.LOADED
-
-    assert await hass.config_entries.async_unload(sysbus_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert sysbus_config_entry.state is ConfigEntryState.NOT_LOADED
     assert not hass.data.get(DOMAIN)

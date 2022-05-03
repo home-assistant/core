@@ -2,8 +2,6 @@
 from unittest.mock import MagicMock, patch
 
 from homeassistant.components.onewire.const import (
-    CONF_TYPE_SYSBUS,
-    DOMAIN,
     INPUT_ENTRY_CLEAR_OPTIONS,
     INPUT_ENTRY_DEVICE_SELECTION,
 )
@@ -24,12 +22,6 @@ class FakeDevice:
     """Mock Class for mocking DeviceEntry."""
 
     name_by_user = "Given Name"
-
-
-class FakeOWHubSysBus:
-    """Mock Class for mocking onewire hub."""
-
-    type = CONF_TYPE_SYSBUS
 
 
 async def test_user_owserver_options_clear(
@@ -223,15 +215,3 @@ async def test_user_owserver_options_no_devices(
     await hass.async_block_till_done()
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "No configurable devices found."
-
-
-async def test_user_sysbus_options(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-):
-    """Test that SysBus options flow aborts on init."""
-    hass.data[DOMAIN] = {config_entry.entry_id: FakeOWHubSysBus()}
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert result["type"] == RESULT_TYPE_ABORT
-    assert result["reason"] == "SysBus setup does not have any config options."
