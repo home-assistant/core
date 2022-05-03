@@ -1,20 +1,25 @@
 """Support for recorder services."""
 from __future__ import annotations
 
+from datetime import timedelta
+from typing import cast
+
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entityfilter import generate_filter
 from homeassistant.helpers.service import async_extract_entity_ids
+import homeassistant.util.dt as dt_util
 
 from .const import ATTR_APPLY_FILTER, ATTR_KEEP_DAYS, ATTR_REPACK, DOMAIN
 from .core import Recorder
+from .tasks import PurgeEntitiesTask, PurgeTask
 
 SERVICE_PURGE = "purge"
 SERVICE_PURGE_ENTITIES = "purge_entities"
 SERVICE_ENABLE = "enable"
 SERVICE_DISABLE = "disable"
-
 
 SERVICE_PURGE_SCHEMA = vol.Schema(
     {
@@ -44,7 +49,12 @@ SERVICE_DISABLE_SCHEMA = vol.Schema({})
 def _async_register_purge_service(hass: HomeAssistant, instance: Recorder) -> None:
     async def async_handle_purge_service(service: ServiceCall) -> None:
         """Handle calls to the purge service."""
-        instance.do_adhoc_purge(**service.data)
+        kwargs = service.data
+        keep_days = kwargs.get(ATTR_KEEP_DAYS, instance.keep_days)
+        repack = cast(bool, kwargs[ATTR_REPACK])
+        apply_filter = cast(bool, kwargs[ATTR_APPLY_FILTER])
+        purge_before = dt_util.utcnow() - timedelta(days=keep_days)
+        instance.queue_task(PurgeTask(purge_before, repack, apply_filter))
 
     hass.services.async_register(
         DOMAIN, SERVICE_PURGE, async_handle_purge_service, schema=SERVICE_PURGE_SCHEMA
@@ -60,8 +70,8 @@ def _async_register_purge_entities_service(
         entity_ids = await async_extract_entity_ids(hass, service)
         domains = service.data.get(ATTR_DOMAINS, [])
         entity_globs = service.data.get(ATTR_ENTITY_GLOBS, [])
-
-        instance.do_adhoc_purge_entities(entity_ids, domains, entity_globs)
+        entity_filter = generate_filter(domains, list(entity_ids), [], [], entity_globs)
+        instance.queue_task(PurgeEntitiesTask(entity_filter))
 
     hass.services.async_register(
         DOMAIN,

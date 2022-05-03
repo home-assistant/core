@@ -78,7 +78,9 @@ class PurgeTask(RecorderTask):
             periodic_db_cleanups(instance)
             return
         # Schedule a new purge task if this one didn't finish
-        instance.queue.put(PurgeTask(self.purge_before, self.repack, self.apply_filter))
+        instance.queue_task(
+            PurgeTask(self.purge_before, self.repack, self.apply_filter)
+        )
 
 
 @dataclass
@@ -92,7 +94,7 @@ class PurgeEntitiesTask(RecorderTask):
         if purge.purge_entity_data(instance, self.entity_filter):
             return
         # Schedule a new purge task if this one didn't finish
-        instance.queue.put(PurgeEntitiesTask(self.entity_filter))
+        instance.queue_task(PurgeEntitiesTask(self.entity_filter))
 
 
 @dataclass
@@ -115,7 +117,7 @@ class StatisticsTask(RecorderTask):
         if statistics.compile_statistics(instance, self.start):
             return
         # Schedule a new statistics task if this one didn't finish
-        instance.queue.put(StatisticsTask(self.start))
+        instance.queue_task(StatisticsTask(self.start))
 
 
 @dataclass
@@ -130,7 +132,7 @@ class ExternalStatisticsTask(RecorderTask):
         if statistics.add_external_statistics(instance, self.metadata, self.statistics):
             return
         # Schedule a new statistics task if this one didn't finish
-        instance.queue.put(ExternalStatisticsTask(self.metadata, self.statistics))
+        instance.queue_task(ExternalStatisticsTask(self.metadata, self.statistics))
 
 
 @dataclass
@@ -151,7 +153,7 @@ class AdjustStatisticsTask(RecorderTask):
         ):
             return
         # Schedule a new adjust statistics task if this one didn't finish
-        instance.queue.put(
+        instance.queue_task(
             AdjustStatisticsTask(
                 self.statistic_id, self.start_time, self.sum_adjustment
             )
