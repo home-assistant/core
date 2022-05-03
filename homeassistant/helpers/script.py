@@ -439,6 +439,7 @@ class _ScriptRun:
                     self._log(
                         "Skipped disabled step %s", self._action.get(CONF_ALIAS, action)
                     )
+                    trace_set_result(enabled=False)
                     return
 
                 try:
