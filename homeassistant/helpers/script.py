@@ -1133,13 +1133,14 @@ class Script:
         domain: str,
         *,
         # Used in "Running <running_description>" log message
-        running_description: str | None = None,
         change_listener: Callable[..., Any] | None = None,
-        script_mode: str = DEFAULT_SCRIPT_MODE,
-        max_runs: int = DEFAULT_MAX,
-        max_exceeded: str = DEFAULT_MAX_EXCEEDED,
-        logger: logging.Logger | None = None,
+        copy_variables: bool = False,
         log_exceptions: bool = True,
+        logger: logging.Logger | None = None,
+        max_exceeded: str = DEFAULT_MAX_EXCEEDED,
+        max_runs: int = DEFAULT_MAX,
+        running_description: str | None = None,
+        script_mode: str = DEFAULT_SCRIPT_MODE,
         top_level: bool = True,
         variables: ScriptVariables | None = None,
     ) -> None:
@@ -1192,6 +1193,7 @@ class Script:
         self._variables_dynamic = template.is_complex(variables)
         if self._variables_dynamic:
             template.attach(hass, variables)
+        self._copy_variables_on_run = copy_variables
 
     @property
     def change_listener(self) -> Callable[..., Any] | None:
@@ -1454,7 +1456,10 @@ class Script:
 
             variables["context"] = context
         else:
-            variables = cast(dict, run_variables)
+            if self._copy_variables_on_run:
+                variables = cast(dict, copy(run_variables))
+            else:
+                variables = cast(dict, run_variables)
 
         # Prevent non-allowed recursive calls which will cause deadlocks when we try to
         # stop (restart) or wait for (queued) our own script run.
@@ -1671,6 +1676,7 @@ class Script:
                 max_runs=self.max_runs,
                 logger=self._logger,
                 top_level=False,
+                copy_variables=True,
             )
             parallel_script.change_listener = partial(
                 self._chain_change_listener, parallel_script
