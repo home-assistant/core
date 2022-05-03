@@ -1507,6 +1507,55 @@ async def test_condition_basic(hass, caplog):
     )
 
 
+async def test_condition_subscript(hass, caplog):
+    """Test failing conditions in a subscript don't stop the parent script."""
+    event = "test_event"
+    events = async_capture_events(hass, event)
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {"event": event},
+            {
+                "repeat": {
+                    "until": "{{ 1 == 1 }}",
+                    "sequence": [
+                        {"condition": "{{ 1 == 2 }}"},
+                    ],
+                }
+            },
+            {"event": event},
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    hass.states.async_set("test.entity", "hello")
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    caplog.clear()
+    assert len(events) == 2
+
+    assert_action_trace(
+        {
+            "0": [{"result": {"event": "test_event", "event_data": {}}}],
+            "1": [{"result": {}}],
+            "1/repeat/sequence/0": [
+                {
+                    "variables": {"repeat": {"first": True, "index": 1}},
+                    "result": {"entities": [], "result": False},
+                }
+            ],
+            "1/repeat": [
+                {
+                    "variables": {"repeat": {"first": True, "index": 1}},
+                    "result": {"result": True},
+                }
+            ],
+            "1/repeat/until/0": [{"result": {"entities": [], "result": True}}],
+            "2": [{"result": {"event": "test_event", "event_data": {}}}],
+        }
+    )
+
+
 async def test_and_default_condition(hass, caplog):
     """Test that a list of conditions evaluates as AND."""
     alias = "condition step"
