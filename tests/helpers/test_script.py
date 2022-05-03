@@ -4939,8 +4939,8 @@ async def test_disabled_actions(
     assert_action_trace(
         {
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
-            "1": [{}],
-            "2": [{}],
+            "1": [{"result": {"enabled": False}}],
+            "2": [{"result": {"enabled": False}}],
             "3": [{"result": {"event": "test_event", "event_data": {}}}],
         },
     )
