@@ -85,7 +85,6 @@ def async_setup_bridge(
 class WemoLight(WemoEntity, LightEntity):
     """Representation of a WeMo light."""
 
-    _attr_supported_color_modes = {ColorMode.COLOR_TEMP, ColorMode.HS}
     _attr_supported_features = LightEntityFeature.TRANSITION
 
     def __init__(self, coordinator: DeviceCoordinator, light: bridge.Light) -> None:
@@ -141,9 +140,18 @@ class WemoLight(WemoEntity, LightEntity):
     @property
     def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
-        if self.light.state.get("color_xy"):
+        if "colorcontrol" in self.light.capabilities:
             return ColorMode.HS
-        return ColorMode.COLOR_TEMP
+        if "colortemperature" in self.light.capabilities:
+            return ColorMode.COLOR_TEMP
+        if "levelcontrol" in self.light.capabilities:
+            return ColorMode.BRIGHTNESS
+        return ColorMode.ONOFF
+
+    @property
+    def supported_color_modes(self) -> set[ColorMode]:
+        """Flag supported color modes."""
+        return {self.color_mode}
 
     @property
     def is_on(self) -> bool:
