@@ -10,10 +10,8 @@ from elro.device import (
     ALARM_HEAT,
     ALARM_SMOKE,
     ALARM_WATER,
-    ATTR_BATTERY_LEVEL,
     ATTR_DEVICE_STATE,
     ATTR_DEVICE_TYPE,
-    ATTR_SIGNAL,
     STATE_SILENCE,
     STATE_TEST_ALARM,
     STATES_OFFLINE,
@@ -63,7 +61,6 @@ SIREN_DEVICE_TYPES = {
         icon="mid:water-alert",
     ),
 }
-SIREN_ATTRIBUTES = [ATTR_SIGNAL, ATTR_BATTERY_LEVEL, "device_state"]
 
 
 async def async_setup_entry(
@@ -111,7 +108,6 @@ class ElroConnectsSiren(ElroConnectsEntity, SirenEntity):
             elro_connects_api.coordinator,
             connector_id,
             device_id,
-            SIREN_ATTRIBUTES,
             description,
         )
 

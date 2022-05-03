@@ -1,9 +1,7 @@
 """Elro Connects K1 device communication."""
 from __future__ import annotations
 
-from collections.abc import Mapping
 import logging
-from typing import Any
 
 from elro.api import K1
 from elro.command import GET_ALL_EQUIPMENT_STATUS, GET_DEVICE_NAMES
@@ -72,7 +70,6 @@ class ElroConnectsEntity(CoordinatorEntity):
         coordinator: DataUpdateCoordinator,
         connector_id: str,
         device_id: int,
-        attributes: list,
         description: EntityDescription,
     ) -> None:
         """Initialize the Elro connects entity."""
@@ -80,22 +77,12 @@ class ElroConnectsEntity(CoordinatorEntity):
 
         self.data: dict = coordinator.data[device_id]
 
-        self._attributes = attributes
         self._connector_id = connector_id
         self._device_id = device_id
         self._attr_device_class = description.device_class
         self._attr_icon = description.icon
         self._attr_unique_id = f"{connector_id}-{device_id}"
         self._description = description
-
-    @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
-        """Return state attributes."""
-        return (
-            {key: val for key, val in self.data.items() if key in self._attributes}
-            if self.data
-            else None
-        )
 
     @property
     def name(self) -> str:

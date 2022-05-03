@@ -24,47 +24,35 @@ from .test_common import MOCK_DEVICE_STATUS_DATA
 
 
 @pytest.mark.parametrize(
-    "entity_id,name,state,icon,device_state,device_class,signal,battery",
+    "entity_id,name,state,icon,device_class",
     [
         (
             "siren.beganegrond",
             "Beganegrond",
             STATE_OFF,
             "mdi:fire-alert",
-            "NORMAL",
             "smoke",
-            3,
-            100,
         ),
         (
             "siren.eerste_etage",
             "Eerste etage",
             STATE_ON,
             "mdi:fire-alert",
-            "ALARM",
             "smoke",
-            4,
-            75,
         ),
         (
             "siren.zolder",
             "Zolder",
             STATE_OFF,
             "mdi:fire-alert",
-            "UNKNOWN",
             "smoke",
-            1,
-            5,
         ),
         (
             "siren.corner",
             "Corner",
             STATE_UNKNOWN,
             "mdi:molecule-co",
-            "OFFLINE",
             "carbon_monoxide",
-            255,
-            255,
         ),
     ],
 )
@@ -76,10 +64,7 @@ async def test_setup_integration_with_siren_platform(
     name: str,
     state: str,
     icon: str,
-    device_state: str,
     device_class: str,
-    signal: int,
-    battery: int,
 ) -> None:
     """Test we can setup the integration with the siren platform."""
     mock_k1_connector["result"].return_value = MOCK_DEVICE_STATUS_DATA
@@ -93,10 +78,7 @@ async def test_setup_integration_with_siren_platform(
     assert entity.state == state
     assert attributes["friendly_name"] == name
     assert attributes["icon"] == icon
-    assert attributes["device_state"] == device_state
     assert attributes["device_class"] == device_class
-    assert attributes["signal"] == signal
-    assert attributes["battery"] == battery
 
 
 async def test_alarm_testing(
@@ -120,9 +102,7 @@ async def test_alarm_testing(
     )
 
     entity = hass.states.get(entity_id)
-    attributes = entity.attributes
     assert entity.state == STATE_ON
-    assert attributes["device_state"] == "TEST ALARM"
     assert (
         mock_k1_connector["result"].call_args[0][0]["cmd_id"]
         == Command.EQUIPMENT_CONTROL
@@ -142,9 +122,7 @@ async def test_alarm_testing(
     )
 
     entity = hass.states.get(entity_id)
-    attributes = entity.attributes
     assert entity.state == STATE_OFF
-    assert attributes["device_state"] == "SILENCE"
     assert (
         mock_k1_connector["result"].call_args[0][0]["cmd_id"]
         == Command.EQUIPMENT_CONTROL
