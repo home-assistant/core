@@ -46,7 +46,7 @@ from .template_entity import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-_VALID_STATES = [STATE_ON, STATE_OFF, "true", "false"]
+_VALID_STATES = [STATE_ON, STATE_OFF, "true", "false", "unknown"]
 
 CONF_COLOR_ACTION = "set_color"
 CONF_COLOR_TEMPLATE = "color_template"
