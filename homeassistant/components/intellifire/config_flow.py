@@ -128,21 +128,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 }
             )
 
-            if user_input[CONF_USERNAME] != "":
-                try:
-                    return await self.validate_api_access_and_create_or_update(
-                        host=self._host,
-                        username=user_input[CONF_USERNAME],
-                        password=user_input[CONF_PASSWORD],
-                        serial=self._serial,
-                    )
+            try:
+                return await self.validate_api_access_and_create_or_update(
+                    host=self._host,
+                    username=user_input[CONF_USERNAME],
+                    password=user_input[CONF_PASSWORD],
+                    serial=self._serial,
+                )
 
-                except (ConnectionError, ClientConnectionError):
-                    errors["base"] = "iftapi_connect"
-                    LOGGER.info("ERROR: iftapi_connect")
-                except LoginException:
-                    errors["base"] = "api_error"
-                    LOGGER.info("ERROR: api_error")
+            except (ConnectionError, ClientConnectionError):
+                errors["base"] = "iftapi_connect"
+                LOGGER.error(
+                    "Could not connect to iftapi.net over https - verify connectivity"
+                )
+            except LoginException:
+                errors["base"] = "api_error"
+                LOGGER.error("Invalid credentials for iftapi.net")
 
         return self.async_show_form(
             step_id="api_config", errors=errors, data_schema=control_schema

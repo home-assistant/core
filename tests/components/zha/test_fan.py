@@ -471,7 +471,10 @@ async def test_fan_update_entity(
     assert hass.states.get(entity_id).attributes[ATTR_PERCENTAGE] == 0
     assert hass.states.get(entity_id).attributes[ATTR_PRESET_MODE] is None
     assert hass.states.get(entity_id).attributes[ATTR_PERCENTAGE_STEP] == 100 / 3
-    assert cluster.read_attributes.await_count == 2
+    if zha_device_joined_restored.name == "zha_device_joined":
+        assert cluster.read_attributes.await_count == 2
+    else:
+        assert cluster.read_attributes.await_count == 4
 
     await async_setup_component(hass, "homeassistant", {})
     await hass.async_block_till_done()
@@ -480,7 +483,10 @@ async def test_fan_update_entity(
         "homeassistant", "update_entity", {"entity_id": entity_id}, blocking=True
     )
     assert hass.states.get(entity_id).state == STATE_OFF
-    assert cluster.read_attributes.await_count == 3
+    if zha_device_joined_restored.name == "zha_device_joined":
+        assert cluster.read_attributes.await_count == 3
+    else:
+        assert cluster.read_attributes.await_count == 5
 
     cluster.PLUGGED_ATTR_READS = {"fan_mode": 1}
     await hass.services.async_call(
@@ -490,4 +496,7 @@ async def test_fan_update_entity(
     assert hass.states.get(entity_id).attributes[ATTR_PERCENTAGE] == 33
     assert hass.states.get(entity_id).attributes[ATTR_PRESET_MODE] is None
     assert hass.states.get(entity_id).attributes[ATTR_PERCENTAGE_STEP] == 100 / 3
-    assert cluster.read_attributes.await_count == 4
+    if zha_device_joined_restored.name == "zha_device_joined":
+        assert cluster.read_attributes.await_count == 4
+    else:
+        assert cluster.read_attributes.await_count == 6

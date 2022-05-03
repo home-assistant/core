@@ -15,10 +15,9 @@ from homeassistant.components.light import (
     ATTR_TRANSITION,
     ATTR_XY_COLOR,
     FLASH_SHORT,
-    SUPPORT_FLASH,
-    SUPPORT_TRANSITION,
     ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -81,8 +80,8 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
         self.group = group
         self.controller = controller
         self.api: HueBridgeV2 = bridge.api
-        self._attr_supported_features |= SUPPORT_FLASH
-        self._attr_supported_features |= SUPPORT_TRANSITION
+        self._attr_supported_features |= LightEntityFeature.FLASH
+        self._attr_supported_features |= LightEntityFeature.TRANSITION
 
         self._dynamic_mode_active = False
         self._update_values()

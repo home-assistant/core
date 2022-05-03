@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from typing import Any, Generic, TypedDict, TypeVar
 
-from pydeconz.interfaces.lights import LightResources
 from pydeconz.models import ResourceType
 from pydeconz.models.event import EventType
 from pydeconz.models.group import Group
@@ -85,33 +84,32 @@ async def async_setup_entry(
             entity_registry.async_remove(entity_id)
 
     @callback
-    def async_add_light(lights: list[LightResources] | None = None) -> None:
+    def async_add_light(_: EventType, light_id: str) -> None:
         """Add light from deCONZ."""
-        entities = []
+        light = gateway.api.lights[light_id]
+        assert isinstance(light, Light)
+        if light.type in POWER_PLUGS:
+            return
 
-        if lights is None:
-            lights = gateway.api.lights.values()
-
-        for light in lights:
-            if (
-                isinstance(light, Light)
-                and light.type not in POWER_PLUGS
-                and light.unique_id not in gateway.entities[DOMAIN]
-            ):
-                entities.append(DeconzLight(light, gateway))
-
-        if entities:
-            async_add_entities(entities)
+        async_add_entities([DeconzLight(light, gateway)])
 
     config_entry.async_on_unload(
-        async_dispatcher_connect(
-            hass,
-            gateway.signal_new_light,
+        gateway.api.lights.lights.subscribe(
             async_add_light,
+            EventType.ADDED,
         )
     )
+    for light_id in gateway.api.lights.lights:
+        async_add_light(EventType.ADDED, light_id)
 
-    async_add_light()
+    config_entry.async_on_unload(
+        gateway.api.lights.fans.subscribe(
+            async_add_light,
+            EventType.ADDED,
+        )
+    )
+    for light_id in gateway.api.lights.fans:
+        async_add_light(EventType.ADDED, light_id)
 
     @callback
     def async_add_group(_: EventType, group_id: str) -> None:

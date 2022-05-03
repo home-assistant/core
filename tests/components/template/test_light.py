@@ -1025,6 +1025,7 @@ async def test_color_action_no_template(hass, start_ha, calls):
         ((359.9, 99.9), {"replace6": '"{{(359.9, 99.9)}}"'}),
         (None, {"replace6": '"{{(361, 100)}}"'}),
         (None, {"replace6": '"{{(360, 101)}}"'}),
+        (None, {"replace6": '"[{{(360)}},{{null}}]"'}),
         (None, {"replace6": '"{{x - 12}}"'}),
         (None, {"replace6": '""'}),
         (None, {"replace6": '"{{ none }}"'}),

@@ -266,7 +266,11 @@ async def async_get_triggers(
     entity_id = async_get_node_status_sensor_entity_id(
         hass, device_id, ent_reg, dev_reg
     )
-    if (entity := ent_reg.async_get(entity_id)) is not None and not entity.disabled:
+    if (
+        entity_id
+        and (entity := ent_reg.async_get(entity_id)) is not None
+        and not entity.disabled
+    ):
         triggers.append(
             {**base_trigger, CONF_TYPE: NODE_STATUS, CONF_ENTITY_ID: entity_id}
         )

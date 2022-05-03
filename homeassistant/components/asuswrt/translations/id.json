@@ -18,7 +18,7 @@
                     "mode": "Mode",
                     "name": "Nama",
                     "password": "Kata Sandi",
-                    "port": "Port",
+                    "port": "Port (Biarkan kosong untuk nilai default)",
                     "protocol": "Protokol komunikasi yang akan digunakan",
                     "ssh_key": "Jalur ke file kunci SSH Anda (bukan kata sandi)",
                     "username": "Nama Pengguna"

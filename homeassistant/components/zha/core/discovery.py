@@ -54,14 +54,13 @@ async def async_add_entities(
             tuple[str, ZHADevice, list[base.ZigbeeChannel]],
         ]
     ],
-    update_before_add: bool = True,
 ) -> None:
     """Add entities helper."""
     if not entities:
         return
     to_add = [ent_cls.create_entity(*args) for ent_cls, args in entities]
     entities_to_add = [entity for entity in to_add if entity is not None]
-    _async_add_entities(entities_to_add, update_before_add=update_before_add)
+    _async_add_entities(entities_to_add, update_before_add=False)
     entities.clear()
 
 

@@ -1257,6 +1257,7 @@ async def test_entity_control(hass: HomeAssistant, quick_play_mock):
 
     # Fake media status
     media_status = MagicMock(images=None)
+    media_status.player_state = "PLAYING"
     media_status.supports_queue_next = False
     media_status.supports_seek = False
     media_status_cb(media_status)
@@ -1397,13 +1398,19 @@ async def test_entity_media_states(hass: HomeAssistant, app_id, state_no_media):
 
     # Got media status
     media_status = MagicMock(images=None)
-    media_status.player_is_playing = True
+    media_status.player_state = "BUFFERING"
+    media_status_cb(media_status)
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == "buffering"
+
+    media_status.player_state = "PLAYING"
     media_status_cb(media_status)
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.state == "playing"
 
-    media_status.player_is_playing = False
+    media_status.player_state = None
     media_status.player_is_paused = True
     media_status_cb(media_status)
     await hass.async_block_till_done()
@@ -1536,15 +1543,22 @@ async def test_group_media_states(hass, mz_mock):
     group_media_status = MagicMock(images=None)
     player_media_status = MagicMock(images=None)
 
+    # Player has no state, group is buffering -> Should report 'buffering'
+    group_media_status.player_state = "BUFFERING"
+    group_media_status_cb(str(FakeGroupUUID), group_media_status)
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == "buffering"
+
     # Player has no state, group is playing -> Should report 'playing'
-    group_media_status.player_is_playing = True
+    group_media_status.player_state = "PLAYING"
     group_media_status_cb(str(FakeGroupUUID), group_media_status)
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.state == "playing"
 
     # Player is paused, group is playing -> Should report 'paused'
-    player_media_status.player_is_playing = False
+    player_media_status.player_state = None
     player_media_status.player_is_paused = True
     media_status_cb(player_media_status)
     await hass.async_block_till_done()

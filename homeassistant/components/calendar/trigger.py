@@ -11,7 +11,7 @@ from homeassistant.components.automation import (
     AutomationActionType,
     AutomationTriggerInfo,
 )
-from homeassistant.const import CONF_ENTITY_ID, CONF_EVENT, CONF_PLATFORM
+from homeassistant.const import CONF_ENTITY_ID, CONF_EVENT, CONF_OFFSET, CONF_PLATFORM
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
@@ -36,6 +36,7 @@ TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
         vol.Required(CONF_PLATFORM): DOMAIN,
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Optional(CONF_EVENT, default=EVENT_START): vol.In({EVENT_START, EVENT_END}),
+        vol.Optional(CONF_OFFSET, default=datetime.timedelta(0)): cv.time_period,
     }
 )
 
@@ -50,12 +51,14 @@ class CalendarEventListener:
         trigger_data: dict[str, Any],
         entity: CalendarEntity,
         event_type: str,
+        offset: datetime.timedelta,
     ) -> None:
         """Initialize CalendarEventListener."""
         self._hass = hass
         self._job = job
         self._trigger_data = trigger_data
         self._entity = entity
+        self._offset = offset
         self._unsub_event: CALLBACK_TYPE | None = None
         self._unsub_refresh: CALLBACK_TYPE | None = None
         # Upcoming set of events with their trigger time
@@ -81,10 +84,18 @@ class CalendarEventListener:
 
     async def _fetch_events(self, last_endtime: datetime.datetime) -> None:
         """Update the set of eligible events."""
+        # Use a sliding window for selecting in scope events in the next interval. The event
+        # search range is offset, then the fire time of the returned events are offset again below.
         # Event time ranges are exclusive so the end time is expanded by 1sec
-        end_time = last_endtime + UPDATE_INTERVAL + datetime.timedelta(seconds=1)
-        _LOGGER.debug("Fetching events between %s, %s", last_endtime, end_time)
-        events = await self._entity.async_get_events(self._hass, last_endtime, end_time)
+        start_time = last_endtime - self._offset
+        end_time = start_time + UPDATE_INTERVAL + datetime.timedelta(seconds=1)
+        _LOGGER.debug(
+            "Fetching events between %s, %s (offset=%s)",
+            start_time,
+            end_time,
+            self._offset,
+        )
+        events = await self._entity.async_get_events(self._hass, start_time, end_time)
 
         # Build list of events and the appropriate time to trigger an alarm. The
         # returned events may have already started but matched the start/end time
@@ -92,13 +103,14 @@ class CalendarEventListener:
         # trigger time.
         event_list = []
         for event in events:
-            event_time = (
+            event_fire_time = (
                 event.start_datetime_local
                 if self._event_type == EVENT_START
                 else event.end_datetime_local
             )
-            if event_time > last_endtime:
-                event_list.append((event_time, event))
+            event_fire_time += self._offset
+            if event_fire_time > last_endtime:
+                event_list.append((event_fire_time, event))
         event_list.sort(key=lambda x: x[0])
         self._events = event_list
         _LOGGER.debug("Populated event list %s", self._events)
@@ -109,12 +121,12 @@ class CalendarEventListener:
         if not self._events:
             return
 
-        (event_datetime, _event) = self._events[0]
-        _LOGGER.debug("Scheduling next event trigger @ %s", event_datetime)
+        (event_fire_time, _event) = self._events[0]
+        _LOGGER.debug("Scheduled alarm for %s", event_fire_time)
         self._unsub_event = async_track_point_in_utc_time(
             self._hass,
             self._handle_calendar_event,
-            event_datetime,
+            event_fire_time,
         )
 
     def _clear_event_listener(self) -> None:
@@ -160,6 +172,7 @@ async def async_attach_trigger(
     """Attach trigger for the specified calendar."""
     entity_id = config[CONF_ENTITY_ID]
     event_type = config[CONF_EVENT]
+    offset = config[CONF_OFFSET]
 
     component: EntityComponent = hass.data[DOMAIN]
     if not (entity := component.get_entity(entity_id)) or not isinstance(
@@ -173,10 +186,10 @@ async def async_attach_trigger(
         **automation_info["trigger_data"],
         "platform": DOMAIN,
         "event": event_type,
+        "offset": offset,
     }
-
     listener = CalendarEventListener(
-        hass, HassJob(action), trigger_data, entity, event_type
+        hass, HassJob(action), trigger_data, entity, event_type, offset
     )
     await listener.async_attach()
     return listener.async_detach
