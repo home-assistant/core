@@ -1,25 +1,24 @@
 """API for yolink bound to Home Assistant OAuth."""
-from asyncio import run_coroutine_threadsafe
-
 from aiohttp import ClientSession
-from yolink_client.yolink_auth_mgr import YoLinkAuthMgr
+from yolink.auth_mgr import YoLinkAuthMgr
 
-from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 
 
-class AuthenticationManager(YoLinkAuthMgr):
-    """YoLink API Authentication Manager."""
+class ConfigEntryAuth(YoLinkAuthMgr):
+    """Provide yolink authentication tied to an OAuth2 based config entry."""
 
     def __init__(
         self,
-        client_session: ClientSession,
-        oauth_session: config_entry_oauth2_flow.OAuth2Session,
+        hass: HomeAssistant,
+        websession: ClientSession,
+        oauth2Session: config_entry_oauth2_flow.OAuth2Session,
     ) -> None:
-        """Init YoLink AuthenticationManager."""
-        super().__init__(client_session)
-        self.oauth_session = oauth_session
+        """Initialize yolink Auth."""
+        self.hass = hass
+        self.oauth_session = oauth2Session
+        super().__init__(websession)
 
     def access_token(self) -> str:
         """Return the access token."""
@@ -30,24 +29,3 @@ class AuthenticationManager(YoLinkAuthMgr):
         if not self.oauth_session.valid_token:
             await self.oauth_session.async_ensure_token_valid()
         return self.access_token()
-
-
-class ConfigEntryAuth(AuthenticationManager):
-    """Provide yolink authentication tied to an OAuth2 based config entry."""
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        websession: ClientSession,
-        oauth_session: config_entry_oauth2_flow.OAuth2Session,
-    ) -> None:
-        """Initialize yolink Auth."""
-        self.hass = hass
-        super().__init__(websession, oauth_session)
-
-    def refresh_tokens(self) -> str:
-        """Refresh and return new yolink tokens using Home Assistant OAuth2 session."""
-        run_coroutine_threadsafe(
-            self.oauth_session.async_ensure_token_valid(), self.hass.loop
-        ).result()
-        return self.oauth_session.token[CONF_ACCESS_TOKEN]

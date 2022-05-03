@@ -3,8 +3,8 @@
   "name": "YoLink",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/yolink",
-  "requirements": ["paho-mqtt==1.6.1", "yolink-client==0.0.8"],
-  "dependencies": ["http"],
+  "requirements": ["yolink-api==0.0.1"],
+  "dependencies": ["auth"],
   "codeowners": ["@YoSmart-Inc"],
   "iot_class": "cloud_push"
 }

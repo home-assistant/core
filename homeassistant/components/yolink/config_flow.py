@@ -1,5 +1,8 @@
 """Config flow for yolink."""
+from __future__ import annotations
+
 import logging
+from typing import Any
 
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -25,7 +28,28 @@ class OAuth2FlowHandler(
         scopes = ["create"]
         return {"scope": " ".join(scopes)}
 
-    async def async_step_user(self, user_input=None) -> FlowResult:
+    async def async_step_reauth(self, user_input=None) -> FlowResult:
+        """Perform reauth upon an API authentication error."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(self, user_input=None) -> FlowResult:
+        """Dialog that informs the user that reauth is required."""
+        if user_input is None:
+            return self.async_show_form(step_id="reauth_confirm")
+        return await self.async_step_user()
+
+    async def async_oauth_create_entry(self, data: dict) -> FlowResult:
+        """Create an oauth config entry or update existing entry for reauth."""
+        existing_entry = await self.async_set_unique_id(DOMAIN)
+        if existing_entry:
+            self.hass.config_entries.async_update_entry(existing_entry, data=data)
+            await self.hass.config_entries.async_reload(existing_entry.entry_id)
+            return self.async_abort(reason="reauth_successful")
+        return self.async_create_entry(title="YoLink", data=data)
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow start."""
         await self.async_set_unique_id(DOMAIN)
 

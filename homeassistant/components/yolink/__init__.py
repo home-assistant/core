@@ -1,19 +1,21 @@
 """The yolink integration."""
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 import logging
 
 import async_timeout
 import voluptuous as vol
-from yolink_client.const import OAUTH2_AUTHORIZE, OAUTH2_TOKEN
-from yolink_client.yolink_client import YoLinkClient
-from yolink_client.yolink_exception import YoLinkAPIError
-from yolink_client.yolink_mqtt_client import HomeEventMqttSub, MqttClient
+from yolink.client import YoLinkClient
+from yolink.const import OAUTH2_AUTHORIZE, OAUTH2_TOKEN
+from yolink.exception import YoLinkAuthFailError, YoLinkClientError
+from yolink.mqtt_client import MqttClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
     aiohttp_client,
     config_entry_oauth2_flow,
@@ -22,7 +24,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.typing import ConfigType
 
 from . import api, config_flow
-from .const import DOMAIN, HOME_ID, HOME_SUBSCRIPTION
+from .const import ATTR_CLIENT, ATTR_DEVICE, ATTR_MQTT_CLIENT, DOMAIN
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
@@ -72,42 +74,36 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
+
     auth_mgr = api.ConfigEntryAuth(
         hass, aiohttp_client.async_get_clientsession(hass), session
     )
+
     yolink_http_client = YoLinkClient(auth_mgr)
     yolink_mqtt_client = MqttClient(auth_mgr)
 
     hass.data[DOMAIN][entry.entry_id] = {
-        "client": yolink_http_client,
-        "mqttClient": yolink_mqtt_client,
-        "devices": [],
+        ATTR_CLIENT: yolink_http_client,
+        ATTR_MQTT_CLIENT: yolink_mqtt_client,
+        ATTR_DEVICE: [],
     }
 
     try:
-        async with async_timeout.timeout(5):
-            home_response = await yolink_http_client.get_general_info()
-            if not (home_response.data["id"] is None):
-                hass.data[DOMAIN][entry.entry_id][HOME_ID] = home_response.data["id"]
-                hass.data[DOMAIN][entry.entry_id][HOME_SUBSCRIPTION] = HomeEventMqttSub(
-                    home_response.data["id"]
-                )
-                yolink_mqtt_client.subHome(
-                    hass.data[DOMAIN][entry.entry_id][HOME_SUBSCRIPTION]
-                )
-        async with async_timeout.timeout(5):
-            devices_response = await yolink_http_client.get_auth_devices()
-            if not (devices_response.data["devices"] is None):
-                hass.data[DOMAIN][entry.entry_id]["devices"] = devices_response.data[
-                    "devices"
-                ]
-        await yolink_mqtt_client.async_connect()
-
-    except YoLinkAPIError as yl_err:
-        _LOGGER.warning("Call yolink api failed: %s", yl_err)
-        return False
+        async with async_timeout.timeout(10):
+            home_info = await yolink_http_client.get_general_info()
+            yolink_devices = await yolink_http_client.get_auth_devices()
+            hass.data[DOMAIN][entry.entry_id][ATTR_DEVICE] = yolink_devices.data[
+                ATTR_DEVICE
+            ]
+            await yolink_mqtt_client.init_home_connection(home_info.data["id"])
+    except YoLinkAuthFailError as auth_err:
+        raise ConfigEntryAuthFailed() from auth_err
+    except (YoLinkClientError, asyncio.TimeoutError) as exception:
+        _LOGGER.warning("Call yolink api failed: %s", exception)
+        raise ConfigEntryNotReady from exception
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+
     return True
 
 

@@ -1187,7 +1187,6 @@ p1monitor==1.0.1
 
 # homeassistant.components.mqtt
 # homeassistant.components.shiftr
-# homeassistant.components.yolink
 paho-mqtt==1.6.1
 
 # homeassistant.components.panasonic_bluray
@@ -2481,7 +2480,7 @@ yeelight==0.7.10
 yeelightsunflower==0.0.10
 
 # homeassistant.components.yolink
-yolink-client==0.0.8
+yolink-api==0.0.1
 
 # homeassistant.components.youless
 youless-api==0.16
