@@ -850,7 +850,8 @@ class TemplateStateFromEntityId(TemplateStateBase):
     @property
     def _state(self) -> State:  # type: ignore[override] # mypy issue 4125
         state = self._hass.states.get(self._entity_id)
-        assert state
+        if not state:
+            state = State(self._entity_id, STATE_UNKNOWN)
         return state
 
     def __repr__(self) -> str:
