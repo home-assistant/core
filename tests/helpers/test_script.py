@@ -3027,7 +3027,7 @@ async def test_parallel(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
         ],
         "0/parallel/1/sequence/0": [
             {
-                "variables": {"wait": {"remaining": None}},
+                "variables": {},
                 "result": {
                     "event": "test_event",
                     "event_data": {"hello": "from action 2", "what": "world"},
