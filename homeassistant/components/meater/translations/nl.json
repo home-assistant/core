@@ -6,6 +6,11 @@
             "unknown_auth_error": "Onverwachte fout"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Wachtwoord"
+                }
+            },
             "user": {
                 "data": {
                     "password": "Wachtwoord",

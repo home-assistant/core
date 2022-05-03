@@ -14,7 +14,7 @@
             "unknown": "Unerwarteter Fehler"
         },
         "progress": {
-            "email_2fa": "Gib den Code f\u00fcr die Zwei-Faktor-Authentifizierung ein, den du per E-Mail erhalten hast."
+            "email_2fa": "\u00dcberpr\u00fcfe deine E-Mails auf einen Best\u00e4tigungslink von Simplisafe."
         },
         "step": {
             "mfa": {

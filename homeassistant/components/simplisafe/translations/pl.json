@@ -14,7 +14,7 @@
             "unknown": "Nieoczekiwany b\u0142\u0105d"
         },
         "progress": {
-            "email_2fa": "Wprowad\u017a kod uwierzytelniania dwusk\u0142adnikowego\nwys\u0142any do Ciebie e-mailem."
+            "email_2fa": "Sprawd\u017a e-mail z linkiem weryfikacyjnym od Simplisafe."
         },
         "step": {
             "mfa": {

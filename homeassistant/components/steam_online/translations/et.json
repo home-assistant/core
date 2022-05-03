@@ -12,7 +12,7 @@
         },
         "step": {
             "reauth_confirm": {
-                "description": "Steami sidumine tuleb uuesti autentida\n\nV\u00f5tme leiad siit: https://steamcommunity.com/dev/apikey",
+                "description": "Steami sidumine tuleb k\u00e4sitsi uuesti autentida \n\n Oma v\u00f5tme leiad siit: {api_key_url}",
                 "title": "Taastuvasta sidumine"
             },
             "user": {
@@ -20,7 +20,7 @@
                     "account": "Steami konto ID",
                     "api_key": "API v\u00f5ti"
                 },
-                "description": "Kasuta https://steamid.io, et leida oma Steam'i konto ID"
+                "description": "Steami konto ID leidmiseks kasuta {account_id_url}"
             }
         }
     },
