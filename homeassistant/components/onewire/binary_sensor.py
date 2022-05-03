@@ -21,7 +21,7 @@ from .const import (
     DOMAIN,
     READ_MODE_BOOL,
 )
-from .onewire_entities import OneWireEntityDescription, OneWireProxyEntity
+from .onewire_entities import OneWireEntity, OneWireEntityDescription
 from .onewirehub import OneWireHub
 
 
@@ -135,7 +135,7 @@ def get_entities(onewirehub: OneWireHub) -> list[OneWireBinarySensor]:
     return entities
 
 
-class OneWireBinarySensor(OneWireProxyEntity, BinarySensorEntity):
+class OneWireBinarySensor(OneWireEntity, BinarySensorEntity):
     """Implementation of a 1-Wire binary sensor."""
 
     entity_description: OneWireBinarySensorEntityDescription

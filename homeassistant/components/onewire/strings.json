@@ -12,7 +12,7 @@
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]"
         },
-        "title": "Set owserver details"
+        "title": "Set server details"
       }
     }
   },

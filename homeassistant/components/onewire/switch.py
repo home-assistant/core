@@ -18,7 +18,7 @@ from .const import (
     DOMAIN,
     READ_MODE_BOOL,
 )
-from .onewire_entities import OneWireEntityDescription, OneWireProxyEntity
+from .onewire_entities import OneWireEntity, OneWireEntityDescription
 from .onewirehub import OneWireHub
 
 
@@ -192,7 +192,7 @@ def get_entities(onewirehub: OneWireHub) -> list[OneWireSwitch]:
     return entities
 
 
-class OneWireSwitch(OneWireProxyEntity, SwitchEntity):
+class OneWireSwitch(OneWireEntity, SwitchEntity):
     """Implementation of a 1-Wire switch."""
 
     entity_description: OneWireSwitchEntityDescription
@@ -204,8 +204,8 @@ class OneWireSwitch(OneWireProxyEntity, SwitchEntity):
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        self._write_value_ownet(b"1")
+        self._write_value(b"1")
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        self._write_value_ownet(b"0")
+        self._write_value(b"0")

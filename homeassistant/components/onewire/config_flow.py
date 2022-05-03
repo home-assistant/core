@@ -13,8 +13,8 @@ from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.device_registry import DeviceRegistry
 
 from .const import (
-    DEFAULT_OWSERVER_HOST,
-    DEFAULT_OWSERVER_PORT,
+    DEFAULT_HOST,
+    DEFAULT_PORT,
     DEVICE_SUPPORT_OPTIONS,
     DOMAIN,
     INPUT_ENTRY_CLEAR_OPTIONS,
@@ -26,20 +26,18 @@ from .const import (
 from .model import OWDeviceDescription
 from .onewirehub import CannotConnect, OneWireHub
 
-DATA_SCHEMA_OWSERVER = vol.Schema(
+DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_HOST, default=DEFAULT_OWSERVER_HOST): str,
-        vol.Required(CONF_PORT, default=DEFAULT_OWSERVER_PORT): int,
+        vol.Required(CONF_HOST, default=DEFAULT_HOST): str,
+        vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
     }
 )
 
 
-async def validate_input_owserver(
-    hass: HomeAssistant, data: dict[str, Any]
-) -> dict[str, str]:
+async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, str]:
     """Validate the user input allows us to connect.
 
-    Data has the keys from DATA_SCHEMA_OWSERVER with values provided by the user.
+    Data has the keys from DATA_SCHEMA with values provided by the user.
     """
 
     hub = OneWireHub(hass)
@@ -82,7 +80,7 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
             self.onewire_config.update(user_input)
 
             try:
-                info = await validate_input_owserver(self.hass, user_input)
+                info = await validate_input(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             else:
@@ -92,7 +90,7 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=DATA_SCHEMA_OWSERVER,
+            data_schema=DATA_SCHEMA,
             errors=errors,
         )
 

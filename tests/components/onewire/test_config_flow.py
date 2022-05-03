@@ -24,8 +24,8 @@ def override_async_setup_entry() -> AsyncMock:
         yield mock_setup_entry
 
 
-async def test_user_owserver(hass: HomeAssistant, mock_setup_entry: AsyncMock):
-    """Test OWServer user flow."""
+async def test_user_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock):
+    """Test user flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -65,10 +65,10 @@ async def test_user_owserver(hass: HomeAssistant, mock_setup_entry: AsyncMock):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_user_owserver_duplicate(
+async def test_user_duplicate(
     hass: HomeAssistant, config_entry: ConfigEntry, mock_setup_entry: AsyncMock
 ):
-    """Test OWServer flow."""
+    """Test user duplicate flow."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1

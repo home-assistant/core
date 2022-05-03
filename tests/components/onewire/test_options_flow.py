@@ -24,7 +24,7 @@ class FakeDevice:
     name_by_user = "Given Name"
 
 
-async def test_user_owserver_options_clear(
+async def test_user_options_clear(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     owproxy: MagicMock,
@@ -53,7 +53,7 @@ async def test_user_owserver_options_clear(
     assert result["data"] == {}
 
 
-async def test_user_owserver_options_empty_selection(
+async def test_user_options_empty_selection(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     owproxy: MagicMock,
@@ -83,7 +83,7 @@ async def test_user_owserver_options_empty_selection(
     assert result["errors"] == {"base": "device_not_selected"}
 
 
-async def test_user_owserver_options_set_single(
+async def test_user_options_set_single(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     owproxy: MagicMock,
@@ -126,7 +126,7 @@ async def test_user_owserver_options_set_single(
     )
 
 
-async def test_user_owserver_options_set_multiple(
+async def test_user_options_set_multiple(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     owproxy: MagicMock,
@@ -200,7 +200,7 @@ async def test_user_owserver_options_set_multiple(
     )
 
 
-async def test_user_owserver_options_no_devices(
+async def test_user_options_no_devices(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     owproxy: MagicMock,

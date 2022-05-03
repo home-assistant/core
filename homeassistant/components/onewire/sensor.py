@@ -38,7 +38,7 @@ from .const import (
     READ_MODE_FLOAT,
     READ_MODE_INT,
 )
-from .onewire_entities import OneWireEntityDescription, OneWireProxyEntity
+from .onewire_entities import OneWireEntity, OneWireEntityDescription
 from .onewirehub import OneWireHub
 
 
@@ -251,8 +251,6 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
 }
 
 # EF sensors are usually hobbyboards specialized sensors.
-# These can only be read by OWFS.  Currently this driver only supports them
-# via owserver (network protocol)
 
 HOBBYBOARD_EF: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
     "HobbyBoards_EF": (
@@ -435,8 +433,8 @@ def get_entities(
     return entities
 
 
-class OneWireSensor(OneWireProxyEntity, SensorEntity):
-    """Implementation of a 1-Wire sensor connected through owserver."""
+class OneWireSensor(OneWireEntity, SensorEntity):
+    """Implementation of a 1-Wire sensor."""
 
     entity_description: OneWireSensorEntityDescription
 
