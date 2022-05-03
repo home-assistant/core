@@ -1445,7 +1445,7 @@ async def test_condition_warning(hass, caplog):
     assert_action_trace(
         {
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
-            "1": [{"error_type": ConditionError, "result": {"result": False}}],
+            "1": [{"result": {"result": False}}],
             "1/entity_id/0": [{"error_type": ConditionError}],
         },
         expected_script_execution="aborted",

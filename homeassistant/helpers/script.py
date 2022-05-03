@@ -206,6 +206,8 @@ async def trace_action(hass, script_run, stop, variables):
         trace_element.set_error(ex.__cause__ or ex)
         raise ex
     except _ConditionFail as ex:
+        # Clear errors which may have been set when evaluating the condition
+        trace_element.set_error(None)
         raise ex
     except _StopScript as ex:
         raise ex
