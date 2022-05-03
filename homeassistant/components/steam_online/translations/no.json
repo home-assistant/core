@@ -12,7 +12,7 @@
         },
         "step": {
             "reauth_confirm": {
-                "description": "Steam-integrasjonen m\u00e5 re-autentiseres manuelt \n\n Du finner n\u00f8kkelen din her: https://steamcommunity.com/dev/apikey",
+                "description": "Steam-integrasjonen m\u00e5 re-autentiseres manuelt \n\n Du finner n\u00f8kkelen din her: {api_key_url}",
                 "title": "Godkjenne integrering p\u00e5 nytt"
             },
             "user": {
@@ -20,7 +20,7 @@
                     "account": "Steam-konto-ID",
                     "api_key": "API-n\u00f8kkel"
                 },
-                "description": "Bruk https://steamid.io for \u00e5 finne din Steam-konto-ID"
+                "description": "Bruk {account_id_url} for \u00e5 finne Steam-konto-ID-en din"
             }
         }
     },

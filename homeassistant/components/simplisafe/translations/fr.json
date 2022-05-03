@@ -14,7 +14,7 @@
             "unknown": "Erreur inattendue"
         },
         "progress": {
-            "email_2fa": "Saisissez le code d'authentification \u00e0 deux facteurs qui vous a \u00e9t\u00e9 envoy\u00e9 par courriel."
+            "email_2fa": "Vous devriez recevoir un lien de v\u00e9rification par courriel envoy\u00e9 par Simplisafe."
         },
         "step": {
             "mfa": {
