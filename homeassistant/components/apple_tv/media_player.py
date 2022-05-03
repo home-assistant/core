@@ -395,11 +395,12 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
         media_content_id=None,
     ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
-        # If we can't stream files or URLs, we can't browse media.
-        # In that case the `BROWSE_MEDIA` feature was added because of AppList/LaunchApp
-        if not self._is_feature_available(
-            FeatureName.PlayUrl
-        ) and not self._is_feature_available(FeatureName.StreamFile):
+        if media_content_id == "apps" or (
+            # If we can't stream files or URLs, we can't browse media.
+            # In that case the `BROWSE_MEDIA` feature was added because of AppList/LaunchApp
+            not self._is_feature_available(FeatureName.PlayUrl)
+            and not self._is_feature_available(FeatureName.StreamFile)
+        ):
             return build_app_list(self._app_list)
 
         if self._app_list:
