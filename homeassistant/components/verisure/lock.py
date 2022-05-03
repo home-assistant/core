@@ -99,7 +99,7 @@ class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEnt
         """Last change triggered by."""
         return self.coordinator.data["locks"][self.serial_number].get("userString")
 
-        @property
+    @property
     def changed_method(self) -> str:
         """Last change method."""
         return self.coordinator.data["locks"][self.serial_number]["method"]
@@ -117,7 +117,7 @@ class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEnt
             == "LOCKED"
         )
 
-        @property
+    @property
     def extra_state_attributes(self):
         """Return the state attributes."""
         return {"method": self.changed_method}
