@@ -18,6 +18,7 @@ from homeassistant.components.generic.const import (
     CONF_RTSP_TRANSPORT,
     CONF_STILL_IMAGE_URL,
     CONF_STREAM_SOURCE,
+    CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
     DOMAIN,
 )
 from homeassistant.const import (
@@ -40,6 +41,7 @@ TESTDATA = {
     CONF_PASSWORD: "bambam",
     CONF_FRAMERATE: 5,
     CONF_VERIFY_SSL: False,
+    CONF_USE_WALLCLOCK_AS_TIMESTAMPS: True,
 }
 
 TESTDATA_OPTIONS = {
