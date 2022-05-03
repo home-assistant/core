@@ -156,8 +156,8 @@ async def test_error_invalid_host(hass):
         assert result["errors"] == {"base": "invalid_host"}
 
 
-async def test_abort_if_already_setup(hass):
-    """Test we abort if component is already setup."""
+async def test_abort_if_not_unique_id_setup(hass):
+    """Test we abort if component without uniqueid is already setup."""
     MockConfigEntry(
         domain=DOMAIN,
         data=CONFIG_DATA,
@@ -169,27 +169,34 @@ async def test_abort_if_already_setup(hass):
         data=CONFIG_DATA,
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "single_instance_allowed"
+    assert result["reason"] == "not_unique_id_exist"
 
 
 @pytest.mark.usefixtures("connect")
-async def test_abort_if_unique_exist(hass, mock_unique_id):
-    """Test we abort if uniqueid is already configured."""
+async def test_update_uniqueid_exist(hass, mock_unique_id):
+    """Test we update entry if uniqueid is already configured."""
     mock_unique_id.update({"label_mac": MAC_ADDR})
-    MockConfigEntry(
+    existing_entry = MockConfigEntry(
         domain=DOMAIN,
-        data=CONFIG_DATA,
+        data={**CONFIG_DATA, CONF_HOST: "10.10.10.10"},
         unique_id=MAC_ADDR,
-    ).add_to_hass(hass)
+    )
+    existing_entry.add_to_hass(hass)
 
-    with PATCH_GET_HOST:
+    # test with all provided
+    with PATCH_GET_HOST, PATCH_SETUP_ENTRY:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": SOURCE_USER},
+            context={"source": SOURCE_USER, "show_advanced_options": True},
             data=CONFIG_DATA,
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-        assert result["reason"] == "already_configured"
+        await hass.async_block_till_done()
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["title"] == HOST
+        assert result["data"] == CONFIG_DATA
+        prev_entry = hass.config_entries.async_get_entry(existing_entry.entry_id)
+        assert not prev_entry
 
 
 @pytest.mark.usefixtures("connect")

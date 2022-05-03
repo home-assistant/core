@@ -156,7 +156,7 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
                     "A device without a valid UniqueID is already configured."
                     " Configuration of multiple instance is not possible"
                 )
-                return self.async_abort(reason="single_instance_allowed")
+                return self.async_abort(reason="not_unique_id_exist")
 
         if user_input is None:
             return self._show_setup_form(user_input)
@@ -187,7 +187,6 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
             if result == RESULT_SUCCESS:
                 if unique_id:
                     await self.async_set_unique_id(unique_id)
-                    self._abort_if_unique_id_configured()
                 # we allow configure a single instance without unique id
                 elif self._async_current_entries():
                     return self.async_abort(reason="invalid_unique_id")
