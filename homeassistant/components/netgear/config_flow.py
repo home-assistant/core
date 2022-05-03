@@ -124,15 +124,15 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize flow from ssdp."""
         updated_data: dict[str, str | int | bool] = {}
 
-        _LOGGER.debug("Netgear ssdp discovery info: %s", discovery_info)
-
-        await self.async_set_unique_id(discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL])
-        self._abort_if_unique_id_configured()
-
         device_url = urlparse(discovery_info.ssdp_location)
         if hostname := device_url.hostname:
             hostname = cast(str, hostname)
             updated_data[CONF_HOST] = hostname
+
+        _LOGGER.debug("Netgear ssdp discovery info: %s", discovery_info)
+
+        await self.async_set_unique_id(discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL])
+        self._abort_if_unique_id_configured(updates=updated_data)
 
         if device_url.scheme == "https":
             updated_data[CONF_SSL] = True
