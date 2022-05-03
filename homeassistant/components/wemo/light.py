@@ -126,11 +126,9 @@ class WemoLight(WemoEntity, LightEntity):
         return cast(int, self.light.state.get("level", 255))
 
     @property
-    def hs_color(self) -> tuple[float, float] | None:
-        """Return the hs color values of this light."""
-        if xy_color := self.light.state.get("color_xy"):
-            return color_util.color_xy_to_hs(*xy_color)
-        return None
+    def xy_color(self) -> tuple[float, float] | None:
+        """Return the xy color value [float, float]."""
+        return self.light.state.get("color_xy")  # type:ignore[no-any-return]
 
     @property
     def color_temp(self) -> int | None:
@@ -141,7 +139,7 @@ class WemoLight(WemoEntity, LightEntity):
     def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
         if "colorcontrol" in self.light.capabilities:
-            return ColorMode.HS
+            return ColorMode.XY
         if "colortemperature" in self.light.capabilities:
             return ColorMode.COLOR_TEMP
         if "levelcontrol" in self.light.capabilities:
