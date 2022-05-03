@@ -557,7 +557,7 @@ async def test_purge_cutoff_date(
         assert events.filter(Events.event_type == "PURGE").count() == rows - 1
         assert events.filter(Events.event_type == "KEEP").count() == 1
 
-    instance.queue.put(PurgeTask(cutoff, repack=False, apply_filter=False))
+    instance.queue_task(PurgeTask(cutoff, repack=False, apply_filter=False))
     await hass.async_block_till_done()
     await async_recorder_block_till_done(hass)
     await async_wait_purge_done(hass)
@@ -588,7 +588,7 @@ async def test_purge_cutoff_date(
         assert events.filter(Events.event_type == "KEEP").count() == 1
 
     # Make sure we can purge everything
-    instance.queue.put(PurgeTask(dt_util.utcnow(), repack=False, apply_filter=False))
+    instance.queue_task(PurgeTask(dt_util.utcnow(), repack=False, apply_filter=False))
     await async_recorder_block_till_done(hass)
     await async_wait_purge_done(hass)
 
@@ -599,7 +599,7 @@ async def test_purge_cutoff_date(
         assert state_attributes.count() == 0
 
     # Make sure we can purge everything when the db is already empty
-    instance.queue.put(PurgeTask(dt_util.utcnow(), repack=False, apply_filter=False))
+    instance.queue_task(PurgeTask(dt_util.utcnow(), repack=False, apply_filter=False))
     await async_recorder_block_till_done(hass)
     await async_wait_purge_done(hass)
 
