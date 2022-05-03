@@ -43,7 +43,7 @@ async def test_step_user(hass):
             {"name": "JCalendar", "diaspora": True, "language": "hebrew"},
         )
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] == "form"
     assert result2["title"] == "Test Title"
     assert result2["data"] == {
         "name": "JCalendar",

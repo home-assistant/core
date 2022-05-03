@@ -10,12 +10,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from . import (
-    HDATE_DEFAULT_ALTITUDE,
-    alter_time,
-    make_jerusalem_test_params,
-    make_nyc_test_params,
-)
+from . import alter_time, make_jerusalem_test_params, make_nyc_test_params
 
 from tests.common import async_fire_time_changed
 
@@ -214,12 +209,8 @@ async def test_issur_melacha_sensor(
                 [
                     latitude,
                     longitude,
-                    tzname,
-                    HDATE_DEFAULT_ALTITUDE,
                     diaspora,
                     "english",
-                    candle_lighting,
-                    havdalah,
                     "issur_melacha_in_effect",
                 ],
             )
