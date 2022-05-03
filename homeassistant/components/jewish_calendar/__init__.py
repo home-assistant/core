@@ -35,7 +35,7 @@ PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
-            cv.ensure_list,
+            cv.deprecated,
             [
                 {
                     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
