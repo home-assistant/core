@@ -2,15 +2,13 @@
   "config": {
     "step": {
       "user": {
-        "description": "Jewish Calendar Configuration",
         "data": {
-          "name": "Name to be used for sensors",
-          "diaspora": "Outside of Israel",
-          "language": "Language for holidays and dates",
-          "latitude": "Override default latitude",
-          "longitude": "Override default longitude",
-          "elevation": "Override default elevation",
-          "time_zone": "Override default time zone"
+          "name": "[%key:common::config_flow::data::name%]",
+          "diaspora": "Outside of Israel?",
+          "language": "Language for Holidays and Dates",
+          "location": "[%key:common::config_flow::data::location%]",
+          "elevation": "[%key:common::config_flow::data::elevation%]",
+          "time_zone": "Time Zone"
         }
       }
     },
@@ -18,7 +16,7 @@
       "name_exists": "Name already exists"
     },
     "abort": {
-      "already_configured": "Device is already configured"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
   "options": {
@@ -27,7 +25,7 @@
         "title": "Configure options for Jewish Calendar",
         "data": {
           "candle_lighting_minutes_before_sunset": "Minutes before sunset for candle lighthing",
-          "havdalah_minutes_after_sunset": "Minutes after sunset for havdalah"
+          "havdalah_minutes_after_sunset": "Minutes after sunset for Havdalah"
         }
       }
     }
