@@ -177,7 +177,7 @@ aionanoleaf==0.2.0
 aionotion==3.0.2
 
 # homeassistant.components.oncue
-aiooncue==0.3.2
+aiooncue==0.3.4
 
 # homeassistant.components.acmeda
 aiopulse==0.4.3
