@@ -459,23 +459,28 @@ def test_get_significant_states_only(hass_history):
         points.append(start + timedelta(minutes=i))
 
     states = []
-    with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=start):
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=start
+    ):
         set_state("123", attributes={"attribute": 10.64})
 
     with patch(
-        "homeassistant.components.recorder.dt_util.utcnow", return_value=points[0]
+        "homeassistant.components.recorder.core.dt_util.utcnow",
+        return_value=points[0],
     ):
         # Attributes are different, state not
         states.append(set_state("123", attributes={"attribute": 21.42}))
 
     with patch(
-        "homeassistant.components.recorder.dt_util.utcnow", return_value=points[1]
+        "homeassistant.components.recorder.core.dt_util.utcnow",
+        return_value=points[1],
     ):
         # state is different, attributes not
         states.append(set_state("32", attributes={"attribute": 21.42}))
 
     with patch(
-        "homeassistant.components.recorder.dt_util.utcnow", return_value=points[2]
+        "homeassistant.components.recorder.core.dt_util.utcnow",
+        return_value=points[2],
     ):
         # everything is different
         states.append(set_state("412", attributes={"attribute": 54.23}))
@@ -536,7 +541,9 @@ def record_states(hass):
     four = three + timedelta(seconds=1)
 
     states = {therm: [], therm2: [], mp: [], mp2: [], mp3: [], script_c: []}
-    with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=one):
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=one
+    ):
         states[mp].append(
             set_state(mp, "idle", attributes={"media_title": str(sentinel.mt1)})
         )
@@ -553,7 +560,9 @@ def record_states(hass):
             set_state(therm, 20, attributes={"current_temperature": 19.5})
         )
 
-    with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=two):
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=two
+    ):
         # This state will be skipped only different in time
         set_state(mp, "YouTube", attributes={"media_title": str(sentinel.mt3)})
         # This state will be skipped because domain is excluded
@@ -568,7 +577,9 @@ def record_states(hass):
             set_state(therm2, 20, attributes={"current_temperature": 19})
         )
 
-    with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=three):
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=three
+    ):
         states[mp].append(
             set_state(mp, "Netflix", attributes={"media_title": str(sentinel.mt4)})
         )
