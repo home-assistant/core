@@ -532,13 +532,6 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             state_class=SensorStateClass.TOTAL_INCREASING,
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
-        # Unknown status set. Read-only value
-        # TuyaSensorEntityDescription(
-        #     key="use_time_one",
-        #     name="use_time_one",
-        #     entity_category=EntityCategory.SYSTEM,
-        #     icon="mdi:timer-play-outline",
-        # ),
         *BATTERY_SENSORS,
     ),
     # Water Detector
