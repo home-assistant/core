@@ -19,6 +19,10 @@ from homeassistant.components.recorder.models import (
     StatisticsShortTerm,
 )
 from homeassistant.components.recorder.purge import purge_old_data
+from homeassistant.components.recorder.services import (
+    SERVICE_PURGE,
+    SERVICE_PURGE_ENTITIES,
+)
 from homeassistant.components.recorder.tasks import PurgeTask
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import EVENT_STATE_CHANGED, STATE_ON
@@ -133,9 +137,7 @@ async def test_purge_old_states_encouters_database_corruption(
         "homeassistant.components.recorder.purge.purge_old_data",
         side_effect=sqlite3_exception,
     ):
-        await hass.services.async_call(
-            recorder.DOMAIN, recorder.SERVICE_PURGE, {"keep_days": 0}
-        )
+        await hass.services.async_call(recorder.DOMAIN, SERVICE_PURGE, {"keep_days": 0})
         await hass.async_block_till_done()
         await async_wait_recording_done(hass)
 
@@ -169,9 +171,7 @@ async def test_purge_old_states_encounters_temporary_mysql_error(
     ), patch.object(
         instance.engine.dialect, "name", "mysql"
     ):
-        await hass.services.async_call(
-            recorder.DOMAIN, recorder.SERVICE_PURGE, {"keep_days": 0}
-        )
+        await hass.services.async_call(recorder.DOMAIN, SERVICE_PURGE, {"keep_days": 0})
         await hass.async_block_till_done()
         await async_wait_recording_done(hass)
         await async_wait_recording_done(hass)
@@ -197,9 +197,7 @@ async def test_purge_old_states_encounters_operational_error(
         "homeassistant.components.recorder.purge._purge_old_recorder_runs",
         side_effect=exception,
     ):
-        await hass.services.async_call(
-            recorder.DOMAIN, recorder.SERVICE_PURGE, {"keep_days": 0}
-        )
+        await hass.services.async_call(recorder.DOMAIN, SERVICE_PURGE, {"keep_days": 0})
         await hass.async_block_till_done()
         await async_wait_recording_done(hass)
         await async_wait_recording_done(hass)
@@ -452,9 +450,7 @@ async def test_purge_edge_case(
         events = session.query(Events).filter(Events.event_type == "EVENT_TEST_PURGE")
         assert events.count() == 1
 
-    await hass.services.async_call(
-        recorder.DOMAIN, recorder.SERVICE_PURGE, service_data
-    )
+    await hass.services.async_call(recorder.DOMAIN, SERVICE_PURGE, service_data)
     await hass.async_block_till_done()
 
     await async_recorder_block_till_done(hass)
@@ -722,9 +718,7 @@ async def test_purge_filtered_states(
         assert events_keep.count() == 1
 
     # Normal purge doesn't remove excluded entities
-    await hass.services.async_call(
-        recorder.DOMAIN, recorder.SERVICE_PURGE, service_data
-    )
+    await hass.services.async_call(recorder.DOMAIN, SERVICE_PURGE, service_data)
     await hass.async_block_till_done()
 
     await async_recorder_block_till_done(hass)
@@ -742,9 +736,7 @@ async def test_purge_filtered_states(
 
     # Test with 'apply_filter' = True
     service_data["apply_filter"] = True
-    await hass.services.async_call(
-        recorder.DOMAIN, recorder.SERVICE_PURGE, service_data
-    )
+    await hass.services.async_call(recorder.DOMAIN, SERVICE_PURGE, service_data)
     await hass.async_block_till_done()
 
     await async_recorder_block_till_done(hass)
@@ -780,9 +772,7 @@ async def test_purge_filtered_states(
         assert session.query(StateAttributes).count() == 11
 
     # Do it again to make sure nothing changes
-    await hass.services.async_call(
-        recorder.DOMAIN, recorder.SERVICE_PURGE, service_data
-    )
+    await hass.services.async_call(recorder.DOMAIN, SERVICE_PURGE, service_data)
     await async_recorder_block_till_done(hass)
     await async_wait_purge_done(hass)
 
@@ -794,9 +784,7 @@ async def test_purge_filtered_states(
         assert session.query(StateAttributes).count() == 11
 
     service_data = {"keep_days": 0}
-    await hass.services.async_call(
-        recorder.DOMAIN, recorder.SERVICE_PURGE, service_data
-    )
+    await hass.services.async_call(recorder.DOMAIN, SERVICE_PURGE, service_data)
     await async_recorder_block_till_done(hass)
     await async_wait_purge_done(hass)
 
@@ -844,9 +832,7 @@ async def test_purge_filtered_states_to_empty(
 
     # Test with 'apply_filter' = True
     service_data["apply_filter"] = True
-    await hass.services.async_call(
-        recorder.DOMAIN, recorder.SERVICE_PURGE, service_data
-    )
+    await hass.services.async_call(recorder.DOMAIN, SERVICE_PURGE, service_data)
     await async_recorder_block_till_done(hass)
     await async_wait_purge_done(hass)
 
@@ -858,9 +844,7 @@ async def test_purge_filtered_states_to_empty(
 
     # Do it again to make sure nothing changes
     # Why do we do this? Should we check the end result?
-    await hass.services.async_call(
-        recorder.DOMAIN, recorder.SERVICE_PURGE, service_data
-    )
+    await hass.services.async_call(recorder.DOMAIN, SERVICE_PURGE, service_data)
     await async_recorder_block_till_done(hass)
     await async_wait_purge_done(hass)
 
@@ -914,9 +898,7 @@ async def test_purge_without_state_attributes_filtered_states_to_empty(
 
     # Test with 'apply_filter' = True
     service_data["apply_filter"] = True
-    await hass.services.async_call(
-        recorder.DOMAIN, recorder.SERVICE_PURGE, service_data
-    )
+    await hass.services.async_call(recorder.DOMAIN, SERVICE_PURGE, service_data)
     await async_recorder_block_till_done(hass)
     await async_wait_purge_done(hass)
 
@@ -928,9 +910,7 @@ async def test_purge_without_state_attributes_filtered_states_to_empty(
 
     # Do it again to make sure nothing changes
     # Why do we do this? Should we check the end result?
-    await hass.services.async_call(
-        recorder.DOMAIN, recorder.SERVICE_PURGE, service_data
-    )
+    await hass.services.async_call(recorder.DOMAIN, SERVICE_PURGE, service_data)
     await async_recorder_block_till_done(hass)
     await async_wait_purge_done(hass)
 
@@ -985,9 +965,7 @@ async def test_purge_filtered_events(
         assert states.count() == 10
 
     # Normal purge doesn't remove excluded events
-    await hass.services.async_call(
-        recorder.DOMAIN, recorder.SERVICE_PURGE, service_data
-    )
+    await hass.services.async_call(recorder.DOMAIN, SERVICE_PURGE, service_data)
     await hass.async_block_till_done()
 
     await async_recorder_block_till_done(hass)
@@ -1005,9 +983,7 @@ async def test_purge_filtered_events(
 
     # Test with 'apply_filter' = True
     service_data["apply_filter"] = True
-    await hass.services.async_call(
-        recorder.DOMAIN, recorder.SERVICE_PURGE, service_data
-    )
+    await hass.services.async_call(recorder.DOMAIN, SERVICE_PURGE, service_data)
     await hass.async_block_till_done()
 
     await async_recorder_block_till_done(hass)
@@ -1105,9 +1081,7 @@ async def test_purge_filtered_events_state_changed(
         assert events_purge.count() == 60
         assert states.count() == 63
 
-    await hass.services.async_call(
-        recorder.DOMAIN, recorder.SERVICE_PURGE, service_data
-    )
+    await hass.services.async_call(recorder.DOMAIN, SERVICE_PURGE, service_data)
     await hass.async_block_till_done()
 
     await async_recorder_block_till_done(hass)
@@ -1146,7 +1120,7 @@ async def test_purge_entities(
         }
 
         await hass.services.async_call(
-            recorder.DOMAIN, recorder.SERVICE_PURGE_ENTITIES, service_data
+            recorder.DOMAIN, SERVICE_PURGE_ENTITIES, service_data
         )
         await hass.async_block_till_done()
 
