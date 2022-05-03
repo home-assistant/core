@@ -101,7 +101,7 @@ async def async_setup_entry(
         entities.append(ISYAuxSensorEntity(node, control, enabled_default))
 
     for node in aux_nodes:
-        # Anything a node in SENSOR_AUX can potentially have communication errors
+        # Any node in SENSOR_AUX can potentially have communication errors
         entities.append(ISYAuxSensorEntity(node, PROP_COMMS_ERROR, False))
 
     for vname, vobj in hass_isy_data[ISY994_VARIABLES]:
