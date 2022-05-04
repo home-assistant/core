@@ -47,16 +47,6 @@ DISCOVERY_INFO_WRONG_DEVICE = zeroconf.ZeroconfServiceInfo(
     type="mock_type",
 )
 
-DISCOVERY_INFO_INCOMPLETE_QUERY = zeroconf.ZeroconfServiceInfo(
-    host="mock_host",
-    addresses=["mock_host"],
-    hostname="mock_hostname",
-    name="mock_name",
-    port=None,
-    properties={},
-    type="mock_type",
-)
-
 
 NEIGHBOR_ACCESS_POINTS = {
     "neighbor_aps": [
