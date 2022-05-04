@@ -22,6 +22,7 @@ from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import persistent_notification as pn, recorder
 from homeassistant.components.recorder import migration, models
 from homeassistant.components.recorder.const import DATA_INSTANCE
+from homeassistant.components.recorder.core import Recorder
 from homeassistant.components.recorder.models import RecorderRuns, States
 from homeassistant.components.recorder.util import session_scope
 import homeassistant.util.dt as dt_util
@@ -56,9 +57,12 @@ async def test_schema_update_calls(hass):
         await async_wait_recording_done(hass)
 
     assert recorder.util.async_migration_in_progress(hass) is False
+    instance: Recorder = hass.data[DATA_INSTANCE]
+    engine = instance.engine
+    session_maker = instance.get_session
     update.assert_has_calls(
         [
-            call(hass.data[DATA_INSTANCE], version + 1, 0)
+            call(hass, engine, session_maker, version + 1, 0)
             for version in range(0, models.SCHEMA_VERSION)
         ]
     )
@@ -322,10 +326,10 @@ async def test_schema_migrate(hass, start_version):
         assert recorder.util.async_migration_in_progress(hass) is not True
 
 
-def test_invalid_update():
+def test_invalid_update(hass):
     """Test that an invalid new version raises an exception."""
     with pytest.raises(ValueError):
-        migration._apply_update(Mock(), -1, 0)
+        migration._apply_update(hass, Mock(), Mock(), -1, 0)
 
 
 @pytest.mark.parametrize(
@@ -346,7 +350,9 @@ def test_modify_column(engine_type, substr):
     instance.get_session = Mock(return_value=session)
     engine = Mock()
     engine.dialect.name = engine_type
-    migration._modify_columns(instance, engine, "events", ["event_type VARCHAR(64)"])
+    migration._modify_columns(
+        instance.get_session, engine, "events", ["event_type VARCHAR(64)"]
+    )
     if substr:
         assert substr in connection.execute.call_args[0][0].text
     else:
@@ -360,8 +366,12 @@ def test_forgiving_add_column():
         session.execute(text("CREATE TABLE hello (id int)"))
         instance = Mock()
         instance.get_session = Mock(return_value=session)
-        migration._add_columns(instance, "hello", ["context_id CHARACTER(36)"])
-        migration._add_columns(instance, "hello", ["context_id CHARACTER(36)"])
+        migration._add_columns(
+            instance.get_session, "hello", ["context_id CHARACTER(36)"]
+        )
+        migration._add_columns(
+            instance.get_session, "hello", ["context_id CHARACTER(36)"]
+        )
 
 
 def test_forgiving_add_index():
@@ -371,7 +381,7 @@ def test_forgiving_add_index():
     with Session(engine) as session:
         instance = Mock()
         instance.get_session = Mock(return_value=session)
-        migration._create_index(instance, "states", "ix_states_context_id")
+        migration._create_index(instance.get_session, "states", "ix_states_context_id")
 
 
 @pytest.mark.parametrize(

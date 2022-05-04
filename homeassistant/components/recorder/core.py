@@ -586,7 +586,8 @@ class Recorder(threading.Thread):
         while tries <= self.db_max_retries:
             try:
                 self._setup_connection()
-                return migration.get_schema_version(self)
+                assert self.get_session is not None
+                return migration.get_schema_version(self.get_session)
             except Exception as err:  # pylint: disable=broad-except
                 _LOGGER.exception(
                     "Error during connection setup: %s (retrying in %s seconds)",
@@ -612,9 +613,12 @@ class Recorder(threading.Thread):
             "recorder_database_migration",
         )
         self.hass.add_job(self._async_migration_started)
+        assert self.get_session is not None
 
         try:
-            migration.migrate_schema(self, current_version)
+            migration.migrate_schema(
+                self.hass, self.engine, self.get_session, current_version
+            )
         except exc.DatabaseError as err:
             if self._handle_database_error(err):
                 return True
