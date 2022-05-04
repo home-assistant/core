@@ -1791,18 +1791,12 @@ async def test_recursive_automation(hass: HomeAssistant, automation_mode, caplog
         )
 
         service_called = asyncio.Event()
-        service_called_late = []
 
         async def async_service_handler(service):
             if service.service == "automation_done":
                 service_called.set()
-            if service.service == "automation_started_late":
-                service_called_late.append(service)
 
         hass.services.async_register("test", "automation_done", async_service_handler)
-        hass.services.async_register(
-            "test", "automation_started_late", async_service_handler
-        )
 
         hass.bus.async_fire("trigger_automation")
         await asyncio.wait_for(service_called.wait(), 1)

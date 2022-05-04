@@ -819,7 +819,7 @@ hole==0.7.0
 holidays==0.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220503.0
+home-assistant-frontend==20220504.0
 
 # homeassistant.components.home_connect
 homeconnect==0.7.0
@@ -1667,7 +1667,7 @@ pymyq==3.1.4
 pymysensors==0.22.1
 
 # homeassistant.components.netgear
-pynetgear==0.9.4
+pynetgear==0.10.0
 
 # homeassistant.components.netio
 pynetio==0.1.9.1
@@ -2448,7 +2448,7 @@ xbox-webapi==2.0.11
 xboxapi==2.0.1
 
 # homeassistant.components.knx
-xknx==0.21.1
+xknx==0.21.2
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz

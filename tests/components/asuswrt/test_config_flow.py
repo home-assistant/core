@@ -169,7 +169,7 @@ async def test_abort_if_not_unique_id_setup(hass):
         data=CONFIG_DATA,
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "not_unique_id_exist"
+    assert result["reason"] == "no_unique_id"
 
 
 @pytest.mark.usefixtures("connect")
