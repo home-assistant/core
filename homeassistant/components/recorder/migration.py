@@ -84,7 +84,7 @@ def migrate_schema(
     for version in range(current_version, SCHEMA_VERSION):
         new_version = version + 1
         _LOGGER.info("Upgrading recorder db schema to version %s", new_version)
-        _apply_update(hass, engine, session_scope, new_version, current_version)
+        _apply_update(hass, engine, session_maker, new_version, current_version)
         with session_scope(session=session_maker()) as session:
             session.add(SchemaChanges(schema_version=new_version))
 
