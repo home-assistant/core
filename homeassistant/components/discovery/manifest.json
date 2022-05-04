@@ -4,7 +4,7 @@
   "documentation": "https://www.home-assistant.io/integrations/discovery",
   "requirements": ["netdisco==3.0.0"],
   "after_dependencies": ["zeroconf"],
-  "codeowners": [],
+  "codeowners": ["@home-assistant/core"],
   "quality_scale": "internal",
   "loggers": ["netdisco"]
 }

@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import AugustData
-from .const import DATA_AUGUST, DOMAIN
+from .const import DOMAIN
 from .entity import AugustEntityMixin
 
 
@@ -17,8 +17,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up August lock wake buttons."""
-    data: AugustData = hass.data[DOMAIN][config_entry.entry_id][DATA_AUGUST]
-    async_add_entities([AugustWakeLockButton(data, lock) for lock in data.locks])
+    data: AugustData = hass.data[DOMAIN][config_entry.entry_id]
+    async_add_entities(AugustWakeLockButton(data, lock) for lock in data.locks)
 
 
 class AugustWakeLockButton(AugustEntityMixin, ButtonEntity):

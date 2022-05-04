@@ -146,7 +146,9 @@ async def async_init_integration(
             text=load_fixture(zone_1_state_fixture),
         )
         entry = MockConfigEntry(
-            domain=DOMAIN, data={CONF_USERNAME: "mock", CONF_PASSWORD: "mock"}
+            domain=DOMAIN,
+            data={CONF_USERNAME: "mock", CONF_PASSWORD: "mock"},
+            options={"fallback": "NEXT_TIME_BLOCK"},
         )
         entry.add_to_hass(hass)
 

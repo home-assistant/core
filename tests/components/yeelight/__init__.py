@@ -1,14 +1,14 @@
 """Tests for the Yeelight integration."""
 import asyncio
 from datetime import timedelta
-from ipaddress import IPv4Address
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from async_upnp_client.search import SsdpSearchListener
+from async_upnp_client.utils import CaseInsensitiveDict
 from yeelight import BulbException, BulbType
 from yeelight.main import _MODEL_SPECS
 
-from homeassistant.components import ssdp, zeroconf
+from homeassistant.components import zeroconf
 from homeassistant.components.yeelight import (
     CONF_MODE_MUSIC,
     CONF_NIGHTLIGHT_SWITCH_TYPE,
@@ -158,11 +158,11 @@ def _mocked_bulb(cannot_connect=False):
     return bulb
 
 
-def _patched_ssdp_listener(info: ssdp.SsdpHeaders, *args, **kwargs):
+def _patched_ssdp_listener(info: CaseInsensitiveDict, *args, **kwargs):
     listener = SsdpSearchListener(*args, **kwargs)
 
     async def _async_callback(*_):
-        if kwargs["source_ip"] == IPv4Address(FAIL_TO_BIND_IP):
+        if kwargs["source"][0] == FAIL_TO_BIND_IP:
             raise OSError
         await listener.async_connect_callback()
 

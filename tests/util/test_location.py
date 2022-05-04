@@ -74,7 +74,7 @@ def test_get_miles():
 
 
 async def test_detect_location_info_whoami(aioclient_mock, session):
-    """Test detect location info using whoami.home-assistant.io."""
+    """Test detect location info using services.home-assistant.io/whoami."""
     aioclient_mock.get(location_util.WHOAMI_URL, text=load_fixture("whoami.json"))
 
     with patch("homeassistant.util.location.HA_VERSION", "1.0"):

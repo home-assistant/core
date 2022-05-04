@@ -6,11 +6,11 @@ from uuid import uuid4
 from homeassistant.components.twinkly.const import (
     CONF_HOST,
     CONF_ID,
-    CONF_MODEL,
     CONF_NAME,
     DOMAIN as TWINKLY_DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry

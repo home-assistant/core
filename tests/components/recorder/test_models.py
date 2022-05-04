@@ -1,5 +1,6 @@
 """The tests for the Recorder component."""
-from datetime import datetime
+from datetime import datetime, timedelta
+from unittest.mock import PropertyMock
 
 import pytest
 from sqlalchemy import create_engine
@@ -7,8 +8,11 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 
 from homeassistant.components.recorder.models import (
     Base,
+    EventData,
     Events,
+    LazyState,
     RecorderRuns,
+    StateAttributes,
     States,
     process_timestamp,
     process_timestamp_to_utc_isoformat,
@@ -16,14 +20,15 @@ from homeassistant.components.recorder.models import (
 from homeassistant.const import EVENT_STATE_CHANGED
 import homeassistant.core as ha
 from homeassistant.exceptions import InvalidEntityFormatError
-from homeassistant.util import dt
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt, dt as dt_util
 
 
 def test_from_event_to_db_event():
     """Test converting event to db event."""
     event = ha.Event("test_event", {"some_data": 15})
-    assert event == Events.from_event(event).to_native()
+    db_event = Events.from_event(event)
+    db_event.event_data = EventData.from_event(event).shared_data
+    assert event == db_event.to_native()
 
 
 def test_from_event_to_db_state():
@@ -34,10 +39,28 @@ def test_from_event_to_db_state():
         {"entity_id": "sensor.temperature", "old_state": None, "new_state": state},
         context=state.context,
     )
-    # We don't restore context unless we need it by joining the
-    # events table on the event_id for state_changed events
-    state.context = ha.Context(id=None)
     assert state == States.from_event(event).to_native()
+
+
+def test_from_event_to_db_state_attributes():
+    """Test converting event to db state attributes."""
+    attrs = {"this_attr": True}
+    state = ha.State("sensor.temperature", "18", attrs)
+    event = ha.Event(
+        EVENT_STATE_CHANGED,
+        {"entity_id": "sensor.temperature", "old_state": None, "new_state": state},
+        context=state.context,
+    )
+    assert StateAttributes.from_event(event).to_native() == attrs
+
+
+def test_handling_broken_json_state_attributes(caplog):
+    """Test we handle broken json in state attributes."""
+    state_attributes = StateAttributes(
+        attributes_id=444, hash=1234, shared_attrs="{NOT_PARSE}"
+    )
+    assert state_attributes.to_native() == {}
+    assert "Error converting row to state attributes" in caplog.text
 
 
 def test_from_event_to_delete_state():
@@ -53,7 +76,6 @@ def test_from_event_to_delete_state():
     db_state = States.from_event(event)
 
     assert db_state.entity_id == "sensor.temperature"
-    assert db_state.domain == "sensor"
     assert db_state.state == ""
     assert db_state.last_changed == event.time_fired
     assert db_state.last_updated == event.time_fired
@@ -209,9 +231,105 @@ async def test_event_to_db_model():
     event = ha.Event(
         "state_changed", {"some": "attr"}, ha.EventOrigin.local, dt_util.utcnow()
     )
-    native = Events.from_event(event).to_native()
+    db_event = Events.from_event(event)
+    db_event.event_data = EventData.from_event(event).shared_data
+    native = db_event.to_native()
     assert native == event
 
-    native = Events.from_event(event, event_data="{}").to_native()
+    native = Events.from_event(event).to_native()
     event.data = {}
     assert native == event
+
+
+async def test_lazy_state_handles_include_json(caplog):
+    """Test that the LazyState class handles invalid json."""
+    row = PropertyMock(
+        entity_id="sensor.invalid",
+        shared_attrs="{INVALID_JSON}",
+    )
+    assert LazyState(row).attributes == {}
+    assert "Error converting row to state attributes" in caplog.text
+
+
+async def test_lazy_state_prefers_shared_attrs_over_attrs(caplog):
+    """Test that the LazyState prefers shared_attrs over attributes."""
+    row = PropertyMock(
+        entity_id="sensor.invalid",
+        shared_attrs='{"shared":true}',
+        attributes='{"shared":false}',
+    )
+    assert LazyState(row).attributes == {"shared": True}
+
+
+async def test_lazy_state_handles_different_last_updated_and_last_changed(caplog):
+    """Test that the LazyState handles different last_updated and last_changed."""
+    now = datetime(2021, 6, 12, 3, 4, 1, 323, tzinfo=dt_util.UTC)
+    row = PropertyMock(
+        entity_id="sensor.valid",
+        state="off",
+        shared_attrs='{"shared":true}',
+        last_updated=now,
+        last_changed=now - timedelta(seconds=60),
+    )
+    lstate = LazyState(row)
+    assert lstate.as_dict() == {
+        "attributes": {"shared": True},
+        "entity_id": "sensor.valid",
+        "last_changed": "2021-06-12T03:03:01.000323+00:00",
+        "last_updated": "2021-06-12T03:04:01.000323+00:00",
+        "state": "off",
+    }
+    assert lstate.last_updated == row.last_updated
+    assert lstate.last_changed == row.last_changed
+    assert lstate.as_dict() == {
+        "attributes": {"shared": True},
+        "entity_id": "sensor.valid",
+        "last_changed": "2021-06-12T03:03:01.000323+00:00",
+        "last_updated": "2021-06-12T03:04:01.000323+00:00",
+        "state": "off",
+    }
+
+
+async def test_lazy_state_handles_same_last_updated_and_last_changed(caplog):
+    """Test that the LazyState handles same last_updated and last_changed."""
+    now = datetime(2021, 6, 12, 3, 4, 1, 323, tzinfo=dt_util.UTC)
+    row = PropertyMock(
+        entity_id="sensor.valid",
+        state="off",
+        shared_attrs='{"shared":true}',
+        last_updated=now,
+        last_changed=now,
+    )
+    lstate = LazyState(row)
+    assert lstate.as_dict() == {
+        "attributes": {"shared": True},
+        "entity_id": "sensor.valid",
+        "last_changed": "2021-06-12T03:04:01.000323+00:00",
+        "last_updated": "2021-06-12T03:04:01.000323+00:00",
+        "state": "off",
+    }
+    assert lstate.last_updated == row.last_updated
+    assert lstate.last_changed == row.last_changed
+    assert lstate.as_dict() == {
+        "attributes": {"shared": True},
+        "entity_id": "sensor.valid",
+        "last_changed": "2021-06-12T03:04:01.000323+00:00",
+        "last_updated": "2021-06-12T03:04:01.000323+00:00",
+        "state": "off",
+    }
+    lstate.last_updated = datetime(2020, 6, 12, 3, 4, 1, 323, tzinfo=dt_util.UTC)
+    assert lstate.as_dict() == {
+        "attributes": {"shared": True},
+        "entity_id": "sensor.valid",
+        "last_changed": "2021-06-12T03:04:01.000323+00:00",
+        "last_updated": "2020-06-12T03:04:01.000323+00:00",
+        "state": "off",
+    }
+    lstate.last_changed = datetime(2020, 6, 12, 3, 4, 1, 323, tzinfo=dt_util.UTC)
+    assert lstate.as_dict() == {
+        "attributes": {"shared": True},
+        "entity_id": "sensor.valid",
+        "last_changed": "2020-06-12T03:04:01.000323+00:00",
+        "last_updated": "2020-06-12T03:04:01.000323+00:00",
+        "state": "off",
+    }

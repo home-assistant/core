@@ -133,7 +133,10 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
 
         entity_registry = er.async_get(self.hass)
         if registry_entry := entity_registry.async_get(entity_id):
-            auxiliary_entity = registry_entry.entity_category is not None
+            auxiliary_entity = (
+                registry_entry.entity_category is not None
+                or registry_entry.hidden_by is not None
+            )
         else:
             auxiliary_entity = False
 

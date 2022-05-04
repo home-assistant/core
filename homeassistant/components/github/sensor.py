@@ -172,12 +172,11 @@ async def async_setup_entry(
     )
 
 
-class GitHubSensorEntity(CoordinatorEntity[dict[str, Any]], SensorEntity):
+class GitHubSensorEntity(CoordinatorEntity[GitHubDataUpdateCoordinator], SensorEntity):
     """Defines a GitHub sensor entity."""
 
     _attr_attribution = "Data provided by the GitHub API"
 
-    coordinator: GitHubDataUpdateCoordinator
     entity_description: GitHubSensorEntityDescription
 
     def __init__(

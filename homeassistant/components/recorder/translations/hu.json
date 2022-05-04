@@ -1,0 +1,8 @@
+{
+    "system_health": {
+        "info": {
+            "current_recorder_run": "Aktu\u00e1lis futtat\u00e1s kezd\u00e9si id\u0151pontja",
+            "oldest_recorder_run": "Legr\u00e9gebbi futtat\u00e1s kezd\u00e9si id\u0151pontja"
+        }
+    }
+}

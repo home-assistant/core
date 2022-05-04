@@ -43,7 +43,7 @@ async def async_setup_platform(
     station_id = config[CONF_STATION_ID]
 
     session = async_get_clientsession(hass)
-    osm_api = OpenSenseMapData(OpenSenseMap(station_id, hass.loop, session))
+    osm_api = OpenSenseMapData(OpenSenseMap(station_id, session))
 
     await osm_api.async_update()
 

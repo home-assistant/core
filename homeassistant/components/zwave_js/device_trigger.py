@@ -32,6 +32,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.typing import ConfigType
 
 from . import trigger
+from .config_validation import VALUE_SCHEMA
 from .const import (
     ATTR_COMMAND_CLASS,
     ATTR_DATA_TYPE,
@@ -79,14 +80,6 @@ SCENE_ACTIVATION_VALUE_NOTIFICATION = "event.value_notification.scene_activation
 CONFIG_PARAMETER_VALUE_UPDATED = f"{VALUE_UPDATED_PLATFORM_TYPE}.config_parameter"
 VALUE_VALUE_UPDATED = f"{VALUE_UPDATED_PLATFORM_TYPE}.value"
 NODE_STATUS = "state.node_status"
-
-VALUE_SCHEMA = vol.Any(
-    bool,
-    vol.Coerce(int),
-    vol.Coerce(float),
-    cv.boolean,
-    cv.string,
-)
 
 
 NOTIFICATION_EVENT_CC_MAPPINGS = (
@@ -273,7 +266,11 @@ async def async_get_triggers(
     entity_id = async_get_node_status_sensor_entity_id(
         hass, device_id, ent_reg, dev_reg
     )
-    if (entity := ent_reg.async_get(entity_id)) is not None and not entity.disabled:
+    if (
+        entity_id
+        and (entity := ent_reg.async_get(entity_id)) is not None
+        and not entity.disabled
+    ):
         triggers.append(
             {**base_trigger, CONF_TYPE: NODE_STATUS, CONF_ENTITY_ID: entity_id}
         )

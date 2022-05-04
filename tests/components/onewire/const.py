@@ -435,6 +435,54 @@ MOCK_OWPROXY_DEVICES = {
             },
         ],
     },
+    "28.222222222222": {
+        # This device has precision options in the config entry
+        ATTR_INJECT_READS: [
+            b"DS18B20",  # read device type
+        ],
+        ATTR_DEVICE_INFO: {
+            ATTR_IDENTIFIERS: {(DOMAIN, "28.222222222222")},
+            ATTR_MANUFACTURER: MANUFACTURER_MAXIM,
+            ATTR_MODEL: "DS18B20",
+            ATTR_NAME: "28.222222222222",
+        },
+        Platform.SENSOR: [
+            {
+                ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
+                ATTR_DEVICE_FILE: "/28.222222222222/temperature9",
+                ATTR_ENTITY_ID: "sensor.28_222222222222_temperature",
+                ATTR_INJECT_READS: b"    26.984",
+                ATTR_STATE: "27.0",
+                ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
+                ATTR_UNIQUE_ID: "/28.222222222222/temperature",
+                ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
+            },
+        ],
+    },
+    "28.222222222223": {
+        # This device has an illegal precision option in the config entry
+        ATTR_INJECT_READS: [
+            b"DS18B20",  # read device type
+        ],
+        ATTR_DEVICE_INFO: {
+            ATTR_IDENTIFIERS: {(DOMAIN, "28.222222222223")},
+            ATTR_MANUFACTURER: MANUFACTURER_MAXIM,
+            ATTR_MODEL: "DS18B20",
+            ATTR_NAME: "28.222222222223",
+        },
+        Platform.SENSOR: [
+            {
+                ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
+                ATTR_DEVICE_FILE: "/28.222222222223/temperature",
+                ATTR_ENTITY_ID: "sensor.28_222222222223_temperature",
+                ATTR_INJECT_READS: b"    26.984",
+                ATTR_STATE: "27.0",
+                ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
+                ATTR_UNIQUE_ID: "/28.222222222223/temperature",
+                ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
+            },
+        ],
+    },
     "29.111111111111": {
         ATTR_INJECT_READS: [
             b"DS2408",  # read device type

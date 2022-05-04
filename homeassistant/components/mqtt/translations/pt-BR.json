@@ -10,7 +10,7 @@
         "step": {
             "broker": {
                 "data": {
-                    "broker": "Broker",
+                    "broker": "Endere\u00e7o do Broker",
                     "discovery": "Ativar descoberta",
                     "password": "Senha",
                     "port": "Porta",

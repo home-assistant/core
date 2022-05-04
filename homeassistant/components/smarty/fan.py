@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 import math
 
-from homeassistant.components.fan import SUPPORT_SET_SPEED, FanEntity
+from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -40,6 +40,8 @@ async def async_setup_platform(
 class SmartyFan(FanEntity):
     """Representation of a Smarty Fan."""
 
+    _attr_supported_features = FanEntityFeature.SET_SPEED
+
     def __init__(self, name, smarty):
         """Initialize the entity."""
         self._name = name
@@ -60,11 +62,6 @@ class SmartyFan(FanEntity):
     def icon(self):
         """Return the icon to use in the frontend."""
         return "mdi:air-conditioner"
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_SET_SPEED
 
     @property
     def is_on(self):
@@ -99,9 +96,9 @@ class SmartyFan(FanEntity):
         self._smarty_fan_speed = fan_speed
         self.schedule_update_ha_state()
 
-    def turn_on(self, speed=None, percentage=None, preset_mode=None, **kwargs):
+    def turn_on(self, percentage=None, preset_mode=None, **kwargs):
         """Turn on the fan."""
-        _LOGGER.debug("Turning on fan. Speed is %s", speed)
+        _LOGGER.debug("Turning on fan. percentage is %s", percentage)
         self.set_percentage(percentage or DEFAULT_ON_PERCENTAGE)
 
     def turn_off(self, **kwargs):

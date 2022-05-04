@@ -16,7 +16,7 @@
                     "longitude": "Longitud",
                     "name": "Nombre"
                 },
-                "description": "Si necesitas ayuda con la configuraci\u00f3n, echa un vistazo aqu\u00ed: https://www.home-assistant.io/integrations/accuweather/ \n\nEl pron\u00f3stico del tiempo no est\u00e1 habilitado por defecto. Puedes habilitarlo en las opciones de la integraci\u00f3n.",
+                "description": "Si necesitas ayuda con la configuraci\u00f3n, echa un vistazo aqu\u00ed: https://www.home-assistant.io/integrations/accuweather/ \n\nAlgunos sensores no est\u00e1n habilitados por defecto. Los puedes habilitar en el registro de entidades despu\u00e9s de configurar la integraci\u00f3n.\nEl pron\u00f3stico del tiempo no est\u00e1 habilitado por defecto. Puedes habilitarlo en las opciones de la integraci\u00f3n.",
                 "title": "AccuWeather"
             }
         }

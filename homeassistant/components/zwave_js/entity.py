@@ -223,7 +223,7 @@ class ZWaveBaseEntity(Entity):
         value_property: str | int,
         command_class: int | None = None,
         endpoint: int | None = None,
-        value_property_key: int | None = None,
+        value_property_key: int | str | None = None,
         add_to_watched_value_ids: bool = True,
         check_all_endpoints: bool = False,
     ) -> ZwaveValue | None:

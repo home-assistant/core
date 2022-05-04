@@ -6,7 +6,7 @@
             "reauth_successful": "La r\u00e9-authentification a r\u00e9ussi"
         },
         "error": {
-            "invalid_auth": "Authentification invalide",
+            "invalid_auth": "Authentification non valide",
             "usercode": "Code d'utilisateur non valide pour cet utilisateur \u00e0 cet emplacement"
         },
         "step": {

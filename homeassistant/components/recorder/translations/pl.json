@@ -1,0 +1,8 @@
+{
+    "system_health": {
+        "info": {
+            "current_recorder_run": "Pocz\u0105tek aktualnej sesji rejestratora",
+            "oldest_recorder_run": "Pocz\u0105tek najstarszej sesji rejestratora"
+        }
+    }
+}

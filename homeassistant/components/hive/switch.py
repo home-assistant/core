@@ -70,11 +70,6 @@ class HiveDevicePlug(HiveEntity, SwitchEntity):
         }
 
     @property
-    def current_power_w(self):
-        """Return the current power usage in W."""
-        return self.device["status"].get("power_usage")
-
-    @property
     def is_on(self):
         """Return true if switch is on."""
         return self.device["status"]["state"]

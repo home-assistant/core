@@ -7,8 +7,8 @@
         },
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
-            "invalid_auth": "Authentification invalide",
-            "invalid_zone": "Zone invalide"
+            "invalid_auth": "Authentification non valide",
+            "invalid_zone": "Zone non valide"
         },
         "flow_title": "{name}",
         "step": {

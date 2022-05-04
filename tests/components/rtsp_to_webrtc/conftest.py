@@ -24,8 +24,8 @@ CONFIG_ENTRY_DATA = {"server_url": SERVER_URL}
 
 # Typing helpers
 ComponentSetup = Callable[[], Awaitable[None]]
-T = TypeVar("T")
-YieldFixture = Generator[T, None, None]
+_T = TypeVar("_T")
+YieldFixture = Generator[_T, None, None]
 
 
 @pytest.fixture(autouse=True)

@@ -1,0 +1,23 @@
+{
+    "config": {
+        "error": {
+            "invalid_auth": "Ongeldige authenticatie",
+            "service_unavailable_error": "De API is momenteel niet beschikbaar, probeer het later opnieuw.",
+            "unknown_auth_error": "Onverwachte fout"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Wachtwoord"
+                }
+            },
+            "user": {
+                "data": {
+                    "password": "Wachtwoord",
+                    "username": "Gebruikersnaam"
+                },
+                "description": "Stel uw Meater Cloud-account in."
+            }
+        }
+    }
+}

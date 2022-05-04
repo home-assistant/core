@@ -27,6 +27,7 @@ from withings_api.common import (
     query_measure_groups,
 )
 
+from homeassistant.components import webhook
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -494,7 +495,7 @@ class ConfigEntryWithingsApi(AbstractWithingsApi):
         """Perform an async request."""
         asyncio.run_coroutine_threadsafe(
             self.session.async_ensure_token_valid(), self._hass.loop
-        )
+        ).result()
 
         access_token = self._config_entry.data["token"]["access_token"]
         response = requests.request(
@@ -641,14 +642,17 @@ class DataManager:
 
         Withings' API occasionally and incorrectly throws errors. Retrying the call tends to work.
         """
-        # pylint: disable=no-self-use
         exception = None
         for attempt in range(1, attempts + 1):
             _LOGGER.debug("Attempt %s of %s", attempt, attempts)
             try:
                 return await func()
             except Exception as exception1:  # pylint: disable=broad-except
-                await asyncio.sleep(0.1)
+                _LOGGER.debug(
+                    "Failed attempt %s of %s (%s)", attempt, attempts, exception1
+                )
+                # Make each backoff pause a little bit longer
+                await asyncio.sleep(0.5 * attempt)
                 exception = exception1
                 continue
 
@@ -1043,7 +1047,9 @@ async def async_get_data_manager(
             config_entry.data["token"]["userid"],
             WebhookConfig(
                 id=config_entry.data[CONF_WEBHOOK_ID],
-                url=config_entry.data[const.CONF_WEBHOOK_URL],
+                url=webhook.async_generate_url(
+                    hass, config_entry.data[CONF_WEBHOOK_ID]
+                ),
                 enabled=config_entry.data[const.CONF_USE_WEBHOOK],
             ),
         )

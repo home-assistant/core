@@ -31,7 +31,6 @@ from .const import (
     ATTR_OPERATION_KEYPAD,
     ATTR_OPERATION_METHOD,
     ATTR_OPERATION_REMOTE,
-    DATA_AUGUST,
     DOMAIN,
     OPERATION_METHOD_AUTORELOCK,
     OPERATION_METHOD_KEYPAD,
@@ -53,19 +52,19 @@ def _retrieve_linked_keypad_battery_state(detail: KeypadDetail) -> int | None:
     return detail.battery_percentage
 
 
-T = TypeVar("T", LockDetail, KeypadDetail)
+_T = TypeVar("_T", LockDetail, KeypadDetail)
 
 
 @dataclass
-class AugustRequiredKeysMixin(Generic[T]):
+class AugustRequiredKeysMixin(Generic[_T]):
     """Mixin for required keys."""
 
-    value_fn: Callable[[T], int | None]
+    value_fn: Callable[[_T], int | None]
 
 
 @dataclass
 class AugustSensorEntityDescription(
-    SensorEntityDescription, AugustRequiredKeysMixin[T]
+    SensorEntityDescription, AugustRequiredKeysMixin[_T]
 ):
     """Describes August sensor entity."""
 
@@ -93,7 +92,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the August sensors."""
-    data: AugustData = hass.data[DOMAIN][config_entry.entry_id][DATA_AUGUST]
+    data: AugustData = hass.data[DOMAIN][config_entry.entry_id]
     entities: list[SensorEntity] = []
     migrate_unique_id_devices = []
     operation_sensors = []
@@ -256,10 +255,10 @@ class AugustOperatorSensor(AugustEntityMixin, RestoreEntity, SensorEntity):
         return f"{self._device_id}_lock_operator"
 
 
-class AugustBatterySensor(AugustEntityMixin, SensorEntity, Generic[T]):
+class AugustBatterySensor(AugustEntityMixin, SensorEntity, Generic[_T]):
     """Representation of an August sensor."""
 
-    entity_description: AugustSensorEntityDescription[T]
+    entity_description: AugustSensorEntityDescription[_T]
     _attr_device_class = SensorDeviceClass.BATTERY
     _attr_native_unit_of_measurement = PERCENTAGE
 
@@ -268,7 +267,7 @@ class AugustBatterySensor(AugustEntityMixin, SensorEntity, Generic[T]):
         data: AugustData,
         device,
         old_device,
-        description: AugustSensorEntityDescription[T],
+        description: AugustSensorEntityDescription[_T],
     ):
         """Initialize the sensor."""
         super().__init__(data, device)

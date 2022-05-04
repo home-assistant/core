@@ -40,7 +40,7 @@
                 "data": {
                     "inverse": "\u53cd\u8f49\u958b\u555f/\u95dc\u9589\u72c0\u614b",
                     "name": "\u540d\u7a31 \uff08\u9078\u9805\uff09",
-                    "type": "\u4e8c\u9032\u4f4d\u611f\u61c9\u5668\u985e\u578b"
+                    "type": "\u4e8c\u9032\u4f4d\u611f\u61c9\u5668\u985e\u5225"
                 },
                 "description": "{zone}\u9078\u9805",
                 "title": "\u8a2d\u5b9a\u4e8c\u9032\u4f4d\u611f\u61c9\u5668"
@@ -49,7 +49,7 @@
                 "data": {
                     "name": "\u540d\u7a31 \uff08\u9078\u9805\uff09",
                     "poll_interval": "\u66f4\u65b0\u9593\u8ddd\uff08\u5206\u9418\uff09\uff08\u9078\u9805\uff09",
-                    "type": "\u611f\u61c9\u5668\u985e\u578b"
+                    "type": "\u611f\u61c9\u5668\u985e\u5225"
                 },
                 "description": "{zone}\u9078\u9805",
                 "title": "\u8a2d\u5b9a\u6578\u4f4d\u611f\u61c9\u5668"

@@ -1,6 +1,9 @@
 """Support for Netgear routers."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
+from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL
@@ -51,6 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
+    assert entry.unique_id
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
@@ -67,7 +71,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Fetch data from the router."""
         return await router.async_update_device_trackers()
 
-    async def async_update_traffic_meter() -> dict:
+    async def async_update_traffic_meter() -> dict[str, Any] | None:
         """Fetch data from the router."""
         return await router.async_get_traffic_meter()
 

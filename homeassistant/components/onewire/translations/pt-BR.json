@@ -22,5 +22,31 @@
                 "title": "Configurar 1-Wire"
             }
         }
+    },
+    "options": {
+        "error": {
+            "device_not_selected": "Selecione os dispositivos para configurar"
+        },
+        "step": {
+            "ack_no_options": {
+                "description": "N\u00e3o h\u00e1 op\u00e7\u00f5es para a implementa\u00e7\u00e3o do SysBus",
+                "title": "Op\u00e7\u00f5es de OneWire SysBus"
+            },
+            "configure_device": {
+                "data": {
+                    "precision": "Precis\u00e3o do Sensor"
+                },
+                "description": "Selecione a precis\u00e3o do sensor para {sensor_id}",
+                "title": "Precis\u00e3o do Sensor OneWire"
+            },
+            "device_selection": {
+                "data": {
+                    "clear_device_options": "Limpar todas as configura\u00e7\u00f5es do dispositivo",
+                    "device_selection": "Selecione os dispositivos para configurar"
+                },
+                "description": "Selecione as etapas de configura\u00e7\u00e3o a serem processadas",
+                "title": "Op\u00e7\u00f5es de dispositivo OneWire"
+            }
+        }
     }
 }

@@ -22,8 +22,8 @@ from tests.common import MockConfigEntry
 
 # Typing helpers
 PlatformSetup = Callable[[], Awaitable[None]]
-T = TypeVar("T")
-YieldFixture = Generator[T, None, None]
+_T = TypeVar("_T")
+YieldFixture = Generator[_T, None, None]
 
 PROJECT_ID = "some-project-id"
 CLIENT_ID = "some-client-id"

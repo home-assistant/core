@@ -18,7 +18,6 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     homekit: HomeKit = hass.data[DOMAIN][entry.entry_id][HOMEKIT]
-    driver: AccessoryDriver = homekit.driver
     data: dict[str, Any] = {
         "status": homekit.status,
         "config-entry": {
@@ -28,8 +27,9 @@ async def async_get_config_entry_diagnostics(
             "options": dict(entry.options),
         },
     }
-    if not driver:
+    if not hasattr(homekit, "driver"):
         return data
+    driver: AccessoryDriver = homekit.driver
     data.update(driver.get_accessories())
     state: State = driver.state
     data.update(
