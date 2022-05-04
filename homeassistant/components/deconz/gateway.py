@@ -289,6 +289,6 @@ async def get_deconz_session(
         LOGGER.warning("Invalid key for deCONZ at %s", config[CONF_HOST])
         raise AuthenticationRequired from err
 
-    except (asyncio.TimeoutError, errors.RequestError) as err:
+    except (asyncio.TimeoutError, errors.RequestError, errors.ResponseError) as err:
         LOGGER.error("Error connecting to deCONZ gateway at %s", config[CONF_HOST])
         raise CannotConnect from err

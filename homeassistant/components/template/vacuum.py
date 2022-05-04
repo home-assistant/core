@@ -253,8 +253,9 @@ class TemplateVacuum(TemplateEntity, StateVacuumEntity):
             )
         else:
             _LOGGER.error(
-                "Received invalid fan speed: %s. Expected: %s",
+                "Received invalid fan speed: %s for entity %s. Expected: %s",
                 fan_speed,
+                self.entity_id,
                 self._attr_fan_speed_list,
             )
 
@@ -298,8 +299,9 @@ class TemplateVacuum(TemplateEntity, StateVacuumEntity):
             self._state = None
         else:
             _LOGGER.error(
-                "Received invalid vacuum state: %s. Expected: %s",
+                "Received invalid vacuum state: %s for entity %s. Expected: %s",
                 result,
+                self.entity_id,
                 ", ".join(_VALID_STATES),
             )
             self._state = None
@@ -312,7 +314,9 @@ class TemplateVacuum(TemplateEntity, StateVacuumEntity):
                 raise ValueError
         except ValueError:
             _LOGGER.error(
-                "Received invalid battery level: %s. Expected: 0-100", battery_level
+                "Received invalid battery level: %s for entity %s. Expected: 0-100",
+                battery_level,
+                self.entity_id,
             )
             self._attr_battery_level = None
             return
@@ -333,8 +337,9 @@ class TemplateVacuum(TemplateEntity, StateVacuumEntity):
             self._attr_fan_speed = None
         else:
             _LOGGER.error(
-                "Received invalid fan speed: %s. Expected: %s",
+                "Received invalid fan speed: %s for entity %s. Expected: %s",
                 fan_speed,
+                self.entity_id,
                 self._attr_fan_speed_list,
             )
             self._attr_fan_speed = None

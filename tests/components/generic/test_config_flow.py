@@ -166,6 +166,48 @@ async def test_form_only_still_sample(hass, user_flow, image_file):
 
 
 @respx.mock
+@pytest.mark.parametrize(
+    ("template", "url", "expected_result"),
+    [
+        # Test we can handle templates in strange parts of the url, #70961.
+        (
+            "http://localhost:812{{3}}/static/icons/favicon-apple-180x180.png",
+            "http://localhost:8123/static/icons/favicon-apple-180x180.png",
+            data_entry_flow.RESULT_TYPE_CREATE_ENTRY,
+        ),
+        (
+            "{% if 1 %}https://bla{% else %}https://yo{% endif %}",
+            "https://bla/",
+            data_entry_flow.RESULT_TYPE_CREATE_ENTRY,
+        ),
+        (
+            "http://{{example.org",
+            "http://example.org",
+            data_entry_flow.RESULT_TYPE_FORM,
+        ),
+        (
+            "invalid1://invalid:4\\1",
+            "invalid1://invalid:4%5c1",
+            data_entry_flow.RESULT_TYPE_CREATE_ENTRY,
+        ),
+    ],
+)
+async def test_still_template(
+    hass, user_flow, fakeimgbytes_png, template, url, expected_result
+) -> None:
+    """Test we can handle various templates."""
+    respx.get(url).respond(stream=fakeimgbytes_png)
+    data = TESTDATA.copy()
+    data.pop(CONF_STREAM_SOURCE)
+    data[CONF_STILL_IMAGE_URL] = template
+    result2 = await hass.config_entries.flow.async_configure(
+        user_flow["flow_id"],
+        data,
+    )
+    assert result2["type"] == expected_result
+
+
+@respx.mock
 async def test_form_rtsp_mode(hass, fakeimg_png, mock_av_open, user_flow):
     """Test we complete ok if the user enters a stream url."""
     with mock_av_open as mock_setup:

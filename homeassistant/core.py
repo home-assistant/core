@@ -192,18 +192,15 @@ class HassJob(Generic[_R_co]):
 
     def __init__(self, target: Callable[..., _R_co]) -> None:
         """Create a job object."""
-        if asyncio.iscoroutine(target):
-            raise ValueError("Coroutine not allowed to be passed to HassJob")
-
         self.target = target
-        self.job_type = _get_callable_job_type(target)
+        self.job_type = _get_hassjob_callable_job_type(target)
 
     def __repr__(self) -> str:
         """Return the job."""
         return f"<Job {self.job_type} {self.target}>"
 
 
-def _get_callable_job_type(target: Callable[..., Any]) -> HassJobType:
+def _get_hassjob_callable_job_type(target: Callable[..., Any]) -> HassJobType:
     """Determine the job type from the callable."""
     # Check for partials to properly determine if coroutine function
     check_target = target
@@ -214,6 +211,8 @@ def _get_callable_job_type(target: Callable[..., Any]) -> HassJobType:
         return HassJobType.Coroutinefunction
     if is_callback(check_target):
         return HassJobType.Callback
+    if asyncio.iscoroutine(check_target):
+        raise ValueError("Coroutine not allowed to be passed to HassJob")
     return HassJobType.Executor
 
 
