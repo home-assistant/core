@@ -16,6 +16,40 @@
       "mild": "Mild",
       "good": "Good",
       "severe": "Severe"
+    },
+    "tuya__battery_state": {
+        "high":"High",
+        "medium":"Medium",
+        "low":"Low",
+        "poweroff":"Power Off"
+    },
+    "tuya__lock_alarm": {
+        "wrong_finger":"Wrong Finger",
+        "wrong_password":"Wrong Passwod",
+        "wrong_card":"Wrong Card",
+        "wrong_face":"Wrong Face",
+        "tongue_bad":"Bolt Stuck",
+        "too_hot":"High Temperature",
+        "tongue_not_out":"Bolt Popup Failure",
+        "pry":"Prying",
+        "key_in":"Key In",
+        "power_off":"Power Off",
+        "shock":"Shock",
+        "unclosed_time":"Unclosed Time",
+        "low_battery":"Low Battery",
+        "defense":"Defense"
+    },
+    "tuya__lock_status": {
+        "open":"[%key:common::state::unlocked%]",
+        "closed":"[%key:common::state::locked%]"
+    },
+    "tuya__lock_antilock": {
+        "unlocked":"Unlocked",
+        "anti_locked":"Anti locked"
+    },
+    "tuya__lock_insurance": {
+        "uninsured_lock":"Uninsured Lock",
+        "insured_lock":"Insured Lock"
     }
   }
 }

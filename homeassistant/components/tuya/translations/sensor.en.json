@@ -6,6 +6,40 @@
             "mild": "Mild",
             "severe": "Severe"
         },
+        "tuya__battery_state": {
+            "high": "High",
+            "low": "Low",
+            "medium": "Medium",
+            "poweroff": "Power Off"
+        },
+        "tuya__lock_alarm": {
+            "defense": "Defense",
+            "key_in": "Key In",
+            "low_battery": "Low Battery",
+            "power_off": "Power Off",
+            "pry": "Prying",
+            "shock": "Shock",
+            "tongue_bad": "Bolt Stuck",
+            "tongue_not_out": "Bolt Popup Failure",
+            "too_hot": "High Temperature",
+            "unclosed_time": "Unclosed Time",
+            "wrong_card": "Wrong Card",
+            "wrong_face": "Wrong Face",
+            "wrong_finger": "Wrong Finger",
+            "wrong_password": "Wrong Passwod"
+        },
+        "tuya__lock_antilock": {
+            "anti_locked": "Anti locked",
+            "unlocked": "Unlocked"
+        },
+        "tuya__lock_insurance": {
+            "insured_lock": "Insured Lock",
+            "uninsured_lock": "Uninsured Lock"
+        },
+        "tuya__lock_status": {
+            "closed": "Locked",
+            "open": "Unlocked"
+        },
         "tuya__status": {
             "boiling_temp": "Boiling temperature",
             "cooling": "Cooling",

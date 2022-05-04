@@ -62,6 +62,15 @@ BUTTONS: dict[str, tuple[ButtonEntityDescription, ...]] = {
             icon="mdi:sleep",
         ),
     ),
+    # Smart Finder
+    # Note: Not documented
+    "fdq": (
+        ButtonEntityDescription(
+            key=DPCode.FINDDEV,
+            name="Finder",
+            icon="mdi:map-marker-radius-outline",
+        ),
+    ),
 }
 
 
