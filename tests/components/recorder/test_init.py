@@ -26,6 +26,7 @@ from homeassistant.components.recorder import (
 )
 from homeassistant.components.recorder.const import DATA_INSTANCE, KEEPALIVE_TIME
 from homeassistant.components.recorder.models import (
+    SCHEMA_VERSION,
     EventData,
     Events,
     RecorderRuns,
@@ -137,6 +138,8 @@ async def test_shutdown_closes_connections(hass, recorder_mock):
     await hass.async_block_till_done()
 
     assert len(pool.shutdown.mock_calls) == 1
+    with pytest.raises(RuntimeError):
+        assert instance.get_session()
 
 
 async def test_state_gets_saved_when_set_before_start_event(
@@ -457,6 +460,12 @@ def _state_with_context(hass, entity_id):
     # We don't restore context unless we need it by joining the
     # events table on the event_id for state_changed events
     return hass.states.get(entity_id)
+
+
+def test_setup_without_migration(hass_recorder):
+    """Verify the schema version without a migration."""
+    hass = hass_recorder()
+    assert recorder.get_instance(hass).schema_version == SCHEMA_VERSION
 
 
 # pylint: disable=redefined-outer-name,invalid-name
@@ -1395,7 +1404,7 @@ async def test_database_lock_timeout(hass, recorder_mock):
             self.event.wait()
 
     block_task = BlockQueue()
-    instance.queue.put(block_task)
+    instance.queue_task(block_task)
     with patch.object(recorder.core, "DB_LOCK_TIMEOUT", 0.1):
         try:
             with pytest.raises(TimeoutError):

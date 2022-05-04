@@ -540,7 +540,6 @@ class ZWaveServices:
 
     async def async_ping(self, service: ServiceCall) -> None:
         """Ping node(s)."""
-        # pylint: disable=no-self-use
         _LOGGER.warning(
             "This service is deprecated in favor of the ping button entity. Service "
             "calls will still work for now but the service will be removed in a "

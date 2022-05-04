@@ -25,6 +25,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.device_registry import format_mac
 
 from .const import (
     CONF_DNSMASQ,
@@ -41,11 +42,13 @@ from .const import (
     PROTOCOL_SSH,
     PROTOCOL_TELNET,
 )
-from .router import get_api
+from .router import get_api, get_nvram_info
+
+LABEL_MAC = "LABEL_MAC"
 
 RESULT_CONN_ERROR = "cannot_connect"
-RESULT_UNKNOWN = "unknown"
 RESULT_SUCCESS = "success"
+RESULT_UNKNOWN = "unknown"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -107,7 +110,9 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     @staticmethod
-    async def _async_check_connection(user_input: dict[str, Any]) -> str:
+    async def _async_check_connection(
+        user_input: dict[str, Any]
+    ) -> tuple[str, str | None]:
         """Attempt to connect the AsusWrt router."""
 
         host: str = user_input[CONF_HOST]
@@ -117,29 +122,37 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
 
         except OSError:
             _LOGGER.error("Error connecting to the AsusWrt router at %s", host)
-            return RESULT_CONN_ERROR
+            return RESULT_CONN_ERROR, None
 
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
                 "Unknown error connecting with AsusWrt router at %s", host
             )
-            return RESULT_UNKNOWN
+            return RESULT_UNKNOWN, None
 
         if not api.is_connected:
             _LOGGER.error("Error connecting to the AsusWrt router at %s", host)
-            return RESULT_CONN_ERROR
+            return RESULT_CONN_ERROR, None
 
+        label_mac = await get_nvram_info(api, LABEL_MAC)
         conf_protocol = user_input[CONF_PROTOCOL]
         if conf_protocol == PROTOCOL_TELNET:
             api.connection.disconnect()
-        return RESULT_SUCCESS
+
+        unique_id = None
+        if label_mac and "label_mac" in label_mac:
+            unique_id = format_mac(label_mac["label_mac"])
+        return RESULT_SUCCESS, unique_id
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a flow initiated by the user."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
+
+        # if there's one entry without unique ID, we abort config flow
+        for unique_id in self._async_current_ids():
+            if unique_id is None:
+                return self.async_abort(reason="no_unique_id")
 
         if user_input is None:
             return self._show_setup_form(user_input)
@@ -166,17 +179,27 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_host"
 
         if not errors:
-            result = await self._async_check_connection(user_input)
-            if result != RESULT_SUCCESS:
-                errors["base"] = result
+            result, unique_id = await self._async_check_connection(user_input)
+            if result == RESULT_SUCCESS:
+                if unique_id:
+                    await self.async_set_unique_id(unique_id)
+                # we allow configure a single instance without unique id
+                elif self._async_current_entries():
+                    return self.async_abort(reason="invalid_unique_id")
+                else:
+                    _LOGGER.warning(
+                        "This device does not provide a valid Unique ID."
+                        " Configuration of multiple instance will not be possible"
+                    )
 
-        if errors:
-            return self._show_setup_form(user_input, errors)
+                return self.async_create_entry(
+                    title=host,
+                    data=user_input,
+                )
 
-        return self.async_create_entry(
-            title=host,
-            data=user_input,
-        )
+            errors["base"] = result
+
+        return self._show_setup_form(user_input, errors)
 
     @staticmethod
     @callback

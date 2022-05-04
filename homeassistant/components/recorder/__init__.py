@@ -179,4 +179,4 @@ async def _process_recorder_platform(
 ) -> None:
     """Process a recorder platform."""
     instance: Recorder = hass.data[DATA_INSTANCE]
-    instance.queue.put(AddRecorderPlatformTask(domain, platform))
+    instance.queue_task(AddRecorderPlatformTask(domain, platform))

@@ -3,7 +3,20 @@ from __future__ import annotations
 
 from typing import Any, cast
 
-from pyisy.constants import COMMAND_FRIENDLY_NAME, ISY_VALUE_UNKNOWN
+from pyisy.constants import (
+    COMMAND_FRIENDLY_NAME,
+    ISY_VALUE_UNKNOWN,
+    PROP_BATTERY_LEVEL,
+    PROP_BUSY,
+    PROP_COMMS_ERROR,
+    PROP_ENERGY_MODE,
+    PROP_HEAT_COOL_STATE,
+    PROP_HUMIDITY,
+    PROP_ON_LEVEL,
+    PROP_RAMP_RATE,
+    PROP_STATUS,
+    PROP_TEMPERATURE,
+)
 from pyisy.helpers import NodeProperty
 from pyisy.nodes import Node
 
@@ -11,10 +24,12 @@ from homeassistant.components.sensor import (
     DOMAIN as SENSOR,
     SensorDeviceClass,
     SensorEntity,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -33,17 +48,33 @@ from .entity import ISYEntity, ISYNodeEntity
 from .helpers import convert_isy_value_to_hass, migrate_old_unique_ids
 
 # Disable general purpose and redundant sensors by default
-AUX_DISABLED_BY_DEFAULT = ["ERR", "GV", "CLIEMD", "CLIHCS", "DO", "OL", "RR", "ST"]
+AUX_DISABLED_BY_DEFAULT_MATCH = ["GV", "DO"]
+AUX_DISABLED_BY_DEFAULT_EXACT = {
+    PROP_ENERGY_MODE,
+    PROP_HEAT_COOL_STATE,
+    PROP_ON_LEVEL,
+    PROP_RAMP_RATE,
+    PROP_STATUS,
+}
+SKIP_AUX_PROPERTIES = {PROP_BUSY, PROP_COMMS_ERROR, PROP_STATUS}
 
 ISY_CONTROL_TO_DEVICE_CLASS = {
+    PROP_BATTERY_LEVEL: SensorDeviceClass.BATTERY,
+    PROP_HUMIDITY: SensorDeviceClass.HUMIDITY,
+    PROP_TEMPERATURE: SensorDeviceClass.TEMPERATURE,
     "BARPRES": SensorDeviceClass.PRESSURE,
-    "BATLVL": SensorDeviceClass.BATTERY,
-    "CLIHUM": SensorDeviceClass.HUMIDITY,
-    "CLITEMP": SensorDeviceClass.TEMPERATURE,
     "CO2LVL": SensorDeviceClass.CO2,
     "CV": SensorDeviceClass.VOLTAGE,
     "LUMIN": SensorDeviceClass.ILLUMINANCE,
     "PF": SensorDeviceClass.POWER_FACTOR,
+}
+ISY_CONTROL_TO_STATE_CLASS = {
+    control: SensorStateClass.MEASUREMENT for control in ISY_CONTROL_TO_DEVICE_CLASS
+}
+ISY_CONTROL_TO_ENTITY_CATEGORY = {
+    PROP_RAMP_RATE: EntityCategory.CONFIG,
+    PROP_ON_LEVEL: EntityCategory.CONFIG,
+    PROP_COMMS_ERROR: EntityCategory.DIAGNOSTIC,
 }
 
 
@@ -58,12 +89,20 @@ async def async_setup_entry(
         _LOGGER.debug("Loading %s", node.name)
         entities.append(ISYSensorEntity(node))
 
+    aux_nodes = set()
     for node, control in hass_isy_data[ISY994_NODES][SENSOR_AUX]:
+        aux_nodes.add(node)
+        if control in SKIP_AUX_PROPERTIES:
+            continue
         _LOGGER.debug("Loading %s %s", node.name, node.aux_properties[control])
-        enabled_default = not any(
-            control.startswith(match) for match in AUX_DISABLED_BY_DEFAULT
+        enabled_default = control not in AUX_DISABLED_BY_DEFAULT_EXACT and not any(
+            control.startswith(match) for match in AUX_DISABLED_BY_DEFAULT_MATCH
         )
         entities.append(ISYAuxSensorEntity(node, control, enabled_default))
+
+    for node in aux_nodes:
+        # Any node in SENSOR_AUX can potentially have communication errors
+        entities.append(ISYAuxSensorEntity(node, PROP_COMMS_ERROR, False))
 
     for vname, vobj in hass_isy_data[ISY994_VARIABLES]:
         entities.append(ISYSensorVariableEntity(vname, vobj))
@@ -76,7 +115,7 @@ class ISYSensorEntity(ISYNodeEntity, SensorEntity):
     """Representation of an ISY994 sensor device."""
 
     @property
-    def target(self) -> Node | NodeProperty:
+    def target(self) -> Node | NodeProperty | None:
         """Return target for the sensor."""
         return self._node
 
@@ -88,6 +127,9 @@ class ISYSensorEntity(ISYNodeEntity, SensorEntity):
     @property
     def raw_unit_of_measurement(self) -> dict | str | None:
         """Get the raw unit of measurement for the ISY994 sensor device."""
+        if self.target is None:
+            return None
+
         uom = self.target.uom
 
         # Backwards compatibility for ISYv4 Firmware:
@@ -107,6 +149,9 @@ class ISYSensorEntity(ISYNodeEntity, SensorEntity):
     @property
     def native_value(self) -> float | int | str | None:
         """Get the state of the ISY994 sensor device."""
+        if self.target is None:
+            return None
+
         if (value := self.target_value) == ISY_VALUE_UNKNOWN:
             return None
 
@@ -157,21 +202,22 @@ class ISYAuxSensorEntity(ISYSensorEntity):
         super().__init__(node)
         self._control = control
         self._attr_entity_registry_enabled_default = enabled_default
+        self._attr_entity_category = ISY_CONTROL_TO_ENTITY_CATEGORY.get(control)
+        self._attr_device_class = ISY_CONTROL_TO_DEVICE_CLASS.get(control)
+        self._attr_state_class = ISY_CONTROL_TO_STATE_CLASS.get(control)
 
     @property
-    def device_class(self) -> SensorDeviceClass | str | None:
-        """Return the device class for the sensor."""
-        return ISY_CONTROL_TO_DEVICE_CLASS.get(self._control, super().device_class)
-
-    @property
-    def target(self) -> Node | NodeProperty:
+    def target(self) -> Node | NodeProperty | None:
         """Return target for the sensor."""
+        if self._control not in self._node.aux_properties:
+            # Property not yet set (i.e. no errors)
+            return None
         return cast(NodeProperty, self._node.aux_properties[self._control])
 
     @property
     def target_value(self) -> Any:
         """Return the target value."""
-        return self.target.value
+        return None if self.target is None else self.target.value
 
     @property
     def unique_id(self) -> str | None:
