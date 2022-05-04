@@ -1013,6 +1013,8 @@ class Recorder(threading.Thread):
                 )
                 self._shutdown()
                 return
+        else:
+            self.schema_version = SCHEMA_VERSION
 
         _LOGGER.debug("Recorder processing the queue")
         self.hass.add_job(self._async_recorder_ready)
