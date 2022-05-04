@@ -358,6 +358,7 @@ class PowerViewShadeWithTilt(PowerViewShade):
     )
 
     _max_tilt = MAX_POSITION
+    _tilt_steps = 10
 
     def __init__(self, coordinator, device_info, room_name, shade, name):
         """Initialize the shade."""
@@ -366,10 +367,20 @@ class PowerViewShadeWithTilt(PowerViewShade):
 
     async def async_open_cover_tilt(self, **kwargs):
         """Open the cover tilt."""
+        current_hass_position = hd_position_to_hass(
+            self._current_hd_cover_position, MAX_POSITION
+        )
+        steps_to_move = current_hass_position + self._tilt_steps
+        self._async_schedule_update_for_transition(steps_to_move)
         self._async_update_from_command(await self._shade.tilt_open())
 
     async def async_close_cover_tilt(self, **kwargs):
         """Close the cover tilt."""
+        current_hass_position = hd_position_to_hass(
+            self._current_hd_cover_position, MAX_POSITION
+        )
+        steps_to_move = current_hass_position + self._tilt_steps
+        self._async_schedule_update_for_transition(steps_to_move)
         self._async_update_from_command(await self._shade.tilt_close())
 
     async def async_set_cover_tilt_position(self, **kwargs):
@@ -378,9 +389,8 @@ class PowerViewShadeWithTilt(PowerViewShade):
         current_hass_position = hd_position_to_hass(
             self._current_hd_cover_position, MAX_POSITION
         )
-        steps_to_move = (
-            current_hass_position + 10
-        )  # tilting is fast, so just add a bit on
+        steps_to_move = current_hass_position + self._tilt_steps
+
         self._async_schedule_update_for_transition(steps_to_move)
         self._async_update_from_command(
             await self._shade.move(
@@ -420,3 +430,4 @@ class PowerViewShadeSilhouette(PowerViewShadeWithTilt):
         """Initialize the shade."""
         super().__init__(coordinator, device_info, room_name, shade, name)
         self._max_tilt = 32767
+        self._tilt_steps = 4
