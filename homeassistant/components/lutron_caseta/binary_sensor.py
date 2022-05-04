@@ -48,7 +48,7 @@ class LutronOccupancySensor(LutronCasetaDevice, BinarySensorEntity):
         info = DeviceInfo(
             identifiers={(CASETA_DOMAIN, self.unique_id)},
             manufacturer=MANUFACTURER,
-            model=f"{device['model']} ({device['type']})",
+            model="Lutron Occupancy",
             name=self.name,
             via_device=(CASETA_DOMAIN, self._bridge_device["serial"]),
             configuration_url=CONFIG_URL,
