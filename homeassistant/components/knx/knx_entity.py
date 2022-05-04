@@ -45,5 +45,5 @@ class KnxEntity(Entity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect device object when removed."""
-        # will also remove callbacks
+        # will also remove all callbacks
         self._device.shutdown()

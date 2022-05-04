@@ -12,15 +12,8 @@ from homeassistant.components.cover import (
     ATTR_TILT_POSITION,
     DOMAIN,
     PLATFORM_SCHEMA,
-    SUPPORT_CLOSE,
-    SUPPORT_CLOSE_TILT,
-    SUPPORT_OPEN,
-    SUPPORT_OPEN_TILT,
-    SUPPORT_SET_POSITION,
-    SUPPORT_SET_TILT_POSITION,
-    SUPPORT_STOP,
-    SUPPORT_STOP_TILT,
     CoverEntity,
+    CoverEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -154,28 +147,28 @@ class CoverGroup(GroupEntity, CoverEntity):
 
         features = new_state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
-        if features & (SUPPORT_OPEN | SUPPORT_CLOSE):
+        if features & (CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE):
             self._covers[KEY_OPEN_CLOSE].add(entity_id)
         else:
             self._covers[KEY_OPEN_CLOSE].discard(entity_id)
-        if features & (SUPPORT_STOP):
+        if features & (CoverEntityFeature.STOP):
             self._covers[KEY_STOP].add(entity_id)
         else:
             self._covers[KEY_STOP].discard(entity_id)
-        if features & (SUPPORT_SET_POSITION):
+        if features & (CoverEntityFeature.SET_POSITION):
             self._covers[KEY_POSITION].add(entity_id)
         else:
             self._covers[KEY_POSITION].discard(entity_id)
 
-        if features & (SUPPORT_OPEN_TILT | SUPPORT_CLOSE_TILT):
+        if features & (CoverEntityFeature.OPEN_TILT | CoverEntityFeature.CLOSE_TILT):
             self._tilts[KEY_OPEN_CLOSE].add(entity_id)
         else:
             self._tilts[KEY_OPEN_CLOSE].discard(entity_id)
-        if features & (SUPPORT_STOP_TILT):
+        if features & (CoverEntityFeature.STOP_TILT):
             self._tilts[KEY_STOP].add(entity_id)
         else:
             self._tilts[KEY_STOP].discard(entity_id)
-        if features & (SUPPORT_SET_TILT_POSITION):
+        if features & (CoverEntityFeature.SET_TILT_POSITION):
             self._tilts[KEY_POSITION].add(entity_id)
         else:
             self._tilts[KEY_POSITION].discard(entity_id)
@@ -320,18 +313,19 @@ class CoverGroup(GroupEntity, CoverEntity):
         )
 
         supported_features = 0
-        supported_features |= (
-            SUPPORT_OPEN | SUPPORT_CLOSE if self._covers[KEY_OPEN_CLOSE] else 0
-        )
-        supported_features |= SUPPORT_STOP if self._covers[KEY_STOP] else 0
-        supported_features |= SUPPORT_SET_POSITION if self._covers[KEY_POSITION] else 0
-        supported_features |= (
-            SUPPORT_OPEN_TILT | SUPPORT_CLOSE_TILT if self._tilts[KEY_OPEN_CLOSE] else 0
-        )
-        supported_features |= SUPPORT_STOP_TILT if self._tilts[KEY_STOP] else 0
-        supported_features |= (
-            SUPPORT_SET_TILT_POSITION if self._tilts[KEY_POSITION] else 0
-        )
+        if self._covers[KEY_OPEN_CLOSE]:
+            supported_features |= CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
+        supported_features |= CoverEntityFeature.STOP if self._covers[KEY_STOP] else 0
+        if self._covers[KEY_POSITION]:
+            supported_features |= CoverEntityFeature.SET_POSITION
+        if self._tilts[KEY_OPEN_CLOSE]:
+            supported_features |= (
+                CoverEntityFeature.OPEN_TILT | CoverEntityFeature.CLOSE_TILT
+            )
+        if self._tilts[KEY_STOP]:
+            supported_features |= CoverEntityFeature.STOP_TILT
+        if self._tilts[KEY_POSITION]:
+            supported_features |= CoverEntityFeature.SET_TILT_POSITION
         self._attr_supported_features = supported_features
 
         if not self._attr_assumed_state:

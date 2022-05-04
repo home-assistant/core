@@ -151,7 +151,6 @@ TEST_IDS = [
 )
 async def test_jewish_calendar_sensor(
     hass,
-    legacy_patchable_time,
     now,
     tzname,
     latitude,
@@ -495,7 +494,6 @@ SHABBAT_TEST_IDS = [
 )
 async def test_shabbat_times_sensor(
     hass,
-    legacy_patchable_time,
     language,
     now,
     candle_lighting,
@@ -592,7 +590,7 @@ OMER_TEST_IDS = [
 
 
 @pytest.mark.parametrize(["test_time", "result"], OMER_PARAMS, ids=OMER_TEST_IDS)
-async def test_omer_sensor(hass, legacy_patchable_time, test_time, result):
+async def test_omer_sensor(hass, test_time, result):
     """Test Omer Count sensor output."""
     test_time = test_time.replace(tzinfo=dt_util.get_time_zone(hass.config.time_zone))
 
@@ -626,7 +624,7 @@ DAFYOMI_TEST_IDS = [
 
 
 @pytest.mark.parametrize(["test_time", "result"], DAFYOMI_PARAMS, ids=DAFYOMI_TEST_IDS)
-async def test_dafyomi_sensor(hass, legacy_patchable_time, test_time, result):
+async def test_dafyomi_sensor(hass, test_time, result):
     """Test Daf Yomi sensor output."""
     test_time = test_time.replace(tzinfo=dt_util.get_time_zone(hass.config.time_zone))
 

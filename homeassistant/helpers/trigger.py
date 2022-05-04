@@ -9,7 +9,7 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_ID, CONF_PLATFORM, CONF_VARIABLES
+from homeassistant.const import CONF_ENABLED, CONF_ID, CONF_PLATFORM, CONF_VARIABLES
 from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import IntegrationNotFound, async_get_integration
@@ -89,6 +89,10 @@ async def async_initialize_triggers(
 
     triggers = []
     for idx, conf in enumerate(trigger_config):
+        # Skip triggers that are not enabled
+        if not conf.get(CONF_ENABLED, True):
+            continue
+
         platform = await _async_get_trigger_platform(hass, conf)
         trigger_id = conf.get(CONF_ID, f"{idx}")
         trigger_idx = f"{idx}"

@@ -6,7 +6,7 @@ import datetime
 import http
 import time
 from typing import Any
-from unittest.mock import Mock, call, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -119,10 +119,12 @@ async def test_invalid_calendar_yaml(
     setup_config_entry: MockConfigEntry,
 ) -> None:
     """Test setup with missing entity id fields fails to setup the config entry."""
-    # Integration fails to setup
     assert await component_setup()
 
-    # XXX No config entries
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    entry = entries[0]
+    assert entry.state is ConfigEntryState.SETUP_ERROR
 
     assert not hass.states.get(TEST_YAML_ENTITY)
 
@@ -132,10 +134,12 @@ async def test_calendar_yaml_error(
     component_setup: ComponentSetup,
     mock_calendars_list: ApiResult,
     test_api_calendar: dict[str, Any],
+    mock_events_list: ApiResult,
     setup_config_entry: MockConfigEntry,
 ) -> None:
     """Test setup with yaml file not found."""
     mock_calendars_list({"items": [test_api_calendar]})
+    mock_events_list({})
 
     with patch("homeassistant.components.google.open", side_effect=FileNotFoundError()):
         assert await component_setup()
@@ -180,6 +184,7 @@ async def test_track_new(
     component_setup: ComponentSetup,
     mock_calendars_list: ApiResult,
     test_api_calendar: dict[str, Any],
+    mock_events_list: ApiResult,
     mock_calendars_yaml: None,
     expected_state: State,
     setup_config_entry: MockConfigEntry,
@@ -187,6 +192,7 @@ async def test_track_new(
     """Test behavior of configuration.yaml settings for tracking new calendars not in the config."""
 
     mock_calendars_list({"items": [test_api_calendar]})
+    mock_events_list({})
     assert await component_setup()
 
     state = hass.states.get(TEST_API_ENTITY)
@@ -200,11 +206,13 @@ async def test_found_calendar_from_api(
     mock_calendars_yaml: None,
     mock_calendars_list: ApiResult,
     test_api_calendar: dict[str, Any],
+    mock_events_list: ApiResult,
     setup_config_entry: MockConfigEntry,
 ) -> None:
     """Test finding a calendar from the API."""
 
     mock_calendars_list({"items": [test_api_calendar]})
+    mock_events_list({})
     assert await component_setup()
 
     state = hass.states.get(TEST_API_ENTITY)
@@ -238,6 +246,7 @@ async def test_calendar_config_track_new(
     component_setup: ComponentSetup,
     mock_calendars_yaml: None,
     mock_calendars_list: ApiResult,
+    mock_events_list: ApiResult,
     test_api_calendar: dict[str, Any],
     calendars_config_track: bool,
     expected_state: State,
@@ -246,44 +255,35 @@ async def test_calendar_config_track_new(
     """Test calendar config that overrides whether or not a calendar is tracked."""
 
     mock_calendars_list({"items": [test_api_calendar]})
+    mock_events_list({})
     assert await component_setup()
 
     state = hass.states.get(TEST_YAML_ENTITY)
     assert_state(state, expected_state)
 
 
-async def test_add_event(
+async def test_add_event_missing_required_fields(
     hass: HomeAssistant,
     component_setup: ComponentSetup,
     mock_calendars_list: ApiResult,
     test_api_calendar: dict[str, Any],
-    mock_insert_event: Mock,
     setup_config_entry: MockConfigEntry,
 ) -> None:
-    """Test service call that adds an event."""
+    """Test service call that adds an event missing required fields."""
 
     assert await component_setup()
 
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_ADD_EVENT,
-        {
-            "calendar_id": CALENDAR_ID,
-            "summary": "Summary",
-            "description": "Description",
-        },
-        blocking=True,
-    )
-    mock_insert_event.assert_called()
-    assert mock_insert_event.mock_calls[0] == call(
-        calendarId=CALENDAR_ID,
-        body={
-            "summary": "Summary",
-            "description": "Description",
-            "start": {},
-            "end": {},
-        },
-    )
+    with pytest.raises(ValueError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_ADD_EVENT,
+            {
+                "calendar_id": CALENDAR_ID,
+                "summary": "Summary",
+                "description": "Description",
+            },
+            blocking=True,
+        )
 
 
 @pytest.mark.parametrize(
@@ -306,16 +306,26 @@ async def test_add_event_date_in_x(
     hass: HomeAssistant,
     component_setup: ComponentSetup,
     mock_calendars_list: ApiResult,
+    mock_insert_event: Callable[[..., dict[str, Any]], None],
     test_api_calendar: dict[str, Any],
-    mock_insert_event: Mock,
     date_fields: dict[str, Any],
     start_timedelta: datetime.timedelta,
     end_timedelta: datetime.timedelta,
     setup_config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test service call that adds an event with various time ranges."""
 
+    mock_calendars_list({})
     assert await component_setup()
+
+    now = datetime.datetime.now()
+    start_date = now + start_timedelta
+    end_date = now + end_timedelta
+
+    mock_insert_event(
+        calendar_id=CALENDAR_ID,
+    )
 
     await hass.services.async_call(
         DOMAIN,
@@ -328,37 +338,35 @@ async def test_add_event_date_in_x(
         },
         blocking=True,
     )
-    mock_insert_event.assert_called()
-
-    now = datetime.datetime.now()
-    start_date = now + start_timedelta
-    end_date = now + end_timedelta
-
-    assert mock_insert_event.mock_calls[0] == call(
-        calendarId=CALENDAR_ID,
-        body={
-            "summary": "Summary",
-            "description": "Description",
-            "start": {"date": start_date.date().isoformat()},
-            "end": {"date": end_date.date().isoformat()},
-        },
-    )
+    assert len(aioclient_mock.mock_calls) == 2
+    assert aioclient_mock.mock_calls[1][2] == {
+        "summary": "Summary",
+        "description": "Description",
+        "start": {"date": start_date.date().isoformat()},
+        "end": {"date": end_date.date().isoformat()},
+    }
 
 
 async def test_add_event_date(
     hass: HomeAssistant,
     component_setup: ComponentSetup,
     mock_calendars_list: ApiResult,
-    mock_insert_event: Mock,
+    mock_insert_event: Callable[[str, dict[str, Any]], None],
     setup_config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test service call that sets a date range."""
 
+    mock_calendars_list({})
     assert await component_setup()
 
     now = utcnow()
     today = now.date()
     end_date = today + datetime.timedelta(days=2)
+
+    mock_insert_event(
+        calendar_id=CALENDAR_ID,
+    )
 
     await hass.services.async_call(
         DOMAIN,
@@ -372,34 +380,36 @@ async def test_add_event_date(
         },
         blocking=True,
     )
-    mock_insert_event.assert_called()
-
-    assert mock_insert_event.mock_calls[0] == call(
-        calendarId=CALENDAR_ID,
-        body={
-            "summary": "Summary",
-            "description": "Description",
-            "start": {"date": today.isoformat()},
-            "end": {"date": end_date.isoformat()},
-        },
-    )
+    assert len(aioclient_mock.mock_calls) == 2
+    assert aioclient_mock.mock_calls[1][2] == {
+        "summary": "Summary",
+        "description": "Description",
+        "start": {"date": today.isoformat()},
+        "end": {"date": end_date.isoformat()},
+    }
 
 
 async def test_add_event_date_time(
     hass: HomeAssistant,
     component_setup: ComponentSetup,
     mock_calendars_list: ApiResult,
+    mock_insert_event: Callable[[str, dict[str, Any]], None],
     test_api_calendar: dict[str, Any],
-    mock_insert_event: Mock,
     setup_config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test service call that adds an event with a date time range."""
 
+    mock_calendars_list({})
     assert await component_setup()
 
     start_datetime = datetime.datetime.now()
     delta = datetime.timedelta(days=3, hours=3)
     end_datetime = start_datetime + delta
+
+    mock_insert_event(
+        calendar_id=CALENDAR_ID,
+    )
 
     await hass.services.async_call(
         DOMAIN,
@@ -413,34 +423,32 @@ async def test_add_event_date_time(
         },
         blocking=True,
     )
-    mock_insert_event.assert_called()
-
-    assert mock_insert_event.mock_calls[0] == call(
-        calendarId=CALENDAR_ID,
-        body={
-            "summary": "Summary",
-            "description": "Description",
-            "start": {
-                "dateTime": start_datetime.isoformat(timespec="seconds"),
-                "timeZone": "America/Regina",
-            },
-            "end": {
-                "dateTime": end_datetime.isoformat(timespec="seconds"),
-                "timeZone": "America/Regina",
-            },
+    assert len(aioclient_mock.mock_calls) == 2
+    assert aioclient_mock.mock_calls[1][2] == {
+        "summary": "Summary",
+        "description": "Description",
+        "start": {
+            "dateTime": start_datetime.isoformat(timespec="seconds"),
+            "timeZone": "America/Regina",
         },
-    )
+        "end": {
+            "dateTime": end_datetime.isoformat(timespec="seconds"),
+            "timeZone": "America/Regina",
+        },
+    }
 
 
 async def test_scan_calendars(
     hass: HomeAssistant,
     component_setup: ComponentSetup,
     mock_calendars_list: ApiResult,
-    test_api_calendar: dict[str, Any],
+    mock_events_list: ApiResult,
     setup_config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test finding a calendar from the API."""
 
+    mock_calendars_list({"items": []})
     assert await component_setup()
 
     calendar_1 = {
@@ -452,7 +460,9 @@ async def test_scan_calendars(
         "summary": "Calendar 2",
     }
 
+    aioclient_mock.clear_requests()
     mock_calendars_list({"items": [calendar_1]})
+    mock_events_list({}, calendar_id="calendar-id-1")
     await hass.services.async_call(DOMAIN, SERVICE_SCAN_CALENDARS, {}, blocking=True)
     await hass.async_block_till_done()
 
@@ -462,7 +472,10 @@ async def test_scan_calendars(
     assert state.state == STATE_OFF
     assert not hass.states.get("calendar.calendar_2")
 
+    aioclient_mock.clear_requests()
     mock_calendars_list({"items": [calendar_1, calendar_2]})
+    mock_events_list({}, calendar_id="calendar-id-1")
+    mock_events_list({}, calendar_id="calendar-id-2")
     await hass.services.async_call(DOMAIN, SERVICE_SCAN_CALENDARS, {}, blocking=True)
     await hass.async_block_till_done()
 

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 import functools
 import logging
 import os
@@ -64,6 +64,10 @@ RETRYABLE_MYSQL_ERRORS = (1205, 1206, 1213)
 # 1205: Lock wait timeout exceeded; try restarting transaction
 # 1206: The total number of locks exceeds the lock table size
 # 1213: Deadlock found when trying to get lock; try restarting transaction
+
+FIRST_POSSIBLE_SUNDAY = 8
+SUNDAY_WEEKDAY = 6
+DAYS_IN_WEEK = 7
 
 
 @contextmanager
@@ -460,8 +464,8 @@ def retryable_database_job(description: str) -> Callable:
     return decorator
 
 
-def perodic_db_cleanups(instance: Recorder) -> None:
-    """Run any database cleanups that need to happen perodiclly.
+def periodic_db_cleanups(instance: Recorder) -> None:
+    """Run any database cleanups that need to happen periodically.
 
     These cleanups will happen nightly or after any purge.
     """
@@ -501,3 +505,19 @@ def async_migration_in_progress(hass: HomeAssistant) -> bool:
         return False
     instance: Recorder = hass.data[DATA_INSTANCE]
     return instance.migration_in_progress
+
+
+def second_sunday(year: int, month: int) -> date:
+    """Return the datetime.date for the second sunday of a month."""
+    second = date(year, month, FIRST_POSSIBLE_SUNDAY)
+    day_of_week = second.weekday()
+    if day_of_week == SUNDAY_WEEKDAY:
+        return second
+    return second.replace(
+        day=(FIRST_POSSIBLE_SUNDAY + (SUNDAY_WEEKDAY - day_of_week) % DAYS_IN_WEEK)
+    )
+
+
+def is_second_sunday(date_time: datetime) -> bool:
+    """Check if a time is the second sunday of the month."""
+    return bool(second_sunday(date_time.year, date_time.month).day == date_time.day)

@@ -50,6 +50,7 @@ async def test_get_notification_notification_triggers(
         "type": "event.notification.notification",
         "device_id": device.id,
         "command_class": CommandClass.NOTIFICATION,
+        "metadata": {},
     }
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device.id
@@ -316,6 +317,7 @@ async def test_get_node_status_triggers(hass, client, lock_schlage_be469, integr
         "type": "state.node_status",
         "device_id": device.id,
         "entity_id": entity_id,
+        "metadata": {"secondary": True},
     }
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device.id
@@ -470,6 +472,7 @@ async def test_get_basic_value_notification_triggers(
         "property_key": None,
         "endpoint": 0,
         "subtype": "Endpoint 0",
+        "metadata": {},
     }
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device.id
@@ -637,6 +640,7 @@ async def test_get_central_scene_value_notification_triggers(
         "property_key": "001",
         "endpoint": 0,
         "subtype": "Endpoint 0 Scene 001",
+        "metadata": {},
     }
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device.id
@@ -810,6 +814,7 @@ async def test_get_scene_activation_value_notification_triggers(
         "property_key": None,
         "endpoint": 0,
         "subtype": "Endpoint 0",
+        "metadata": {},
     }
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device.id
@@ -972,6 +977,7 @@ async def test_get_value_updated_value_triggers(
         "domain": DOMAIN,
         "type": "zwave_js.value_updated.value",
         "device_id": device.id,
+        "metadata": {},
     }
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device.id
@@ -1132,6 +1138,7 @@ async def test_get_value_updated_config_parameter_triggers(
         "endpoint": 0,
         "command_class": CommandClass.CONFIGURATION.value,
         "subtype": "3 (Beeper)",
+        "metadata": {},
     }
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device.id

@@ -16,14 +16,11 @@ from homeassistant.components.light import (
     ATTR_FLASH,
     ATTR_TRANSITION,
     ATTR_XY_COLOR,
-    COLOR_MODE_BRIGHTNESS,
-    COLOR_MODE_COLOR_TEMP,
-    COLOR_MODE_ONOFF,
-    COLOR_MODE_XY,
     FLASH_SHORT,
     SUPPORT_EFFECT,
     SUPPORT_FLASH,
     SUPPORT_TRANSITION,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -80,15 +77,15 @@ class HueLight(HueBaseEntity, LightEntity):
             self._attr_supported_features |= SUPPORT_FLASH
         self.resource = resource
         self.controller = controller
-        self._supported_color_modes = set()
+        self._supported_color_modes: set[ColorMode | str] = set()
         if self.resource.supports_color:
-            self._supported_color_modes.add(COLOR_MODE_XY)
+            self._supported_color_modes.add(ColorMode.XY)
         if self.resource.supports_color_temperature:
-            self._supported_color_modes.add(COLOR_MODE_COLOR_TEMP)
+            self._supported_color_modes.add(ColorMode.COLOR_TEMP)
         if self.resource.supports_dimming:
             if len(self._supported_color_modes) == 0:
                 # only add color mode brightness if no color variants
-                self._supported_color_modes.add(COLOR_MODE_BRIGHTNESS)
+                self._supported_color_modes.add(ColorMode.BRIGHTNESS)
             # support transition if brightness control
             self._attr_supported_features |= SUPPORT_TRANSITION
         # get list of supported effects (combine effects and timed_effects)
@@ -121,18 +118,18 @@ class HueLight(HueBaseEntity, LightEntity):
         return self.resource.on.on
 
     @property
-    def color_mode(self) -> str | None:
+    def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
         if color_temp := self.resource.color_temperature:
             # Hue lights return `mired_valid` to indicate CT is active
             if color_temp.mirek_valid and color_temp.mirek is not None:
-                return COLOR_MODE_COLOR_TEMP
+                return ColorMode.COLOR_TEMP
         if self.resource.supports_color:
-            return COLOR_MODE_XY
+            return ColorMode.XY
         if self.resource.supports_dimming:
-            return COLOR_MODE_BRIGHTNESS
+            return ColorMode.BRIGHTNESS
         # fallback to on_off
-        return COLOR_MODE_ONOFF
+        return ColorMode.ONOFF
 
     @property
     def xy_color(self) -> tuple[float, float] | None:

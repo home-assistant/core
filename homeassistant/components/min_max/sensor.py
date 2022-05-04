@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import statistics
 
 import voluptuous as vol
 
@@ -30,23 +31,10 @@ ATTR_MIN_VALUE = "min_value"
 ATTR_MIN_ENTITY_ID = "min_entity_id"
 ATTR_MAX_VALUE = "max_value"
 ATTR_MAX_ENTITY_ID = "max_entity_id"
-ATTR_COUNT_SENSORS = "count_sensors"
 ATTR_MEAN = "mean"
 ATTR_MEDIAN = "median"
 ATTR_LAST = "last"
 ATTR_LAST_ENTITY_ID = "last_entity_id"
-
-ATTR_TO_PROPERTY = [
-    ATTR_COUNT_SENSORS,
-    ATTR_MAX_VALUE,
-    ATTR_MAX_ENTITY_ID,
-    ATTR_MEAN,
-    ATTR_MEDIAN,
-    ATTR_MIN_VALUE,
-    ATTR_MIN_ENTITY_ID,
-    ATTR_LAST,
-    ATTR_LAST_ENTITY_ID,
-]
 
 ICON = "mdi:calculator"
 
@@ -57,6 +45,7 @@ SENSOR_TYPES = {
     ATTR_MEDIAN: "median",
     ATTR_LAST: "last",
 }
+SENSOR_TYPE_TO_ATTR = {v: k for k, v in SENSOR_TYPES.items()}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -149,7 +138,7 @@ def calc_mean(sensor_values, round_digits):
 
     if not result:
         return None
-    return round(sum(result) / len(result), round_digits)
+    return round(statistics.mean(result), round_digits)
 
 
 def calc_median(sensor_values, round_digits):
@@ -162,14 +151,7 @@ def calc_median(sensor_values, round_digits):
 
     if not result:
         return None
-    result.sort()
-    if len(result) % 2 == 0:
-        median1 = result[len(result) // 2]
-        median2 = result[len(result) // 2 - 1]
-        median = (median1 + median2) / 2
-    else:
-        median = result[len(result) // 2]
-    return round(median, round_digits)
+    return round(statistics.median(result), round_digits)
 
 
 class MinMaxSensor(SensorEntity):
@@ -185,7 +167,8 @@ class MinMaxSensor(SensorEntity):
         if name:
             self._name = name
         else:
-            self._name = f"{next(v for k, v in SENSOR_TYPES.items() if self._sensor_type == v)} sensor".capitalize()
+            self._name = f"{sensor_type} sensor".capitalize()
+        self._sensor_attr = SENSOR_TYPE_TO_ATTR[self._sensor_type]
         self._unit_of_measurement = None
         self._unit_of_measurement_mismatch = False
         self.min_value = self.max_value = self.mean = self.last = self.median = None
@@ -219,9 +202,7 @@ class MinMaxSensor(SensorEntity):
         """Return the state of the sensor."""
         if self._unit_of_measurement_mismatch:
             return None
-        return getattr(
-            self, next(k for k, v in SENSOR_TYPES.items() if self._sensor_type == v)
-        )
+        return getattr(self, self._sensor_attr)
 
     @property
     def native_unit_of_measurement(self):
@@ -238,11 +219,13 @@ class MinMaxSensor(SensorEntity):
     @property
     def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
-        return {
-            attr: getattr(self, attr)
-            for attr in ATTR_TO_PROPERTY
-            if getattr(self, attr) is not None
-        }
+        if self._sensor_type == "min":
+            return {ATTR_MIN_ENTITY_ID: self.min_entity_id}
+        if self._sensor_type == "max":
+            return {ATTR_MAX_ENTITY_ID: self.max_entity_id}
+        if self._sensor_type == "last":
+            return {ATTR_LAST_ENTITY_ID: self.last_entity_id}
+        return None
 
     @property
     def icon(self):

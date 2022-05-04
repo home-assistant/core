@@ -44,7 +44,6 @@ async def test_setup_and_remove_config_entry(
     # Check the platform is setup correctly
     state = hass.states.get(min_max_entity_id)
     assert state.state == "20.0"
-    assert state.attributes["count_sensors"] == 2
 
     # Remove the config entry
     assert await hass.config_entries.async_remove(config_entry.entry_id)
