@@ -42,3 +42,7 @@ STREAM_RESTART_RESET_TIME = 300  # Reset wait_timeout after this many seconds
 CONF_LL_HLS = "ll_hls"
 CONF_PART_DURATION = "part_duration"
 CONF_SEGMENT_DURATION = "segment_duration"
+
+CONF_PREFER_TCP = "prefer_tcp"
+CONF_RTSP_TRANSPORT = "rtsp_transport"
+RTSP_TRANS_PROTOCOLS = ["tcp", "udp", "udp_multicast", "http"]

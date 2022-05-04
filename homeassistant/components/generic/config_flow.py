@@ -16,6 +16,7 @@ from httpx import HTTPStatusError, RequestError, TimeoutException
 import voluptuous as vol
 import yarl
 
+from homeassistant.components.stream import CONF_RTSP_TRANSPORT, RTSP_TRANS_PROTOCOLS
 from homeassistant.components.stream.const import SOURCE_TIMEOUT
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import (
@@ -38,15 +39,12 @@ from .const import (
     CONF_CONTENT_TYPE,
     CONF_FRAMERATE,
     CONF_LIMIT_REFETCH_TO_URL_CHANGE,
-    CONF_RTSP_TRANSPORT,
     CONF_STILL_IMAGE_URL,
     CONF_STREAM_SOURCE,
     CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
     DEFAULT_NAME,
     DOMAIN,
-    FFMPEG_OPTION_MAP,
     GET_IMAGE_TIMEOUT,
-    RTSP_TRANSPORTS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -80,7 +78,7 @@ def build_schema(
         vol.Optional(
             CONF_RTSP_TRANSPORT,
             description={"suggested_value": user_input.get(CONF_RTSP_TRANSPORT)},
-        ): vol.In(RTSP_TRANSPORTS),
+        ): vol.In(RTSP_TRANS_PROTOCOLS),
         vol.Optional(
             CONF_AUTHENTICATION,
             description={"suggested_value": user_input.get(CONF_AUTHENTICATION)},
@@ -207,9 +205,9 @@ async def async_test_stream(hass, info) -> dict[str, str]:
                 "stimeout": "5000000",
             }
         if rtsp_transport := info.get(CONF_RTSP_TRANSPORT):
-            stream_options[FFMPEG_OPTION_MAP[CONF_RTSP_TRANSPORT]] = rtsp_transport
+            stream_options[CONF_RTSP_TRANSPORT] = rtsp_transport
         if info.get(CONF_USE_WALLCLOCK_AS_TIMESTAMPS):
-            stream_options[FFMPEG_OPTION_MAP[CONF_USE_WALLCLOCK_AS_TIMESTAMPS]] = "1"
+            stream_options[CONF_USE_WALLCLOCK_AS_TIMESTAMPS] = True
         _LOGGER.debug("Attempting to open stream %s", stream_source)
         container = await hass.async_add_executor_job(
             partial(

@@ -23,7 +23,7 @@ import secrets
 import threading
 import time
 from types import MappingProxyType
-from typing import Any, cast
+from typing import Any, Final, cast
 
 import voluptuous as vol
 
@@ -39,12 +39,14 @@ from .const import (
     ATTR_STREAMS,
     CONF_LL_HLS,
     CONF_PART_DURATION,
+    CONF_RTSP_TRANSPORT,
     CONF_SEGMENT_DURATION,
     DOMAIN,
     HLS_PROVIDER,
     MAX_SEGMENTS,
     OUTPUT_IDLE_TIMEOUT,
     RECORDER_PROVIDER,
+    RTSP_TRANS_PROTOCOLS,
     SEGMENT_DURATION_ADJUSTER,
     STREAM_RESTART_INCREMENT,
     STREAM_RESTART_RESET_TIME,
@@ -72,28 +74,32 @@ def redact_credentials(data: str) -> str:
 def create_stream(
     hass: HomeAssistant,
     stream_source: str,
-    options: dict[str, str],
+    options: dict[str, Any],
     stream_label: str | None = None,
 ) -> Stream:
     """Create a stream with the specified identfier based on the source url.
 
     The stream_source is typically an rtsp url (though any url accepted by ffmpeg is fine) and
-    options are passed into pyav / ffmpeg as options.
+    options are converted and passed into pyav / ffmpeg as options.
 
     The stream_label is a string used as an additional message in logging.
     """
     if DOMAIN not in hass.config.components:
         raise HomeAssistantError("Stream integration is not set up.")
 
+    # Convert extra stream options into PyAV options
+    stream_options = convert_stream_options(options)
     # For RTSP streams, prefer TCP
     if isinstance(stream_source, str) and stream_source[:7] == "rtsp://":
-        options = {
+        stream_options = {
             "rtsp_flags": "prefer_tcp",
-            "stimeout": "5000000",
-            **options,
+            "timeout": "5000000",
+            **stream_options,
         }
 
-    stream = Stream(hass, stream_source, options=options, stream_label=stream_label)
+    stream = Stream(
+        hass, stream_source, options=stream_options, stream_label=stream_label
+    )
     hass.data[DOMAIN][ATTR_STREAMS].append(stream)
     return stream
 
@@ -464,3 +470,25 @@ class Stream:
 def _should_retry() -> bool:
     """Return true if worker failures should be retried, for disabling during tests."""
     return True
+
+
+STREAM_OPTIONS_SCHEMA: Final = vol.Schema(
+    {
+        vol.Optional(CONF_RTSP_TRANSPORT): vol.In(RTSP_TRANS_PROTOCOLS),
+    }
+)
+
+
+def convert_stream_options(stream_options: dict[str, Any]) -> dict[str, str]:
+    """Convert options from stream options into PyAV options."""
+    pyav_options: dict[str, str] = {}
+    try:
+        STREAM_OPTIONS_SCHEMA(stream_options)
+    except vol.Invalid as exc:
+        _LOGGER.error("Invalid stream options: %s", exc)
+        return pyav_options
+
+    if rtsp_transport := stream_options.get(CONF_RTSP_TRANSPORT):
+        pyav_options["rtsp_transport"] = rtsp_transport
+
+    return pyav_options
