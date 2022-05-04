@@ -12,6 +12,7 @@ import voluptuous as vol
 
 from homeassistant.components.notify import (
     ATTR_DATA,
+    ATTR_TARGET,
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
@@ -63,7 +64,7 @@ class TwitterNotificationService(BaseNotificationService):
         username,
     ):
         """Initialize the service."""
-        self.user = username
+        self.default_user = username
         self.hass = hass
         self.api = TwitterAPI(
             consumer_key, consumer_secret, access_token_key, access_token_secret
@@ -72,6 +73,7 @@ class TwitterNotificationService(BaseNotificationService):
     def send_message(self, message="", **kwargs):
         """Tweet a message, optionally with media."""
         data = kwargs.get(ATTR_DATA)
+        target = kwargs.get(ATTR_TARGET)
 
         media = None
         if data:
@@ -79,6 +81,11 @@ class TwitterNotificationService(BaseNotificationService):
             if not self.hass.config.is_allowed_path(media):
                 _LOGGER.warning("'%s' is not a whitelisted directory", media)
                 return
+
+        if target:
+            self.user = target
+        else:
+            self.user = self.default_user
 
         callback = partial(self.send_message_callback, message)
 
