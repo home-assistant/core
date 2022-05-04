@@ -5,7 +5,7 @@ from datetime import date, datetime, timedelta
 import logging
 
 from aiohttp import ClientConnectorError
-from vulcan._utils import VulcanAPIException
+from vulcan import UnauthorizedCertificateException
 
 from homeassistant.components.calendar import (
     ENTITY_ID_FORMAT,
@@ -13,16 +13,13 @@ from homeassistant.components.calendar import (
     CalendarEvent,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import Throttle
 
 from . import DOMAIN
-from .const import DEFAULT_SCAN_INTERVAL
 from .fetch_data import get_lessons, get_student_info
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,9 +31,6 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the calendar platform for entity."""
-    VulcanCalendarEntity.MIN_TIME_BETWEEN_UPDATES = timedelta(
-        minutes=config_entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-    )
     client = hass.data[DOMAIN][config_entry.entry_id]
     data = {
         "student_info": await get_student_info(
@@ -69,8 +63,6 @@ class VulcanCalendarEntity(CalendarEntity):
         self.client = client
         self.entity_id = entity_id
         self._unique_id = f"vulcan_calendar_{self.student_info['id']}"
-        self.service_available = True
-
         if data["students_number"] == 1:
             self._attr_name = "Vulcan calendar"
             self.device_name = "Calendar"
@@ -87,8 +79,6 @@ class VulcanCalendarEntity(CalendarEntity):
             "configuration_url": f"https://uonetplus.vulcan.net.pl/{self.student_info['symbol']}",
         }
 
-    MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=DEFAULT_SCAN_INTERVAL)
-
     @property
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
@@ -102,16 +92,12 @@ class VulcanCalendarEntity(CalendarEntity):
                 date_from=start_date,
                 date_to=end_date,
             )
-        except VulcanAPIException as err:
-            if str(err) == "The certificate is not authorized.":
-                _LOGGER.error(
-                    "The certificate is not authorized, please authorize integration again"
-                )
-                raise ConfigEntryAuthFailed from err
-            _LOGGER.error("An API error has occurred: %s", err)
-            events = []
+        except UnauthorizedCertificateException as err:
+            raise ConfigEntryAuthFailed(
+                "The certificate is not authorized, please authorize integration again"
+            ) from err
         except ClientConnectorError as err:
-            if self.service_available:
+            if self.available:
                 _LOGGER.warning(
                     "Connection error - please check your internet connection: %s", err
                 )
@@ -131,16 +117,15 @@ class VulcanCalendarEntity(CalendarEntity):
 
         return event_list
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self) -> None:
         """Get the latest data."""
 
         try:
             events = await get_lessons(self.client)
 
-            if not self.service_available:
+            if not self.available:
                 _LOGGER.info("Restored connection with API")
-                self.service_available = True
+                self._attr_available = True
 
             if events == []:
                 events = await get_lessons(
@@ -150,20 +135,16 @@ class VulcanCalendarEntity(CalendarEntity):
                 if events == []:
                     self._event = None
                     return
-        except VulcanAPIException as err:
-            if str(err) == "The certificate is not authorized.":
-                _LOGGER.error(
-                    "The certificate is not authorized, please authorize integration again"
-                )
-                raise ConfigEntryAuthFailed from err
-            _LOGGER.error("An API error has occurred: %s", err)
-            return
+        except UnauthorizedCertificateException as err:
+            raise ConfigEntryAuthFailed(
+                "The certificate is not authorized, please authorize integration again"
+            ) from err
         except ClientConnectorError as err:
-            if self.service_available:
+            if self.available:
                 _LOGGER.warning(
                     "Connection error - please check your internet connection: %s", err
                 )
-                self.service_available = False
+                self._attr_available = False
             return
 
         new_event = min(
