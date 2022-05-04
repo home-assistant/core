@@ -47,7 +47,7 @@ def purge_old_data(
     )
     using_sqlite = instance.using_sqlite()
 
-    with session_scope(session=instance.get_session()) as session:  # type: ignore[misc]
+    with session_scope(session=instance.get_session()) as session:
         # Purge a max of MAX_ROWS_TO_PURGE, based on the oldest states or events record
         (
             event_ids,
@@ -515,7 +515,7 @@ def _purge_filtered_events(
 def purge_entity_data(instance: Recorder, entity_filter: Callable[[str], bool]) -> bool:
     """Purge states and events of specified entities."""
     using_sqlite = instance.using_sqlite()
-    with session_scope(session=instance.get_session()) as session:  # type: ignore[misc]
+    with session_scope(session=instance.get_session()) as session:
         selected_entity_ids: list[str] = [
             entity_id
             for (entity_id,) in session.query(distinct(States.entity_id)).all()

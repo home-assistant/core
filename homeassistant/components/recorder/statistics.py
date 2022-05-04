@@ -551,7 +551,7 @@ def compile_statistics(instance: Recorder, start: datetime) -> bool:
     end = start + timedelta(minutes=5)
 
     # Return if we already have 5-minute statistics for the requested period
-    with session_scope(session=instance.get_session()) as session:  # type: ignore[misc]
+    with session_scope(session=instance.get_session()) as session:
         if session.query(StatisticsRuns).filter_by(start=start).first():
             _LOGGER.debug("Statistics already compiled for %s-%s", start, end)
             return True
@@ -578,7 +578,7 @@ def compile_statistics(instance: Recorder, start: datetime) -> bool:
 
     # Insert collected statistics in the database
     with session_scope(
-        session=instance.get_session(),  # type: ignore[misc]
+        session=instance.get_session(),
         exception_filter=_filter_unique_constraint_integrity_error(instance),
     ) as session:
         for stats in platform_stats:
@@ -768,7 +768,7 @@ def _configured_unit(unit: str | None, units: UnitSystem) -> str | None:
 
 def clear_statistics(instance: Recorder, statistic_ids: list[str]) -> None:
     """Clear statistics for a list of statistic_ids."""
-    with session_scope(session=instance.get_session()) as session:  # type: ignore[misc]
+    with session_scope(session=instance.get_session()) as session:
         session.query(StatisticsMeta).filter(
             StatisticsMeta.statistic_id.in_(statistic_ids)
         ).delete(synchronize_session=False)
@@ -778,7 +778,7 @@ def update_statistics_metadata(
     instance: Recorder, statistic_id: str, unit_of_measurement: str | None
 ) -> None:
     """Update statistics metadata for a statistic_id."""
-    with session_scope(session=instance.get_session()) as session:  # type: ignore[misc]
+    with session_scope(session=instance.get_session()) as session:
         session.query(StatisticsMeta).filter(
             StatisticsMeta.statistic_id == statistic_id
         ).update({StatisticsMeta.unit_of_measurement: unit_of_measurement})
@@ -1376,7 +1376,7 @@ def add_external_statistics(
     """Process an add_external_statistics job."""
 
     with session_scope(
-        session=instance.get_session(),  # type: ignore[misc]
+        session=instance.get_session(),
         exception_filter=_filter_unique_constraint_integrity_error(instance),
     ) as session:
         old_metadata_dict = get_metadata_with_session(
@@ -1403,7 +1403,7 @@ def adjust_statistics(
 ) -> bool:
     """Process an add_statistics job."""
 
-    with session_scope(session=instance.get_session()) as session:  # type: ignore[misc]
+    with session_scope(session=instance.get_session()) as session:
         metadata = get_metadata_with_session(
             instance.hass, session, statistic_ids=(statistic_id,)
         )
