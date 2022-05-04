@@ -8,6 +8,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_SUGGESTED_AREA
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -51,6 +52,7 @@ class LutronOccupancySensor(LutronCasetaDevice, BinarySensorEntity):
             name=self.name,
             via_device=(CASETA_DOMAIN, self._bridge_device["serial"]),
             configuration_url=CONFIG_URL,
+            entry_type=DeviceEntryType.SERVICE,
         )
         area, _ = _area_and_name_from_name(device["name"])
         if area != UNASSIGNED_AREA:
