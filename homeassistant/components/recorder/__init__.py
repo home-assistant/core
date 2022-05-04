@@ -998,6 +998,7 @@ class Recorder(threading.Thread):
         # with startup which is also cpu intensive
         if not schema_is_current:
             if self._migrate_schema_and_setup_run(current_version):
+                self.schema_version = SCHEMA_VERSION
                 if not self._event_listener:
                     # If the schema migration takes so long that the end
                     # queue watcher safety kicks in because MAX_QUEUE_BACKLOG
@@ -1013,7 +1014,6 @@ class Recorder(threading.Thread):
                 self._shutdown()
                 return
 
-        self.schema_version = SCHEMA_VERSION
         _LOGGER.debug("Recorder processing the queue")
         self.hass.add_job(self._async_recorder_ready)
         self._run_event_loop()
