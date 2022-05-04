@@ -9,6 +9,7 @@
             "updated_instance": "Oppdatert deCONZ forekomst med ny vertsadresse"
         },
         "error": {
+            "linking_not_possible": "Kunne ikke koble til gatewayen",
             "no_key": "Kunne ikke f\u00e5 en API-n\u00f8kkel"
         },
         "flow_title": "{host}",
