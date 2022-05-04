@@ -9,6 +9,7 @@
             "cannot_connect": "Kan geen verbinding maken",
             "invalid_auth": "Ongeldige authenticatie",
             "server_in_maintenance": "Server is offline wegens onderhoud",
+            "too_many_attempts": "Te veel pogingen met een ongeldig token, tijdelijk verbannen",
             "too_many_requests": "Te veel verzoeken, probeer het later opnieuw.",
             "unknown": "Onverwachte fout"
         },

@@ -7,21 +7,14 @@ A callback has to be provided to `request_config` which will be called when
 the user has submitted configuration information.
 """
 from contextlib import suppress
+from datetime import datetime
 import functools as ft
 from typing import Any
 
-from homeassistant.const import (
-    ATTR_ENTITY_PICTURE,
-    ATTR_FRIENDLY_NAME,
-    EVENT_TIME_CHANGED,
-)
-from homeassistant.core import (
-    Event,
-    HomeAssistant,
-    ServiceCall,
-    callback as async_callback,
-)
+from homeassistant.const import ATTR_ENTITY_PICTURE, ATTR_FRIENDLY_NAME
+from homeassistant.core import HomeAssistant, ServiceCall, callback as async_callback
 from homeassistant.helpers.entity import async_generate_entity_id
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import run_callback_threadsafe
@@ -213,11 +206,11 @@ class Configurator:
         self.hass.states.async_set(entity_id, STATE_CONFIGURED)
 
         @async_callback
-        def deferred_remove(event: Event):
+        def deferred_remove(now: datetime):
             """Remove the request state."""
-            self.hass.states.async_remove(entity_id, context=event.context)
+            self.hass.states.async_remove(entity_id)
 
-        self.hass.bus.async_listen_once(EVENT_TIME_CHANGED, deferred_remove)
+        async_call_later(self.hass, 1, deferred_remove)
 
     async def async_handle_service_call(self, call: ServiceCall) -> None:
         """Handle a configure service call."""

@@ -13,7 +13,7 @@ from pycomfoconnect import (
     SENSOR_FAN_SPEED_MODE,
 )
 
-from homeassistant.components.fan import SUPPORT_SET_SPEED, FanEntity
+from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -53,6 +53,7 @@ def setup_platform(
 class ComfoConnectFan(FanEntity):
     """Representation of the ComfoConnect fan platform."""
 
+    _attr_supported_features = FanEntityFeature.SET_SPEED
     current_speed = None
 
     def __init__(self, ccb: ComfoConnectBridge) -> None:
@@ -100,11 +101,6 @@ class ComfoConnectFan(FanEntity):
     def icon(self):
         """Return the icon to use in the frontend."""
         return "mdi:air-conditioner"
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return SUPPORT_SET_SPEED
 
     @property
     def percentage(self) -> int | None:

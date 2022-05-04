@@ -5,18 +5,11 @@ from freezegun import freeze_time
 import pytest
 
 from homeassistant.const import STATE_OFF, STATE_ON
-import homeassistant.core as ha
 from homeassistant.helpers.sun import get_astral_event_date, get_astral_event_next
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import assert_setup_component
-
-
-@pytest.fixture(autouse=True)
-def mock_legacy_time(legacy_patchable_time):
-    """Make time patchable for all the tests."""
-    yield
+from tests.common import assert_setup_component, async_fire_time_changed
 
 
 @pytest.fixture
@@ -126,7 +119,7 @@ async def test_midnight_turnover_after_midnight_inside_period(
     await hass.async_block_till_done()
 
     freezer.move_to(test_time + timedelta(hours=1))
-    hass.bus.async_fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: dt_util.utcnow()})
+    async_fire_time_changed(hass, dt_util.utcnow())
 
     await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.night")
@@ -184,15 +177,14 @@ async def test_midnight_turnover_after_midnight_outside_period(
     switchover_time = datetime(2019, 1, 11, 4, 59, 0, tzinfo=hass_tz_info)
     freezer.move_to(switchover_time)
 
-    hass.bus.async_fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: dt_util.utcnow()})
+    async_fire_time_changed(hass, dt_util.utcnow())
     await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.night")
     assert state.state == STATE_ON
 
     freezer.move_to(switchover_time + timedelta(minutes=1, seconds=1))
 
-    hass.bus.async_fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: dt_util.utcnow()})
-
+    async_fire_time_changed(hass, dt_util.utcnow())
     await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.night")
     assert state.state == STATE_OFF
@@ -225,31 +217,31 @@ async def test_from_sunrise_to_sunset(hass, freezer, hass_tz_info):
     assert state.state == STATE_OFF
 
     freezer.move_to(sunrise)
-    hass.bus.async_fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: dt_util.utcnow()})
+    async_fire_time_changed(hass, dt_util.utcnow())
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
 
     freezer.move_to(sunrise + timedelta(seconds=1))
-    hass.bus.async_fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: dt_util.utcnow()})
+    async_fire_time_changed(hass, dt_util.utcnow())
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
 
     freezer.move_to(sunset + timedelta(seconds=-1))
-    hass.bus.async_fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: dt_util.utcnow()})
+    async_fire_time_changed(hass, dt_util.utcnow())
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
 
     freezer.move_to(sunset)
-    hass.bus.async_fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: dt_util.utcnow()})
+    async_fire_time_changed(hass, dt_util.utcnow())
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.state == STATE_OFF
 
     freezer.move_to(sunset + timedelta(seconds=1))
-    hass.bus.async_fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: dt_util.utcnow()})
+    async_fire_time_changed(hass, dt_util.utcnow())
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.state == STATE_OFF
@@ -279,31 +271,31 @@ async def test_from_sunset_to_sunrise(hass, freezer, hass_tz_info):
     assert state.state == STATE_OFF
 
     freezer.move_to(sunset)
-    hass.bus.async_fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: dt_util.utcnow()})
+    async_fire_time_changed(hass, dt_util.utcnow())
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
 
     freezer.move_to(sunset + timedelta(minutes=1))
-    hass.bus.async_fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: dt_util.utcnow()})
+    async_fire_time_changed(hass, dt_util.utcnow())
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
 
     freezer.move_to(sunrise + timedelta(minutes=-1))
-    hass.bus.async_fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: dt_util.utcnow()})
+    async_fire_time_changed(hass, dt_util.utcnow())
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
 
     freezer.move_to(sunrise)
-    hass.bus.async_fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: dt_util.utcnow()})
+    async_fire_time_changed(hass, dt_util.utcnow())
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.state == STATE_OFF
 
     freezer.move_to(sunrise + timedelta(minutes=1))
-    hass.bus.async_fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: dt_util.utcnow()})
+    async_fire_time_changed(hass, dt_util.utcnow())
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.state == STATE_OFF
@@ -339,25 +331,25 @@ async def test_offset(hass, freezer, hass_tz_info):
     assert state.state == STATE_OFF
 
     freezer.move_to(after)
-    hass.bus.async_fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: dt_util.utcnow()})
+    async_fire_time_changed(hass, dt_util.utcnow())
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
 
     freezer.move_to(before + timedelta(seconds=-1))
-    hass.bus.async_fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: dt_util.utcnow()})
+    async_fire_time_changed(hass, dt_util.utcnow())
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
 
     freezer.move_to(before)
-    hass.bus.async_fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: dt_util.utcnow()})
+    async_fire_time_changed(hass, dt_util.utcnow())
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.state == STATE_OFF
 
     freezer.move_to(before + timedelta(seconds=1))
-    hass.bus.async_fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: dt_util.utcnow()})
+    async_fire_time_changed(hass, dt_util.utcnow())
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.state == STATE_OFF
@@ -388,7 +380,7 @@ async def test_offset_overnight(hass, freezer, hass_tz_info):
     assert state.state == STATE_OFF
 
     freezer.move_to(after)
-    hass.bus.async_fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: dt_util.utcnow()})
+    async_fire_time_changed(hass, dt_util.utcnow())
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
@@ -424,37 +416,37 @@ async def test_norwegian_case_winter(hass, freezer, hass_tz_info):
     assert state.state == STATE_OFF
 
     freezer.move_to(sunrise + timedelta(seconds=-1))
-    hass.bus.async_fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: dt_util.utcnow()})
+    async_fire_time_changed(hass, dt_util.utcnow())
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.state == STATE_OFF
 
     freezer.move_to(sunrise)
-    hass.bus.async_fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: dt_util.utcnow()})
+    async_fire_time_changed(hass, dt_util.utcnow())
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
 
     freezer.move_to(sunrise + timedelta(seconds=1))
-    hass.bus.async_fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: dt_util.utcnow()})
+    async_fire_time_changed(hass, dt_util.utcnow())
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
 
     freezer.move_to(sunset + timedelta(seconds=-1))
-    hass.bus.async_fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: dt_util.utcnow()})
+    async_fire_time_changed(hass, dt_util.utcnow())
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
 
     freezer.move_to(sunset)
-    hass.bus.async_fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: dt_util.utcnow()})
+    async_fire_time_changed(hass, dt_util.utcnow())
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.state == STATE_OFF
 
     freezer.move_to(sunset + timedelta(seconds=1))
-    hass.bus.async_fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: dt_util.utcnow()})
+    async_fire_time_changed(hass, dt_util.utcnow())
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.state == STATE_OFF
@@ -492,37 +484,37 @@ async def test_norwegian_case_summer(hass, freezer, hass_tz_info):
     assert state.state == STATE_OFF
 
     freezer.move_to(sunrise + timedelta(seconds=-1))
-    hass.bus.async_fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: dt_util.utcnow()})
+    async_fire_time_changed(hass, dt_util.utcnow())
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.state == STATE_OFF
 
     freezer.move_to(sunrise)
-    hass.bus.async_fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: dt_util.utcnow()})
+    async_fire_time_changed(hass, dt_util.utcnow())
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
 
     freezer.move_to(sunrise + timedelta(seconds=1))
-    hass.bus.async_fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: dt_util.utcnow()})
+    async_fire_time_changed(hass, dt_util.utcnow())
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
 
     freezer.move_to(sunset + timedelta(seconds=-1))
-    hass.bus.async_fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: dt_util.utcnow()})
+    async_fire_time_changed(hass, dt_util.utcnow())
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
 
     freezer.move_to(sunset)
-    hass.bus.async_fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: dt_util.utcnow()})
+    async_fire_time_changed(hass, dt_util.utcnow())
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.state == STATE_OFF
 
     freezer.move_to(sunset + timedelta(seconds=1))
-    hass.bus.async_fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: dt_util.utcnow()})
+    async_fire_time_changed(hass, dt_util.utcnow())
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.state == STATE_OFF
@@ -559,19 +551,19 @@ async def test_sun_offset(hass, freezer, hass_tz_info):
     assert state.state == STATE_OFF
 
     freezer.move_to(sunrise)
-    hass.bus.async_fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: dt_util.utcnow()})
+    async_fire_time_changed(hass, dt_util.utcnow())
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
 
     freezer.move_to(sunrise + timedelta(seconds=1))
-    hass.bus.async_fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: dt_util.utcnow()})
+    async_fire_time_changed(hass, dt_util.utcnow())
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
 
     freezer.move_to(sunset + timedelta(seconds=-1))
-    hass.bus.async_fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: dt_util.utcnow()})
+    async_fire_time_changed(hass, dt_util.utcnow())
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
@@ -579,13 +571,13 @@ async def test_sun_offset(hass, freezer, hass_tz_info):
     await hass.async_block_till_done()
 
     freezer.move_to(sunset)
-    hass.bus.async_fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: dt_util.utcnow()})
+    async_fire_time_changed(hass, dt_util.utcnow())
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.state == STATE_OFF
 
     freezer.move_to(sunset + timedelta(seconds=1))
-    hass.bus.async_fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: dt_util.utcnow()})
+    async_fire_time_changed(hass, dt_util.utcnow())
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.state == STATE_OFF
@@ -596,7 +588,7 @@ async def test_sun_offset(hass, freezer, hass_tz_info):
         + timedelta(hours=-1, minutes=-30)
     )
     freezer.move_to(sunrise)
-    hass.bus.async_fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: dt_util.utcnow()})
+    async_fire_time_changed(hass, dt_util.utcnow())
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON

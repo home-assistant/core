@@ -6,16 +6,11 @@ import voluptuous as vol
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
-    CURRENT_HVAC_OFF,
-    HVAC_MODE_AUTO,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
     PRESET_BOOST,
     PRESET_NONE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
@@ -33,27 +28,25 @@ from .const import (
 )
 
 HIVE_TO_HASS_STATE = {
-    "SCHEDULE": HVAC_MODE_AUTO,
-    "MANUAL": HVAC_MODE_HEAT,
-    "OFF": HVAC_MODE_OFF,
+    "SCHEDULE": HVACMode.AUTO,
+    "MANUAL": HVACMode.HEAT,
+    "OFF": HVACMode.OFF,
 }
 
 HASS_TO_HIVE_STATE = {
-    HVAC_MODE_AUTO: "SCHEDULE",
-    HVAC_MODE_HEAT: "MANUAL",
-    HVAC_MODE_OFF: "OFF",
+    HVACMode.AUTO: "SCHEDULE",
+    HVACMode.HEAT: "MANUAL",
+    HVACMode.OFF: "OFF",
 }
 
 HIVE_TO_HASS_HVAC_ACTION = {
-    "UNKNOWN": CURRENT_HVAC_OFF,
-    False: CURRENT_HVAC_IDLE,
-    True: CURRENT_HVAC_HEAT,
+    "UNKNOWN": HVACAction.OFF,
+    False: HVACAction.IDLE,
+    True: HVACAction.HEATING,
 }
 
 TEMP_UNIT = {"C": TEMP_CELSIUS, "F": TEMP_FAHRENHEIT}
 
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
-SUPPORT_HVAC = [HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_OFF]
 SUPPORT_PRESET = [PRESET_NONE, PRESET_BOOST]
 PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(seconds=15)
@@ -111,6 +104,11 @@ async def async_setup_entry(
 class HiveClimateEntity(HiveEntity, ClimateEntity):
     """Hive Climate Device."""
 
+    _attr_hvac_modes = [HVACMode.AUTO, HVACMode.HEAT, HVACMode.OFF]
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+    )
+
     def __init__(self, hive_session, hive_device):
         """Initialize the Climate device."""
         super().__init__(hive_session, hive_device)
@@ -135,11 +133,6 @@ class HiveClimateEntity(HiveEntity, ClimateEntity):
         )
 
     @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_FLAGS
-
-    @property
     def name(self):
         """Return the name of the Climate device."""
         return self.device["haName"]
@@ -150,15 +143,7 @@ class HiveClimateEntity(HiveEntity, ClimateEntity):
         return self.device["deviceData"]["online"]
 
     @property
-    def hvac_modes(self):
-        """Return the list of available hvac operation modes.
-
-        Need to be a subset of HVAC_MODES.
-        """
-        return SUPPORT_HVAC
-
-    @property
-    def hvac_mode(self):
+    def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode.
 
         Need to be one of HVAC_MODE_*.
@@ -166,7 +151,7 @@ class HiveClimateEntity(HiveEntity, ClimateEntity):
         return HIVE_TO_HASS_STATE[self.device["status"]["mode"]]
 
     @property
-    def hvac_action(self):
+    def hvac_action(self) -> HVACAction:
         """Return current HVAC action."""
         return HIVE_TO_HASS_HVAC_ACTION[self.device["status"]["action"]]
 
@@ -208,7 +193,7 @@ class HiveClimateEntity(HiveEntity, ClimateEntity):
         return SUPPORT_PRESET
 
     @refresh_system
-    async def async_set_hvac_mode(self, hvac_mode):
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         new_mode = HASS_TO_HIVE_STATE[hvac_mode]
         await self.hive.heating.setMode(self.device, new_mode)

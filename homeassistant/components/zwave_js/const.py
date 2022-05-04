@@ -45,6 +45,7 @@ ATTR_PROPERTY_KEY_NAME = "property_key_name"
 ATTR_PROPERTY = "property"
 ATTR_PROPERTY_KEY = "property_key"
 ATTR_PARAMETERS = "parameters"
+ATTR_DIRECTION = "direction"
 ATTR_EVENT = "event"
 ATTR_EVENT_LABEL = "event_label"
 ATTR_EVENT_TYPE = "event_type"
@@ -70,15 +71,16 @@ ATTR_CONFIG_ENTRY_ID = "config_entry_id"
 ATTR_PARTIAL_DICT_MATCH = "partial_dict_match"
 
 # service constants
-SERVICE_SET_LOCK_USERCODE = "set_lock_usercode"
+SERVICE_BULK_SET_PARTIAL_CONFIG_PARAMETERS = "bulk_set_partial_config_parameters"
 SERVICE_CLEAR_LOCK_USERCODE = "clear_lock_usercode"
-SERVICE_SET_VALUE = "set_value"
-SERVICE_RESET_METER = "reset_meter"
+SERVICE_INVOKE_CC_API = "invoke_cc_api"
 SERVICE_MULTICAST_SET_VALUE = "multicast_set_value"
 SERVICE_PING = "ping"
 SERVICE_REFRESH_VALUE = "refresh_value"
+SERVICE_RESET_METER = "reset_meter"
 SERVICE_SET_CONFIG_PARAMETER = "set_config_parameter"
-SERVICE_BULK_SET_PARTIAL_CONFIG_PARAMETERS = "bulk_set_partial_config_parameters"
+SERVICE_SET_LOCK_USERCODE = "set_lock_usercode"
+SERVICE_SET_VALUE = "set_value"
 
 ATTR_NODES = "nodes"
 # config parameter
@@ -92,6 +94,9 @@ ATTR_BROADCAST = "broadcast"
 # meter reset
 ATTR_METER_TYPE = "meter_type"
 ATTR_METER_TYPE_NAME = "meter_type_name"
+# invoke CC API
+ATTR_METHOD_NAME = "method_name"
+ATTR_PARAMETERS = "parameters"
 
 ADDON_SLUG = "core_zwave_js"
 

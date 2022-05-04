@@ -8,7 +8,7 @@
         "flow_title": "{name}",
         "step": {
             "confirm": {
-                "description": "Apakah Anda ingin menyiapkan WiLight {name}?\n\nIni mendukung: {components}",
+                "description": "Komponen berikut didukung: {components}",
                 "title": "WiLight"
             }
         }

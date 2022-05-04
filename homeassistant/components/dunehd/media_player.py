@@ -9,14 +9,7 @@ import voluptuous as vol
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     MediaPlayerEntity,
-)
-from homeassistant.components.media_player.const import (
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
+    MediaPlayerEntityFeature,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
@@ -46,12 +39,12 @@ PLATFORM_SCHEMA: Final = PARENT_PLATFORM_SCHEMA.extend(
 )
 
 DUNEHD_PLAYER_SUPPORT: Final[int] = (
-    SUPPORT_PAUSE
-    | SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-    | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_PLAY
+    MediaPlayerEntityFeature.PAUSE
+    | MediaPlayerEntityFeature.TURN_ON
+    | MediaPlayerEntityFeature.TURN_OFF
+    | MediaPlayerEntityFeature.PREVIOUS_TRACK
+    | MediaPlayerEntityFeature.NEXT_TRACK
+    | MediaPlayerEntityFeature.PLAY
 )
 
 

@@ -7,7 +7,7 @@ import voluptuous as vol
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     PLATFORM_SCHEMA,
-    SUPPORT_BRIGHTNESS,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.const import CONF_NAME
@@ -60,7 +60,11 @@ class AdsLight(AdsEntity, LightEntity):
         self._state_dict[STATE_KEY_BRIGHTNESS] = None
         self._ads_var_brightness = ads_var_brightness
         if ads_var_brightness is not None:
-            self._attr_supported_features = SUPPORT_BRIGHTNESS
+            self._attr_color_mode = ColorMode.BRIGHTNESS
+            self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+        else:
+            self._attr_color_mode = ColorMode.ONOFF
+            self._attr_supported_color_modes = {ColorMode.ONOFF}
 
     async def async_added_to_hass(self):
         """Register device notification."""

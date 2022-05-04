@@ -130,7 +130,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         )
         self.context[CONF_HOST] = self._host
 
-        if ipaddress.ip_address(self._host).is_link_local:
+        if not self._host or ipaddress.ip_address(self._host).is_link_local:
             return self.async_abort(reason="ignore_ip6_link_local")
 
         if uuid := discovery_info.upnp.get(ssdp.ATTR_UPNP_UDN):
@@ -148,9 +148,13 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
                 self.hass.config_entries.async_update_entry(entry, unique_id=uuid)
             return self.async_abort(reason="already_configured")
 
-        self.context["title_placeholders"] = {
-            "name": self._name.replace("FRITZ!Box ", "")
-        }
+        self.context.update(
+            {
+                "title_placeholders": {"name": self._name.replace("FRITZ!Box ", "")},
+                "configuration_url": f"http://{self._host}",
+            }
+        )
+
         return await self.async_step_confirm()
 
     async def async_step_confirm(

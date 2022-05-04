@@ -14,6 +14,9 @@ from homeassistant.components import ssdp
 from homeassistant.components.upnp.const import (
     BYTES_RECEIVED,
     BYTES_SENT,
+    CONFIG_ENTRY_LOCATION,
+    CONFIG_ENTRY_MAC_ADDRESS,
+    CONFIG_ENTRY_ORIGINAL_UDN,
     CONFIG_ENTRY_ST,
     CONFIG_ENTRY_UDN,
     DOMAIN,
@@ -34,9 +37,11 @@ TEST_USN = f"{TEST_UDN}::{TEST_ST}"
 TEST_LOCATION = "http://192.168.1.1/desc.xml"
 TEST_HOSTNAME = urlparse(TEST_LOCATION).hostname
 TEST_FRIENDLY_NAME = "mock-name"
+TEST_MAC_ADDRESS = "00:11:22:33:44:55"
 TEST_DISCOVERY = ssdp.SsdpServiceInfo(
-    ssdp_usn=TEST_USN,
     ssdp_st=TEST_ST,
+    ssdp_udn=TEST_UDN,
+    ssdp_usn=TEST_USN,
     ssdp_location=TEST_LOCATION,
     upnp={
         "_udn": TEST_UDN,
@@ -211,6 +216,26 @@ def mock_upnp_device():
 
 
 @pytest.fixture
+def mock_mac_address_from_host():
+    """Get mac address."""
+    with patch(
+        "homeassistant.components.upnp.device.get_mac_address",
+        return_value=TEST_MAC_ADDRESS,
+    ):
+        yield
+
+
+@pytest.fixture
+def mock_no_mac_address_from_host():
+    """Get no mac address."""
+    with patch(
+        "homeassistant.components.upnp.device.get_mac_address",
+        return_value=None,
+    ):
+        yield
+
+
+@pytest.fixture
 def mock_setup_entry():
     """Mock async_setup_entry."""
     with patch(
@@ -272,15 +297,23 @@ async def ssdp_no_discovery():
 
 
 @pytest.fixture
-async def setup_integration(
-    hass: HomeAssistant, mock_get_source_ip, ssdp_instant_discovery, mock_upnp_device
+async def config_entry(
+    hass: HomeAssistant,
+    mock_get_source_ip,
+    ssdp_instant_discovery,
+    mock_upnp_device,
+    mock_mac_address_from_host,
 ):
     """Create an initialized integration."""
     entry = MockConfigEntry(
         domain=DOMAIN,
+        unique_id=TEST_USN,
         data={
-            CONFIG_ENTRY_UDN: TEST_UDN,
             CONFIG_ENTRY_ST: TEST_ST,
+            CONFIG_ENTRY_UDN: TEST_UDN,
+            CONFIG_ENTRY_ORIGINAL_UDN: TEST_UDN,
+            CONFIG_ENTRY_LOCATION: TEST_LOCATION,
+            CONFIG_ENTRY_MAC_ADDRESS: TEST_MAC_ADDRESS,
         },
     )
 

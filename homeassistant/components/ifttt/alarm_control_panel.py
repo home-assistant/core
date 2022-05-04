@@ -7,15 +7,10 @@ import re
 import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel import (
-    FORMAT_NUMBER,
-    FORMAT_TEXT,
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     AlarmControlPanelEntity,
-)
-from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_HOME,
-    SUPPORT_ALARM_ARM_NIGHT,
+    AlarmControlPanelEntityFeature,
+    CodeFormat,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -132,6 +127,12 @@ def setup_platform(
 class IFTTTAlarmPanel(AlarmControlPanelEntity):
     """Representation of an alarm control panel controlled through IFTTT."""
 
+    _attr_supported_features = (
+        AlarmControlPanelEntityFeature.ARM_HOME
+        | AlarmControlPanelEntityFeature.ARM_AWAY
+        | AlarmControlPanelEntityFeature.ARM_NIGHT
+    )
+
     def __init__(
         self,
         name,
@@ -165,11 +166,6 @@ class IFTTTAlarmPanel(AlarmControlPanelEntity):
         return self._state
 
     @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_NIGHT
-
-    @property
     def assumed_state(self):
         """Notify that this platform return an assumed state."""
         return True
@@ -180,8 +176,8 @@ class IFTTTAlarmPanel(AlarmControlPanelEntity):
         if self._code is None:
             return None
         if isinstance(self._code, str) and re.search("^\\d+$", self._code):
-            return FORMAT_NUMBER
-        return FORMAT_TEXT
+            return CodeFormat.NUMBER
+        return CodeFormat.TEXT
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""
