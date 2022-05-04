@@ -307,7 +307,7 @@ class LutronCasetaDevice(Entity):
         self._smartbridge = bridge
         self._bridge_device = bridge_device
         info = DeviceInfo(
-            identifiers={(DOMAIN, self.serial)},
+            identifiers={(DOMAIN, self.unique_id)},
             manufacturer=MANUFACTURER,
             model=f"{device['model']} ({device['type']})",
             name=self.name,
