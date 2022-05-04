@@ -26,6 +26,7 @@ from homeassistant.components.recorder import (
 )
 from homeassistant.components.recorder.const import DATA_INSTANCE, KEEPALIVE_TIME
 from homeassistant.components.recorder.models import (
+    SCHEMA_VERSION,
     EventData,
     Events,
     RecorderRuns,
@@ -457,6 +458,12 @@ def _state_with_context(hass, entity_id):
     # We don't restore context unless we need it by joining the
     # events table on the event_id for state_changed events
     return hass.states.get(entity_id)
+
+
+def test_setup_without_migraton(hass_recorder):
+    """Verify the schema version without a migration."""
+    hass = hass_recorder()
+    assert recorder.get_instance(hass).schema_version == SCHEMA_VERSION
 
 
 # pylint: disable=redefined-outer-name,invalid-name
