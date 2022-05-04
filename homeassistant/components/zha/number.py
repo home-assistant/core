@@ -379,7 +379,15 @@ class ZHANumberConfigurationEntity(ZhaEntity, NumberEntity):
         Return entity if it is a supported configuration, otherwise return None
         """
         channel = channels[0]
-        if cls._zcl_attribute in channel.cluster.unsupported_attributes:
+        if (
+            cls._zcl_attribute in channel.cluster.unsupported_attributes
+            or channel.cluster.get(cls._zcl_attribute) is None
+        ):
+            _LOGGER.debug(
+                "%s is not supported - skipping %s entity creation",
+                cls._zcl_attribute,
+                cls.__name__,
+            )
             return None
 
         return cls(unique_id, zha_device, channels, **kwargs)
