@@ -103,7 +103,10 @@ ZEROCONF = {
             "domain": "devolo_home_control"
         },
         {
-            "domain": "devolo_home_network"
+            "domain": "devolo_home_network",
+            "properties": {
+                "MT": "*"
+            }
         }
     ],
     "_easylink._tcp.local.": [
