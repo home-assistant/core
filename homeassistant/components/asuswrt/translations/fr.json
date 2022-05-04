@@ -1,6 +1,8 @@
 {
     "config": {
         "abort": {
+            "invalid_unique_id": "Impossible de d\u00e9terminer un identifiant unique valide pour l'appareil",
+            "not_unique_id_exist": "Un appareil sans UniqueID valide est d\u00e9j\u00e0 configur\u00e9. La configuration de plusieurs instances n'est pas possible",
             "single_instance_allowed": "D\u00e9j\u00e0 configur\u00e9. Une seule configuration possible."
         },
         "error": {
