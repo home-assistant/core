@@ -15,6 +15,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     CONF_ID,
+    CONF_MODEL,
     CONF_NAME,
     CONF_PROTOCOL,
     PERCENTAGE,
@@ -34,7 +35,6 @@ DatatypeDescription = namedtuple(
 CONF_DATATYPE_MASK = "datatype_mask"
 CONF_ONLY_NAMED = "only_named"
 CONF_TEMPERATURE_SCALE = "temperature_scale"
-CONF_MODEL = "model"
 
 DEFAULT_DATATYPE_MASK = 127
 DEFAULT_TEMPERATURE_SCALE = TEMP_CELSIUS

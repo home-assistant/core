@@ -55,7 +55,6 @@ async def test_homeassistant_bridge_fan_setup(hass):
                             ),
                             capabilities={
                                 "preset_modes": None,
-                                "speed_list": ["off", "low", "medium", "high"],
                             },
                             state="off",
                         )

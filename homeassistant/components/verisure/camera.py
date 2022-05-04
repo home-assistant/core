@@ -43,10 +43,8 @@ async def async_setup_entry(
     )
 
 
-class VerisureSmartcam(CoordinatorEntity, Camera):
+class VerisureSmartcam(CoordinatorEntity[VerisureDataUpdateCoordinator], Camera):
     """Representation of a Verisure camera."""
-
-    coordinator: VerisureDataUpdateCoordinator
 
     def __init__(
         self,

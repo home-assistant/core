@@ -3,44 +3,44 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Mapping
-from datetime import timedelta
-from typing import Any
+from typing import Any, cast
 
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.components.ssdp import SsdpChange, SsdpServiceInfo
-from homeassistant.const import CONF_SCAN_INTERVAL
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
-    CONFIG_ENTRY_HOSTNAME,
-    CONFIG_ENTRY_SCAN_INTERVAL,
+    CONFIG_ENTRY_LOCATION,
+    CONFIG_ENTRY_MAC_ADDRESS,
+    CONFIG_ENTRY_ORIGINAL_UDN,
     CONFIG_ENTRY_ST,
     CONFIG_ENTRY_UDN,
-    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     LOGGER,
     SSDP_SEARCH_TIMEOUT,
     ST_IGD_V1,
     ST_IGD_V2,
 )
+from .device import async_get_mac_address_from_host
 
 
 def _friendly_name_from_discovery(discovery_info: ssdp.SsdpServiceInfo) -> str:
     """Extract user-friendly name from discovery."""
-    return (
+    return cast(
+        str,
         discovery_info.upnp.get(ssdp.ATTR_UPNP_FRIENDLY_NAME)
         or discovery_info.upnp.get(ssdp.ATTR_UPNP_MODEL_NAME)
-        or discovery_info.ssdp_headers.get("_host", "")
+        or discovery_info.ssdp_headers.get("_host", ""),
     )
 
 
 def _is_complete_discovery(discovery_info: ssdp.SsdpServiceInfo) -> bool:
     """Test if discovery is complete and usable."""
-    return (
+    return bool(
         ssdp.ATTR_UPNP_UDN in discovery_info.upnp
         and discovery_info.ssdp_st
         and discovery_info.ssdp_location
@@ -53,15 +53,13 @@ async def _async_wait_for_discoveries(hass: HomeAssistant) -> bool:
     device_discovered_event = asyncio.Event()
 
     async def device_discovered(info: SsdpServiceInfo, change: SsdpChange) -> None:
-        if change == SsdpChange.BYEBYE:
-            return
-
-        LOGGER.info(
-            "Device discovered: %s, at: %s",
-            info.ssdp_usn,
-            info.ssdp_location,
-        )
-        device_discovered_event.set()
+        if change != SsdpChange.BYEBYE:
+            LOGGER.info(
+                "Device discovered: %s, at: %s",
+                info.ssdp_usn,
+                info.ssdp_location,
+            )
+            device_discovered_event.set()
 
     cancel_discovered_callback_1 = await ssdp.async_register_callback(
         hass,
@@ -100,6 +98,14 @@ async def _async_discover_igd_devices(
     ) + await ssdp.async_get_discovery_info_by_st(hass, ST_IGD_V2)
 
 
+async def _async_mac_address_from_discovery(
+    hass: HomeAssistant, discovery: SsdpServiceInfo
+) -> str | None:
+    """Get the mac address from a discovery."""
+    host = discovery.ssdp_headers["_host"]
+    return await async_get_mac_address_from_host(hass, host)
+
+
 class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a UPnP/IGD config flow."""
 
@@ -114,23 +120,20 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the UPnP/IGD config flow."""
         self._discoveries: list[SsdpServiceInfo] | None = None
 
-    async def async_step_user(
-        self, user_input: Mapping | None = None
-    ) -> Mapping[str, Any]:
+    async def async_step_user(self, user_input: Mapping | None = None) -> FlowResult:
         """Handle a flow start."""
         LOGGER.debug("async_step_user: user_input: %s", user_input)
 
         if user_input is not None:
             # Ensure wanted device was discovered.
-            matching_discoveries = [
-                discovery
-                for discovery in self._discoveries
-                if discovery.ssdp_usn == user_input["unique_id"]
-            ]
-            if not matching_discoveries:
-                return self.async_abort(reason="no_devices_found")
-
-            discovery = matching_discoveries[0]
+            assert self._discoveries
+            discovery = next(
+                iter(
+                    discovery
+                    for discovery in self._discoveries
+                    if discovery.ssdp_usn == user_input["unique_id"]
+                )
+            )
             await self.async_set_unique_id(discovery.ssdp_usn, raise_on_progress=False)
             return await self._async_create_entry_from_discovery(discovery)
 
@@ -221,18 +224,45 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # Ensure not already configuring/configured.
         unique_id = discovery_info.ssdp_usn
         await self.async_set_unique_id(unique_id)
-        hostname = discovery_info.ssdp_headers["_host"]
-        self._abort_if_unique_id_configured(updates={CONFIG_ENTRY_HOSTNAME: hostname})
+        mac_address = await _async_mac_address_from_discovery(self.hass, discovery_info)
+        self._abort_if_unique_id_configured(
+            # Store mac address for older entries.
+            # The location is stored in the config entry such that when the location changes, the entry is reloaded.
+            updates={
+                CONFIG_ENTRY_MAC_ADDRESS: mac_address,
+                CONFIG_ENTRY_LOCATION: discovery_info.ssdp_location,
+            },
+        )
 
         # Handle devices changing their UDN, only allow a single host.
-        existing_entries = self._async_current_entries()
-        for config_entry in existing_entries:
-            entry_hostname = config_entry.data.get(CONFIG_ENTRY_HOSTNAME)
-            if entry_hostname == hostname:
-                LOGGER.debug(
-                    "Found existing config_entry with same hostname, discovery ignored"
-                )
+        for entry in self._async_current_entries(include_ignore=True):
+            entry_mac_address = entry.data.get(CONFIG_ENTRY_MAC_ADDRESS)
+            entry_st = entry.data.get(CONFIG_ENTRY_ST)
+            if entry_mac_address != mac_address:
+                continue
+
+            if discovery_info.ssdp_st != entry_st:
+                # Check ssdp_st to prevent swapping between IGDv1 and IGDv2.
+                continue
+
+            if entry.source == config_entries.SOURCE_IGNORE:
+                # Host was already ignored. Don't update ignored entries.
                 return self.async_abort(reason="discovery_ignored")
+
+            LOGGER.debug("Updating entry: %s", entry.entry_id)
+            self.hass.config_entries.async_update_entry(
+                entry,
+                unique_id=unique_id,
+                data={**entry.data, CONFIG_ENTRY_UDN: discovery_info.ssdp_udn},
+            )
+            if entry.state == config_entries.ConfigEntryState.LOADED:
+                # Only reload when entry has state LOADED; when entry has state SETUP_RETRY,
+                # another load is started, causing the entry to be loaded twice.
+                LOGGER.debug("Reloading entry: %s", entry.entry_id)
+                self.hass.async_create_task(
+                    self.hass.config_entries.async_reload(entry.entry_id)
+                )
+            return self.async_abort(reason="config_entry_updated")
 
         # Store discovery.
         self._discoveries = [discovery_info]
@@ -246,27 +276,20 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_ssdp_confirm(
         self, user_input: Mapping | None = None
-    ) -> Mapping[str, Any]:
+    ) -> FlowResult:
         """Confirm integration via SSDP."""
         LOGGER.debug("async_step_ssdp_confirm: user_input: %s", user_input)
         if user_input is None:
             return self.async_show_form(step_id="ssdp_confirm")
 
+        assert self._discoveries
         discovery = self._discoveries[0]
         return await self._async_create_entry_from_discovery(discovery)
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
-    ) -> config_entries.OptionsFlow:
-        """Define the config flow to handle options."""
-        return UpnpOptionsFlowHandler(config_entry)
 
     async def _async_create_entry_from_discovery(
         self,
         discovery: SsdpServiceInfo,
-    ) -> Mapping[str, Any]:
+    ) -> FlowResult:
         """Create an entry from discovery."""
         LOGGER.debug(
             "_async_create_entry_from_discovery: discovery: %s",
@@ -274,44 +297,12 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         title = _friendly_name_from_discovery(discovery)
+        mac_address = await _async_mac_address_from_discovery(self.hass, discovery)
         data = {
             CONFIG_ENTRY_UDN: discovery.upnp[ssdp.ATTR_UPNP_UDN],
             CONFIG_ENTRY_ST: discovery.ssdp_st,
-            CONFIG_ENTRY_HOSTNAME: discovery.ssdp_headers["_host"],
+            CONFIG_ENTRY_ORIGINAL_UDN: discovery.upnp[ssdp.ATTR_UPNP_UDN],
+            CONFIG_ENTRY_LOCATION: discovery.ssdp_location,
+            CONFIG_ENTRY_MAC_ADDRESS: mac_address,
         }
         return self.async_create_entry(title=title, data=data)
-
-
-class UpnpOptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle a UPnP options flow."""
-
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize."""
-        self.config_entry = config_entry
-
-    async def async_step_init(self, user_input: Mapping = None) -> None:
-        """Manage the options."""
-        if user_input is not None:
-            coordinator = self.hass.data[DOMAIN][self.config_entry.entry_id]
-            update_interval_sec = user_input.get(
-                CONFIG_ENTRY_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-            )
-            update_interval = timedelta(seconds=update_interval_sec)
-            LOGGER.debug("Updating coordinator, update_interval: %s", update_interval)
-            coordinator.update_interval = update_interval
-            return self.async_create_entry(title="", data=user_input)
-
-        scan_interval = self.config_entry.options.get(
-            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-        )
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(
-                        CONF_SCAN_INTERVAL,
-                        default=scan_interval,
-                    ): vol.All(vol.Coerce(int), vol.Range(min=30)),
-                }
-            ),
-        )

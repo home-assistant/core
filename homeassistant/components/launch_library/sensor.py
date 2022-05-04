@@ -4,25 +4,20 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-import logging
 from typing import Any
 
 from pylaunches.objects.event import Event
 from pylaunches.objects.launch import Launch
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, PERCENTAGE
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -33,13 +28,6 @@ from . import LaunchLibraryData
 from .const import DOMAIN
 
 DEFAULT_NEXT_LAUNCH_NAME = "Next launch"
-
-_LOGGER = logging.getLogger(__name__)
-
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Optional(CONF_NAME, default=DEFAULT_NEXT_LAUNCH_NAME): cv.string}
-)
 
 
 @dataclass
@@ -137,28 +125,6 @@ SENSOR_DESCRIPTIONS: tuple[LaunchLibrarySensorEntityDescription, ...] = (
 )
 
 
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Import Launch Library configuration from yaml."""
-    _LOGGER.warning(
-        "Configuration of the launch_library platform in YAML is deprecated and will be "
-        "removed in Home Assistant 2022.4; Your existing configuration "
-        "has been imported into the UI automatically and can be safely removed "
-        "from your configuration.yaml file"
-    )
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=config,
-        )
-    )
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -179,13 +145,14 @@ async def async_setup_entry(
     )
 
 
-class LaunchLibrarySensor(CoordinatorEntity, SensorEntity):
+class LaunchLibrarySensor(
+    CoordinatorEntity[DataUpdateCoordinator[LaunchLibraryData]], SensorEntity
+):
     """Representation of the next launch sensors."""
 
     _attr_attribution = "Data provided by Launch Library."
     _next_event: Launch | Event | None = None
     entity_description: LaunchLibrarySensorEntityDescription
-    coordinator: DataUpdateCoordinator[LaunchLibraryData]
 
     def __init__(
         self,

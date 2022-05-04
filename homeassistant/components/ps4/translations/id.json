@@ -25,6 +25,9 @@
                     "name": "Nama",
                     "region": "Wilayah"
                 },
+                "data_description": {
+                    "code": "Navigasikan ke 'Pengaturan' di konsol PlayStation 4 Anda. Kemudian navigasikan ke 'Pengaturan Koneksi Aplikasi Seluler' dan pilih 'Tambahkan Perangkat' untuk mendapatkan PIN."
+                },
                 "description": "Masukkan informasi PlayStation 4 Anda. Untuk Kode PIN, buka 'Pengaturan' di konsol PlayStation 4 Anda. Kemudian buka 'Pengaturan Koneksi Aplikasi Seluler' dan pilih 'Tambah Perangkat'. Masukkan Kode PIN yang ditampilkan. Lihat [dokumentasi] (https://www.home-assistant.io/components/ps4/) untuk info lebih lanjut.",
                 "title": "PlayStation 4"
             },
@@ -32,6 +35,9 @@
                 "data": {
                     "ip_address": "Alamat IP (Kosongkan jika menggunakan Penemuan Otomatis).",
                     "mode": "Mode Konfigurasi"
+                },
+                "data_description": {
+                    "ip_address": "Kosongkan jika memilih penemuan otomatis."
                 },
                 "description": "Pilih mode untuk konfigurasi. Alamat IP dapat dikosongkan jika memilih Penemuan Otomatis karena perangkat akan ditemukan secara otomatis.",
                 "title": "PlayStation 4"

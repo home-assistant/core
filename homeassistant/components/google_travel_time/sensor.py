@@ -35,7 +35,6 @@ from .const import (
     CONF_UNITS,
     DEFAULT_NAME,
     DOMAIN,
-    TRACKABLE_DOMAINS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -109,17 +108,10 @@ class GoogleTravelTimeSensor(SensorEntity):
         self._api_key = api_key
         self._unique_id = config_entry.entry_id
         self._client = client
-
-        # Check if location is a trackable entity
-        if origin.split(".", 1)[0] in TRACKABLE_DOMAINS:
-            self._origin_entity_id = origin
-        else:
-            self._origin = origin
-
-        if destination.split(".", 1)[0] in TRACKABLE_DOMAINS:
-            self._destination_entity_id = destination
-        else:
-            self._destination = destination
+        self._origin = origin
+        self._destination = destination
+        self._resolved_origin = None
+        self._resolved_destination = None
 
     async def async_added_to_hass(self) -> None:
         """Handle when entity is added."""
@@ -179,8 +171,8 @@ class GoogleTravelTimeSensor(SensorEntity):
             res["duration"] = _data["duration"]["text"]
         if "distance" in _data:
             res["distance"] = _data["distance"]["text"]
-        res["origin"] = self._origin
-        res["destination"] = self._destination
+        res["origin"] = self._resolved_origin
+        res["destination"] = self._resolved_destination
         res[ATTR_ATTRIBUTION] = ATTRIBUTION
         return res
 
@@ -211,14 +203,18 @@ class GoogleTravelTimeSensor(SensorEntity):
         elif atime is not None:
             options_copy[CONF_ARRIVAL_TIME] = atime
 
-        # Convert device_trackers to google friendly location
-        if hasattr(self, "_origin_entity_id"):
-            self._origin = find_coordinates(self.hass, self._origin_entity_id)
+        self._resolved_origin = find_coordinates(self.hass, self._origin)
+        self._resolved_destination = find_coordinates(self.hass, self._destination)
 
-        if hasattr(self, "_destination_entity_id"):
-            self._destination = find_coordinates(self.hass, self._destination_entity_id)
-
-        if self._destination is not None and self._origin is not None:
+        _LOGGER.debug(
+            "Getting update for origin: %s destination: %s",
+            self._resolved_origin,
+            self._resolved_destination,
+        )
+        if self._resolved_destination is not None and self._resolved_origin is not None:
             self._matrix = distance_matrix(
-                self._client, self._origin, self._destination, **options_copy
+                self._client,
+                self._resolved_origin,
+                self._resolved_destination,
+                **options_copy,
             )

@@ -1,13 +1,17 @@
 """Constants for the Shelly integration."""
 from __future__ import annotations
 
+from logging import Logger, getLogger
 import re
 from typing import Final
+
+DOMAIN: Final = "shelly"
+
+LOGGER: Logger = getLogger(__package__)
 
 BLOCK: Final = "block"
 DATA_CONFIG_ENTRY: Final = "config_entry"
 DEVICE: Final = "device"
-DOMAIN: Final = "shelly"
 REST: Final = "rest"
 RPC: Final = "rpc"
 RPC_POLL: Final = "rpc_poll"

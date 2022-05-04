@@ -1,0 +1,10 @@
+{
+    "device_automation": {
+        "trigger_type": {
+            "changed_states": "{entity_name} -oppdateringstilgjengeligheten er endret",
+            "turned_off": "{entity_name} ble oppdatert",
+            "turned_on": "{entity_name} har en oppdatering tilgjengelig"
+        }
+    },
+    "title": "Oppdater"
+}

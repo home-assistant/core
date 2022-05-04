@@ -8,14 +8,14 @@ set_aircleaner_mode:
   fields:
     aircleaner_mode:
       name: Air cleaner mode
-      description: 'The air cleaner mode to set.'
+      description: "The air cleaner mode to set."
       required: true
       selector:
         select:
           options:
-            - 'allergy'
-            - 'auto'
-            - 'quick'
+            - "allergy"
+            - "auto"
+            - "quick"
 
 set_humidify_setpoint:
   name: Set humidify set point
@@ -33,7 +33,7 @@ set_humidify_setpoint:
         number:
           min: 35
           max: 65
-          unit_of_measurement: '%'
+          unit_of_measurement: "%"
 
 set_hvac_run_mode:
   name: Set hvac run mode
@@ -45,20 +45,20 @@ set_hvac_run_mode:
   fields:
     run_mode:
       name: Run mode
-      description: 'Run the schedule or hold. If not specified, the current run mode will be used.'
+      description: "Run the schedule or hold. If not specified, the current run mode will be used."
       required: false
       selector:
         select:
           options:
-            - 'permanent_hold'
-            - 'run_schedule'
+            - "permanent_hold"
+            - "run_schedule"
     hvac_mode:
       name: Hvac mode
-      description: 'The hvac mode to use for the schedule or hold. If not specified, the current hvac mode will be used.'
+      description: "The hvac mode to use for the schedule or hold. If not specified, the current hvac mode will be used."
       required: false
       selector:
         select:
           options:
-            - 'auto'
-            - 'cool'
-            - 'heat'
+            - "auto"
+            - "cool"
+            - "heat"

@@ -2,15 +2,16 @@
 import asyncio
 import logging
 
-from roonapi import RoonApi
+from roonapi import RoonApi, RoonDiscovery
 
-from homeassistant.const import CONF_API_KEY, CONF_HOST, Platform
+from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, Platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util.dt import utcnow
 
 from .const import CONF_ROON_ID, ROON_APPINFO
 
 _LOGGER = logging.getLogger(__name__)
+INITIAL_SYNC_INTERVAL = 5
 FULL_SYNC_INTERVAL = 30
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
@@ -33,23 +34,38 @@ class RoonServer:
 
     async def async_setup(self, tries=0):
         """Set up a roon server based on config parameters."""
-        hass = self.hass
-        # Host will be None for configs using discovery
-        host = self.config_entry.data[CONF_HOST]
-        token = self.config_entry.data[CONF_API_KEY]
-        # Default to None for compatibility with older configs
-        core_id = self.config_entry.data.get(CONF_ROON_ID)
-        _LOGGER.debug("async_setup: host=%s core_id=%s token=%s", host, core_id, token)
 
-        self.roonapi = RoonApi(
-            ROON_APPINFO, token, host, blocking_init=False, core_id=core_id
-        )
+        def get_roon_host():
+            host = self.config_entry.data.get(CONF_HOST)
+            port = self.config_entry.data.get(CONF_PORT)
+            if host:
+                _LOGGER.debug("static roon core host=%s port=%s", host, port)
+                return (host, port)
+
+            discover = RoonDiscovery(core_id)
+            server = discover.first()
+            discover.stop()
+            _LOGGER.debug("dynamic roon core core_id=%s server=%s", core_id, server)
+            return (server[0], server[1])
+
+        def get_roon_api():
+            token = self.config_entry.data[CONF_API_KEY]
+            (host, port) = get_roon_host()
+            return RoonApi(ROON_APPINFO, token, host, port, blocking_init=True)
+
+        hass = self.hass
+        core_id = self.config_entry.data.get(CONF_ROON_ID)
+
+        self.roonapi = await self.hass.async_add_executor_job(get_roon_api)
+
         self.roonapi.register_state_callback(
             self.roonapi_state_callback, event_filter=["zones_changed"]
         )
 
         # Default to 'host' for compatibility with older configs without core_id
-        self.roon_id = core_id if core_id is not None else host
+        self.roon_id = (
+            core_id if core_id is not None else self.config_entry.data[CONF_HOST]
+        )
 
         # initialize media_player platform
         hass.config_entries.async_setup_platforms(self.config_entry, PLATFORMS)
@@ -98,13 +114,14 @@ class RoonServer:
     async def async_do_loop(self):
         """Background work loop."""
         self._exit = False
+        await asyncio.sleep(INITIAL_SYNC_INTERVAL)
         while not self._exit:
             await self.async_update_players()
-            # await self.async_update_playlists()
             await asyncio.sleep(FULL_SYNC_INTERVAL)
 
     async def async_update_changed_players(self, changed_zones_ids):
         """Update the players which were reported as changed by the Roon API."""
+        _LOGGER.debug("async_update_changed_players %s", changed_zones_ids)
         for zone_id in changed_zones_ids:
             if zone_id not in self.roonapi.zones:
                 # device was removed ?
@@ -127,6 +144,7 @@ class RoonServer:
     async def async_update_players(self):
         """Periodic full scan of all devices."""
         zone_ids = self.roonapi.zones.keys()
+        _LOGGER.debug("async_update_players %s", zone_ids)
         await self.async_update_changed_players(zone_ids)
         # check for any removed devices
         all_devs = {}

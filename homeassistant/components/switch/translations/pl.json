@@ -1,4 +1,14 @@
 {
+    "config": {
+        "step": {
+            "init": {
+                "data": {
+                    "entity_id": "Encja prze\u0142\u0105cznika"
+                },
+                "description": "Wybierz prze\u0142\u0105cznik do w\u0142\u0105cznika \u015bwiat\u0142a."
+            }
+        }
+    },
     "device_automation": {
         "action_type": {
             "toggle": "prze\u0142\u0105cz {entity_name}",

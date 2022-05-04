@@ -2,7 +2,6 @@
 from collections.abc import Awaitable
 import dataclasses
 
-from homeassistant import config_entries
 from homeassistant.components import ssdp, zeroconf
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
@@ -17,7 +16,7 @@ async def _async_has_devices(hass: HomeAssistant) -> bool:
     return bool(await ssdp.async_get_discovery_info_by_st(hass, UPNP_ST))
 
 
-class SonosDiscoveryFlowHandler(DiscoveryFlowHandler[Awaitable[bool]]):
+class SonosDiscoveryFlowHandler(DiscoveryFlowHandler[Awaitable[bool]], domain=DOMAIN):
     """Sonos discovery flow that callsback zeroconf updates."""
 
     def __init__(self) -> None:
@@ -43,6 +42,3 @@ class SonosDiscoveryFlowHandler(DiscoveryFlowHandler[Awaitable[bool]]):
                 "Zeroconf", properties, host, uid, boot_seqnum, model, mdns_name
             )
         return await self.async_step_discovery(dataclasses.asdict(discovery_info))
-
-
-config_entries.HANDLERS.register(DOMAIN)(SonosDiscoveryFlowHandler)

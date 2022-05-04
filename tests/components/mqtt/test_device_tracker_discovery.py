@@ -3,6 +3,7 @@
 import pytest
 
 from homeassistant.components import device_tracker
+from homeassistant.components.mqtt.const import DOMAIN as MQTT_DOMAIN
 from homeassistant.components.mqtt.discovery import ALREADY_DISCOVERED
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNKNOWN
 from homeassistant.setup import async_setup_component
@@ -187,7 +188,7 @@ async def test_device_tracker_discovery_update(hass, mqtt_mock, caplog):
 async def test_cleanup_device_tracker(
     hass, hass_ws_client, device_reg, entity_reg, mqtt_mock
 ):
-    """Test discvered device is cleaned up when removed from registry."""
+    """Test discovered device is cleaned up when removed from registry."""
     assert await async_setup_component(hass, "config", {})
     ws_client = await hass_ws_client(hass)
 
@@ -210,10 +211,12 @@ async def test_cleanup_device_tracker(
     assert state is not None
 
     # Remove MQTT from the device
+    mqtt_config_entry = hass.config_entries.async_entries(MQTT_DOMAIN)[0]
     await ws_client.send_json(
         {
             "id": 6,
-            "type": "mqtt/device/remove",
+            "type": "config/device_registry/remove_config_entry",
+            "config_entry_id": mqtt_config_entry.entry_id,
             "device_id": device_entry.id,
         }
     )

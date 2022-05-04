@@ -3,7 +3,7 @@
   "name": "SMA Solar",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/sma",
-  "requirements": ["pysma==0.6.10"],
+  "requirements": ["pysma==0.6.11"],
   "codeowners": ["@kellerza", "@rklomp"],
   "iot_class": "local_polling",
   "loggers": ["pysma"]

@@ -27,10 +27,8 @@ async def async_setup_entry(
     async_add_entities([PhilipsTVRemote(coordinator)])
 
 
-class PhilipsTVRemote(CoordinatorEntity, RemoteEntity):
+class PhilipsTVRemote(CoordinatorEntity[PhilipsTVDataUpdateCoordinator], RemoteEntity):
     """Device that sends commands."""
-
-    coordinator: PhilipsTVDataUpdateCoordinator
 
     def __init__(
         self,

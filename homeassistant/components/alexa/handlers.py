@@ -73,7 +73,7 @@ from .errors import (
 from .state_report import async_enable_proactive_mode
 
 _LOGGER = logging.getLogger(__name__)
-HANDLERS = Registry()
+HANDLERS = Registry()  # type: ignore[var-annotated]
 
 
 @HANDLERS.register(("Alexa.Discovery", "Discover"))
@@ -129,13 +129,19 @@ async def async_api_turn_on(hass, config, directive, context):
         service = fan.SERVICE_TURN_ON
     elif domain == vacuum.DOMAIN:
         supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-        if not supported & vacuum.SUPPORT_TURN_ON and supported & vacuum.SUPPORT_START:
+        if (
+            not supported & vacuum.VacuumEntityFeature.TURN_ON
+            and supported & vacuum.VacuumEntityFeature.START
+        ):
             service = vacuum.SERVICE_START
     elif domain == timer.DOMAIN:
         service = timer.SERVICE_START
     elif domain == media_player.DOMAIN:
         supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-        power_features = media_player.SUPPORT_TURN_ON | media_player.SUPPORT_TURN_OFF
+        power_features = (
+            media_player.MediaPlayerEntityFeature.TURN_ON
+            | media_player.MediaPlayerEntityFeature.TURN_OFF
+        )
         if not supported & power_features:
             service = media_player.SERVICE_MEDIA_PLAY
 
@@ -166,15 +172,18 @@ async def async_api_turn_off(hass, config, directive, context):
     elif domain == vacuum.DOMAIN:
         supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if (
-            not supported & vacuum.SUPPORT_TURN_OFF
-            and supported & vacuum.SUPPORT_RETURN_HOME
+            not supported & vacuum.VacuumEntityFeature.TURN_OFF
+            and supported & vacuum.VacuumEntityFeature.RETURN_HOME
         ):
             service = vacuum.SERVICE_RETURN_TO_BASE
     elif domain == timer.DOMAIN:
         service = timer.SERVICE_CANCEL
     elif domain == media_player.DOMAIN:
         supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-        power_features = media_player.SUPPORT_TURN_ON | media_player.SUPPORT_TURN_OFF
+        power_features = (
+            media_player.MediaPlayerEntityFeature.TURN_ON
+            | media_player.MediaPlayerEntityFeature.TURN_OFF
+        )
         if not supported & power_features:
             service = media_player.SERVICE_MEDIA_STOP
 
@@ -1087,7 +1096,7 @@ async def async_api_set_range(hass, config, directive, context):
             service = fan.SERVICE_TURN_OFF
         else:
             supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-            if supported and fan.SUPPORT_SET_SPEED:
+            if supported and fan.FanEntityFeature.SET_SPEED:
                 service = fan.SERVICE_SET_PERCENTAGE
                 data[fan.ATTR_PERCENTAGE] = range_value
             else:

@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "Apparaat is al geconfigureerd",
             "already_in_progress": "De configuratiestroom is al aan de gang",
+            "ignore_ip6_link_local": "Lokaal IPv6-linkadres wordt niet ondersteund.",
             "reauth_successful": "Herauthenticatie was succesvol"
         },
         "error": {
@@ -10,7 +11,8 @@
             "already_in_progress": "De configuratiestroom is al aan de gang",
             "cannot_connect": "Kan geen verbinding maken",
             "connection_error": "Kan geen verbinding maken",
-            "invalid_auth": "Ongeldige authenticatie"
+            "invalid_auth": "Ongeldige authenticatie",
+            "upnp_not_configured": "Ontbrekende UPnP instellingen op apparaat."
         },
         "flow_title": "{name}",
         "step": {
@@ -56,7 +58,8 @@
         "step": {
             "init": {
                 "data": {
-                    "consider_home": "Seconden om een apparaat als \"thuis\" te beschouwen"
+                    "consider_home": "Seconden om een apparaat als \"thuis\" te beschouwen",
+                    "old_discovery": "Oude detectiemethode inschakelen"
                 }
             }
         }

@@ -7,18 +7,18 @@ from typing import Any
 from pyunifiprotect.data import Camera
 from pyunifiprotect.exceptions import StreamError
 
+from homeassistant.components import media_source
 from homeassistant.components.media_player import (
+    BrowseMedia,
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityDescription,
+    MediaPlayerEntityFeature,
 )
-from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_MUSIC,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_STOP,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
+from homeassistant.components.media_player.browse_media import (
+    async_process_play_media_url,
 )
+from homeassistant.components.media_player.const import MEDIA_TYPE_MUSIC
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_IDLE, STATE_PLAYING
 from homeassistant.core import HomeAssistant, callback
@@ -57,6 +57,13 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
 
     device: Camera
     entity_description: MediaPlayerEntityDescription
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.PLAY_MEDIA
+        | MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.VOLUME_STEP
+        | MediaPlayerEntityFeature.STOP
+        | MediaPlayerEntityFeature.BROWSE_MEDIA
+    )
 
     def __init__(
         self,
@@ -73,9 +80,6 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
         )
 
         self._attr_name = f"{self.device.name} Speaker"
-        self._attr_supported_features = (
-            SUPPORT_PLAY_MEDIA | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_STEP | SUPPORT_STOP
-        )
         self._attr_media_content_type = MEDIA_TYPE_MUSIC
 
     @callback
@@ -112,16 +116,20 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
         self, media_type: str, media_id: str, **kwargs: Any
     ) -> None:
         """Play a piece of media."""
+        if media_source.is_media_source_id(media_id):
+            media_type = MEDIA_TYPE_MUSIC
+            play_item = await media_source.async_resolve_media(self.hass, media_id)
+            media_id = async_process_play_media_url(self.hass, play_item.url)
 
         if media_type != MEDIA_TYPE_MUSIC:
-            raise ValueError("Only music media type is supported")
+            raise HomeAssistantError("Only music media type is supported")
 
         _LOGGER.debug("Playing Media %s for %s Speaker", media_id, self.device.name)
         await self.async_media_stop()
         try:
             await self.device.play_audio(media_id, blocking=False)
         except StreamError as err:
-            raise HomeAssistantError from err
+            raise HomeAssistantError(err) from err
         else:
             # update state after starting player
             self._async_updated_event()
@@ -129,3 +137,13 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
             await self.device.wait_until_audio_completes()
 
         self._async_updated_event()
+
+    async def async_browse_media(
+        self, media_content_type: str | None = None, media_content_id: str | None = None
+    ) -> BrowseMedia:
+        """Implement the websocket media browsing helper."""
+        return await media_source.async_browse_media(
+            self.hass,
+            media_content_id,
+            content_filter=lambda item: item.media_content_type.startswith("audio/"),
+        )

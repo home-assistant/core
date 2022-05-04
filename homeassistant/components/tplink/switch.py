@@ -47,7 +47,6 @@ async def async_setup_entry(
 class SmartPlugLedSwitch(CoordinatedTPLinkEntity, SwitchEntity):
     """Representation of switch for the LED of a TPLink Smart Plug."""
 
-    coordinator: TPLinkDataUpdateCoordinator
     device: SmartPlug
 
     _attr_entity_category = EntityCategory.CONFIG
@@ -84,8 +83,6 @@ class SmartPlugLedSwitch(CoordinatedTPLinkEntity, SwitchEntity):
 
 class SmartPlugSwitch(CoordinatedTPLinkEntity, SwitchEntity):
     """Representation of a TPLink Smart Plug switch."""
-
-    coordinator: TPLinkDataUpdateCoordinator
 
     def __init__(
         self,

@@ -2,13 +2,18 @@
     "config": {
         "abort": {
             "cannot_connect": "Tilkobling mislyktes",
+            "not_insteon_device": "Oppdaget enhet, ikke en Insteon-enhet",
             "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
         },
         "error": {
             "cannot_connect": "Tilkobling mislyktes",
             "select_single": "Velg ett alternativ."
         },
+        "flow_title": "{name}",
         "step": {
+            "confirm_usb": {
+                "description": "Vil du konfigurere {name}?"
+            },
             "hubv1": {
                 "data": {
                     "host": "IP adresse",

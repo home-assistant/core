@@ -95,6 +95,16 @@ async def test_state_reporting_all(hass):
         hass.states.get("binary_sensor.binary_sensor_group").state == STATE_UNAVAILABLE
     )
 
+    hass.states.async_set("binary_sensor.test1", STATE_ON)
+    hass.states.async_set("binary_sensor.test2", STATE_UNKNOWN)
+    await hass.async_block_till_done()
+    assert hass.states.get("binary_sensor.binary_sensor_group").state == STATE_UNKNOWN
+
+    hass.states.async_set("binary_sensor.test1", STATE_UNKNOWN)
+    hass.states.async_set("binary_sensor.test2", STATE_UNKNOWN)
+    await hass.async_block_till_done()
+    assert hass.states.get("binary_sensor.binary_sensor_group").state == STATE_UNKNOWN
+
 
 async def test_state_reporting_any(hass):
     """Test the state reporting."""
@@ -116,11 +126,10 @@ async def test_state_reporting_any(hass):
     await hass.async_start()
     await hass.async_block_till_done()
 
-    # binary sensors have state off if unavailable
     hass.states.async_set("binary_sensor.test1", STATE_ON)
     hass.states.async_set("binary_sensor.test2", STATE_UNAVAILABLE)
     await hass.async_block_till_done()
-    assert hass.states.get("binary_sensor.binary_sensor_group").state == STATE_UNKNOWN
+    assert hass.states.get("binary_sensor.binary_sensor_group").state == STATE_ON
 
     hass.states.async_set("binary_sensor.test1", STATE_ON)
     hass.states.async_set("binary_sensor.test2", STATE_OFF)
@@ -137,7 +146,6 @@ async def test_state_reporting_any(hass):
     await hass.async_block_till_done()
     assert hass.states.get("binary_sensor.binary_sensor_group").state == STATE_ON
 
-    # binary sensors have state off if unavailable
     hass.states.async_set("binary_sensor.test1", STATE_UNAVAILABLE)
     hass.states.async_set("binary_sensor.test2", STATE_UNAVAILABLE)
     await hass.async_block_till_done()
@@ -149,3 +157,13 @@ async def test_state_reporting_any(hass):
     entry = entity_registry.async_get("binary_sensor.binary_sensor_group")
     assert entry
     assert entry.unique_id == "unique_identifier"
+
+    hass.states.async_set("binary_sensor.test1", STATE_ON)
+    hass.states.async_set("binary_sensor.test2", STATE_UNKNOWN)
+    await hass.async_block_till_done()
+    assert hass.states.get("binary_sensor.binary_sensor_group").state == STATE_ON
+
+    hass.states.async_set("binary_sensor.test1", STATE_UNKNOWN)
+    hass.states.async_set("binary_sensor.test2", STATE_UNKNOWN)
+    await hass.async_block_till_done()
+    assert hass.states.get("binary_sensor.binary_sensor_group").state == STATE_UNKNOWN

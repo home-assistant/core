@@ -118,7 +118,7 @@ class AuroraDataUpdateCoordinator(DataUpdateCoordinator):
             raise UpdateFailed(f"Error updating from NOAA: {error}") from error
 
 
-class AuroraEntity(CoordinatorEntity):
+class AuroraEntity(CoordinatorEntity[AuroraDataUpdateCoordinator]):
     """Implementation of the base Aurora Entity."""
 
     _attr_extra_state_attributes = {"attribution": ATTRIBUTION}

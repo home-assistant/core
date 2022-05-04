@@ -25,6 +25,3 @@ UNITS = [CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL]
 
 REGIONS = ["US", "NA", "EU", "IL", "AU"]
 VEHICLE_TYPES = ["car", "taxi", "motorcycle"]
-
-# Attempt to find entity_id without finding address with period.
-ENTITY_ID_PATTERN = "(?<![a-zA-Z0-9 ])[a-z_]+[.][a-zA-Z0-9_]+"

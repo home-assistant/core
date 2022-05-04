@@ -5,6 +5,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.konnected import config_flow, panel
+from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.setup import async_setup_component
 from homeassistant.util import utcnow
 
@@ -654,15 +655,11 @@ async def test_connect_retry(hass, mock_panel):
     # confirm switch is unavailable after second attempt
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=11))
     await hass.async_block_till_done()
-    await hass.helpers.entity_component.async_update_entity(
-        "switch.konnected_445566_actuator_6"
-    )
+    await async_update_entity(hass, "switch.konnected_445566_actuator_6")
     assert hass.states.get("switch.konnected_445566_actuator_6").state == "unavailable"
 
     # confirm switch is available after third attempt
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=21))
     await hass.async_block_till_done()
-    await hass.helpers.entity_component.async_update_entity(
-        "switch.konnected_445566_actuator_6"
-    )
+    await async_update_entity(hass, "switch.konnected_445566_actuator_6")
     assert hass.states.get("switch.konnected_445566_actuator_6").state == "off"

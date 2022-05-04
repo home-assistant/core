@@ -232,10 +232,7 @@ class NestFlowHandler(
         """Confirm reauth dialog."""
         assert self.config_mode != ConfigMode.LEGACY, "Step only supported for SDM API"
         if user_input is None:
-            return self.async_show_form(
-                step_id="reauth_confirm",
-                data_schema=vol.Schema({}),
-            )
+            return self.async_show_form(step_id="reauth_confirm")
         existing_entries = self._async_current_entries()
         if existing_entries:
             # Pick an existing auth implementation for Reauth if present. Note

@@ -6,6 +6,7 @@ import logging
 from typing import Any
 from urllib.parse import urlparse
 
+import aiohttp
 from aiohue import LinkButtonNotPressed, create_app_key
 from aiohue.discovery import DiscoveredHueBridge, discover_bridge, discover_nupnp
 from aiohue.util import normalize_bridge_id
@@ -20,6 +21,7 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client, device_registry
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.network import is_ipv6_address
 
 from .const import (
     CONF_ALLOW_HUE_GROUPS,
@@ -70,9 +72,12 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, host: str, bridge_id: str | None = None
     ) -> DiscoveredHueBridge:
         """Return a DiscoveredHueBridge object."""
-        bridge = await discover_bridge(
-            host, websession=aiohttp_client.async_get_clientsession(self.hass)
-        )
+        try:
+            bridge = await discover_bridge(
+                host, websession=aiohttp_client.async_get_clientsession(self.hass)
+            )
+        except aiohttp.ClientError:
+            return None
         if bridge_id is not None:
             bridge_id = normalize_bridge_id(bridge_id)
             assert bridge_id == bridge.id
@@ -226,6 +231,10 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if not url.hostname:
             return self.async_abort(reason="not_hue_bridge")
 
+        # Ignore if host is IPv6
+        if is_ipv6_address(url.hostname):
+            return self.async_abort(reason="invalid_host")
+
         # abort if we already have exactly this bridge id/host
         # reload the integration if the host got updated
         bridge_id = normalize_bridge_id(discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL])
@@ -247,6 +256,10 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         This flow is triggered by the Zeroconf component. It will check if the
         host is already configured and delegate to the import step if not.
         """
+        # Ignore if host is IPv6
+        if is_ipv6_address(discovery_info.host):
+            return self.async_abort(reason="invalid_host")
+
         # abort if we already have exactly this bridge id/host
         # reload the integration if the host got updated
         bridge_id = normalize_bridge_id(discovery_info.properties["bridgeid"])

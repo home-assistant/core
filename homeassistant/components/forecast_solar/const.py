@@ -14,6 +14,7 @@ CONF_DECLINATION = "declination"
 CONF_AZIMUTH = "azimuth"
 CONF_MODULES_POWER = "modules power"
 CONF_DAMPING = "damping"
+CONF_INVERTER_SIZE = "inverter_size"
 
 SENSORS: tuple[ForecastSolarSensorEntityDescription, ...] = (
     ForecastSolarSensorEntityDescription(

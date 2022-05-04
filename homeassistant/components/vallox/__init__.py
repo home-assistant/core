@@ -131,10 +131,8 @@ class ValloxState:
         return next_filter_change_date
 
 
-class ValloxDataUpdateCoordinator(DataUpdateCoordinator):
+class ValloxDataUpdateCoordinator(DataUpdateCoordinator[ValloxState]):
     """The DataUpdateCoordinator for Vallox."""
-
-    data: ValloxState
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

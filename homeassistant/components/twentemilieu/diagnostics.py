@@ -17,6 +17,6 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.data[CONF_ID]]
     return {
-        waste_type: waste_date.isoformat() if waste_date else None
-        for waste_type, waste_date in coordinator.data.items()
+        waste_type: [waste_date.isoformat() for waste_date in waste_dates]
+        for waste_type, waste_dates in coordinator.data.items()
     }

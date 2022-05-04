@@ -16,9 +16,9 @@ async def test_diagnostics(
     assert await get_diagnostics_for_config_entry(
         hass, hass_client, init_integration
     ) == {
-        "0": "2021-11-01",
-        "1": "2021-11-02",
-        "2": None,
-        "6": "2022-01-06",
-        "10": "2021-11-03",
+        "0": ["2021-11-01", "2021-12-01"],
+        "1": ["2021-11-02"],
+        "2": [],
+        "6": ["2022-01-06"],
+        "10": ["2021-11-03"],
     }

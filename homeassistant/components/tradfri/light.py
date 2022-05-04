@@ -5,44 +5,24 @@ from collections.abc import Callable
 from typing import Any, cast
 
 from pytradfri.command import Command
-from pytradfri.group import Group
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_COLOR_TEMP,
+    ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 import homeassistant.util.color as color_util
 
 from .base_class import TradfriBaseEntity
-from .const import (
-    ATTR_DIMMER,
-    ATTR_HUE,
-    ATTR_SAT,
-    ATTR_TRANSITION_TIME,
-    CONF_GATEWAY_ID,
-    CONF_IMPORT_GROUPS,
-    COORDINATOR,
-    COORDINATOR_LIST,
-    DOMAIN,
-    GROUPS_LIST,
-    KEY_API,
-    SUPPORTED_GROUP_FEATURES,
-    SUPPORTED_LIGHT_FEATURES,
-)
-from .coordinator import (
-    TradfriDeviceDataUpdateCoordinator,
-    TradfriGroupDataUpdateCoordinator,
-)
+from .const import CONF_GATEWAY_ID, COORDINATOR, COORDINATOR_LIST, DOMAIN, KEY_API
+from .coordinator import TradfriDeviceDataUpdateCoordinator
 
 
 async def async_setup_entry(
@@ -55,7 +35,7 @@ async def async_setup_entry(
     coordinator_data = hass.data[DOMAIN][config_entry.entry_id][COORDINATOR]
     api = coordinator_data[KEY_API]
 
-    entities: list = [
+    async_add_entities(
         TradfriLight(
             device_coordinator,
             api,
@@ -63,75 +43,13 @@ async def async_setup_entry(
         )
         for device_coordinator in coordinator_data[COORDINATOR_LIST]
         if device_coordinator.device.has_light_control
-    ]
-
-    if config_entry.data[CONF_IMPORT_GROUPS] and (
-        group_coordinators := coordinator_data[GROUPS_LIST]
-    ):
-        entities.extend(
-            [
-                TradfriGroup(group_coordinator, api, gateway_id)
-                for group_coordinator in group_coordinators
-            ]
-        )
-
-    async_add_entities(entities)
-
-
-class TradfriGroup(CoordinatorEntity, LightEntity):
-    """The platform class for light groups required by hass."""
-
-    _attr_supported_features = SUPPORTED_GROUP_FEATURES
-
-    def __init__(
-        self,
-        group_coordinator: TradfriGroupDataUpdateCoordinator,
-        api: Callable[[Command | list[Command]], Any],
-        gateway_id: str,
-    ) -> None:
-        """Initialize a Group."""
-        super().__init__(coordinator=group_coordinator)
-
-        self._group: Group = self.coordinator.data
-
-        self._api = api
-        self._attr_unique_id = f"group-{gateway_id}-{self._group.id}"
-
-    @property
-    def is_on(self) -> bool:
-        """Return true if group lights are on."""
-        return cast(bool, self._group.state)
-
-    @property
-    def brightness(self) -> int | None:
-        """Return the brightness of the group lights."""
-        return cast(int, self._group.dimmer)
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Instruct the group lights to turn off."""
-        await self._api(self._group.set_state(0))
-
-        await self.coordinator.async_request_refresh()
-
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Instruct the group lights to turn on, or dim."""
-        keys = {}
-        if ATTR_TRANSITION in kwargs:
-            keys["transition_time"] = int(kwargs[ATTR_TRANSITION]) * 10
-
-        if ATTR_BRIGHTNESS in kwargs:
-            if kwargs[ATTR_BRIGHTNESS] == 255:
-                kwargs[ATTR_BRIGHTNESS] = 254
-
-            await self._api(self._group.set_dimmer(kwargs[ATTR_BRIGHTNESS], **keys))
-        else:
-            await self._api(self._group.set_state(1))
-
-        await self.coordinator.async_request_refresh()
+    )
 
 
 class TradfriLight(TradfriBaseEntity, LightEntity):
     """The platform class required by Home Assistant."""
+
+    _attr_supported_features = LightEntityFeature.TRANSITION
 
     def __init__(
         self,
@@ -152,15 +70,19 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
         self._attr_unique_id = f"light-{gateway_id}-{self._device_id}"
         self._hs_color = None
 
-        # Calculate supported features
-        _features = SUPPORTED_LIGHT_FEATURES
-        if self._device.light_control.can_set_dimmer:
-            _features |= SUPPORT_BRIGHTNESS
+        # Calculate supported color modes
+        self._attr_supported_color_modes: set[ColorMode] = set()
         if self._device.light_control.can_set_color:
-            _features |= SUPPORT_COLOR | SUPPORT_COLOR_TEMP
+            self._attr_supported_color_modes.add(ColorMode.HS)
         if self._device.light_control.can_set_temp:
-            _features |= SUPPORT_COLOR_TEMP
-        self._attr_supported_features = _features
+            self._attr_supported_color_modes.add(ColorMode.COLOR_TEMP)
+        if (
+            not self._attr_supported_color_modes
+            and self._device.light_control.can_set_dimmer
+        ):
+            # Must be the only supported mode according to docs for
+            # ColorMode.BRIGHTNESS
+            self._attr_supported_color_modes.add(ColorMode.BRIGHTNESS)
 
         if self._device_control:
             self._attr_min_mireds = self._device_control.min_mireds
@@ -214,8 +136,11 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
         if ATTR_TRANSITION in kwargs:
             transition_time = int(kwargs[ATTR_TRANSITION]) * 10
 
-            dimmer_data = {ATTR_DIMMER: 0, ATTR_TRANSITION_TIME: transition_time}
-            await self._api(self._device_control.set_dimmer(**dimmer_data))
+            await self._api(
+                self._device_control.set_dimmer(
+                    dimmer=0, transition_time=transition_time
+                )
+            )
         else:
             await self._api(self._device_control.set_state(False))
 
@@ -232,8 +157,8 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
             brightness = kwargs[ATTR_BRIGHTNESS]
             brightness = min(brightness, 254)
             dimmer_data = {
-                ATTR_DIMMER: brightness,
-                ATTR_TRANSITION_TIME: transition_time,
+                "dimmer": brightness,
+                "transition_time": transition_time,
             }
             dimmer_command = self._device_control.set_dimmer(**dimmer_data)
             transition_time = None
@@ -247,9 +172,9 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
                 kwargs[ATTR_HS_COLOR][1] * (self._device_control.max_saturation / 100)
             )
             color_data = {
-                ATTR_HUE: hue,
-                ATTR_SAT: sat,
-                ATTR_TRANSITION_TIME: transition_time,
+                "hue": hue,
+                "saturation": sat,
+                "transition_time": transition_time,
             }
             color_command = self._device_control.set_hsb(**color_data)
             transition_time = None
@@ -267,7 +192,7 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
                     temp = self.min_mireds
                 temp_data = {
                     ATTR_COLOR_TEMP: temp,
-                    ATTR_TRANSITION_TIME: transition_time,
+                    "transition_time": transition_time,
                 }
                 temp_command = self._device_control.set_color_temp(**temp_data)
                 transition_time = None
@@ -279,9 +204,9 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
                 hue = int(hs_color[0] * (self._device_control.max_hue / 360))
                 sat = int(hs_color[1] * (self._device_control.max_saturation / 100))
                 color_data = {
-                    ATTR_HUE: hue,
-                    ATTR_SAT: sat,
-                    ATTR_TRANSITION_TIME: transition_time,
+                    "hue": hue,
+                    "saturation": sat,
+                    "transition_time": transition_time,
                 }
                 color_command = self._device_control.set_hsb(**color_data)
                 transition_time = None

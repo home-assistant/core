@@ -1,6 +1,7 @@
 """Config flow for AVM FRITZ!SmartHome."""
 from __future__ import annotations
 
+import ipaddress
 from typing import Any
 from urllib.parse import urlparse
 
@@ -119,6 +120,12 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
         host = urlparse(discovery_info.ssdp_location).hostname
         assert isinstance(host, str)
         self.context[CONF_HOST] = host
+
+        if (
+            ipaddress.ip_address(host).version == 6
+            and ipaddress.ip_address(host).is_link_local
+        ):
+            return self.async_abort(reason="ignore_ip6_link_local")
 
         if uuid := discovery_info.upnp.get(ssdp.ATTR_UPNP_UDN):
             if uuid.startswith("uuid:"):

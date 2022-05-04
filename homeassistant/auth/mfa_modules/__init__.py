@@ -16,7 +16,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.decorator import Registry
 
-MULTI_FACTOR_AUTH_MODULES = Registry()
+MULTI_FACTOR_AUTH_MODULES: Registry[str, type[MultiFactorAuthModule]] = Registry()
 
 MULTI_FACTOR_AUTH_MODULE_SCHEMA = vol.Schema(
     {
@@ -129,7 +129,7 @@ async def auth_mfa_module_from_config(
     hass: HomeAssistant, config: dict[str, Any]
 ) -> MultiFactorAuthModule:
     """Initialize an auth module from a config."""
-    module_name = config[CONF_TYPE]
+    module_name: str = config[CONF_TYPE]
     module = await _load_mfa_module(hass, module_name)
 
     try:
@@ -142,7 +142,7 @@ async def auth_mfa_module_from_config(
         )
         raise
 
-    return MULTI_FACTOR_AUTH_MODULES[module_name](hass, config)  # type: ignore[no-any-return]
+    return MULTI_FACTOR_AUTH_MODULES[module_name](hass, config)
 
 
 async def _load_mfa_module(hass: HomeAssistant, module_name: str) -> types.ModuleType:

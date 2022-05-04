@@ -1,6 +1,7 @@
 {
     "device_automation": {
         "condition_type": {
+            "is_buffering": "{entity_name} est\u00e1 em buffer",
             "is_idle": "{entity_name} est\u00e1 ocioso",
             "is_off": "{entity_name} est\u00e1 desligado",
             "is_on": "{entity_name} est\u00e1 ligado",
@@ -8,6 +9,7 @@
             "is_playing": "{entity_name} est\u00e1 reproduzindo"
         },
         "trigger_type": {
+            "buffering": "{entity_name} inicia o armazenamento em buffer",
             "changed_states": "{entity_name} ligado ou desligado",
             "idle": "{entity_name} ficar ocioso",
             "paused": "{entity_name} for pausado",
@@ -18,6 +20,7 @@
     },
     "state": {
         "_": {
+            "buffering": "Carregando",
             "idle": "Ocioso",
             "off": "Desligado",
             "on": "Ligado",

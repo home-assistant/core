@@ -22,7 +22,7 @@ IGNORE_PACKAGES = {
     commented.lower().replace("_", "-") for commented in COMMENT_REQUIREMENTS
 }
 PACKAGE_REGEX = re.compile(
-    r"^(?:--.+\s)?([-_\.\w\d\[\]]+)(==|>=|<=|~=|!=|<|>|===)*(.*)$"
+    r"^(?:--.+\s)?([-_,\.\w\d\[\]]+)(==|>=|<=|~=|!=|<|>|===)*(.*)$"
 )
 PIP_REGEX = re.compile(r"^(--.+\s)?([-_\.\w\d]+.*(?:==|>=|<=|~=|!=|<|>|===)?.*$)")
 PIP_VERSION_RANGE_SEPARATOR = re.compile(r"^(==|>=|<=|~=|!=|<|>|===)?(.*)$")

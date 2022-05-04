@@ -55,10 +55,8 @@ async def async_setup_entry(
     )
 
 
-class VerisureDoorlock(CoordinatorEntity, LockEntity):
+class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEntity):
     """Representation of a Verisure doorlock."""
-
-    coordinator: VerisureDataUpdateCoordinator
 
     def __init__(
         self, coordinator: VerisureDataUpdateCoordinator, serial_number: str
@@ -102,6 +100,11 @@ class VerisureDoorlock(CoordinatorEntity, LockEntity):
         return self.coordinator.data["locks"][self.serial_number].get("userString")
 
     @property
+    def changed_method(self) -> str:
+        """Last change method."""
+        return self.coordinator.data["locks"][self.serial_number]["method"]
+
+    @property
     def code_format(self) -> str:
         """Return the required six digit code."""
         return "^\\d{%s}$" % self._digits
@@ -113,6 +116,11 @@ class VerisureDoorlock(CoordinatorEntity, LockEntity):
             self.coordinator.data["locks"][self.serial_number]["lockedState"]
             == "LOCKED"
         )
+
+    @property
+    def extra_state_attributes(self):
+        """Return the state attributes."""
+        return {"method": self.changed_method}
 
     async def async_unlock(self, **kwargs) -> None:
         """Send unlock command."""

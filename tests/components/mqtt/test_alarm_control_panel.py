@@ -476,7 +476,7 @@ async def test_attributes_code_number(hass, mqtt_mock):
     state = hass.states.get("alarm_control_panel.test")
     assert (
         state.attributes.get(alarm_control_panel.ATTR_CODE_FORMAT)
-        == alarm_control_panel.FORMAT_NUMBER
+        == alarm_control_panel.CodeFormat.NUMBER
     )
 
 
@@ -491,7 +491,7 @@ async def test_attributes_remote_code_number(hass, mqtt_mock):
     state = hass.states.get("alarm_control_panel.test")
     assert (
         state.attributes.get(alarm_control_panel.ATTR_CODE_FORMAT)
-        == alarm_control_panel.FORMAT_NUMBER
+        == alarm_control_panel.CodeFormat.NUMBER
     )
 
 
@@ -506,7 +506,7 @@ async def test_attributes_code_text(hass, mqtt_mock):
     state = hass.states.get("alarm_control_panel.test")
     assert (
         state.attributes.get(alarm_control_panel.ATTR_CODE_FORMAT)
-        == alarm_control_panel.FORMAT_TEXT
+        == alarm_control_panel.CodeFormat.TEXT
     )
 
 

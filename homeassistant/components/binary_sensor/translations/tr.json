@@ -134,6 +134,10 @@
             "off": "\u015earj olmuyor",
             "on": "\u015earj Oluyor"
         },
+        "carbon_monoxide": {
+            "off": "Temiz",
+            "on": "Alg\u0131land\u0131"
+        },
         "co": {
             "off": "Temiz",
             "on": "Alg\u0131land\u0131"

@@ -420,7 +420,11 @@ async def _account_data(hass: HomeAssistant, cloud: Cloud):
     """Generate the auth data JSON response."""
 
     if not cloud.is_logged_in:
-        return {"logged_in": False, "cloud": STATE_DISCONNECTED}
+        return {
+            "logged_in": False,
+            "cloud": STATE_DISCONNECTED,
+            "http_use_ssl": hass.config.api.use_ssl,
+        }
 
     claims = cloud.claims
     client = cloud.client
@@ -457,6 +461,7 @@ async def _account_data(hass: HomeAssistant, cloud: Cloud):
         "remote_connected": remote.is_connected,
         "remote_domain": remote.instance_domain,
         "http_use_ssl": hass.config.api.use_ssl,
+        "active_subscription": not cloud.subscription_expired,
     }
 
 
