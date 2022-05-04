@@ -149,10 +149,10 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle a flow initiated by the user."""
 
-        # if exist one entry without unique ID, we abort config flow
+        # if there's one entry without unique ID, we abort config flow
         for unique_id in self._async_current_ids():
             if unique_id is None:
-                return self.async_abort(reason="not_unique_id_exist")
+                return self.async_abort(reason="no_unique_id")
 
         if user_input is None:
             return self._show_setup_form(user_input)
@@ -188,7 +188,7 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
                     return self.async_abort(reason="invalid_unique_id")
                 else:
                     _LOGGER.warning(
-                        "This device do not provide a valid Unique ID."
+                        "This device does not provide a valid Unique ID."
                         " Configuration of multiple instance will not be possible"
                     )
 
