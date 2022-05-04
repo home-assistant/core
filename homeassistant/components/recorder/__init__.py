@@ -79,6 +79,7 @@ from .const import (
 )
 from .executor import DBInterruptibleThreadPoolExecutor
 from .models import (
+    SCHEMA_VERSION,
     Base,
     Events,
     StateAttributes,
@@ -634,6 +635,7 @@ class Recorder(threading.Thread):
         self.entity_filter = entity_filter
         self.exclude_t = exclude_t
 
+        self.schema_version = 0
         self._commits_without_expire = 0
         self._old_states: dict[str, States] = {}
         self._state_attributes_ids: LRU = LRU(STATE_ATTRIBUTES_ID_CACHE_SIZE)
@@ -973,6 +975,8 @@ class Recorder(threading.Thread):
             self.hass.add_job(self.async_connection_failed)
             return
 
+        self.schema_version = current_version
+
         schema_is_current = migration.schema_is_current(current_version)
         if schema_is_current:
             self._setup_run()
@@ -1009,6 +1013,7 @@ class Recorder(threading.Thread):
                 self._shutdown()
                 return
 
+        self.schema_version = SCHEMA_VERSION
         _LOGGER.debug("Recorder processing the queue")
         self.hass.add_job(self._async_recorder_ready)
         self._run_event_loop()
