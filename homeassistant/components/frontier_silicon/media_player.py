@@ -329,4 +329,5 @@ class AFSAPIDevice(MediaPlayerEntity):
 
     async def async_select_source(self, source):
         """Select input source."""
-        await self.fs_device.set_mode(source)
+        await self.fs_device.set_power(True)
+        await self.fs_device.set_mode(self.__modes_by_label.get(source))
