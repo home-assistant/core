@@ -38,7 +38,6 @@ from .const import (
     CONF_CA_CERTS,
     CONF_CERTFILE,
     CONF_KEYFILE,
-    CONFIG_URL,
     DOMAIN,
     LUTRON_CASETA_BUTTON_EVENT,
     MANUFACTURER,
@@ -308,15 +307,13 @@ class LutronCasetaDevice(Entity):
         self._device = device
         self._smartbridge = bridge
         self._bridge_device = bridge_device
-        if "serial" not in self._device:
-            return
         info = DeviceInfo(
-            identifiers={(DOMAIN, self.serial)},
+            identifiers={(DOMAIN, self.unique_id)},
             manufacturer=MANUFACTURER,
             model=f"{device['model']} ({device['type']})",
             name=self.name,
             via_device=(DOMAIN, self._bridge_device["serial"]),
-            configuration_url=CONFIG_URL,
+            configuration_url="https://device-login.lutron.com",
         )
         area, _ = _area_and_name_from_name(device["name"])
         if area != UNASSIGNED_AREA:
