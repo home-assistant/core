@@ -65,8 +65,6 @@ class PurgeTask(RecorderTask):
 
     def run(self, instance: Recorder) -> None:
         """Purge the database."""
-        assert instance.get_session is not None
-
         if purge.purge_old_data(
             instance, self.purge_before, self.repack, self.apply_filter
         ):
