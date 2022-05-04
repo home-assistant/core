@@ -31,9 +31,7 @@ class MeaterSensorEntityDescriptionMixin:
     """Mixin for MeaterSensorEntityDescription."""
 
     available: Callable[[MeaterProbe | None], bool]
-    value: Callable[
-        [MeaterProbe], datetime | float | str | None
-    ]
+    value: Callable[[MeaterProbe], datetime | float | str | None]
 
 
 @dataclass
