@@ -60,7 +60,7 @@ class InsteonDimmerEntity(InsteonEntity, LightEntity):
             brightness = int(kwargs[ATTR_BRIGHTNESS])
         else:
             brightness = self.get_device_property(ON_LEVEL)
-        if brightness is not None:
+        if brightness:
             await self._insteon_device.async_on(
                 on_level=brightness, group=self._insteon_device_group.group
             )
