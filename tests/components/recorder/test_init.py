@@ -138,6 +138,8 @@ async def test_shutdown_closes_connections(hass, recorder_mock):
     await hass.async_block_till_done()
 
     assert len(pool.shutdown.mock_calls) == 1
+    with pytest.raises(RuntimeError):
+        assert instance.get_session()
 
 
 async def test_state_gets_saved_when_set_before_start_event(
