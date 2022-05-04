@@ -2,6 +2,7 @@
 from unittest.mock import call, patch
 
 import pytest
+from zigpy.exceptions import ZigbeeException
 from zigpy.profiles import zha
 import zigpy.zcl.clusters.general as general
 import zigpy.zcl.foundation as zcl_f
@@ -284,3 +285,22 @@ async def test_level_control_number(
         )
         in level_control_cluster.read_attributes.call_args_list
     )
+
+    level_control_cluster.write_attributes.reset_mock()
+    level_control_cluster.write_attributes.side_effect = ZigbeeException
+
+    await hass.services.async_call(
+        "number",
+        "set_value",
+        {
+            "entity_id": entity_id,
+            "value": new_value,
+        },
+        blocking=True,
+    )
+
+    assert level_control_cluster.write_attributes.call_count == 1
+    assert level_control_cluster.write_attributes.call_args[0][0] == {
+        attr: new_value,
+    }
+    assert hass.states.get(entity_id).state == str(initial_value)
