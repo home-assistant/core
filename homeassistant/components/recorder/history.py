@@ -116,7 +116,7 @@ def query_and_join_attributes(
     # If we in the process of migrating schema we do
     # not want to join the state_attributes table as we
     # do not know if it will be there yet
-    if recorder.get_instance(hass).migration_in_progress:
+    if recorder.get_instance(hass).schema_version < 25:
         return QUERY_STATES_PRE_SCHEMA_25, False
     # Finally if no migration is in progress and no_attributes
     # was not requested, we query both attributes columns and
@@ -146,7 +146,7 @@ def bake_query_and_join_attributes(
     # If we in the process of migrating schema we do
     # not want to join the state_attributes table as we
     # do not know if it will be there yet
-    if recorder.get_instance(hass).migration_in_progress:
+    if recorder.get_instance(hass).schema_version < 25:
         if include_last_updated:
             return (
                 bakery(lambda session: session.query(*QUERY_STATES_PRE_SCHEMA_25)),
