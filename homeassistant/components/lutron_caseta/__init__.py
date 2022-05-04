@@ -306,6 +306,13 @@ class LutronCasetaDevice(Entity):
         self._device = device
         self._smartbridge = bridge
         self._bridge_device = bridge_device
+        if "serial" not in self._device:
+            #
+            # Occupancy sensors do not have
+            # a unique serial since all of the ones
+            # in the same room are grouped together
+            #
+            return
         info = DeviceInfo(
             identifiers={(DOMAIN, self.serial)},
             manufacturer=MANUFACTURER,
