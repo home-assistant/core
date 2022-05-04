@@ -22,7 +22,6 @@ from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import persistent_notification as pn, recorder
 from homeassistant.components.recorder import migration, models
 from homeassistant.components.recorder.const import DATA_INSTANCE
-from homeassistant.components.recorder.core import Recorder
 from homeassistant.components.recorder.models import RecorderRuns, States
 from homeassistant.components.recorder.util import session_scope
 import homeassistant.util.dt as dt_util
