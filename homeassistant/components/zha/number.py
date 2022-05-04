@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import functools
 import logging
+from typing import TYPE_CHECKING
 
 import zigpy.exceptions
 from zigpy.zcl.foundation import Status
@@ -16,7 +17,6 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .core import discovery
-from .core.channels.base import ZigbeeChannel
 from .core.const import (
     CHANNEL_ANALOG_OUTPUT,
     CHANNEL_LEVEL,
@@ -24,9 +24,12 @@ from .core.const import (
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
 )
-from .core.device import ZHADevice
 from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity
+
+if TYPE_CHECKING:
+    from .core.channels.base import ZigbeeChannel
+    from .core.device import ZHADevice
 
 _LOGGER = logging.getLogger(__name__)
 
