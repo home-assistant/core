@@ -108,7 +108,8 @@ SENSOR_TYPES = (
         available=lambda probe: probe is not None and probe.cook is not None,
         value=lambda probe: probe.cook.peak_temperature if probe.cook else None,
     ),
-    # Time since the start of cook in seconds. Default: 0.
+    # Remaining time in seconds. When unknown/calculating default is used. Default: -1
+    # Exposed as a TIMESTAMP sensor where the timestamp is current time + remaining time.
     MeaterSensorEntityDescription(
         key="cook_time_remaining",
         device_class=SensorDeviceClass.TIMESTAMP,
@@ -116,7 +117,8 @@ SENSOR_TYPES = (
         available=lambda probe: probe is not None and probe.cook is not None,
         value=_remaining_time_to_timestamp,
     ),
-    # Remaining time in seconds. When unknown/calculating default is used. Default: -1
+    # Time since the start of cook in seconds. Default: 0. Exposed as a TIMESTAMP sensor
+    # where the timestamp is current time - elapsed time.
     MeaterSensorEntityDescription(
         key="cook_time_elapsed",
         device_class=SensorDeviceClass.TIMESTAMP,
@@ -147,7 +149,7 @@ async def async_setup_entry(
 
         # Add entities for temperature probes which we've not yet seen
         for dev in devices:
-            if dev in known_probes:
+            if dev.id in known_probes:
                 continue
 
             entities.extend(
@@ -156,7 +158,7 @@ async def async_setup_entry(
                     for sensor_description in SENSOR_TYPES
                 ]
             )
-            known_probes.add(dev)
+            known_probes.add(dev.id)
 
         async_add_entities(entities)
 
