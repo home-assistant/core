@@ -56,16 +56,15 @@ class InsteonDimmerEntity(InsteonEntity, LightEntity):
 
     async def async_turn_on(self, **kwargs):
         """Turn light on."""
+        brightness = 0xFF
         if ATTR_BRIGHTNESS in kwargs:
             brightness = int(kwargs[ATTR_BRIGHTNESS])
-        else:
+        elif self._insteon_device_group.group == 1:
             brightness = self.get_device_property(ON_LEVEL)
-        if brightness:
-            await self._insteon_device.async_on(
-                on_level=brightness, group=self._insteon_device_group.group
-            )
-        else:
-            await self._insteon_device.async_on(group=self._insteon_device_group.group)
+
+        await self._insteon_device.async_on(
+            on_level=brightness, group=self._insteon_device_group.group
+        )
 
     async def async_turn_off(self, **kwargs):
         """Turn light off."""
