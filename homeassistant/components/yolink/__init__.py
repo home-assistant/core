@@ -9,7 +9,9 @@ import async_timeout
 import voluptuous as vol
 from yolink.client import YoLinkClient
 from yolink.const import OAUTH2_AUTHORIZE, OAUTH2_TOKEN
+from yolink.device import YoLinkDevice
 from yolink.exception import YoLinkAuthFailError, YoLinkClientError
+from yolink.model import BRDP
 from yolink.mqtt_client import MqttClient
 
 from homeassistant.config_entries import ConfigEntry
@@ -22,10 +24,17 @@ from homeassistant.helpers import (
     config_validation as cv,
 )
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from . import api, config_flow
-from .const import ATTR_CLIENT, ATTR_COORDINATOR, ATTR_DEVICE, ATTR_MQTT_CLIENT, DOMAIN
+from .const import (
+    ATTR_CLIENT,
+    ATTR_COORDINATOR,
+    ATTR_DEVICE,
+    ATTR_DEVICE_STATE,
+    ATTR_MQTT_CLIENT,
+    DOMAIN,
+)
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
@@ -49,12 +58,83 @@ PLATFORMS = [Platform.SENSOR]
 class YoLinkCoordinator(DataUpdateCoordinator):
     """YoLink DataUpdateCoordinator."""
 
+    yl_devices: list[YoLinkDevice] = []
+
     def __init__(
-        self,
-        hass: HomeAssistant,
+        self, hass: HomeAssistant, yl_client: YoLinkClient, yl_mqtt_client: MqttClient
     ) -> None:
-        """Init YoLink DataUpdateCoordinator."""
-        super().__init__(hass, _LOGGER, name=DOMAIN)
+        """Init YoLink DataUpdateCoordinator.
+
+        fetch state every 30 minutes base on yolink device heartbeat interval
+        """
+        super().__init__(
+            hass, _LOGGER, name=DOMAIN, update_interval=timedelta(minutes=30)
+        )
+        self._client = yl_client
+        self._mqtt_client = yl_mqtt_client
+        self.data = {}
+
+    async def init_coordinator(self):
+        """Init coordinator."""
+        try:
+            async with async_timeout.timeout(10):
+                home_info = await self._client.get_general_info()
+
+                def on_message_callback(message: tuple[str, BRDP]):
+                    """On message callback."""
+                    data = message[1]
+                    if data.event is None:
+                        return
+                    event_param = data.event.split(".")
+                    event_type = event_param[len(event_param) - 1]
+                    if event_type not in (
+                        "Report",
+                        "Alert",
+                        "StatusChange",
+                        "getState",
+                    ):
+                        return
+                    resolved_state = data.data
+                    if resolved_state is None:
+                        return
+                    self.data[message[0]] = resolved_state
+                    self.async_set_updated_data(self.data)
+
+                await self._mqtt_client.init_home_connection(
+                    home_info.data["id"], on_message_callback
+                )
+            async with async_timeout.timeout(10):
+                device_response = await self._client.get_auth_devices()
+                yl_devices: list[YoLinkDevice] = []
+                for device_info in device_response.data[ATTR_DEVICE]:
+                    yl_device = YoLinkDevice(device_info, self._client)
+                    yl_devices.append(yl_device)
+                self.yl_devices = yl_devices
+        except YoLinkAuthFailError as yl_auth_err:
+            raise ConfigEntryAuthFailed from yl_auth_err
+        except (YoLinkClientError, asyncio.TimeoutError) as err:
+            raise ConfigEntryNotReady from err
+
+    async def fetch_device_state(self, device: YoLinkDevice):
+        """Fetch Device State."""
+        async with async_timeout.timeout(20):
+            device_state_resp = await device.fetch_state_with_api()
+            if ATTR_DEVICE_STATE in device_state_resp.data:
+                self.data[device.device_id] = device_state_resp.data[ATTR_DEVICE_STATE]
+
+    async def _async_update_data(self) -> dict:
+        try:
+            for yl_device in self.yl_devices:
+                await self.fetch_device_state(yl_device)
+        except YoLinkAuthFailError as yl_auth_err:
+            raise ConfigEntryAuthFailed from yl_auth_err
+        except YoLinkClientError as yl_client_err:
+            # code 010203 for can't connect to device currently
+            if yl_client_err.code != "010203":
+                raise UpdateFailed(
+                    f"Error communicating with API: {yl_client_err}"
+                ) from yl_client_err
+        return self.data
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -93,33 +173,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     yolink_http_client = YoLinkClient(auth_mgr)
     yolink_mqtt_client = MqttClient(auth_mgr)
-    coordinator = YoLinkCoordinator(hass)
-
+    coordinator = YoLinkCoordinator(hass, yolink_http_client, yolink_mqtt_client)
+    await coordinator.init_coordinator()
     hass.data[DOMAIN][entry.entry_id] = {
         ATTR_CLIENT: yolink_http_client,
         ATTR_MQTT_CLIENT: yolink_mqtt_client,
         ATTR_COORDINATOR: coordinator,
-        ATTR_DEVICE: [],
     }
-
-    try:
-        async with async_timeout.timeout(10):
-            home_info = await yolink_http_client.get_general_info()
-            yolink_devices = await yolink_http_client.get_auth_devices()
-            hass.data[DOMAIN][entry.entry_id][ATTR_DEVICE] = yolink_devices.data[
-                ATTR_DEVICE
-            ]
-            await yolink_mqtt_client.init_home_connection(
-                home_info.data["id"], coordinator.async_set_updated_data
-            )
-    except YoLinkAuthFailError as auth_err:
-        raise ConfigEntryAuthFailed() from auth_err
-    except (YoLinkClientError, asyncio.TimeoutError) as exception:
-        _LOGGER.warning("Call yolink api failed: %s", exception)
-        raise ConfigEntryNotReady from exception
-
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
-
     return True
 
 

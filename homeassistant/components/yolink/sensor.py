@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from yolink.client import YoLinkClient
+from yolink.device import YoLinkDevice
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -19,16 +19,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import percentage
 
 from . import YoLinkCoordinator
-from .const import (
-    ATTR_CLIENT,
-    ATTR_COORDINATOR,
-    ATTR_DEVICE,
-    ATTR_DEVICE_DOOR_SENSOR,
-    ATTR_DEVICE_ID,
-    ATTR_DEVICE_NAME,
-    ATTR_DEVICE_TYPE,
-    DOMAIN,
-)
+from .const import ATTR_COORDINATOR, ATTR_DEVICE_DOOR_SENSOR, DOMAIN
 from .entity import YoLinkEntity
 
 
@@ -36,7 +27,7 @@ from .entity import YoLinkEntity
 class YoLinkSensorEntityDescription(SensorEntityDescription):
     """YoLink SensorEntityDescription."""
 
-    value: Callable = round
+    value: Callable = lambda state: state
     supports: list[str] | None = None
 
 
@@ -63,23 +54,20 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up YoLink Sensor from a config entry."""
+    coordinator = hass.data[DOMAIN][config_entry.entry_id][ATTR_COORDINATOR]
     sensor_devices = [
         device
-        for device in hass.data[DOMAIN][config_entry.entry_id][ATTR_DEVICE]
-        if device[ATTR_DEVICE_TYPE] in SENSOR_DEVICE_TYPE
+        for device in coordinator.yl_devices
+        if device.device_type in SENSOR_DEVICE_TYPE
     ]
-    yl_client = hass.data[DOMAIN][config_entry.entry_id][ATTR_CLIENT]
-    coordinator = hass.data[DOMAIN][config_entry.entry_id][ATTR_COORDINATOR]
     entities = []
     for sensor_device in sensor_devices:
         for description in SENSOR_TYPES:
             if description.supports is None:
                 continue
-            if sensor_device[ATTR_DEVICE_TYPE] in description.supports:
+            if sensor_device.device_type in description.supports:
                 entities.append(
-                    YoLinkSensorEntity(
-                        hass, coordinator, description, sensor_device, yl_client
-                    )
+                    YoLinkSensorEntity(hass, coordinator, description, sensor_device)
                 )
     async_add_entities(entities)
 
@@ -94,26 +82,20 @@ class YoLinkSensorEntity(YoLinkEntity, SensorEntity):
         hass: HomeAssistant,
         coordinator: YoLinkCoordinator,
         description: YoLinkSensorEntityDescription,
-        device: dict,
-        client: YoLinkClient,
+        device: YoLinkDevice,
     ) -> None:
         """Init YoLink Sensor."""
-        super().__init__(hass, coordinator, device, client)
+        super().__init__(hass, coordinator, device)
         self.entity_description = description
-        self._attr_unique_id = f"{device[ATTR_DEVICE_ID]} {self.entity_description.key}"
-        self._attr_name = f"{device[ATTR_DEVICE_NAME]} ({self.entity_description.name})"
+        self._attr_unique_id = f"{device.device_id} {self.entity_description.key}"
+        self._attr_name = f"{device.device_name} ({self.entity_description.name})"
 
     @callback
     def update_entity_state(self, state: dict) -> None:
         """Update HA Entity State."""
         if state is None:
             return
-        _attr_val = None
-        if self.entity_description.value is not None:
-            _attr_val = self.entity_description.value(
-                state[self.entity_description.key]
-            )
-        else:
-            _attr_val = state[self.entity_description.key]
-        self._attr_native_value = _attr_val
+        self._attr_native_value = self.entity_description.value(
+            state[self.entity_description.key]
+        )
         self.async_write_ha_state()
