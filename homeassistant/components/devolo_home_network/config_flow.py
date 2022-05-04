@@ -78,6 +78,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle zeroconf discovery."""
+        if (
+            "MT" not in discovery_info.properties
+            or "SN" not in discovery_info.properties
+        ):
+            return self.async_abort(reason="incomplete_query")
+
         if discovery_info.properties["MT"] in ["2600", "2601"]:
             return self.async_abort(reason="home_control")
 
@@ -86,7 +92,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         self.context[CONF_HOST] = discovery_info.host
         self.context["title_placeholders"] = {
-            PRODUCT: discovery_info.properties["Product"],
+            PRODUCT: discovery_info.properties.get("Product", ""),
             CONF_NAME: discovery_info.hostname.split(".")[0],
         }
 

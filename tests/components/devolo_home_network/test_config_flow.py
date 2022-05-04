@@ -22,7 +22,12 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_FORM,
 )
 
-from .const import DISCOVERY_INFO, DISCOVERY_INFO_WRONG_DEVICE, IP
+from .const import (
+    DISCOVERY_INFO,
+    DISCOVERY_INFO_INCOMPLETE_QUERY,
+    DISCOVERY_INFO_WRONG_DEVICE,
+    IP,
+)
 
 
 async def test_form(hass: HomeAssistant, info: dict[str, Any]):
@@ -116,6 +121,17 @@ async def test_zeroconf(hass: HomeAssistant):
     assert result2["data"] == {
         CONF_IP_ADDRESS: IP,
     }
+
+
+async def test_abort_zeroconf_incomplete_query(hass: HomeAssistant):
+    """Test we abort zeroconf on incomplete queries."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=DISCOVERY_INFO_INCOMPLETE_QUERY,
+    )
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "incomplete_query"
 
 
 async def test_abort_zeroconf_wrong_device(hass: HomeAssistant):
