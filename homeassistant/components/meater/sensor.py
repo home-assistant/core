@@ -27,15 +27,20 @@ from .const import DOMAIN
 
 
 @dataclass
-class MeaterSensorEntityDescription(SensorEntityDescription):
-    """Describes meater sensor entity."""
+class MeaterSensorEntityDescriptionMixin:
+    """Mixin for MeaterSensorEntityDescription."""
 
-    available: Callable[
-        [MeaterProbe | None], bool | type[NotImplementedError]
-    ] = lambda x: NotImplementedError
+    available: Callable[[MeaterProbe | None], bool | type[NotImplementedError]]
     value: Callable[
         [MeaterProbe], datetime | float | str | None | type[NotImplementedError]
-    ] = lambda x: NotImplementedError
+    ]
+
+
+@dataclass
+class MeaterSensorEntityDescription(
+    SensorEntityDescription, MeaterSensorEntityDescriptionMixin
+):
+    """Describes meater sensor entity."""
 
 
 def _elapsed_time_to_timestamp(probe: MeaterProbe) -> datetime | None:
