@@ -30,9 +30,9 @@ from .const import DOMAIN
 class MeaterSensorEntityDescriptionMixin:
     """Mixin for MeaterSensorEntityDescription."""
 
-    available: Callable[[MeaterProbe | None], bool | type[NotImplementedError]]
+    available: Callable[[MeaterProbe | None], bool]
     value: Callable[
-        [MeaterProbe], datetime | float | str | None | type[NotImplementedError]
+        [MeaterProbe], datetime | float | str | None
     ]
 
 
