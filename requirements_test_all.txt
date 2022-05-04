@@ -1057,6 +1057,9 @@ pyairvisual==2022.12.1
 # homeassistant.components.almond
 pyalmond==0.0.2
 
+# homeassistant.components.asuswrt
+pyasuswrt==0.1.6
+
 # homeassistant.components.atag
 pyatag==0.3.5.3
 

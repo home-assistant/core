@@ -4,8 +4,8 @@
   "integration_type": "hub",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/asuswrt",
-  "requirements": ["aioasuswrt==1.4.0"],
+  "requirements": ["aioasuswrt==1.4.0", "pyasuswrt==0.1.6"],
   "codeowners": ["@kennedyshead", "@ollo69"],
   "iot_class": "local_polling",
-  "loggers": ["aioasuswrt", "asyncssh"]
+  "loggers": ["aioasuswrt", "asyncssh", "pyasuswrt"]
 }

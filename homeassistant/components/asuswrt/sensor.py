@@ -22,13 +22,15 @@ from homeassistant.helpers.update_coordinator import (
 from .const import (
     DATA_ASUSWRT,
     DOMAIN,
+    KEY_COORDINATOR,
+    KEY_SENSORS,
     SENSORS_BYTES,
     SENSORS_CONNECTED_DEVICE,
     SENSORS_LOAD_AVG,
     SENSORS_RATES,
     SENSORS_TEMPERATURES,
 )
-from .router import KEY_COORDINATOR, KEY_SENSORS, AsusWrtRouter
+from .router import AsusWrtRouter
 
 
 @dataclass
@@ -41,6 +43,20 @@ class AsusWrtSensorEntityDescription(SensorEntityDescription):
 
 UNIT_DEVICES = "Devices"
 
+TEMP_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = tuple(
+    AsusWrtSensorEntityDescription(
+        key=sens_key,
+        name=sens_name,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        factor=1,
+        precision=1,
+    )
+    for sens_key, sens_name in SENSORS_TEMPERATURES.items()
+)
 CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
     AsusWrtSensorEntityDescription(
         key=SENSORS_CONNECTED_DEVICE[0],
@@ -119,40 +135,7 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
         factor=1,
         precision=1,
     ),
-    AsusWrtSensorEntityDescription(
-        key=SENSORS_TEMPERATURES[0],
-        name="2.4GHz Temperature",
-        state_class=SensorStateClass.MEASUREMENT,
-        device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-        factor=1,
-        precision=1,
-    ),
-    AsusWrtSensorEntityDescription(
-        key=SENSORS_TEMPERATURES[1],
-        name="5GHz Temperature",
-        state_class=SensorStateClass.MEASUREMENT,
-        device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-        factor=1,
-        precision=1,
-    ),
-    AsusWrtSensorEntityDescription(
-        key=SENSORS_TEMPERATURES[2],
-        name="CPU Temperature",
-        state_class=SensorStateClass.MEASUREMENT,
-        device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-        factor=1,
-        precision=1,
-    ),
-)
+) + TEMP_SENSORS
 
 
 async def async_setup_entry(
@@ -196,6 +179,8 @@ class AsusWrtSensor(CoordinatorEntity, SensorEntity):
             self._attr_unique_id = f"{DOMAIN} {self.name}"
         self._attr_device_info = router.device_info
         self._attr_extra_state_attributes = {"hostname": router.host}
+        if mac := router.mac:
+            self._attr_extra_state_attributes["mac"] = mac
 
     @property
     def native_value(self) -> float | int | str | None:

@@ -5,7 +5,7 @@ from typing import Any
 
 import attr
 
-from homeassistant.components.diagnostics import async_redact_data
+from homeassistant.components.diagnostics import REDACTED, async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CONNECTIONS,
@@ -62,6 +62,12 @@ async def async_get_config_entry_diagnostics(
             state_dict.pop("entity_id", None)
             # The context doesn't provide useful information in this case.
             state_dict.pop("context", None)
+            # Redact the `mac` attribute.
+            if "mac" in state_dict["attributes"]:
+                state_dict["attributes"] = {
+                    **state_dict["attributes"],
+                    "mac": REDACTED,
+                }
 
         data["device"]["entities"][entity_entry.entity_id] = {
             **async_redact_data(

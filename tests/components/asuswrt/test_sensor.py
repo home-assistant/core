@@ -2,13 +2,16 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock, Mock, patch
 
-from aioasuswrt.asuswrt import Device
+from aioasuswrt.asuswrt import Device as LegacyDevice
+from pyasuswrt.asuswrt import AsusWrtError, Device as HttpDevice
 import pytest
 
 from homeassistant.components import device_tracker, sensor
 from homeassistant.components.asuswrt.const import (
     CONF_INTERFACE,
     DOMAIN,
+    PROTOCOL_HTTP,
+    PROTOCOL_HTTPS,
     PROTOCOL_TELNET,
 )
 from homeassistant.components.asuswrt.router import DEFAULT_NAME
@@ -31,12 +34,14 @@ from homeassistant.util.dt import utcnow
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
-ASUSWRT_LIB = "homeassistant.components.asuswrt.router.AsusWrt"
+ASUSWRT_BASE = "homeassistant.components.asuswrt"
+ASUSWRT_HTTP_LIB = f"{ASUSWRT_BASE}.bridge.AsusWrtHttp"
+ASUSWRT_LEGACY_LIB = f"{ASUSWRT_BASE}.bridge.AsusWrtLegacy"
 
 HOST = "myrouter.asuswrt.com"
 IP_ADDRESS = "192.168.1.1"
 
-CONFIG_DATA = {
+CONFIG_DATA_TELNET = {
     CONF_HOST: HOST,
     CONF_PORT: 22,
     CONF_PROTOCOL: PROTOCOL_TELNET,
@@ -45,10 +50,22 @@ CONFIG_DATA = {
     CONF_MODE: "router",
 }
 
+CONFIG_DATA_HTTP = {
+    CONF_HOST: HOST,
+    CONF_PORT: 80,
+    CONF_PROTOCOL: PROTOCOL_HTTP,
+    CONF_USERNAME: "user",
+    CONF_PASSWORD: "pwd",
+}
+
 MAC_ADDR = "a1:b2:c3:d4:e5:f6"
 
 MOCK_BYTES_TOTAL = [60000000000, 50000000000]
+MOCK_BYTES_TOTAL_HTTP = {k: v for k, v in enumerate(MOCK_BYTES_TOTAL)}
 MOCK_CURRENT_TRANSFER_RATES = [20000000, 10000000]
+MOCK_CURRENT_TRANSFER_RATES_HTTP = {
+    k: v for k, v in enumerate(MOCK_CURRENT_TRANSFER_RATES)
+}
 MOCK_LOAD_AVG = [1.1, 1.2, 1.3]
 MOCK_TEMPERATURES = {"2.4GHz": 40, "5.0GHz": 0, "CPU": 71.2}
 MOCK_MAC_1 = "A1:B1:C1:D1:E1:F1"
@@ -75,25 +92,39 @@ SENSORS_TEMP = [
     "CPU Temperature",
 ]
 
-SENSORS_ALL = [*SENSORS_DEFAULT, *SENSORS_LOADAVG, *SENSORS_TEMP]
+SENSORS_ALL_LEGACY = [*SENSORS_DEFAULT, *SENSORS_LOADAVG, *SENSORS_TEMP]
+SENSORS_ALL_HTTP = [*SENSORS_DEFAULT, *SENSORS_TEMP]
 
 PATCH_SETUP_ENTRY = patch(
-    "homeassistant.components.asuswrt.async_setup_entry",
+    f"{ASUSWRT_BASE}.async_setup_entry",
     return_value=True,
 )
 
 
-def new_device(mac, ip, name):
+def new_device(protocol, mac, ip, name):
     """Return a new device for specific protocol."""
-    return Device(mac, ip, name)
+    if protocol in [PROTOCOL_HTTP, PROTOCOL_HTTPS]:
+        return HttpDevice(mac, ip, name, MAC_ADDR, None, None)
+    return LegacyDevice(mac, ip, name)
 
 
-@pytest.fixture(name="mock_devices")
-def mock_devices_fixture():
+@pytest.fixture(name="mock_devices_legacy")
+def mock_devices_legacy_fixture():
     """Mock a list of devices."""
     return {
-        MOCK_MAC_1: Device(MOCK_MAC_1, "192.168.1.2", "Test"),
-        MOCK_MAC_2: Device(MOCK_MAC_2, "192.168.1.3", "TestTwo"),
+        MOCK_MAC_1: LegacyDevice(MOCK_MAC_1, "192.168.1.2", "Test"),
+        MOCK_MAC_2: LegacyDevice(MOCK_MAC_2, "192.168.1.3", "TestTwo"),
+    }
+
+
+@pytest.fixture(name="mock_devices_http")
+def mock_devices_http_fixture():
+    """Mock a list of devices."""
+    return {
+        MOCK_MAC_1: HttpDevice(MOCK_MAC_1, "192.168.1.2", "Test", MAC_ADDR, None, None),
+        MOCK_MAC_2: HttpDevice(
+            MOCK_MAC_2, "192.168.1.3", "TestTwo", MAC_ADDR, None, None
+        ),
     }
 
 
@@ -122,10 +153,10 @@ def create_device_registry_devices_fixture(hass):
         )
 
 
-@pytest.fixture(name="connect")
-def mock_controller_connect(mock_devices, mock_available_temps):
-    """Mock a successful connection with AsusWrt library."""
-    with patch(ASUSWRT_LIB) as service_mock:
+@pytest.fixture(name="connect_legacy")
+def mock_controller_connect_legacy(mock_devices_legacy, mock_available_temps):
+    """Mock a successful connection with legacy library."""
+    with patch(ASUSWRT_LEGACY_LIB) as service_mock:
         service_mock.return_value.connection.async_connect = AsyncMock()
         service_mock.return_value.is_connected = True
         service_mock.return_value.connection.disconnect = Mock()
@@ -138,7 +169,7 @@ def mock_controller_connect(mock_devices, mock_available_temps):
             }
         )
         service_mock.return_value.async_get_connected_devices = AsyncMock(
-            return_value=mock_devices
+            return_value=mock_devices_legacy
         )
         service_mock.return_value.async_get_bytes_total = AsyncMock(
             return_value=MOCK_BYTES_TOTAL
@@ -158,10 +189,41 @@ def mock_controller_connect(mock_devices, mock_available_temps):
         yield service_mock
 
 
-@pytest.fixture(name="connect_sens_fail")
-def mock_controller_connect_sens_fail():
-    """Mock a successful connection using AsusWrt library with sensors failing."""
-    with patch(ASUSWRT_LIB) as service_mock:
+@pytest.fixture(name="connect_http")
+def mock_controller_connect_http(mock_devices_http):
+    """Mock a successful connection with http library."""
+    with patch(ASUSWRT_HTTP_LIB) as service_mock:
+        service_mock.return_value.async_connect = AsyncMock()
+        service_mock.return_value.is_connected = True
+        service_mock.return_value.mac = MAC_ADDR
+        service_mock.return_value.async_disconnect = AsyncMock()
+        service_mock.return_value.async_get_settings = AsyncMock(
+            return_value={
+                "productid": "abcd",
+                "firmver": "efg",
+                "buildno": "123",
+                "extendno": "2",
+            }
+        )
+        service_mock.return_value.async_get_connected_devices = AsyncMock(
+            return_value=mock_devices_http
+        )
+        service_mock.return_value.async_get_traffic_bytes = AsyncMock(
+            return_value=MOCK_BYTES_TOTAL_HTTP
+        )
+        service_mock.return_value.async_get_traffic_rates = AsyncMock(
+            return_value=MOCK_CURRENT_TRANSFER_RATES_HTTP
+        )
+        service_mock.return_value.async_get_temperatures = AsyncMock(
+            return_value={"2.4GHz": 40, "CPU": 71.2}
+        )
+        yield service_mock
+
+
+@pytest.fixture(name="connect_legacy_sens_fail")
+def mock_controller_connect_legacy_sens_fail():
+    """Mock a successful connection using legacy library with sensors fail."""
+    with patch(ASUSWRT_LEGACY_LIB) as service_mock:
         service_mock.return_value.connection.async_connect = AsyncMock()
         service_mock.return_value.is_connected = True
         service_mock.return_value.connection.disconnect = Mock()
@@ -177,6 +239,32 @@ def mock_controller_connect_sens_fail():
         service_mock.return_value.async_get_temperature = AsyncMock(side_effect=OSError)
         service_mock.return_value.async_find_temperature_commands = AsyncMock(
             return_value=[True, True, True]
+        )
+        yield service_mock
+
+
+@pytest.fixture(name="connect_http_sens_fail")
+def mock_controller_connect_http_sens_fail():
+    """Mock a successful connection using http library with sensors fail."""
+    with patch(ASUSWRT_HTTP_LIB) as service_mock:
+        service_mock.return_value.async_connect = AsyncMock()
+        service_mock.return_value.is_connected = True
+        service_mock.return_value.mac = None
+        service_mock.return_value.async_disconnect = AsyncMock()
+        service_mock.return_value.async_get_settings = AsyncMock(
+            side_effect=AsusWrtError
+        )
+        service_mock.return_value.async_get_connected_devices = AsyncMock(
+            side_effect=AsusWrtError
+        )
+        service_mock.return_value.async_get_traffic_bytes = AsyncMock(
+            side_effect=AsusWrtError
+        )
+        service_mock.return_value.async_get_traffic_rates = AsyncMock(
+            side_effect=AsusWrtError
+        )
+        service_mock.return_value.async_get_temperatures = AsyncMock(
+            side_effect=AsusWrtError
         )
         yield service_mock
 
@@ -212,20 +300,15 @@ def _setup_entry(hass, config, sensors, unique_id=None):
     return config_entry, sensor_prefix
 
 
-@pytest.mark.parametrize(
-    "entry_unique_id",
-    [None, MAC_ADDR],
-)
-async def test_sensors(
+async def _test_sensors(
     hass,
-    connect,
     mock_devices,
-    create_device_registry_devices,
+    config,
     entry_unique_id,
 ):
     """Test creating AsusWRT default sensors and tracker."""
     config_entry, sensor_prefix = _setup_entry(
-        hass, CONFIG_DATA, SENSORS_DEFAULT, entry_unique_id
+        hass, config, SENSORS_DEFAULT, entry_unique_id
     )
 
     # Create the first device tracker to test mac conversion
@@ -272,8 +355,12 @@ async def test_sensors(
     assert hass.states.get(f"{sensor_prefix}_devices_connected").state == "1"
 
     # add 2 new devices, one unnamed that should be ignored but counted
-    mock_devices[MOCK_MAC_3] = new_device(MOCK_MAC_3, "192.168.1.4", "TestThree")
-    mock_devices[MOCK_MAC_4] = new_device(MOCK_MAC_4, "192.168.1.5", None)
+    mock_devices[MOCK_MAC_3] = new_device(
+        config[CONF_PROTOCOL], MOCK_MAC_3, "192.168.1.4", "TestThree"
+    )
+    mock_devices[MOCK_MAC_4] = new_device(
+        config[CONF_PROTOCOL], MOCK_MAC_4, "192.168.1.5", None
+    )
 
     # change consider home settings to have status not home of removed tracked device
     hass.config_entries.async_update_entry(
@@ -290,12 +377,44 @@ async def test_sensors(
     assert hass.states.get(f"{sensor_prefix}_devices_connected").state == "3"
 
 
+@pytest.mark.parametrize(
+    "entry_unique_id",
+    [None, MAC_ADDR],
+)
+async def test_sensors_legacy(
+    hass,
+    connect_legacy,
+    mock_devices_legacy,
+    create_device_registry_devices,
+    entry_unique_id,
+):
+    """Test creating AsusWRT default sensors and tracker with legacy protocol."""
+    await _test_sensors(hass, mock_devices_legacy, CONFIG_DATA_TELNET, entry_unique_id)
+
+
+@pytest.mark.parametrize(
+    "entry_unique_id",
+    [None, MAC_ADDR],
+)
+async def test_sensors_http(
+    hass,
+    connect_http,
+    mock_devices_http,
+    create_device_registry_devices,
+    entry_unique_id,
+):
+    """Test creating AsusWRT default sensors and tracker with http protocol."""
+    await _test_sensors(hass, mock_devices_http, CONFIG_DATA_HTTP, entry_unique_id)
+
+
 async def test_loadavg_sensors(
     hass,
-    connect,
+    connect_legacy,
 ):
     """Test creating an AsusWRT load average sensors."""
-    config_entry, sensor_prefix = _setup_entry(hass, CONFIG_DATA, SENSORS_LOADAVG)
+    config_entry, sensor_prefix = _setup_entry(
+        hass, CONFIG_DATA_TELNET, SENSORS_LOADAVG
+    )
     config_entry.add_to_hass(hass)
 
     # initial devices setup
@@ -310,13 +429,13 @@ async def test_loadavg_sensors(
     assert hass.states.get(f"{sensor_prefix}_load_avg_15m").state == "1.3"
 
 
-async def test_temperature_sensors_fail(
+async def test_temperature_sensors_legacy_fail(
     hass,
-    connect,
+    connect_legacy,
     mock_available_temps,
 ):
     """Test fail creating AsusWRT temperature sensors."""
-    config_entry, sensor_prefix = _setup_entry(hass, CONFIG_DATA, SENSORS_TEMP)
+    config_entry, sensor_prefix = _setup_entry(hass, CONFIG_DATA_TELNET, SENSORS_TEMP)
     config_entry.add_to_hass(hass)
 
     # Only length of 3 booleans is valid. Checking the exception handling.
@@ -332,12 +451,27 @@ async def test_temperature_sensors_fail(
     assert not hass.states.get(f"{sensor_prefix}_cpu_temperature")
 
 
-async def test_temperature_sensors(
+async def test_temperature_sensors_http_fail(
     hass,
-    connect,
+    connect_http_sens_fail,
 ):
+    """Test fail creating AsusWRT temperature sensors."""
+    config_entry, sensor_prefix = _setup_entry(hass, CONFIG_DATA_HTTP, SENSORS_TEMP)
+    config_entry.add_to_hass(hass)
+
+    # initial devices setup
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # assert temperature availability exception is handled correctly
+    assert not hass.states.get(f"{sensor_prefix}_2_4ghz_temperature")
+    assert not hass.states.get(f"{sensor_prefix}_5ghz_temperature")
+    assert not hass.states.get(f"{sensor_prefix}_cpu_temperature")
+
+
+async def _test_temperature_sensors(hass, config):
     """Test creating a AsusWRT temperature sensors."""
-    config_entry, sensor_prefix = _setup_entry(hass, CONFIG_DATA, SENSORS_TEMP)
+    config_entry, sensor_prefix = _setup_entry(hass, config, SENSORS_TEMP)
     config_entry.add_to_hass(hass)
 
     # initial devices setup
@@ -352,21 +486,37 @@ async def test_temperature_sensors(
     assert hass.states.get(f"{sensor_prefix}_cpu_temperature").state == "71.2"
 
 
+async def test_temperature_sensors_legacy(
+    hass,
+    connect_legacy,
+):
+    """Test creating a AsusWRT temperature sensors."""
+    await _test_temperature_sensors(hass, CONFIG_DATA_TELNET)
+
+
+async def test_temperature_sensors_http(
+    hass,
+    connect_http,
+):
+    """Test creating a AsusWRT temperature sensors."""
+    await _test_temperature_sensors(hass, CONFIG_DATA_HTTP)
+
+
 @pytest.mark.parametrize(
     "side_effect",
     [OSError, None],
 )
-async def test_connect_fail(hass, side_effect):
+async def test_connect_fail_legacy(hass, side_effect):
     """Test AsusWRT connect fail."""
 
     # init config entry
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data=CONFIG_DATA,
+        data=CONFIG_DATA_TELNET,
     )
     config_entry.add_to_hass(hass)
 
-    with patch(ASUSWRT_LIB) as asus_wrt:
+    with patch(ASUSWRT_LEGACY_LIB) as asus_wrt:
         asus_wrt.return_value.connection.async_connect = AsyncMock(
             side_effect=side_effect
         )
@@ -379,9 +529,35 @@ async def test_connect_fail(hass, side_effect):
         assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_sensors_polling_fails(hass, connect_sens_fail):
+@pytest.mark.parametrize(
+    "side_effect",
+    [AsusWrtError, None],
+)
+async def test_connect_fail_http(hass, side_effect):
+    """Test AsusWRT connect fail."""
+
+    # init config entry
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=CONFIG_DATA_HTTP,
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch(ASUSWRT_HTTP_LIB) as asus_wrt:
+        asus_wrt.return_value.async_connect = AsyncMock(side_effect=side_effect)
+        asus_wrt.return_value.async_get_settings = AsyncMock()
+        asus_wrt.return_value.is_connected = False
+        asus_wrt.return_value.mac = None
+
+        # initial setup fail
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def _test_sensors_polling_fails(hass, config, sensors):
     """Test AsusWRT sensors are unavailable when polling fails."""
-    config_entry, sensor_prefix = _setup_entry(hass, CONFIG_DATA, SENSORS_ALL)
+    config_entry, sensor_prefix = _setup_entry(hass, config, sensors)
     config_entry.add_to_hass(hass)
 
     # initial devices setup
@@ -390,7 +566,7 @@ async def test_sensors_polling_fails(hass, connect_sens_fail):
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
     await hass.async_block_till_done()
 
-    for sensor_name in SENSORS_ALL:
+    for sensor_name in sensors:
         assert (
             hass.states.get(f"{sensor_prefix}_{slugify(sensor_name)}").state
             == STATE_UNAVAILABLE
@@ -398,9 +574,29 @@ async def test_sensors_polling_fails(hass, connect_sens_fail):
     assert hass.states.get(f"{sensor_prefix}_devices_connected").state == "0"
 
 
-async def test_options_reload(hass, connect):
+async def test_sensors_polling_fails_legacy(
+    hass,
+    connect_legacy_sens_fail,
+):
+    """Test AsusWRT sensors are unavailable when polling fails."""
+    await _test_sensors_polling_fails(hass, CONFIG_DATA_TELNET, SENSORS_ALL_LEGACY)
+
+
+async def test_sensors_polling_fails_http(
+    hass,
+    connect_http_sens_fail,
+):
+    """Test AsusWRT sensors are unavailable when polling fails."""
+    with patch(
+        f"{ASUSWRT_BASE}.bridge.AsusWrtHttpBridge._get_available_temperature_sensors",
+        return_value=[*MOCK_TEMPERATURES],
+    ):
+        await _test_sensors_polling_fails(hass, CONFIG_DATA_HTTP, SENSORS_ALL_HTTP)
+
+
+async def _test_options_reload(hass, config):
     """Test AsusWRT integration is reload changing an options that require this."""
-    config_entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_DATA, unique_id=MAC_ADDR)
+    config_entry = MockConfigEntry(domain=DOMAIN, data=config, unique_id=MAC_ADDR)
     config_entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -417,3 +613,19 @@ async def test_options_reload(hass, connect):
 
         assert setup_entry_call.called
         assert config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_options_reload_legacy(
+    hass,
+    connect_legacy,
+):
+    """Test AsusWRT integration is reload changing an options that require this."""
+    await _test_options_reload(hass, CONFIG_DATA_TELNET)
+
+
+async def test_options_reload_http(
+    hass,
+    connect_http,
+):
+    """Test AsusWRT integration is reload changing an options that require this."""
+    await _test_options_reload(hass, CONFIG_DATA_HTTP)
