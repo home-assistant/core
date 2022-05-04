@@ -377,7 +377,7 @@ def _delete_duplicates_from_table(
     return (total_deleted_rows, all_non_identical_duplicates)
 
 
-def delete_duplicates(instance: Recorder, session: Session) -> None:
+def delete_duplicates(hass: HomeAssistant, session: Session) -> None:
     """Identify and delete duplicated statistics.
 
     A backup will be made of duplicated statistics before it is deleted.
@@ -391,7 +391,7 @@ def delete_duplicates(instance: Recorder, session: Session) -> None:
     if non_identical_duplicates:
         isotime = dt_util.utcnow().isoformat()
         backup_file_name = f"deleted_statistics.{isotime}.json"
-        backup_path = instance.hass.config.path(STORAGE_DIR, backup_file_name)
+        backup_path = hass.config.path(STORAGE_DIR, backup_file_name)
 
         os.makedirs(os.path.dirname(backup_path), exist_ok=True)
         with open(backup_path, "w", encoding="utf8") as backup_file:
