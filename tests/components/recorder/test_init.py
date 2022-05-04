@@ -460,7 +460,7 @@ def _state_with_context(hass, entity_id):
     return hass.states.get(entity_id)
 
 
-def test_setup_without_migraton(hass_recorder):
+def test_setup_without_migration(hass_recorder):
     """Verify the schema version without a migration."""
     hass = hass_recorder()
     assert recorder.get_instance(hass).schema_version == SCHEMA_VERSION
