@@ -8,7 +8,7 @@ import voluptuous as vol
 from yeelight import BulbException
 from yeelight.aio import AsyncBulb
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry, ConfigEntryNotReady
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_DEVICES,
     CONF_HOST,
@@ -18,6 +18,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 

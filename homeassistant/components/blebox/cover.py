@@ -1,11 +1,8 @@
 """BleBox cover entity."""
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    SUPPORT_CLOSE,
-    SUPPORT_OPEN,
-    SUPPORT_SET_POSITION,
-    SUPPORT_STOP,
     CoverEntity,
+    CoverEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_CLOSED, STATE_CLOSING, STATE_OPENING
@@ -35,9 +32,11 @@ class BleBoxCoverEntity(BleBoxEntity, CoverEntity):
         """Initialize a BleBox cover feature."""
         super().__init__(feature)
         self._attr_device_class = BLEBOX_TO_HASS_DEVICE_CLASSES[feature.device_class]
-        position = SUPPORT_SET_POSITION if feature.is_slider else 0
-        stop = SUPPORT_STOP if feature.has_stop else 0
-        self._attr_supported_features = position | stop | SUPPORT_OPEN | SUPPORT_CLOSE
+        position = CoverEntityFeature.SET_POSITION if feature.is_slider else 0
+        stop = CoverEntityFeature.STOP if feature.has_stop else 0
+        self._attr_supported_features = (
+            position | stop | CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
+        )
 
     @property
     def current_cover_position(self):

@@ -13,18 +13,12 @@ from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityDescription,
+    MediaPlayerEntityFeature,
 )
 from homeassistant.components.media_player.browse_media import (
     async_process_play_media_url,
 )
-from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_MUSIC,
-    SUPPORT_BROWSE_MEDIA,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_STOP,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
-)
+from homeassistant.components.media_player.const import MEDIA_TYPE_MUSIC
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_IDLE, STATE_PLAYING
 from homeassistant.core import HomeAssistant, callback
@@ -63,6 +57,13 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
 
     device: Camera
     entity_description: MediaPlayerEntityDescription
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.PLAY_MEDIA
+        | MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.VOLUME_STEP
+        | MediaPlayerEntityFeature.STOP
+        | MediaPlayerEntityFeature.BROWSE_MEDIA
+    )
 
     def __init__(
         self,
@@ -79,13 +80,6 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
         )
 
         self._attr_name = f"{self.device.name} Speaker"
-        self._attr_supported_features = (
-            SUPPORT_PLAY_MEDIA
-            | SUPPORT_VOLUME_SET
-            | SUPPORT_VOLUME_STEP
-            | SUPPORT_STOP
-            | SUPPORT_BROWSE_MEDIA
-        )
         self._attr_media_content_type = MEDIA_TYPE_MUSIC
 
     @callback

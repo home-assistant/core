@@ -1,7 +1,6 @@
 """Make sure that Mysa Living is enumerated properly."""
 
 from homeassistant.components.climate import SUPPORT_TARGET_TEMPERATURE
-from homeassistant.components.light import SUPPORT_BRIGHTNESS
 from homeassistant.components.sensor import SensorStateClass
 from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
 
@@ -64,7 +63,7 @@ async def test_mysa_living_setup(hass):
                     entity_id="light.mysa_85dda9",
                     friendly_name="Mysa-85dda9",
                     unique_id="homekit-AAAAAAA000-40",
-                    supported_features=SUPPORT_BRIGHTNESS,
+                    supported_features=0,
                     capabilities={"supported_color_modes": ["brightness"]},
                     state="off",
                 ),

@@ -17,19 +17,9 @@ from androidtv.exceptions import LockNotAcquiredException
 import voluptuous as vol
 
 from homeassistant.components import persistent_notification
-from homeassistant.components.media_player import MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_STOP,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
+from homeassistant.components.media_player import (
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -73,31 +63,6 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_ANDROIDTV = (
-    SUPPORT_PAUSE
-    | SUPPORT_PLAY
-    | SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-    | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_SELECT_SOURCE
-    | SUPPORT_STOP
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_VOLUME_SET
-    | SUPPORT_VOLUME_STEP
-)
-
-SUPPORT_FIRETV = (
-    SUPPORT_PAUSE
-    | SUPPORT_PLAY
-    | SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-    | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_SELECT_SOURCE
-    | SUPPORT_STOP
-)
-
 ATTR_ADB_RESPONSE = "adb_response"
 ATTR_DEVICE_PATH = "device_path"
 ATTR_HDMI_INPUT = "hdmi_input"
@@ -108,7 +73,8 @@ SERVICE_DOWNLOAD = "download"
 SERVICE_LEARN_SENDEVENT = "learn_sendevent"
 SERVICE_UPLOAD = "upload"
 
-DEFAULT_NAME = "Android TV"
+PREFIX_ANDROIDTV = "Android TV"
+PREFIX_FIRETV = "Fire TV"
 
 # Translate from `AndroidTV` / `FireTV` reported state to HA state.
 ANDROIDTV_STATES = {
@@ -128,7 +94,9 @@ async def async_setup_entry(
     """Set up the Android TV entity."""
     aftv = hass.data[DOMAIN][entry.entry_id][ANDROID_DEV]
     device_class = aftv.DEVICE_CLASS
-    device_type = "Android TV" if device_class == DEVICE_ANDROIDTV else "Fire TV"
+    device_type = (
+        PREFIX_ANDROIDTV if device_class == DEVICE_ANDROIDTV else PREFIX_FIRETV
+    )
     # CONF_NAME may be present in entry.data for configuration imported from YAML
     device_name = entry.data.get(CONF_NAME) or f"{device_type} {entry.data[CONF_HOST]}"
 
@@ -285,6 +253,9 @@ class ADBDevice(MediaPlayerEntity):
             ATTR_ADB_RESPONSE: None,
             ATTR_HDMI_INPUT: None,
         }
+
+        # The number of consecutive failed connect attempts
+        self._failed_connect_count = 0
 
     def _process_config(self):
         """Load the config options."""
@@ -467,15 +438,31 @@ class ADBDevice(MediaPlayerEntity):
 class AndroidTVDevice(ADBDevice):
     """Representation of an Android TV device."""
 
-    _attr_supported_features = SUPPORT_ANDROIDTV
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.PLAY
+        | MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.PREVIOUS_TRACK
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.SELECT_SOURCE
+        | MediaPlayerEntityFeature.STOP
+        | MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.VOLUME_STEP
+    )
 
     @adb_decorator(override_available=True)
     async def async_update(self):
         """Update the device state and, if necessary, re-connect."""
         # Check if device is disconnected.
-        if not self.available:
+        if not self._attr_available:
             # Try to connect
-            self._attr_available = await self.aftv.adb_connect(always_log_errors=False)
+            if await self.aftv.adb_connect(log_errors=self._failed_connect_count == 0):
+                self._failed_connect_count = 0
+                self._attr_available = True
+            else:
+                self._failed_connect_count += 1
 
         # If the ADB connection is not intact, don't update.
         if not self.available:
@@ -543,15 +530,28 @@ class AndroidTVDevice(ADBDevice):
 class FireTVDevice(ADBDevice):
     """Representation of a Fire TV device."""
 
-    _attr_supported_features = SUPPORT_FIRETV
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.PLAY
+        | MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.PREVIOUS_TRACK
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.SELECT_SOURCE
+        | MediaPlayerEntityFeature.STOP
+    )
 
     @adb_decorator(override_available=True)
     async def async_update(self):
         """Update the device state and, if necessary, re-connect."""
         # Check if device is disconnected.
-        if not self.available:
+        if not self._attr_available:
             # Try to connect
-            self._attr_available = await self.aftv.adb_connect(always_log_errors=False)
+            if await self.aftv.adb_connect(log_errors=self._failed_connect_count == 0):
+                self._failed_connect_count = 0
+                self._attr_available = True
+            else:
+                self._failed_connect_count += 1
 
         # If the ADB connection is not intact, don't update.
         if not self.available:

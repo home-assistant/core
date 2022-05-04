@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from homeassistant.components.camera import SUPPORT_ON_OFF, Camera
+from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -39,7 +39,7 @@ class DemoCamera(Camera):
 
     _attr_is_streaming = True
     _attr_motion_detection_enabled = False
-    _attr_supported_features = SUPPORT_ON_OFF
+    _attr_supported_features = CameraEntityFeature.ON_OFF
 
     def __init__(self, name, content_type):
         """Initialize demo camera component."""

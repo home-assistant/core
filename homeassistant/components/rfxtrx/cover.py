@@ -5,15 +5,7 @@ import logging
 
 import RFXtrx as rfxtrxmod
 
-from homeassistant.components.cover import (
-    SUPPORT_CLOSE,
-    SUPPORT_CLOSE_TILT,
-    SUPPORT_OPEN,
-    SUPPORT_OPEN_TILT,
-    SUPPORT_STOP,
-    SUPPORT_STOP_TILT,
-    CoverEntity,
-)
+from homeassistant.components.cover import CoverEntity, CoverEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OPEN
 from homeassistant.core import HomeAssistant, callback
@@ -91,14 +83,18 @@ class RfxtrxCover(RfxtrxCommandEntity, CoverEntity):
     @property
     def supported_features(self):
         """Flag supported features."""
-        supported_features = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP
+        supported_features = (
+            CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
+        )
 
         if self._venetian_blind_mode in (
             CONST_VENETIAN_BLIND_MODE_US,
             CONST_VENETIAN_BLIND_MODE_EU,
         ):
             supported_features |= (
-                SUPPORT_OPEN_TILT | SUPPORT_CLOSE_TILT | SUPPORT_STOP_TILT
+                CoverEntityFeature.OPEN_TILT
+                | CoverEntityFeature.CLOSE_TILT
+                | CoverEntityFeature.STOP_TILT
             )
 
         return supported_features

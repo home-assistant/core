@@ -13,7 +13,7 @@
                 "data": {
                     "host": "Host"
                 },
-                "description": "Set up Dune HD integration. If you have problems with configuration go to: https://www.home-assistant.io/integrations/dunehd \n\nEnsure that your player is turned on.",
+                "description": "Ensure that your player is turned on.",
                 "title": "Dune HD"
             }
         }

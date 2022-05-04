@@ -13,11 +13,8 @@ from pyoverkiz.enums import (
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    SUPPORT_CLOSE,
-    SUPPORT_OPEN,
-    SUPPORT_SET_POSITION,
-    SUPPORT_STOP,
     CoverDeviceClass,
+    CoverEntityFeature,
 )
 
 from ..coordinator import OverkizDataUpdateCoordinator
@@ -54,16 +51,16 @@ class VerticalCover(OverkizGenericCover):
         supported_features: int = super().supported_features
 
         if self.executor.has_command(OverkizCommand.SET_CLOSURE):
-            supported_features |= SUPPORT_SET_POSITION
+            supported_features |= CoverEntityFeature.SET_POSITION
 
         if self.executor.has_command(*COMMANDS_OPEN):
-            supported_features |= SUPPORT_OPEN
+            supported_features |= CoverEntityFeature.OPEN
 
             if self.executor.has_command(*COMMANDS_STOP):
-                supported_features |= SUPPORT_STOP
+                supported_features |= CoverEntityFeature.STOP
 
         if self.executor.has_command(*COMMANDS_CLOSE):
-            supported_features |= SUPPORT_CLOSE
+            supported_features |= CoverEntityFeature.CLOSE
 
         return supported_features
 

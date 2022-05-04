@@ -6,6 +6,7 @@
             "already_in_progress": "Seadistamine on juba k\u00e4imas",
             "cannot_connect": "\u00dchendus nurjus",
             "discover_timeout": "Ei leia Philips Hue sildu",
+            "invalid_host": "Kehtetu host",
             "no_bridges": "Philips Hue sildu ei avastatud",
             "not_hue_bridge": "See pole Hue sild",
             "unknown": "Ilmnes tundmatu viga"

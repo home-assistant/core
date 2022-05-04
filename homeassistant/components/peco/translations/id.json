@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Layanan sudah dikonfigurasi"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "county": "Kota/kabupaten"
+                },
+                "description": "Pilih kota/kabupaten Anda di bawah ini.",
+                "title": "Penghitung Pemadaman PECO"
+            }
+        }
+    }
+}
