@@ -38,6 +38,7 @@ from .const import (
     CONF_CA_CERTS,
     CONF_CERTFILE,
     CONF_KEYFILE,
+    CONFIG_URL,
     DOMAIN,
     LUTRON_CASETA_BUTTON_EVENT,
     MANUFACTURER,
@@ -242,7 +243,6 @@ def _async_subscribe_pico_remote_events(
         type_ = device["type"]
         area, name = _area_and_name_from_name(device["name"])
         button_number = device["button_number"]
-
         # The original implementation used LIP instead of LEAP
         # so we need to convert the button number to maintain compat
         sub_type_to_lip_button = DEVICE_TYPE_SUBTYPE_MAP_TO_LIP[type_]
@@ -307,13 +307,15 @@ class LutronCasetaDevice(Entity):
         self._device = device
         self._smartbridge = bridge
         self._bridge_device = bridge_device
+        if "serial" not in self._device:
+            return
         info = DeviceInfo(
-            identifiers={(DOMAIN, self.unique_id)},
+            identifiers={(DOMAIN, self.serial)},
             manufacturer=MANUFACTURER,
             model=f"{device['model']} ({device['type']})",
             name=self.name,
             via_device=(DOMAIN, self._bridge_device["serial"]),
-            configuration_url="https://device-login.lutron.com",
+            configuration_url=CONFIG_URL,
         )
         area, _ = _area_and_name_from_name(device["name"])
         if area != UNASSIGNED_AREA:
