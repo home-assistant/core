@@ -6,9 +6,11 @@ from yolink.device import YoLinkDevice
 from yolink.model import BRDP
 
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, MANUFACTURER
+from . import YoLinkCoordinator
+from .const import ATTR_DEVICE_STATE, DOMAIN, MANUFACTURER
 
 
 def resolve_state_in_event(data: BRDP, event_type: str) -> dict | None:
@@ -18,46 +20,43 @@ def resolve_state_in_event(data: BRDP, event_type: str) -> dict | None:
     return None
 
 
-class YoLinkHADevice(YoLinkDevice):
-    """YoLink Device Common."""
+class YoLinkEntity(CoordinatorEntity[YoLinkCoordinator]):
+    """YoLink Device Basic Entity."""
 
     def __init__(
         self,
         hass: HomeAssistant,
-        device: dict,
+        coordinator: YoLinkCoordinator,
+        device_info: dict,
         client: YoLinkClient,
     ) -> None:
-        """HA YoLink Device."""
-        super().__init__(device, client)
+        """Init YoLink Entity."""
+        super().__init__(coordinator)
         self.hass = hass
+        self.device = YoLinkDevice(device_info, client)
 
     @property
     def device_id(self) -> str:
         """Return the device id of the YoLink device."""
-        return self._device_id
+        return self.device.device_id
 
+    async def async_added_to_hass(self) -> None:
+        """Add to hass."""
 
-class YoLinkEntity(YoLinkHADevice, Entity):
-    """YoLink Device Basic Entity."""
+        async def request_state():
+            resp = await self.device.fetch_state_with_api()
+            if "state" in resp.data:
+                self.update_entity_state(resp.data[ATTR_DEVICE_STATE])
 
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info for HA."""
-
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.device_id)},
-            manufacturer=MANUFACTURER,
-            model=self._device_type,
-            name=self._device_name,
-        )
-
-    def _async_set_unavailable(self, now) -> None:
-        """Set state to UNAVAILABLE."""
-        self._attr_available = False
+        self.hass.create_task(request_state())
+        self.coordinator.async_add_listener(self._handle_coordinator_update)
 
     @callback
-    def on_data_push(self, data: BRDP) -> None:
-        """Push from Hub."""
+    def _handle_coordinator_update(self) -> None:
+        _device_id = self.coordinator.data[0]
+        if _device_id != self.device.device_id:
+            return None
+        data = self.coordinator.data[1]
         if data.event is None:
             return None
         event_param = data.event.split(".")
@@ -65,8 +64,23 @@ class YoLinkEntity(YoLinkHADevice, Entity):
         resolved_state = resolve_state_in_event(data, event_type)
         if resolved_state is None:
             return None
-        self.hass.async_create_task(self.update_entity_state(resolved_state))
+        self.update_entity_state(data)
 
-    async def update_entity_state(self, state: dict) -> None:
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return the device info for HA."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.device.device_id)},
+            manufacturer=MANUFACTURER,
+            model=self.device.device_type,
+            name=self.device.device_name,
+        )
+
+    def _async_set_unavailable(self, now) -> None:
+        """Set state to UNAVAILABLE."""
+        self._attr_available = False
+
+    @callback
+    def update_entity_state(self, state: dict) -> None:
         """Parse and update entity stat, Should be override."""
         raise NotImplementedError

@@ -22,9 +22,10 @@ from homeassistant.helpers import (
     config_validation as cv,
 )
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import api, config_flow
-from .const import ATTR_CLIENT, ATTR_DEVICE, ATTR_MQTT_CLIENT, DOMAIN
+from .const import ATTR_CLIENT, ATTR_COORDINATOR, ATTR_DEVICE, ATTR_MQTT_CLIENT, DOMAIN
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
@@ -43,6 +44,17 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 PLATFORMS = [Platform.SENSOR]
+
+
+class YoLinkCoordinator(DataUpdateCoordinator):
+    """YoLink DataUpdateCoordinator."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+    ) -> None:
+        """Init YoLink DataUpdateCoordinator."""
+        super().__init__(hass, _LOGGER, name=DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -81,10 +93,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     yolink_http_client = YoLinkClient(auth_mgr)
     yolink_mqtt_client = MqttClient(auth_mgr)
+    coordinator = YoLinkCoordinator(hass)
 
     hass.data[DOMAIN][entry.entry_id] = {
         ATTR_CLIENT: yolink_http_client,
         ATTR_MQTT_CLIENT: yolink_mqtt_client,
+        ATTR_COORDINATOR: coordinator,
         ATTR_DEVICE: [],
     }
 
@@ -95,7 +109,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass.data[DOMAIN][entry.entry_id][ATTR_DEVICE] = yolink_devices.data[
                 ATTR_DEVICE
             ]
-            await yolink_mqtt_client.init_home_connection(home_info.data["id"])
+            await yolink_mqtt_client.init_home_connection(
+                home_info.data["id"], coordinator.async_set_updated_data
+            )
     except YoLinkAuthFailError as auth_err:
         raise ConfigEntryAuthFailed() from auth_err
     except (YoLinkClientError, asyncio.TimeoutError) as exception:
