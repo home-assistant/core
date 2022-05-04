@@ -91,20 +91,20 @@ async def async_setup_entry(
         room_id = shade.raw_data.get(ROOM_ID_IN_SHADE)
         room_name = room_data.get(room_id, {}).get(ROOM_NAME_UNICODE, "")
         entities.append(
-            create_powerviewshade(
+            create_powerview_shade_entity(
                 coordinator, device_info, room_name, shade, name_before_refresh
             )
         )
     async_add_entities(entities)
 
 
-def create_powerviewshade(
+def create_powerview_shade_entity(
     coordinator, device_info, room_name, shade, name_before_refresh
 ):
     """Create a PowerViewShade entity."""
 
     if isinstance(shade, Silhouette):
-        return SilhouettePowerViewShade(
+        return PowerViewShadeSilhouette(
             coordinator, device_info, room_name, shade, name_before_refresh
         )
 
@@ -344,8 +344,8 @@ class PowerViewShade(PowerViewShadeBase):
             self._current_hd_cover_position = int(position_data[ATTR_POSITION1])
 
 
-class SilhouettePowerViewShade(PowerViewShade):
-    """Class to represent a Silhouette (Type 23) blind."""
+class PowerViewShadeWithTilt(PowerViewShade):
+    """Representation of a PowerView shade with tilt capabilities."""
 
     _attr_supported_features = (
         CoverEntityFeature.OPEN
@@ -357,7 +357,7 @@ class SilhouettePowerViewShade(PowerViewShade):
         | CoverEntityFeature.SET_TILT_POSITION
     )
 
-    _max_tilt = 32767
+    _max_tilt = MAX_POSITION
 
     def __init__(self, coordinator, device_info, room_name, shade, name):
         """Initialize the shade."""
@@ -411,3 +411,12 @@ class SilhouettePowerViewShade(PowerViewShade):
             self._attr_current_cover_tilt_position = hd_position_to_hass(
                 int(position_data[ATTR_POSITION1]), self._max_tilt
             )
+
+
+class PowerViewShadeSilhouette(PowerViewShadeWithTilt):
+    """Representation of a Silhouette PowerView shade."""
+
+    def __init__(self, coordinator, device_info, room_name, shade, name):
+        """Initialize the shade."""
+        super().__init__(coordinator, device_info, room_name, shade, name)
+        self._max_tilt = 32767
