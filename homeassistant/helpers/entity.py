@@ -200,9 +200,6 @@ class EntityCategory(StrEnum):
     # Diagnostic: An entity exposing some configuration parameter or diagnostics of a device
     DIAGNOSTIC = "diagnostic"
 
-    # System: An entity which is not useful for the user to interact with
-    SYSTEM = "system"
-
 
 ENTITY_CATEGORIES_SCHEMA: Final = vol.Coerce(EntityCategory)
 
