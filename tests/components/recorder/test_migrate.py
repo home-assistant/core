@@ -57,7 +57,7 @@ async def test_schema_update_calls(hass):
         await async_wait_recording_done(hass)
 
     assert recorder.util.async_migration_in_progress(hass) is False
-    instance: Recorder = hass.data[DATA_INSTANCE]
+    instance = recorder.get_instance(hass)
     engine = instance.engine
     session_maker = instance.get_session
     update.assert_has_calls(
