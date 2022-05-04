@@ -171,7 +171,7 @@ class Recorder(threading.Thread):
         self._pending_event_data: dict[str, EventData] = {}
         self._pending_expunge: list[States] = []
         self.event_session: Session | None = None
-        self.get_session: Callable[[], Session] | None = None
+        self._get_session: Callable[[], Session] | None = None
         self._completed_first_database_setup: bool | None = None
         self.async_migration_event = asyncio.Event()
         self.migration_in_progress = False
@@ -204,6 +204,12 @@ class Recorder(threading.Thread):
     def recording(self) -> bool:
         """Return if the recorder is recording."""
         return self._event_listener is not None
+
+    def get_session(self) -> Session:
+        """Get a new sqlalchemy session."""
+        if self._get_session is None:
+            raise RuntimeError("The database connection has not been established")
+        return self._get_session()
 
     def queue_task(self, task: RecorderTask) -> None:
         """Add a task to the recorder queue."""
@@ -459,7 +465,7 @@ class Recorder(threading.Thread):
     @callback
     def _async_setup_periodic_tasks(self) -> None:
         """Prepare periodic tasks."""
-        if self.hass.is_stopping or not self.get_session:
+        if self.hass.is_stopping or not self._get_session:
             # Home Assistant is shutting down
             return
 
@@ -591,7 +597,7 @@ class Recorder(threading.Thread):
         while tries <= self.db_max_retries:
             try:
                 self._setup_connection()
-                return migration.get_schema_version(self)
+                return migration.get_schema_version(self.get_session)
             except Exception as err:  # pylint: disable=broad-except
                 _LOGGER.exception(
                     "Error during connection setup: %s (retrying in %s seconds)",
@@ -619,7 +625,9 @@ class Recorder(threading.Thread):
         self.hass.add_job(self._async_migration_started)
 
         try:
-            migration.migrate_schema(self, current_version)
+            migration.migrate_schema(
+                self.hass, self.engine, self.get_session, current_version
+            )
         except exc.DatabaseError as err:
             if self._handle_database_error(err):
                 return True
@@ -896,7 +904,6 @@ class Recorder(threading.Thread):
 
     def _open_event_session(self) -> None:
         """Open the event session."""
-        assert self.get_session is not None
         self.event_session = self.get_session()
         self.event_session.expire_on_commit = False
 
@@ -1011,7 +1018,7 @@ class Recorder(threading.Thread):
         sqlalchemy_event.listen(self.engine, "connect", setup_recorder_connection)
 
         Base.metadata.create_all(self.engine)
-        self.get_session = scoped_session(sessionmaker(bind=self.engine, future=True))
+        self._get_session = scoped_session(sessionmaker(bind=self.engine, future=True))
         _LOGGER.debug("Connected to recorder database")
 
     def _close_connection(self) -> None:
@@ -1019,11 +1026,10 @@ class Recorder(threading.Thread):
         assert self.engine is not None
         self.engine.dispose()
         self.engine = None
-        self.get_session = None
+        self._get_session = None
 
     def _setup_run(self) -> None:
         """Log the start of the current run and schedule any needed jobs."""
-        assert self.get_session is not None
         with session_scope(session=self.get_session()) as session:
             end_incomplete_runs(session, self.run_history.recording_start)
             self.run_history.start(session)
