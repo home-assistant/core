@@ -11,6 +11,7 @@ from .const import DOMAIN
 from .hub import LitterRobotHub
 
 PLATFORMS = [
+    Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.SELECT,
     Platform.SENSOR,
