@@ -1,6 +1,7 @@
 """Test selectors."""
 import pytest
 import voluptuous as vol
+import yaml
 
 from homeassistant.helpers import config_validation as cv, selector
 
@@ -65,6 +66,8 @@ def _test_selector(
     assert cv.custom_serializer(selector_instance) == {
         "selector": {selector_type: selector_instance.config}
     }
+    # Test serialized selector can be dumped to YAML
+    yaml.dump(selector_instance.serialize())
 
 
 @pytest.mark.parametrize(
