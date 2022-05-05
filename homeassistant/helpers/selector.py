@@ -5,11 +5,13 @@ from collections.abc import Callable, Sequence
 from typing import Any, TypedDict, cast
 
 import voluptuous as vol
+import yaml
 
 from homeassistant.backports.enum import StrEnum
 from homeassistant.const import CONF_MODE, CONF_UNIT_OF_MEASUREMENT
 from homeassistant.core import split_entity_id, valid_entity_id
 from homeassistant.util import decorator
+from homeassistant.util.yaml.dumper import represent_odict
 
 from . import config_validation as cv
 
@@ -881,3 +883,11 @@ class TimeSelector(Selector):
         """Validate the passed selection."""
         cv.time(data)
         return cast(str, data)
+
+
+yaml.SafeDumper.add_representer(
+    Selector,
+    lambda dumper, value: represent_odict(
+        dumper, "tag:yaml.org,2002:map", value.serialize()
+    ),
+)
