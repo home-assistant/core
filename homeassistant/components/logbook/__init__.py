@@ -353,8 +353,10 @@ def humanify(
         # Process events
         for event in events_batch:
             if event.event_type == EVENT_STATE_CHANGED:
-                if event.domain in CONTINUOUS_DOMAINS:
-                    last_sensor_event[event.entity_id] = event
+                entity_id = event.entity_id
+                assert entity_id is not None
+                if split_entity_id(entity_id)[0] in CONTINUOUS_DOMAINS:
+                    last_sensor_event[entity_id] = event
 
             elif event.event_type == EVENT_HOMEASSISTANT_STOP:
                 if event.time_fired_minute in start_stop_events:
@@ -372,10 +374,10 @@ def humanify(
         for event in events_batch:
             if event.event_type == EVENT_STATE_CHANGED:
                 entity_id = event.entity_id
-                domain = event.domain
+                assert entity_id is not None
 
                 if (
-                    domain in CONTINUOUS_DOMAINS
+                    split_entity_id(entity_id)[0] in CONTINUOUS_DOMAINS
                     and event != last_sensor_event[entity_id]
                 ):
                     # Skip all but the last sensor state
@@ -849,14 +851,6 @@ class LazyEventPartialState:
         self.context_parent_id: str | None = self._row.context_parent_id
         self.time_fired_minute: int = self._row.time_fired.minute
         self._event_data_cache = event_data_cache
-
-    @property
-    def domain(self) -> str | None:
-        """Return the domain for the state."""
-        if self._domain is None:
-            assert self.entity_id is not None
-            self._domain = split_entity_id(self.entity_id)[0]
-        return self._domain
 
     @property
     def attributes_icon(self) -> str | None:
