@@ -133,9 +133,12 @@ SOURCE_YAML = ConfigSource.YAML.value
 # How long to wait until things that run on startup have to finish.
 TIMEOUT_EVENT_START = 15
 
+MAX_EXPECTED_ENTITY_IDS = 16384
+
 _LOGGER = logging.getLogger(__name__)
 
 
+@functools.lru_cache(MAX_EXPECTED_ENTITY_IDS)
 def split_entity_id(entity_id: str) -> tuple[str, str]:
     """Split a state entity ID into domain and object ID."""
     domain, _, object_id = entity_id.partition(".")
