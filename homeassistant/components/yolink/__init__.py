@@ -130,17 +130,16 @@ class YoLinkCoordinator(DataUpdateCoordinator[dict]):
         except YoLinkAuthFailError as yl_auth_err:
             raise ConfigEntryAuthFailed from yl_auth_err
         except YoLinkClientError as yl_client_err:
-            # code 010203 for can't connect to device currently(ignore wait for device report state by mqtt)
-            if yl_client_err.code != "010203":
-                raise UpdateFailed(
-                    f"Error communicating with API: {yl_client_err}"
-                ) from yl_client_err
+            raise UpdateFailed(
+                f"Error communicating with API: {yl_client_err}"
+            ) from yl_client_err
 
     async def _async_update_data(self) -> dict:
         fetch_tasks = []
         for yl_device in self.yl_devices:
             fetch_tasks.append(self.fetch_device_state(yl_device))
-        asyncio.gather(*fetch_tasks)
+        if fetch_tasks:
+            await asyncio.gather(*fetch_tasks)
         return self.data
 
 
@@ -182,7 +181,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     yolink_mqtt_client = MqttClient(auth_mgr)
     coordinator = YoLinkCoordinator(hass, yolink_http_client, yolink_mqtt_client)
     await coordinator.init_coordinator()
-    await coordinator.async_config_entry_first_refresh()
+    try:
+        await coordinator.async_config_entry_first_refresh()
+    except ConfigEntryNotReady as ex:
+        _LOGGER.error("Fetch initial data fail: %s", ex)
+
     hass.data[DOMAIN][entry.entry_id] = {
         ATTR_CLIENT: yolink_http_client,
         ATTR_MQTT_CLIENT: yolink_mqtt_client,
