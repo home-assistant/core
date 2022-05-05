@@ -711,6 +711,10 @@ class EntityRegistry:
                 if not valid_entity_id(entity["entity_id"]):
                     continue
 
+                # We removed this in 2022.5. Remove this check in 2023.1.
+                if entity["entity_category"] == "system":
+                    entity["entity_category"] = None
+
                 entities[entity["entity_id"]] = RegistryEntry(
                     area_id=entity["area_id"],
                     capabilities=entity["capabilities"],

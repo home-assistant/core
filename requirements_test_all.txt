@@ -94,7 +94,7 @@ aio_geojson_nsw_rfs_incidents==0.4
 aio_georss_gdacs==0.7
 
 # homeassistant.components.airzone
-aioairzone==0.4.2
+aioairzone==0.4.3
 
 # homeassistant.components.ambient_station
 aioambient==2021.11.0
@@ -727,7 +727,7 @@ netdisco==3.0.0
 netmap==0.7.0.2
 
 # homeassistant.components.nam
-nettigo-air-monitor==1.2.2
+nettigo-air-monitor==1.2.3
 
 # homeassistant.components.nexia
 nexia==0.9.13
@@ -755,7 +755,7 @@ numato-gpio==0.10.0
 # homeassistant.components.opencv
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-numpy==1.21.4
+numpy==1.21.6
 
 # homeassistant.components.google
 oauth2client==4.1.3
@@ -938,7 +938,7 @@ pybotvac==0.0.23
 pycfdns==1.2.2
 
 # homeassistant.components.cast
-pychromecast==12.0.0
+pychromecast==12.1.1
 
 # homeassistant.components.climacell
 pyclimacell==0.18.2
