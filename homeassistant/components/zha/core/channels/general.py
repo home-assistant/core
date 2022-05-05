@@ -308,6 +308,22 @@ class OnOffChannel(ZigbeeChannel):
         """Return cached value of on/off attribute."""
         return self.cluster.get("on_off")
 
+    async def turn_on(self) -> bool:
+        """Turn the on off cluster on."""
+        result = await self.on()
+        if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
+            return False
+        self.cluster.update_attribute(self.ON_OFF, t.Bool.true)
+        return True
+
+    async def turn_off(self):
+        """Turn the on off cluster off."""
+        result = await self.off()
+        if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
+            return False
+        self.cluster.update_attribute(self.ON_OFF, t.Bool.false)
+        return True
+
     @callback
     def cluster_command(self, tsn, command_id, args):
         """Handle commands received to this cluster."""
