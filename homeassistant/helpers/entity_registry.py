@@ -12,7 +12,7 @@ from __future__ import annotations
 from collections import UserDict
 from collections.abc import Callable, Iterable, Mapping
 import logging
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 import attr
 import voluptuous as vol
@@ -51,6 +51,9 @@ if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
 
     from .entity import EntityCategory
+
+_StrEnumT = TypeVar("_StrEnumT", bound="StrEnum")
+
 
 PATH_REGISTRY = "entity_registry.yaml"
 DATA_REGISTRY = "entity_registry"
@@ -703,6 +706,19 @@ class EntityRegistry:
 
         from .entity import EntityCategory  # pylint: disable=import-outside-toplevel
 
+        def parse_enum(
+            cls: type[_StrEnumT], value: str | None, default: _StrEnumT | None
+        ) -> _StrEnumT | None:
+            """Parse enum and ignore invalid values."""
+
+            if not value:
+                return None
+            try:
+                return cls(value)
+            except ValueError:
+                _LOGGER.warning("Ignoring unexpected value %s for enum %s", value, cls)
+                return default
+
         if data is not None:
             for entity in data["entities"]:
                 # Some old installations can have some bad entities.
@@ -717,12 +733,12 @@ class EntityRegistry:
                     config_entry_id=entity["config_entry_id"],
                     device_class=entity["device_class"],
                     device_id=entity["device_id"],
-                    disabled_by=RegistryEntryDisabler(entity["disabled_by"])
-                    if entity["disabled_by"]
-                    else None,
-                    entity_category=EntityCategory(entity["entity_category"])
-                    if entity["entity_category"]
-                    else None,
+                    disabled_by=parse_enum(
+                        RegistryEntryDisabler, entity["disabled_by"], None
+                    ),
+                    entity_category=parse_enum(
+                        EntityCategory, entity["entity_category"], None
+                    ),
                     entity_id=entity["entity_id"],
                     hidden_by=entity["hidden_by"],
                     icon=entity["icon"],

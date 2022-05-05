@@ -278,6 +278,7 @@ async def test_loading_extra_values(hass, hass_storage):
                     "entity_id": "test.no_name",
                     "platform": "super_platform",
                     "unique_id": "without-name",
+                    "disabled_by": "ignored-invalid-disabled-by",
                 },
                 {
                     "entity_id": "test.disabled_user",
