@@ -63,7 +63,7 @@ class HomeKitSmokeSensor(HomeKitEntity, BinarySensorEntity):
 class HomeKitCarbonMonoxideSensor(HomeKitEntity, BinarySensorEntity):
     """Representation of a Homekit BO sensor."""
 
-    _attr_device_class = BinarySensorDeviceClass.GAS
+    _attr_device_class = BinarySensorDeviceClass.CO
 
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity is tracking."""

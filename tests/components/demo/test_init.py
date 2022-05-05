@@ -12,7 +12,7 @@ from homeassistant.components.recorder.statistics import list_statistic_ids
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import async_setup_component
 
-from tests.components.recorder.common import async_wait_recording_done_without_instance
+from tests.components.recorder.common import async_wait_recording_done
 
 
 @pytest.fixture(autouse=True)
@@ -51,7 +51,7 @@ async def test_demo_statistics(hass, recorder_mock):
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     await hass.async_block_till_done()
     await hass.async_start()
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
 
     statistic_ids = await get_instance(hass).async_add_executor_job(
         list_statistic_ids, hass

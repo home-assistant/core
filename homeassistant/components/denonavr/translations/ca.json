@@ -27,6 +27,9 @@
                 "data": {
                     "host": "Adre\u00e7a IP"
                 },
+                "data_description": {
+                    "host": "Deixeu-ho en blanc per utilitzar descobriment autom\u00e0tic"
+                },
                 "description": "Connecta el teu receptor, si no es configura l'adre\u00e7a IP, s'utilitza el descobriment autom\u00e0tic",
                 "title": "Receptors de xarxa AVR de Denon"
             }

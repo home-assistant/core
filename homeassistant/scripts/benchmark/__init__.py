@@ -6,7 +6,6 @@ import asyncio
 import collections
 from collections.abc import Callable
 from contextlib import suppress
-from datetime import datetime
 import json
 import logging
 from timeit import default_timer as timer
@@ -14,7 +13,7 @@ from typing import TypeVar
 
 from homeassistant import core
 from homeassistant.components.websocket_api.const import JSON_DUMP
-from homeassistant.const import ATTR_NOW, EVENT_STATE_CHANGED, EVENT_TIME_CHANGED
+from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.helpers.entityfilter import convert_include_exclude_filter
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.util import dt as dt_util
@@ -115,34 +114,6 @@ async def fire_events_with_filter(hass):
     await hass.async_block_till_done()
 
     assert count == 0
-
-    return timer() - start
-
-
-@benchmark
-async def time_changed_helper(hass):
-    """Run a million events through time changed helper."""
-    count = 0
-    event = asyncio.Event()
-
-    @core.callback
-    def listener(_):
-        """Handle event."""
-        nonlocal count
-        count += 1
-
-        if count == 10**6:
-            event.set()
-
-    hass.helpers.event.async_track_time_change(listener, minute=0, second=0)
-    event_data = {ATTR_NOW: datetime(2017, 10, 10, 15, 0, 0, tzinfo=dt_util.UTC)}
-
-    for _ in range(10**6):
-        hass.bus.async_fire(EVENT_TIME_CHANGED, event_data)
-
-    start = timer()
-
-    await event.wait()
 
     return timer() - start
 
@@ -433,4 +404,4 @@ def _create_state_changed_event_from_old_new(
     # pylint: disable=import-outside-toplevel
     from homeassistant.components import logbook
 
-    return logbook.LazyEventPartialState(row)
+    return logbook.LazyEventPartialState(row, {})

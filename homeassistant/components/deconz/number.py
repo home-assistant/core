@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from pydeconz.sensor import PRESENCE_DELAY, Presence, SensorBase as PydeconzSensor
+from pydeconz.models.sensor.presence import PRESENCE_DELAY, Presence
 
 from homeassistant.components.number import (
     DOMAIN,
@@ -28,7 +28,7 @@ class DeconzNumberDescriptionMixin:
 
     suffix: str
     update_key: str
-    value_fn: Callable[[PydeconzSensor], float | None]
+    value_fn: Callable[[Presence], float | None]
 
 
 @dataclass
@@ -40,7 +40,7 @@ ENTITY_DESCRIPTIONS = {
     Presence: [
         DeconzNumberDescription(
             key="delay",
-            value_fn=lambda device: device.delay,  # type: ignore[no-any-return]
+            value_fn=lambda device: device.delay,
             suffix="Delay",
             update_key=PRESENCE_DELAY,
             max_value=65535,
@@ -99,7 +99,10 @@ async def async_setup_entry(
     )
 
     async_add_sensor(
-        [gateway.api.sensors[key] for key in sorted(gateway.api.sensors, key=int)]
+        [
+            gateway.api.sensors.presence[key]
+            for key in sorted(gateway.api.sensors.presence, key=int)
+        ]
     )
 
 
@@ -129,9 +132,9 @@ class DeconzNumber(DeconzDevice, NumberEntity):
             super().async_update_callback()
 
     @property
-    def value(self) -> float:
+    def value(self) -> float | None:
         """Return the value of the sensor property."""
-        return self.entity_description.value_fn(self._device)  # type: ignore[no-any-return]
+        return self.entity_description.value_fn(self._device)
 
     async def async_set_value(self, value: float) -> None:
         """Set sensor config."""

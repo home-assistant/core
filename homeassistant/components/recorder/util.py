@@ -8,7 +8,7 @@ import functools
 import logging
 import os
 import time
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from awesomeversion import (
     AwesomeVersion,
@@ -20,6 +20,7 @@ from sqlalchemy.engine.cursor import CursorFetchStrategy
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.orm.query import Query
 from sqlalchemy.orm.session import Session
+from typing_extensions import Concatenate, ParamSpec
 
 from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
@@ -39,6 +40,9 @@ from .models import (
 
 if TYPE_CHECKING:
     from . import Recorder
+
+_RecorderT = TypeVar("_RecorderT", bound="Recorder")
+_P = ParamSpec("_P")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -430,15 +434,22 @@ def end_incomplete_runs(session: Session, start_time: datetime) -> None:
         session.add(run)
 
 
-def retryable_database_job(description: str) -> Callable:
+def retryable_database_job(
+    description: str,
+) -> Callable[
+    [Callable[Concatenate[_RecorderT, _P], bool]],
+    Callable[Concatenate[_RecorderT, _P], bool],
+]:
     """Try to execute a database job.
 
     The job should return True if it finished, and False if it needs to be rescheduled.
     """
 
-    def decorator(job: Callable[[Any], bool]) -> Callable:
+    def decorator(
+        job: Callable[Concatenate[_RecorderT, _P], bool]
+    ) -> Callable[Concatenate[_RecorderT, _P], bool]:
         @functools.wraps(job)
-        def wrapper(instance: Recorder, *args: Any, **kwargs: Any) -> bool:
+        def wrapper(instance: _RecorderT, *args: _P.args, **kwargs: _P.kwargs) -> bool:
             try:
                 return job(instance, *args, **kwargs)
             except OperationalError as err:
@@ -464,8 +475,8 @@ def retryable_database_job(description: str) -> Callable:
     return decorator
 
 
-def perodic_db_cleanups(instance: Recorder) -> None:
-    """Run any database cleanups that need to happen perodiclly.
+def periodic_db_cleanups(instance: Recorder) -> None:
+    """Run any database cleanups that need to happen periodically.
 
     These cleanups will happen nightly or after any purge.
     """

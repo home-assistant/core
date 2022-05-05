@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 import logging
-from typing import Any, Generic
+from typing import Any
 
 from pyunifiprotect.data import (
     NVR,
@@ -54,13 +54,13 @@ DEVICE_CLASS_DETECTION = "unifiprotect__detection"
 
 @dataclass
 class ProtectSensorEntityDescription(
-    ProtectRequiredKeysMixin, SensorEntityDescription, Generic[T]
+    ProtectRequiredKeysMixin[T], SensorEntityDescription
 ):
     """Describes UniFi Protect Sensor entity."""
 
     precision: int | None = None
 
-    def get_ufp_value(self, obj: ProtectDeviceModel) -> Any:
+    def get_ufp_value(self, obj: T) -> Any:
         """Return value from UniFi Protect device."""
         value = super().get_ufp_value(obj)
 

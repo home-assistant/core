@@ -23,6 +23,12 @@
             "confirm": {
                 "description": "Do you want to start set up?"
             },
+            "content_type": {
+                "data": {
+                    "content_type": "Content Type"
+                },
+                "description": "Specify the content type for the stream."
+            },
             "user": {
                 "data": {
                     "authentication": "Authentication",
@@ -57,6 +63,12 @@
             "unknown": "Unexpected error"
         },
         "step": {
+            "content_type": {
+                "data": {
+                    "content_type": "Content Type"
+                },
+                "description": "Specify the content type for the stream."
+            },
             "init": {
                 "data": {
                     "authentication": "Authentication",

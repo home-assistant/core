@@ -1451,6 +1451,31 @@ async def test_update_missing_mac_unique_id_ssdp_location_added_from_ssdp(
     assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
+@pytest.mark.usefixtures(
+    "remote", "remotews", "remoteencws_failing", "rest_api_failing"
+)
+async def test_update_zeroconf_discovery_preserved_unique_id(
+    hass: HomeAssistant,
+) -> None:
+    """Test zeroconf discovery preserves unique id."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={**MOCK_OLD_ENTRY, CONF_MAC: "aa:bb:zz:ee:rr:oo"},
+        unique_id="original",
+    )
+    entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=MOCK_ZEROCONF_DATA,
+    )
+    await hass.async_block_till_done()
+    assert result["type"] == "abort"
+    assert result["reason"] == "not_supported"
+    assert entry.data[CONF_MAC] == "aa:bb:zz:ee:rr:oo"
+    assert entry.unique_id == "original"
+
+
 @pytest.mark.usefixtures("remotews", "rest_api", "remoteencws_failing")
 async def test_update_missing_mac_unique_id_added_ssdp_location_updated_from_ssdp(
     hass: HomeAssistant,
