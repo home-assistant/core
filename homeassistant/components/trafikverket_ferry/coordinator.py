@@ -65,7 +65,7 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator):
         """Fetch data from Trafikverket."""
 
         departure_day = next_departuredate(self._weekdays)
-        current_time = dt.now(dt.get_time_zone(self.hass.config.time_zone))
+        current_time = dt.now()
         when = (
             datetime.combine(
                 departure_day, self._time, dt.get_time_zone(self.hass.config.time_zone)
