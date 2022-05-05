@@ -1068,7 +1068,7 @@ netdisco==3.0.0
 netmap==0.7.0.2
 
 # homeassistant.components.nam
-nettigo-air-monitor==1.2.2
+nettigo-air-monitor==1.2.3
 
 # homeassistant.components.neurio_energy
 neurio==0.3.1
