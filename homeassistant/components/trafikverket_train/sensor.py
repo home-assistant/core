@@ -24,7 +24,7 @@ from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util.dt import as_utc, get_time_zone, parse_time
+from homeassistant.util import dt
 
 from .const import CONF_FROM, CONF_TIME, CONF_TO, CONF_TRAINS, DOMAIN
 from .util import create_unique_id
@@ -110,7 +110,9 @@ async def async_setup_entry(
         ) from error
 
     train_time = (
-        parse_time(entry.data.get(CONF_TIME, "")) if entry.data.get(CONF_TIME) else None
+        dt.parse_time(entry.data.get(CONF_TIME, ""))
+        if entry.data.get(CONF_TIME)
+        else None
     )
 
     async_add_entities(
@@ -152,7 +154,7 @@ def next_departuredate(departure: list[str]) -> date:
 
 def _to_iso_format(traintime: datetime) -> str:
     """Return isoformatted utc time."""
-    return as_utc(traintime).isoformat()
+    return dt.as_utc(traintime).isoformat()
 
 
 class TrainSensor(SensorEntity):
@@ -192,12 +194,12 @@ class TrainSensor(SensorEntity):
 
     async def async_update(self) -> None:
         """Retrieve latest state."""
-        when = datetime.now(get_time_zone(self.hass.config.time_zone))
+        when = dt.now()
         _state: TrainStop | None = None
         if self._time:
             departure_day = next_departuredate(self._weekday)
             when = datetime.combine(
-                departure_day, self._time, get_time_zone(self.hass.config.time_zone)
+                departure_day, self._time, dt.get_time_zone(self.hass.config.time_zone)
             )
         try:
             if self._time:
@@ -221,11 +223,11 @@ class TrainSensor(SensorEntity):
         self._attr_available = True
 
         # The original datetime doesn't provide a timezone so therefore attaching it here.
-        self._attr_native_value = as_utc(_state.advertised_time_at_location)
+        self._attr_native_value = dt.as_utc(_state.advertised_time_at_location)
         if _state.time_at_location:
-            self._attr_native_value = as_utc(_state.time_at_location)
+            self._attr_native_value = dt.as_utc(_state.time_at_location)
         if _state.estimated_time_at_location:
-            self._attr_native_value = as_utc(_state.estimated_time_at_location)
+            self._attr_native_value = dt.as_utc(_state.estimated_time_at_location)
 
         self._update_attributes(_state)
 

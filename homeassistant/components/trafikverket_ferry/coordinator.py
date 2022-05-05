@@ -71,7 +71,7 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator):
                 departure_day, self._time, dt.get_time_zone(self.hass.config.time_zone)
             )
             if self._time
-            else datetime.now(dt.get_time_zone(self.hass.config.time_zone))
+            else dt.now()
         )
         if current_time > when:
             when = current_time
