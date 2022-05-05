@@ -21,7 +21,6 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.components.sensibo.climate import SERVICE_ASSUME_STATE
 from homeassistant.components.sensibo.const import DOMAIN
-from homeassistant.components.sensibo.coordinator import SensiboDataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -76,7 +75,9 @@ async def test_climate(hass: HomeAssistant, load_int: ConfigEntry) -> None:
     assert state2.state == "off"
 
 
-async def test_climate_fan(hass: HomeAssistant, load_int: ConfigEntry) -> None:
+async def test_climate_fan(
+    hass: HomeAssistant, load_int: ConfigEntry, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Test the Sensibo climate fan service."""
 
     state1 = hass.states.get("climate.hallway")
@@ -97,8 +98,28 @@ async def test_climate_fan(hass: HomeAssistant, load_int: ConfigEntry) -> None:
     state2 = hass.states.get("climate.hallway")
     assert state2.attributes["fan_mode"] == "low"
 
-    coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][load_int.entry_id]
-    coordinator.data.parsed["ABC999111"].active_features.remove("fanLevel")
+    monkeypatch.setattr(
+        DATA_FROM_API.parsed["ABC999111"],
+        "active_features",
+        [
+            "timestamp",
+            "on",
+            "mode",
+            "swing",
+            "targetTemperature",
+            "horizontalSwing",
+            "light",
+        ],
+    )
+    with patch(
+        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
+        return_value=DATA_FROM_API,
+    ):
+        async_fire_time_changed(
+            hass,
+            dt.utcnow() + timedelta(minutes=5),
+        )
+        await hass.async_block_till_done()
 
     with patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_set_ac_state_property",
@@ -116,7 +137,9 @@ async def test_climate_fan(hass: HomeAssistant, load_int: ConfigEntry) -> None:
     assert state3.attributes["fan_mode"] == "low"
 
 
-async def test_climate_swing(hass: HomeAssistant, load_int: ConfigEntry) -> None:
+async def test_climate_swing(
+    hass: HomeAssistant, load_int: ConfigEntry, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Test the Sensibo climate swing service."""
 
     state1 = hass.states.get("climate.hallway")
@@ -137,8 +160,27 @@ async def test_climate_swing(hass: HomeAssistant, load_int: ConfigEntry) -> None
     state2 = hass.states.get("climate.hallway")
     assert state2.attributes["swing_mode"] == "fixedTop"
 
-    coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][load_int.entry_id]
-    coordinator.data.parsed["ABC999111"].active_features.remove("swing")
+    monkeypatch.setattr(
+        DATA_FROM_API.parsed["ABC999111"],
+        "active_features",
+        [
+            "timestamp",
+            "on",
+            "mode",
+            "targetTemperature",
+            "horizontalSwing",
+            "light",
+        ],
+    )
+    with patch(
+        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
+        return_value=DATA_FROM_API,
+    ):
+        async_fire_time_changed(
+            hass,
+            dt.utcnow() + timedelta(minutes=5),
+        )
+        await hass.async_block_till_done()
 
     with patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_set_ac_state_property",
@@ -156,20 +198,10 @@ async def test_climate_swing(hass: HomeAssistant, load_int: ConfigEntry) -> None
     assert state3.attributes["swing_mode"] == "fixedTop"
 
 
-async def test_climate_temperatures(hass: HomeAssistant, load_int: ConfigEntry) -> None:
+async def test_climate_temperatures(
+    hass: HomeAssistant, load_int: ConfigEntry, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Test the Sensibo climate temperature service."""
-
-    coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][load_int.entry_id]
-    coordinator.data.parsed["ABC999111"].active_features = [
-        "timestamp",
-        "on",
-        "mode",
-        "fanLevel",
-        "targetTemperature",
-        "swing",
-        "horizontalSwing",
-        "light",
-    ]
 
     state1 = hass.states.get("climate.hallway")
     assert state1.attributes["temperature"] == 25
@@ -266,7 +298,27 @@ async def test_climate_temperatures(hass: HomeAssistant, load_int: ConfigEntry) 
     state2 = hass.states.get("climate.hallway")
     assert state2.attributes["temperature"] == 20
 
-    coordinator.data.parsed["ABC999111"].active_features.remove("targetTemperature")
+    monkeypatch.setattr(
+        DATA_FROM_API.parsed["ABC999111"],
+        "active_features",
+        [
+            "timestamp",
+            "on",
+            "mode",
+            "swing",
+            "horizontalSwing",
+            "light",
+        ],
+    )
+    with patch(
+        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
+        return_value=DATA_FROM_API,
+    ):
+        async_fire_time_changed(
+            hass,
+            dt.utcnow() + timedelta(minutes=5),
+        )
+        await hass.async_block_till_done()
 
     with patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_set_ac_state_property",
@@ -286,23 +338,29 @@ async def test_climate_temperatures(hass: HomeAssistant, load_int: ConfigEntry) 
 
 
 async def test_climate_temperature_is_none(
-    hass: HomeAssistant, load_int: ConfigEntry
+    hass: HomeAssistant, load_int: ConfigEntry, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test the Sensibo climate temperature service no temperature provided."""
 
-    coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][load_int.entry_id]
-    coordinator.data.parsed["ABC999111"].active_features = [
-        "timestamp",
-        "on",
-        "mode",
-        "fanLevel",
-        "targetTemperature",
-        "swing",
-        "horizontalSwing",
-        "light",
-    ]
-    coordinator.data.parsed["ABC999111"].target_temp = 25
-
+    monkeypatch.setattr(
+        DATA_FROM_API.parsed["ABC999111"],
+        "active_features",
+        [
+            "timestamp",
+            "on",
+            "mode",
+            "fanLevel",
+            "targetTemperature",
+            "swing",
+            "horizontalSwing",
+            "light",
+        ],
+    )
+    monkeypatch.setattr(
+        DATA_FROM_API.parsed["ABC999111"],
+        "target_temp",
+        25,
+    )
     with patch(
         "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
         return_value=DATA_FROM_API,
@@ -336,20 +394,34 @@ async def test_climate_temperature_is_none(
     assert state2.attributes["temperature"] == 25
 
 
-async def test_climate_hvac_mode(hass: HomeAssistant, load_int: ConfigEntry) -> None:
+async def test_climate_hvac_mode(
+    hass: HomeAssistant, load_int: ConfigEntry, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Test the Sensibo climate hvac mode service."""
 
-    coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][load_int.entry_id]
-    coordinator.data.parsed["ABC999111"].active_features = [
-        "timestamp",
-        "on",
-        "mode",
-        "fanLevel",
-        "targetTemperature",
-        "swing",
-        "horizontalSwing",
-        "light",
-    ]
+    monkeypatch.setattr(
+        DATA_FROM_API.parsed["ABC999111"],
+        "active_features",
+        [
+            "timestamp",
+            "on",
+            "mode",
+            "fanLevel",
+            "targetTemperature",
+            "swing",
+            "horizontalSwing",
+            "light",
+        ],
+    )
+    with patch(
+        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
+        return_value=DATA_FROM_API,
+    ):
+        async_fire_time_changed(
+            hass,
+            dt.utcnow() + timedelta(minutes=5),
+        )
+        await hass.async_block_till_done()
 
     state1 = hass.states.get("climate.hallway")
     assert state1.state == "heat"
@@ -372,7 +444,16 @@ async def test_climate_hvac_mode(hass: HomeAssistant, load_int: ConfigEntry) -> 
     state2 = hass.states.get("climate.hallway")
     assert state2.state == "off"
 
-    coordinator.data.parsed["ABC999111"].device_on = False
+    monkeypatch.setattr(DATA_FROM_API.parsed["ABC999111"], "device_on", False)
+    with patch(
+        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
+        return_value=DATA_FROM_API,
+    ):
+        async_fire_time_changed(
+            hass,
+            dt.utcnow() + timedelta(minutes=5),
+        )
+        await hass.async_block_till_done()
 
     with patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
@@ -393,8 +474,22 @@ async def test_climate_hvac_mode(hass: HomeAssistant, load_int: ConfigEntry) -> 
     assert state2.state == "heat"
 
 
-async def test_climate_on_off(hass: HomeAssistant, load_int: ConfigEntry) -> None:
+async def test_climate_on_off(
+    hass: HomeAssistant, load_int: ConfigEntry, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Test the Sensibo climate on/off service."""
+
+    monkeypatch.setattr(DATA_FROM_API.parsed["ABC999111"], "hvac_mode", "heat")
+    monkeypatch.setattr(DATA_FROM_API.parsed["ABC999111"], "device_on", True)
+    with patch(
+        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
+        return_value=DATA_FROM_API,
+    ):
+        async_fire_time_changed(
+            hass,
+            dt.utcnow() + timedelta(minutes=5),
+        )
+        await hass.async_block_till_done()
 
     state1 = hass.states.get("climate.hallway")
     assert state1.state == "heat"
@@ -431,9 +526,21 @@ async def test_climate_on_off(hass: HomeAssistant, load_int: ConfigEntry) -> Non
 
 
 async def test_climate_service_failed(
-    hass: HomeAssistant, load_int: ConfigEntry
+    hass: HomeAssistant, load_int: ConfigEntry, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test the Sensibo climate service failed."""
+
+    monkeypatch.setattr(DATA_FROM_API.parsed["ABC999111"], "hvac_mode", "heat")
+    monkeypatch.setattr(DATA_FROM_API.parsed["ABC999111"], "device_on", True)
+    with patch(
+        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
+        return_value=DATA_FROM_API,
+    ):
+        async_fire_time_changed(
+            hass,
+            dt.utcnow() + timedelta(minutes=5),
+        )
+        await hass.async_block_till_done()
 
     state1 = hass.states.get("climate.hallway")
     assert state1.state == "heat"
@@ -456,9 +563,21 @@ async def test_climate_service_failed(
 
 
 async def test_climate_assumed_state(
-    hass: HomeAssistant, load_int: ConfigEntry
+    hass: HomeAssistant, load_int: ConfigEntry, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test the Sensibo climate assumed state service."""
+
+    monkeypatch.setattr(DATA_FROM_API.parsed["ABC999111"], "hvac_mode", "heat")
+    monkeypatch.setattr(DATA_FROM_API.parsed["ABC999111"], "device_on", True)
+    with patch(
+        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
+        return_value=DATA_FROM_API,
+    ):
+        async_fire_time_changed(
+            hass,
+            dt.utcnow() + timedelta(minutes=5),
+        )
+        await hass.async_block_till_done()
 
     state1 = hass.states.get("climate.hallway")
     assert state1.state == "heat"

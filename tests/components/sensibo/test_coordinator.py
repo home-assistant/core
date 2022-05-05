@@ -16,6 +16,8 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.util import dt
 
+from .response import DATA_FROM_API
+
 from tests.common import async_fire_time_changed
 
 
@@ -26,11 +28,13 @@ async def test_coordinator(hass: HomeAssistant, load_int: ConfigEntry) -> None:
     assert coordinator.data.parsed["ABC999111"].state == "heat"
 
 
-async def test_coordinator_errors(hass: HomeAssistant, load_int: ConfigEntry) -> None:
+async def test_coordinator_errors(
+    hass: HomeAssistant, load_int: ConfigEntry, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Test the Sensibo coordinator errors."""
 
     coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][load_int.entry_id]
-    coordinator.data.parsed["ABC999111"].state = "heat"
+    monkeypatch.setattr(DATA_FROM_API.parsed["ABC999111"], "state", "heat")
 
     assert coordinator.last_update_success is True
 

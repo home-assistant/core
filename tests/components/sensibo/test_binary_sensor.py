@@ -4,8 +4,8 @@ from __future__ import annotations
 from datetime import timedelta
 from unittest.mock import patch
 
-from homeassistant.components.sensibo.const import DOMAIN
-from homeassistant.components.sensibo.coordinator import SensiboDataUpdateCoordinator
+from pytest import MonkeyPatch
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt
@@ -15,7 +15,9 @@ from .response import DATA_FROM_API
 from tests.common import async_fire_time_changed
 
 
-async def test_binary_sensor(hass: HomeAssistant, load_int: ConfigEntry) -> None:
+async def test_binary_sensor(
+    hass: HomeAssistant, load_int: ConfigEntry, monkeypatch: MonkeyPatch
+) -> None:
     """Test the Sensibo binary sensor."""
 
     state1 = hass.states.get("binary_sensor.hallway_motion_sensor_alive")
@@ -27,9 +29,12 @@ async def test_binary_sensor(hass: HomeAssistant, load_int: ConfigEntry) -> None
     assert state3.state == "on"
     assert state4.state == "on"
 
-    coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][load_int.entry_id]
-    coordinator.data.parsed["ABC999111"].motion_sensors["AABBCC"].alive = False
-    coordinator.data.parsed["ABC999111"].motion_sensors["AABBCC"].motion = False
+    monkeypatch.setattr(
+        DATA_FROM_API.parsed["ABC999111"].motion_sensors["AABBCC"], "alive", False
+    )
+    monkeypatch.setattr(
+        DATA_FROM_API.parsed["ABC999111"].motion_sensors["AABBCC"], "motion", False
+    )
 
     with patch(
         "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
