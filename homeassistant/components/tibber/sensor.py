@@ -8,6 +8,7 @@ from random import randrange
 
 import aiohttp
 
+from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.models import StatisticData, StatisticMetaData
 from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
@@ -574,7 +575,7 @@ class TibberDataCoordinator(DataUpdateCoordinator):
                     f"{home.home_id.replace('-', '')}"
                 )
 
-                last_stats = await self.hass.async_add_executor_job(
+                last_stats = await get_instance(self.hass).async_add_executor_job(
                     get_last_statistics, self.hass, 1, statistic_id, True
                 )
 
@@ -594,7 +595,7 @@ class TibberDataCoordinator(DataUpdateCoordinator):
                     start = dt_util.parse_datetime(
                         hourly_consumption_data[0]["from"]
                     ) - timedelta(hours=1)
-                    stat = await self.hass.async_add_executor_job(
+                    stat = await get_instance(self.hass).async_add_executor_job(
                         statistics_during_period,
                         self.hass,
                         start,

@@ -49,7 +49,6 @@ class FanSwitch(BaseToggleEntity, FanEntity):
         """
         return self._attr_is_on
 
-    # pylint: disable=arguments-differ
     async def async_turn_on(
         self,
         percentage: int | None = None,

@@ -209,6 +209,12 @@ def get_config_parameter_discovery_schema(
     )
 
 
+DOOR_LOCK_CURRENT_MODE_SCHEMA = ZWaveValueDiscoverySchema(
+    command_class={CommandClass.DOOR_LOCK},
+    property={CURRENT_MODE_PROPERTY},
+    type={"number"},
+)
+
 SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA = ZWaveValueDiscoverySchema(
     command_class={CommandClass.SWITCH_MULTILEVEL},
     property={CURRENT_VALUE_PROPERTY},
@@ -501,16 +507,17 @@ DISCOVERY_SCHEMAS = [
     ),
     # ====== START OF GENERIC MAPPING SCHEMAS =======
     # locks
+    # Door Lock CC
+    ZWaveDiscoverySchema(platform="lock", primary_value=DOOR_LOCK_CURRENT_MODE_SCHEMA),
+    # Only discover the Lock CC if the Door Lock CC isn't also present on the node
     ZWaveDiscoverySchema(
         platform="lock",
         primary_value=ZWaveValueDiscoverySchema(
-            command_class={
-                CommandClass.LOCK,
-                CommandClass.DOOR_LOCK,
-            },
-            property={CURRENT_MODE_PROPERTY, LOCKED_PROPERTY},
-            type={"number", "boolean"},
+            command_class={CommandClass.LOCK},
+            property={LOCKED_PROPERTY},
+            type={"boolean"},
         ),
+        absent_values=[DOOR_LOCK_CURRENT_MODE_SCHEMA],
     ),
     # door lock door status
     ZWaveDiscoverySchema(

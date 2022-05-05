@@ -1,4 +1,4 @@
-"""Modesl used by multiple MQTT modules."""
+"""Models used by multiple MQTT modules."""
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable

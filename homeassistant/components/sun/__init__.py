@@ -12,6 +12,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import event
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.integration_platform import (
+    async_process_integration_platform_for_component,
+)
 from homeassistant.helpers.sun import (
     get_astral_location,
     get_location_astral_event_next,
@@ -93,6 +96,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up from a config entry."""
+    # Process integration platforms right away since
+    # we will create entities before firing EVENT_COMPONENT_LOADED
+    await async_process_integration_platform_for_component(hass, DOMAIN)
     hass.data[DOMAIN] = Sun(hass)
     return True
 
@@ -124,22 +130,22 @@ class Sun(Entity):
         self._config_listener = None
         self._update_events_listener = None
         self._update_sun_position_listener = None
-
-        @callback
-        def update_location(_event):
-            location, elevation = get_astral_location(self.hass)
-            if location == self.location:
-                return
-            self.location = location
-            self.elevation = elevation
-            if self._update_events_listener:
-                self._update_events_listener()
-            self.update_events()
-
-        update_location(None)
         self._config_listener = self.hass.bus.async_listen(
-            EVENT_CORE_CONFIG_UPDATE, update_location
+            EVENT_CORE_CONFIG_UPDATE, self.update_location
         )
+        self.update_location()
+
+    @callback
+    def update_location(self, *_):
+        """Update location."""
+        location, elevation = get_astral_location(self.hass)
+        if location == self.location:
+            return
+        self.location = location
+        self.elevation = elevation
+        if self._update_events_listener:
+            self._update_events_listener()
+        self.update_events()
 
     @callback
     def remove_listeners(self):

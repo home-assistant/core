@@ -1,4 +1,5 @@
 """The motion_blinds component."""
+import asyncio
 from datetime import timedelta
 import logging
 from socket import timeout
@@ -20,6 +21,7 @@ from .const import (
     DEFAULT_INTERFACE,
     DEFAULT_WAIT_FOR_PUSH,
     DOMAIN,
+    KEY_API_LOCK,
     KEY_COORDINATOR,
     KEY_GATEWAY,
     KEY_MULTICAST_LISTENER,
@@ -56,6 +58,7 @@ class DataUpdateCoordinatorMotionBlinds(DataUpdateCoordinator):
             update_interval=update_interval,
         )
 
+        self.api_lock = coordinator_info[KEY_API_LOCK]
         self._gateway = coordinator_info[KEY_GATEWAY]
         self._wait_for_push = coordinator_info[CONF_WAIT_FOR_PUSH]
 
@@ -88,7 +91,8 @@ class DataUpdateCoordinatorMotionBlinds(DataUpdateCoordinator):
 
     async def _async_update_data(self):
         """Fetch the latest data from the gateway and blinds."""
-        data = await self.hass.async_add_executor_job(self.update_gateway)
+        async with self.api_lock:
+            data = await self.hass.async_add_executor_job(self.update_gateway)
 
         all_available = all(device[ATTR_AVAILABLE] for device in data.values())
         if all_available:
@@ -109,9 +113,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
+    # check multicast interface
+    check_multicast_class = ConnectMotionGateway(hass, interface=multicast_interface)
+    working_interface = await check_multicast_class.async_check_interface(host, key)
+    if working_interface != multicast_interface:
+        data = {**entry.data, CONF_INTERFACE: working_interface}
+        hass.config_entries.async_update_entry(entry, data=data)
+        _LOGGER.debug(
+            "Motion Blinds interface updated from %s to %s, "
+            "this should only occur after a network change",
+            multicast_interface,
+            working_interface,
+        )
+
     # Create multicast Listener
     if KEY_MULTICAST_LISTENER not in hass.data[DOMAIN]:
-        multicast = AsyncMotionMulticast(interface=multicast_interface)
+        multicast = AsyncMotionMulticast(interface=working_interface)
         hass.data[DOMAIN][KEY_MULTICAST_LISTENER] = multicast
         # start listening for local pushes (only once)
         await multicast.Start_listen()
@@ -130,8 +147,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not await connect_gateway_class.async_connect_gateway(host, key):
         raise ConfigEntryNotReady
     motion_gateway = connect_gateway_class.gateway_device
+    api_lock = asyncio.Lock()
     coordinator_info = {
         KEY_GATEWAY: motion_gateway,
+        KEY_API_LOCK: api_lock,
         CONF_WAIT_FOR_PUSH: wait_for_push,
     }
 

@@ -23,35 +23,14 @@
       "lower_bound": 0.0,
       "upper_bound": 99.9,
       "resolution": 0.01,
-      "preset_modes": [
-        "home",
-        "asleep",
-        "away",
-        "vacation",
-        "no_frost"
-      ],
+      "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
       "active_preset": "away",
       "presets": {
-        "home": [
-          20.0,
-          22.0
-        ],
-        "asleep": [
-          17.0,
-          24.0
-        ],
-        "away": [
-          15.0,
-          25.0
-        ],
-        "vacation": [
-          15.0,
-          28.0
-        ],
-        "no_frost": [
-          10.0,
-          30.0
-        ]
+        "home": [20.0, 22.0],
+        "asleep": [17.0, 24.0],
+        "away": [15.0, 25.0],
+        "vacation": [15.0, 28.0],
+        "no_frost": [10.0, 30.0]
       },
       "available_schedules": [
         "CV Roan",
@@ -121,35 +100,14 @@
       "lower_bound": 0.0,
       "upper_bound": 99.9,
       "resolution": 0.01,
-      "preset_modes": [
-        "home",
-        "asleep",
-        "away",
-        "vacation",
-        "no_frost"
-      ],
+      "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
       "active_preset": "home",
       "presets": {
-        "home": [
-          20.0,
-          22.0
-        ],
-        "asleep": [
-          17.0,
-          24.0
-        ],
-        "away": [
-          15.0,
-          25.0
-        ],
-        "vacation": [
-          15.0,
-          28.0
-        ],
-        "no_frost": [
-          10.0,
-          30.0
-        ]
+        "home": [20.0, 22.0],
+        "asleep": [17.0, 24.0],
+        "away": [15.0, 25.0],
+        "vacation": [15.0, 28.0],
+        "no_frost": [10.0, 30.0]
       },
       "available_schedules": [
         "CV Roan",
@@ -178,6 +136,8 @@
       "name": "Adam",
       "vendor": "Plugwise B.V.",
       "zigbee_mac_address": "ABCD012345670101",
+      "regulation_mode": "heating",
+      "regulation_modes": [],
       "binary_sensors": {
         "plugwise_notification": true
       },
@@ -360,35 +320,14 @@
       "lower_bound": 0.0,
       "upper_bound": 99.9,
       "resolution": 0.01,
-      "preset_modes": [
-        "home",
-        "asleep",
-        "away",
-        "vacation",
-        "no_frost"
-      ],
+      "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
       "active_preset": "asleep",
       "presets": {
-        "home": [
-          20.0,
-          22.0
-        ],
-        "asleep": [
-          17.0,
-          24.0
-        ],
-        "away": [
-          15.0,
-          25.0
-        ],
-        "vacation": [
-          15.0,
-          28.0
-        ],
-        "no_frost": [
-          10.0,
-          30.0
-        ]
+        "home": [20.0, 22.0],
+        "asleep": [17.0, 24.0],
+        "away": [15.0, 25.0],
+        "vacation": [15.0, 28.0],
+        "no_frost": [10.0, 30.0]
       },
       "available_schedules": [
         "CV Roan",
@@ -439,35 +378,14 @@
       "lower_bound": 0.0,
       "upper_bound": 99.9,
       "resolution": 0.01,
-      "preset_modes": [
-        "home",
-        "asleep",
-        "away",
-        "vacation",
-        "no_frost"
-      ],
+      "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
       "active_preset": "away",
       "presets": {
-        "home": [
-          20.0,
-          22.0
-        ],
-        "asleep": [
-          17.0,
-          24.0
-        ],
-        "away": [
-          15.0,
-          25.0
-        ],
-        "vacation": [
-          15.0,
-          28.0
-        ],
-        "no_frost": [
-          10.0,
-          30.0
-        ]
+        "home": [20.0, 22.0],
+        "asleep": [17.0, 24.0],
+        "away": [15.0, 25.0],
+        "vacation": [15.0, 28.0],
+        "no_frost": [10.0, 30.0]
       },
       "available_schedules": [
         "CV Roan",
@@ -519,35 +437,14 @@
       "lower_bound": 0.0,
       "upper_bound": 100.0,
       "resolution": 0.01,
-      "preset_modes": [
-        "home",
-        "asleep",
-        "away",
-        "vacation",
-        "no_frost"
-      ],
+      "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
       "active_preset": "no_frost",
       "presets": {
-        "home": [
-          20.0,
-          22.0
-        ],
-        "asleep": [
-          17.0,
-          24.0
-        ],
-        "away": [
-          15.0,
-          25.0
-        ],
-        "vacation": [
-          15.0,
-          28.0
-        ],
-        "no_frost": [
-          10.0,
-          30.0
-        ]
+        "home": [20.0, 22.0],
+        "asleep": [17.0, 24.0],
+        "away": [15.0, 25.0],
+        "vacation": [15.0, 28.0],
+        "no_frost": [10.0, 30.0]
       },
       "available_schedules": [
         "CV Roan",

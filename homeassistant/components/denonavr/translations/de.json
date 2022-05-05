@@ -27,6 +27,9 @@
                 "data": {
                     "host": "IP-Adresse"
                 },
+                "data_description": {
+                    "host": "Leer lassen, um automatische Erkennung zu verwenden"
+                },
                 "description": "Verbinde dich mit deinem Receiver, wenn die IP-Adresse nicht eingestellt ist, wird die automatische Erkennung verwendet",
                 "title": "Denon AVR-Netzwerk-Receiver"
             }

@@ -34,8 +34,8 @@
         },
         "error": {
             "bad_host": "URL host API di sostituzione non valido",
-            "one": "Pi\u00f9",
-            "other": "Altri"
+            "one": "Vuoto",
+            "other": "Vuoti"
         },
         "step": {
             "options_binary": {
@@ -92,7 +92,7 @@
                     "override_api_host": "Sovrascrivi l'URL predefinito del pannello host API di Home Assistant"
                 },
                 "description": "Seleziona il comportamento desiderato per il tuo pannello",
-                "title": "Configura Altro"
+                "title": "Configura altro"
             },
             "options_switch": {
                 "data": {

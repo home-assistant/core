@@ -28,6 +28,7 @@ TYPE_BATT6 = "batt6"
 TYPE_BATT7 = "batt7"
 TYPE_BATT8 = "batt8"
 TYPE_BATT9 = "batt9"
+TYPE_BATTIN = "battin"
 TYPE_BATTOUT = "battout"
 TYPE_BATT_CO2 = "batt_co2"
 TYPE_BATT_LIGHTNING = "batt_lightning"
@@ -136,6 +137,13 @@ BINARY_SENSOR_DESCRIPTIONS = (
     AmbientBinarySensorDescription(
         key=TYPE_BATT9,
         name="Battery 9",
+        device_class=BinarySensorDeviceClass.BATTERY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        on_state=0,
+    ),
+    AmbientBinarySensorDescription(
+        key=TYPE_BATTIN,
+        name="Interior Battery",
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         on_state=0,

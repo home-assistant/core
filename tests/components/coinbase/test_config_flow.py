@@ -8,6 +8,7 @@ from requests.models import Response
 from homeassistant import config_entries
 from homeassistant.components.coinbase.const import (
     CONF_CURRENCIES,
+    CONF_EXCHANGE_PRECISION,
     CONF_EXCHANGE_RATES,
     CONF_YAML_API_TOKEN,
     DOMAIN,
@@ -211,6 +212,7 @@ async def test_option_form(hass):
             user_input={
                 CONF_CURRENCIES: [GOOD_CURRENCY],
                 CONF_EXCHANGE_RATES: [GOOD_EXCHANGE_RATE],
+                CONF_EXCHANGE_PRECISION: 5,
             },
         )
         assert result2["type"] == "create_entry"
@@ -237,6 +239,7 @@ async def test_form_bad_account_currency(hass):
             user_input={
                 CONF_CURRENCIES: [BAD_CURRENCY],
                 CONF_EXCHANGE_RATES: [],
+                CONF_EXCHANGE_PRECISION: 5,
             },
         )
 
@@ -263,6 +266,7 @@ async def test_form_bad_exchange_rate(hass):
             user_input={
                 CONF_CURRENCIES: [],
                 CONF_EXCHANGE_RATES: [BAD_EXCHANGE_RATE],
+                CONF_EXCHANGE_PRECISION: 5,
             },
         )
     assert result2["type"] == "form"
@@ -293,6 +297,7 @@ async def test_option_catch_all_exception(hass):
             user_input={
                 CONF_CURRENCIES: [],
                 CONF_EXCHANGE_RATES: ["ETH"],
+                CONF_EXCHANGE_PRECISION: 5,
             },
         )
 

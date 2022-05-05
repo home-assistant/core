@@ -28,7 +28,7 @@
     {
       "hostname": "hub*",
       "macaddress": "286D97*"
-    }    
+    }
   ],
   "loggers": ["httpsig", "pysmartapp", "pysmartthings"]
 }

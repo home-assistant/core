@@ -33,6 +33,10 @@ def async_redact_data(data: _T, to_redact: Iterable[Any]) -> _T:
     redacted = {**data}
 
     for key, value in redacted.items():
+        if value is None:
+            continue
+        if isinstance(value, str) and not value:
+            continue
         if key in to_redact:
             redacted[key] = REDACTED
         elif isinstance(value, Mapping):

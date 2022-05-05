@@ -114,7 +114,7 @@ class DelugeFlowHandler(ConfigFlow, domain=DOMAIN):
             await self.hass.async_add_executor_job(api.connect)
         except (
             ConnectionRefusedError,
-            socket.timeout,  # pylint:disable=no-member
+            socket.timeout,
             SSLError,
         ):
             return "cannot_connect"

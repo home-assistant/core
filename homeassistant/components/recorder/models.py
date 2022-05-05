@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 import json
 import logging
-from typing import Any, TypedDict, overload
+from typing import Any, TypedDict, cast, overload
 
 from fnvhash import fnv1a_32
 from sqlalchemy import (
@@ -17,6 +17,7 @@ from sqlalchemy import (
     Identity,
     Index,
     Integer,
+    SmallInteger,
     String,
     Text,
     distinct,
@@ -34,22 +35,23 @@ from homeassistant.const import (
     MAX_LENGTH_STATE_ENTITY_ID,
     MAX_LENGTH_STATE_STATE,
 )
-from homeassistant.core import Context, Event, EventOrigin, State
+from homeassistant.core import Context, Event, EventOrigin, State, split_entity_id
 import homeassistant.util.dt as dt_util
 
-from .const import JSON_DUMP
+from .const import ALL_DOMAIN_EXCLUDE_ATTRS, JSON_DUMP
 
 # SQLAlchemy Schema
 # pylint: disable=invalid-name
 Base = declarative_base()
 
-SCHEMA_VERSION = 25
+SCHEMA_VERSION = 28
 
 _LOGGER = logging.getLogger(__name__)
 
 DB_TIMEZONE = "+00:00"
 
 TABLE_EVENTS = "events"
+TABLE_EVENT_DATA = "event_data"
 TABLE_STATES = "states"
 TABLE_STATE_ATTRIBUTES = "state_attributes"
 TABLE_RECORDER_RUNS = "recorder_runs"
@@ -59,6 +61,9 @@ TABLE_STATISTICS_META = "statistics_meta"
 TABLE_STATISTICS_RUNS = "statistics_runs"
 TABLE_STATISTICS_SHORT_TERM = "statistics_short_term"
 
+# Only add TABLE_STATE_ATTRIBUTES and TABLE_EVENT_DATA
+# to the below list once we want to check for their
+# instance in the sanity check.
 ALL_TABLES = [
     TABLE_STATES,
     TABLE_EVENTS,
@@ -82,6 +87,8 @@ DOUBLE_TYPE = (
     .with_variant(oracle.DOUBLE_PRECISION(), "oracle")
     .with_variant(postgresql.DOUBLE_PRECISION(), "postgresql")
 )
+EVENT_ORIGIN_ORDER = [EventOrigin.local, EventOrigin.remote]
+EVENT_ORIGIN_TO_IDX = {origin: idx for idx, origin in enumerate(EVENT_ORIGIN_ORDER)}
 
 
 class Events(Base):  # type: ignore[misc,valid-type]
@@ -94,38 +101,41 @@ class Events(Base):  # type: ignore[misc,valid-type]
         {"mysql_default_charset": "utf8mb4", "mysql_collate": "utf8mb4_unicode_ci"},
     )
     __tablename__ = TABLE_EVENTS
-    event_id = Column(Integer, Identity(), primary_key=True)
+    event_id = Column(Integer, Identity(), primary_key=True)  # no longer used
     event_type = Column(String(MAX_LENGTH_EVENT_EVENT_TYPE))
     event_data = Column(Text().with_variant(mysql.LONGTEXT, "mysql"))
-    origin = Column(String(MAX_LENGTH_EVENT_ORIGIN))
+    origin = Column(String(MAX_LENGTH_EVENT_ORIGIN))  # no longer used
+    origin_idx = Column(SmallInteger)
     time_fired = Column(DATETIME_TYPE, index=True)
     context_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
-    context_user_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
-    context_parent_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
+    context_user_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID))
+    context_parent_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID))
+    data_id = Column(Integer, ForeignKey("event_data.data_id"), index=True)
+    event_data_rel = relationship("EventData")
 
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
         return (
             f"<recorder.Events("
-            f"id={self.event_id}, type='{self.event_type}', data='{self.event_data}', "
-            f"origin='{self.origin}', time_fired='{self.time_fired}'"
-            f")>"
+            f"id={self.event_id}, type='{self.event_type}', "
+            f"origin_idx='{self.origin_idx}', time_fired='{self.time_fired}'"
+            f", data_id={self.data_id})>"
         )
 
     @staticmethod
-    def from_event(event, event_data=None):
+    def from_event(event: Event) -> Events:
         """Create an event database object from a native event."""
         return Events(
             event_type=event.event_type,
-            event_data=event_data or JSON_DUMP(event.data),
-            origin=str(event.origin.value),
+            event_data=None,
+            origin_idx=EVENT_ORIGIN_TO_IDX.get(event.origin),
             time_fired=event.time_fired,
             context_id=event.context.id,
             context_user_id=event.context.user_id,
             context_parent_id=event.context.parent_id,
         )
 
-    def to_native(self, validate_entity_id=True):
+    def to_native(self, validate_entity_id: bool = True) -> Event | None:
         """Convert to a native HA Event."""
         context = Context(
             id=self.context_id,
@@ -135,8 +145,10 @@ class Events(Base):  # type: ignore[misc,valid-type]
         try:
             return Event(
                 self.event_type,
-                json.loads(self.event_data),
-                EventOrigin(self.origin),
+                json.loads(self.event_data) if self.event_data else {},
+                EventOrigin(self.origin)
+                if self.origin
+                else EVENT_ORIGIN_ORDER[self.origin_idx],
                 process_timestamp(self.time_fired),
                 context=context,
             )
@@ -144,6 +156,53 @@ class Events(Base):  # type: ignore[misc,valid-type]
             # When json.loads fails
             _LOGGER.exception("Error converting to event: %s", self)
             return None
+
+
+class EventData(Base):  # type: ignore[misc,valid-type]
+    """Event data history."""
+
+    __table_args__ = (
+        {"mysql_default_charset": "utf8mb4", "mysql_collate": "utf8mb4_unicode_ci"},
+    )
+    __tablename__ = TABLE_EVENT_DATA
+    data_id = Column(Integer, Identity(), primary_key=True)
+    hash = Column(BigInteger, index=True)
+    # Note that this is not named attributes to avoid confusion with the states table
+    shared_data = Column(Text().with_variant(mysql.LONGTEXT, "mysql"))
+
+    def __repr__(self) -> str:
+        """Return string representation of instance for debugging."""
+        return (
+            f"<recorder.EventData("
+            f"id={self.data_id}, hash='{self.hash}', data='{self.shared_data}'"
+            f")>"
+        )
+
+    @staticmethod
+    def from_event(event: Event) -> EventData:
+        """Create object from an event."""
+        shared_data = JSON_DUMP(event.data)
+        return EventData(
+            shared_data=shared_data, hash=EventData.hash_shared_data(shared_data)
+        )
+
+    @staticmethod
+    def shared_data_from_event(event: Event) -> str:
+        """Create shared_attrs from an event."""
+        return JSON_DUMP(event.data)
+
+    @staticmethod
+    def hash_shared_data(shared_data: str) -> int:
+        """Return the hash of json encoded shared data."""
+        return cast(int, fnv1a_32(shared_data.encode("utf-8")))
+
+    def to_native(self) -> dict[str, Any]:
+        """Convert to an HA state object."""
+        try:
+            return cast(dict[str, Any], json.loads(self.shared_data))
+        except ValueError:
+            _LOGGER.exception("Error converting row to event data: %s", self)
+            return {}
 
 
 class States(Base):  # type: ignore[misc,valid-type]
@@ -169,7 +228,10 @@ class States(Base):  # type: ignore[misc,valid-type]
     attributes_id = Column(
         Integer, ForeignKey("state_attributes.attributes_id"), index=True
     )
-    event = relationship("Events", uselist=False)
+    context_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
+    context_user_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID))
+    context_parent_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID))
+    origin_idx = Column(SmallInteger)  # 0 is local, 1 is remote
     old_state = relationship("States", remote_side=[state_id])
     state_attributes = relationship("StateAttributes")
 
@@ -185,11 +247,18 @@ class States(Base):  # type: ignore[misc,valid-type]
         )
 
     @staticmethod
-    def from_event(event) -> States:
+    def from_event(event: Event) -> States:
         """Create object from a state_changed event."""
         entity_id = event.data["entity_id"]
         state: State | None = event.data.get("new_state")
-        dbstate = States(entity_id=entity_id, attributes=None)
+        dbstate = States(
+            entity_id=entity_id,
+            attributes=None,
+            context_id=event.context.id,
+            context_user_id=event.context.user_id,
+            context_parent_id=event.context.parent_id,
+            origin_idx=EVENT_ORIGIN_TO_IDX.get(event.origin),
+        )
 
         # None state means the state was removed from the state machine
         if state is None:
@@ -205,6 +274,11 @@ class States(Base):  # type: ignore[misc,valid-type]
 
     def to_native(self, validate_entity_id: bool = True) -> State | None:
         """Convert to an HA state object."""
+        context = Context(
+            id=self.context_id,
+            user_id=self.context_user_id,
+            parent_id=self.context_parent_id,
+        )
         try:
             return State(
                 self.entity_id,
@@ -214,9 +288,7 @@ class States(Base):  # type: ignore[misc,valid-type]
                 json.loads(self.attributes) if self.attributes else {},
                 process_timestamp(self.last_changed),
                 process_timestamp(self.last_updated),
-                # Join the events table on event_id to get the context instead
-                # as it will always be there for state_changed events
-                context=Context(id=None),  # type: ignore[arg-type]
+                context=context,
                 validate_entity_id=validate_entity_id,
             )
         except ValueError:
@@ -257,21 +329,31 @@ class StateAttributes(Base):  # type: ignore[misc,valid-type]
         return dbstate
 
     @staticmethod
-    def shared_attrs_from_event(event: Event) -> str:
+    def shared_attrs_from_event(
+        event: Event, exclude_attrs_by_domain: dict[str, set[str]]
+    ) -> str:
         """Create shared_attrs from a state_changed event."""
         state: State | None = event.data.get("new_state")
         # None state means the state was removed from the state machine
-        return "{}" if state is None else JSON_DUMP(state.attributes)
+        if state is None:
+            return "{}"
+        domain = split_entity_id(state.entity_id)[0]
+        exclude_attrs = (
+            exclude_attrs_by_domain.get(domain, set()) | ALL_DOMAIN_EXCLUDE_ATTRS
+        )
+        return JSON_DUMP(
+            {k: v for k, v in state.attributes.items() if k not in exclude_attrs}
+        )
 
     @staticmethod
     def hash_shared_attrs(shared_attrs: str) -> int:
         """Return the hash of json encoded shared attributes."""
-        return fnv1a_32(shared_attrs.encode("utf-8"))
+        return cast(int, fnv1a_32(shared_attrs.encode("utf-8")))
 
     def to_native(self) -> dict[str, Any]:
         """Convert to an HA state object."""
         try:
-            return json.loads(self.shared_attrs)
+            return cast(dict[str, Any], json.loads(self.shared_attrs))
         except ValueError:
             # When json.loads fails
             _LOGGER.exception("Error converting row to state attributes: %s", self)
@@ -311,8 +393,8 @@ class StatisticsBase:
     id = Column(Integer, Identity(), primary_key=True)
     created = Column(DATETIME_TYPE, default=dt_util.utcnow)
 
-    @declared_attr
-    def metadata_id(self):
+    @declared_attr  # type: ignore[misc]
+    def metadata_id(self) -> Column:
         """Define the metadata_id column for sub classes."""
         return Column(
             Integer,
@@ -329,7 +411,7 @@ class StatisticsBase:
     sum = Column(DOUBLE_TYPE)
 
     @classmethod
-    def from_stats(cls, metadata_id: int, stats: StatisticData):
+    def from_stats(cls, metadata_id: int, stats: StatisticData) -> StatisticsBase:
         """Create object from a statistics."""
         return cls(  # type: ignore[call-arg,misc]
             metadata_id=metadata_id,
@@ -422,7 +504,7 @@ class RecorderRuns(Base):  # type: ignore[misc,valid-type]
             f")>"
         )
 
-    def entity_ids(self, point_in_time=None):
+    def entity_ids(self, point_in_time: datetime | None = None) -> list[str]:
         """Return the entity ids that existed in this run.
 
         Specify point_in_time if you want to know which existed at that point
@@ -443,7 +525,7 @@ class RecorderRuns(Base):  # type: ignore[misc,valid-type]
 
         return [row[0] for row in query]
 
-    def to_native(self, validate_entity_id=True):
+    def to_native(self, validate_entity_id: bool = True) -> RecorderRuns:
         """Return self, native format is this model."""
         return self
 
@@ -471,7 +553,7 @@ class StatisticsRuns(Base):  # type: ignore[misc,valid-type]
 
     __tablename__ = TABLE_STATISTICS_RUNS
     run_id = Column(Integer, Identity(), primary_key=True)
-    start = Column(DateTime(timezone=True))
+    start = Column(DateTime(timezone=True), index=True)
 
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
@@ -528,8 +610,6 @@ class LazyState(State):
 
     __slots__ = [
         "_row",
-        "entity_id",
-        "state",
         "_attributes",
         "_last_changed",
         "_last_updated",
@@ -542,16 +622,16 @@ class LazyState(State):
     ) -> None:
         """Init the lazy state."""
         self._row = row
-        self.entity_id = self._row.entity_id
+        self.entity_id: str = self._row.entity_id
         self.state = self._row.state or ""
-        self._attributes = None
-        self._last_changed = None
-        self._last_updated = None
-        self._context = None
+        self._attributes: dict[str, Any] | None = None
+        self._last_changed: datetime | None = None
+        self._last_updated: datetime | None = None
+        self._context: Context | None = None
         self._attr_cache = attr_cache
 
     @property  # type: ignore[override]
-    def attributes(self):
+    def attributes(self) -> dict[str, Any]:  # type: ignore[override]
         """State attributes."""
         if self._attributes is None:
             source = self._row.shared_attrs or self._row.attributes
@@ -576,47 +656,50 @@ class LazyState(State):
         return self._attributes
 
     @attributes.setter
-    def attributes(self, value):
+    def attributes(self, value: dict[str, Any]) -> None:
         """Set attributes."""
         self._attributes = value
 
     @property  # type: ignore[override]
-    def context(self):
+    def context(self) -> Context:  # type: ignore[override]
         """State context."""
-        if not self._context:
-            self._context = Context(id=None)
+        if self._context is None:
+            self._context = Context(id=None)  # type: ignore[arg-type]
         return self._context
 
     @context.setter
-    def context(self, value):
+    def context(self, value: Context) -> None:
         """Set context."""
         self._context = value
 
     @property  # type: ignore[override]
-    def last_changed(self):
+    def last_changed(self) -> datetime:  # type: ignore[override]
         """Last changed datetime."""
-        if not self._last_changed:
+        if self._last_changed is None:
             self._last_changed = process_timestamp(self._row.last_changed)
         return self._last_changed
 
     @last_changed.setter
-    def last_changed(self, value):
+    def last_changed(self, value: datetime) -> None:
         """Set last changed datetime."""
         self._last_changed = value
 
     @property  # type: ignore[override]
-    def last_updated(self):
+    def last_updated(self) -> datetime:  # type: ignore[override]
         """Last updated datetime."""
-        if not self._last_updated:
-            self._last_updated = process_timestamp(self._row.last_updated)
+        if self._last_updated is None:
+            if (last_updated := self._row.last_updated) is not None:
+                self._last_updated = process_timestamp(last_updated)
+            else:
+                self._last_updated = self.last_changed
         return self._last_updated
 
     @last_updated.setter
-    def last_updated(self, value):
+    def last_updated(self, value: datetime) -> None:
         """Set last updated datetime."""
         self._last_updated = value
 
-    def as_dict(self):
+    def as_dict(self) -> dict[str, Any]:  # type: ignore[override]
         """Return a dict representation of the LazyState.
 
         Async friendly.
@@ -627,7 +710,10 @@ class LazyState(State):
             last_changed_isoformat = process_timestamp_to_utc_isoformat(
                 self._row.last_changed
             )
-            if self._row.last_changed == self._row.last_updated:
+            if (
+                self._row.last_updated is None
+                or self._row.last_changed == self._row.last_updated
+            ):
                 last_updated_isoformat = last_changed_isoformat
             else:
                 last_updated_isoformat = process_timestamp_to_utc_isoformat(
@@ -647,7 +733,7 @@ class LazyState(State):
             "last_updated": last_updated_isoformat,
         }
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> bool:
         """Return the comparison."""
         return (
             other.__class__ in [self.__class__, State]

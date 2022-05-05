@@ -1,8 +1,7 @@
 """Interfaces with iAlarm control panels."""
-from homeassistant.components.alarm_control_panel import AlarmControlPanelEntity
-from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_HOME,
+from homeassistant.components.alarm_control_panel import (
+    AlarmControlPanelEntity,
+    AlarmControlPanelEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -23,6 +22,11 @@ async def async_setup_entry(
 
 class IAlarmPanel(CoordinatorEntity, AlarmControlPanelEntity):
     """Representation of an iAlarm device."""
+
+    _attr_supported_features = (
+        AlarmControlPanelEntityFeature.ARM_HOME
+        | AlarmControlPanelEntityFeature.ARM_AWAY
+    )
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -47,11 +51,6 @@ class IAlarmPanel(CoordinatorEntity, AlarmControlPanelEntity):
     def state(self):
         """Return the state of the device."""
         return self.coordinator.state
-
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""

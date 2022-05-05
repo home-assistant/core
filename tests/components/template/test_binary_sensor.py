@@ -17,6 +17,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, CoreState, State
 from homeassistant.helpers import entity_registry
+from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -753,14 +754,10 @@ async def test_no_update_template_match_all(hass, caplog):
     assert hass.states.get("binary_sensor.all_entity_picture").state == OFF
     assert hass.states.get("binary_sensor.all_attribute").state == OFF
 
-    await hass.helpers.entity_component.async_update_entity("binary_sensor.all_state")
-    await hass.helpers.entity_component.async_update_entity("binary_sensor.all_icon")
-    await hass.helpers.entity_component.async_update_entity(
-        "binary_sensor.all_entity_picture"
-    )
-    await hass.helpers.entity_component.async_update_entity(
-        "binary_sensor.all_attribute"
-    )
+    await async_update_entity(hass, "binary_sensor.all_state")
+    await async_update_entity(hass, "binary_sensor.all_icon")
+    await async_update_entity(hass, "binary_sensor.all_entity_picture")
+    await async_update_entity(hass, "binary_sensor.all_attribute")
 
     assert hass.states.get("binary_sensor.all_state").state == ON
     assert hass.states.get("binary_sensor.all_icon").state == OFF
@@ -1145,29 +1142,41 @@ async def test_template_with_trigger_templated_delay_on(hass, start_ha):
                     "name": "test",
                     "state": "{{ trigger.event.data.beer == 2 }}",
                     "device_class": "motion",
+                    "picture": "{{ '/local/dogs.png' }}",
+                    "icon": "{{ 'mdi:pirate' }}",
+                    "attributes": {
+                        "plus_one": "{{ trigger.event.data.beer + 1 }}",
+                        "another": "{{ trigger.event.data.uno_mas or 1 }}",
+                    },
                 },
             },
         },
     ],
 )
 @pytest.mark.parametrize(
-    "restored_state, initial_state",
+    "restored_state, initial_state, initial_attributes",
     [
-        (ON, ON),
-        (OFF, OFF),
-        (STATE_UNAVAILABLE, STATE_UNKNOWN),
-        (STATE_UNKNOWN, STATE_UNKNOWN),
+        (ON, ON, ["entity_picture", "icon", "plus_one"]),
+        (OFF, OFF, ["entity_picture", "icon", "plus_one"]),
+        (STATE_UNAVAILABLE, STATE_UNKNOWN, []),
+        (STATE_UNKNOWN, STATE_UNKNOWN, []),
     ],
 )
 async def test_trigger_entity_restore_state(
-    hass, count, domain, config, restored_state, initial_state
+    hass, count, domain, config, restored_state, initial_state, initial_attributes
 ):
     """Test restoring trigger template binary sensor."""
+
+    restored_attributes = {
+        "entity_picture": "/local/cats.png",
+        "icon": "mdi:ship",
+        "plus_one": 55,
+    }
 
     fake_state = State(
         "binary_sensor.test",
         restored_state,
-        {},
+        restored_attributes,
     )
     fake_extra_data = {
         "auto_off_time": None,
@@ -1186,6 +1195,22 @@ async def test_trigger_entity_restore_state(
 
     state = hass.states.get("binary_sensor.test")
     assert state.state == initial_state
+    for attr in restored_attributes:
+        if attr in initial_attributes:
+            assert state.attributes[attr] == restored_attributes[attr]
+        else:
+            assert attr not in state.attributes
+    assert "another" not in state.attributes
+
+    hass.bus.async_fire("test_event", {"beer": 2})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == ON
+    assert state.attributes["icon"] == "mdi:pirate"
+    assert state.attributes["entity_picture"] == "/local/dogs.png"
+    assert state.attributes["plus_one"] == 3
+    assert state.attributes["another"] == 1
 
 
 @pytest.mark.parametrize("count,domain", [(1, "template")])

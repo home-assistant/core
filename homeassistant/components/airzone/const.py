@@ -10,7 +10,7 @@ DOMAIN: Final = "airzone"
 MANUFACTURER: Final = "Airzone"
 
 AIOAIRZONE_DEVICE_TIMEOUT_SEC: Final = 10
-DEFAULT_LOCAL_API_PORT: Final = 3000
+API_TEMPERATURE_STEP: Final = 0.5
 
 TEMP_UNIT_LIB_TO_HASS: Final[dict[TemperatureUnit, str]] = {
     TemperatureUnit.CELSIUS: TEMP_CELSIUS,

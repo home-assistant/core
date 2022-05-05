@@ -11,6 +11,7 @@ from homeassistant.components.vacuum import (
     STATE_RETURNING,
 )
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.helpers.entity_component import async_update_entity
 
 from tests.common import assert_setup_component
 from tests.components.vacuum import common
@@ -244,9 +245,7 @@ async def test_attribute_templates(hass, start_ha):
 
     hass.states.async_set("sensor.test_state", "Works")
     await hass.async_block_till_done()
-    await hass.helpers.entity_component.async_update_entity(
-        "vacuum.test_template_vacuum"
-    )
+    await async_update_entity(hass, "vacuum.test_template_vacuum")
     state = hass.states.get("vacuum.test_template_vacuum")
     assert state.attributes["test_attribute"] == "It Works."
 

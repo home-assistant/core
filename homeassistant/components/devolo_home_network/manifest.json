@@ -4,7 +4,9 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/devolo_home_network",
   "requirements": ["devolo-plc-api==0.7.1"],
-  "zeroconf": ["_dvl-deviceapi._tcp.local."],
+  "zeroconf": [
+    { "type": "_dvl-deviceapi._tcp.local.", "properties": { "MT": "*" } }
+  ],
   "codeowners": ["@2Fake", "@Shutgun"],
   "quality_scale": "platinum",
   "iot_class": "local_polling",

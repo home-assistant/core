@@ -1,6 +1,5 @@
 """Tests for the AndroidTV config flow."""
 import json
-from socket import gaierror
 from unittest.mock import patch
 
 import pytest
@@ -29,6 +28,7 @@ from homeassistant.components.androidtv.const import (
     CONF_TURN_ON_COMMAND,
     DEFAULT_ADB_SERVER_PORT,
     DEFAULT_PORT,
+    DEVICE_ANDROIDTV,
     DOMAIN,
     PROP_ETHMAC,
     PROP_WIFIMAC,
@@ -36,12 +36,14 @@ from homeassistant.components.androidtv.const import (
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_HOST, CONF_PORT
 
+from .patchers import PATCH_ACCESS, PATCH_ISFILE, PATCH_SETUP_ENTRY
+
 from tests.common import MockConfigEntry
-from tests.components.androidtv.patchers import isfile
 
 ADBKEY = "adbkey"
 ETH_MAC = "a1:b1:c1:d1:e1:f1"
 WIFI_MAC = "a2:b2:c2:d2:e2:f2"
+INVALID_MAC = "ff:ff:ff:ff:ff:ff"
 HOST = "127.0.0.1"
 VALID_DETECT_RULE = [{"paused": {"media_session_state": 3}}]
 
@@ -49,35 +51,20 @@ VALID_DETECT_RULE = [{"paused": {"media_session_state": 3}}]
 CONFIG_PYTHON_ADB = {
     CONF_HOST: HOST,
     CONF_PORT: DEFAULT_PORT,
-    CONF_DEVICE_CLASS: "androidtv",
-    CONF_ADB_SERVER_PORT: DEFAULT_ADB_SERVER_PORT,
+    CONF_DEVICE_CLASS: DEVICE_ANDROIDTV,
 }
 
 # Android TV device with ADB server
 CONFIG_ADB_SERVER = {
     CONF_HOST: HOST,
     CONF_PORT: DEFAULT_PORT,
-    CONF_DEVICE_CLASS: "androidtv",
+    CONF_DEVICE_CLASS: DEVICE_ANDROIDTV,
     CONF_ADB_SERVER_IP: "127.0.0.1",
     CONF_ADB_SERVER_PORT: DEFAULT_ADB_SERVER_PORT,
 }
 
 CONNECT_METHOD = (
     "homeassistant.components.androidtv.config_flow.async_connect_androidtv"
-)
-PATCH_ACCESS = patch(
-    "homeassistant.components.androidtv.config_flow.os.access", return_value=True
-)
-PATCH_GET_HOST_IP = patch(
-    "homeassistant.components.androidtv.config_flow.socket.gethostbyname",
-    return_value=HOST,
-)
-PATCH_ISFILE = patch(
-    "homeassistant.components.androidtv.config_flow.os.path.isfile", isfile
-)
-PATCH_SETUP_ENTRY = patch(
-    "homeassistant.components.androidtv.async_setup_entry",
-    return_value=True,
 )
 
 
@@ -117,7 +104,7 @@ async def test_user(hass, config, eth_mac, wifi_mac):
     with patch(
         CONNECT_METHOD,
         return_value=(MockConfigDevice(eth_mac, wifi_mac), None),
-    ), PATCH_SETUP_ENTRY as mock_setup_entry, PATCH_GET_HOST_IP:
+    ), PATCH_SETUP_ENTRY as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             flow_result["flow_id"], user_input=config
         )
@@ -138,7 +125,7 @@ async def test_user_adbkey(hass):
     with patch(
         CONNECT_METHOD,
         return_value=(MockConfigDevice(), None),
-    ), PATCH_SETUP_ENTRY as mock_setup_entry, PATCH_GET_HOST_IP, PATCH_ISFILE, PATCH_ACCESS:
+    ), PATCH_ISFILE, PATCH_ACCESS, PATCH_SETUP_ENTRY as mock_setup_entry:
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -171,7 +158,7 @@ async def test_error_both_key_server(hass):
     with patch(
         CONNECT_METHOD,
         return_value=(MockConfigDevice(), None),
-    ), PATCH_SETUP_ENTRY, PATCH_GET_HOST_IP:
+    ), PATCH_SETUP_ENTRY:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=CONFIG_ADB_SERVER
         )
@@ -198,7 +185,7 @@ async def test_error_invalid_key(hass):
     with patch(
         CONNECT_METHOD,
         return_value=(MockConfigDevice(), None),
-    ), PATCH_SETUP_ENTRY, PATCH_GET_HOST_IP:
+    ), PATCH_SETUP_ENTRY:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=CONFIG_ADB_SERVER
         )
@@ -209,45 +196,27 @@ async def test_error_invalid_key(hass):
         assert result2["data"] == CONFIG_ADB_SERVER
 
 
-async def test_error_invalid_host(hass):
-    """Test we abort if host name is invalid."""
+@pytest.mark.parametrize(
+    ["config", "eth_mac", "wifi_mac"],
+    [
+        (CONFIG_ADB_SERVER, None, None),
+        (CONFIG_PYTHON_ADB, None, None),
+        (CONFIG_ADB_SERVER, INVALID_MAC, None),
+        (CONFIG_PYTHON_ADB, INVALID_MAC, None),
+        (CONFIG_ADB_SERVER, None, INVALID_MAC),
+        (CONFIG_PYTHON_ADB, None, INVALID_MAC),
+    ],
+)
+async def test_invalid_mac(hass, config, eth_mac, wifi_mac):
+    """Test for invalid mac address."""
     with patch(
-        "socket.gethostbyname",
-        side_effect=gaierror,
+        CONNECT_METHOD,
+        return_value=(MockConfigDevice(eth_mac, wifi_mac), None),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": SOURCE_USER, "show_advanced_options": True},
-            data=CONFIG_ADB_SERVER,
-        )
-
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["errors"] == {"base": "invalid_host"}
-
-    with patch(
-        CONNECT_METHOD,
-        return_value=(MockConfigDevice(), None),
-    ), PATCH_SETUP_ENTRY, PATCH_GET_HOST_IP:
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=CONFIG_ADB_SERVER
-        )
-        await hass.async_block_till_done()
-
-        assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result2["title"] == HOST
-        assert result2["data"] == CONFIG_ADB_SERVER
-
-
-async def test_invalid_serial(hass):
-    """Test for invalid serialno."""
-    with patch(
-        CONNECT_METHOD,
-        return_value=(MockConfigDevice(eth_mac=None), None),
-    ), PATCH_GET_HOST_IP:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
             context={"source": SOURCE_USER},
-            data=CONFIG_ADB_SERVER,
+            data=config,
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
@@ -260,18 +229,16 @@ async def test_abort_if_host_exist(hass):
         domain=DOMAIN, data=CONFIG_ADB_SERVER, unique_id=ETH_MAC
     ).add_to_hass(hass)
 
-    config_data = CONFIG_ADB_SERVER.copy()
-    config_data[CONF_HOST] = "name"
-    # Should fail, same IP Address (by PATCH_GET_HOST_IP)
-    with PATCH_GET_HOST_IP:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data=config_data,
-        )
+    config_data = CONFIG_PYTHON_ADB
+    # Should fail, same HOST
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data=config_data,
+    )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-        assert result["reason"] == "already_configured"
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_abort_if_unique_exist(hass):
@@ -286,7 +253,7 @@ async def test_abort_if_unique_exist(hass):
     with patch(
         CONNECT_METHOD,
         return_value=(MockConfigDevice(), None),
-    ), PATCH_GET_HOST_IP:
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
@@ -304,7 +271,7 @@ async def test_on_connect_failed(hass):
         context={"source": SOURCE_USER, "show_advanced_options": True},
     )
 
-    with patch(CONNECT_METHOD, return_value=(None, "Error")), PATCH_GET_HOST_IP:
+    with patch(CONNECT_METHOD, return_value=(None, "Error")):
         result = await hass.config_entries.flow.async_configure(
             flow_result["flow_id"], user_input=CONFIG_ADB_SERVER
         )
@@ -314,7 +281,7 @@ async def test_on_connect_failed(hass):
     with patch(
         CONNECT_METHOD,
         side_effect=TypeError,
-    ), PATCH_GET_HOST_IP:
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=CONFIG_ADB_SERVER
         )
@@ -324,7 +291,7 @@ async def test_on_connect_failed(hass):
     with patch(
         CONNECT_METHOD,
         return_value=(MockConfigDevice(), None),
-    ), PATCH_SETUP_ENTRY, PATCH_GET_HOST_IP:
+    ), PATCH_SETUP_ENTRY:
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"], user_input=CONFIG_ADB_SERVER
         )

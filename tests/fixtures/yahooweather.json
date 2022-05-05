@@ -56,77 +56,88 @@
             "temp": "18",
             "text": "Cloudy"
           },
-          "forecast": [{
-            "code": "28",
-            "date": "17 Nov 2017",
-            "day": "Fri",
-            "high": "23",
-            "low": "16",
-            "text": "Mostly Cloudy"
-          }, {
-            "code": "30",
-            "date": "18 Nov 2017",
-            "day": "Sat",
-            "high": "22",
-            "low": "13",
-            "text": "Partly Cloudy"
-          }, {
-            "code": "30",
-            "date": "19 Nov 2017",
-            "day": "Sun",
-            "high": "22",
-            "low": "12",
-            "text": "Partly Cloudy"
-          }, {
-            "code": "28",
-            "date": "20 Nov 2017",
-            "day": "Mon",
-            "high": "21",
-            "low": "11",
-            "text": "Mostly Cloudy"
-          }, {
-            "code": "28",
-            "date": "21 Nov 2017",
-            "day": "Tue",
-            "high": "24",
-            "low": "14",
-            "text": "Mostly Cloudy"
-          }, {
-            "code": "30",
-            "date": "22 Nov 2017",
-            "day": "Wed",
-            "high": "27",
-            "low": "15",
-            "text": "Partly Cloudy"
-          }, {
-            "code": "34",
-            "date": "23 Nov 2017",
-            "day": "Thu",
-            "high": "27",
-            "low": "15",
-            "text": "Mostly Sunny"
-          }, {
-            "code": "30",
-            "date": "24 Nov 2017",
-            "day": "Fri",
-            "high": "23",
-            "low": "16",
-            "text": "Partly Cloudy"
-          }, {
-            "code": "30",
-            "date": "25 Nov 2017",
-            "day": "Sat",
-            "high": "22",
-            "low": "15",
-            "text": "Partly Cloudy"
-          }, {
-            "code": "28",
-            "date": "26 Nov 2017",
-            "day": "Sun",
-            "high": "24",
-            "low": "13",
-            "text": "Mostly Cloudy"
-          }],
+          "forecast": [
+            {
+              "code": "28",
+              "date": "17 Nov 2017",
+              "day": "Fri",
+              "high": "23",
+              "low": "16",
+              "text": "Mostly Cloudy"
+            },
+            {
+              "code": "30",
+              "date": "18 Nov 2017",
+              "day": "Sat",
+              "high": "22",
+              "low": "13",
+              "text": "Partly Cloudy"
+            },
+            {
+              "code": "30",
+              "date": "19 Nov 2017",
+              "day": "Sun",
+              "high": "22",
+              "low": "12",
+              "text": "Partly Cloudy"
+            },
+            {
+              "code": "28",
+              "date": "20 Nov 2017",
+              "day": "Mon",
+              "high": "21",
+              "low": "11",
+              "text": "Mostly Cloudy"
+            },
+            {
+              "code": "28",
+              "date": "21 Nov 2017",
+              "day": "Tue",
+              "high": "24",
+              "low": "14",
+              "text": "Mostly Cloudy"
+            },
+            {
+              "code": "30",
+              "date": "22 Nov 2017",
+              "day": "Wed",
+              "high": "27",
+              "low": "15",
+              "text": "Partly Cloudy"
+            },
+            {
+              "code": "34",
+              "date": "23 Nov 2017",
+              "day": "Thu",
+              "high": "27",
+              "low": "15",
+              "text": "Mostly Sunny"
+            },
+            {
+              "code": "30",
+              "date": "24 Nov 2017",
+              "day": "Fri",
+              "high": "23",
+              "low": "16",
+              "text": "Partly Cloudy"
+            },
+            {
+              "code": "30",
+              "date": "25 Nov 2017",
+              "day": "Sat",
+              "high": "22",
+              "low": "15",
+              "text": "Partly Cloudy"
+            },
+            {
+              "code": "28",
+              "date": "26 Nov 2017",
+              "day": "Sun",
+              "high": "24",
+              "low": "13",
+              "text": "Mostly Cloudy"
+            }
+          ],
           "description": "<![CDATA[<img src=\"http://l.yimg.com/a/i/us/we/52/26.gif\"/>\n<BR />\n<b>Current Conditions:</b>\n<BR />Cloudy\n<BR />\n<BR />\n<b>Forecast:</b>\n<BR /> Fri - Mostly Cloudy. High: 23Low: 16\n<BR /> Sat - Partly Cloudy. High: 22Low: 13\n<BR /> Sun - Partly Cloudy. High: 22Low: 12\n<BR /> Mon - Mostly Cloudy. High: 21Low: 11\n<BR /> Tue - Mostly Cloudy. High: 24Low: 14\n<BR />\n<BR />\n<a href=\"http://us.rd.yahoo.com/dailynews/rss/weather/Country__Country/*https://weather.yahoo.com/country/state/city-23511632/\">Full Forecast at Yahoo! Weather</a>\n<BR />\n<BR />\n<BR />\n]]>",
           "guid": {
             "isPermaLink": "false"
