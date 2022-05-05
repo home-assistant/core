@@ -2,7 +2,8 @@
 import pytest
 import voluptuous as vol
 
-from homeassistant.helpers import config_validation as cv, selector
+from homeassistant.helpers import selector
+from homeassistant.util import yaml
 
 FAKE_UUID = "a266a680b608c32770e6c45bfe6b8411"
 
@@ -48,10 +49,12 @@ def _test_selector(
         converter = default_converter
 
     # Validate selector configuration
-    selector.validate_selector({selector_type: schema})
+    config = {selector_type: schema}
+    selector.validate_selector(config)
+    selector_instance = selector.selector(config)
 
     # Use selector in schema and validate
-    vol_schema = vol.Schema({"selection": selector.selector({selector_type: schema})})
+    vol_schema = vol.Schema({"selection": selector_instance})
     for selection in valid_selections:
         assert vol_schema({"selection": selection}) == {
             "selection": converter(selection)
@@ -62,9 +65,12 @@ def _test_selector(
 
     # Serialize selector
     selector_instance = selector.selector({selector_type: schema})
-    assert cv.custom_serializer(selector_instance) == {
-        "selector": {selector_type: selector_instance.config}
-    }
+    assert (
+        selector.selector(selector_instance.serialize()["selector"]).config
+        == selector_instance.config
+    )
+    # Test serialized selector can be dumped to YAML
+    yaml.dump(selector_instance.serialize())
 
 
 @pytest.mark.parametrize(
