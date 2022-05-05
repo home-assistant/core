@@ -32,6 +32,12 @@ async def load_int(hass: HomeAssistant) -> MockConfigEntry:
     with patch(
         "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
         return_value=DATA_FROM_API,
+    ), patch(
+        "homeassistant.components.sensibo.util.SensiboClient.async_get_devices",
+        return_value={"result": [{"id": "xyzxyz"}, {"id": "abcabc"}]},
+    ), patch(
+        "homeassistant.components.sensibo.util.SensiboClient.async_get_me",
+        return_value={"result": {"username": "username"}},
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()

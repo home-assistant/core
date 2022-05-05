@@ -9,66 +9,82 @@ from pysensibo.model import SensiboData
 import pytest
 
 from homeassistant.components.sensibo.const import DOMAIN
-from homeassistant.components.sensibo.coordinator import SensiboDataUpdateCoordinator
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.util import dt
 
+from . import ENTRY_CONFIG
 from .response import DATA_FROM_API
 
-from tests.common import async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_coordinator(hass: HomeAssistant, load_int: ConfigEntry) -> None:
-    """Test the Sensibo coordinator."""
-
-    coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][load_int.entry_id]
-    assert coordinator.data.parsed["ABC999111"].state == "heat"
-
-
-async def test_coordinator_errors(
-    hass: HomeAssistant, load_int: ConfigEntry, monkeypatch: pytest.MonkeyPatch
+async def test_coordinator(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Test the Sensibo coordinator errors."""
+    """Test the Sensibo coordinator with errors."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=SOURCE_USER,
+        data=ENTRY_CONFIG,
+        entry_id="1",
+        unique_id="username",
+        version=2,
+    )
 
-    coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][load_int.entry_id]
-    monkeypatch.setattr(DATA_FROM_API.parsed["ABC999111"], "state", "heat")
-
-    assert coordinator.last_update_success is True
-
-    with patch(
-        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
-        side_effect=AuthenticationError,
-    ):
-        with pytest.raises(ConfigEntryAuthFailed):
-            await coordinator._async_update_data()  # pylint: disable=protected-access
+    config_entry.add_to_hass(hass)
 
     with patch(
         "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
-        side_effect=SensiboError,
+    ) as mock_data, patch(
+        "homeassistant.components.sensibo.util.SensiboClient.async_get_devices",
+        return_value={"result": [{"id": "xyzxyz"}, {"id": "abcabc"}]},
+    ), patch(
+        "homeassistant.components.sensibo.util.SensiboClient.async_get_me",
+        return_value={"result": {"username": "username"}},
     ):
-        with pytest.raises(UpdateFailed):
-            await coordinator._async_update_data()  # pylint: disable=protected-access
-
-    with patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
-        return_value=SensiboData(raw={}, parsed={}),
-    ):
-        with pytest.raises(UpdateFailed):
-            await coordinator._async_update_data()  # pylint: disable=protected-access
-
-    with patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
-        return_value=SensiboData(raw={}, parsed={}),
-    ):
-        async_fire_time_changed(
-            hass,
-            dt.utcnow() + timedelta(minutes=5),
-        )
+        monkeypatch.setattr(DATA_FROM_API.parsed["ABC999111"], "hvac_mode", "heat")
+        monkeypatch.setattr(DATA_FROM_API.parsed["ABC999111"], "device_on", True)
+        mock_data.return_value = DATA_FROM_API
+        await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
+        mock_data.assert_called_once()
+        state = hass.states.get("climate.hallway")
+        assert state.state == "heat"
+        mock_data.reset_mock()
 
-    assert coordinator.data.parsed["ABC999111"].state == "heat"
-    assert coordinator.data.parsed["AAZZAAZZ"].state == "off"
-    assert coordinator.last_update_success is False
+        mock_data.side_effect = SensiboError("info")
+        async_fire_time_changed(hass, dt.utcnow() + timedelta(minutes=1))
+        await hass.async_block_till_done()
+        mock_data.assert_called_once()
+        state = hass.states.get("climate.hallway")
+        assert state.state == STATE_UNAVAILABLE
+        mock_data.reset_mock()
+
+        mock_data.return_value = SensiboData(raw={}, parsed={})
+        async_fire_time_changed(hass, dt.utcnow() + timedelta(minutes=3))
+        await hass.async_block_till_done()
+        mock_data.assert_called_once()
+        state = hass.states.get("climate.hallway")
+        assert state.state == STATE_UNAVAILABLE
+        mock_data.reset_mock()
+
+        monkeypatch.setattr(DATA_FROM_API.parsed["ABC999111"], "hvac_mode", "heat")
+        monkeypatch.setattr(DATA_FROM_API.parsed["ABC999111"], "device_on", True)
+
+        mock_data.return_value = DATA_FROM_API
+        mock_data.side_effect = None
+        async_fire_time_changed(hass, dt.utcnow() + timedelta(minutes=5))
+        await hass.async_block_till_done()
+        mock_data.assert_called_once()
+        state = hass.states.get("climate.hallway")
+        assert state.state == "heat"
+        mock_data.reset_mock()
+
+        mock_data.side_effect = AuthenticationError("info")
+        async_fire_time_changed(hass, dt.utcnow() + timedelta(minutes=7))
+        await hass.async_block_till_done()
+        mock_data.assert_called_once()
+        state = hass.states.get("climate.hallway")
+        assert state.state == STATE_UNAVAILABLE
