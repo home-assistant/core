@@ -896,7 +896,6 @@ class TimeSelector(Selector):
         return cast(str, data)
 
 
-print("DUMPER INSTALLED")
 yaml.SafeDumper.add_representer(
     Selector,
     lambda dumper, value: represent_odict(
