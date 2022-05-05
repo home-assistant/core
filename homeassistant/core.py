@@ -856,7 +856,7 @@ class EventBus:
                     continue
             if run_immediately:
                 try:
-                    self._hass.async_run_hass_job(job, event)
+                    job.target(event)
                 except Exception:  # pylint: disable=broad-except
                     _LOGGER.exception("Error running job: %s", job)
             else:
@@ -906,6 +906,8 @@ class EventBus:
         """
         if event_filter is not None and not is_callback(event_filter):
             raise HomeAssistantError(f"Event filter {event_filter} is not a callback")
+        if run_immediately and not is_callback(listener):
+            raise HomeAssistantError(f"Event listener {listener} is not a callback")
         return self._async_listen_filterable_job(
             event_type, _FilterableJob(HassJob(listener), event_filter, run_immediately)
         )
