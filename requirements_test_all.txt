@@ -1301,7 +1301,7 @@ pytradfri[async]==9.0.0
 # homeassistant.components.trafikverket_ferry
 # homeassistant.components.trafikverket_train
 # homeassistant.components.trafikverket_weatherstation
-pytrafikverket==0.1.6.2
+pytrafikverket==0.2.0.1
 
 # homeassistant.components.usb
 pyudev==0.22.0
@@ -1614,7 +1614,7 @@ xmltodict==0.12.0
 yalesmartalarmclient==0.3.8
 
 # homeassistant.components.august
-yalexs==1.1.23
+yalexs==1.1.24
 
 # homeassistant.components.yeelight
 yeelight==0.7.10
