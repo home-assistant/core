@@ -93,7 +93,7 @@ def create_stream(
     if isinstance(stream_source, str) and stream_source[:7] == "rtsp://":
         stream_options = {
             "rtsp_flags": "prefer_tcp",
-            "timeout": "5000000",
+            "stimeout": "5000000",
             **stream_options,
         }
 

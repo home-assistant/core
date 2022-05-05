@@ -202,7 +202,7 @@ async def async_test_stream(hass, info) -> dict[str, str]:
         if isinstance(stream_source, str) and stream_source[:7] == "rtsp://":
             stream_options = {
                 "rtsp_flags": "prefer_tcp",
-                "timeout": "5000000",
+                "stimeout": "5000000",
             }
         if rtsp_transport := info.get(CONF_RTSP_TRANSPORT):
             stream_options[CONF_RTSP_TRANSPORT] = rtsp_transport
