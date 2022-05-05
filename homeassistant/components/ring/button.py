@@ -34,16 +34,17 @@ async def async_setup_entry(
 class BaseRingButton(RingEntityMixin, ButtonEntity):
     """Represents a Button for controlling an aspect of a ring device."""
 
-    def __init__(self, config_entry_id, device, device_type):
+    def __init__(self, config_entry_id, device, button_identifier, button_name):
         """Initialize the switch."""
         super().__init__(config_entry_id, device)
-        self._device_type = device_type
-        self._unique_id = f"{self._device.id}-{self._device_type}"
+        self._button_identifier = button_identifier
+        self._button_name = button_name
+        self._unique_id = f"{self._device.id}-{self._button_identifier}"
 
     @property
     def name(self):
         """Name of the device."""
-        return f"{self._device.name} {self._device_type}"
+        return f"{self._device.name} {self._button_name}"
 
     @property
     def unique_id(self):
@@ -56,7 +57,9 @@ class ChimeButton(BaseRingButton):
 
     def __init__(self, config_entry_id, device, kind):
         """Initialize the button for a device with a chime."""
-        super().__init__(config_entry_id, device, f"Play chime: {kind}")
+        super().__init__(
+            config_entry_id, device, f"play-chime-{kind}", f"Play chime: {kind}"
+        )
         self.kind = kind
 
     def press(self) -> None:
