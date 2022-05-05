@@ -32,9 +32,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady(
             f"Connection error - please check your internet connection: {err}"
         ) from err
-    hass.data[DOMAIN]["students_number"] = len(
-        hass.config_entries.async_entries(DOMAIN)
-    )
     hass.data[DOMAIN][entry.entry_id] = client
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
@@ -46,8 +43,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)
-        hass.data[DOMAIN]["students_number"] = len(
-            hass.config_entries.async_entries(DOMAIN)
-        )
 
     return unload_ok
