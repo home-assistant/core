@@ -632,7 +632,7 @@ class AllStates:
         """Initialize all states."""
         self._hass = hass
 
-    def __getattr__(self, name: str):
+    def __getattr__(self, name: str) -> TemplateState | DomainStates | None:
         """Return the domain state."""
         if "." in name:
             return _get_state_if_valid(self._hass, name)
@@ -641,7 +641,7 @@ class AllStates:
             return None
 
         if not valid_entity_id(f"{name}.entity"):
-            raise TemplateError(f"Invalid domain name '{name}'")
+            raise TemplateError(f"Invalid domain name '{name}'")  # type: ignore[arg-type]
 
         return DomainStates(self._hass, name)
 
@@ -669,7 +669,7 @@ class AllStates:
         self._collect_all_lifecycle()
         return self._hass.states.async_entity_ids_count()
 
-    def __call__(self, entity_id: str):
+    def __call__(self, entity_id: str) -> str:
         """Return the states."""
         state = _get_state(self._hass, entity_id)
         return STATE_UNKNOWN if state is None else state.state
@@ -686,7 +686,7 @@ class StateTranslated:
         """Initialize all states."""
         self._hass = hass
 
-    def __call__(self, entity_id: str, language: str):
+    def __call__(self, entity_id: str, language: str) -> str | None:
         """Retrieve translated state if available."""
         state = None
         if "." in entity_id:
@@ -697,7 +697,7 @@ class StateTranslated:
                 return None
 
             if not valid_entity_id(f"{entity_id}.entity"):
-                raise TemplateError(f"Invalid domain name '{entity_id}'")
+                raise TemplateError(f"Invalid domain name '{entity_id}'")  # type: ignore[arg-type]
 
         if state is None:
             return STATE_UNKNOWN
@@ -724,7 +724,7 @@ class DomainStates:
         self._hass = hass
         self._domain = domain
 
-    def __getattr__(self, name: str):
+    def __getattr__(self, name: str) -> TemplateState | None:
         """Return the states."""
         return _get_state_if_valid(self._hass, f"{self._domain}.{name}")
 
@@ -1061,7 +1061,7 @@ def device_attr(hass: HomeAssistant, device_or_entity_id: str, attr_name: str) -
     """Get the device specific attribute."""
     device_reg = device_registry.async_get(hass)
     if not isinstance(device_or_entity_id, str):
-        raise TemplateError("Must provide a device or entity ID")
+        raise TemplateError("Must provide a device or entity ID")  # type: ignore[arg-type]
     device = None
     if (
         "." in device_or_entity_id
@@ -2074,7 +2074,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
             def unsupported(name):
                 def warn_unsupported(*args, **kwargs):
                     raise TemplateError(
-                        f"Use of '{name}' is not supported in limited templates"
+                        f"Use of '{name}' is not supported in limited templates"  # type: ignore[arg-type]
                     )
 
                 return warn_unsupported
