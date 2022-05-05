@@ -1,9 +1,11 @@
 """Support for YoLink Device."""
 from __future__ import annotations
 
+from abc import abstractmethod
+
 from yolink.device import YoLinkDevice
 
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -16,13 +18,11 @@ class YoLinkEntity(CoordinatorEntity[YoLinkCoordinator]):
 
     def __init__(
         self,
-        hass: HomeAssistant,
         coordinator: YoLinkCoordinator,
         device_info: YoLinkDevice,
     ) -> None:
         """Init YoLink Entity."""
         super().__init__(coordinator)
-        self.hass = hass
         self.device = device_info
 
     @property
@@ -51,6 +51,6 @@ class YoLinkEntity(CoordinatorEntity[YoLinkCoordinator]):
         self._attr_available = False
 
     @callback
+    @abstractmethod
     def update_entity_state(self, state: dict) -> None:
-        """Parse and update entity stat, Should be override."""
-        raise NotImplementedError
+        """Parse and update entity state, should be overridden."""

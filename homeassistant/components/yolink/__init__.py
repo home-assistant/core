@@ -55,10 +55,8 @@ CONFIG_SCHEMA = vol.Schema(
 PLATFORMS = [Platform.SENSOR]
 
 
-class YoLinkCoordinator(DataUpdateCoordinator):
+class YoLinkCoordinator(DataUpdateCoordinator[dict]):
     """YoLink DataUpdateCoordinator."""
-
-    yl_devices: list[YoLinkDevice] = []
 
     def __init__(
         self, hass: HomeAssistant, yl_client: YoLinkClient, yl_mqtt_client: MqttClient
@@ -66,74 +64,83 @@ class YoLinkCoordinator(DataUpdateCoordinator):
         """Init YoLink DataUpdateCoordinator.
 
         fetch state every 30 minutes base on yolink device heartbeat interval
+        data is None before the first successful update, but we need to use data at first update
         """
         super().__init__(
             hass, _LOGGER, name=DOMAIN, update_interval=timedelta(minutes=30)
         )
         self._client = yl_client
         self._mqtt_client = yl_mqtt_client
+        self.yl_devices: list[YoLinkDevice] = []
         self.data = {}
+
+    def on_message_callback(self, message: tuple[str, BRDP]):
+        """On message callback."""
+        data = message[1]
+        if data.event is None:
+            return
+        event_param = data.event.split(".")
+        event_type = event_param[len(event_param) - 1]
+        if event_type not in (
+            "Report",
+            "Alert",
+            "StatusChange",
+            "getState",
+        ):
+            return
+        resolved_state = data.data
+        if resolved_state is None:
+            return
+        self.data[message[0]] = resolved_state
+        self.async_set_updated_data(self.data)
 
     async def init_coordinator(self):
         """Init coordinator."""
         try:
             async with async_timeout.timeout(10):
                 home_info = await self._client.get_general_info()
-
-                def on_message_callback(message: tuple[str, BRDP]):
-                    """On message callback."""
-                    data = message[1]
-                    if data.event is None:
-                        return
-                    event_param = data.event.split(".")
-                    event_type = event_param[len(event_param) - 1]
-                    if event_type not in (
-                        "Report",
-                        "Alert",
-                        "StatusChange",
-                        "getState",
-                    ):
-                        return
-                    resolved_state = data.data
-                    if resolved_state is None:
-                        return
-                    self.data[message[0]] = resolved_state
-                    self.async_set_updated_data(self.data)
-
                 await self._mqtt_client.init_home_connection(
-                    home_info.data["id"], on_message_callback
+                    home_info.data["id"], self.on_message_callback
                 )
             async with async_timeout.timeout(10):
                 device_response = await self._client.get_auth_devices()
-                yl_devices: list[YoLinkDevice] = []
-                for device_info in device_response.data[ATTR_DEVICE]:
-                    yl_device = YoLinkDevice(device_info, self._client)
-                    yl_devices.append(yl_device)
-                self.yl_devices = yl_devices
+
         except YoLinkAuthFailError as yl_auth_err:
             raise ConfigEntryAuthFailed from yl_auth_err
+
         except (YoLinkClientError, asyncio.TimeoutError) as err:
             raise ConfigEntryNotReady from err
 
+        yl_devices: list[YoLinkDevice] = []
+
+        for device_info in device_response.data[ATTR_DEVICE]:
+            yl_devices.append(YoLinkDevice(device_info, self._client))
+
+        self.yl_devices = yl_devices
+
     async def fetch_device_state(self, device: YoLinkDevice):
         """Fetch Device State."""
-        async with async_timeout.timeout(20):
-            device_state_resp = await device.fetch_state_with_api()
-            if ATTR_DEVICE_STATE in device_state_resp.data:
-                self.data[device.device_id] = device_state_resp.data[ATTR_DEVICE_STATE]
-
-    async def _async_update_data(self) -> dict:
         try:
-            for yl_device in self.yl_devices:
-                await self.fetch_device_state(yl_device)
+            async with async_timeout.timeout(10):
+                device_state_resp = await device.fetch_state_with_api()
+                if ATTR_DEVICE_STATE in device_state_resp.data:
+                    self.data[device.device_id] = device_state_resp.data[
+                        ATTR_DEVICE_STATE
+                    ]
         except YoLinkAuthFailError as yl_auth_err:
             raise ConfigEntryAuthFailed from yl_auth_err
         except YoLinkClientError as yl_client_err:
-            # code 010203 for can't connect to device currently
+            # code 010203 for can't connect to device currently(ignore wait for device report state by mqtt)
             if yl_client_err.code != "010203":
                 raise UpdateFailed(
                     f"Error communicating with API: {yl_client_err}"
                 ) from yl_client_err
+
+    async def _async_update_data(self) -> dict:
+        fetch_tasks = []
+        for yl_device in self.yl_devices:
+            fetch_tasks.append(self.fetch_device_state(yl_device))
+        asyncio.gather(*fetch_tasks)
         return self.data
 
 
@@ -175,6 +182,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     yolink_mqtt_client = MqttClient(auth_mgr)
     coordinator = YoLinkCoordinator(hass, yolink_http_client, yolink_mqtt_client)
     await coordinator.init_coordinator()
+    await coordinator.async_config_entry_first_refresh()
     hass.data[DOMAIN][entry.entry_id] = {
         ATTR_CLIENT: yolink_http_client,
         ATTR_MQTT_CLIENT: yolink_mqtt_client,

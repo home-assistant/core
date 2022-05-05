@@ -85,7 +85,7 @@ class YoLinkSensorEntity(YoLinkEntity, SensorEntity):
         device: YoLinkDevice,
     ) -> None:
         """Init YoLink Sensor."""
-        super().__init__(hass, coordinator, device)
+        super().__init__(coordinator, device)
         self.entity_description = description
         self._attr_unique_id = f"{device.device_id} {self.entity_description.key}"
         self._attr_name = f"{device.device_name} ({self.entity_description.name})"
@@ -93,8 +93,6 @@ class YoLinkSensorEntity(YoLinkEntity, SensorEntity):
     @callback
     def update_entity_state(self, state: dict) -> None:
         """Update HA Entity State."""
-        if state is None:
-            return
         self._attr_native_value = self.entity_description.value(
             state[self.entity_description.key]
         )
