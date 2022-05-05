@@ -9,39 +9,23 @@ import pytest
 
 from homeassistant.components.sensibo.const import DOMAIN
 from homeassistant.components.sensibo.coordinator import SensiboDataUpdateCoordinator
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from . import init_integration
-from .response import DATA_FROM_API
 
-
-async def test_coordinator(hass: HomeAssistant) -> None:
+async def test_coordinator(hass: HomeAssistant, load_int: ConfigEntry) -> None:
     """Test the Sensibo coordinator."""
-    entry = await init_integration(hass, entry_id="hallcd")
-    with patch(
-        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
-        return_value=DATA_FROM_API,
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
 
-    coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][load_int.entry_id]
     assert coordinator.data.parsed["ABC999111"].state == "heat"
 
 
-async def test_coordinator_errors(hass: HomeAssistant) -> None:
+async def test_coordinator_errors(hass: HomeAssistant, load_int: ConfigEntry) -> None:
     """Test the Sensibo coordinator errors."""
-    entry = await init_integration(hass, entry_id="hallcd2")
-    with patch(
-        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
-        return_value=DATA_FROM_API,
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
 
-    coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][load_int.entry_id]
     coordinator.data.parsed["ABC999111"].state = "heat"
 
     with patch(

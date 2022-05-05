@@ -1,6 +1,7 @@
 """The test for the sensibo binary sensor platform."""
 from __future__ import annotations
 
+from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
@@ -21,6 +22,7 @@ from homeassistant.components.climate.const import (
 from homeassistant.components.sensibo.climate import SERVICE_ASSUME_STATE
 from homeassistant.components.sensibo.const import DOMAIN
 from homeassistant.components.sensibo.coordinator import SensiboDataUpdateCoordinator
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_STATE,
@@ -30,20 +32,15 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.util import dt
 
-from . import init_integration
 from .response import DATA_FROM_API
 
+from tests.common import async_fire_time_changed
 
-async def test_climate(hass: HomeAssistant) -> None:
+
+async def test_climate(hass: HomeAssistant, load_int: ConfigEntry) -> None:
     """Test the Sensibo climate."""
-    entry = await init_integration(hass, entry_id="clima1")
-    with patch(
-        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
-        return_value=DATA_FROM_API,
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
 
     state1 = hass.states.get("climate.hallway")
     state2 = hass.states.get("climate.kitchen")
@@ -79,15 +76,8 @@ async def test_climate(hass: HomeAssistant) -> None:
     assert state2.state == "off"
 
 
-async def test_climate_fan(hass: HomeAssistant) -> None:
+async def test_climate_fan(hass: HomeAssistant, load_int: ConfigEntry) -> None:
     """Test the Sensibo climate fan service."""
-    entry = await init_integration(hass, entry_id="clima2")
-    with patch(
-        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
-        return_value=DATA_FROM_API,
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
 
     state1 = hass.states.get("climate.hallway")
     assert state1.attributes["fan_mode"] == "high"
@@ -107,7 +97,7 @@ async def test_climate_fan(hass: HomeAssistant) -> None:
     state2 = hass.states.get("climate.hallway")
     assert state2.attributes["fan_mode"] == "low"
 
-    coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][load_int.entry_id]
     coordinator.data.parsed["ABC999111"].active_features = [
         "timestamp",
         "on",
@@ -134,15 +124,8 @@ async def test_climate_fan(hass: HomeAssistant) -> None:
     assert state3.attributes["fan_mode"] == "low"
 
 
-async def test_climate_swing(hass: HomeAssistant) -> None:
+async def test_climate_swing(hass: HomeAssistant, load_int: ConfigEntry) -> None:
     """Test the Sensibo climate swing service."""
-    entry = await init_integration(hass, entry_id="clima3")
-    with patch(
-        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
-        return_value=DATA_FROM_API,
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
 
     state1 = hass.states.get("climate.hallway")
     assert state1.attributes["swing_mode"] == "stopped"
@@ -162,7 +145,7 @@ async def test_climate_swing(hass: HomeAssistant) -> None:
     state2 = hass.states.get("climate.hallway")
     assert state2.attributes["swing_mode"] == "fixedTop"
 
-    coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][load_int.entry_id]
     coordinator.data.parsed["ABC999111"].active_features = [
         "timestamp",
         "on",
@@ -188,17 +171,10 @@ async def test_climate_swing(hass: HomeAssistant) -> None:
     assert state3.attributes["swing_mode"] == "fixedTop"
 
 
-async def test_climate_temperatures(hass: HomeAssistant) -> None:
+async def test_climate_temperatures(hass: HomeAssistant, load_int: ConfigEntry) -> None:
     """Test the Sensibo climate temperature service."""
-    entry = await init_integration(hass, entry_id="clima4")
-    with patch(
-        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
-        return_value=DATA_FROM_API,
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
 
-    coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][load_int.entry_id]
     coordinator.data.parsed["ABC999111"].active_features = [
         "timestamp",
         "on",
@@ -305,7 +281,6 @@ async def test_climate_temperatures(hass: HomeAssistant) -> None:
     state2 = hass.states.get("climate.hallway")
     assert state2.attributes["temperature"] == 20
 
-    coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     coordinator.data.parsed["ABC999111"].active_features = [
         "timestamp",
         "on",
@@ -333,17 +308,12 @@ async def test_climate_temperatures(hass: HomeAssistant) -> None:
     assert state2.attributes["temperature"] == 20
 
 
-async def test_climate_temperature_is_none(hass: HomeAssistant) -> None:
+async def test_climate_temperature_is_none(
+    hass: HomeAssistant, load_int: ConfigEntry
+) -> None:
     """Test the Sensibo climate temperature service no temperature provided."""
-    entry = await init_integration(hass, entry_id="clima5")
-    with patch(
-        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
-        return_value=DATA_FROM_API,
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
 
-    coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][load_int.entry_id]
     coordinator.data.parsed["ABC999111"].active_features = [
         "timestamp",
         "on",
@@ -354,6 +324,17 @@ async def test_climate_temperature_is_none(hass: HomeAssistant) -> None:
         "horizontalSwing",
         "light",
     ]
+    coordinator.data.parsed["ABC999111"].target_temp = 25
+
+    with patch(
+        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
+        return_value=DATA_FROM_API,
+    ):
+        async_fire_time_changed(
+            hass,
+            dt.utcnow() + timedelta(minutes=5),
+        )
+        await hass.async_block_till_done()
 
     state1 = hass.states.get("climate.hallway")
     assert state1.attributes["temperature"] == 25
@@ -379,17 +360,10 @@ async def test_climate_temperature_is_none(hass: HomeAssistant) -> None:
     assert state2.attributes["temperature"] == 25
 
 
-async def test_climate_hvac_mode(hass: HomeAssistant) -> None:
+async def test_climate_hvac_mode(hass: HomeAssistant, load_int: ConfigEntry) -> None:
     """Test the Sensibo climate hvac mode service."""
-    entry = await init_integration(hass, entry_id="clima6")
-    with patch(
-        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
-        return_value=DATA_FROM_API,
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
 
-    coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][load_int.entry_id]
     coordinator.data.parsed["ABC999111"].active_features = [
         "timestamp",
         "on",
@@ -443,15 +417,8 @@ async def test_climate_hvac_mode(hass: HomeAssistant) -> None:
     assert state2.state == "heat"
 
 
-async def test_climate_on_off(hass: HomeAssistant) -> None:
+async def test_climate_on_off(hass: HomeAssistant, load_int: ConfigEntry) -> None:
     """Test the Sensibo climate on/off service."""
-    entry = await init_integration(hass, entry_id="clima7")
-    with patch(
-        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
-        return_value=DATA_FROM_API,
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
 
     state1 = hass.states.get("climate.hallway")
     assert state1.state == "heat"
@@ -487,15 +454,10 @@ async def test_climate_on_off(hass: HomeAssistant) -> None:
     assert state2.state == "heat"
 
 
-async def test_climate_service_failed(hass: HomeAssistant) -> None:
+async def test_climate_service_failed(
+    hass: HomeAssistant, load_int: ConfigEntry
+) -> None:
     """Test the Sensibo climate service failed."""
-    entry = await init_integration(hass, entry_id="clima8")
-    with patch(
-        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
-        return_value=DATA_FROM_API,
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
 
     state1 = hass.states.get("climate.hallway")
     assert state1.state == "heat"
@@ -517,15 +479,10 @@ async def test_climate_service_failed(hass: HomeAssistant) -> None:
     assert state2.state == "heat"
 
 
-async def test_climate_assumed_state(hass: HomeAssistant) -> None:
+async def test_climate_assumed_state(
+    hass: HomeAssistant, load_int: ConfigEntry
+) -> None:
     """Test the Sensibo climate assumed state service."""
-    entry = await init_integration(hass, entry_id="clima9")
-    with patch(
-        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
-        return_value=DATA_FROM_API,
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
 
     state1 = hass.states.get("climate.hallway")
     assert state1.state == "heat"

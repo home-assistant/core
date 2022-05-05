@@ -4,16 +4,29 @@ from __future__ import annotations
 from unittest.mock import patch
 
 from homeassistant import config_entries
+from homeassistant.components.sensibo.const import DOMAIN
 from homeassistant.components.sensibo.util import NoUsernameError
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 
-from . import init_integration
+from . import ENTRY_CONFIG
 from .response import DATA_FROM_API
+
+from tests.common import MockConfigEntry
 
 
 async def test_setup_entry(hass: HomeAssistant) -> None:
     """Test setup entry."""
-    entry = await init_integration(hass, entry_id="setup_entry")
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=SOURCE_USER,
+        data=ENTRY_CONFIG,
+        entry_id="1",
+        unique_id="12",
+        version=2,
+    )
+    entry.add_to_hass(hass)
+
     with patch(
         "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
         return_value=DATA_FROM_API,
@@ -32,7 +45,16 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
 
 async def test_migrate_entry(hass: HomeAssistant) -> None:
     """Test migrate entry unique id."""
-    entry = await init_integration(hass, version=1, unique_id="1234567890")
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=SOURCE_USER,
+        data=ENTRY_CONFIG,
+        entry_id="1",
+        unique_id="12",
+        version=1,
+    )
+    entry.add_to_hass(hass)
+
     with patch(
         "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
         return_value=DATA_FROM_API,
@@ -53,7 +75,16 @@ async def test_migrate_entry(hass: HomeAssistant) -> None:
 
 async def test_migrate_entry_fails(hass: HomeAssistant) -> None:
     """Test migrate entry unique id."""
-    entry = await init_integration(hass, version=1, unique_id="1234567890")
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=SOURCE_USER,
+        data=ENTRY_CONFIG,
+        entry_id="1",
+        unique_id="12",
+        version=1,
+    )
+    entry.add_to_hass(hass)
+
     with patch(
         "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
         return_value=DATA_FROM_API,
@@ -68,12 +99,21 @@ async def test_migrate_entry_fails(hass: HomeAssistant) -> None:
 
     assert entry.state == config_entries.ConfigEntryState.MIGRATION_ERROR
     assert entry.version == 1
-    assert entry.unique_id == "1234567890"
+    assert entry.unique_id == "12"
 
 
 async def test_unload_entry(hass: HomeAssistant) -> None:
     """Test unload an entry."""
-    entry = await init_integration(hass, entry_id="unload_entry")
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=SOURCE_USER,
+        data=ENTRY_CONFIG,
+        entry_id="1",
+        unique_id="12",
+        version="2",
+    )
+    entry.add_to_hass(hass)
+
     with patch(
         "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
         return_value=DATA_FROM_API,
