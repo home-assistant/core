@@ -39,21 +39,17 @@ class BaseRingButton(RingEntityMixin, ButtonEntity):
         super().__init__(config_entry_id, device)
         self._button_identifier = button_identifier
         self._button_name = button_name
-        self._unique_id = f"{self._device.id}-{self._button_identifier}"
+        self._attr_unique_id = f"{self._device.id}-{self._button_identifier}"
 
     @property
     def name(self):
         """Name of the device."""
         return f"{self._device.name} {self._button_name}"
 
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return self._unique_id
-
 
 class ChimeButton(BaseRingButton):
     """Creates a button to play the test chime of a Chime device."""
+    _attr_icon = BELL_ICON
 
     def __init__(self, config_entry_id, device, kind):
         """Initialize the button for a device with a chime."""
@@ -66,8 +62,3 @@ class ChimeButton(BaseRingButton):
         """Send the test chime request."""
         if not self._device.test_sound(kind=self.kind):
             _LOGGER.error("Failed to ring chime sound on %s", self.name)
-
-    @property
-    def icon(self):
-        """Return the icon."""
-        return BELL_ICON
