@@ -63,7 +63,7 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
         vol.Optional(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        vol.Optional(CONF_VALUE_TEMPLATE): cv.string,
         vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
     }
 )
@@ -77,14 +77,15 @@ async def async_setup_platform(
 ) -> None:
     """Set up the Web scrape sensor."""
     _LOGGER.warning(
-        # Config flow added in Home Assistant Core 2022.5, remove import flow in 2022.7
-        "Loading Scrape via platform setup has been deprecated in Home Assistant 2022.5"
+        # Config flow added in Home Assistant Core 2022.6, remove import flow in 2022.8
+        "Loading Scrape via platform setup has been deprecated in Home Assistant 2022.6"
         "Your configuration has been automatically imported and you can"
         "remove it from your configuration.yaml"
     )
 
     if config.get(CONF_VALUE_TEMPLATE):
-        template: Template = config[CONF_VALUE_TEMPLATE]
+        template: Template = Template(config[CONF_VALUE_TEMPLATE])
+        template.ensure_valid()
         config[CONF_VALUE_TEMPLATE] = template.template
 
     hass.async_create_task(
