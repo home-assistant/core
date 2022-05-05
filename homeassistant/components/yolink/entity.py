@@ -9,8 +9,8 @@ from homeassistant.core import callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import YoLinkCoordinator
 from .const import DOMAIN, MANUFACTURER
+from .coordinator import YoLinkCoordinator
 
 
 class YoLinkEntity(CoordinatorEntity[YoLinkCoordinator]):
@@ -45,10 +45,6 @@ class YoLinkEntity(CoordinatorEntity[YoLinkCoordinator]):
             model=self.device.device_type,
             name=self.device.device_name,
         )
-
-    def _async_set_unavailable(self, now) -> None:
-        """Set state to UNAVAILABLE."""
-        self._attr_available = False
 
     @callback
     @abstractmethod

@@ -18,17 +18,25 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import percentage
 
-from . import YoLinkCoordinator
 from .const import ATTR_COORDINATOR, ATTR_DEVICE_DOOR_SENSOR, DOMAIN
+from .coordinator import YoLinkCoordinator
 from .entity import YoLinkEntity
 
 
 @dataclass
-class YoLinkSensorEntityDescription(SensorEntityDescription):
+class YoLinkSensorEntityDescriptionMixin:
+    """Mixin for device type."""
+
+    exists_fn: Callable[[YoLinkDevice], bool] = lambda _: True
+
+
+@dataclass
+class YoLinkSensorEntityDescription(
+    YoLinkSensorEntityDescriptionMixin, SensorEntityDescription
+):
     """YoLink SensorEntityDescription."""
 
     value: Callable = lambda state: state
-    supports: list[str] | None = None
 
 
 SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
@@ -41,7 +49,7 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         value=lambda value: percentage.ordered_list_item_to_percentage(
             [1, 2, 3, 4], value
         ),
-        supports=[ATTR_DEVICE_DOOR_SENSOR],
+        exists_fn=lambda device: device.device_type in [ATTR_DEVICE_DOOR_SENSOR],
     ),
 )
 
@@ -63,11 +71,9 @@ async def async_setup_entry(
     entities = []
     for sensor_device in sensor_devices:
         for description in SENSOR_TYPES:
-            if description.supports is None:
-                continue
-            if sensor_device.device_type in description.supports:
+            if description.exists_fn(sensor_device):
                 entities.append(
-                    YoLinkSensorEntity(hass, coordinator, description, sensor_device)
+                    YoLinkSensorEntity(coordinator, description, sensor_device)
                 )
     async_add_entities(entities)
 
@@ -79,7 +85,6 @@ class YoLinkSensorEntity(YoLinkEntity, SensorEntity):
 
     def __init__(
         self,
-        hass: HomeAssistant,
         coordinator: YoLinkCoordinator,
         description: YoLinkSensorEntityDescription,
         device: YoLinkDevice,

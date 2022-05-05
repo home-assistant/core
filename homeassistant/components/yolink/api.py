@@ -26,6 +26,5 @@ class ConfigEntryAuth(YoLinkAuthMgr):
 
     async def check_and_refresh_token(self) -> str:
         """Check the token."""
-        if not self.oauth_session.valid_token:
-            await self.oauth_session.async_ensure_token_valid()
+        await self.oauth_session.async_ensure_token_valid()
         return self.access_token()
