@@ -73,7 +73,11 @@ class Selector:
 
     def serialize(self) -> Any:
         """Serialize Selector for voluptuous_serialize."""
-        return {"selector": {self.selector_type: self.config}}
+        return {"selector": {self.selector_type: self.serialize_config()}}
+
+    def serialize_config(self) -> Any:
+        """Serialize config."""
+        return self.config
 
 
 SINGLE_ENTITY_SELECTOR_CONFIG_SCHEMA = vol.Schema(
@@ -625,6 +629,13 @@ class NumberSelector(Selector):
         """Instantiate a selector."""
         super().__init__(config)
 
+    def serialize_config(self) -> Any:
+        """Serialize the selector config."""
+        return {
+            **self.config,
+            "mode": self.config["mode"].value,
+        }
+
     def __call__(self, data: Any) -> float:
         """Validate the passed selection."""
         value: float = vol.Coerce(float)(data)
@@ -885,6 +896,7 @@ class TimeSelector(Selector):
         return cast(str, data)
 
 
+print("DUMPER INSTALLED")
 yaml.SafeDumper.add_representer(
     Selector,
     lambda dumper, value: represent_odict(
