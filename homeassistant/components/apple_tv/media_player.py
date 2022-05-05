@@ -296,7 +296,7 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
             _LOGGER.debug("Streaming %s via RAOP", media_id)
             await self.atv.stream.stream_file(media_id)
 
-        if self._is_feature_available(FeatureName.PlayUrl):
+        elif self._is_feature_available(FeatureName.PlayUrl):
             _LOGGER.debug("Playing %s via AirPlay", media_id)
             await self.atv.stream.play_url(media_id)
         else:
