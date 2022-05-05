@@ -82,9 +82,7 @@ ICON_JSON_EXTRACT = re.compile('"icon": ?"([^"]+)"')
 ATTR_MESSAGE = "message"
 
 CONTINUOUS_DOMAINS = {PROXIMITY_DOMAIN, SENSOR_DOMAIN}
-CONTINUOUS_ENTITY_ID_LIKE = [
-    f"{domain}.%" for domain in (PROXIMITY_DOMAIN, SENSOR_DOMAIN)
-]
+CONTINUOUS_ENTITY_ID_LIKE = [f"{domain}.%" for domain in CONTINUOUS_DOMAINS]
 
 DOMAIN = "logbook"
 
@@ -357,12 +355,12 @@ def humanify(
         for event in events_batch:
             if event.event_type == EVENT_STATE_CHANGED:
                 entity_id = event.entity_id
-                assert entity_id is not None
                 if (
-                    not entity_id.startswith("sensor.")
-                    or entity_id in continuous_sensors
+                    entity_id in continuous_sensors
+                    or split_entity_id(entity_id)[0] != SENSOR_DOMAIN
                 ):
                     continue
+                assert entity_id is not None
                 continuous_sensors[entity_id] = _is_sensor_continuous(hass, entity_id)
 
             elif event.event_type == EVENT_HOMEASSISTANT_STOP:
