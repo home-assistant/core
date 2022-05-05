@@ -63,6 +63,7 @@ async def test_coordinator(
         mock_data.reset_mock()
 
         mock_data.return_value = SensiboData(raw={}, parsed={})
+        mock_data.side_effect = None
         async_fire_time_changed(hass, dt.utcnow() + timedelta(minutes=3))
         await hass.async_block_till_done()
         mock_data.assert_called_once()
