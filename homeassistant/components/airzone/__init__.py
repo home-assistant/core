@@ -99,7 +99,7 @@ async def _async_migrate_unique_ids(
 
         if entity_unique_id.startswith(entry_id):
             new_unique_id = f"{unique_id}{entity_unique_id[len(entry_id):]}"
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Migrating unique_id from [%s] to [%s]",
                 entity_unique_id,
                 new_unique_id,
