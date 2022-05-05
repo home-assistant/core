@@ -1,7 +1,6 @@
 """Fixtures for the Sensibo integration."""
 from __future__ import annotations
 
-from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -17,25 +16,15 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-async def load_int(  # pylint: disable=dangerous-default-value
-    hass: HomeAssistant,
-    config: dict[str, Any] = None,
-    entry_id: str = "1",
-    source: str = SOURCE_USER,
-    version: int = 2,
-    unique_id: str = "username",
-) -> MockConfigEntry:
+async def load_int(hass: HomeAssistant) -> MockConfigEntry:
     """Set up the Sensibo integration in Home Assistant."""
-    if not config:
-        config = ENTRY_CONFIG
-
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        source=source,
-        data=config,
-        entry_id=entry_id,
-        unique_id=unique_id,
-        version=version,
+        source=SOURCE_USER,
+        data=ENTRY_CONFIG,
+        entry_id="1",
+        unique_id="username",
+        version=2,
     )
 
     config_entry.add_to_hass(hass)

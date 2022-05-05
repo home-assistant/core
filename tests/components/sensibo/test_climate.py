@@ -98,18 +98,10 @@ async def test_climate_fan(hass: HomeAssistant, load_int: ConfigEntry) -> None:
     assert state2.attributes["fan_mode"] == "low"
 
     coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][load_int.entry_id]
-    coordinator.data.parsed["ABC999111"].active_features = [
-        "timestamp",
-        "on",
-        "mode",
-        "swing",
-        "horizontalSwing",
-        "light",
-    ]
+    coordinator.data.parsed["ABC999111"].active_features.remove("fanLevel")
 
     with patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_set_ac_state_property",
-        return_value={"result": {"status": "Success"}},
     ):
         with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
@@ -146,17 +138,10 @@ async def test_climate_swing(hass: HomeAssistant, load_int: ConfigEntry) -> None
     assert state2.attributes["swing_mode"] == "fixedTop"
 
     coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][load_int.entry_id]
-    coordinator.data.parsed["ABC999111"].active_features = [
-        "timestamp",
-        "on",
-        "mode",
-        "horizontalSwing",
-        "light",
-    ]
+    coordinator.data.parsed["ABC999111"].active_features.remove("swing")
 
     with patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_set_ac_state_property",
-        return_value={"result": {"status": "Success"}},
     ):
         with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
@@ -281,15 +266,7 @@ async def test_climate_temperatures(hass: HomeAssistant, load_int: ConfigEntry) 
     state2 = hass.states.get("climate.hallway")
     assert state2.attributes["temperature"] == 20
 
-    coordinator.data.parsed["ABC999111"].active_features = [
-        "timestamp",
-        "on",
-        "mode",
-        "fanLevel",
-        "swing",
-        "horizontalSwing",
-        "light",
-    ]
+    coordinator.data.parsed["ABC999111"].active_features.remove("targetTemperature")
 
     with patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_set_ac_state_property",

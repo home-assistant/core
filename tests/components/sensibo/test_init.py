@@ -87,7 +87,6 @@ async def test_migrate_entry_fails(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
-        return_value=DATA_FROM_API,
     ), patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_get_devices",
     ), patch(

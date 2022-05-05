@@ -1,6 +1,7 @@
 """The test for the sensibo coordinator."""
 from __future__ import annotations
 
+from datetime import timedelta
 from unittest.mock import patch
 
 from pysensibo.exceptions import AuthenticationError, SensiboError
@@ -13,6 +14,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import UpdateFailed
+from homeassistant.util import dt
+
+from tests.common import async_fire_time_changed
 
 
 async def test_coordinator(hass: HomeAssistant, load_int: ConfigEntry) -> None:
@@ -27,6 +31,8 @@ async def test_coordinator_errors(hass: HomeAssistant, load_int: ConfigEntry) ->
 
     coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][load_int.entry_id]
     coordinator.data.parsed["ABC999111"].state = "heat"
+
+    assert coordinator.last_update_success is True
 
     with patch(
         "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
@@ -48,3 +54,17 @@ async def test_coordinator_errors(hass: HomeAssistant, load_int: ConfigEntry) ->
     ):
         with pytest.raises(UpdateFailed):
             await coordinator._async_update_data()  # pylint: disable=protected-access
+
+    with patch(
+        "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
+        return_value=SensiboData(raw={}, parsed={}),
+    ):
+        async_fire_time_changed(
+            hass,
+            dt.utcnow() + timedelta(minutes=5),
+        )
+        await hass.async_block_till_done()
+
+    assert coordinator.data.parsed["ABC999111"].state == "heat"
+    assert coordinator.data.parsed["AAZZAAZZ"].state == "off"
+    assert coordinator.last_update_success is False
