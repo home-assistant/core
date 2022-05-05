@@ -37,7 +37,7 @@ SCAN_INTERVAL = timedelta(minutes=5)
 class TrafikverketRequiredKeysMixin:
     """Mixin for required keys."""
 
-    value_fn: Callable[[dict[str, Any]], StateType]
+    value_fn: Callable[[dict[str, Any]], StateType | datetime]
     info_fn: Callable[[dict[str, Any]], StateType | list]
 
 
@@ -54,7 +54,7 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
         name="Departure Time",
         icon="mdi:clock",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda data: data["departure_time"],
+        value_fn=lambda data: as_utc(data["departure_time"]),
         info_fn=lambda data: data["departure_information"],
     ),
     TrafikverketSensorEntityDescription(
@@ -76,7 +76,7 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
         name="Departure Modified",
         icon="mdi:clock",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda data: data["departure_modified"],
+        value_fn=lambda data: as_utc(data["departure_modified"]),
         info_fn=lambda data: data["departure_information"],
         entity_registry_enabled_default=False,
     ),
@@ -131,8 +131,6 @@ class FerrySensor(CoordinatorEntity[TVDataUpdateCoordinator], SensorEntity):
         self._attr_native_value = self.entity_description.value_fn(
             self.coordinator.data
         )
-        if isinstance(self._attr_native_value, datetime):
-            self._attr_native_value = as_utc(self._attr_native_value)
 
         self._attr_extra_state_attributes = {
             "other_information": self.entity_description.info_fn(self.coordinator.data),
