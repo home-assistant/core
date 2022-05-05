@@ -3,6 +3,8 @@ blueprint:
   domain: automation
   input:
     trigger_event:
+      selector:
+        text:
     service_to_call:
 trigger:
   platform: event

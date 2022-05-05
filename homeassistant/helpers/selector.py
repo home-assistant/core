@@ -5,11 +5,13 @@ from collections.abc import Callable, Sequence
 from typing import Any, TypedDict, cast
 
 import voluptuous as vol
+import yaml
 
 from homeassistant.backports.enum import StrEnum
 from homeassistant.const import CONF_MODE, CONF_UNIT_OF_MEASUREMENT
 from homeassistant.core import split_entity_id, valid_entity_id
 from homeassistant.util import decorator
+from homeassistant.util.yaml.dumper import represent_odict
 
 from . import config_validation as cv
 
@@ -71,7 +73,11 @@ class Selector:
 
     def serialize(self) -> Any:
         """Serialize Selector for voluptuous_serialize."""
-        return {"selector": {self.selector_type: self.config}}
+        return {"selector": {self.selector_type: self.serialize_config()}}
+
+    def serialize_config(self) -> Any:
+        """Serialize config."""
+        return self.config
 
 
 SINGLE_ENTITY_SELECTOR_CONFIG_SCHEMA = vol.Schema(
@@ -623,6 +629,13 @@ class NumberSelector(Selector):
         """Instantiate a selector."""
         super().__init__(config)
 
+    def serialize_config(self) -> Any:
+        """Serialize the selector config."""
+        return {
+            **self.config,
+            "mode": self.config["mode"].value,
+        }
+
     def __call__(self, data: Any) -> float:
         """Validate the passed selection."""
         value: float = vol.Coerce(float)(data)
@@ -881,3 +894,11 @@ class TimeSelector(Selector):
         """Validate the passed selection."""
         cv.time(data)
         return cast(str, data)
+
+
+yaml.SafeDumper.add_representer(
+    Selector,
+    lambda dumper, value: represent_odict(
+        dumper, "tag:yaml.org,2002:map", value.serialize()
+    ),
+)
