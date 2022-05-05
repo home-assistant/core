@@ -341,7 +341,6 @@ async def test_climate_temperature_is_none(
 
     with patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_set_ac_state_property",
-        return_value={"result": {"status": "Success"}},
     ):
         with pytest.raises(ValueError):
             await hass.services.async_call(
