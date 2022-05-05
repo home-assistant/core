@@ -19,7 +19,6 @@ from .const import CONF_FROM, CONF_TIME, CONF_TO, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 TIME_BETWEEN_UPDATES = timedelta(minutes=5)
-STOCKHOLM_TIMEZONE = get_time_zone("Europe/Stockholm")
 
 
 def next_weekday(fromdate: date, weekday: int) -> date:
@@ -66,11 +65,13 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator):
         """Fetch data from Trafikverket."""
 
         departure_day = next_departuredate(self._weekdays)
-        currenttime = datetime.now(STOCKHOLM_TIMEZONE)
+        currenttime = datetime.now(get_time_zone(self.hass.config.time_zone))
         when = (
-            datetime.combine(departure_day, self._time, STOCKHOLM_TIMEZONE)
+            datetime.combine(
+                departure_day, self._time, get_time_zone(self.hass.config.time_zone)
+            )
             if self._time
-            else datetime.now(STOCKHOLM_TIMEZONE)
+            else datetime.now(get_time_zone(self.hass.config.time_zone))
         )
         if currenttime > when:
             when = currenttime

@@ -42,7 +42,6 @@ ATTR_DEVIATIONS = "deviations"
 
 ICON = "mdi:train"
 SCAN_INTERVAL = timedelta(minutes=5)
-STOCKHOLM_TIMEZONE = get_time_zone("Europe/Stockholm")
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -193,11 +192,13 @@ class TrainSensor(SensorEntity):
 
     async def async_update(self) -> None:
         """Retrieve latest state."""
-        when = datetime.now(STOCKHOLM_TIMEZONE)
+        when = datetime.now(get_time_zone(self.hass.config.time_zone))
         _state: TrainStop | None = None
         if self._time:
             departure_day = next_departuredate(self._weekday)
-            when = datetime.combine(departure_day, self._time, STOCKHOLM_TIMEZONE)
+            when = datetime.combine(
+                departure_day, self._time, get_time_zone(self.hass.config.time_zone)
+            )
         try:
             if self._time:
                 _state = await self._train_api.async_get_train_stop(

@@ -24,12 +24,10 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util.dt import as_utc, get_time_zone
+from homeassistant.util.dt import as_utc
 
 from .const import ATTRIBUTION, CONF_STATION, DOMAIN, NONE_IS_ZERO_SENSORS
 from .coordinator import TVDataUpdateCoordinator
-
-STOCKHOLM_TIMEZONE = get_time_zone("Europe/Stockholm")
 
 
 @dataclass
