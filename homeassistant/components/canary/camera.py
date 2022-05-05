@@ -263,7 +263,7 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
 
         ffmpeg_args = f"{self._ffmpeg_arguments} {self._headers_for_ffmpeg()}"
         stream = CameraMjpeg(self._ffmpeg.binary)
-        await stream.open_camera(live_stream_url, extra_cmd=ffmpeg_args)
+        await stream.open_camera(live_stream_url, extra_cmd=self._ffmpeg_arguments)
 
         try:
             stream_reader = await stream.get_reader()
