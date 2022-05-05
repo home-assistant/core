@@ -30,7 +30,10 @@ async def test_list_blueprints(hass, hass_ws_client):
         "test_event_service.yaml": {
             "metadata": {
                 "domain": "automation",
-                "input": {"service_to_call": None, "trigger_event": None},
+                "input": {
+                    "service_to_call": None,
+                    "trigger_event": {"selector": {"text": {}}},
+                },
                 "name": "Call service based on event",
             },
         },
@@ -89,7 +92,10 @@ async def test_import_blueprint(hass, aioclient_mock, hass_ws_client):
         "blueprint": {
             "metadata": {
                 "domain": "automation",
-                "input": {"service_to_call": None, "trigger_event": None},
+                "input": {
+                    "service_to_call": None,
+                    "trigger_event": {"selector": {"text": {}}},
+                },
                 "name": "Call service based on event",
                 "source_url": "https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/motion_light.yaml",
             },
@@ -123,7 +129,7 @@ async def test_save_blueprint(hass, aioclient_mock, hass_ws_client):
         assert msg["success"]
         assert write_mock.mock_calls
         assert write_mock.call_args[0] == (
-            "blueprint:\n  name: Call service based on event\n  domain: automation\n  input:\n    trigger_event:\n    service_to_call:\n  source_url: https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/motion_light.yaml\ntrigger:\n  platform: event\n  event_type: !input 'trigger_event'\naction:\n  service: !input 'service_to_call'\n  entity_id: light.kitchen\n",
+            "blueprint:\n  name: Call service based on event\n  domain: automation\n  input:\n    trigger_event:\n      selector:\n        text: {}\n    service_to_call:\n  source_url: https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/motion_light.yaml\ntrigger:\n  platform: event\n  event_type: !input 'trigger_event'\naction:\n  service: !input 'service_to_call'\n  entity_id: light.kitchen\n",
         )
 
 
