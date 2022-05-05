@@ -14,8 +14,10 @@ from . import DOMAIN, SIGNAL_SABNZBD_UPDATED
 from ...config_entries import ConfigEntry
 from ...const import DATA_GIGABYTES, DATA_MEGABYTES, DATA_RATE_MEGABYTES_PER_SECOND
 from ...core import HomeAssistant
+from ...helpers.device_registry import DeviceEntryType
+from ...helpers.entity import DeviceInfo
 from ...helpers.entity_platform import AddEntitiesCallback
-from .const import KEY_API_DATA, KEY_NAME
+from .const import DEFAULT_NAME, KEY_API_DATA, KEY_NAME
 
 
 @dataclass
@@ -127,9 +129,16 @@ class SabnzbdSensor(SensorEntity):
         self, sabnzbd_api_data, client_name, description: SabnzbdSensorEntityDescription
     ):
         """Initialize the sensor."""
+        unique_id = description.key
+        self._attr_unique_id = unique_id
         self.entity_description = description
         self._sabnzbd_api = sabnzbd_api_data
         self._attr_name = f"{client_name} {description.name}"
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, DOMAIN)},
+            name=DEFAULT_NAME,
+        )
 
     async def async_added_to_hass(self):
         """Call when entity about to be added to hass."""
