@@ -1,5 +1,5 @@
 """Config flow for AirTouch4."""
-from airtouch4pyapi import AirTouch, AirTouchStatus
+from airtouch4pyapi.airtouch import AirTouch, AirTouchStatus
 import voluptuous as vol
 
 from homeassistant import config_entries
