@@ -237,7 +237,10 @@ class Recorder(threading.Thread):
     def async_initialize(self) -> None:
         """Initialize the recorder."""
         self._event_listener = self.hass.bus.async_listen(
-            MATCH_ALL, self.event_listener, event_filter=self._async_event_filter
+            MATCH_ALL,
+            self.event_listener,
+            event_filter=self._async_event_filter,
+            run_immediately=True,
         )
         self._queue_watcher = async_track_time_interval(
             self.hass, self._async_check_queue, timedelta(minutes=10)

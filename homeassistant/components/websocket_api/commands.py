@@ -118,7 +118,7 @@ def handle_subscribe_events(
             connection.send_message(messages.cached_event_message(msg["id"], event))
 
     connection.subscriptions[msg["id"]] = hass.bus.async_listen(
-        event_type, forward_events
+        event_type, forward_events, run_immediately=True
     )
 
     connection.send_result(msg["id"])
@@ -302,7 +302,7 @@ def handle_subscribe_entities(
     # where some states are missed
     states = _async_get_allowed_states(hass, connection)
     connection.subscriptions[msg["id"]] = hass.bus.async_listen(
-        "state_changed", forward_entity_changes
+        "state_changed", forward_entity_changes, run_immediately=True
     )
     connection.send_result(msg["id"])
     data: dict[str, dict[str, dict]] = {
