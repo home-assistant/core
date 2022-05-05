@@ -49,6 +49,7 @@ class BaseRingButton(RingEntityMixin, ButtonEntity):
 
 class ChimeButton(BaseRingButton):
     """Creates a button to play the test chime of a Chime device."""
+
     _attr_icon = BELL_ICON
 
     def __init__(self, config_entry_id, device, kind):
