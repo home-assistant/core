@@ -117,7 +117,7 @@ async def async_attach_trigger(
 
     @callback
     def check_numeric_state(entity_id, from_s, to_s):
-        """Return whether the criteria are met, raise ConditionError if unknown."""
+        """Return whether the criteria are met."""
         return condition.async_numeric_state(
             hass, to_s, below, above, value_template, variables(entity_id), attribute
         )
@@ -125,7 +125,7 @@ async def async_attach_trigger(
     # Each entity that starts outside the range is already armed (ready to fire).
     for entity_id in entity_ids:
         try:
-            if not check_numeric_state(entity_id, None, entity_id):
+            if check_numeric_state(entity_id, None, entity_id) is False:
                 armed_entities.add(entity_id)
         except exceptions.ConditionError as ex:
             _LOGGER.warning(
@@ -166,7 +166,7 @@ async def async_attach_trigger(
         def check_numeric_state_no_raise(entity_id, from_s, to_s):
             """Return True if the criteria are now met, False otherwise."""
             try:
-                return check_numeric_state(entity_id, from_s, to_s)
+                return check_numeric_state(entity_id, from_s, to_s) is True
             except exceptions.ConditionError:
                 # This is an internal same-state listener so we just drop the
                 # error. The same error will be reached and logged by the
@@ -175,6 +175,11 @@ async def async_attach_trigger(
 
         try:
             matching = check_numeric_state(entity_id, from_s, to_s)
+            if matching is None:
+                # Unarm the entity if its value becomes unknown
+                if entity_id in armed_entities:
+                    armed_entities.discard(entity_id)
+                return
         except exceptions.ConditionError as ex:
             _LOGGER.warning("Error in '%s' trigger: %s", automation_info["name"], ex)
             return

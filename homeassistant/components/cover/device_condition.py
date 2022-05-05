@@ -151,8 +151,11 @@ def async_condition_from_config(
         hass: HomeAssistant, variables: TemplateVarsType = None
     ) -> bool:
         """Return whether the criteria are met."""
-        return condition.async_numeric_state(
-            hass, config[ATTR_ENTITY_ID], max_pos, min_pos, attribute=position_attr
+        return (
+            condition.async_numeric_state(
+                hass, config[ATTR_ENTITY_ID], max_pos, min_pos, attribute=position_attr
+            )
+            is True
         )
 
     return check_numeric_state

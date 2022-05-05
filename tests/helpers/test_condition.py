@@ -1454,6 +1454,23 @@ async def test_numeric_state_known_non_matching(hass):
     )
 
 
+async def test_numeric_state_return_for_unknown(hass):
+    """Test numeric_state return for unknown values."""
+    # False for false
+    hass.states.async_set("sensor.temperature", 0)
+    assert (
+        condition.async_numeric_state(hass, entity="sensor.temperature", above=1)
+        is False
+    )
+
+    # None for unknown
+    hass.states.async_set("sensor.temperature", "unknown")
+    assert (
+        condition.async_numeric_state(hass, entity="sensor.temperature", above=0)
+        is None
+    )
+
+
 async def test_numeric_state_raises(hass):
     """Test that numeric_state raises ConditionError on errors."""
     # Unknown entities

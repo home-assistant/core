@@ -10,7 +10,12 @@ import homeassistant.components.automation as automation
 from homeassistant.components.homeassistant.triggers import (
     numeric_state as numeric_state_trigger,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, SERVICE_TURN_OFF
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ENTITY_MATCH_ALL,
+    SERVICE_TURN_OFF,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import Context
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -414,10 +419,58 @@ async def test_if_fires_on_entity_unavailable_at_startup(hass, calls):
             }
         },
     )
+    hass.states.async_set("test.entity", "unavailable")
+    await hass.async_block_till_done()
     # 11 is above 10
     hass.states.async_set("test.entity", 11)
     await hass.async_block_till_done()
     assert len(calls) == 0
+
+
+async def test_if_not_fires_on_entity_unavailable(hass, calls):
+    """Test the firing with entity changing to unavailable."""
+    # set initial state
+    hass.states.async_set("test.entity", 9)
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "numeric_state",
+                    "entity_id": "test.entity",
+                    "above": 10,
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    # 11 is above 10
+    hass.states.async_set("test.entity", 11)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    # Going to unavailable and back should not fire
+    hass.states.async_set("test.entity", STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    hass.states.async_set("test.entity", 11)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    # Crossing threshold via unavailable should not fire
+    hass.states.async_set("test.entity", 9)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    hass.states.async_set("test.entity", STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    hass.states.async_set("test.entity", 11)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
 
 
 @pytest.mark.parametrize("above", (10, "input_number.value_10"))

@@ -289,7 +289,7 @@ def numeric_state(
     above: float | str | None = None,
     value_template: Template | None = None,
     variables: TemplateVarsType = None,
-) -> bool:
+) -> bool | None:
     """Test a numeric state condition."""
     return run_callback_threadsafe(
         hass.loop,
@@ -311,8 +311,11 @@ def async_numeric_state(  # noqa: C901
     value_template: Template | None = None,
     variables: TemplateVarsType = None,
     attribute: str | None = None,
-) -> bool:
-    """Test a numeric state condition."""
+) -> bool | None:
+    """Test a numeric state condition.
+
+    Returns None if a value is unknown and raises ConditionError if it is invalid.
+    """
     if entity is None:
         raise ConditionErrorMessage("numeric_state", "no entity specified")
 
@@ -329,7 +332,7 @@ def async_numeric_state(  # noqa: C901
             False,
             message=f"attribute '{attribute}' of entity {entity_id} does not exist",
         )
-        return False
+        return None
 
     value: Any = None
     if value_template is None:
@@ -353,7 +356,7 @@ def async_numeric_state(  # noqa: C901
             False,
             message=f"value '{value}' is non-numeric and treated as False",
         )
-        return False
+        return None
 
     try:
         fvalue = float(value)
@@ -373,7 +376,7 @@ def async_numeric_state(  # noqa: C901
                 STATE_UNAVAILABLE,
                 STATE_UNKNOWN,
             ):
-                return False
+                return None
             try:
                 if fvalue >= float(below_entity.state):
                     condition_trace_set_result(
@@ -401,7 +404,7 @@ def async_numeric_state(  # noqa: C901
                 STATE_UNAVAILABLE,
                 STATE_UNKNOWN,
             ):
-                return False
+                return None
             try:
                 if fvalue <= float(above_entity.state):
                     condition_trace_set_result(
