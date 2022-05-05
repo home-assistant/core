@@ -146,13 +146,13 @@ async def async_setup_entry(
         if not coordinator.last_update_success:
             return
 
-        devices = coordinator.data
+        devices: dict[str, MeaterProbe] = coordinator.data
         entities = []
         known_probes: set = hass.data[DOMAIN]["known_probes"]
 
         # Add entities for temperature probes which we've not yet seen
         for dev in devices:
-            if dev.id in known_probes:
+            if dev in known_probes:
                 continue
 
             entities.extend(
@@ -161,7 +161,7 @@ async def async_setup_entry(
                     for sensor_description in SENSOR_TYPES
                 ]
             )
-            known_probes.add(dev.id)
+            known_probes.add(dev)
 
         async_add_entities(entities)
 
