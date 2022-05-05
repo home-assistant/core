@@ -6,11 +6,14 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_SUGGESTED_AREA
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DOMAIN as CASETA_DOMAIN, LutronCasetaDevice
-from .const import BRIDGE_DEVICE, BRIDGE_LEAP
+from . import DOMAIN as CASETA_DOMAIN, LutronCasetaDevice, _area_and_name_from_name
+from .const import BRIDGE_DEVICE, BRIDGE_LEAP, CONFIG_URL, MANUFACTURER, UNASSIGNED_AREA
 
 
 async def async_setup_entry(
@@ -39,6 +42,23 @@ async def async_setup_entry(
 class LutronOccupancySensor(LutronCasetaDevice, BinarySensorEntity):
     """Representation of a Lutron occupancy group."""
 
+    def __init__(self, device, bridge, bridge_device):
+        """Init an occupancy sensor."""
+        super().__init__(device, bridge, bridge_device)
+        info = DeviceInfo(
+            identifiers={(CASETA_DOMAIN, self.unique_id)},
+            manufacturer=MANUFACTURER,
+            model="Lutron Occupancy",
+            name=self.name,
+            via_device=(CASETA_DOMAIN, self._bridge_device["serial"]),
+            configuration_url=CONFIG_URL,
+            entry_type=DeviceEntryType.SERVICE,
+        )
+        area, _ = _area_and_name_from_name(device["name"])
+        if area != UNASSIGNED_AREA:
+            info[ATTR_SUGGESTED_AREA] = area
+        self._attr_device_info = info
+
     @property
     def device_class(self):
         """Flag supported features."""
@@ -64,16 +84,6 @@ class LutronOccupancySensor(LutronCasetaDevice, BinarySensorEntity):
     def unique_id(self):
         """Return a unique identifier."""
         return f"occupancygroup_{self.device_id}"
-
-    @property
-    def device_info(self):
-        """Return the device info.
-
-        Sensor entities are aggregated from one or more physical
-        sensors by each room. Therefore, there shouldn't be devices
-        related to any sensor entities.
-        """
-        return None
 
     @property
     def extra_state_attributes(self):
