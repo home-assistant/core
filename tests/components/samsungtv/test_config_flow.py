@@ -340,16 +340,16 @@ async def test_user_encrypted_websocket(
         )
 
     assert result4["type"] == "create_entry"
-    assert result4["title"] == "Living Room (82GXARRS)"
+    assert result4["title"] == "TV-UE48JU6470 (UE48JU6400)"
     assert result4["data"][CONF_HOST] == "fake_host"
-    assert result4["data"][CONF_NAME] == "Living Room"
+    assert result4["data"][CONF_NAME] == "TV-UE48JU6470"
     assert result4["data"][CONF_MAC] == "aa:bb:ww:ii:ff:ii"
     assert result4["data"][CONF_MANUFACTURER] == "Samsung"
-    assert result4["data"][CONF_MODEL] == "82GXARRS"
+    assert result4["data"][CONF_MODEL] == "UE48JU6400"
     assert result4["data"][CONF_SSDP_RENDERING_CONTROL_LOCATION] is None
     assert result4["data"][CONF_TOKEN] == "037739871315caef138547b03e348b72"
     assert result4["data"][CONF_SESSION_ID] == "1"
-    assert result4["result"].unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
+    assert result4["result"].unique_id == "223da676-497a-4e06-9507-5e27ec4f0fb3"
 
 
 @pytest.mark.usefixtures("rest_api_failing")
@@ -714,19 +714,19 @@ async def test_ssdp_encrypted_websocket_success_populates_mac_address_and_ssdp_l
         )
 
     assert result4["type"] == "create_entry"
-    assert result4["title"] == "Living Room (82GXARRS)"
+    assert result4["title"] == "TV-UE48JU6470 (UE48JU6400)"
     assert result4["data"][CONF_HOST] == "fake_host"
-    assert result4["data"][CONF_NAME] == "Living Room"
+    assert result4["data"][CONF_NAME] == "TV-UE48JU6470"
     assert result4["data"][CONF_MAC] == "aa:bb:ww:ii:ff:ii"
     assert result4["data"][CONF_MANUFACTURER] == "Samsung fake_manufacturer"
-    assert result4["data"][CONF_MODEL] == "82GXARRS"
+    assert result4["data"][CONF_MODEL] == "UE48JU6400"
     assert (
         result4["data"][CONF_SSDP_RENDERING_CONTROL_LOCATION]
         == "https://fake_host:12345/test"
     )
     assert result4["data"][CONF_TOKEN] == "037739871315caef138547b03e348b72"
     assert result4["data"][CONF_SESSION_ID] == "1"
-    assert result4["result"].unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
+    assert result4["result"].unique_id == "223da676-497a-4e06-9507-5e27ec4f0fb3"
 
 
 @pytest.mark.usefixtures("rest_api_non_ssl_only")
@@ -1036,13 +1036,13 @@ async def test_dhcp_wireless(hass: HomeAssistant) -> None:
         result["flow_id"], user_input="whatever"
     )
     assert result["type"] == "create_entry"
-    assert result["title"] == "Living Room (82GXARRS)"
+    assert result["title"] == "TV-UE48JU6470 (UE48JU6400)"
     assert result["data"][CONF_HOST] == "fake_host"
-    assert result["data"][CONF_NAME] == "Living Room"
+    assert result["data"][CONF_NAME] == "TV-UE48JU6470"
     assert result["data"][CONF_MAC] == "aa:bb:ww:ii:ff:ii"
     assert result["data"][CONF_MANUFACTURER] == "Samsung"
-    assert result["data"][CONF_MODEL] == "82GXARRS"
-    assert result["result"].unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
+    assert result["data"][CONF_MODEL] == "UE48JU6400"
+    assert result["result"].unique_id == "223da676-497a-4e06-9507-5e27ec4f0fb3"
 
 
 @pytest.mark.usefixtures("remotews", "rest_api", "remoteencws_failing")

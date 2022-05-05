@@ -85,6 +85,11 @@ def mac_from_device_info(info: dict[str, Any]) -> str | None:
     return None
 
 
+def model_requires_encryption(model: str | None) -> bool:
+    """H and J models need pairing with PIN."""
+    return model is not None and len(model) > 4 and model[4] in ("H", "J")
+
+
 async def async_get_device_info(
     hass: HomeAssistant,
     host: str,
@@ -99,17 +104,19 @@ async def async_get_device_info(
                 port,
                 info,
             )
-            encrypted_bridge = SamsungTVEncryptedBridge(
-                hass, METHOD_ENCRYPTED_WEBSOCKET, host, ENCRYPTED_WEBSOCKET_PORT
-            )
-            result = await encrypted_bridge.async_try_connect()
-            if result != RESULT_CANNOT_CONNECT:
-                return (
-                    result,
-                    ENCRYPTED_WEBSOCKET_PORT,
-                    METHOD_ENCRYPTED_WEBSOCKET,
-                    info,
+            # Check the encrypted port if the model requires encryption
+            if model_requires_encryption(info.get("device", {}).get("modelName")):
+                encrypted_bridge = SamsungTVEncryptedBridge(
+                    hass, METHOD_ENCRYPTED_WEBSOCKET, host, ENCRYPTED_WEBSOCKET_PORT
                 )
+                result = await encrypted_bridge.async_try_connect()
+                if result != RESULT_CANNOT_CONNECT:
+                    return (
+                        result,
+                        ENCRYPTED_WEBSOCKET_PORT,
+                        METHOD_ENCRYPTED_WEBSOCKET,
+                        info,
+                    )
             return RESULT_SUCCESS, port, METHOD_WEBSOCKET, info
 
     # Try legacy port
