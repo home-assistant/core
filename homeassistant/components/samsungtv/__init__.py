@@ -30,7 +30,12 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.typing import ConfigType
 
-from .bridge import SamsungTVBridge, async_get_device_info, mac_from_device_info
+from .bridge import (
+    SamsungTVBridge,
+    async_get_device_info,
+    mac_from_device_info,
+    model_requires_encryption,
+)
 from .const import (
     CONF_ON_ACTION,
     CONF_SESSION_ID,
@@ -214,11 +219,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-def _model_requires_encryption(model: str | None) -> bool:
-    """H and J models need pairing with PIN."""
-    return model is not None and len(model) > 4 and model[4] in ("H", "J")
-
-
 async def _async_create_bridge_with_updated_data(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> SamsungTVBridge:
@@ -279,7 +279,7 @@ async def _async_create_bridge_with_updated_data(
                 LOGGER.info("Updated model to %s for %s", model, host)
                 updated_data[CONF_MODEL] = model
 
-    if _model_requires_encryption(model) and method != METHOD_ENCRYPTED_WEBSOCKET:
+    if model_requires_encryption(model) and method != METHOD_ENCRYPTED_WEBSOCKET:
         LOGGER.info(
             "Detected model %s for %s. Some televisions from H and J series use "
             "an encrypted protocol but you are using %s which may not be supported",
