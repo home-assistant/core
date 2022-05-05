@@ -837,7 +837,7 @@ horimote==0.4.1
 httplib2==0.20.4
 
 # homeassistant.components.huawei_lte
-huawei-lte-api==1.4.18
+huawei-lte-api==1.6.0
 
 # homeassistant.components.huisbaasje
 huisbaasje-client==0.1.0
