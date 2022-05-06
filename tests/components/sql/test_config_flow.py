@@ -214,9 +214,11 @@ async def test_options_flow(hass: HomeAssistant) -> None:
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["data"] == {
+        "name": "Get Value",
         "db_url": "sqlite://",
         "query": "SELECT 5 as size",
         "column": "size",
+        "value_template": None,
         "unit_of_measurement": "MiB",
     }
 
@@ -312,6 +314,8 @@ async def test_options_flow_fails_invalid_query(
 
     assert result4["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result4["data"] == {
+        "name": "Get Value",
+        "value_template": None,
         "db_url": "sqlite://",
         "query": "SELECT 5 as size",
         "column": "size",
