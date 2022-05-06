@@ -2,11 +2,8 @@
 from http import HTTPStatus
 from unittest.mock import patch
 
-import pytest
-
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.http import CONF_BASE_URL, DOMAIN as DOMAIN_HTTP
-from homeassistant.components.yolink import config_flow
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.helpers import config_entry_oauth2_flow
 
@@ -17,23 +14,6 @@ YOLINK_HTTP_HOST = f"http://{YOLINK_HOST}"
 DOMAIN = "yolink"
 OAUTH2_AUTHORIZE = f"{YOLINK_HTTP_HOST}/oauth/v2/authorization.htm"
 OAUTH2_TOKEN = f"{YOLINK_HTTP_HOST}/open/yolink/token"
-
-
-@pytest.fixture()
-async def mock_impl(hass):
-    """Mock implementation."""
-    await setup.async_setup_component(hass, "http", {})
-
-    impl = config_entry_oauth2_flow.LocalOAuth2Implementation(
-        hass,
-        DOMAIN,
-        CLIENT_ID,
-        CLIENT_SECRET,
-        OAUTH2_AUTHORIZE,
-        OAUTH2_TOKEN,
-    )
-    config_flow.OAuth2FlowHandler.async_register_implementation(hass, impl)
-    return impl
 
 
 async def test_abort_if_no_configuration(hass):
