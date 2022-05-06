@@ -237,7 +237,9 @@ class Recorder(threading.Thread):
     def async_initialize(self) -> None:
         """Initialize the recorder."""
         self._event_listener = self.hass.bus.async_listen(
-            MATCH_ALL, self.event_listener, event_filter=self._async_event_filter
+            MATCH_ALL,
+            self.event_listener,
+            run_immediately=True,
         )
         self._queue_watcher = async_track_time_interval(
             self.hass, self._async_check_queue, timedelta(minutes=10)
@@ -916,7 +918,8 @@ class Recorder(threading.Thread):
     @callback
     def event_listener(self, event: Event) -> None:
         """Listen for new events and put them in the process queue."""
-        self.queue_task(EventTask(event))
+        if self._async_event_filter(event):
+            self.queue_task(EventTask(event))
 
     def block_till_done(self) -> None:
         """Block till all events processed.
