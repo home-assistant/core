@@ -8,6 +8,7 @@ from threading import Lock
 import feedparser
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL, EVENT_HOMEASSISTANT_START
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -16,6 +17,7 @@ from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = getLogger(__name__)
 
+CONF_URL = "url"
 CONF_URLS = "urls"
 CONF_MAX_ENTRIES = "max_entries"
 
@@ -42,8 +44,29 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up the Feedreader component from a config entry."""
+    data_file = hass.config.path(f"{DOMAIN}_{entry.entry_id}.pickle")
+    storage = StoredData(data_file)
+    await hass.async_add_executor_job(
+        lambda: FeedManager(
+            entry.data[CONF_URL],
+            timedelta(seconds=entry.data[CONF_SCAN_INTERVAL]),
+            entry.data[CONF_MAX_ENTRIES],
+            hass,
+            storage,
+        )
+    )
+    return True
+
+
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Feedreader component."""
+
+    # Skip setup here if it's being loaded with no config data. Will handle in config entry.
+    if DOMAIN not in config:
+        return True
+
     urls = config[DOMAIN][CONF_URLS]
     scan_interval = config[DOMAIN].get(CONF_SCAN_INTERVAL)
     max_entries = config[DOMAIN].get(CONF_MAX_ENTRIES)
