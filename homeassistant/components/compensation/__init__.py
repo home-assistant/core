@@ -20,6 +20,7 @@ from .const import (
     CONF_COMPENSATION,
     CONF_DATAPOINTS,
     CONF_DEGREE,
+    CONF_HIDE_SOURCE,
     CONF_POLYNOMIAL,
     CONF_PRECISION,
     DATA_COMPENSATION,
@@ -55,6 +56,7 @@ COMPENSATION_SCHEMA = vol.Schema(
             vol.Range(min=1, max=7),
         ),
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+        vol.Optional(CONF_HIDE_SOURCE): cv.boolean,
     }
 )
 
