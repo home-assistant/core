@@ -61,7 +61,7 @@ class BAFFan(BAFEntity, FanEntity):
     def _async_update_attrs(self) -> None:
         """Update attrs from device."""
         device = self._device
-        self._attr_is_on = device.fan_mode != OffOnAuto.OFF
+        self._attr_is_on = device.fan_mode == OffOnAuto.ON
         self._attr_current_direction = DIRECTION_FORWARD
         if device.reverse_enable:
             self._attr_current_direction = DIRECTION_REVERSE
@@ -98,17 +98,13 @@ class BAFFan(BAFEntity, FanEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
-        device = self._device
-        if device.fan_mode == OffOnAuto.ON:
-            device.fan_mode = OffOnAuto.OFF
-        elif device.auto_comfort_enable:
-            device.auto_comfort_enable = False
+        self._device.fan_mode = OffOnAuto.OFF
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
         if preset_mode != PRESET_MODE_AUTO:
             raise ValueError(f"Invalid preset mode: {preset_mode}")
-        self._device.auto_comfort_enable = True
+        self._device.fan_mode = OffOnAuto.AUTO
 
     async def async_set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
