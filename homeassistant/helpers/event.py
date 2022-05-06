@@ -68,8 +68,8 @@ class TrackStates:
     """Class for keeping track of states being tracked.
 
     all_states: All states on the system are being tracked
-    entities: Entities to track
-    domains: Domains to track
+    entities: Lowercased entities to track
+    domains: Lowercased domains to track
     """
 
     all_states: bool
@@ -248,6 +248,18 @@ def async_track_state_change_event(
     """
     if not (entity_ids := _async_string_to_lower_list(entity_ids)):
         return _remove_empty_listener
+    return _async_track_state_change_event(hass, entity_ids, action)
+
+
+@bind_hass
+def _async_track_state_change_event(
+    hass: HomeAssistant,
+    entity_ids: str | Iterable[str],
+    action: Callable[[Event], Any],
+) -> CALLBACK_TYPE:
+    """async_track_state_change_event without lowercasing."""
+    if not entity_ids:
+        return _remove_empty_listener
 
     entity_callbacks = hass.data.setdefault(TRACK_STATE_CHANGE_CALLBACKS, {})
 
@@ -418,6 +430,18 @@ def async_track_state_added_domain(
 ) -> CALLBACK_TYPE:
     """Track state change events when an entity is added to domains."""
     if not (domains := _async_string_to_lower_list(domains)):
+        return _remove_empty_listener
+    return _async_track_state_added_domain(hass, domains, action)
+
+
+@bind_hass
+def _async_track_state_added_domain(
+    hass: HomeAssistant,
+    domains: str | Iterable[str],
+    action: Callable[[Event], Any],
+) -> CALLBACK_TYPE:
+    """async_track_state_added_domain without lowercasing."""
+    if not domains:
         return _remove_empty_listener
 
     domain_callbacks = hass.data.setdefault(TRACK_STATE_ADDED_DOMAIN_CALLBACKS, {})
@@ -631,7 +655,7 @@ class _TrackStateChangeFiltered:
         if not entities:
             return
 
-        self._listeners[_ENTITIES_LISTENER] = async_track_state_change_event(
+        self._listeners[_ENTITIES_LISTENER] = _async_track_state_change_event(
             self.hass, entities, self._action
         )
 
@@ -648,7 +672,7 @@ class _TrackStateChangeFiltered:
         if not domains:
             return
 
-        self._listeners[_DOMAINS_LISTENER] = async_track_state_added_domain(
+        self._listeners[_DOMAINS_LISTENER] = _async_track_state_added_domain(
             self.hass, domains, self._state_added
         )
 
@@ -1222,7 +1246,7 @@ def async_track_same_state(
     else:
         async_remove_state_for_cancel = async_track_state_change_event(
             hass,
-            [entity_ids] if isinstance(entity_ids, str) else entity_ids,
+            entity_ids,
             state_for_cancel_listener,
         )
 

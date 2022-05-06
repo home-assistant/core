@@ -900,7 +900,8 @@ class EventBus:
         listener callable should run.
 
         If run_immediately is passed, the callback will be run
-        right away instead of using call_soon
+        right away instead of using call_soon. Only use this if
+        the callback results in scheduling another task.
 
         This method must be run in the event loop.
         """
