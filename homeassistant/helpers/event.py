@@ -258,9 +258,6 @@ def _async_track_state_change_event(
     action: Callable[[Event], Any],
 ) -> CALLBACK_TYPE:
     """async_track_state_change_event without lowercasing."""
-    if not entity_ids:
-        return _remove_empty_listener
-
     entity_callbacks = hass.data.setdefault(TRACK_STATE_CHANGE_CALLBACKS, {})
 
     if TRACK_STATE_CHANGE_LISTENER not in hass.data:
@@ -441,9 +438,6 @@ def _async_track_state_added_domain(
     action: Callable[[Event], Any],
 ) -> CALLBACK_TYPE:
     """async_track_state_added_domain without lowercasing."""
-    if not domains:
-        return _remove_empty_listener
-
     domain_callbacks = hass.data.setdefault(TRACK_STATE_ADDED_DOMAIN_CALLBACKS, {})
 
     if TRACK_STATE_ADDED_DOMAIN_LISTENER not in hass.data:
