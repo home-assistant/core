@@ -554,7 +554,7 @@ class _TrackStateChangeFiltered:
             self._setup_all_listener()
             return
 
-        self._setup_entity_added_domain_listener(track_states.domains)
+        self._setup_domains_listener(track_states.domains)
         self._setup_entities_listener(track_states.domains, track_states.entities)
 
     @property
@@ -570,8 +570,6 @@ class _TrackStateChangeFiltered:
     @callback
     def async_update_listeners(self, new_track_states: TrackStates) -> None:
         """Update the listeners based on the new TrackStates."""
-        if new_track_states == self._last_track_states:
-            return
         last_track_states = self._last_track_states
         _LOGGER.debug(
             "async_update_listeners: last: %s new: %s",
@@ -598,7 +596,7 @@ class _TrackStateChangeFiltered:
         if had_all_listener or domains_changed:
             domains_changed = True
             self._cancel_listener(_DOMAINS_LISTENER)
-            self._setup_entity_added_domain_listener(new_track_states.domains)
+            self._setup_domains_listener(new_track_states.domains)
 
         if (
             had_all_listener
@@ -638,8 +636,7 @@ class _TrackStateChangeFiltered:
         )
 
     @callback
-    def _state_added_domain(self, event: Event) -> None:
-        """Call when a state is added to a domain."""
+    def _state_added(self, event: Event) -> None:
         self._cancel_listener(_ENTITIES_LISTENER)
         self._setup_entities_listener(
             self._last_track_states.domains, self._last_track_states.entities
@@ -647,13 +644,12 @@ class _TrackStateChangeFiltered:
         self.hass.async_run_hass_job(self._action_as_hassjob, event)
 
     @callback
-    def _setup_entity_added_domain_listener(self, domains: set[str]) -> None:
-        """Listen for a new state to to appear in a domain."""
+    def _setup_domains_listener(self, domains: set[str]) -> None:
         if not domains:
             return
 
         self._listeners[_DOMAINS_LISTENER] = async_track_state_added_domain(
-            self.hass, domains, self._state_added_domain
+            self.hass, domains, self._state_added
         )
 
     @callback
@@ -1069,7 +1065,7 @@ class _TrackTemplateResultInfo:
             self._track_state_changes.async_update_listeners(
                 _render_infos_to_track_states(
                     [
-                        _suppress_all_in_render_info(info)
+                        _suppress_domain_all_in_render_info(info)
                         if self._rate_limit.async_has_timer(template)
                         else info
                         for template, info in self._info.items()
@@ -1632,11 +1628,11 @@ def _rate_limit_for_event(
     return rate_limit
 
 
-def _suppress_all_in_render_info(render_info: RenderInfo) -> RenderInfo:
-    """Remove all_states from render info during a ratelimit."""
-    if not render_info.all_states and not render_info.all_states_lifecycle:
-        return render_info
+def _suppress_domain_all_in_render_info(render_info: RenderInfo) -> RenderInfo:
+    """Remove the domains and all_states from render info during a ratelimit."""
     rate_limited_render_info = copy.copy(render_info)
     rate_limited_render_info.all_states = False
     rate_limited_render_info.all_states_lifecycle = False
+    rate_limited_render_info.domains = set()
+    rate_limited_render_info.domains_lifecycle = set()
     return rate_limited_render_info
