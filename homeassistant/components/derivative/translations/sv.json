@@ -1,0 +1,12 @@
+{
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "name": "Namn",
+                    "round": "Precision"
+                }
+            }
+        }
+    }
+}

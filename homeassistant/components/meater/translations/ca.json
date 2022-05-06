@@ -1,0 +1,27 @@
+{
+    "config": {
+        "error": {
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
+            "service_unavailable_error": "L'API no est\u00e0 disponible actualment, torna-ho a provar m\u00e9s tard.",
+            "unknown_auth_error": "Error inesperat"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Contrasenya"
+                },
+                "description": "Confirma la contrasenya del compte de Meater Cloud {username}."
+            },
+            "user": {
+                "data": {
+                    "password": "Contrasenya",
+                    "username": "Nom d'usuari"
+                },
+                "data_description": {
+                    "username": "Nom d'usuari de Meater Cloud, normalment una adre\u00e7a de correu electr\u00f2nic."
+                },
+                "description": "Configura el teu compte de Meater Cloud."
+            }
+        }
+    }
+}

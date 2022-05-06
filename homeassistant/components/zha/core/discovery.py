@@ -54,14 +54,13 @@ async def async_add_entities(
             tuple[str, ZHADevice, list[base.ZigbeeChannel]],
         ]
     ],
-    update_before_add: bool = True,
 ) -> None:
     """Add entities helper."""
     if not entities:
         return
     to_add = [ent_cls.create_entity(*args) for ent_cls, args in entities]
     entities_to_add = [entity for entity in to_add if entity is not None]
-    _async_add_entities(entities_to_add, update_before_add=update_before_add)
+    _async_add_entities(entities_to_add, update_before_add=False)
     entities.clear()
 
 
@@ -78,6 +77,7 @@ class ProbeEndpoint:
         self.discover_by_device_type(channel_pool)
         self.discover_multi_entities(channel_pool)
         self.discover_by_cluster_id(channel_pool)
+        self.discover_multi_entities(channel_pool, config_diagnostic_entities=True)
         zha_regs.ZHA_ENTITIES.clean_up()
 
     @callback
@@ -177,17 +177,28 @@ class ProbeEndpoint:
 
     @staticmethod
     @callback
-    def discover_multi_entities(channel_pool: ChannelPool) -> None:
+    def discover_multi_entities(
+        channel_pool: ChannelPool,
+        config_diagnostic_entities: bool = False,
+    ) -> None:
         """Process an endpoint on and discover multiple entities."""
 
         ep_profile_id = channel_pool.endpoint.profile_id
         ep_device_type = channel_pool.endpoint.device_type
         cmpt_by_dev_type = zha_regs.DEVICE_CLASS[ep_profile_id].get(ep_device_type)
-        remaining_channels = channel_pool.unclaimed_channels()
 
-        matches, claimed = zha_regs.ZHA_ENTITIES.get_multi_entity(
-            channel_pool.manufacturer, channel_pool.model, remaining_channels
-        )
+        if config_diagnostic_entities:
+            matches, claimed = zha_regs.ZHA_ENTITIES.get_config_diagnostic_entity(
+                channel_pool.manufacturer,
+                channel_pool.model,
+                list(channel_pool.all_channels.values()),
+            )
+        else:
+            matches, claimed = zha_regs.ZHA_ENTITIES.get_multi_entity(
+                channel_pool.manufacturer,
+                channel_pool.model,
+                channel_pool.unclaimed_channels(),
+            )
 
         channel_pool.claim_channels(claimed)
         for component, ent_n_chan_list in matches.items():

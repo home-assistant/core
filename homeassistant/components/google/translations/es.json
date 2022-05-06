@@ -1,0 +1,12 @@
+{
+    "config": {
+        "abort": {
+            "missing_configuration": "El componente no est\u00e1 configurado. Por favor, sigue la documentaci\u00f3n."
+        },
+        "step": {
+            "auth": {
+                "title": "Vincular cuenta de Google"
+            }
+        }
+    }
+}

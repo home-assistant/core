@@ -2,13 +2,18 @@
     "config": {
         "abort": {
             "cannot_connect": "Verbindung fehlgeschlagen",
+            "not_insteon_device": "Erkanntes Ger\u00e4t ist kein Insteon-Ger\u00e4t",
             "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich."
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
             "select_single": "W\u00e4hle eine Option aus."
         },
+        "flow_title": "{name}",
         "step": {
+            "confirm_usb": {
+                "description": "M\u00f6chtest du {name} einrichten?"
+            },
             "hubv1": {
                 "data": {
                     "host": "IP-Adresse",

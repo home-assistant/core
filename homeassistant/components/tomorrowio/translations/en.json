@@ -11,6 +11,7 @@
                 "data": {
                     "api_key": "API Key",
                     "latitude": "Latitude",
+                    "location": "Location",
                     "longitude": "Longitude",
                     "name": "Name"
                 },

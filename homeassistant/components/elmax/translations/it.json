@@ -6,7 +6,7 @@
         "error": {
             "bad_auth": "Autenticazione non valida",
             "invalid_auth": "Autenticazione non valida",
-            "invalid_pin": "Il pin fornito non \u00e8 valido",
+            "invalid_pin": "Il PIN fornito non \u00e8 valido",
             "network_error": "Si \u00e8 verificato un errore di rete",
             "no_panel_online": "Non \u00e8 stato trovato alcun pannello di controllo Elmax in linea.",
             "unknown": "Errore imprevisto",

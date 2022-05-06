@@ -47,6 +47,7 @@
         "step": {
             "init": {
                 "data": {
+                    "browse_unfiltered": "Show incompatible media when browsing",
                     "callback_url_override": "Event listener callback URL",
                     "listen_port": "Event listener port (random if not set)",
                     "poll_availability": "Poll for device availability"

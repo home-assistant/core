@@ -1,0 +1,17 @@
+{
+    "config": {
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "L\u00f6senord"
+                },
+                "description": "Bekr\u00e4fta l\u00f6senordet f\u00f6r Meater Cloud-kontot {username}."
+            },
+            "user": {
+                "data_description": {
+                    "username": "Meater Cloud anv\u00e4ndarnamn, vanligtvis en e-postadress."
+                }
+            }
+        }
+    }
+}

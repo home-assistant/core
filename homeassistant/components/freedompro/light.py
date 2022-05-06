@@ -6,9 +6,7 @@ from pyfreedompro import put_state
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_HS_COLOR,
-    COLOR_MODE_BRIGHTNESS,
-    COLOR_MODE_HS,
-    COLOR_MODE_ONOFF,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -55,11 +53,11 @@ class Device(CoordinatorEntity, LightEntity):
         )
         self._attr_is_on = False
         self._attr_brightness = 0
-        color_mode = COLOR_MODE_ONOFF
+        color_mode = ColorMode.ONOFF
         if "hue" in device["characteristics"]:
-            color_mode = COLOR_MODE_HS
+            color_mode = ColorMode.HS
         elif "brightness" in device["characteristics"]:
-            color_mode = COLOR_MODE_BRIGHTNESS
+            color_mode = ColorMode.BRIGHTNESS
         self._attr_color_mode = color_mode
         self._attr_supported_color_modes = {color_mode}
 

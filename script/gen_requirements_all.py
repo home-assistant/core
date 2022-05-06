@@ -68,6 +68,7 @@ httplib2>=0.19.0
 # upgrades intentionally. It is a large package to build from source and we
 # want to ensure we have wheels built.
 grpcio==1.45.0
+grpcio-status==1.45.0
 
 # libcst >=0.4.0 requires a newer Rust than we currently have available,
 # thus our wheels builds fail. This pins it to the last working version,
@@ -118,6 +119,10 @@ multidict>=6.0.2
 # Required for compatibility with point integration - ensure_active_token
 # https://github.com/home-assistant/core/pull/68176
 authlib<1.0
+
+# Pin backoff for compatibility until most libraries have been updated
+# https://github.com/home-assistant/core/pull/70817
+backoff<2.0
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (

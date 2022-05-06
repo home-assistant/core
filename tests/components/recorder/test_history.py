@@ -1,4 +1,6 @@
 """The tests the History component."""
+from __future__ import annotations
+
 # pylint: disable=protected-access,invalid-name
 from copy import copy
 from datetime import datetime, timedelta
@@ -12,24 +14,45 @@ from homeassistant.components import recorder
 from homeassistant.components.recorder import history
 from homeassistant.components.recorder.models import (
     Events,
+    RecorderRuns,
     StateAttributes,
     States,
     process_timestamp,
 )
+from homeassistant.components.recorder.util import session_scope
 import homeassistant.core as ha
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.json import JSONEncoder
 import homeassistant.util.dt as dt_util
 
-from .conftest import SetupRecorderInstanceT
-
-from tests.common import mock_state_change_event
+from tests.common import SetupRecorderInstanceT, mock_state_change_event
 from tests.components.recorder.common import wait_recording_done
+
+
+async def _async_get_states(
+    hass: HomeAssistant,
+    utc_point_in_time: datetime,
+    entity_ids: list[str] | None = None,
+    run: RecorderRuns | None = None,
+    no_attributes: bool = False,
+):
+    """Get states from the database."""
+
+    def _get_states_with_session():
+        with session_scope(hass=hass) as session:
+            return history._get_states_with_session(
+                hass, session, utc_point_in_time, entity_ids, run, None, no_attributes
+            )
+
+    return await recorder.get_instance(hass).async_add_executor_job(
+        _get_states_with_session
+    )
 
 
 def _add_db_entries(
     hass: ha.HomeAssistant, point: datetime, entity_ids: list[str]
 ) -> None:
-    with recorder.session_scope(hass=hass) as session:
+    with session_scope(hass=hass) as session:
         for idx, entity_id in enumerate(entity_ids):
             session.add(
                 Events(
@@ -64,7 +87,9 @@ def _setup_get_states(hass):
     """Set up for testing get_states."""
     states = []
     now = dt_util.utcnow()
-    with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=now):
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=now
+    ):
         for i in range(5):
             state = ha.State(
                 f"test.point_in_time_{i % 5}",
@@ -79,7 +104,9 @@ def _setup_get_states(hass):
         wait_recording_done(hass)
 
     future = now + timedelta(seconds=1)
-    with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=future):
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=future
+    ):
         for i in range(5):
             state = ha.State(
                 f"test.point_in_time_{i % 5}",
@@ -94,43 +121,12 @@ def _setup_get_states(hass):
     return now, future, states
 
 
-def test_get_states(hass_recorder):
-    """Test getting states at a specific point in time."""
-    hass = hass_recorder()
-    now, future, states = _setup_get_states(hass)
-    # Get states returns everything before POINT for all entities
-    for state1, state2 in zip(
-        states,
-        sorted(history.get_states(hass, future), key=lambda state: state.entity_id),
-    ):
-        assert state1 == state2
-
-    # Get states returns everything before POINT for tested entities
-    entities = [f"test.point_in_time_{i % 5}" for i in range(5)]
-    for state1, state2 in zip(
-        states,
-        sorted(
-            history.get_states(hass, future, entities),
-            key=lambda state: state.entity_id,
-        ),
-    ):
-        assert state1 == state2
-
-    # Test get_state here because we have a DB setup
-    assert states[0] == history.get_state(hass, future, states[0].entity_id)
-
-    time_before_recorder_ran = now - timedelta(days=1000)
-    assert history.get_states(hass, time_before_recorder_ran) == []
-
-    assert history.get_state(hass, time_before_recorder_ran, "demo.id") is None
-
-
 def test_get_full_significant_states_with_session_entity_no_matches(hass_recorder):
     """Test getting states at a specific point in time for entities that never have been recorded."""
     hass = hass_recorder()
     now = dt_util.utcnow()
     time_before_recorder_ran = now - timedelta(days=1000)
-    with recorder.session_scope(hass=hass) as session:
+    with session_scope(hass=hass) as session:
         assert (
             history.get_full_significant_states_with_session(
                 hass, session, time_before_recorder_ran, now, entity_ids=["demo.id"]
@@ -156,7 +152,7 @@ def test_significant_states_with_session_entity_minimal_response_no_matches(
     hass = hass_recorder()
     now = dt_util.utcnow()
     time_before_recorder_ran = now - timedelta(days=1000)
-    with recorder.session_scope(hass=hass) as session:
+    with session_scope(hass=hass) as session:
         assert (
             history.get_significant_states_with_session(
                 hass,
@@ -179,48 +175,6 @@ def test_significant_states_with_session_entity_minimal_response_no_matches(
             )
             == {}
         )
-
-
-def test_get_states_no_attributes(hass_recorder):
-    """Test getting states without attributes at a specific point in time."""
-    hass = hass_recorder()
-    now, future, states = _setup_get_states(hass)
-    for state in states:
-        state.attributes = {}
-
-    # Get states returns everything before POINT for all entities
-    for state1, state2 in zip(
-        states,
-        sorted(
-            history.get_states(hass, future, no_attributes=True),
-            key=lambda state: state.entity_id,
-        ),
-    ):
-        assert state1 == state2
-
-    # Get states returns everything before POINT for tested entities
-    entities = [f"test.point_in_time_{i % 5}" for i in range(5)]
-    for state1, state2 in zip(
-        states,
-        sorted(
-            history.get_states(hass, future, entities, no_attributes=True),
-            key=lambda state: state.entity_id,
-        ),
-    ):
-        assert state1 == state2
-
-    # Test get_state here because we have a DB setup
-    assert states[0] == history.get_state(
-        hass, future, states[0].entity_id, no_attributes=True
-    )
-
-    time_before_recorder_ran = now - timedelta(days=1000)
-    assert history.get_states(hass, time_before_recorder_ran, no_attributes=True) == []
-
-    assert (
-        history.get_state(hass, time_before_recorder_ran, "demo.id", no_attributes=True)
-        is None
-    )
 
 
 @pytest.mark.parametrize(
@@ -247,11 +201,15 @@ def test_state_changes_during_period(hass_recorder, attributes, no_attributes, l
     point = start + timedelta(seconds=1)
     end = point + timedelta(seconds=1)
 
-    with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=start):
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=start
+    ):
         set_state("idle")
         set_state("YouTube")
 
-    with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=point):
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=point
+    ):
         states = [
             set_state("idle"),
             set_state("Netflix"),
@@ -259,7 +217,9 @@ def test_state_changes_during_period(hass_recorder, attributes, no_attributes, l
             set_state("YouTube"),
         ]
 
-    with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=end):
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=end
+    ):
         set_state("Netflix")
         set_state("Plex")
 
@@ -268,6 +228,54 @@ def test_state_changes_during_period(hass_recorder, attributes, no_attributes, l
     )
 
     assert states[:limit] == hist[entity_id]
+
+
+def test_state_changes_during_period_descending(hass_recorder):
+    """Test state change during period descending."""
+    hass = hass_recorder()
+    entity_id = "media_player.test"
+
+    def set_state(state):
+        """Set the state."""
+        hass.states.set(entity_id, state, {"any": 1})
+        wait_recording_done(hass)
+        return hass.states.get(entity_id)
+
+    start = dt_util.utcnow()
+    point = start + timedelta(seconds=1)
+    end = point + timedelta(seconds=1)
+
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=start
+    ):
+        set_state("idle")
+        set_state("YouTube")
+
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=point
+    ):
+        states = [
+            set_state("idle"),
+            set_state("Netflix"),
+            set_state("Plex"),
+            set_state("YouTube"),
+        ]
+
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=end
+    ):
+        set_state("Netflix")
+        set_state("Plex")
+
+    hist = history.state_changes_during_period(
+        hass, start, end, entity_id, no_attributes=False, descending=False
+    )
+    assert states == hist[entity_id]
+
+    hist = history.state_changes_during_period(
+        hass, start, end, entity_id, no_attributes=False, descending=True
+    )
+    assert states == list(reversed(list(hist[entity_id])))
 
 
 def test_get_last_state_changes(hass_recorder):
@@ -285,14 +293,20 @@ def test_get_last_state_changes(hass_recorder):
     point = start + timedelta(minutes=1)
     point2 = point + timedelta(minutes=1)
 
-    with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=start):
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=start
+    ):
         set_state("1")
 
     states = []
-    with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=point):
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=point
+    ):
         states.append(set_state("2"))
 
-    with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=point2):
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=point2
+    ):
         states.append(set_state("3"))
 
     hist = history.get_last_state_changes(hass, 2, entity_id)
@@ -318,10 +332,14 @@ def test_ensure_state_can_be_copied(hass_recorder):
     start = dt_util.utcnow() - timedelta(minutes=2)
     point = start + timedelta(minutes=1)
 
-    with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=start):
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=start
+    ):
         set_state("1")
 
-    with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=point):
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=point
+    ):
         set_state("2")
 
     hist = history.get_last_state_changes(hass, 2, entity_id)
@@ -494,23 +512,28 @@ def test_get_significant_states_only(hass_recorder):
         points.append(start + timedelta(minutes=i))
 
     states = []
-    with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=start):
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=start
+    ):
         set_state("123", attributes={"attribute": 10.64})
 
     with patch(
-        "homeassistant.components.recorder.dt_util.utcnow", return_value=points[0]
+        "homeassistant.components.recorder.core.dt_util.utcnow",
+        return_value=points[0],
     ):
         # Attributes are different, state not
         states.append(set_state("123", attributes={"attribute": 21.42}))
 
     with patch(
-        "homeassistant.components.recorder.dt_util.utcnow", return_value=points[1]
+        "homeassistant.components.recorder.core.dt_util.utcnow",
+        return_value=points[1],
     ):
         # state is different, attributes not
         states.append(set_state("32", attributes={"attribute": 21.42}))
 
     with patch(
-        "homeassistant.components.recorder.dt_util.utcnow", return_value=points[2]
+        "homeassistant.components.recorder.core.dt_util.utcnow",
+        return_value=points[2],
     ):
         # everything is different
         states.append(set_state("412", attributes={"attribute": 54.23}))
@@ -555,7 +578,9 @@ def record_states(hass):
     four = three + timedelta(seconds=1)
 
     states = {therm: [], therm2: [], mp: [], mp2: [], mp3: [], script_c: []}
-    with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=one):
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=one
+    ):
         states[mp].append(
             set_state(mp, "idle", attributes={"media_title": str(sentinel.mt1)})
         )
@@ -572,7 +597,9 @@ def record_states(hass):
             set_state(therm, 20, attributes={"current_temperature": 19.5})
         )
 
-    with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=two):
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=two
+    ):
         # This state will be skipped only different in time
         set_state(mp, "YouTube", attributes={"media_title": str(sentinel.mt3)})
         # This state will be skipped because domain is excluded
@@ -587,7 +614,9 @@ def record_states(hass):
             set_state(therm2, 20, attributes={"current_temperature": 19})
         )
 
-    with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=three):
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=three
+    ):
         states[mp].append(
             set_state(mp, "Netflix", attributes={"media_title": str(sentinel.mt4)})
         )
@@ -613,7 +642,9 @@ async def test_state_changes_during_period_query_during_migration_to_schema_25(
     point = start + timedelta(seconds=1)
     end = point + timedelta(seconds=1)
     entity_id = "light.test"
-    await hass.async_add_executor_job(_add_db_entries, hass, point, [entity_id])
+    await recorder.get_instance(hass).async_add_executor_job(
+        _add_db_entries, hass, point, [entity_id]
+    )
 
     no_attributes = True
     hist = history.state_changes_during_period(
@@ -634,7 +665,7 @@ async def test_state_changes_during_period_query_during_migration_to_schema_25(
         conn.execute(text("drop table state_attributes;"))
         conn.commit()
 
-    with patch.object(instance, "migration_in_progress", True):
+    with patch.object(instance, "schema_version", 24):
         no_attributes = True
         hist = history.state_changes_during_period(
             hass, start, end, entity_id, no_attributes, include_start_time_state=False
@@ -661,15 +692,17 @@ async def test_get_states_query_during_migration_to_schema_25(
     point = start + timedelta(seconds=1)
     end = point + timedelta(seconds=1)
     entity_id = "light.test"
-    await hass.async_add_executor_job(_add_db_entries, hass, point, [entity_id])
+    await recorder.get_instance(hass).async_add_executor_job(
+        _add_db_entries, hass, point, [entity_id]
+    )
 
     no_attributes = True
-    hist = history.get_states(hass, end, [entity_id], no_attributes=no_attributes)
+    hist = await _async_get_states(hass, end, [entity_id], no_attributes=no_attributes)
     state = hist[0]
     assert state.attributes == {}
 
     no_attributes = False
-    hist = history.get_states(hass, end, [entity_id], no_attributes=no_attributes)
+    hist = await _async_get_states(hass, end, [entity_id], no_attributes=no_attributes)
     state = hist[0]
     assert state.attributes == {"name": "the shared light"}
 
@@ -678,14 +711,18 @@ async def test_get_states_query_during_migration_to_schema_25(
         conn.execute(text("drop table state_attributes;"))
         conn.commit()
 
-    with patch.object(instance, "migration_in_progress", True):
+    with patch.object(instance, "schema_version", 24):
         no_attributes = True
-        hist = history.get_states(hass, end, [entity_id], no_attributes=no_attributes)
+        hist = await _async_get_states(
+            hass, end, [entity_id], no_attributes=no_attributes
+        )
         state = hist[0]
         assert state.attributes == {}
 
         no_attributes = False
-        hist = history.get_states(hass, end, [entity_id], no_attributes=no_attributes)
+        hist = await _async_get_states(
+            hass, end, [entity_id], no_attributes=no_attributes
+        )
         state = hist[0]
         assert state.attributes == {"name": "the light"}
 
@@ -704,15 +741,17 @@ async def test_get_states_query_during_migration_to_schema_25_multiple_entities(
     entity_id_2 = "switch.test"
     entity_ids = [entity_id_1, entity_id_2]
 
-    await hass.async_add_executor_job(_add_db_entries, hass, point, entity_ids)
+    await recorder.get_instance(hass).async_add_executor_job(
+        _add_db_entries, hass, point, entity_ids
+    )
 
     no_attributes = True
-    hist = history.get_states(hass, end, entity_ids, no_attributes=no_attributes)
+    hist = await _async_get_states(hass, end, entity_ids, no_attributes=no_attributes)
     assert hist[0].attributes == {}
     assert hist[1].attributes == {}
 
     no_attributes = False
-    hist = history.get_states(hass, end, entity_ids, no_attributes=no_attributes)
+    hist = await _async_get_states(hass, end, entity_ids, no_attributes=no_attributes)
     assert hist[0].attributes == {"name": "the shared light"}
     assert hist[1].attributes == {"name": "the shared light"}
 
@@ -721,13 +760,17 @@ async def test_get_states_query_during_migration_to_schema_25_multiple_entities(
         conn.execute(text("drop table state_attributes;"))
         conn.commit()
 
-    with patch.object(instance, "migration_in_progress", True):
+    with patch.object(instance, "schema_version", 24):
         no_attributes = True
-        hist = history.get_states(hass, end, entity_ids, no_attributes=no_attributes)
+        hist = await _async_get_states(
+            hass, end, entity_ids, no_attributes=no_attributes
+        )
         assert hist[0].attributes == {}
         assert hist[1].attributes == {}
 
         no_attributes = False
-        hist = history.get_states(hass, end, entity_ids, no_attributes=no_attributes)
+        hist = await _async_get_states(
+            hass, end, entity_ids, no_attributes=no_attributes
+        )
         assert hist[0].attributes == {"name": "the light"}
         assert hist[1].attributes == {"name": "the light"}
