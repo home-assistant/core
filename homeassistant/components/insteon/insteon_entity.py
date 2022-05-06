@@ -3,7 +3,6 @@ import functools
 import logging
 
 from pyinsteon import devices
-from pyinsteon.config import get_usable_value
 
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (
@@ -154,10 +153,9 @@ class InsteonEntity(Entity):
 
     def get_device_property(self, name: str):
         """Get a single Insteon device property value (raw)."""
-        value = None
         if (prop := self._insteon_device.properties.get(name)) is not None:
-            value = get_usable_value(prop)
-        return value
+            return prop.value
+        return None
 
     def _get_label(self):
         """Get the device label for grouped devices."""
