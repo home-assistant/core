@@ -31,9 +31,12 @@ class BAFFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if name.endswith(API_SUFFIX):
             name = name[: -len(API_SUFFIX)]
         properties = discovery_info.properties
-        self.discovery = BAFDiscovery(
-            name, discovery_info.host, properties["uuid"], properties["model"]
-        )
+        ip_address = discovery_info.host
+        uuid = properties["uuid"]
+        model = properties["model"]
+        await self.async_set_unique_id(uuid, raise_on_progress=False)
+        self._abort_if_unique_id_configured(updates={CONF_IP_ADDRESS: ip_address})
+        self.discovery = BAFDiscovery(name, ip_address, uuid, model)
         return await self.async_step_discovery_confirm()
 
     async def async_step_discovery_confirm(
@@ -58,8 +61,6 @@ class BAFFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery: BAFDiscovery
     ) -> FlowResult:
         """Create a config entry for a device."""
-        await self.async_set_unique_id(discovery.uuid, raise_on_progress=False)
-        self._abort_if_unique_id_configured()
         return self.async_create_entry(
             title=discovery.name,
             data={CONF_IP_ADDRESS: discovery.ip_address},

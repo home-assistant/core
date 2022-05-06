@@ -20,7 +20,7 @@ from homeassistant.util.percentage import (
     ranged_value_to_percentage,
 )
 
-from .const import DOMAIN, PRESET_MODE_WHOOSH, SPEED_COUNT, SPEED_RANGE
+from .const import DOMAIN, PRESET_MODE_AUTO, SPEED_COUNT, SPEED_RANGE
 from .entity import BAFEntity
 from .models import BAFData
 
@@ -41,7 +41,7 @@ class BAFFan(BAFEntity, FanEntity):
     """BAF ceiling fan component."""
 
     _attr_supported_features = FanEntityFeature.SET_SPEED | FanEntityFeature.DIRECTION
-    _attr_preset_modes = [PRESET_MODE_WHOOSH]
+    _attr_preset_modes = [PRESET_MODE_AUTO]
 
     def __init__(self, device: Device) -> None:
         """Initialize the entity."""
@@ -52,7 +52,7 @@ class BAFFan(BAFEntity, FanEntity):
     def _async_update_attrs(self) -> None:
         """Update attrs from device."""
         device = self._device
-        self._attr_is_on = device.fan_mode != OffOnAuto.OFF
+        self._attr_is_on = device.fan_mode != OffOnAuto.OFF.value
         self._attr_current_direction = DIRECTION_FORWARD
         if device.reverse_enable:
             self._attr_current_direction = DIRECTION_REVERSE
@@ -62,15 +62,16 @@ class BAFFan(BAFEntity, FanEntity):
             )
         else:
             self._attr_percentage = None
-        whoosh = self._device.whoosh_enable
-        self._attr_preset_mode = PRESET_MODE_WHOOSH if whoosh else None
+        auto = device.fan_mode == OffOnAuto.AUTO.value
+        self._attr_preset_mode = PRESET_MODE_AUTO if auto else None
         super()._async_update_attrs()
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
-        self._device.speed = math.ceil(
-            percentage_to_ranged_value(SPEED_RANGE, percentage)
-        )
+        device = self._device
+        if device.auto_comfort_enable:
+            device.auto_comfort_enable = False
+        device.speed = math.ceil(percentage_to_ranged_value(SPEED_RANGE, percentage))
 
     async def async_turn_on(
         self,
@@ -88,17 +89,18 @@ class BAFFan(BAFEntity, FanEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
-        self._device.fan_mode = OffOnAuto.OFF
+        device = self._device
+        if device.fan_mode == OffOnAuto.ON:
+            device.fan_mode = OffOnAuto.OFF
+        elif device.auto_comfort_enable:
+            device.auto_comfort_enable = False
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
-        if preset_mode != PRESET_MODE_WHOOSH:
+        if preset_mode != PRESET_MODE_AUTO:
             raise ValueError(f"Invalid preset mode: {preset_mode}")
-        self._device.whoosh_enable = True
+        self._device.auto_comfort_enable = True
 
     async def async_set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
-        if direction == DIRECTION_FORWARD:
-            self._device.reverse_enable = False
-        else:
-            self._device.reverse_enable = True
+        self._device.reverse_enable = direction == DIRECTION_REVERSE

@@ -31,7 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         run_task.cancel()
         raise ConfigEntryNotReady(f"Timed out connecting to {ip_address}") from ex
 
-    hass.data[DOMAIN][entry.entry_id] = BAFData(device, run_task)
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = BAFData(device, run_task)
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
