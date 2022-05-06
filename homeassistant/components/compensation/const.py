@@ -6,6 +6,7 @@ SENSOR = "compensation"
 CONF_COMPENSATION = "compensation"
 CONF_DATAPOINTS = "data_points"
 CONF_DEGREE = "degree"
+CONF_HIDE_SOURCE = "hide_source"
 CONF_PRECISION = "precision"
 CONF_POLYNOMIAL = "polynomial"
 

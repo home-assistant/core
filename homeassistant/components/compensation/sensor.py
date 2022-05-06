@@ -13,12 +13,15 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     CONF_COMPENSATION,
+    CONF_HIDE_SOURCE,
     CONF_POLYNOMIAL,
     CONF_PRECISION,
     DATA_COMPENSATION,
@@ -50,6 +53,14 @@ async def async_setup_platform(
     name = f"{DEFAULT_NAME} {source}"
     if attribute is not None:
         name = f"{name} {attribute}"
+
+    if conf.get(CONF_HIDE_SOURCE):
+        registry = entity_registry.async_get(hass)
+        source_entity = registry.async_get(source)
+        if source_entity and not source_entity.hidden:
+            registry.async_update_entity(
+                source, hidden_by=RegistryEntryHider.INTEGRATION
+            )
 
     async_add_entities(
         [
