@@ -1,10 +1,11 @@
 """Support for Big Ass Fans fan."""
 from __future__ import annotations
 
+from enum import IntEnum
 import math
 from typing import Any
 
-from aiobafi6 import Device, OffOnAuto
+from aiobafi6 import Device
 
 from homeassistant import config_entries
 from homeassistant.components.fan import (
@@ -23,6 +24,14 @@ from homeassistant.util.percentage import (
 from .const import DOMAIN, PRESET_MODE_AUTO, SPEED_COUNT, SPEED_RANGE
 from .entity import BAFEntity
 from .models import BAFData
+
+
+class OffOnAuto(IntEnum):
+    """Tri-state mode enum that matches the protocol buffer."""
+
+    OFF = 0
+    ON = 1
+    AUTO = 2
 
 
 async def async_setup_entry(
@@ -52,7 +61,7 @@ class BAFFan(BAFEntity, FanEntity):
     def _async_update_attrs(self) -> None:
         """Update attrs from device."""
         device = self._device
-        self._attr_is_on = device.fan_mode != OffOnAuto.OFF.value
+        self._attr_is_on = device.fan_mode != OffOnAuto.OFF
         self._attr_current_direction = DIRECTION_FORWARD
         if device.reverse_enable:
             self._attr_current_direction = DIRECTION_REVERSE
@@ -62,7 +71,7 @@ class BAFFan(BAFEntity, FanEntity):
             )
         else:
             self._attr_percentage = None
-        auto = device.fan_mode == OffOnAuto.AUTO.value
+        auto = device.fan_mode == OffOnAuto.AUTO
         self._attr_preset_mode = PRESET_MODE_AUTO if auto else None
         super()._async_update_attrs()
 
