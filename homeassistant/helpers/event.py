@@ -1065,7 +1065,7 @@ class _TrackTemplateResultInfo:
             self._track_state_changes.async_update_listeners(
                 _render_infos_to_track_states(
                     [
-                        _suppress_domain_all_in_render_info(info)
+                        _suppress_all_in_render_info(info)
                         if self._rate_limit.async_has_timer(template)
                         else info
                         for template, info in self._info.items()
@@ -1628,11 +1628,11 @@ def _rate_limit_for_event(
     return rate_limit
 
 
-def _suppress_domain_all_in_render_info(render_info: RenderInfo) -> RenderInfo:
-    """Remove the domains and all_states from render info during a ratelimit."""
+def _suppress_all_in_render_info(render_info: RenderInfo) -> RenderInfo:
+    """Remove all_states from render info during a ratelimit."""
+    if not render_info.all_states and render_info.all_states_lifecycle:
+        return render_info
     rate_limited_render_info = copy.copy(render_info)
     rate_limited_render_info.all_states = False
     rate_limited_render_info.all_states_lifecycle = False
-    rate_limited_render_info.domains = set()
-    rate_limited_render_info.domains_lifecycle = set()
     return rate_limited_render_info
