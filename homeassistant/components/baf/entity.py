@@ -36,9 +36,6 @@ class BAFEntity(Entity):
     @callback
     def _async_update_from_device(self, device: Device) -> None:
         """Process an update from the device."""
-        import pprint
-
-        pprint.pprint(device.properties_dict)
         self._async_update_attrs()
         self.async_write_ha_state()
 
