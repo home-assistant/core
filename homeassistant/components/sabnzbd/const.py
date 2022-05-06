@@ -1,6 +1,8 @@
 """Constants for the Sabnzbd component."""
 from datetime import timedelta
 
+CONFIG_ENTRY_VERSION = 2
+
 DOMAIN = "sabnzbd"
 DATA_SABNZBD = "sabnzbd"
 

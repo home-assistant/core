@@ -18,7 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import DEFAULT_NAME, DOMAIN
+from .const import CONFIG_ENTRY_VERSION, DEFAULT_NAME, DOMAIN
 from .sab import get_client
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,7 +36,7 @@ USER_SCHEMA = vol.Schema(
 class SABnzbdConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Sabnzbd config flow."""
 
-    VERSION = 1
+    VERSION = CONFIG_ENTRY_VERSION
 
     async def _async_validate_input(self, user_input):
         """Validate the user input allows us to connect."""
