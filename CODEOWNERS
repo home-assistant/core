@@ -116,6 +116,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/azure_service_bus/ @hfurubotten
 /homeassistant/components/backup/ @home-assistant/core
 /tests/components/backup/ @home-assistant/core
+/homeassistant/components/baf/ @bdraco
+/tests/components/baf/ @bdraco
 /homeassistant/components/balboa/ @garbled1
 /tests/components/balboa/ @garbled1
 /homeassistant/components/beewi_smartclim/ @alemuro

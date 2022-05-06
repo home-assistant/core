@@ -41,6 +41,7 @@ FLOWS = {
         "axis",
         "azure_devops",
         "azure_event_hub",
+        "baf",
         "balboa",
         "blebox",
         "blink",
