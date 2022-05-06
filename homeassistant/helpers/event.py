@@ -571,6 +571,11 @@ class _TrackStateChangeFiltered:
     def async_update_listeners(self, new_track_states: TrackStates) -> None:
         """Update the listeners based on the new TrackStates."""
         last_track_states = self._last_track_states
+        _LOGGER.debug(
+            "async_update_listeners: last: %s new: %s",
+            last_track_states,
+            new_track_states,
+        )
         self._last_track_states = new_track_states
 
         had_all_listener = last_track_states.all_states
