@@ -9,6 +9,8 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED,
     STATE_UNKNOWN,
 )
+from homeassistant.helpers import entity_registry
+from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
 
 
@@ -217,3 +219,31 @@ async def test_new_state_is_none(hass):
     )
 
     assert last_changed == hass.states.get(expected_entity_id).last_changed
+
+
+async def test_hide_source(hass):
+    """Test hiding source sensor."""
+    config = {
+        "compensation": {
+            "test": {
+                "source": None,
+                "data_points": [
+                    [1.0, 2.0],
+                    [2.0, 3.0],
+                ],
+                "precision": 2,
+                "hide_source": "yes",
+            }
+        }
+    }
+
+    registry = entity_registry.async_get(hass)
+    source = registry.async_get_or_create(SENSOR_DOMAIN, "test", "sensor.uncompensated")
+    config[DOMAIN]["test"]["source"] = source.entity_id
+
+    assert await async_setup_component(hass, DOMAIN, config)
+    assert await async_setup_component(hass, SENSOR_DOMAIN, config)
+    await hass.async_block_till_done()
+
+    source = registry.async_get(source.entity_id)
+    assert source.hidden_by == RegistryEntryHider.INTEGRATION
