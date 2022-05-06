@@ -7,26 +7,19 @@ from typing import Any
 
 from pytrafikverket import TrafikverketTrain
 from pytrafikverket.trafikverket_train import StationInfo, TrainStop
-import voluptuous as vol
 
-from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
-    SensorDeviceClass,
-    SensorEntity,
-)
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_WEEKDAY, WEEKDAYS
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt
 
-from .const import CONF_FROM, CONF_TIME, CONF_TO, CONF_TRAINS, DOMAIN
+from .const import CONF_FROM, CONF_TIME, CONF_TO, DOMAIN
 from .util import create_unique_id
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,53 +35,6 @@ ATTR_DEVIATIONS = "deviations"
 
 ICON = "mdi:train"
 SCAN_INTERVAL = timedelta(minutes=5)
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Required(CONF_TRAINS): [
-            {
-                vol.Required(CONF_NAME): cv.string,
-                vol.Required(CONF_TO): cv.string,
-                vol.Required(CONF_FROM): cv.string,
-                vol.Optional(CONF_TIME): cv.time,
-                vol.Optional(CONF_WEEKDAY, default=WEEKDAYS): vol.All(
-                    cv.ensure_list, [vol.In(WEEKDAYS)]
-                ),
-            }
-        ],
-    }
-)
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Import Trafikverket Train configuration from YAML."""
-    _LOGGER.warning(
-        # Config flow added in Home Assistant Core 2022.3, remove import flow in 2022.7
-        "Loading Trafikverket Train via platform setup is deprecated; Please remove it from your configuration"
-    )
-
-    for train in config[CONF_TRAINS]:
-
-        new_config = {
-            CONF_API_KEY: config[CONF_API_KEY],
-            CONF_FROM: train[CONF_FROM],
-            CONF_TO: train[CONF_TO],
-            CONF_TIME: str(train.get(CONF_TIME)),
-            CONF_WEEKDAY: train.get(CONF_WEEKDAY, WEEKDAYS),
-        }
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data=new_config,
-            )
-        )
 
 
 async def async_setup_entry(
