@@ -32,11 +32,11 @@ DEFAULT_ENTITY_NAMESPACE = "ring"
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
-    Platform.BUTTON,
     Platform.LIGHT,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.CAMERA,
+    Platform.SIREN,
 ]
 
 
