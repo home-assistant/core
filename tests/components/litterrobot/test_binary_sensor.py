@@ -17,8 +17,8 @@ async def test_timing_mode_binary_sensor(hass, mock_account):
 
     sensor = hass.states.get(TIMING_MODE_ENTITY_ID)
     assert sensor
-    assert sensor.is_on is False
-    assert sensor.icon == "mdi:timer-off-outline"
+    assert sensor.state == "off"
+    assert sensor.attributes["icon"] == "mdi:timer-off-outline"
 
 
 async def test_sleep_time_sensor_in_true_state(hass):
@@ -30,3 +30,14 @@ async def test_sleep_time_sensor_in_true_state(hass):
     assert sensor
     assert sensor.is_on is True
     assert sensor.icon == "mdi:timer-outline"
+
+
+async def test_sleep_time_sensor_in_false_state(hass):
+    """Tests the sleep mode start time sensor where sleep mode is inactive."""
+    robot = create_mock_robot({"unitStatus": "RDY"})
+    sensor = LitterRobotTimingModeSensor(robot, "Timing Mode", Mock())
+    sensor.hass = hass
+
+    assert sensor
+    assert sensor.is_on is False
+    assert sensor.icon == "mdi:timer-off-outline"
