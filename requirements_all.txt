@@ -110,7 +110,7 @@ aio_geojson_nsw_rfs_incidents==0.4
 aio_georss_gdacs==0.7
 
 # homeassistant.components.airzone
-aioairzone==0.4.2
+aioairzone==0.4.3
 
 # homeassistant.components.ambient_station
 aioambient==2021.11.0
@@ -244,7 +244,7 @@ aiosenz==1.0.0
 aioshelly==2.0.0
 
 # homeassistant.components.slimproto
-aioslimproto==2.0.0
+aioslimproto==2.0.1
 
 # homeassistant.components.steamist
 aiosteamist==0.3.1
@@ -1066,7 +1066,7 @@ netdisco==3.0.0
 netmap==0.7.0.2
 
 # homeassistant.components.nam
-nettigo-air-monitor==1.2.2
+nettigo-air-monitor==1.2.3
 
 # homeassistant.components.neurio_energy
 neurio==0.3.1
@@ -1112,7 +1112,7 @@ numato-gpio==0.10.0
 # homeassistant.components.opencv
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-numpy==1.21.4
+numpy==1.21.6
 
 # homeassistant.components.oasa_telematics
 oasatelematics==0.3
@@ -1403,7 +1403,7 @@ pycfdns==1.2.2
 pychannels==1.0.0
 
 # homeassistant.components.cast
-pychromecast==12.0.0
+pychromecast==12.1.1
 
 # homeassistant.components.pocketcasts
 pycketcasts==1.0.0
@@ -1668,7 +1668,7 @@ pymyq==3.1.4
 pymysensors==0.22.1
 
 # homeassistant.components.netgear
-pynetgear==0.9.4
+pynetgear==0.10.0
 
 # homeassistant.components.netio
 pynetio==0.1.9.1
@@ -2449,7 +2449,7 @@ xbox-webapi==2.0.11
 xboxapi==2.0.1
 
 # homeassistant.components.knx
-xknx==0.21.1
+xknx==0.21.2
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz

@@ -628,7 +628,7 @@ async def test_state_changes_during_period_query_during_migration_to_schema_25(
         conn.execute(text("drop table state_attributes;"))
         conn.commit()
 
-    with patch.object(instance, "migration_in_progress", True):
+    with patch.object(instance, "schema_version", 24):
         no_attributes = True
         hist = history.state_changes_during_period(
             hass, start, end, entity_id, no_attributes, include_start_time_state=False
@@ -674,7 +674,7 @@ async def test_get_states_query_during_migration_to_schema_25(
         conn.execute(text("drop table state_attributes;"))
         conn.commit()
 
-    with patch.object(instance, "migration_in_progress", True):
+    with patch.object(instance, "schema_version", 24):
         no_attributes = True
         hist = await _async_get_states(
             hass, end, [entity_id], no_attributes=no_attributes
@@ -723,7 +723,7 @@ async def test_get_states_query_during_migration_to_schema_25_multiple_entities(
         conn.execute(text("drop table state_attributes;"))
         conn.commit()
 
-    with patch.object(instance, "migration_in_progress", True):
+    with patch.object(instance, "schema_version", 24):
         no_attributes = True
         hist = await _async_get_states(
             hass, end, entity_ids, no_attributes=no_attributes

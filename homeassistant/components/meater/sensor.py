@@ -27,15 +27,18 @@ from .const import DOMAIN
 
 
 @dataclass
-class MeaterSensorEntityDescription(SensorEntityDescription):
-    """Describes meater sensor entity."""
+class MeaterSensorEntityDescriptionMixin:
+    """Mixin for MeaterSensorEntityDescription."""
 
-    available: Callable[
-        [MeaterProbe | None], bool | type[NotImplementedError]
-    ] = lambda x: NotImplementedError
-    value: Callable[
-        [MeaterProbe], datetime | float | str | None | type[NotImplementedError]
-    ] = lambda x: NotImplementedError
+    available: Callable[[MeaterProbe | None], bool]
+    value: Callable[[MeaterProbe], datetime | float | str | None]
+
+
+@dataclass
+class MeaterSensorEntityDescription(
+    SensorEntityDescription, MeaterSensorEntityDescriptionMixin
+):
+    """Describes meater sensor entity."""
 
 
 def _elapsed_time_to_timestamp(probe: MeaterProbe) -> datetime | None:
@@ -108,7 +111,8 @@ SENSOR_TYPES = (
         available=lambda probe: probe is not None and probe.cook is not None,
         value=lambda probe: probe.cook.peak_temperature if probe.cook else None,
     ),
-    # Time since the start of cook in seconds. Default: 0.
+    # Remaining time in seconds. When unknown/calculating default is used. Default: -1
+    # Exposed as a TIMESTAMP sensor where the timestamp is current time + remaining time.
     MeaterSensorEntityDescription(
         key="cook_time_remaining",
         device_class=SensorDeviceClass.TIMESTAMP,
@@ -116,7 +120,8 @@ SENSOR_TYPES = (
         available=lambda probe: probe is not None and probe.cook is not None,
         value=_remaining_time_to_timestamp,
     ),
-    # Remaining time in seconds. When unknown/calculating default is used. Default: -1
+    # Time since the start of cook in seconds. Default: 0. Exposed as a TIMESTAMP sensor
+    # where the timestamp is current time - elapsed time.
     MeaterSensorEntityDescription(
         key="cook_time_elapsed",
         device_class=SensorDeviceClass.TIMESTAMP,
@@ -141,7 +146,7 @@ async def async_setup_entry(
         if not coordinator.last_update_success:
             return
 
-        devices = coordinator.data
+        devices: dict[str, MeaterProbe] = coordinator.data
         entities = []
         known_probes: set = hass.data[DOMAIN]["known_probes"]
 
