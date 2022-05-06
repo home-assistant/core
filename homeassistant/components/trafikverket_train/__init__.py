@@ -1,6 +1,8 @@
 """The trafikverket_train component."""
 from __future__ import annotations
 
+from typing import Any
+
 from pytrafikverket import TrafikverketTrain
 from pytrafikverket.exceptions import (
     InvalidAuthentication,
@@ -9,14 +11,15 @@ from pytrafikverket.exceptions import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_API_KEY, CONF_WEEKDAY
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_FROM, CONF_TO, DOMAIN, PLATFORMS
+from .const import CONF_FROM, CONF_TIME, CONF_TO, DOMAIN, PLATFORMS
 from .coordinator import TVDataUpdateCoordinator
+from .util import create_unique_id
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
