@@ -271,5 +271,7 @@ async def test_attr_hide_exclusive(hass):
         }
     }
 
-    with pytest.raises(MultipleInvalid):
+    with pytest.raises(
+        MultipleInvalid, match="two or more values in the same group of exclusion"
+    ):
         CONFIG_SCHEMA(config)
