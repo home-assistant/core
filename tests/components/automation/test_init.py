@@ -1474,6 +1474,7 @@ async def test_blueprint_automation(hass, calls):
                     "input": {
                         "trigger_event": "blueprint_event",
                         "service_to_call": "test.automation",
+                        "a_number": 5,
                     },
                 }
             }
@@ -1499,6 +1500,7 @@ async def test_blueprint_automation_bad_config(hass, caplog):
                     "input": {
                         "trigger_event": "blueprint_event",
                         "service_to_call": {"dict": "not allowed"},
+                        "a_number": 5,
                     },
                 }
             }
