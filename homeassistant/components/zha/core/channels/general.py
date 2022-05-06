@@ -316,7 +316,7 @@ class OnOffChannel(ZigbeeChannel):
         self.cluster.update_attribute(self.ON_OFF, t.Bool.true)
         return True
 
-    async def turn_off(self):
+    async def turn_off(self) -> bool:
         """Turn the on off cluster off."""
         result = await self.off()
         if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
