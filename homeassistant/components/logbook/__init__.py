@@ -1,6 +1,7 @@
 """Event parser and human readable log generator."""
 from __future__ import annotations
 
+import cProfile
 from collections.abc import Callable, Generator, Iterable
 from contextlib import suppress
 from datetime import datetime as dt, timedelta
@@ -8,6 +9,7 @@ from http import HTTPStatus
 from itertools import groupby
 import json
 import re
+import time
 from typing import Any, cast
 
 from aiohttp import web
@@ -306,7 +308,10 @@ class LogbookView(HomeAssistantView):
 
         def json_events() -> web.Response:
             """Fetch events and generate JSON."""
-            return self.json(
+
+            profiler = cProfile.Profile()
+            profiler.enable()
+            ret = self.json(
                 _get_events(
                     hass,
                     start_day,
@@ -318,6 +323,11 @@ class LogbookView(HomeAssistantView):
                     context_id,
                 )
             )
+
+            profiler.disable()
+            profiler.create_stats()
+            profiler.dump_stats(f"logbook.{time.time()}.cprof")
+            return ret
 
         return cast(
             web.Response, await get_instance(hass).async_add_executor_job(json_events)
