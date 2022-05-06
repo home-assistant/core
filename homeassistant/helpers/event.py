@@ -554,7 +554,7 @@ class _TrackStateChangeFiltered:
             self._setup_all_listener()
             return
 
-        self._setup_domains_listener(track_states.domains)
+        self._setup_entity_added_domain_listener(track_states.domains)
         self._setup_entities_listener(track_states.domains, track_states.entities)
 
     @property
@@ -598,7 +598,7 @@ class _TrackStateChangeFiltered:
         if had_all_listener or domains_changed:
             domains_changed = True
             self._cancel_listener(_DOMAINS_LISTENER)
-            self._setup_domains_listener(new_track_states.domains)
+            self._setup_entity_added_domain_listener(new_track_states.domains)
 
         if (
             had_all_listener
@@ -638,7 +638,8 @@ class _TrackStateChangeFiltered:
         )
 
     @callback
-    def _state_added(self, event: Event) -> None:
+    def _state_added_domain(self, event: Event) -> None:
+        """Call when a state is added to a domain."""
         self._cancel_listener(_ENTITIES_LISTENER)
         self._setup_entities_listener(
             self._last_track_states.domains, self._last_track_states.entities
@@ -646,12 +647,13 @@ class _TrackStateChangeFiltered:
         self.hass.async_run_hass_job(self._action_as_hassjob, event)
 
     @callback
-    def _setup_domains_listener(self, domains: set[str]) -> None:
+    def _setup_entity_added_domain_listener(self, domains: set[str]) -> None:
+        """Listen for a new state to to appear in a domain."""
         if not domains:
             return
 
         self._listeners[_DOMAINS_LISTENER] = async_track_state_added_domain(
-            self.hass, domains, self._state_added
+            self.hass, domains, self._state_added_domain
         )
 
     @callback
