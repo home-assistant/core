@@ -1,6 +1,6 @@
 {
   "state": {
-    "trafikverket__depart_state": {
+    "trafikverket_train__depart_state": {
       "on_time": "On Time",
       "delayed": "Delayed",
       "canceled": "Canceled"
