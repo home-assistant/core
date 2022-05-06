@@ -321,32 +321,21 @@ class ValloxServiceHandler:
 class ValloxEntity(CoordinatorEntity[ValloxDataUpdateCoordinator]):
     """Representation of a Vallox entity."""
 
-    _device_config_url: str | None
-
     def __init__(self, name: str, coordinator: ValloxDataUpdateCoordinator) -> None:
         """Initialize a Vallox entity."""
         super().__init__(coordinator)
 
-        if self.coordinator.config_entry is not None:
-            self._device_config_url = (
-                f"http://{self.coordinator.config_entry.data[CONF_HOST]}"
-            )
-        else:
-            self._device_config_url = None
-
         self._device_uuid = self.coordinator.data.get_uuid()
-        self._device_model = self.coordinator.data.get_model()
-        self._device_name = name
-        self._device_sw_version = self.coordinator.data.get_sw_version()
 
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device information of the entity."""
-        return DeviceInfo(
-            configuration_url=self._device_config_url,
+        self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, str(self._device_uuid))},
             manufacturer=DEFAULT_NAME,
-            model=self._device_model,
-            name=self._device_name,
-            sw_version=self._device_sw_version,
+            model=self.coordinator.data.get_model(),
+            name=name,
+            sw_version=self.coordinator.data.get_sw_version(),
         )
+
+        if self.coordinator.config_entry is not None:
+            self._attr_device_info[
+                "configuration_url"
+            ] = f"http://{self.coordinator.config_entry.data[CONF_HOST]}"
