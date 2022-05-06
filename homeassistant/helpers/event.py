@@ -1630,7 +1630,7 @@ def _rate_limit_for_event(
 
 def _suppress_all_in_render_info(render_info: RenderInfo) -> RenderInfo:
     """Remove all_states from render info during a ratelimit."""
-    if not render_info.all_states and render_info.all_states_lifecycle:
+    if not render_info.all_states and not render_info.all_states_lifecycle:
         return render_info
     rate_limited_render_info = copy.copy(render_info)
     rate_limited_render_info.all_states = False
