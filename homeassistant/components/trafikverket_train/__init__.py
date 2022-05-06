@@ -4,8 +4,8 @@ from __future__ import annotations
 from pytrafikverket import TrafikverketTrain
 from pytrafikverket.exceptions import (
     InvalidAuthentication,
-    MultipleTrainStationsFound,
     NoTrainStationFound,
+    MultipleTrainStationsFound,
 )
 
 from homeassistant.config_entries import ConfigEntry
