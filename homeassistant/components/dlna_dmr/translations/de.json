@@ -47,6 +47,7 @@
         "step": {
             "init": {
                 "data": {
+                    "browse_unfiltered": "Inkompatible Medien beim Durchsuchen anzeigen",
                     "callback_url_override": "R\u00fcckruf-URL des Ereignis-Listeners",
                     "listen_port": "Port des Ereignis-Listeners (zuf\u00e4llig, wenn nicht festgelegt)",
                     "poll_availability": "Abfrage der Ger\u00e4teverf\u00fcgbarkeit"
