@@ -11,7 +11,7 @@ import pytest
 import voluptuous as vol
 
 import homeassistant
-from homeassistant.helpers import config_validation as cv, template
+from homeassistant.helpers import config_validation as cv, selector, template
 
 
 def test_boolean():
@@ -717,6 +717,17 @@ def test_string_in_serializer():
     """Test string with custom_serializer."""
     assert cv.custom_serializer(cv.string) == {
         "type": "string",
+    }
+
+
+def test_selector_in_serializer():
+    """Test selector with custom_serializer."""
+    assert cv.custom_serializer(selector.selector({"text": {}})) == {
+        "selector": {
+            "text": {
+                "multiline": False,
+            }
+        }
     }
 
 
