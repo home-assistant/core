@@ -149,7 +149,16 @@ class WemoLight(WemoEntity, LightEntity):
     @property
     def supported_color_modes(self) -> set[ColorMode]:
         """Flag supported color modes."""
-        return {self.color_mode}
+        modes: set[ColorMode] = set()
+        if "colorcontrol" in self.light.capabilities:
+            modes.add(ColorMode.XY)
+        if "colortemperature" in self.light.capabilities:
+            modes.add(ColorMode.COLOR_TEMP)
+        if "levelcontrol" in self.light.capabilities and not modes:
+            modes.add(ColorMode.BRIGHTNESS)
+        if not modes:
+            modes.add(ColorMode.ONOFF)
+        return modes
 
     @property
     def is_on(self) -> bool:
