@@ -22,7 +22,6 @@ async def async_setup_entry(
     devices = hass.data[DOMAIN][config_entry.entry_id]["devices"]
     sirens = []
 
-    # add one button for each test chime type (ding, motion)
     for device in devices["chimes"]:
         sirens.append(RingChimeSiren(config_entry, device))
 

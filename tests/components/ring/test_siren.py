@@ -51,6 +51,33 @@ async def test_default_ding_chime_can_be_played(hass, requests_mock):
     assert state.state == "unknown"
 
 
+async def test_toggle_plays_default_chime(hass, requests_mock):
+    """Tests the play chime request is sent correctly when toggled."""
+    await setup_platform(hass, Platform.SIREN)
+
+    # Mocks the response for playing a test sound
+    requests_mock.post(
+        "https://api.ring.com/clients_api/chimes/123456/play_sound",
+        text="SUCCESS",
+    )
+    await hass.services.async_call(
+        "siren",
+        "toggle",
+        {"entity_id": "siren.downstairs_siren"},
+        blocking=True,
+    )
+
+    await hass.async_block_till_done()
+
+    assert requests_mock.request_history[-1].url.startswith(
+        "https://api.ring.com/clients_api/chimes/123456/play_sound?"
+    )
+    assert "kind=ding" in requests_mock.request_history[-1].url
+
+    state = hass.states.get("siren.downstairs_siren")
+    assert state.state == "unknown"
+
+
 async def test_explicit_ding_chime_can_be_played(hass, requests_mock):
     """Tests the play chime request is sent correctly."""
     await setup_platform(hass, Platform.SIREN)
