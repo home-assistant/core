@@ -1,4 +1,6 @@
 """Manufacturer specific channels module for Zigbee Home Automation."""
+import logging
+
 from homeassistant.core import callback
 
 from .. import registries
@@ -13,6 +15,8 @@ from ..const import (
     UNKNOWN,
 )
 from .base import ClientChannel, ZigbeeChannel
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(registries.SMARTTHINGS_HUMIDITY_CLUSTER)
@@ -49,6 +53,14 @@ class OppleRemote(ZigbeeChannel):
     """Opple button channel."""
 
     REPORT_CONFIG = []
+
+    async def async_initialize_channel_specific(self, from_cache: bool) -> None:
+        """Initialize channel specific."""
+        if self.cluster.endpoint.model == "lumi.motion.ac02":
+            interval = self.cluster.get("detection_interval", self.cluster.get(0x0102))
+            self.warning("interval at startup: %s", interval)
+            if interval is not None:
+                self.cluster.endpoint.ias_zone.reset_s = int(interval)
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(
