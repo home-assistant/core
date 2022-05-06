@@ -239,28 +239,30 @@ async def test_options_flow_name_previously_removed(hass: HomeAssistant) -> None
     )
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.sql.async_setup_entry",
-        return_value=True,
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "init"
 
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            "db_url": "sqlite://",
-            "query": "SELECT 5 as size",
-            "column": "size",
-            "unit_of_measurement": "MiB",
-        },
-    )
+    with patch(
+        "homeassistant.components.sql.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                "db_url": "sqlite://",
+                "query": "SELECT 5 as size",
+                "column": "size",
+                "unit_of_measurement": "MiB",
+            },
+        )
+        await hass.async_block_till_done()
 
+    assert len(mock_setup_entry.mock_calls) == 1
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["data"] == {
         "name": "Get Value Title",
