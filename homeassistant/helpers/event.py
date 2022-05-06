@@ -570,6 +570,8 @@ class _TrackStateChangeFiltered:
     @callback
     def async_update_listeners(self, new_track_states: TrackStates) -> None:
         """Update the listeners based on the new TrackStates."""
+        if new_track_states == self._last_track_states:
+            return
         last_track_states = self._last_track_states
         _LOGGER.debug(
             "async_update_listeners: last: %s new: %s",
