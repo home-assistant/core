@@ -26,6 +26,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     run_task = device.run()
 
     try:
+        # Wait available doesn't mean the name is actually filled in yet
+        # so sometimes the device will show up without a name
         await asyncio.wait_for(device.async_wait_available(), timeout=RUN_TIMEOUT)
     except asyncio.TimeoutError as ex:
         run_task.cancel()

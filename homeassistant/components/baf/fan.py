@@ -78,8 +78,6 @@ class BAFFan(BAFEntity, FanEntity):
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
         device = self._device
-        if device.auto_comfort_enable:
-            device.auto_comfort_enable = False
         device.speed = math.ceil(percentage_to_ranged_value(SPEED_RANGE, percentage))
 
     async def async_turn_on(
