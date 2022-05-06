@@ -223,6 +223,55 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     }
 
 
+async def test_options_flow_name_previously_removed(hass: HomeAssistant) -> None:
+    """Test options config flow where the name was missing."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        options={
+            "db_url": "sqlite://",
+            "query": "SELECT 5 as value",
+            "column": "value",
+            "unit_of_measurement": "MiB",
+            "value_template": None,
+        },
+        title="Get Value Title",
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.sql.async_setup_entry",
+        return_value=True,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "db_url": "sqlite://",
+            "query": "SELECT 5 as size",
+            "column": "size",
+            "unit_of_measurement": "MiB",
+        },
+    )
+
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["data"] == {
+        "name": "Get Value Title",
+        "db_url": "sqlite://",
+        "query": "SELECT 5 as size",
+        "column": "size",
+        "value_template": None,
+        "unit_of_measurement": "MiB",
+    }
+
+
 async def test_options_flow_fails_db_url(hass: HomeAssistant) -> None:
     """Test options flow fails incorrect db url."""
     entry = MockConfigEntry(
