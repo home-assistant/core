@@ -13,3 +13,13 @@ class BAFData:
 
     device: Device
     run_task: asyncio.Task
+
+
+@dataclass
+class BAFDiscovery:
+    """A BAF Discovery."""
+
+    name: str
+    ip_address: str
+    uuid: str
+    model: str

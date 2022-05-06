@@ -1,17 +1,72 @@
-"""Config flow for Big Ass Fans."""
-import my_pypi_dependency
+"""Config flow for baf."""
+from __future__ import annotations
 
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_entry_flow
+from typing import Any
+
+from homeassistant import config_entries
+from homeassistant.components import zeroconf
+from homeassistant.const import CONF_IP_ADDRESS
+from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
+from .models import BAFDiscovery
+
+API_SUFFIX = "._api._tcp.local."
 
 
-async def _async_has_devices(hass: HomeAssistant) -> bool:
-    """Return if there are devices that can be discovered."""
-    # TODO Check if there are any devices that can be discovered in the network.
-    devices = await hass.async_add_executor_job(my_pypi_dependency.discover)
-    return len(devices) > 0
+class BAFFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+    """Handle BAF discovery config flow."""
 
+    VERSION = 1
 
-config_entry_flow.register_discovery_flow(DOMAIN, "Big Ass Fans", _async_has_devices)
+    def __init__(self) -> None:
+        """Initialize the BAF config flow."""
+        self.discovery: BAFDiscovery | None = None
+
+    async def async_step_zeroconf(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> FlowResult:
+        """Handle zeroconf discovery."""
+        name = discovery_info.name
+        if name.endswith(API_SUFFIX):
+            name = name[: -len(API_SUFFIX)]
+        properties = discovery_info.properties
+        self.discovery = BAFDiscovery(
+            name, discovery_info.host, properties["uuid"], properties["model"]
+        )
+        return await self.async_step_discovery_confirm()
+
+    async def async_step_discovery_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Confirm discovery."""
+        assert self.discovery is not None
+        discovery = self.discovery
+        if user_input is not None:
+            return await self._async_entry_for_discovered_device(discovery)
+        placeholders = {
+            "name": discovery.name,
+            "model": discovery.model,
+            "ip_address": discovery.ip_address,
+        }
+        self.context["title_placeholders"] = placeholders
+        return self.async_show_form(
+            step_id="discovery_confirm", description_placeholders=placeholders
+        )
+
+    async def _async_entry_for_discovered_device(
+        self, discovery: BAFDiscovery
+    ) -> FlowResult:
+        """Create a config entry for a device."""
+        await self.async_set_unique_id(discovery.uuid, raise_on_progress=False)
+        self._abort_if_unique_id_configured()
+        return self.async_create_entry(
+            title=discovery.name,
+            data={CONF_IP_ADDRESS: discovery.ip_address},
+        )
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle a flow initialized by the user."""
+        raise NotImplementedError
