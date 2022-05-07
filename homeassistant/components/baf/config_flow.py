@@ -52,7 +52,7 @@ class BAFFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         name = properties["name"]
         await self.async_set_unique_id(uuid, raise_on_progress=False)
         self._abort_if_unique_id_configured(updates={CONF_IP_ADDRESS: ip_address})
-        self.discovery = BAFDiscovery(name, ip_address, uuid, model)
+        self.discovery = BAFDiscovery(ip_address, name, uuid, model)
         return await self.async_step_discovery_confirm()
 
     async def async_step_discovery_confirm(

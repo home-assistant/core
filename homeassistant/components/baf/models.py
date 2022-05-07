@@ -19,7 +19,7 @@ class BAFData:
 class BAFDiscovery:
     """A BAF Discovery."""
 
-    name: str
     ip_address: str
+    name: str
     uuid: str
     model: str
