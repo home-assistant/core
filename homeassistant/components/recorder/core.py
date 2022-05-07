@@ -194,6 +194,11 @@ class Recorder(threading.Thread):
         return self._queue.qsize()
 
     @property
+    def dialect(self) -> str | None:
+        """Return the dialect the recorder uses."""
+        return self.engine.dialect if self.engine else None
+
+    @property
     def _using_file_sqlite(self) -> bool:
         """Short version to check if we are using sqlite3 as a file."""
         return self.db_url != SQLITE_URL_PREFIX and self.db_url.startswith(
@@ -462,7 +467,7 @@ class Recorder(threading.Thread):
     @callback
     def using_sqlite(self) -> bool:
         """Return if recorder uses sqlite as the engine."""
-        return bool(self.engine and self.engine.dialect.name == "sqlite")
+        return bool(self.dialect == "sqlite")
 
     @callback
     def _async_setup_periodic_tasks(self) -> None:
