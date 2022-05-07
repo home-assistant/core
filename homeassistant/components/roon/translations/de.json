@@ -8,6 +8,13 @@
             "unknown": "Unerwarteter Fehler"
         },
         "step": {
+            "fallback": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                },
+                "description": "Der Roon-Server konnte nicht gefunden werden, bitte gib deinen Hostnamen und Port ein."
+            },
             "link": {
                 "description": "Du musst den Home Assistant in Roon autorisieren. Nachdem du auf \"Submit\" geklickt hast, gehe zur Roon Core-Anwendung, \u00f6ffne die Einstellungen und aktiviere HomeAssistant auf der Registerkarte \"Extensions\".",
                 "title": "HomeAssistant in Roon autorisieren"

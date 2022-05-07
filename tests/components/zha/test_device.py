@@ -106,7 +106,7 @@ def _send_time_changed(hass, seconds):
 
 @patch(
     "homeassistant.components.zha.core.channels.general.BasicChannel.async_initialize",
-    new=mock.MagicMock(),
+    new=mock.AsyncMock(),
 )
 async def test_check_available_success(
     hass, device_with_basic_channel, zha_device_restored
@@ -160,7 +160,7 @@ async def test_check_available_success(
 
 @patch(
     "homeassistant.components.zha.core.channels.general.BasicChannel.async_initialize",
-    new=mock.MagicMock(),
+    new=mock.AsyncMock(),
 )
 async def test_check_available_unsuccessful(
     hass, device_with_basic_channel, zha_device_restored
@@ -203,7 +203,7 @@ async def test_check_available_unsuccessful(
 
 @patch(
     "homeassistant.components.zha.core.channels.general.BasicChannel.async_initialize",
-    new=mock.MagicMock(),
+    new=mock.AsyncMock(),
 )
 async def test_check_available_no_basic_channel(
     hass, device_without_basic_channel, zha_device_restored, caplog

@@ -7,8 +7,6 @@ from homeassistant import config_entries
 from homeassistant.components.tibber.const import DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN
 
-from tests.common import async_init_recorder_component
-
 
 @pytest.fixture(name="tibber_setup", autouse=True)
 def tibber_setup_fixture():
@@ -17,10 +15,8 @@ def tibber_setup_fixture():
         yield
 
 
-async def test_show_config_form(hass):
+async def test_show_config_form(hass, recorder_mock):
     """Test show configuration form."""
-    await async_init_recorder_component(hass)
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -29,10 +25,8 @@ async def test_show_config_form(hass):
     assert result["step_id"] == "user"
 
 
-async def test_create_entry(hass):
+async def test_create_entry(hass, recorder_mock):
     """Test create entry from user input."""
-    await async_init_recorder_component(hass)
-
     test_data = {
         CONF_ACCESS_TOKEN: "valid",
     }
@@ -55,10 +49,8 @@ async def test_create_entry(hass):
     assert result["data"] == test_data
 
 
-async def test_flow_entry_already_exists(hass, config_entry):
+async def test_flow_entry_already_exists(hass, recorder_mock, config_entry):
     """Test user input for config_entry that already exists."""
-    await async_init_recorder_component(hass)
-
     test_data = {
         CONF_ACCESS_TOKEN: "valid",
     }

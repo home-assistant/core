@@ -5,13 +5,13 @@ from typing import Any
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    SUPPORT_CLOSE,
-    SUPPORT_OPEN,
-    SUPPORT_SET_POSITION,
     CoverEntity,
+    CoverEntityFeature,
 )
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ZWaveMeEntity
 from .const import DOMAIN, ZWaveMePlatform
@@ -19,7 +19,11 @@ from .const import DOMAIN, ZWaveMePlatform
 DEVICE_NAME = ZWaveMePlatform.COVER
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the cover platform."""
 
     @callback
@@ -43,6 +47,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class ZWaveMeCover(ZWaveMeEntity, CoverEntity):
     """Representation of a ZWaveMe Multilevel Cover."""
 
+    _attr_supported_features = (
+        CoverEntityFeature.OPEN
+        | CoverEntityFeature.CLOSE
+        | CoverEntityFeature.SET_POSITION
+    )
+
     def close_cover(self, **kwargs):
         """Close cover."""
         self.controller.zwave_api.send_command(self.device.id, "exact?level=0")
@@ -64,9 +74,7 @@ class ZWaveMeCover(ZWaveMeEntity, CoverEntity):
 
         None is unknown, 0 is closed, 100 is fully open.
         """
-        return self.device.level
+        if self.device.level == 99:  # Scale max value
+            return 100
 
-    @property
-    def supported_features(self) -> int:
-        """Return the supported features."""
-        return SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
+        return self.device.level

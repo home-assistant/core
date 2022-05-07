@@ -139,11 +139,11 @@ class BaseZhaEntity(LogMixin, entity.Entity):
             )
         self._unsubs.append(unsub)
 
-    def log(self, level: int, msg: str, *args):
+    def log(self, level: int, msg: str, *args, **kwargs):
         """Log a message."""
         msg = f"%s: {msg}"
         args = (self.entity_id,) + args
-        _LOGGER.log(level, msg, *args)
+        _LOGGER.log(level, msg, *args, **kwargs)
 
 
 class ZhaEntity(BaseZhaEntity, RestoreEntity):
@@ -206,10 +206,8 @@ class ZhaEntity(BaseZhaEntity, RestoreEntity):
             signal_override=True,
         )
 
-        if not self.zha_device.is_mains_powered:
-            # mains powered devices will get real time state
-            if last_state := await self.async_get_last_state():
-                self.async_restore_last_state(last_state)
+        if last_state := await self.async_get_last_state():
+            self.async_restore_last_state(last_state)
 
         self.async_accept_signal(
             None,
@@ -291,6 +289,7 @@ class ZhaGroupEntity(BaseZhaEntity):
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await super().async_added_to_hass()
+        await self.async_update()
 
         self.async_accept_signal(
             None,

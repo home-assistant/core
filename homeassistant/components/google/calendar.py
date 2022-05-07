@@ -6,13 +6,15 @@ from datetime import datetime, timedelta
 import logging
 from typing import Any
 
-from httplib2 import ServerNotFoundError
+from gcal_sync.api import GoogleCalendarService, ListEventsRequest
+from gcal_sync.exceptions import ApiException
+from gcal_sync.model import Event
 
 from homeassistant.components.calendar import (
     ENTITY_ID_FORMAT,
-    CalendarEventDevice,
+    CalendarEntity,
+    CalendarEvent,
     extract_offset,
-    get_date,
     is_offset_reached,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -34,7 +36,6 @@ from . import (
     DOMAIN,
     SERVICE_SCAN_CALENDARS,
 )
-from .api import GoogleCalendarService
 from .const import DISCOVER_CALENDAR
 
 _LOGGER = logging.getLogger(__name__)
@@ -94,7 +95,7 @@ def _async_setup_entities(
         entity_id = generate_entity_id(
             ENTITY_ID_FORMAT, data[CONF_DEVICE_ID], hass=hass
         )
-        entity = GoogleCalendarEventDevice(
+        entity = GoogleCalendarEntity(
             calendar_service, disc_info[CONF_CAL_ID], data, entity_id
         )
         entities.append(entity)
@@ -102,7 +103,7 @@ def _async_setup_entities(
     async_add_entities(entities, True)
 
 
-class GoogleCalendarEventDevice(CalendarEventDevice):
+class GoogleCalendarEntity(CalendarEntity):
     """A calendar event device."""
 
     def __init__(
@@ -117,19 +118,28 @@ class GoogleCalendarEventDevice(CalendarEventDevice):
         self._calendar_id = calendar_id
         self._search: str | None = data.get(CONF_SEARCH)
         self._ignore_availability: bool = data.get(CONF_IGNORE_AVAILABILITY, False)
-        self._event: dict[str, Any] | None = None
+        self._event: CalendarEvent | None = None
         self._name: str = data[CONF_NAME]
         self._offset = data.get(CONF_OFFSET, DEFAULT_CONF_OFFSET)
-        self._offset_reached = False
+        self._offset_value: timedelta | None = None
         self.entity_id = entity_id
 
     @property
     def extra_state_attributes(self) -> dict[str, bool]:
         """Return the device state attributes."""
-        return {"offset_reached": self._offset_reached}
+        return {"offset_reached": self.offset_reached}
 
     @property
-    def event(self) -> dict[str, Any] | None:
+    def offset_reached(self) -> bool:
+        """Return whether or not the event offset was reached."""
+        if self._event and self._offset_value:
+            return is_offset_reached(
+                self._event.start_datetime_local, self._offset_value
+            )
+        return False
+
+    @property
+    def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
         return self._event
 
@@ -138,53 +148,63 @@ class GoogleCalendarEventDevice(CalendarEventDevice):
         """Return the name of the entity."""
         return self._name
 
-    def _event_filter(self, event: dict[str, Any]) -> bool:
+    def _event_filter(self, event: Event) -> bool:
         """Return True if the event is visible."""
         if self._ignore_availability:
             return True
-        return event.get(TRANSPARENCY, OPAQUE) == OPAQUE
+        return event.transparency == OPAQUE
 
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
-    ) -> list[dict[str, Any]]:
+    ) -> list[CalendarEvent]:
         """Get all events in a specific time frame."""
-        event_list: list[dict[str, Any]] = []
-        page_token: str | None = None
-        while True:
-            try:
-                items, page_token = await self._calendar_service.async_list_events(
-                    self._calendar_id,
-                    start_time=start_date,
-                    end_time=end_date,
-                    search=self._search,
-                    page_token=page_token,
-                )
-            except ServerNotFoundError as err:
-                _LOGGER.error("Unable to connect to Google: %s", err)
-                return []
 
-            event_list.extend(filter(self._event_filter, items))
-            if not page_token:
-                break
-        return event_list
+        request = ListEventsRequest(
+            calendar_id=self._calendar_id,
+            start_time=start_date,
+            end_time=end_date,
+            search=self._search,
+        )
+        result_items = []
+        try:
+            result = await self._calendar_service.async_list_events(request)
+            async for result_page in result:
+                result_items.extend(result_page.items)
+        except ApiException as err:
+            _LOGGER.error("Unable to connect to Google: %s", err)
+            return []
+        return [
+            _get_calendar_event(event)
+            for event in filter(self._event_filter, result_items)
+        ]
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self) -> None:
         """Get the latest data."""
+        request = ListEventsRequest(calendar_id=self._calendar_id, search=self._search)
         try:
-            items, _ = await self._calendar_service.async_list_events(
-                self._calendar_id, search=self._search
-            )
-        except ServerNotFoundError as err:
+            result = await self._calendar_service.async_list_events(request)
+        except ApiException as err:
             _LOGGER.error("Unable to connect to Google: %s", err)
             return
 
         # Pick the first visible event and apply offset calculations.
-        valid_items = filter(self._event_filter, items)
-        self._event = copy.deepcopy(next(valid_items, None))
-        if self._event:
-            (summary, offset) = extract_offset(self._event["summary"], self._offset)
-            self._event["summary"] = summary
-            self._offset_reached = is_offset_reached(
-                get_date(self._event["start"]), offset
-            )
+        valid_items = filter(self._event_filter, result.items)
+        event = copy.deepcopy(next(valid_items, None))
+        if event:
+            (event.summary, offset) = extract_offset(event.summary, self._offset)
+            self._event = _get_calendar_event(event)
+            self._offset_value = offset
+        else:
+            self._event = None
+
+
+def _get_calendar_event(event: Event) -> CalendarEvent:
+    """Return a CalendarEvent from an API event."""
+    return CalendarEvent(
+        summary=event.summary,
+        start=event.start.value,
+        end=event.end.value,
+        description=event.description,
+        location=event.location,
+    )

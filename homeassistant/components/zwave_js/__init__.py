@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections import defaultdict
 from collections.abc import Callable
+from typing import Any
 
 from async_timeout import timeout
 from zwave_js_server.client import Client as ZwaveClient
@@ -11,6 +12,7 @@ from zwave_js_server.exceptions import BaseZwaveJSServerError, InvalidServerVers
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.notification import (
     EntryControlNotification,
+    MultilevelSwitchNotification,
     NotificationNotification,
     PowerLevelNotification,
 )
@@ -46,6 +48,7 @@ from .const import (
     ATTR_COMMAND_CLASS,
     ATTR_COMMAND_CLASS_NAME,
     ATTR_DATA_TYPE,
+    ATTR_DIRECTION,
     ATTR_ENDPOINT,
     ATTR_EVENT,
     ATTR_EVENT_DATA,
@@ -113,6 +116,11 @@ DATA_INVALID_SERVER_VERSION_LOGGED = "invalid_server_version_logged"
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Z-Wave JS component."""
     hass.data[DOMAIN] = {}
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        if not isinstance(entry.unique_id, str):
+            hass.config_entries.async_update_entry(
+                entry, unique_id=str(entry.unique_id)
+            )
     return True
 
 
@@ -284,12 +292,7 @@ async def async_setup_entry(  # noqa: C901
             )
         )
         # add listener for stateless node notification events
-        entry.async_on_unload(
-            node.on(
-                "notification",
-                lambda event: async_on_notification(event["notification"]),
-            )
-        )
+        entry.async_on_unload(node.on("notification", async_on_notification))
 
     async def async_on_node_added(node: ZwaveNode) -> None:
         """Handle node added event."""
@@ -397,12 +400,14 @@ async def async_setup_entry(  # noqa: C901
         )
 
     @callback
-    def async_on_notification(
-        notification: EntryControlNotification
-        | NotificationNotification
-        | PowerLevelNotification,
-    ) -> None:
+    def async_on_notification(event: dict[str, Any]) -> None:
         """Relay stateless notification events from Z-Wave nodes to hass."""
+        if "notification" not in event:
+            LOGGER.info("Unknown notification: %s", event)
+            return
+        notification: EntryControlNotification | NotificationNotification | PowerLevelNotification | MultilevelSwitchNotification = event[
+            "notification"
+        ]
         device = dev_reg.async_get_device({get_device_id(client, notification.node)})
         # We assert because we know the device exists
         assert device
@@ -441,6 +446,14 @@ async def async_setup_entry(  # noqa: C901
                     ATTR_TEST_NODE_ID: notification.test_node_id,
                     ATTR_STATUS: notification.status,
                     ATTR_ACKNOWLEDGED_FRAMES: notification.acknowledged_frames,
+                }
+            )
+        elif isinstance(notification, MultilevelSwitchNotification):
+            event_data.update(
+                {
+                    ATTR_COMMAND_CLASS_NAME: "Multilevel Switch",
+                    ATTR_EVENT_TYPE: notification.event_type,
+                    ATTR_DIRECTION: notification.direction,
                 }
             )
         else:

@@ -22,7 +22,7 @@ from .const import DATA_KEY_API, DATA_KEY_COORDINATOR, DOMAIN
 class PiHoleUpdateEntityDescription(UpdateEntityDescription):
     """Describes PiHole update entity."""
 
-    current_version: Callable[[dict], str | None] = lambda api: None
+    installed_version: Callable[[dict], str | None] = lambda api: None
     latest_version: Callable[[dict], str | None] = lambda api: None
     release_base_url: str | None = None
     title: str | None = None
@@ -34,7 +34,7 @@ UPDATE_ENTITY_TYPES: tuple[PiHoleUpdateEntityDescription, ...] = (
         name="Core Update Available",
         title="Pi-hole Core",
         entity_category=EntityCategory.DIAGNOSTIC,
-        current_version=lambda versions: versions.get("core_current"),
+        installed_version=lambda versions: versions.get("core_current"),
         latest_version=lambda versions: versions.get("core_latest"),
         release_base_url="https://github.com/pi-hole/pi-hole/releases/tag",
     ),
@@ -43,7 +43,7 @@ UPDATE_ENTITY_TYPES: tuple[PiHoleUpdateEntityDescription, ...] = (
         name="Web Update Available",
         title="Pi-hole Web interface",
         entity_category=EntityCategory.DIAGNOSTIC,
-        current_version=lambda versions: versions.get("web_current"),
+        installed_version=lambda versions: versions.get("web_current"),
         latest_version=lambda versions: versions.get("web_latest"),
         release_base_url="https://github.com/pi-hole/AdminLTE/releases/tag",
     ),
@@ -52,7 +52,7 @@ UPDATE_ENTITY_TYPES: tuple[PiHoleUpdateEntityDescription, ...] = (
         name="FTL Update Available",
         title="Pi-hole FTL DNS",
         entity_category=EntityCategory.DIAGNOSTIC,
-        current_version=lambda versions: versions.get("FTL_current"),
+        installed_version=lambda versions: versions.get("FTL_current"),
         latest_version=lambda versions: versions.get("FTL_latest"),
         release_base_url="https://github.com/pi-hole/FTL/releases/tag",
     ),
@@ -100,10 +100,10 @@ class PiHoleUpdateEntity(PiHoleEntity, UpdateEntity):
         self._attr_title = description.title
 
     @property
-    def current_version(self) -> str | None:
-        """Version currently in use."""
+    def installed_version(self) -> str | None:
+        """Version installed and in use."""
         if isinstance(self.api.versions, dict):
-            return self.entity_description.current_version(self.api.versions)
+            return self.entity_description.installed_version(self.api.versions)
         return None
 
     @property

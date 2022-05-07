@@ -8,7 +8,7 @@ from enum import Enum
 import logging
 import random
 import time
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from zigpy import types
 import zigpy.exceptions
@@ -74,6 +74,9 @@ from .const import (
     ZHA_OPTIONS,
 )
 from .helpers import LogMixin, async_get_zha_config_value
+
+if TYPE_CHECKING:
+    from ..api import ClusterBinding
 
 _LOGGER = logging.getLogger(__name__)
 _UPDATE_ALIVE_INTERVAL = (60, 90)
@@ -348,11 +351,15 @@ class ZHADevice(LogMixin):
         if self.is_coordinator:
             return
         if self.last_seen is None:
+            self.debug("last_seen is None, marking the device unavailable")
             self.update_available(False)
             return
 
         difference = time.time() - self.last_seen
         if difference < self.consider_unavailable_time:
+            self.debug(
+                "Device seen - marking the device available and resetting counter"
+            )
             self.update_available(True)
             self._checkins_missed_count = 0
             return
@@ -362,6 +369,10 @@ class ZHADevice(LogMixin):
             or self.manufacturer == "LUMI"
             or not self._channels.pools
         ):
+            self.debug(
+                "last_seen is %s seconds ago and ping attempts have been exhausted, marking the device unavailable",
+                difference,
+            )
             self.update_available(False)
             return
 
@@ -383,13 +394,23 @@ class ZHADevice(LogMixin):
 
     def update_available(self, available: bool) -> None:
         """Update device availability and signal entities."""
+        self.debug(
+            "Update device availability -  device available: %s - new availability: %s - changed: %s",
+            self.available,
+            available,
+            self.available ^ available,
+        )
         availability_changed = self.available ^ available
         self.available = available
         if availability_changed and available:
             # reinit channels then signal entities
+            self.debug(
+                "Device availability changed and device became available, reinitializing channels"
+            )
             self.hass.async_create_task(self._async_became_available())
             return
         if availability_changed and not available:
+            self.debug("Device availability changed and device became unavailable")
             self._channels.zha_send_event(
                 {
                     "device_event_type": "device_offline",
@@ -655,10 +676,14 @@ class ZHADevice(LogMixin):
         )
         return response
 
-    async def async_add_to_group(self, group_id):
+    async def async_add_to_group(self, group_id: int) -> None:
         """Add this device to the provided zigbee group."""
         try:
-            await self._zigpy_device.add_to_group(group_id)
+            # A group name is required. However, the spec also explicitly states that
+            # the group name can be ignored by the receiving device if a device cannot
+            # store it, so we cannot rely on it existing after being written. This is
+            # only done to make the ZCL command valid.
+            await self._zigpy_device.add_to_group(group_id, name=f"0x{group_id:04X}")
         except (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError) as ex:
             self.debug(
                 "Failed to add device '%s' to group: 0x%04x ex: %s",
@@ -667,7 +692,7 @@ class ZHADevice(LogMixin):
                 str(ex),
             )
 
-    async def async_remove_from_group(self, group_id):
+    async def async_remove_from_group(self, group_id: int) -> None:
         """Remove this device from the provided zigbee group."""
         try:
             await self._zigpy_device.remove_from_group(group_id)
@@ -679,10 +704,14 @@ class ZHADevice(LogMixin):
                 str(ex),
             )
 
-    async def async_add_endpoint_to_group(self, endpoint_id, group_id):
+    async def async_add_endpoint_to_group(
+        self, endpoint_id: int, group_id: int
+    ) -> None:
         """Add the device endpoint to the provided zigbee group."""
         try:
-            await self._zigpy_device.endpoints[int(endpoint_id)].add_to_group(group_id)
+            await self._zigpy_device.endpoints[endpoint_id].add_to_group(
+                group_id, name=f"0x{group_id:04X}"
+            )
         except (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError) as ex:
             self.debug(
                 "Failed to add endpoint: %s for device: '%s' to group: 0x%04x ex: %s",
@@ -692,12 +721,12 @@ class ZHADevice(LogMixin):
                 str(ex),
             )
 
-    async def async_remove_endpoint_from_group(self, endpoint_id, group_id):
+    async def async_remove_endpoint_from_group(
+        self, endpoint_id: int, group_id: int
+    ) -> None:
         """Remove the device endpoint from the provided zigbee group."""
         try:
-            await self._zigpy_device.endpoints[int(endpoint_id)].remove_from_group(
-                group_id
-            )
+            await self._zigpy_device.endpoints[endpoint_id].remove_from_group(group_id)
         except (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError) as ex:
             self.debug(
                 "Failed to remove endpoint: %s for device '%s' from group: 0x%04x ex: %s",
@@ -707,21 +736,28 @@ class ZHADevice(LogMixin):
                 str(ex),
             )
 
-    async def async_bind_to_group(self, group_id, cluster_bindings):
+    async def async_bind_to_group(
+        self, group_id: int, cluster_bindings: list[ClusterBinding]
+    ) -> None:
         """Directly bind this device to a group for the given clusters."""
         await self._async_group_binding_operation(
             group_id, zdo_types.ZDOCmd.Bind_req, cluster_bindings
         )
 
-    async def async_unbind_from_group(self, group_id, cluster_bindings):
+    async def async_unbind_from_group(
+        self, group_id: int, cluster_bindings: list[ClusterBinding]
+    ) -> None:
         """Unbind this device from a group for the given clusters."""
         await self._async_group_binding_operation(
             group_id, zdo_types.ZDOCmd.Unbind_req, cluster_bindings
         )
 
     async def _async_group_binding_operation(
-        self, group_id, operation, cluster_bindings
-    ):
+        self,
+        group_id: int,
+        operation: zdo_types.ZDOCmd,
+        cluster_bindings: list[ClusterBinding],
+    ) -> None:
         """Create or remove a direct zigbee binding between a device and a group."""
 
         zdo = self._zigpy_device.zdo
@@ -771,8 +807,8 @@ class ZHADevice(LogMixin):
                 fmt = f"{log_msg[1]} completed: %s"
             zdo.debug(fmt, *(log_msg[2] + (outcome,)))
 
-    def log(self, level: int, msg: str, *args: Any) -> None:
+    def log(self, level: int, msg: str, *args: Any, **kwargs: dict) -> None:
         """Log a message."""
         msg = f"[%s](%s): {msg}"
         args = (self.nwk, self.model) + args
-        _LOGGER.log(level, msg, *args)
+        _LOGGER.log(level, msg, *args, **kwargs)

@@ -12,8 +12,8 @@ from songpal import (
 )
 
 from homeassistant.components import media_player, songpal
+from homeassistant.components.media_player import MediaPlayerEntityFeature
 from homeassistant.components.songpal.const import SET_SOUND_SETTING
-from homeassistant.components.songpal.media_player import SUPPORT_SONGPAL
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -35,6 +35,15 @@ from . import (
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+
+SUPPORT_SONGPAL = (
+    MediaPlayerEntityFeature.VOLUME_SET
+    | MediaPlayerEntityFeature.VOLUME_STEP
+    | MediaPlayerEntityFeature.VOLUME_MUTE
+    | MediaPlayerEntityFeature.SELECT_SOURCE
+    | MediaPlayerEntityFeature.TURN_ON
+    | MediaPlayerEntityFeature.TURN_OFF
+)
 
 
 def _get_attributes(hass):

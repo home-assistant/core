@@ -1,8 +1,11 @@
 """Test selectors."""
+from enum import Enum
+
 import pytest
 import voluptuous as vol
 
-from homeassistant.helpers import config_validation as cv, selector
+from homeassistant.helpers import selector
+from homeassistant.util import yaml
 
 FAKE_UUID = "a266a680b608c32770e6c45bfe6b8411"
 
@@ -48,10 +51,14 @@ def _test_selector(
         converter = default_converter
 
     # Validate selector configuration
-    selector.validate_selector({selector_type: schema})
+    config = {selector_type: schema}
+    selector.validate_selector(config)
+    selector_instance = selector.selector(config)
+    # We do not allow enums in the config, as they cannot serialize
+    assert not any(isinstance(val, Enum) for val in selector_instance.config.values())
 
     # Use selector in schema and validate
-    vol_schema = vol.Schema({"selection": selector.selector({selector_type: schema})})
+    vol_schema = vol.Schema({"selection": selector_instance})
     for selection in valid_selections:
         assert vol_schema({"selection": selection}) == {
             "selection": converter(selection)
@@ -62,9 +69,12 @@ def _test_selector(
 
     # Serialize selector
     selector_instance = selector.selector({selector_type: schema})
-    assert cv.custom_serializer(selector_instance) == {
-        "selector": {selector_type: selector_instance.config}
-    }
+    assert (
+        selector.selector(selector_instance.serialize()["selector"]).config
+        == selector_instance.config
+    )
+    # Test serialized selector can be dumped to YAML
+    yaml.dump(selector_instance.serialize())
 
 
 @pytest.mark.parametrize(
@@ -246,7 +256,7 @@ def test_number_selector_schema(schema, valid_selections, invalid_selections):
     ),
 )
 def test_number_selector_schema_error(schema):
-    """Test select selector."""
+    """Test number selector."""
     with pytest.raises(vol.Invalid):
         selector.validate_selector({"number": schema})
 
@@ -266,7 +276,13 @@ def test_addon_selector_schema(schema, valid_selections, invalid_selections):
 )
 def test_boolean_selector_schema(schema, valid_selections, invalid_selections):
     """Test boolean selector."""
-    _test_selector("boolean", schema, valid_selections, invalid_selections, bool)
+    _test_selector(
+        "boolean",
+        schema,
+        valid_selections,
+        invalid_selections,
+        bool,
+    )
 
 
 @pytest.mark.parametrize(
@@ -349,7 +365,7 @@ def test_text_selector_schema(schema, valid_selections, invalid_selections):
         (
             {"options": ["red", "green", "blue"]},
             ("red", "green", "blue"),
-            ("cat", 0, None),
+            ("cat", 0, None, ["red"]),
         ),
         (
             {
@@ -359,7 +375,36 @@ def test_text_selector_schema(schema, valid_selections, invalid_selections):
                 ]
             },
             ("red", "green"),
-            ("cat", 0, None),
+            ("cat", 0, None, ["red"]),
+        ),
+        (
+            {"options": ["red", "green", "blue"], "multiple": True},
+            (["red"], ["green", "blue"], []),
+            ("cat", 0, None, "red"),
+        ),
+        (
+            {
+                "options": ["red", "green", "blue"],
+                "multiple": True,
+                "custom_value": True,
+            },
+            (["red"], ["green", "blue"], ["red", "cat"], []),
+            ("cat", 0, None, "red"),
+        ),
+        (
+            {"options": ["red", "green", "blue"], "custom_value": True},
+            ("red", "green", "blue", "cat"),
+            (0, None, ["red"]),
+        ),
+        (
+            {"options": [], "custom_value": True},
+            ("red", "cat"),
+            (0, None, ["red"]),
+        ),
+        (
+            {"options": [], "custom_value": True, "multiple": True},
+            (["red"], ["green", "blue"], []),
+            (0, None, "red"),
         ),
     ),
 )
@@ -373,7 +418,6 @@ def test_select_selector_schema(schema, valid_selections, invalid_selections):
     (
         {},  # Must have options
         {"options": {"hello": "World"}},  # Options must be a list
-        {"options": []},  # Must have at least option
         # Options must be strings or value / label pairs
         {"options": [{"hello": "World"}]},
         # Options must all be of the same type
@@ -484,7 +528,13 @@ def test_media_selector_schema(schema, valid_selections, invalid_selections):
         data.pop("metadata", None)
         return data
 
-    _test_selector("media", schema, valid_selections, invalid_selections, drop_metadata)
+    _test_selector(
+        "media",
+        schema,
+        valid_selections,
+        invalid_selections,
+        drop_metadata,
+    )
 
 
 @pytest.mark.parametrize(
@@ -587,3 +637,12 @@ def test_datetime_selector_schema(schema, valid_selections, invalid_selections):
     """Test datetime selector."""
 
     _test_selector("datetime", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    "schema,valid_selections,invalid_selections",
+    (({}, ("abc123", "{{ now() }}"), (None, "{{ incomplete }", "{% if True %}Hi!")),),
+)
+def test_template_selector_schema(schema, valid_selections, invalid_selections):
+    """Test template selector."""
+    _test_selector("template", schema, valid_selections, invalid_selections)

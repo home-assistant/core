@@ -84,8 +84,8 @@ class IasAce(ZigbeeChannel):
     @callback
     def cluster_command(self, tsn, command_id, args) -> None:
         """Handle commands received to this cluster."""
-        self.warning(
-            "received command %s", self._cluster.server_commands.get(command_id)[NAME]
+        self.debug(
+            "received command %s", self._cluster.server_commands[command_id].name
         )
         self.command_map[command_id](*args)
 
@@ -94,7 +94,7 @@ class IasAce(ZigbeeChannel):
         mode = AceCluster.ArmMode(arm_mode)
 
         self.zha_send_event(
-            self._cluster.server_commands.get(IAS_ACE_ARM)[NAME],
+            self._cluster.server_commands[IAS_ACE_ARM].name,
             {
                 "arm_mode": mode.value,
                 "arm_mode_description": mode.name,
@@ -120,7 +120,7 @@ class IasAce(ZigbeeChannel):
             code != self.panel_code
             and self.armed_state != AceCluster.PanelStatus.Panel_Disarmed
         ):
-            self.warning("Invalid code supplied to IAS ACE")
+            self.debug("Invalid code supplied to IAS ACE")
             self.invalid_tries += 1
             zigbee_reply = self.arm_response(
                 AceCluster.ArmNotification.Invalid_Arm_Disarm_Code
@@ -131,12 +131,12 @@ class IasAce(ZigbeeChannel):
                 self.armed_state == AceCluster.PanelStatus.Panel_Disarmed
                 and self.alarm_status == AceCluster.AlarmStatus.No_Alarm
             ):
-                self.warning("IAS ACE already disarmed")
+                self.debug("IAS ACE already disarmed")
                 zigbee_reply = self.arm_response(
                     AceCluster.ArmNotification.Already_Disarmed
                 )
             else:
-                self.warning("Disarming all IAS ACE zones")
+                self.debug("Disarming all IAS ACE zones")
                 zigbee_reply = self.arm_response(
                     AceCluster.ArmNotification.All_Zones_Disarmed
                 )
@@ -177,12 +177,12 @@ class IasAce(ZigbeeChannel):
     ) -> None:
         """Arm the panel with the specified statuses."""
         if self.code_required_arm_actions and code != self.panel_code:
-            self.warning("Invalid code supplied to IAS ACE")
+            self.debug("Invalid code supplied to IAS ACE")
             zigbee_reply = self.arm_response(
                 AceCluster.ArmNotification.Invalid_Arm_Disarm_Code
             )
         else:
-            self.warning("Arming all IAS ACE zones")
+            self.debug("Arming all IAS ACE zones")
             self.armed_state = panel_status
             zigbee_reply = self.arm_response(armed_type)
         return zigbee_reply
@@ -190,7 +190,7 @@ class IasAce(ZigbeeChannel):
     def _bypass(self, zone_list, code) -> None:
         """Handle the IAS ACE bypass command."""
         self.zha_send_event(
-            self._cluster.server_commands.get(IAS_ACE_BYPASS)[NAME],
+            self._cluster.server_commands[IAS_ACE_BYPASS].name,
             {"zone_list": zone_list, "code": code},
         )
 

@@ -28,7 +28,7 @@
                     "host": "Host",
                     "name": "Name"
                 },
-                "description": "This integration requires the Notifications for Android / Fire TV app.\n\nFor Android TV: {{androidtv_url}}\nFor Fire TV: {firetv_url}\n\nOpen the app once installed.\n\nYou should set up either DHCP reservation on your router (refer to your router's user manual) or a static IP address on the device. If not, the device will eventually become unavailable.",
+                "description": "Please refer to the documentation to make sure all requirements are met.",
                 "title": "Notifications for Android TV / Fire TV"
             }
         }

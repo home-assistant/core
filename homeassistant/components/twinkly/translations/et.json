@@ -13,9 +13,7 @@
             "user": {
                 "data": {
                     "host": "Host"
-                },
-                "description": "Seadista oma Twinkly LED riba",
-                "title": ""
+                }
             }
         }
     }

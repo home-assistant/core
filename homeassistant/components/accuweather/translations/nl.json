@@ -3,6 +3,9 @@
         "abort": {
             "single_instance_allowed": "Al geconfigureerd. Slechts een enkele configuratie mogelijk."
         },
+        "create_entry": {
+            "default": "Sommige sensoren zijn standaard niet ingeschakeld. U kunt ze inschakelen in het entiteitenregister na de integratieconfiguratie.\nWeersvoorspelling is niet standaard ingeschakeld. U kunt deze inschakelen in de integratieopties."
+        },
         "error": {
             "cannot_connect": "Kan geen verbinding maken",
             "invalid_api_key": "API-sleutel",

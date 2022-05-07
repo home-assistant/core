@@ -59,6 +59,10 @@
             },
             "usb_confirm": {
                 "description": "Czy chcesz skonfigurowa\u0107 {name} z dodatkiem Z-Wave JS?"
+            },
+            "zeroconf_confirm": {
+                "description": "Czy chcesz doda\u0107 do Home Assistanta serwer Z-Wave JS z identyfikatorem {home_id} znalezionym pod {url}?",
+                "title": "Wykryty serwer Z-Wave JS"
             }
         }
     },

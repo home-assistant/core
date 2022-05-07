@@ -15,13 +15,16 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_RADIUS,
     CONF_SHOW_ON_MAP,
-    CONF_UNIT_OF_MEASUREMENT,
     LENGTH_KILOMETERS,
 )
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.selector import selector
+from homeassistant.helpers.selector import (
+    LocationSelector,
+    NumberSelector,
+    NumberSelectorConfig,
+)
 
 from .const import CONF_FUEL_TYPES, CONF_STATIONS, DEFAULT_RADIUS, DOMAIN, FUEL_TYPES
 
@@ -154,18 +157,16 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                                 "longitude": self.hass.config.longitude,
                             },
                         ),
-                    ): selector({"location": {}}),
+                    ): LocationSelector(),
                     vol.Required(
                         CONF_RADIUS, default=user_input.get(CONF_RADIUS, DEFAULT_RADIUS)
-                    ): selector(
-                        {
-                            "number": {
-                                "min": 0.1,
-                                "max": 25,
-                                "step": 0.1,
-                                CONF_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
-                            }
-                        }
+                    ): NumberSelector(
+                        NumberSelectorConfig(
+                            min=0.1,
+                            max=25,
+                            step=0.1,
+                            unit_of_measurement=LENGTH_KILOMETERS,
+                        ),
                     ),
                 }
             ),

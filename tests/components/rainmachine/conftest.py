@@ -49,7 +49,9 @@ def controller_fixture(
     controller = AsyncMock()
     controller.api_version = "4.5.0"
     controller.hardware_version = 3
-    controller.name = "My RainMachine"
+    # The api returns a controller with all numbers as numeric
+    # instead of a string
+    controller.name = 12345
     controller.mac = controller_mac
     controller.software_version = "4.0.925"
 

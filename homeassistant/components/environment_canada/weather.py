@@ -80,12 +80,16 @@ class ECWeather(CoordinatorEntity, WeatherEntity):
     @property
     def temperature(self):
         """Return the temperature."""
-        if self.ec_data.conditions.get("temperature", {}).get("value"):
-            return float(self.ec_data.conditions["temperature"]["value"])
-        if self.ec_data.hourly_forecasts and self.ec_data.hourly_forecasts[0].get(
-            "temperature"
+        if (
+            temperature := self.ec_data.conditions.get("temperature", {}).get("value")
+        ) is not None:
+            return float(temperature)
+        if (
+            self.ec_data.hourly_forecasts
+            and (temperature := self.ec_data.hourly_forecasts[0].get("temperature"))
+            is not None
         ):
-            return float(self.ec_data.hourly_forecasts[0]["temperature"])
+            return float(temperature)
         return None
 
     @property
@@ -208,7 +212,7 @@ def get_forecast(ec_data, hourly):
         for hour in ec_data.hourly_forecasts:
             forecast_array.append(
                 {
-                    ATTR_FORECAST_TIME: hour["period"],
+                    ATTR_FORECAST_TIME: hour["period"].isoformat(),
                     ATTR_FORECAST_TEMP: int(hour["temperature"]),
                     ATTR_FORECAST_CONDITION: icon_code_to_condition(
                         int(hour["icon_code"])

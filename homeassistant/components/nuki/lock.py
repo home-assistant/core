@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from pynuki.constants import MODE_OPENER_CONTINUOUS
 import voluptuous as vol
 
-from homeassistant.components.lock import SUPPORT_OPEN, LockEntity
+from homeassistant.components.lock import LockEntity, LockEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
@@ -60,6 +60,8 @@ async def async_setup_entry(
 class NukiDeviceEntity(NukiEntity, LockEntity, ABC):
     """Representation of a Nuki device."""
 
+    _attr_supported_features = LockEntityFeature.OPEN
+
     @property
     def name(self):
         """Return the name of the lock."""
@@ -83,11 +85,6 @@ class NukiDeviceEntity(NukiEntity, LockEntity, ABC):
             ATTR_NUKI_ID: self._nuki_device.nuki_id,
         }
         return data
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_OPEN
 
     @property
     def available(self) -> bool:

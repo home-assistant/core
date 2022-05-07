@@ -1469,3 +1469,39 @@ async def test_upnp_subscribe_events_upnpresponseerror(
 
     upnp_notify_server.async_stop_server.assert_not_called()
     assert "Device rejected subscription" in caplog.text
+
+
+@pytest.mark.usefixtures("rest_api", "upnp_notify_server")
+async def test_upnp_re_subscribe_events(
+    hass: HomeAssistant, remotews: Mock, dmr_device: Mock, mock_now: datetime
+) -> None:
+    """Test for Upnp event feedback."""
+    await setup_samsungtv_entry(hass, MOCK_ENTRY_WS)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == STATE_ON
+    assert dmr_device.async_subscribe_services.call_count == 1
+    assert dmr_device.async_unsubscribe_services.call_count == 0
+
+    with patch.object(
+        remotews, "start_listening", side_effect=WebSocketException("Boom")
+    ), patch.object(remotews, "is_alive", return_value=False):
+        next_update = mock_now + timedelta(minutes=5)
+        with patch("homeassistant.util.dt.utcnow", return_value=next_update):
+            async_fire_time_changed(hass, next_update)
+            await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == STATE_OFF
+    assert dmr_device.async_subscribe_services.call_count == 1
+    assert dmr_device.async_unsubscribe_services.call_count == 1
+
+    next_update = mock_now + timedelta(minutes=10)
+    with patch("homeassistant.util.dt.utcnow", return_value=next_update):
+        async_fire_time_changed(hass, next_update)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == STATE_ON
+    assert dmr_device.async_subscribe_services.call_count == 2
+    assert dmr_device.async_unsubscribe_services.call_count == 1

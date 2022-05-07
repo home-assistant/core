@@ -18,8 +18,8 @@ PLATFORMS = [
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
+    Platform.UPDATE,
 ]
-ALL = ["all"]
 DEFAULT_NAME = "Sensibo"
 TIMEOUT = 8
 

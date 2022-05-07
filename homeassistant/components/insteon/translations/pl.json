@@ -2,13 +2,18 @@
     "config": {
         "abort": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "not_insteon_device": "Wykryte urz\u0105dzenie nie jest urz\u0105dzeniem Insteon",
             "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
         },
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
             "select_single": "Wybierz jedn\u0105 z opcji"
         },
+        "flow_title": "{name}",
         "step": {
+            "confirm_usb": {
+                "description": "Czy chcesz skonfigurowa\u0107 {name}?"
+            },
             "hubv1": {
                 "data": {
                     "host": "Adres IP",

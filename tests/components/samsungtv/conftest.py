@@ -22,7 +22,7 @@ from samsungtvws.remote import ChannelEmitCommand
 from homeassistant.components.samsungtv.const import WEBSOCKET_SSL_PORT
 import homeassistant.util.dt as dt_util
 
-from .const import SAMPLE_DEVICE_INFO_WIFI
+from .const import SAMPLE_DEVICE_INFO_UE48JU6400, SAMPLE_DEVICE_INFO_WIFI
 
 
 @pytest.fixture(autouse=True)
@@ -101,12 +101,27 @@ async def dmr_device_fixture(upnp_device: Mock) -> Mock:
         dmr_device.volume_level = 0.44
         dmr_device.is_volume_muted = False
         dmr_device.on_event = None
+        dmr_device.is_subscribed = False
 
         def _raise_event(service, state_variables):
             if dmr_device.on_event:
                 dmr_device.on_event(service, state_variables)
 
         dmr_device.raise_event = _raise_event
+
+        def _async_subscribe_services(auto_resubscribe: bool = False):
+            dmr_device.is_subscribed = True
+
+        dmr_device.async_subscribe_services = AsyncMock(
+            side_effect=_async_subscribe_services
+        )
+
+        def _async_unsubscribe_services():
+            dmr_device.is_subscribed = False
+
+        dmr_device.async_unsubscribe_services = AsyncMock(
+            side_effect=_async_unsubscribe_services
+        )
         yield dmr_device
 
 
@@ -162,7 +177,7 @@ def rest_api_fixture_non_ssl_only() -> Mock:
             """Mock rest_device_info to fail for ssl and work for non-ssl."""
             if self.port == WEBSOCKET_SSL_PORT:
                 raise ResponseError
-            return SAMPLE_DEVICE_INFO_WIFI
+            return SAMPLE_DEVICE_INFO_UE48JU6400
 
     with patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVAsyncRest",

@@ -44,7 +44,12 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er, 
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, assert_setup_component, mock_platform
+from tests.common import (
+    MockConfigEntry,
+    assert_setup_component,
+    load_fixture,
+    mock_platform,
+)
 from tests.components.media_player import common
 
 # pylint: disable=invalid-name
@@ -59,6 +64,8 @@ FAKE_MDNS_SERVICE = pychromecast.discovery.ServiceInfo(
     pychromecast.const.SERVICE_TYPE_MDNS, "the-service"
 )
 
+UNDEFINED = object()
+
 
 def get_fake_chromecast(info: ChromecastInfo):
     """Generate a Fake Chromecast object with the specified arguments."""
@@ -69,7 +76,14 @@ def get_fake_chromecast(info: ChromecastInfo):
 
 
 def get_fake_chromecast_info(
-    host="192.168.178.42", port=8009, service=None, uuid: UUID | None = FakeUUID
+    *,
+    host="192.168.178.42",
+    port=8009,
+    service=None,
+    uuid: UUID | None = FakeUUID,
+    cast_type=UNDEFINED,
+    manufacturer=UNDEFINED,
+    model_name=UNDEFINED,
 ):
     """Generate a Fake ChromecastInfo with the specified arguments."""
 
@@ -77,16 +91,22 @@ def get_fake_chromecast_info(
         service = pychromecast.discovery.ServiceInfo(
             pychromecast.const.SERVICE_TYPE_HOST, (host, port)
         )
+    if cast_type is UNDEFINED:
+        cast_type = CAST_TYPE_GROUP if port != 8009 else CAST_TYPE_CHROMECAST
+    if manufacturer is UNDEFINED:
+        manufacturer = "Nabu Casa"
+    if model_name is UNDEFINED:
+        model_name = "Chromecast"
     return ChromecastInfo(
         cast_info=pychromecast.models.CastInfo(
             services={service},
             uuid=uuid,
-            model_name="Chromecast",
+            model_name=model_name,
             friendly_name="Speaker",
             host=host,
             port=port,
-            cast_type=CAST_TYPE_GROUP if port != 8009 else CAST_TYPE_CHROMECAST,
-            manufacturer="Nabu Casa",
+            cast_type=cast_type,
+            manufacturer=manufacturer,
         )
     )
 
@@ -335,6 +355,92 @@ async def test_internal_discovery_callback_fill_out_group(
         discover = signal.mock_calls[0][1][0]
         assert discover == full_info
         get_multizone_status_mock.assert_called_once()
+
+
+async def test_internal_discovery_callback_fill_out_cast_type_manufacturer(
+    hass, get_cast_type_mock, caplog
+):
+    """Test internal discovery automatically filling out information."""
+    discover_cast, _, _ = await async_setup_cast_internal_discovery(hass)
+    info = get_fake_chromecast_info(
+        host="host1",
+        port=8009,
+        service=FAKE_MDNS_SERVICE,
+        cast_type=None,
+        manufacturer=None,
+    )
+    info2 = get_fake_chromecast_info(
+        host="host1",
+        port=8009,
+        service=FAKE_MDNS_SERVICE,
+        cast_type=None,
+        manufacturer=None,
+        model_name="Model 101",
+    )
+    zconf = get_fake_zconf(host="host1", port=8009)
+    full_info = attr.evolve(
+        info,
+        cast_info=pychromecast.discovery.CastInfo(
+            services=info.cast_info.services,
+            uuid=FakeUUID,
+            model_name="Chromecast",
+            friendly_name="Speaker",
+            host=info.cast_info.host,
+            port=info.cast_info.port,
+            cast_type="audio",
+            manufacturer="TrollTech",
+        ),
+        is_dynamic_group=None,
+    )
+    full_info2 = attr.evolve(
+        info2,
+        cast_info=pychromecast.discovery.CastInfo(
+            services=info.cast_info.services,
+            uuid=FakeUUID,
+            model_name="Model 101",
+            friendly_name="Speaker",
+            host=info.cast_info.host,
+            port=info.cast_info.port,
+            cast_type="cast",
+            manufacturer="Cyberdyne Systems",
+        ),
+        is_dynamic_group=None,
+    )
+
+    get_cast_type_mock.assert_not_called()
+    get_cast_type_mock.return_value = full_info.cast_info
+
+    with patch(
+        "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
+        return_value=zconf,
+    ):
+        signal = MagicMock()
+
+        async_dispatcher_connect(hass, "cast_discovered", signal)
+        discover_cast(FAKE_MDNS_SERVICE, info)
+        await hass.async_block_till_done()
+
+        # when called with incomplete info, it should use HTTP to get missing
+        get_cast_type_mock.assert_called_once()
+        assert get_cast_type_mock.call_count == 1
+        discover = signal.mock_calls[0][1][0]
+        assert discover == full_info
+        assert "Fetched cast details for unknown model 'Chromecast'" in caplog.text
+
+        # Call again, the model name should be fetched from cache
+        discover_cast(FAKE_MDNS_SERVICE, info)
+        await hass.async_block_till_done()
+        assert get_cast_type_mock.call_count == 1  # No additional calls
+        discover = signal.mock_calls[1][1][0]
+        assert discover == full_info
+
+        # Call for another model, need to call HTTP again
+        get_cast_type_mock.return_value = full_info2.cast_info
+        discover_cast(FAKE_MDNS_SERVICE, info2)
+        await hass.async_block_till_done()
+        assert get_cast_type_mock.call_count == 2
+        discover = signal.mock_calls[2][1][0]
+        assert discover == full_info2
 
 
 async def test_stop_discovery_called_on_stop(hass, castbrowser_mock):
@@ -800,10 +906,12 @@ async def test_entity_cast_status(hass: HomeAssistant):
             | SUPPORT_PLAY_MEDIA
             | SUPPORT_STOP
             | SUPPORT_TURN_OFF
+            | SUPPORT_TURN_ON
             | SUPPORT_VOLUME_MUTE
             | SUPPORT_VOLUME_SET,
             SUPPORT_PLAY_MEDIA
             | SUPPORT_TURN_OFF
+            | SUPPORT_TURN_ON
             | SUPPORT_VOLUME_MUTE
             | SUPPORT_VOLUME_SET,
         ),
@@ -1106,6 +1214,80 @@ async def test_entity_play_media_sign_URL(hass: HomeAssistant, quick_play_mock):
     )
 
 
+@pytest.mark.parametrize(
+    "url,fixture,playlist_item",
+    (
+        # Test title is extracted from m3u playlist
+        (
+            "https://sverigesradio.se/topsy/direkt/209-hi-mp3.m3u",
+            "209-hi-mp3.m3u",
+            {
+                "media_id": "https://http-live.sr.se/p4norrbotten-mp3-192",
+                "media_type": "audio",
+                "metadata": {"title": "Sveriges Radio"},
+            },
+        ),
+        # Test title is extracted from pls playlist
+        (
+            "http://sverigesradio.se/topsy/direkt/164-hi-aac.pls",
+            "164-hi-aac.pls",
+            {
+                "media_id": "https://http-live.sr.se/p3-aac-192",
+                "media_type": "audio",
+                "metadata": {"title": "Sveriges Radio"},
+            },
+        ),
+        # Test HLS playlist is forwarded to the device
+        (
+            "http://a.files.bbci.co.uk/media/live/manifesto/audio/simulcast/hls/nonuk/sbr_low/ak/bbc_radio_fourfm.m3u8",
+            "bbc_radio_fourfm.m3u8",
+            {
+                "media_id": "http://a.files.bbci.co.uk/media/live/manifesto/audio/simulcast/hls/nonuk/sbr_low/ak/bbc_radio_fourfm.m3u8",
+                "media_type": "audio",
+            },
+        ),
+        # Test bad playlist is forwarded to the device
+        (
+            "https://sverigesradio.se/209-hi-mp3.m3u",
+            "209-hi-mp3_bad_url.m3u",
+            {
+                "media_id": "https://sverigesradio.se/209-hi-mp3.m3u",
+                "media_type": "audio",
+            },
+        ),
+    ),
+)
+async def test_entity_play_media_playlist(
+    hass: HomeAssistant, aioclient_mock, quick_play_mock, url, fixture, playlist_item
+):
+    """Test playing media."""
+    entity_id = "media_player.speaker"
+    aioclient_mock.get(url, text=load_fixture(fixture, "cast"))
+
+    await async_process_ha_core_config(
+        hass,
+        {"internal_url": "http://example.com:8123"},
+    )
+
+    info = get_fake_chromecast_info()
+
+    chromecast, _ = await async_setup_media_player_cast(hass, info)
+    _, conn_status_cb, _ = get_status_callbacks(chromecast)
+
+    connection_status = MagicMock()
+    connection_status.status = "CONNECTED"
+    conn_status_cb(connection_status)
+    await hass.async_block_till_done()
+
+    # Play_media
+    await common.async_play_media(hass, "audio", url, entity_id)
+    quick_play_mock.assert_called_once_with(
+        chromecast,
+        "default_media_receiver",
+        playlist_item,
+    )
+
+
 async def test_entity_media_content_type(hass: HomeAssistant):
     """Test various content types."""
     entity_id = "media_player.speaker"
@@ -1157,7 +1339,7 @@ async def test_entity_media_content_type(hass: HomeAssistant):
     assert state.attributes.get("media_content_type") == "movie"
 
 
-async def test_entity_control(hass: HomeAssistant):
+async def test_entity_control(hass: HomeAssistant, quick_play_mock):
     """Test various device and media controls."""
     entity_id = "media_player.speaker"
     reg = er.async_get(hass)
@@ -1176,6 +1358,7 @@ async def test_entity_control(hass: HomeAssistant):
 
     # Fake media status
     media_status = MagicMock(images=None)
+    media_status.player_state = "PLAYING"
     media_status.supports_queue_next = False
     media_status.supports_seek = False
     media_status_cb(media_status)
@@ -1200,8 +1383,13 @@ async def test_entity_control(hass: HomeAssistant):
 
     # Turn on
     await common.async_turn_on(hass, entity_id)
-    chromecast.play_media.assert_called_once_with(
-        "https://www.home-assistant.io/images/cast/splash.png", "image/png"
+    quick_play_mock.assert_called_once_with(
+        chromecast,
+        "default_media_receiver",
+        {
+            "media_id": "https://www.home-assistant.io/images/cast/splash.png",
+            "media_type": "image/png",
+        },
     )
     chromecast.quit_app.reset_mock()
 
@@ -1311,13 +1499,19 @@ async def test_entity_media_states(hass: HomeAssistant, app_id, state_no_media):
 
     # Got media status
     media_status = MagicMock(images=None)
-    media_status.player_is_playing = True
+    media_status.player_state = "BUFFERING"
+    media_status_cb(media_status)
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == "buffering"
+
+    media_status.player_state = "PLAYING"
     media_status_cb(media_status)
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.state == "playing"
 
-    media_status.player_is_playing = False
+    media_status.player_state = None
     media_status.player_is_paused = True
     media_status_cb(media_status)
     await hass.async_block_till_done()
@@ -1381,7 +1575,11 @@ async def test_entity_media_states_lovelace_app(hass: HomeAssistant):
     state = hass.states.get(entity_id)
     assert state.state == "playing"
     assert state.attributes.get("supported_features") == (
-        SUPPORT_PLAY_MEDIA | SUPPORT_TURN_OFF | SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET
+        SUPPORT_PLAY_MEDIA
+        | SUPPORT_TURN_OFF
+        | SUPPORT_TURN_ON
+        | SUPPORT_VOLUME_MUTE
+        | SUPPORT_VOLUME_SET
     )
 
     media_status = MagicMock(images=None)
@@ -1446,15 +1644,22 @@ async def test_group_media_states(hass, mz_mock):
     group_media_status = MagicMock(images=None)
     player_media_status = MagicMock(images=None)
 
+    # Player has no state, group is buffering -> Should report 'buffering'
+    group_media_status.player_state = "BUFFERING"
+    group_media_status_cb(str(FakeGroupUUID), group_media_status)
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == "buffering"
+
     # Player has no state, group is playing -> Should report 'playing'
-    group_media_status.player_is_playing = True
+    group_media_status.player_state = "PLAYING"
     group_media_status_cb(str(FakeGroupUUID), group_media_status)
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.state == "playing"
 
     # Player is paused, group is playing -> Should report 'paused'
-    player_media_status.player_is_playing = False
+    player_media_status.player_state = None
     player_media_status.player_is_paused = True
     media_status_cb(player_media_status)
     await hass.async_block_till_done()

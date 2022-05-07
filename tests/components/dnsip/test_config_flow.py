@@ -146,66 +146,6 @@ async def test_form_error(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "invalid_hostname"}
 
 
-@pytest.mark.parametrize(
-    "p_input,p_output,p_options",
-    [
-        (
-            {CONF_HOSTNAME: "home-assistant.io"},
-            {
-                "hostname": "home-assistant.io",
-                "name": "home-assistant.io",
-                "ipv4": True,
-                "ipv6": True,
-            },
-            {
-                "resolver": "208.67.222.222",
-                "resolver_ipv6": "2620:0:ccc::2",
-            },
-        ),
-        (
-            {},
-            {
-                "hostname": "myip.opendns.com",
-                "name": "myip",
-                "ipv4": True,
-                "ipv6": True,
-            },
-            {
-                "resolver": "208.67.222.222",
-                "resolver_ipv6": "2620:0:ccc::2",
-            },
-        ),
-    ],
-)
-async def test_import_flow_success(
-    hass: HomeAssistant,
-    p_input: dict[str, str],
-    p_output: dict[str, str],
-    p_options: dict[str, str],
-) -> None:
-    """Test a successful import of YAML."""
-
-    with patch(
-        "homeassistant.components.dnsip.config_flow.aiodns.DNSResolver",
-        return_value=RetrieveDNS(),
-    ), patch(
-        "homeassistant.components.dnsip.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=p_input,
-        )
-        await hass.async_block_till_done()
-
-    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result2["title"] == p_output["name"]
-    assert result2["data"] == p_output
-    assert result2["options"] == p_options
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
 async def test_flow_already_exist(hass: HomeAssistant) -> None:
     """Test flow when unique id already exist."""
 
