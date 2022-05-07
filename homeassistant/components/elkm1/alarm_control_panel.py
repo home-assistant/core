@@ -191,7 +191,8 @@ class ElkArea(ElkAttachedEntity, AlarmControlPanelEntity, RestoreEntity):
             attrs["armed_status"] = ArmedStatus(elmt.armed_status).name.lower()
         if elmt.arm_up_state is not None:
             attrs["arm_up_state"] = ArmUpState(elmt.arm_up_state).name.lower()
-        attrs["alarm_state"] = AlarmState(elmt.alarm_state).name.lower()
+        if elmt.alarm_state is not None:
+            attrs["alarm_state"] = AlarmState(elmt.alarm_state).name.lower()
         attrs[ATTR_CHANGED_BY_KEYPAD] = self._changed_by_keypad
         attrs[ATTR_CHANGED_BY_TIME] = self._changed_by_time
         attrs[ATTR_CHANGED_BY_ID] = self._changed_by_id
@@ -213,7 +214,9 @@ class ElkArea(ElkAttachedEntity, AlarmControlPanelEntity, RestoreEntity):
             ArmedStatus.ARMED_TO_VACATION: STATE_ALARM_ARMED_AWAY,
         }
 
-        if self._element.alarm_state.value >= AlarmState.FIRE_ALARM.value:
+        if self._element.alarm_state is None:
+            self._state = None
+        elif self._element.alarm_state.value >= AlarmState.FIRE_ALARM.value:
             # Area is in alarm state
             self._state = STATE_ALARM_TRIGGERED
         elif self._entry_exit_timer_is_running():
