@@ -17,7 +17,6 @@ from homeassistant.data_entry_flow import FlowResult
 from .const import DOMAIN, RUN_TIMEOUT
 from .models import BAFDiscovery
 
-API_SUFFIX = "._api._tcp.local."
 _LOGGER = logging.getLogger(__name__)
 
 
