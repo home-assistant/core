@@ -80,7 +80,7 @@ class UkraineAlarmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle user-chosen district."""
         if user_input is not None:
             if CONF_REGION not in user_input:
-                return self._async_finish_flow()
+                return await self._async_finish_flow()
             self.selected_region = _find(
                 self.selected_region["regionChildIds"], user_input[CONF_REGION]
             )
