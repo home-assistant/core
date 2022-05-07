@@ -735,6 +735,10 @@ def _keep_row(
     )
 
 
+def _rows_match(row: Row, other_row: Row) -> bool:
+    return bool(row.context_id == other_row.context_id and row == other_row)
+
+
 def _augment_data_with_context(
     data: dict[str, Any],
     entity_id: str | None,
@@ -748,14 +752,14 @@ def _augment_data_with_context(
     if not (context_row := row_indexer.get_row_by_context_id(row.context_id)):
         return
 
-    if row == context_row:
+    if _rows_match(row, context_row):
         # This is the first event with the given ID. Was it directly caused by
         # a parent event?
         if row.context_parent_id:
             context_row = row_indexer.get_row_by_context_id(row.context_parent_id)
         # Ensure the (parent) context_event exists and is not the root cause of
         # this log entry.
-        if not context_row or row == context_row:
+        if not context_row or _rows_match(row, context_row):
             return
 
     event_type = context_row.event_type
@@ -778,7 +782,7 @@ def _augment_data_with_context(
         data["context_event_type"] = event_type
         return
 
-    if not entity_id or context_row == row:
+    if not entity_id or _rows_match(row, context_row):
         return
 
     if (attr_entity_id := _extract_entity_id_from_row(context_row)) is None or (
