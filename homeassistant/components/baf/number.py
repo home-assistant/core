@@ -10,7 +10,7 @@ from homeassistant.components.number import NumberEntity, NumberEntityDescriptio
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .const import DOMAIN, HALF_DAY_SECS, ONE_DAY_SECS, ONE_MIN_SECS, SPEED_RANGE
 from .entity import BAFEntity
 from .models import BAFData
 
@@ -18,32 +18,32 @@ FAN_NUMBER_DESCRIPTIONS = (
     NumberEntityDescription(
         key="return_to_auto_timeout",
         name="Return to Auto Timeout",
-        min_value=60,
-        max_value=43200,
+        min_value=ONE_MIN_SECS,
+        max_value=HALF_DAY_SECS,
     ),
     NumberEntityDescription(
         key="motion_sense_timeout",
         name="Motion Sense Timeout",
-        min_value=60,
-        max_value=864000,
+        min_value=ONE_MIN_SECS,
+        max_value=ONE_DAY_SECS,
     ),
     NumberEntityDescription(
         key="comfort_min_speed",
         name="Comfort Minimum Speed",
         min_value=0,
-        max_value=7,
+        max_value=SPEED_RANGE[1],
     ),
     NumberEntityDescription(
         key="comfort_max_speed",
         name="Comfort Maximum Speed",
         min_value=0,
-        max_value=7,
+        max_value=SPEED_RANGE[1],
     ),
     NumberEntityDescription(
         key="comfort_heat_assist_speed",
         name="Comfort Heat Assist Speed",
-        min_value=1,
-        max_value=7,
+        min_value=SPEED_RANGE[0],
+        max_value=SPEED_RANGE[1],
     ),
 )
 
@@ -51,14 +51,14 @@ LIGHT_NUMBER_DESCRIPTIONS = (
     NumberEntityDescription(
         key="light_return_to_auto_timeout",
         name="Light Return to Auto Timeout",
-        min_value=60,
-        max_value=43200,
+        min_value=ONE_MIN_SECS,
+        max_value=HALF_DAY_SECS,
     ),
     NumberEntityDescription(
         key="light_auto_motion_timeout",
         name="Light Motion Sense Timeout",
-        min_value=60,
-        max_value=864000,
+        min_value=ONE_MIN_SECS,
+        max_value=ONE_DAY_SECS,
     ),
 )
 
