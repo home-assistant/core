@@ -15,6 +15,10 @@ PRESET_MODE_AUTO = "Auto"
 SPEED_COUNT = 7
 SPEED_RANGE = (1, SPEED_COUNT)
 
+ONE_MIN_SECS = 60
+ONE_DAY_SECS = 86400
+HALF_DAY_SECS = 43200
+
 
 class OffOnAuto(IntEnum):
     """Tri-state mode enum that matches the protocol buffer."""
