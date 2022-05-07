@@ -326,9 +326,9 @@ class LogbookView(HomeAssistantView):
 
 def humanify(
     hass: HomeAssistant,
-    events: Generator[LazyEventPartialState, None, None],
+    rows: Generator[Row, None, None],
     entity_attr_cache: EntityAttributeCache,
-    context_lookup: dict[str | None, LazyEventPartialState | None],
+    row_indexer: RowIndexer,
 ) -> Generator[dict[str, Any], None, None]:
     """Generate a converted list of events into Entry objects.
 
@@ -336,25 +336,24 @@ def humanify(
     - if Home Assistant stop and start happen in same minute call it restarted
     """
     external_events = hass.data.get(DOMAIN, {})
+    # Continuous sensors, will be excluded from the logbook
+    continuous_sensors = {}
 
     # Group events in batches of GROUP_BY_MINUTES
-    for _, g_events in groupby(
-        events, lambda event: event.time_fired_minute // GROUP_BY_MINUTES
+    for _, g_rows in groupby(
+        rows, lambda row: row.time_fired.minute // GROUP_BY_MINUTES  # type: ignore[no-any-return]
     ):
 
-        events_batch = list(g_events)
-
-        # Continuous sensors, will be excluded from the logbook
-        continuous_sensors = {}
+        rows_batch = list(g_rows)
 
         # Group HA start/stop events
         # Maps minute of event to 1: stop, 2: stop + start
         start_stop_events = {}
 
         # Process events
-        for event in events_batch:
-            if event.event_type == EVENT_STATE_CHANGED:
-                entity_id = event.entity_id
+        for row in rows_batch:
+            if row.event_type == EVENT_STATE_CHANGED:
+                entity_id = row.entity_id
                 if (
                     entity_id in continuous_sensors
                     or split_entity_id(entity_id)[0] != SENSOR_DOMAIN
@@ -363,28 +362,29 @@ def humanify(
                 assert entity_id is not None
                 continuous_sensors[entity_id] = _is_sensor_continuous(hass, entity_id)
 
-            elif event.event_type == EVENT_HOMEASSISTANT_STOP:
-                if event.time_fired_minute in start_stop_events:
+            elif row.event_type == EVENT_HOMEASSISTANT_STOP:
+                if row.time_fired.minute in start_stop_events:
                     continue
 
-                start_stop_events[event.time_fired_minute] = 1
+                start_stop_events[row.time_fired.minute] = 1
 
-            elif event.event_type == EVENT_HOMEASSISTANT_START:
-                if event.time_fired_minute not in start_stop_events:
+            elif row.event_type == EVENT_HOMEASSISTANT_START:
+                if row.time_fired.minute not in start_stop_events:
                     continue
 
-                start_stop_events[event.time_fired_minute] = 2
+                start_stop_events[row.time_fired.minute] = 2
 
         # Yield entries
-        for event in events_batch:
-            if event.event_type == EVENT_STATE_CHANGED:
-                entity_id = event.entity_id
+        for row in rows_batch:
+            if row.event_type == EVENT_STATE_CHANGED:
+                entity_id = row.entity_id
                 assert entity_id is not None
 
                 if continuous_sensors.get(entity_id):
                     # Skip continuous sensors
                     continue
 
+                event = row_indexer.get_event(row)
                 data = {
                     "when": event.time_fired_isoformat,
                     "name": _entity_name_from_event(
@@ -404,14 +404,15 @@ def humanify(
                     data,
                     entity_id,
                     event,
-                    context_lookup,
+                    row_indexer,
                     entity_attr_cache,
                     external_events,
                 )
 
                 yield data
 
-            elif event.event_type in external_events:
+            elif row.event_type in external_events:
+                event = row_indexer.get_event(row)
                 domain, describe_event = external_events[event.event_type]
                 data = describe_event(event)
                 data["when"] = event.time_fired_isoformat
@@ -423,37 +424,39 @@ def humanify(
                     data,
                     data.get(ATTR_ENTITY_ID),
                     event,
-                    context_lookup,
+                    row_indexer,
                     entity_attr_cache,
                     external_events,
                 )
                 yield data
 
-            elif event.event_type == EVENT_HOMEASSISTANT_START:
-                if start_stop_events.get(event.time_fired_minute) == 2:
+            elif row.event_type == EVENT_HOMEASSISTANT_START:
+                if start_stop_events.get(row.time_fired.minute) == 2:
                     continue
-
                 yield {
-                    "when": event.time_fired_isoformat,
+                    "when": process_timestamp_to_utc_isoformat(row.time_fired)
+                    or dt_util.utcnow(),
                     "name": "Home Assistant",
                     "message": "started",
                     "domain": HA_DOMAIN,
                 }
 
-            elif event.event_type == EVENT_HOMEASSISTANT_STOP:
-                if start_stop_events.get(event.time_fired_minute) == 2:
+            elif row.event_type == EVENT_HOMEASSISTANT_STOP:
+                if start_stop_events.get(row.time_fired.minute) == 2:
                     action = "restarted"
                 else:
                     action = "stopped"
 
                 yield {
-                    "when": event.time_fired_isoformat,
+                    "when": process_timestamp_to_utc_isoformat(row.time_fired)
+                    or dt_util.utcnow(),
                     "name": "Home Assistant",
                     "message": action,
                     "domain": HA_DOMAIN,
                 }
 
-            elif event.event_type == EVENT_LOGBOOK_ENTRY:
+            elif row.event_type == EVENT_LOGBOOK_ENTRY:
+                event = row_indexer.get_event(row)
                 event_data = event.data
                 domain = event_data.get(ATTR_DOMAIN)
                 entity_id = event_data.get(ATTR_ENTITY_ID)
@@ -476,7 +479,7 @@ def humanify(
                     data,
                     entity_id,
                     event,
-                    context_lookup,
+                    row_indexer,
                     entity_attr_cache,
                     external_events,
                 )
@@ -501,19 +504,19 @@ def _get_events(
 
     entity_attr_cache = EntityAttributeCache(hass)
     event_data_cache: dict[str, dict[str, Any]] = {}
-    context_lookup: dict[str | None, LazyEventPartialState | None] = {None: None}
+    row_indexer = RowIndexer(event_data_cache)
+    context_id_cache = row_indexer.context_id_cache
 
-    def yield_events(query: Query) -> Generator[LazyEventPartialState, None, None]:
+    def yield_rows(query: Query) -> Generator[Row, None, None]:
         """Yield Events that are not filtered away."""
         for row in query.yield_per(1000):
-            event = LazyEventPartialState(row, event_data_cache)
-            context_lookup.setdefault(event.context_id, event)
-            if event.event_type == EVENT_CALL_SERVICE:
+            context_id_cache.setdefault(row.context_id, row)
+            if row.event_type == EVENT_CALL_SERVICE:
                 continue
-            if event.event_type == EVENT_STATE_CHANGED or _keep_event(
-                hass, event, entities_filter
+            if row.event_type == EVENT_STATE_CHANGED or _keep_row(
+                hass, row, entities_filter
             ):
-                yield event
+                yield row
 
     if entity_ids is not None:
         entities_filter = generate_filter([], entity_ids, [], [])
@@ -567,9 +570,7 @@ def _get_events(
 
         query = query.order_by(Events.time_fired)
 
-        return list(
-            humanify(hass, yield_events(query), entity_attr_cache, context_lookup)
-        )
+        return list(humanify(hass, yield_rows(query), entity_attr_cache, row_indexer))
 
 
 def _generate_events_query_without_data(session: Session) -> Query:
@@ -716,23 +717,24 @@ def _apply_event_entity_id_matchers(
     return events_query.filter(sqlalchemy.or_(*ors))
 
 
-def _keep_event(
+def _keep_row(
     hass: HomeAssistant,
-    event: LazyEventPartialState,
+    row: Row,
     entities_filter: EntityFilter | Callable[[str], bool] | None = None,
 ) -> bool:
-    if event.event_type in HOMEASSISTANT_EVENTS:
+    event_type = row.event_type
+    if event_type in HOMEASSISTANT_EVENTS:
         return entities_filter is None or entities_filter(HA_DOMAIN_ENTITY_ID)
 
-    if entity_id := event.data_entity_id:
+    if entity_id := _extact_entity_id_from_row(row):
         return entities_filter is None or entities_filter(entity_id)
 
-    if event.event_type in hass.data[DOMAIN]:
+    if event_type in hass.data[DOMAIN]:
         # If the entity_id isn't described, use the domain that describes
         # the event for filtering.
-        domain = hass.data[DOMAIN][event.event_type][0]
+        domain = hass.data[DOMAIN][event_type][0]
     else:
-        domain = event.data_domain
+        domain = _extact_domain_from_row(row)
 
     return domain is not None and (
         entities_filter is None or entities_filter(f"{domain}._")
@@ -743,20 +745,20 @@ def _augment_data_with_context(
     data: dict[str, Any],
     entity_id: str | None,
     event: LazyEventPartialState,
-    context_lookup: dict[str | None, LazyEventPartialState | None],
+    row_indexer: RowIndexer,
     entity_attr_cache: EntityAttributeCache,
     external_events: dict[
         str, tuple[str, Callable[[LazyEventPartialState], dict[str, Any]]]
     ],
 ) -> None:
-    if not (context_event := context_lookup.get(event.context_id)):
+    if not (context_event := row_indexer.get_by_context_id(event.context_id)):
         return
 
     if event == context_event:
         # This is the first event with the given ID. Was it directly caused by
         # a parent event?
         if event.context_parent_id:
-            context_event = context_lookup.get(event.context_parent_id)
+            context_event = row_indexer.get_by_context_id(event.context_parent_id)
         # Ensure the (parent) context_event exists and is not the root cause of
         # this log entry.
         if not context_event or event == context_event:
@@ -774,7 +776,6 @@ def _augment_data_with_context(
         return
 
     event_data = context_event.data
-
     # Call service
     if event_type == EVENT_CALL_SERVICE:
         event_data = context_event.data
@@ -834,6 +835,43 @@ def _is_sensor_continuous(
     )
 
 
+def _extact_entity_id_from_row(row: Row) -> str | None:
+    """Extract an entity id from a event row."""
+    result = ENTITY_ID_JSON_EXTRACT.search(row.shared_data or row.event_data or "")
+    return result.group(1) if result else None
+
+
+def _extact_domain_from_row(row: Row) -> str | None:
+    """Extract an domain from a event row."""
+    result = DOMAIN_JSON_EXTRACT.search(row.shared_data or row.event_data or "")
+    return result.group(1) if result else None
+
+
+class RowIndexer:
+    """A class to index rows by context_id and convert them to LazyEventPartialState."""
+
+    def __init__(self, event_data_cache: dict[str, dict[str, Any]]) -> None:
+        """Init the linker."""
+        self._event_data_cache = event_data_cache
+        self.context_id_cache: dict[str | None, Row | None] = {None: None}
+        self.event_cache: dict[Row, LazyEventPartialState] = {}
+
+    def get_event(self, row: Row) -> LazyEventPartialState:
+        """Get the event from the row."""
+        if event := self.event_cache.get(row):
+            return event
+        event = self.event_cache[row] = LazyEventPartialState(
+            row, self._event_data_cache
+        )
+        return event
+
+    def get_by_context_id(self, context_id: str | None) -> LazyEventPartialState | None:
+        """Get an event from the cache or create it from the row."""
+        if (row := self.context_id_cache.get(context_id)) is not None:
+            return self.get_event(row)
+        return None
+
+
 class LazyEventPartialState:
     """A lazy version of core Event with limited State joined in."""
 
@@ -845,7 +883,6 @@ class LazyEventPartialState:
         "event_type",
         "entity_id",
         "state",
-        "_domain",
         "context_id",
         "context_user_id",
         "context_parent_id",
@@ -862,7 +899,6 @@ class LazyEventPartialState:
         self._row = row
         self._event_data: dict[str, Any] | None = None
         self._time_fired_isoformat: dt | None = None
-        self._domain: str | None = None
         self.event_type: str = self._row.event_type
         self.entity_id: str | None = self._row.entity_id
         self.state = self._row.state
@@ -883,21 +919,7 @@ class LazyEventPartialState:
     @property
     def data_entity_id(self) -> str | None:
         """Extract the entity id from the decoded data or json."""
-        if self._event_data:
-            return self._event_data.get(ATTR_ENTITY_ID)
-
-        result = ENTITY_ID_JSON_EXTRACT.search(
-            self._row.shared_data or self._row.event_data or ""
-        )
-        return result.group(1) if result else None
-
-    @property
-    def data_domain(self) -> str | None:
-        """Extract the domain from the decoded data or json."""
-        result = DOMAIN_JSON_EXTRACT.search(
-            self._row.shared_data or self._row.event_data or ""
-        )
-        return result.group(1) if result else None
+        return _extact_entity_id_from_row(self._row)
 
     @property
     def attributes_friendly_name(self) -> str | None:
