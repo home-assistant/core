@@ -90,6 +90,9 @@ class BAFFan(BAFEntity, FanEntity):
         if preset_mode is not None:
             await self.async_set_preset_mode(preset_mode)
             return
+        if percentage is None and self._device.speed:
+            self._device.fan_mode = OffOnAuto.ON
+            return
         await self.async_set_percentage(percentage or DEFAULT_PERCENTAGE)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
