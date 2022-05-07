@@ -11,15 +11,15 @@ from homeassistant.components.recorder.util import session_scope
 from homeassistant.core import HomeAssistant, callback
 
 from .. import get_instance
-from ..const import DIALECT_MYSQL, DIALECT_POSTGRESQL, DIALECT_SQLITE
+from ..const import SupportedDialect
 from .mysql import db_size_bytes as mysql_db_size_bytes
 from .postgresql import db_size_bytes as postgresql_db_size_bytes
 from .sqlite import db_size_bytes as sqlite_db_size_bytes
 
 DIALECT_TO_GET_SIZE = {
-    DIALECT_SQLITE: sqlite_db_size_bytes,
-    DIALECT_MYSQL: mysql_db_size_bytes,
-    DIALECT_POSTGRESQL: postgresql_db_size_bytes,
+    SupportedDialect.SQLITE: sqlite_db_size_bytes,
+    SupportedDialect.MYSQL: mysql_db_size_bytes,
+    SupportedDialect.POSTGRESQL: postgresql_db_size_bytes,
 }
 
 
