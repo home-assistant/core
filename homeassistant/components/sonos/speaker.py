@@ -107,17 +107,17 @@ class SonosSpeaker:
         self.media = SonosMedia(hass, soco)
         self._plex_plugin: PlexPlugin | None = None
         self._share_link_plugin: ShareLinkPlugin | None = None
-        self.available = True
+        self.available: bool = True
 
         # Device information
-        self.hardware_version = speaker_info["hardware_version"]
-        self.software_version = speaker_info["software_version"]
-        self.mac_address = speaker_info["mac_address"]
-        self.model_name = speaker_info["model_name"]
-        self.model_number = speaker_info["model_number"]
-        self.uid = speaker_info["uid"]
-        self.version = speaker_info["display_version"]
-        self.zone_name = speaker_info["zone_name"]
+        self.hardware_version: str = speaker_info["hardware_version"]
+        self.software_version: str = speaker_info["software_version"]
+        self.mac_address: str = speaker_info["mac_address"]
+        self.model_name: str = speaker_info["model_name"]
+        self.model_number: str = speaker_info["model_number"]
+        self.uid: str = speaker_info["uid"]
+        self.version: str = speaker_info["display_version"]
+        self.zone_name: str = speaker_info["zone_name"]
 
         # Subscriptions and events
         self.subscriptions_failed: bool = False
@@ -786,7 +786,7 @@ class SonosSpeaker:
 
             entity_registry = ent_reg.async_get(self.hass)
             sonos_group = []
-            sonos_group_entities = []
+            sonos_group_entities: list = []
 
             for uid in group:
                 speaker = self.hass.data[DATA_SONOS].discovered.get(uid)
@@ -813,11 +813,13 @@ class SonosSpeaker:
 
             self.coordinator = None
             self.sonos_group = sonos_group
-            self.sonos_group_entities = sonos_group_entities  # type:ignore[assignment]
+            self.sonos_group_entities = sonos_group_entities
             self.async_write_entity_states()
 
             for joined_uid in group[1:]:
-                joined_speaker = self.hass.data[DATA_SONOS].discovered.get(joined_uid)
+                joined_speaker: SonosSpeaker = self.hass.data[
+                    DATA_SONOS
+                ].discovered.get(joined_uid)
                 if joined_speaker:
                     joined_speaker.coordinator = self
                     joined_speaker.sonos_group = sonos_group

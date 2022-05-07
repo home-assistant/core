@@ -131,7 +131,7 @@ async def async_setup_entry(
                 "Service 'sonos.join' is deprecated and will be removed in 2022.8, please use 'media_player.join'"
             )
             master = platform.entities.get(service_call.data[ATTR_MASTER])
-            if master:
+            if isinstance(master, SonosEntity):
                 await SonosSpeaker.join_multi(hass, master.speaker, speakers)
             else:
                 _LOGGER.error(
@@ -142,7 +142,7 @@ async def async_setup_entry(
             _LOGGER.warning(
                 "Service 'sonos.unjoin' is deprecated and will be removed in 2022.8, please use 'media_player.unjoin'"
             )
-            await SonosSpeaker.unjoin_multi(hass, speakers)  # type: ignore[arg-type]
+            await SonosSpeaker.unjoin_multi(hass, speakers)
         elif service_call.service == SERVICE_SNAPSHOT:
             await SonosSpeaker.snapshot_multi(
                 hass, speakers, service_call.data[ATTR_WITH_GROUP]
@@ -269,8 +269,8 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         """Return if the media_player is available."""
         return (
             self.speaker.available
-            and self.speaker.sonos_group_entities
-            and self.media.playback_status
+            and self.speaker.sonos_group_entities is not None
+            and self.media.playback_status is not None
         )
 
     @property
@@ -418,7 +418,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         self.soco.volume = str(int(volume * 100))
 
     @soco_error(UPNP_ERRORS_TO_IGNORE)
-    def set_shuffle(self, shuffle: str) -> None:
+    def set_shuffle(self, shuffle: bool) -> None:
         """Enable/Disable shuffle mode."""
         sonos_shuffle = shuffle
         sonos_repeat = PLAY_MODES[self.media.play_mode][1]
@@ -642,7 +642,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         include_linked_zones: bool | None = None,
     ) -> None:
         """Set the alarm clock on the player."""
-        alarm = None
+        alarm: alarms.Alarm | None = None
         for one_alarm in alarms.get_alarms(self.coordinator.soco):
             if one_alarm.alarm_id == str(alarm_id):
                 alarm = one_alarm

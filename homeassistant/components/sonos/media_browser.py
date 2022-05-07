@@ -265,7 +265,7 @@ async def root_payload(
     get_browse_image_url: GetBrowseImageUrlType,
 ) -> BrowseMedia:
     """Return root payload for Sonos."""
-    children = []
+    children: list[BrowseMedia] = []
 
     if speaker.favorites:
         children.append(
