@@ -20,7 +20,6 @@ TO_REDACT = [
 ]
 
 # Private variable access needed for diagnostics
-# flake8: noqa
 # pylint: disable=protected-access
 
 

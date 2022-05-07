@@ -2,12 +2,9 @@
 
 from homeassistant.components.diagnostics import REDACTED
 
+from .common import DEVICE_INFO_BASIC_1, LOCATION_ID, init_integration
+
 from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.components.totalconnect.common import (
-    DEVICE_INFO_BASIC_1,
-    LOCATION_ID,
-    init_integration,
-)
 
 
 async def test_entry_diagnostics(hass, hass_client):
