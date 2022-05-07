@@ -6,13 +6,24 @@ from typing import cast
 from aiobafi6 import Device
 
 from homeassistant import config_entries
-from homeassistant.components.number import NumberEntity, NumberEntityDescription
+from homeassistant.components.number import (
+    NumberEntity,
+    NumberEntityDescription,
+    NumberMode,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, HALF_DAY_SECS, ONE_DAY_SECS, ONE_MIN_SECS, SPEED_RANGE
 from .entity import BAFEntity
 from .models import BAFData
+
+MODES = {
+    "return_to_auto_timeout": NumberMode.SLIDER,
+    "motion_sense_timeout": NumberMode.SLIDER,
+    "light_return_to_auto_timeout": NumberMode.SLIDER,
+    "light_auto_motion_timeout": NumberMode.SLIDER,
+}
 
 FAN_NUMBER_DESCRIPTIONS = (
     NumberEntityDescription(
@@ -89,6 +100,7 @@ class BAFNumber(BAFEntity, NumberEntity):
         self.entity_description = description
         super().__init__(device, f"{device.name} {description.name}")
         self._attr_unique_id = f"{self._device.mac_address}-{description.key}"
+        self._attr_mode = MODES.get(description.key, NumberMode.BOX)
 
     @callback
     def _async_update_attrs(self) -> None:
