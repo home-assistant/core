@@ -8,6 +8,7 @@ from sqlalchemy.orm.session import Session
 from yarl import URL
 
 from homeassistant.components import system_health
+from homeassistant.components.recorder.util import session_scope
 from homeassistant.core import HomeAssistant, callback
 
 from .. import get_instance
@@ -31,15 +32,17 @@ def async_register(
     register.async_register_info(system_health_info)
 
 
-def _get_estimated_db_size(
+def _get_db_stats(
     session_maker: Callable[[], Session], dialect: str, database_name: str
-) -> str | None:
-    """Get the estimated size of the database."""
-    if (get_size := DIALECT_TO_GET_SIZE.get(dialect)) and (
-        db_bytes := get_size(session_maker(), database_name)
-    ):
-        return f"{db_bytes/1024/1024:.2f} MiB"
-    return None
+) -> dict[str, Any]:
+    """Get the stats about the database."""
+    db_stats: dict[str, Any] = {}
+    with session_scope(session=session_maker()) as session:
+        if (get_size := DIALECT_TO_GET_SIZE.get(dialect)) and (
+            db_bytes := get_size(session, database_name)
+        ):
+            db_stats["estimated_db_size"] = f"{db_bytes/1024/1024:.2f} MiB"
+    return db_stats
 
 
 async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
@@ -47,13 +50,12 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
     instance = get_instance(hass)
     run_history = instance.run_history
     database_name = URL(instance.db_url).path.lstrip("/")
-    estimated_db_size = await instance.async_add_executor_job(
-        _get_estimated_db_size, instance.get_session, instance.dialect, database_name
-    )
-    health_data = {
+    db_stats: dict[str, Any] = {}
+    if instance.async_db_ready.done():
+        db_stats = await instance.async_add_executor_job(
+            _get_db_stats, instance.get_session, instance.dialect, database_name
+        )
+    return {
         "oldest_recorder_run": run_history.first.start,
         "current_recorder_run": run_history.current.start,
-    }
-    if estimated_db_size:
-        health_data["estimated_db_size"] = estimated_db_size
-    return health_data
+    } | db_stats
