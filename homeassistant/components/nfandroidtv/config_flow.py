@@ -56,7 +56,6 @@ class NFAndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             name = user_input[CONF_NAME]
 
             self._async_abort_entries_match({CONF_HOST: host})
-            await self.async_set_unique_id(host)
             error = await self._async_try_connect(host)
             if error is None:
                 return self.async_create_entry(
