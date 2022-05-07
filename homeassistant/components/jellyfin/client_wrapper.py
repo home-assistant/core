@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import socket
 from typing import Any
-import uuid
 
 from jellyfin_apiclient_python import Jellyfin, JellyfinClient
 from jellyfin_apiclient_python.api import API
@@ -34,20 +33,19 @@ async def validate_input(
     return userid
 
 
-def create_client() -> JellyfinClient:
+def create_client(client_id: str) -> JellyfinClient:
     """Create a new Jellyfin client."""
     jellyfin = Jellyfin()
     client = jellyfin.get_client()
-    _setup_client(client)
+    _setup_client(client, client_id)
     return client
 
 
-def _setup_client(client: JellyfinClient) -> None:
+def _setup_client(client: JellyfinClient, client_id: str) -> None:
     """Configure the Jellyfin client with a number of required properties."""
     player_name = socket.gethostname()
-    client_uuid = str(uuid.uuid4())
 
-    client.config.app(USER_APP_NAME, CLIENT_VERSION, player_name, client_uuid)
+    client.config.app(USER_APP_NAME, CLIENT_VERSION, player_name, client_id)
     client.config.http(USER_AGENT)
 
 
