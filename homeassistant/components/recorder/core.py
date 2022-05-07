@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Iterable
+import contextlib
 from datetime import datetime, timedelta
 import logging
 import queue
@@ -197,7 +198,9 @@ class Recorder(threading.Thread):
     @property
     def dialect_name(self) -> SupportedDialect | None:
         """Return the dialect the recorder uses."""
-        return SupportedDialect(self.engine.dialect.name) if self.engine else None
+        with contextlib.suppress(ValueError):
+            return SupportedDialect(self.engine.dialect.name) if self.engine else None
+        return None
 
     @property
     def _using_file_sqlite(self) -> bool:
