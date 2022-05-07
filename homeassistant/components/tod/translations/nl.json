@@ -1,0 +1,31 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "after": "Aan na",
+                    "after_time": "Op tijd",
+                    "before": "Uit na",
+                    "before_time": "Uit tijd",
+                    "name": "Naam\n"
+                },
+                "description": "Maak een binaire sensor die afhankelijk van de tijd in- of uitgeschakeld wordt.",
+                "title": "Tijden van de dag sensor toevoegen"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "after": "Aan na",
+                    "after_time": "Op tijd",
+                    "before": "Uit na",
+                    "before_time": "Uit tijd"
+                },
+                "description": "Maak een binaire sensor die afhankelijk van de tijd in- of uitgeschakeld wordt."
+            }
+        }
+    },
+    "title": "Tijd van de dag Sensor"
+}

@@ -1,8 +1,8 @@
 {
     "config": {
         "step": {
-            "init": {
-                "data": {
+            "config": {
+                "user": {
                     "entity_id": "\u05d9\u05e9\u05d5\u05ea \u05de\u05ea\u05d2"
                 }
             }

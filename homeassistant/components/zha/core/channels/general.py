@@ -6,6 +6,7 @@ from collections.abc import Coroutine
 from typing import Any
 
 import zigpy.exceptions
+import zigpy.types as t
 from zigpy.zcl.clusters import general
 from zigpy.zcl.foundation import Status
 
@@ -300,7 +301,6 @@ class OnOffChannel(ZigbeeChannel):
     ) -> None:
         """Initialize OnOffChannel."""
         super().__init__(cluster, ch_pool)
-        self._state = None
         self._off_listener = None
 
     @property
@@ -308,15 +308,31 @@ class OnOffChannel(ZigbeeChannel):
         """Return cached value of on/off attribute."""
         return self.cluster.get("on_off")
 
+    async def turn_on(self) -> bool:
+        """Turn the on off cluster on."""
+        result = await self.on()
+        if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
+            return False
+        self.cluster.update_attribute(self.ON_OFF, t.Bool.true)
+        return True
+
+    async def turn_off(self) -> bool:
+        """Turn the on off cluster off."""
+        result = await self.off()
+        if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
+            return False
+        self.cluster.update_attribute(self.ON_OFF, t.Bool.false)
+        return True
+
     @callback
     def cluster_command(self, tsn, command_id, args):
         """Handle commands received to this cluster."""
         cmd = parse_and_log_command(self, tsn, command_id, args)
 
         if cmd in ("off", "off_with_effect"):
-            self.attribute_updated(self.ON_OFF, False)
+            self.cluster.update_attribute(self.ON_OFF, t.Bool.false)
         elif cmd in ("on", "on_with_recall_global_scene"):
-            self.attribute_updated(self.ON_OFF, True)
+            self.cluster.update_attribute(self.ON_OFF, t.Bool.true)
         elif cmd == "on_with_timed_off":
             should_accept = args[0]
             on_time = args[1]
@@ -325,7 +341,7 @@ class OnOffChannel(ZigbeeChannel):
                 if self._off_listener is not None:
                     self._off_listener()
                     self._off_listener = None
-                self.attribute_updated(self.ON_OFF, True)
+                self.cluster.update_attribute(self.ON_OFF, t.Bool.true)
                 if on_time > 0:
                     self._off_listener = async_call_later(
                         self._ch_pool.hass,
@@ -333,13 +349,13 @@ class OnOffChannel(ZigbeeChannel):
                         self.set_to_off,
                     )
         elif cmd == "toggle":
-            self.attribute_updated(self.ON_OFF, not bool(self._state))
+            self.cluster.update_attribute(self.ON_OFF, not bool(self.on_off))
 
     @callback
     def set_to_off(self, *_):
         """Set the state to off."""
         self._off_listener = None
-        self.attribute_updated(self.ON_OFF, False)
+        self.cluster.update_attribute(self.ON_OFF, t.Bool.false)
 
     @callback
     def attribute_updated(self, attrid, value):
@@ -348,11 +364,6 @@ class OnOffChannel(ZigbeeChannel):
             self.async_send_signal(
                 f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", attrid, "on_off", value
             )
-            self._state = bool(value)
-
-    async def async_initialize_channel_specific(self, from_cache: bool) -> None:
-        """Initialize channel."""
-        self._state = self.on_off
 
     async def async_update(self):
         """Initialize channel."""
@@ -360,9 +371,7 @@ class OnOffChannel(ZigbeeChannel):
             return
         from_cache = not self._ch_pool.is_mains_powered
         self.debug("attempting to update onoff state - from cache: %s", from_cache)
-        state = await self.get_attribute_value(self.ON_OFF, from_cache=from_cache)
-        if state is not None:
-            self._state = bool(state)
+        await self.get_attribute_value(self.ON_OFF, from_cache=from_cache)
         await super().async_update()
 
 

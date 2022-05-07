@@ -9,6 +9,7 @@
             "device_not_found": "Perangkat tidak ditemukan selama penemuan, coba tambahkan lagi.",
             "inconsistent_device": "Protokol yang diharapkan tidak ditemukan selama penemuan. Ini biasanya terjadi karena masalah dengan DNS multicast (Zeroconf). Coba tambahkan perangkat lagi.",
             "invalid_config": "Konfigurasi untuk perangkat ini tidak lengkap. Coba tambahkan lagi.",
+            "ipv6_not_supported": "IPv6 tidak didukung.",
             "no_devices_found": "Tidak ada perangkat yang ditemukan di jaringan",
             "reauth_successful": "Autentikasi ulang berhasil",
             "setup_failed": "Gagal menyiapkan perangkat.",

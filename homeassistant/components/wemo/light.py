@@ -14,8 +14,8 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
-    SUPPORT_TRANSITION,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -30,7 +30,10 @@ from .entity import WemoBinaryStateEntity, WemoEntity
 from .wemo_device import DeviceCoordinator
 
 SUPPORT_WEMO = (
-    SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_COLOR | SUPPORT_TRANSITION
+    SUPPORT_BRIGHTNESS
+    | SUPPORT_COLOR_TEMP
+    | SUPPORT_COLOR
+    | LightEntityFeature.TRANSITION
 )
 
 # The WEMO_ constants below come from pywemo itself

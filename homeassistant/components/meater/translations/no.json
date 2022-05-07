@@ -1,0 +1,27 @@
+{
+    "config": {
+        "error": {
+            "invalid_auth": "Ugyldig godkjenning",
+            "service_unavailable_error": "API-en er for \u00f8yeblikket utilgjengelig, pr\u00f8v igjen senere.",
+            "unknown_auth_error": "Uventet feil"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Passord"
+                },
+                "description": "Bekreft passordet for Meater Cloud-kontoen {username} ."
+            },
+            "user": {
+                "data": {
+                    "password": "Passord",
+                    "username": "Brukernavn"
+                },
+                "data_description": {
+                    "username": "Meater Cloud brukernavn, vanligvis en e-postadresse."
+                },
+                "description": "Sett opp din Meater Cloud-konto."
+            }
+        }
+    }
+}
