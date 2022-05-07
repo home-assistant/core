@@ -12,14 +12,14 @@ from homeassistant.core import HomeAssistant, callback
 
 from .. import get_instance
 from ..const import DIALECT_MYSQL, DIALECT_POSTGRESQL, DIALECT_SQLITE
-from .mysql import db_size_query as mysql_db_size_query
-from .postgresql import db_size_query as postgresql_db_size_query
-from .sqlite import db_size_query as sqlite_db_size_query
+from .mysql import db_size_bytes as mysql_db_size_bytes
+from .postgresql import db_size_bytes as postgresql_db_size_bytes
+from .sqlite import db_size_bytes as sqlite_db_size_bytes
 
-DIALECT_TO_QUERY = {
-    DIALECT_SQLITE: sqlite_db_size_query,
-    DIALECT_MYSQL: mysql_db_size_query,
-    DIALECT_POSTGRESQL: postgresql_db_size_query,
+DIALECT_TO_GET_SIZE = {
+    DIALECT_SQLITE: sqlite_db_size_bytes,
+    DIALECT_MYSQL: mysql_db_size_bytes,
+    DIALECT_POSTGRESQL: postgresql_db_size_bytes,
 }
 
 
@@ -35,8 +35,10 @@ def _get_estimated_db_size(
     session_maker: Callable[[], Session], dialect: str, database_name: str
 ) -> str | None:
     """Get the estimated size of the database."""
-    if query := DIALECT_TO_QUERY.get(dialect):
-        return query(session_maker(), database_name)
+    if (get_size := DIALECT_TO_GET_SIZE.get(dialect)) and (
+        db_bytes := get_size(session_maker(), database_name)
+    ):
+        return f"{db_bytes/1024/1024:.2f} MiB"
     return None
 
 

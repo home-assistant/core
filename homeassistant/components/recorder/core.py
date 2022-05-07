@@ -196,7 +196,7 @@ class Recorder(threading.Thread):
     @property
     def dialect(self) -> str | None:
         """Return the dialect the recorder uses."""
-        return self.engine.dialect if self.engine else None
+        return self.engine.dialect.name if self.engine else None
 
     @property
     def _using_file_sqlite(self) -> bool:
