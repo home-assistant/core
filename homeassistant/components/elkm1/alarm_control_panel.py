@@ -216,7 +216,7 @@ class ElkArea(ElkAttachedEntity, AlarmControlPanelEntity, RestoreEntity):
 
         if self._element.alarm_state is None:
             self._state = None
-        elif self._element.alarm_state.value >= AlarmState.FIRE_ALARM.value:
+        elif self._element.in_alarm_state():
             # Area is in alarm state
             self._state = STATE_ALARM_TRIGGERED
         elif self._entry_exit_timer_is_running():
