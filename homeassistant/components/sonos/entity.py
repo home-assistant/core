@@ -13,13 +13,7 @@ import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
-from .const import (
-    DATA_SONOS,
-    DOMAIN,
-    SONOS_FALLBACK_POLL,
-    SONOS_FAVORITES_UPDATED,
-    SONOS_STATE_UPDATED,
-)
+from .const import DATA_SONOS, DOMAIN, SONOS_FALLBACK_POLL, SONOS_STATE_UPDATED
 from .exception import SonosUpdateError
 from .speaker import SonosSpeaker
 
@@ -51,13 +45,6 @@ class SonosEntity(Entity):
             async_dispatcher_connect(
                 self.hass,
                 f"{SONOS_STATE_UPDATED}-{self.soco.uid}",
-                self.async_write_ha_state,
-            )
-        )
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{SONOS_FAVORITES_UPDATED}-{self.soco.household_id}",
                 self.async_write_ha_state,
             )
         )

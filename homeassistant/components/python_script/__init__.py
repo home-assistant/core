@@ -236,7 +236,6 @@ class StubPrinter:
 
     def _call_print(self, *objects, **kwargs):
         """Print text."""
-        # pylint: disable=no-self-use
         _LOGGER.warning("Don't use print() inside scripts. Use logger.info() instead")
 
 
@@ -246,7 +245,6 @@ class TimeWrapper:
     # Class variable, only going to warn once per Home Assistant run
     warned = False
 
-    # pylint: disable=no-self-use
     def sleep(self, *args, **kwargs):
         """Sleep method that warns once."""
         if not TimeWrapper.warned:

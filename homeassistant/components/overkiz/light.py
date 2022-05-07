@@ -8,9 +8,7 @@ from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_RGB_COLOR,
-    COLOR_MODE_BRIGHTNESS,
-    COLOR_MODE_ONOFF,
-    COLOR_MODE_RGB,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -47,14 +45,15 @@ class OverkizLight(OverkizEntity, LightEntity):
         """Initialize a device."""
         super().__init__(device_url, coordinator)
 
-        self._attr_supported_color_modes = set()
+        self._attr_supported_color_modes: set[ColorMode] = set()
 
         if self.executor.has_command(OverkizCommand.SET_RGB):
-            self._attr_supported_color_modes.add(COLOR_MODE_RGB)
-        if self.executor.has_command(OverkizCommand.SET_INTENSITY):
-            self._attr_supported_color_modes.add(COLOR_MODE_BRIGHTNESS)
-        if not self.supported_color_modes:
-            self._attr_supported_color_modes = {COLOR_MODE_ONOFF}
+            self._attr_color_mode = ColorMode.RGB
+        elif self.executor.has_command(OverkizCommand.SET_INTENSITY):
+            self._attr_color_mode = ColorMode.BRIGHTNESS
+        else:
+            self._attr_color_mode = ColorMode.ONOFF
+        self._attr_supported_color_modes = {self._attr_color_mode}
 
     @property
     def is_on(self) -> bool:

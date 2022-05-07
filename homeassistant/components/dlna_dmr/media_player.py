@@ -45,6 +45,7 @@ from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
+    CONF_BROWSE_UNFILTERED,
     CONF_CALLBACK_URL_OVERRIDE,
     CONF_LISTEN_PORT,
     CONF_POLL_AVAILABILITY,
@@ -61,18 +62,20 @@ from .data import EventListenAddr, get_domain_data
 
 PARALLEL_UPDATES = 0
 
-_T = TypeVar("_T", bound="DlnaDmrEntity")
+_DlnaDmrEntityT = TypeVar("_DlnaDmrEntityT", bound="DlnaDmrEntity")
 _R = TypeVar("_R")
 _P = ParamSpec("_P")
 
 
 def catch_request_errors(
-    func: Callable[Concatenate[_T, _P], Awaitable[_R]]  # type: ignore[misc]
-) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, _R | None]]:  # type: ignore[misc]
+    func: Callable[Concatenate[_DlnaDmrEntityT, _P], Awaitable[_R]]
+) -> Callable[Concatenate[_DlnaDmrEntityT, _P], Coroutine[Any, Any, _R | None]]:
     """Catch UpnpError errors."""
 
     @functools.wraps(func)
-    async def wrapper(self: _T, *args: _P.args, **kwargs: _P.kwargs) -> _R | None:
+    async def wrapper(
+        self: _DlnaDmrEntityT, *args: _P.args, **kwargs: _P.kwargs
+    ) -> _R | None:
         """Catch UpnpError errors and check availability before and after request."""
         if not self.available:
             _LOGGER.warning(
@@ -80,7 +83,7 @@ def catch_request_errors(
             )
             return None
         try:
-            return await func(self, *args, **kwargs)  # type: ignore[no-any-return]  # mypy can't yet infer 'func'
+            return await func(self, *args, **kwargs)
         except UpnpError as err:
             self.check_available = True
             _LOGGER.error("Error during call %s: %r", func.__name__, err)
@@ -106,6 +109,7 @@ async def async_setup_entry(
         event_callback_url=entry.options.get(CONF_CALLBACK_URL_OVERRIDE),
         poll_availability=entry.options.get(CONF_POLL_AVAILABILITY, False),
         location=entry.data[CONF_URL],
+        browse_unfiltered=entry.options.get(CONF_BROWSE_UNFILTERED, False),
     )
 
     async_add_entities([entity])
@@ -122,6 +126,8 @@ class DlnaDmrEntity(MediaPlayerEntity):
     # Last known URL for the device, used when adding this entity to hass to try
     # to connect before SSDP has rediscovered it, or when SSDP discovery fails.
     location: str
+    # Should the async_browse_media function *not* filter out incompatible media?
+    browse_unfiltered: bool
 
     _device_lock: asyncio.Lock  # Held when connecting or disconnecting the device
     _device: DmrDevice | None = None
@@ -144,6 +150,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
         event_callback_url: str | None,
         poll_availability: bool,
         location: str,
+        browse_unfiltered: bool,
     ) -> None:
         """Initialize DLNA DMR entity."""
         self.udn = udn
@@ -152,6 +159,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
         self._event_addr = EventListenAddr(None, event_port, event_callback_url)
         self.poll_availability = poll_availability
         self.location = location
+        self.browse_unfiltered = browse_unfiltered
         self._device_lock = asyncio.Lock()
 
     async def async_added_to_hass(self) -> None:
@@ -273,6 +281,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
         )
         self.location = entry.data[CONF_URL]
         self.poll_availability = entry.options.get(CONF_POLL_AVAILABILITY, False)
+        self.browse_unfiltered = entry.options.get(CONF_BROWSE_UNFILTERED, False)
 
         new_port = entry.options.get(CONF_LISTEN_PORT) or 0
         new_callback_url = entry.options.get(CONF_CALLBACK_URL_OVERRIDE)
@@ -760,14 +769,21 @@ class DlnaDmrEntity(MediaPlayerEntity):
         # media_content_type is ignored; it's the content_type of the current
         # media_content_id, not the desired content_type of whomever is calling.
 
-        content_filter = self._get_content_filter()
+        if self.browse_unfiltered:
+            content_filter = None
+        else:
+            content_filter = self._get_content_filter()
 
         return await media_source.async_browse_media(
             self.hass, media_content_id, content_filter=content_filter
         )
 
     def _get_content_filter(self) -> Callable[[BrowseMedia], bool]:
-        """Return a function that filters media based on what the renderer can play."""
+        """Return a function that filters media based on what the renderer can play.
+
+        The filtering is pretty loose; it's better to show something that can't
+        be played than hide something that can.
+        """
         if not self._device or not self._device.sink_protocol_info:
             # Nothing is specified by the renderer, so show everything
             _LOGGER.debug("Get content filter with no device or sink protocol info")
@@ -778,18 +794,25 @@ class DlnaDmrEntity(MediaPlayerEntity):
             # Renderer claims it can handle everything, so show everything
             return lambda _: True
 
-        # Convert list of things like "http-get:*:audio/mpeg:*" to just "audio/mpeg"
-        content_types: list[str] = []
+        # Convert list of things like "http-get:*:audio/mpeg;codecs=mp3:*"
+        # to just "audio/mpeg"
+        content_types = set[str]()
         for protocol_info in self._device.sink_protocol_info:
             protocol, _, content_format, _ = protocol_info.split(":", 3)
+            # Transform content_format for better generic matching
+            content_format = content_format.lower().replace("/x-", "/", 1)
+            content_format = content_format.partition(";")[0]
+
             if protocol in STREAMABLE_PROTOCOLS:
-                content_types.append(content_format)
+                content_types.add(content_format)
 
-        def _content_type_filter(item: BrowseMedia) -> bool:
-            """Filter media items by their content_type."""
-            return item.media_content_type in content_types
+        def _content_filter(item: BrowseMedia) -> bool:
+            """Filter media items by their media_content_type."""
+            content_type = item.media_content_type
+            content_type = content_type.lower().replace("/x-", "/", 1).partition(";")[0]
+            return content_type in content_types
 
-        return _content_type_filter
+        return _content_filter
 
     @property
     def media_title(self) -> str | None:

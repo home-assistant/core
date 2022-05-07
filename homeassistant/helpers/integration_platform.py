@@ -48,7 +48,7 @@ async def _async_process_single_integration_platform_component(
         return
 
     try:
-        await integration_platform.process_platform(hass, component_name, platform)  # type: ignore[misc,operator] # https://github.com/python/mypy/issues/5485
+        await integration_platform.process_platform(hass, component_name, platform)
     except Exception:  # pylint: disable=broad-except
         _LOGGER.exception(
             "Error processing platform %s.%s", component_name, platform_name
@@ -70,7 +70,7 @@ async def async_process_integration_platform_for_component(
     are created.
     """
     if DATA_INTEGRATION_PLATFORMS not in hass.data:
-        # There are no integraton platforms loaded yet
+        # There are no integration platforms loaded yet
         return
     integration_platforms: list[IntegrationPlatform] = hass.data[
         DATA_INTEGRATION_PLATFORMS

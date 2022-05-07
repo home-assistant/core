@@ -1161,7 +1161,7 @@ async def test_get_with_templates(hass, mqtt_mock, caplog):
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("hvac_action") == "cooling"
     assert (
-        "Invalid ['off', 'heating', 'cooling', 'drying', 'idle', 'fan'] action: None, ignoring"
+        "Invalid ['cooling', 'drying', 'fan', 'heating', 'idle', 'off'] action: None, ignoring"
         in caplog.text
     )
 

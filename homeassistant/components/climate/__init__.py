@@ -75,6 +75,7 @@ from .const import (  # noqa: F401
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
     ClimateEntityFeature,
+    HVACAction,
     HVACMode,
 )
 
@@ -188,9 +189,9 @@ class ClimateEntity(Entity):
     _attr_current_temperature: float | None = None
     _attr_fan_mode: str | None
     _attr_fan_modes: list[str] | None
-    _attr_hvac_action: str | None = None
+    _attr_hvac_action: HVACAction | str | None = None
     _attr_hvac_mode: HVACMode | str | None
-    _attr_hvac_modes: list[HVACMode | str]
+    _attr_hvac_modes: list[HVACMode] | list[str]
     _attr_is_aux_heat: bool | None
     _attr_max_humidity: int = DEFAULT_MAX_HUMIDITY
     _attr_max_temp: float
@@ -340,16 +341,13 @@ class ClimateEntity(Entity):
         return self._attr_hvac_mode
 
     @property
-    def hvac_modes(self) -> list[HVACMode | str]:
+    def hvac_modes(self) -> list[HVACMode] | list[str]:
         """Return the list of available hvac operation modes."""
         return self._attr_hvac_modes
 
     @property
-    def hvac_action(self) -> str | None:
-        """Return the current running hvac operation if supported.
-
-        Need to be one of CURRENT_HVAC_*.
-        """
+    def hvac_action(self) -> HVACAction | str | None:
+        """Return the current running hvac operation if supported."""
         return self._attr_hvac_action
 
     @property
@@ -465,11 +463,11 @@ class ClimateEntity(Entity):
         """Set new target fan mode."""
         await self.hass.async_add_executor_job(self.set_fan_mode, fan_mode)
 
-    def set_hvac_mode(self, hvac_mode: HVACMode | str) -> None:
+    def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         raise NotImplementedError()
 
-    async def async_set_hvac_mode(self, hvac_mode: HVACMode | str) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         await self.hass.async_add_executor_job(self.set_hvac_mode, hvac_mode)
 

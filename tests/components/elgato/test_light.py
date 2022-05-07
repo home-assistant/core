@@ -13,9 +13,8 @@ from homeassistant.components.light import (
     ATTR_MAX_MIREDS,
     ATTR_MIN_MIREDS,
     ATTR_SUPPORTED_COLOR_MODES,
-    COLOR_MODE_COLOR_TEMP,
-    COLOR_MODE_HS,
     DOMAIN as LIGHT_DOMAIN,
+    ColorMode,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -45,10 +44,10 @@ async def test_light_state_temperature(
     assert state.attributes.get(ATTR_BRIGHTNESS) == 54
     assert state.attributes.get(ATTR_COLOR_TEMP) == 297
     assert state.attributes.get(ATTR_HS_COLOR) == (27.316, 47.743)
-    assert state.attributes.get(ATTR_COLOR_MODE) == COLOR_MODE_COLOR_TEMP
+    assert state.attributes.get(ATTR_COLOR_MODE) == ColorMode.COLOR_TEMP
     assert state.attributes.get(ATTR_MIN_MIREDS) == 143
     assert state.attributes.get(ATTR_MAX_MIREDS) == 344
-    assert state.attributes.get(ATTR_SUPPORTED_COLOR_MODES) == [COLOR_MODE_COLOR_TEMP]
+    assert state.attributes.get(ATTR_SUPPORTED_COLOR_MODES) == [ColorMode.COLOR_TEMP]
     assert state.state == STATE_ON
 
     entry = entity_registry.async_get("light.frenck")
@@ -90,10 +89,10 @@ async def test_light_state_color(
     assert state.attributes.get(ATTR_HS_COLOR) == (358.0, 6.0)
     assert state.attributes.get(ATTR_MIN_MIREDS) == 153
     assert state.attributes.get(ATTR_MAX_MIREDS) == 285
-    assert state.attributes.get(ATTR_COLOR_MODE) == COLOR_MODE_HS
+    assert state.attributes.get(ATTR_COLOR_MODE) == ColorMode.HS
     assert state.attributes.get(ATTR_SUPPORTED_COLOR_MODES) == [
-        COLOR_MODE_COLOR_TEMP,
-        COLOR_MODE_HS,
+        ColorMode.COLOR_TEMP,
+        ColorMode.HS,
     ]
     assert state.state == STATE_ON
 

@@ -132,7 +132,7 @@ class SonosMedia:
         self.title = track_info.get("title")
         self.image_url = track_info.get("album_art")
 
-        playlist_position = int(track_info.get("playlist_position"))
+        playlist_position = int(track_info.get("playlist_position", -1))
         if playlist_position > 0:
             self.queue_position = playlist_position
 

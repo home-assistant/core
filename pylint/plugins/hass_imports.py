@@ -115,6 +115,16 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
             constant=re.compile(r"^SUPPORT_(\w*)$"),
         ),
     ],
+    "homeassistant.components.light": [
+        ObsoleteImportMatch(
+            reason="replaced by ColorMode enum",
+            constant=re.compile(r"^COLOR_MODE_(\w*)$"),
+        ),
+        ObsoleteImportMatch(
+            reason="replaced by LightEntityFeature enum",
+            constant=re.compile("^SUPPORT_(EFFECT|FLASH|TRANSITION)$"),
+        ),
+    ],
     "homeassistant.components.media_player": [
         ObsoleteImportMatch(
             reason="replaced by MediaPlayerDeviceClass enum",
@@ -163,6 +173,12 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
         ObsoleteImportMatch(
             reason="replaced by SwitchDeviceClass enum",
             constant=re.compile(r"^DEVICE_CLASS_(\w*)$"),
+        ),
+    ],
+    "homeassistant.components.vacuum": [
+        ObsoleteImportMatch(
+            reason="replaced by VacuumEntityFeature enum",
+            constant=re.compile(r"^SUPPORT_(\w*)$"),
         ),
     ],
     "homeassistant.components.water_heater": [

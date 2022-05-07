@@ -18,6 +18,7 @@ RUN \
         libavfilter-dev \
         libpcap-dev \
         libturbojpeg0 \
+        libxml2 \
         git \
         cmake \
     && apt-get clean \
