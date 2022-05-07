@@ -18,8 +18,10 @@ import voluptuous as vol
 from homeassistant import config_entries, exceptions
 from homeassistant.components import zeroconf
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 
@@ -35,7 +37,10 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(data: dict[str, Any]) -> dict[str, str]:
+async def validate_input(
+    hass: HomeAssistant,
+    data: dict[str, Any],
+) -> dict[str, str]:
     """Validate the user input allows us to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
@@ -49,7 +54,7 @@ async def validate_input(data: dict[str, Any]) -> dict[str, str]:
     )
     try:
         async with async_timeout.timeout(20):
-            await websocket_client.connect()
+            await websocket_client.connect(session=async_get_clientsession(hass))
     except (asyncio.TimeoutError, ConnectionErrorException) as exception:
         _LOGGER.info(exception)
         raise CannotConnect from exception
@@ -87,12 +92,13 @@ async def validate_input(data: dict[str, Any]) -> dict[str, str]:
 
 
 async def _async_get_info(
-    user_input: dict[str, Any]
+    hass: HomeAssistant,
+    user_input: dict[str, Any],
 ) -> tuple[dict[str, str], dict[str, str] | None]:
     errors = {}
 
     try:
-        info = await validate_input(user_input)
+        info = await validate_input(hass, user_input)
     except CannotConnect:
         errors["base"] = "cannot_connect"
     except InvalidAuth:
@@ -129,7 +135,7 @@ class ConfigFlow(
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA
             )
 
-        errors, info = await _async_get_info(user_input)
+        errors, info = await _async_get_info(self.hass, user_input)
         if not errors and info is not None:
             # Check if already configured
             await self.async_set_unique_id(info["uuid"], raise_on_progress=False)
@@ -149,7 +155,7 @@ class ConfigFlow(
 
         if user_input is not None:
             user_input = {**self._input, **user_input}
-            errors, info = await _async_get_info(user_input)
+            errors, info = await _async_get_info(self.hass, user_input)
             if not errors and info is not None:
                 # Check if already configured
                 existing_entry = await self.async_set_unique_id(info["uuid"])
