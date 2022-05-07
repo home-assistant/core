@@ -165,7 +165,14 @@ class SQLOptionsFlowHandler(config_entries.OptionsFlow):
             except ValueError:
                 errors["query"] = "query_invalid"
             else:
-                return self.async_create_entry(title="", data=user_input)
+                return self.async_create_entry(
+                    title="",
+                    data={
+                        CONF_NAME: self.entry.title,
+                        **self.entry.options,
+                        **user_input,
+                    },
+                )
 
         return self.async_show_form(
             step_id="init",
