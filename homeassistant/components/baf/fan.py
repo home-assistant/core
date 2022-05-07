@@ -32,9 +32,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up SenseME fans."""
     data: BAFData = hass.data[DOMAIN][entry.entry_id]
-    device = data.device
-    if device.has_fan:
-        async_add_entities([BAFFan(device)])
+    if data.device.has_fan:
+        async_add_entities([BAFFan(data.device)])
 
 
 class BAFFan(BAFEntity, FanEntity):
@@ -51,10 +50,9 @@ class BAFFan(BAFEntity, FanEntity):
     @callback
     def _async_update_attrs(self) -> None:
         """Update attrs from device."""
-        device = self._device
-        self._attr_is_on = device.fan_mode == OffOnAuto.ON
+        self._attr_is_on = self._device.fan_mode == OffOnAuto.ON
         self._attr_current_direction = DIRECTION_FORWARD
-        if device.reverse_enable:
+        if self._device.reverse_enable:
             self._attr_current_direction = DIRECTION_REVERSE
         if self._device.speed is not None:
             self._attr_percentage = ranged_value_to_percentage(
@@ -62,7 +60,7 @@ class BAFFan(BAFEntity, FanEntity):
             )
         else:
             self._attr_percentage = None
-        auto = device.fan_mode == OffOnAuto.AUTO
+        auto = self._device.fan_mode == OffOnAuto.AUTO
         self._attr_preset_mode = PRESET_MODE_AUTO if auto else None
         super()._async_update_attrs()
 
