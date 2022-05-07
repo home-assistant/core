@@ -1,5 +1,4 @@
 """Constants for the Big Ass Fans integration."""
-from enum import IntEnum
 
 DOMAIN = "baf"
 
@@ -18,11 +17,3 @@ SPEED_RANGE = (1, SPEED_COUNT)
 ONE_MIN_SECS = 60
 ONE_DAY_SECS = 86400
 HALF_DAY_SECS = 43200
-
-
-class OffOnAuto(IntEnum):
-    """Tri-state mode enum that matches the protocol buffer."""
-
-    OFF = 0
-    ON = 1
-    AUTO = 2
