@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -14,7 +15,41 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import UkraineAlarmDataUpdateCoordinator
-from .const import ATTRIBUTION, BINARY_SENSOR_TYPES, DEFAULT_NAME, DOMAIN, MANUFACTURER
+from .const import (
+    ALERT_TYPE_AIR,
+    ALERT_TYPE_ARTILLERY,
+    ALERT_TYPE_UNKNOWN,
+    ALERT_TYPE_URBAN_FIGHTS,
+    ATTRIBUTION,
+    DEFAULT_NAME,
+    DOMAIN,
+    MANUFACTURER,
+)
+
+BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
+    BinarySensorEntityDescription(
+        key=ALERT_TYPE_UNKNOWN,
+        name="Unknown",
+        device_class=BinarySensorDeviceClass.SAFETY,
+    ),
+    BinarySensorEntityDescription(
+        key=ALERT_TYPE_AIR,
+        name="Air",
+        device_class=BinarySensorDeviceClass.SAFETY,
+        icon="mdi:cloud",
+    ),
+    BinarySensorEntityDescription(
+        key=ALERT_TYPE_URBAN_FIGHTS,
+        name="Urban Fights",
+        device_class=BinarySensorDeviceClass.SAFETY,
+        icon="mdi:pistol",
+    ),
+    BinarySensorEntityDescription(
+        key=ALERT_TYPE_ARTILLERY,
+        name="Artillery",
+        device_class=BinarySensorDeviceClass.SAFETY,
+    ),
+)
 
 
 async def async_setup_entry(
