@@ -116,7 +116,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Create multicast Listener
     if KEY_MULTICAST_LISTENER not in hass.data[DOMAIN]:
         # check multicast interface
-        check_multicast_class = ConnectMotionGateway(hass, interface=multicast_interface)
+        check_multicast_class = ConnectMotionGateway(
+            hass, interface=multicast_interface
+        )
         working_interface = await check_multicast_class.async_check_interface(host, key)
         if working_interface != multicast_interface:
             data = {**entry.data, CONF_INTERFACE: working_interface}
