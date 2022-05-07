@@ -31,15 +31,17 @@ class UkraineAlarmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 regions = await Client(
                     websession, user_input[CONF_API_KEY]
                 ).get_regions()
-                if not regions:
-                    errors["base"] = "unknown"
             except aiohttp.ClientResponseError as ex:
                 errors["base"] = "invalid_api_key" if ex.status == 401 else "unknown"
             except aiohttp.ClientConnectionError:
                 errors["base"] = "cannot_connect"
             except aiohttp.ClientError:
                 errors["base"] = "unknown"
-            else:
+
+            if not regions:
+                errors["base"] = "unknown"
+
+            if not errors:
                 self.api_key = user_input[CONF_API_KEY]
                 self.states = regions["states"]
                 return await self.async_step_state()
@@ -58,7 +60,7 @@ class UkraineAlarmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle user-chosen state."""
         if user_input is not None:
             self.selected_region = _find(self.states, user_input[CONF_REGION])
-            if len(self.selected_region["regionChildIds"]):
+            if self.selected_region["regionChildIds"]:
                 return await self.async_step_district()
             return await self._async_finish_flow()
 
@@ -82,7 +84,7 @@ class UkraineAlarmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.selected_region = _find(
                 self.selected_region["regionChildIds"], user_input[CONF_REGION]
             )
-            if len(self.selected_region["regionChildIds"]):
+            if self.selected_region["regionChildIds"]:
                 return await self.async_step_community()
             return await self._async_finish_flow()
 
@@ -135,9 +137,7 @@ class UkraineAlarmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 
 def _find(regions, region_id):
-    for region in regions:
-        if region["regionId"] == region_id:
-            return region
+    return next((region for region in regions if region["regionId"] == region_id), None)
 
 
 def _make_regions_object(regions):
@@ -145,13 +145,13 @@ def _make_regions_object(regions):
     for region in regions:
         regions_list.append(
             {
-                "key": region["regionId"],
-                "value": region["regionName"],
+                "id": region["regionId"],
+                "name": region["regionName"],
             }
         )
-    regions_list = sorted(regions_list, key=lambda region: region["value"].lower())
+    regions_list = sorted(regions_list, key=lambda region: region["name"].lower())
     regions_object = {}
     for region in regions_list:
-        regions_object[region["key"]] = region["value"]
+        regions_object[region["id"]] = region["name"]
 
     return regions_object

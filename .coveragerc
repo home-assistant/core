@@ -1314,7 +1314,9 @@ omit =
     homeassistant/components/twitter/notify.py
     homeassistant/components/ubus/device_tracker.py
     homeassistant/components/ue_smart_radio/media_player.py
-    homeassistant/components/ukraine_alarm/*
+    homeassistant/components/ukraine_alarm/__init__.py
+    homeassistant/components/ukraine_alarm/const.py
+    homeassistant/components/ukraine_alarm/binary_sensor.py
     homeassistant/components/unifiled/*
     homeassistant/components/upb/__init__.py
     homeassistant/components/upb/const.py

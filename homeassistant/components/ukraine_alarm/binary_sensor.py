@@ -72,7 +72,9 @@ async def async_setup_entry(
     )
 
 
-class UkraineAlarmSensor(CoordinatorEntity, BinarySensorEntity):
+class UkraineAlarmSensor(
+    CoordinatorEntity[UkraineAlarmDataUpdateCoordinator], BinarySensorEntity
+):
     """Class for a Ukraine Alarm binary sensor."""
 
     _attr_attribution = ATTRIBUTION

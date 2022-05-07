@@ -14,7 +14,7 @@
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "region": "Region"
         },
-        "description": "Set up Ukraine Alarm integration. To generate API key go to https://api.ukrainealarm.com/"
+        "description": "Set up the Ukraine Alarm integration. To generate an API key go to https://api.ukrainealarm.com/"
       },
       "state": {
         "description": "Choose state to monitor"
