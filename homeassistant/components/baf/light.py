@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from aiobafi6 import Device
+from aiobafi6 import Device, OffOnAuto
 
 from homeassistant import config_entries
 from homeassistant.components.light import (
@@ -19,7 +19,7 @@ from homeassistant.util.color import (
     color_temperature_mired_to_kelvin,
 )
 
-from .const import DOMAIN, OffOnAuto
+from .const import DOMAIN
 from .entity import BAFEntity
 from .models import BAFData
 
