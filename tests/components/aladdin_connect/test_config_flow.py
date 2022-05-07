@@ -187,7 +187,7 @@ async def test_import_flow_success(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_reconfig_flow(hass: HomeAssistant) -> None:
+async def test_reauth_flow(hass: HomeAssistant) -> None:
     """Test a successful reconfig flow."""
 
     mock_entry = MockConfigEntry(
@@ -235,7 +235,7 @@ async def test_reconfig_flow(hass: HomeAssistant) -> None:
     }
 
 
-async def test_reconfig_flow_auth_error(hass: HomeAssistant) -> None:
+async def test_reauth_flow_auth_error(hass: HomeAssistant) -> None:
     """Test a successful reconfig flow."""
 
     mock_entry = MockConfigEntry(
@@ -276,9 +276,10 @@ async def test_reconfig_flow_auth_error(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["errors"] == {"base": "invalid_auth"}
 
 
-async def test_reconfig_flow_other_error(hass: HomeAssistant) -> None:
+async def test_reauth_flow_other_error(hass: HomeAssistant) -> None:
     """Test a successful reconfig flow."""
 
     mock_entry = MockConfigEntry(
@@ -319,3 +320,4 @@ async def test_reconfig_flow_other_error(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["errors"] == {"base": "cannot_connect"}

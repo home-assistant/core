@@ -5,14 +5,7 @@ from homeassistant.components.aladdin_connect.const import DOMAIN
 import homeassistant.components.aladdin_connect.cover as cover
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import (
-    STATE_CLOSED,
-    STATE_CLOSING,
-    STATE_OPEN,
-    STATE_OPENING,
-    STATE_UNAVAILABLE,
-    Platform,
-)
+from homeassistant.const import STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_OPENING
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -184,17 +177,9 @@ async def test_load_and_unload(hass: HomeAssistant) -> None:
     assert config_entry.state == ConfigEntryState.LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
-    entities = hass.states.async_entity_ids(Platform.COVER)
-    for entity in entities:
-        assert hass.states.get(entity).state != STATE_UNAVAILABLE
-
     assert await config_entry.async_unload(hass)
     await hass.async_block_till_done()
     assert config_entry.state == ConfigEntryState.NOT_LOADED
-
-    entities = hass.states.async_entity_ids(Platform.COVER)
-    for entity in entities:
-        assert hass.states.get(entity).state == STATE_UNAVAILABLE
 
 
 async def test_open_cover(hass: HomeAssistant) -> None:

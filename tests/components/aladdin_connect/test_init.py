@@ -47,3 +47,4 @@ async def test_entry_password_fail(hass: HomeAssistant):
     ):
 
         assert (await async_setup_component(hass, DOMAIN, entry)) is True
+        assert entry.state is ConfigEntryState.SETUP_ERROR
