@@ -1501,7 +1501,7 @@ tololib==0.1.0b3
 toonapi==0.2.1
 
 # homeassistant.components.totalconnect
-total_connect_client==2022.3
+total_connect_client==2022.5
 
 # homeassistant.components.transmission
 transmissionrpc==0.11
