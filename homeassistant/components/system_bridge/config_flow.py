@@ -53,35 +53,32 @@ async def validate_input(
         data[CONF_API_KEY],
     )
     try:
-        async with async_timeout.timeout(20):
+        async with async_timeout.timeout(40):
             await websocket_client.connect(session=async_get_clientsession(hass))
-    except asyncio.TimeoutError as exception:
-        _LOGGER.warning("Timed out connecting to %s: %s", data[CONF_HOST], exception)
-        raise CannotConnect from exception
-    except ConnectionErrorException as exception:
-        _LOGGER.warning(
-            "Connection error when connecting to %s: %s", data[CONF_HOST], exception
-        )
-        raise CannotConnect from exception
-
-    await websocket_client.get_data(["system"])
-    try:
-        while True:
-            message = await websocket_client.receive_message()
-            _LOGGER.debug("Message: %s", message)
-            if (
-                message[EVENT_TYPE] == TYPE_DATA_UPDATE
-                and message[EVENT_MODULE] == "system"
-            ):
-                break
+            await websocket_client.get_data(["system"])
+            while True:
+                message = await websocket_client.receive_message()
+                _LOGGER.debug("Message: %s", message)
+                if (
+                    message[EVENT_TYPE] == TYPE_DATA_UPDATE
+                    and message[EVENT_MODULE] == "system"
+                ):
+                    break
     except AuthenticationException as exception:
-        _LOGGER.info(exception)
+        _LOGGER.warning(
+            "Authentication error when connecting to %s: %s", data[CONF_HOST], exception
+        )
         raise InvalidAuth from exception
     except (
         ConnectionClosedException,
         ConnectionErrorException,
     ) as exception:
-        _LOGGER.info(exception)
+        _LOGGER.warning(
+            "Connection error when connecting to %s: %s", data[CONF_HOST], exception
+        )
+        raise CannotConnect from exception
+    except asyncio.TimeoutError as exception:
+        _LOGGER.warning("Timed out connecting to %s: %s", data[CONF_HOST], exception)
         raise CannotConnect from exception
 
     _LOGGER.info("%s Message: %s", TYPE_DATA_UPDATE, message)
