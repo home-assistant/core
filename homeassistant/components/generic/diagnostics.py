@@ -1,10 +1,10 @@
 """Diagnostics support for generic (IP camera)."""
 from __future__ import annotations
 
+import re
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.components.sql.sensor import redact_credentials
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -15,6 +15,14 @@ TO_REDACT = {
     CONF_PASSWORD,
     CONF_USERNAME,
 }
+
+# A very similar redact function is in components.sql.  Possible to be made common.
+URL_RE = re.compile("//.*:.*@")
+
+
+def redact_credentials(data: str) -> str:
+    """Redact credentials from string data."""
+    return URL_RE.sub("//****:****@", data)
 
 
 async def async_get_config_entry_diagnostics(
