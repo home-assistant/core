@@ -1,8 +1,6 @@
 """Support for Big Ass Fans switch."""
 from __future__ import annotations
 
-from collections.abc import Callable
-from dataclasses import dataclass
 from typing import Any, cast
 
 from aiobafi6 import Device
@@ -16,33 +14,39 @@ from .const import DOMAIN
 from .entity import BAFEntity
 from .models import BAFData
 
+BASE_PROPERTY_NAMES = {
+    "legacy_ir_remote_enable": "Legacy IR Remote",
+    "led_indicators_enable": "Led Indicators",
+}
 
-@dataclass
-class BAFSwitchEntityDescriptionMixin:
-    """Mixin for required keys."""
+BASE_SWITCHES = [
+    SwitchEntityDescription(key=key, name=name)
+    for key, name in BASE_PROPERTY_NAMES.items()
+]
 
-    value_fn: Callable[[Device], bool]
-    set_fn: Callable[[Device, bool], None]
+FAN_PROPERTY_NAMES = {
+    "auto_comfort_enable": "Auto Comfort",
+    "comfort_heat_assist_enable": "Auto Comfort Heat Assist",
+    "fan_beep_enable": "Beep",
+    "eco_enable": "Eco Mode",
+    "motion_sense_enable": "Motion Sense",
+    "return_to_auto_enable": "Return to Auto",
+    "whoosh_enable": "Whoosh",
+}
 
+FAN_SWITCHES = [
+    SwitchEntityDescription(key=key, name=name)
+    for key, name in FAN_PROPERTY_NAMES.items()
+]
 
-@dataclass
-class BAFSwitchEntityDescription(
-    SwitchEntityDescription, BAFSwitchEntityDescriptionMixin
-):
-    """Describes BAF switch entity."""
+LIGHT_PROPERTY_NAMES = {
+    "light_dim_to_warm_enable": "Dim to Warm",
+    "light_return_to_auto_enable": "Light Return to Auto",
+}
 
-
-def _set_fan_motion_auto(device: Device, value: bool) -> None:
-    device.motion_sense_enable = value
-
-
-MOTION_SWITCHES = [
-    BAFSwitchEntityDescription(
-        key="motion_sense",
-        name="Motion Sense",
-        value_fn=lambda device: cast(bool, device.motion_sense_enable),
-        set_fn=_set_fan_motion_auto,
-    ),
+LIGHT_SWITCHES = [
+    SwitchEntityDescription(key=key, name=name)
+    for key, name in LIGHT_PROPERTY_NAMES.items()
 ]
 
 
@@ -54,17 +58,21 @@ async def async_setup_entry(
     """Set up BAF fan switches."""
     data: BAFData = hass.data[DOMAIN][entry.entry_id]
     device = data.device
-    descriptions: list[BAFSwitchEntityDescription] = []
-    descriptions.extend(MOTION_SWITCHES)
+    descriptions: list[SwitchEntityDescription] = []
+    descriptions.extend(BASE_SWITCHES)
+    if device.has_fan:
+        descriptions.extend(FAN_SWITCHES)
+    if device.has_light:
+        descriptions.extend(LIGHT_SWITCHES)
     async_add_entities(BAFSwitch(device, description) for description in descriptions)
 
 
 class BAFSwitch(BAFEntity, SwitchEntity):
     """BAF switch component."""
 
-    entity_description: BAFSwitchEntityDescription
+    entity_description: SwitchEntityDescription
 
-    def __init__(self, device: Device, description: BAFSwitchEntityDescription) -> None:
+    def __init__(self, device: Device, description: SwitchEntityDescription) -> None:
         """Initialize the entity."""
         self.entity_description = description
         super().__init__(device, f"{device.name} {description.name}")
@@ -73,12 +81,14 @@ class BAFSwitch(BAFEntity, SwitchEntity):
     @callback
     def _async_update_attrs(self) -> None:
         """Update attrs from device."""
-        self._attr_is_on = self.entity_description.value_fn(self._device)
+        self._attr_is_on = cast(
+            bool, getattr(self._device, self.entity_description.key)
+        )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
-        self.entity_description.set_fn(self._device, True)
+        setattr(self._device, self.entity_description.key, True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
-        self.entity_description.set_fn(self._device, False)
+        setattr(self._device, self.entity_description.key, False)
