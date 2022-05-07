@@ -55,7 +55,6 @@ class BAFAutoComfort(BAFEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the target temperature."""
-        temp = kwargs[ATTR_TEMPERATURE]
         if not self._device.auto_comfort_enable:
             self._device.auto_comfort_enable = True
-        self._device.comfort_ideal_temperature = temp
+        self._device.comfort_ideal_temperature = kwargs[ATTR_TEMPERATURE]
