@@ -384,26 +384,23 @@ def humanify(
                     # Skip continuous sensors
                     continue
 
-                event = row_indexer.get_event(row)
                 data = {
-                    "when": event.time_fired_isoformat,
-                    "name": _entity_name_from_event(
-                        entity_id, event, entity_attr_cache
-                    ),
-                    "state": event.state,
+                    "when": _time_fired_isoformat_from_row(row),
+                    "name": _entity_name_from_row(entity_id, row, entity_attr_cache),
+                    "state": row.state,
                     "entity_id": entity_id,
                 }
 
-                if icon := event.attributes_icon:
+                if icon := _extract_icon_from_row(row):
                     data["icon"] = icon
 
-                if event.context_user_id:
-                    data["context_user_id"] = event.context_user_id
+                if row.context_user_id:
+                    data["context_user_id"] = row.context_user_id
 
                 _augment_data_with_context(
                     data,
                     entity_id,
-                    event,
+                    row,
                     row_indexer,
                     entity_attr_cache,
                     external_events,
@@ -415,15 +412,15 @@ def humanify(
                 event = row_indexer.get_event(row)
                 domain, describe_event = external_events[event.event_type]
                 data = describe_event(event)
-                data["when"] = event.time_fired_isoformat
+                data["when"] = _time_fired_isoformat_from_row(row)
                 data["domain"] = domain
-                if event.context_user_id:
-                    data["context_user_id"] = event.context_user_id
+                if row.context_user_id:
+                    data["context_user_id"] = row.context_user_id
 
                 _augment_data_with_context(
                     data,
                     data.get(ATTR_ENTITY_ID),
-                    event,
+                    row,
                     row_indexer,
                     entity_attr_cache,
                     external_events,
@@ -434,8 +431,7 @@ def humanify(
                 if start_stop_events.get(row.time_fired.minute) == 2:
                     continue
                 yield {
-                    "when": process_timestamp_to_utc_isoformat(row.time_fired)
-                    or dt_util.utcnow(),
+                    "when": _time_fired_isoformat_from_row(row),
                     "name": "Home Assistant",
                     "message": "started",
                     "domain": HA_DOMAIN,
@@ -448,8 +444,7 @@ def humanify(
                     action = "stopped"
 
                 yield {
-                    "when": process_timestamp_to_utc_isoformat(row.time_fired)
-                    or dt_util.utcnow(),
+                    "when": _time_fired_isoformat_from_row(row),
                     "name": "Home Assistant",
                     "message": action,
                     "domain": HA_DOMAIN,
@@ -465,7 +460,7 @@ def humanify(
                         domain = split_entity_id(str(entity_id))[0]
 
                 data = {
-                    "when": event.time_fired_isoformat,
+                    "when": _time_fired_isoformat_from_row(row),
                     "name": event_data.get(ATTR_NAME),
                     "message": event_data.get(ATTR_MESSAGE),
                     "domain": domain,
@@ -478,7 +473,7 @@ def humanify(
                 _augment_data_with_context(
                     data,
                     entity_id,
-                    event,
+                    row,
                     row_indexer,
                     entity_attr_cache,
                     external_events,
@@ -726,7 +721,7 @@ def _keep_row(
     if event_type in HOMEASSISTANT_EVENTS:
         return entities_filter is None or entities_filter(HA_DOMAIN_ENTITY_ID)
 
-    if entity_id := _extact_entity_id_from_row(row):
+    if entity_id := _extract_entity_id_from_row(row):
         return entities_filter is None or entities_filter(entity_id)
 
     if event_type in hass.data[DOMAIN]:
@@ -734,7 +729,7 @@ def _keep_row(
         # the event for filtering.
         domain = hass.data[DOMAIN][event_type][0]
     else:
-        domain = _extact_domain_from_row(row)
+        domain = _extract_domain_from_row(row)
 
     return domain is not None and (
         entities_filter is None or entities_filter(f"{domain}._")
@@ -744,16 +739,17 @@ def _keep_row(
 def _augment_data_with_context(
     data: dict[str, Any],
     entity_id: str | None,
-    event: LazyEventPartialState,
+    row: Row,
     row_indexer: RowIndexer,
     entity_attr_cache: EntityAttributeCache,
     external_events: dict[
         str, tuple[str, Callable[[LazyEventPartialState], dict[str, Any]]]
     ],
 ) -> None:
-    if not (context_event := row_indexer.get_by_context_id(event.context_id)):
+    if not (context_event := row_indexer.get_by_context_id(row.context_id)):
         return
 
+    event = row_indexer.get_event(row)
     if event == context_event:
         # This is the first event with the given ID. Was it directly caused by
         # a parent event?
@@ -787,7 +783,7 @@ def _augment_data_with_context(
     if not entity_id or context_event == event:
         return
 
-    if (attr_entity_id := context_event.data_entity_id) is None or (
+    if (attr_entity_id := _extract_entity_id_from_row(context_event.row)) is None or (
         event_type in SCRIPT_AUTOMATION_EVENTS and attr_entity_id == entity_id
     ):
         return
@@ -811,9 +807,18 @@ def _entity_name_from_event(
     entity_attr_cache: EntityAttributeCache,
 ) -> str:
     """Extract the entity name from the event using the cache if possible."""
-    return entity_attr_cache.get(
-        entity_id, ATTR_FRIENDLY_NAME, event
-    ) or split_entity_id(entity_id)[1].replace("_", " ")
+    return _entity_name_from_row(entity_id, event.row, entity_attr_cache)
+
+
+def _entity_name_from_row(
+    entity_id: str,
+    row: Row,
+    entity_attr_cache: EntityAttributeCache,
+) -> str:
+    """Extract the entity name from the event using the cache if possible."""
+    return entity_attr_cache.get(entity_id, ATTR_FRIENDLY_NAME, row) or split_entity_id(
+        entity_id
+    )[1].replace("_", " ")
 
 
 def _is_sensor_continuous(
@@ -835,16 +840,33 @@ def _is_sensor_continuous(
     )
 
 
-def _extact_entity_id_from_row(row: Row) -> str | None:
+def _extract_entity_id_from_row(row: Row) -> str | None:
     """Extract an entity id from a event row."""
     result = ENTITY_ID_JSON_EXTRACT.search(row.shared_data or row.event_data or "")
     return result.group(1) if result else None
 
 
-def _extact_domain_from_row(row: Row) -> str | None:
+def _extract_domain_from_row(row: Row) -> str | None:
     """Extract an domain from a event row."""
     result = DOMAIN_JSON_EXTRACT.search(row.shared_data or row.event_data or "")
     return result.group(1) if result else None
+
+
+def _extract_icon_from_row(row: Row) -> str | None:
+    """Extract an icon from a event row."""
+    result = ICON_JSON_EXTRACT.search(row.shared_attrs or row.attributes or "")
+    return result.group(1) if result else None
+
+
+def _extract_friendly_name_from_row(row: Row) -> str | None:
+    """Extract the friendly name from the row."""
+    result = FRIENDLY_NAME_JSON_EXTRACT.search(row.shared_attrs or row.attributes or "")
+    return result.group(1) if result else None
+
+
+def _time_fired_isoformat_from_row(row: Row) -> dt | None:
+    """Convert the row timed_fired to isoformat."""
+    return process_timestamp_to_utc_isoformat(row.time_fired) or dt_util.utcnow()
 
 
 class RowIndexer:
@@ -876,10 +898,9 @@ class LazyEventPartialState:
     """A lazy version of core Event with limited State joined in."""
 
     __slots__ = [
-        "_row",
+        "row",
         "_event_data",
-        "_time_fired_isoformat",
-        "_attributes",
+        "_event_data_cache",
         "event_type",
         "entity_id",
         "state",
@@ -887,7 +908,6 @@ class LazyEventPartialState:
         "context_user_id",
         "context_parent_id",
         "time_fired_minute",
-        "_event_data_cache",
     ]
 
     def __init__(
@@ -896,44 +916,23 @@ class LazyEventPartialState:
         event_data_cache: dict[str, dict[str, Any]],
     ) -> None:
         """Init the lazy event."""
-        self._row = row
+        self.row = row
         self._event_data: dict[str, Any] | None = None
-        self._time_fired_isoformat: dt | None = None
-        self.event_type: str = self._row.event_type
-        self.entity_id: str | None = self._row.entity_id
-        self.state = self._row.state
-        self.context_id: str | None = self._row.context_id
-        self.context_user_id: str | None = self._row.context_user_id
-        self.context_parent_id: str | None = self._row.context_parent_id
-        self.time_fired_minute: int = self._row.time_fired.minute
         self._event_data_cache = event_data_cache
 
-    @property
-    def attributes_icon(self) -> str | None:
-        """Extract the icon from the decoded attributes or json."""
-        result = ICON_JSON_EXTRACT.search(
-            self._row.shared_attrs or self._row.attributes or ""
-        )
-        return result.group(1) if result else None
-
-    @property
-    def data_entity_id(self) -> str | None:
-        """Extract the entity id from the decoded data or json."""
-        return _extact_entity_id_from_row(self._row)
-
-    @property
-    def attributes_friendly_name(self) -> str | None:
-        """Extract the friendly name from the decoded attributes or json."""
-        result = FRIENDLY_NAME_JSON_EXTRACT.search(
-            self._row.shared_attrs or self._row.attributes or ""
-        )
-        return result.group(1) if result else None
+        self.event_type: str = self.row.event_type
+        self.entity_id: str | None = self.row.entity_id
+        self.state = self.row.state
+        self.context_id: str | None = self.row.context_id
+        self.context_user_id: str | None = self.row.context_user_id
+        self.context_parent_id: str | None = self.row.context_parent_id
+        self.time_fired_minute: int = self.row.time_fired.minute
 
     @property
     def data(self) -> dict[str, Any]:
         """Event data."""
         if self._event_data is None:
-            source: str = self._row.shared_data or self._row.event_data
+            source: str = self.row.shared_data or self.row.event_data
             if not source:
                 self._event_data = {}
             elif event_data := self._event_data_cache.get(source):
@@ -943,17 +942,6 @@ class LazyEventPartialState:
                     dict[str, Any], json.loads(source)
                 )
         return self._event_data
-
-    @property
-    def time_fired_isoformat(self) -> dt | None:
-        """Time event was fired in utc isoformat."""
-        if not self._time_fired_isoformat:
-            self._time_fired_isoformat = (
-                process_timestamp_to_utc_isoformat(self._row.time_fired)
-                or dt_util.utcnow()
-            )
-
-        return self._time_fired_isoformat
 
 
 class EntityAttributeCache:
@@ -968,7 +956,7 @@ class EntityAttributeCache:
         self._hass = hass
         self._cache: dict[str, dict[str, Any]] = {}
 
-    def get(self, entity_id: str, attribute: str, event: LazyEventPartialState) -> Any:
+    def get(self, entity_id: str, attribute: str, row: Row) -> Any:
         """Lookup an attribute for an entity or get it from the cache."""
         if entity_id in self._cache:
             if attribute in self._cache[entity_id]:
@@ -987,6 +975,6 @@ class EntityAttributeCache:
                 raise ValueError(
                     f"{attribute} is not supported by {self.__class__.__name__}"
                 )
-            cache[attribute] = event.attributes_friendly_name
+            cache[attribute] = _extract_friendly_name_from_row(row)
 
         return cache[attribute]
