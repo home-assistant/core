@@ -1,16 +1,18 @@
 """Support for RSS/Atom feeds."""
 from datetime import datetime, timedelta
 from logging import getLogger
+import os
 from os.path import exists
 import pickle
 from threading import Lock
+from time import struct_time
 
 import feedparser
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL, EVENT_HOMEASSISTANT_START
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CoreState, HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_time_interval
 from homeassistant.helpers.typing import ConfigType
@@ -48,20 +50,43 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Feedreader component from a config entry."""
     data_file = hass.config.path(f"{DOMAIN}_{entry.entry_id}.pickle")
     storage = StoredData(data_file)
-    await hass.async_add_executor_job(
-        lambda: FeedManager(
+
+    def init_feed_manager():
+        hass.data[DOMAIN][entry.entry_id] = FeedManager(
             entry.data[CONF_URL],
             timedelta(seconds=entry.data[CONF_SCAN_INTERVAL]),
             entry.data[CONF_MAX_ENTRIES],
             hass,
             storage,
+            entry.entry_id,
         )
-    )
+
+    await hass.async_add_executor_job(init_feed_manager)
     return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Handle unloading the entry."""
+    feed_manager = hass.data[DOMAIN][entry.entry_id]
+    await hass.async_add_executor_job(feed_manager.unload)
+    return True
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Handle removal of an entry, clean up associated data files."""
+    data_file = hass.config.path(f"{DOMAIN}_{entry.entry_id}.pickle")
+
+    def delete_data_file():
+        if os.path.exists(data_file):
+            os.remove(data_file)
+
+    await hass.async_add_executor_job(delete_data_file)
 
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Feedreader component."""
+
+    hass.data[DOMAIN] = {}
 
     # Skip setup here if it's being loaded with no config data. Will handle in config entry.
     if DOMAIN not in config:
@@ -78,10 +103,64 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return len(feeds) > 0
 
 
+class StoredData:
+    """Abstraction over pickle data storage."""
+
+    def __init__(self, data_file: str) -> None:
+        """Initialize pickle data storage."""
+        self._data_file = data_file
+        self._lock = Lock()
+        self._cache_outdated = True
+        self._data: dict[str, struct_time] = {}
+        self._fetch_data()
+
+    def _fetch_data(self):
+        """Fetch data stored into pickle file."""
+        if self._cache_outdated and exists(self._data_file):
+            try:
+                _LOGGER.debug("Fetching data from file %s", self._data_file)
+                with self._lock, open(self._data_file, "rb") as myfile:
+                    self._data = pickle.load(myfile) or {}
+                    self._cache_outdated = False
+            except:  # noqa: E722 pylint: disable=bare-except
+                _LOGGER.error(
+                    "Error loading data from pickled file %s", self._data_file
+                )
+
+    def get_timestamp(self, feed_id: str):
+        """Return stored timestamp for given feed id (usually the url)."""
+        self._fetch_data()
+        return self._data.get(feed_id)
+
+    def put_timestamp(self, feed_id: str, timestamp: struct_time):
+        """Update timestamp for given feed id (usually the url)."""
+        self._fetch_data()
+        with self._lock, open(self._data_file, "wb") as myfile:
+            self._data.update({feed_id: timestamp})
+            _LOGGER.debug(
+                "Overwriting feed %s timestamp in storage file %s",
+                feed_id,
+                self._data_file,
+            )
+            try:
+                pickle.dump(self._data, myfile)
+            except:  # noqa: E722 pylint: disable=bare-except
+                _LOGGER.error("Error saving pickled data to %s", self._data_file)
+        self._cache_outdated = True
+
+
 class FeedManager:
     """Abstraction over Feedparser module."""
 
-    def __init__(self, url, scan_interval, max_entries, hass, storage):
+    def __init__(
+        self,
+        url: str,
+        scan_interval: timedelta,
+        max_entries: int,
+        hass: HomeAssistant,
+        storage: StoredData,
+        entry_id: str = None,
+    ) -> None:
         """Initialize the FeedManager object, poll as per scan interval."""
         self._url = url
         self._scan_interval = scan_interval
@@ -95,16 +174,29 @@ class FeedManager:
         self._has_published_parsed = False
         self._event_type = EVENT_FEEDREADER
         self._feed_id = url
+        self._entry_id = entry_id
         hass.bus.listen_once(EVENT_HOMEASSISTANT_START, lambda _: self._update())
         self._init_regular_updates(hass)
+
+        # Trigger update immediately if added to already running instance by config entry.
+        if entry_id is not None and hass.state == CoreState.running:
+            self._update()
 
     def _log_no_entries(self):
         """Send no entries log at debug level."""
         _LOGGER.debug("No new entries to be published in feed %s", self._url)
 
-    def _init_regular_updates(self, hass):
+    def _init_regular_updates(self, hass: HomeAssistant):
         """Schedule regular updates at the top of the clock."""
-        track_time_interval(hass, lambda now: self._update(), self._scan_interval)
+        self._stop_regular_updates = track_time_interval(
+            hass, lambda now: self._update(), self._scan_interval
+        )
+
+    def unload(self):
+        """Prepare the feed manager for unloading."""
+        _LOGGER.debug("Unloading feed manager for feed %s", self._url)
+        if self._stop_regular_updates is not None:
+            self._stop_regular_updates()
 
     @property
     def last_update_successful(self):
@@ -201,49 +293,3 @@ class FeedManager:
         if not new_entries:
             self._log_no_entries()
         self._firstrun = False
-
-
-class StoredData:
-    """Abstraction over pickle data storage."""
-
-    def __init__(self, data_file):
-        """Initialize pickle data storage."""
-        self._data_file = data_file
-        self._lock = Lock()
-        self._cache_outdated = True
-        self._data = {}
-        self._fetch_data()
-
-    def _fetch_data(self):
-        """Fetch data stored into pickle file."""
-        if self._cache_outdated and exists(self._data_file):
-            try:
-                _LOGGER.debug("Fetching data from file %s", self._data_file)
-                with self._lock, open(self._data_file, "rb") as myfile:
-                    self._data = pickle.load(myfile) or {}
-                    self._cache_outdated = False
-            except:  # noqa: E722 pylint: disable=bare-except
-                _LOGGER.error(
-                    "Error loading data from pickled file %s", self._data_file
-                )
-
-    def get_timestamp(self, feed_id):
-        """Return stored timestamp for given feed id (usually the url)."""
-        self._fetch_data()
-        return self._data.get(feed_id)
-
-    def put_timestamp(self, feed_id, timestamp):
-        """Update timestamp for given feed id (usually the url)."""
-        self._fetch_data()
-        with self._lock, open(self._data_file, "wb") as myfile:
-            self._data.update({feed_id: timestamp})
-            _LOGGER.debug(
-                "Overwriting feed %s timestamp in storage file %s",
-                feed_id,
-                self._data_file,
-            )
-            try:
-                pickle.dump(self._data, myfile)
-            except:  # noqa: E722 pylint: disable=bare-except
-                _LOGGER.error("Error saving pickled data to %s", self._data_file)
-        self._cache_outdated = True
