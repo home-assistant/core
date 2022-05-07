@@ -34,6 +34,7 @@ class NFAndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.ip_address = discovery_info.ip
         mac = format_mac(discovery_info.macaddress)
 
+        # Host unique_id has been deprecated in 2022.6
         if existing_entry := await self.async_set_unique_id(discovery_info.ip):
             self.hass.config_entries.async_update_entry(existing_entry, unique_id=mac)
             return self.async_abort(reason="already_configured")
