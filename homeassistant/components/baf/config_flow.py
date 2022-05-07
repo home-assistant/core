@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from typing import Any
 
 from aiobafi6 import Device, Service
@@ -17,6 +18,7 @@ from .const import DOMAIN, RUN_TIMEOUT
 from .models import BAFDiscovery
 
 API_SUFFIX = "._api._tcp.local."
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_try_connect(ip_address: str) -> Device:
@@ -88,6 +90,11 @@ class BAFFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 device = await async_try_connect(ip_address)
             except CannotConnect:
                 errors[CONF_IP_ADDRESS] = "cannot_connect"
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception(
+                    "Unknown exception during connection test to %s", ip_address
+                )
+                errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(device.dns_sd_uuid)
                 self._abort_if_unique_id_configured(
