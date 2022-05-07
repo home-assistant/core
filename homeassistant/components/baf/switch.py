@@ -25,7 +25,6 @@ BASE_SWITCHES = [
 ]
 
 FAN_PROPERTY_NAMES = {
-    "auto_comfort_enable": "Auto Comfort",
     "comfort_heat_assist_enable": "Auto Comfort Heat Assist",
     "fan_beep_enable": "Beep",
     "eco_enable": "Eco Mode",
