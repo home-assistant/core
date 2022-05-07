@@ -40,19 +40,19 @@ FAN_NUMBER_DESCRIPTIONS = (
     ),
     NumberEntityDescription(
         key="comfort_min_speed",
-        name="Comfort Minimum Speed",
+        name="Auto Comfort Minimum Speed",
         min_value=0,
         max_value=SPEED_RANGE[1] - 1,
     ),
     NumberEntityDescription(
         key="comfort_max_speed",
-        name="Comfort Maximum Speed",
+        name="Auto Comfort Maximum Speed",
         min_value=1,
         max_value=SPEED_RANGE[1],
     ),
     NumberEntityDescription(
         key="comfort_heat_assist_speed",
-        name="Comfort Heat Assist Speed",
+        name="Auto Comfort Heat Assist Speed",
         min_value=SPEED_RANGE[0],
         max_value=SPEED_RANGE[1],
     ),
