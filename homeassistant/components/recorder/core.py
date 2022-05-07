@@ -38,6 +38,7 @@ import homeassistant.util.dt as dt_util
 from . import migration, statistics
 from .const import (
     DB_WORKER_PREFIX,
+    DIALECT_SQLITE,
     KEEPALIVE_TIME,
     MAX_QUEUE_BACKLOG,
     SQLITE_URL_PREFIX,
@@ -194,7 +195,7 @@ class Recorder(threading.Thread):
         return self._queue.qsize()
 
     @property
-    def dialect(self) -> str | None:
+    def dialect_name(self) -> str | None:
         """Return the dialect the recorder uses."""
         return self.engine.dialect.name if self.engine else None
 
@@ -465,11 +466,6 @@ class Recorder(threading.Thread):
         self.queue_task(ExternalStatisticsTask(metadata, stats))
 
     @callback
-    def using_sqlite(self) -> bool:
-        """Return if recorder uses sqlite as the engine."""
-        return bool(self.dialect == "sqlite")
-
-    @callback
     def _async_setup_periodic_tasks(self) -> None:
         """Prepare periodic tasks."""
         if self.hass.is_stopping or not self._get_session:
@@ -478,7 +474,7 @@ class Recorder(threading.Thread):
 
         # If the db is using a socket connection, we need to keep alive
         # to prevent errors from unexpected disconnects
-        if not self.using_sqlite():
+        if self.dialect_name != DIALECT_SQLITE:
             self._keep_alive_listener = async_track_time_interval(
                 self.hass, self._async_keep_alive, timedelta(seconds=KEEPALIVE_TIME)
             )
@@ -944,7 +940,7 @@ class Recorder(threading.Thread):
 
     async def lock_database(self) -> bool:
         """Lock database so it can be backed up safely."""
-        if not self.using_sqlite():
+        if self.dialect_name != DIALECT_SQLITE:
             _LOGGER.debug(
                 "Not a SQLite database or not connected, locking not necessary"
             )
@@ -973,7 +969,7 @@ class Recorder(threading.Thread):
 
         Returns true if database lock has been held throughout the process.
         """
-        if not self.using_sqlite():
+        if self.dialect_name != DIALECT_SQLITE:
             _LOGGER.debug(
                 "Not a SQLite database or not connected, unlocking not necessary"
             )

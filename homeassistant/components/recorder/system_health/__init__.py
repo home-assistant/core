@@ -1,13 +1,12 @@
 """Provide info to system health."""
 from __future__ import annotations
 
-from collections.abc import Callable
 from typing import Any
 
-from sqlalchemy.orm.session import Session
 from yarl import URL
 
 from homeassistant.components import system_health
+from homeassistant.components.recorder.core import Recorder
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.core import HomeAssistant, callback
 
@@ -32,14 +31,14 @@ def async_register(
     register.async_register_info(system_health_info)
 
 
-def _get_db_stats(
-    session_maker: Callable[[], Session], dialect: str, database_name: str
-) -> dict[str, Any]:
+def _get_db_stats(instance: Recorder, database_name: str) -> dict[str, Any]:
     """Get the stats about the database."""
     db_stats: dict[str, Any] = {}
-    with session_scope(session=session_maker()) as session:
-        if (get_size := DIALECT_TO_GET_SIZE.get(dialect)) and (
-            db_bytes := get_size(session, database_name)
+    with session_scope(session=instance.get_session()) as session:
+        if (
+            (dialect_name := instance.dialect_name)
+            and (get_size := DIALECT_TO_GET_SIZE.get(dialect_name))
+            and (db_bytes := get_size(session, database_name))
         ):
             db_stats["estimated_db_size"] = f"{db_bytes/1024/1024:.2f} MiB"
     return db_stats
@@ -53,7 +52,7 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
     db_stats: dict[str, Any] = {}
     if instance.async_db_ready.done():
         db_stats = await instance.async_add_executor_job(
-            _get_db_stats, instance.get_session, instance.dialect, database_name
+            _get_db_stats, instance, database_name
         )
     return {
         "oldest_recorder_run": run_history.first.start,
