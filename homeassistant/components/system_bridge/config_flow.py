@@ -55,8 +55,13 @@ async def validate_input(
     try:
         async with async_timeout.timeout(20):
             await websocket_client.connect(session=async_get_clientsession(hass))
-    except (asyncio.TimeoutError, ConnectionErrorException) as exception:
-        _LOGGER.info(exception)
+    except asyncio.TimeoutError as exception:
+        _LOGGER.warning("Timed out connecting to %s: %s", data[CONF_HOST], exception)
+        raise CannotConnect from exception
+    except ConnectionErrorException as exception:
+        _LOGGER.warning(
+            "Connection error when connecting to %s: %s", data[CONF_HOST], exception
+        )
         raise CannotConnect from exception
 
     await websocket_client.get_data(["system"])
