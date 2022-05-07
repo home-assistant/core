@@ -14,14 +14,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from .const import DOMAIN, QUERY_INTERVAL, RUN_TIMEOUT
 from .models import BAFData
 
-PLATFORMS: list[Platform] = [
-    Platform.CLIMATE,
-    Platform.FAN,
-    Platform.LIGHT,
-    Platform.NUMBER,
-    Platform.SENSOR,
-    Platform.SWITCH,
-]
+PLATFORMS: list[Platform] = [Platform.FAN]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
