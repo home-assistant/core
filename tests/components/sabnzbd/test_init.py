@@ -4,8 +4,8 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import sabnzbd
-from homeassistant.components.sabnzbd import DEFAULT_NAME, DOMAIN, KEY_API
-from homeassistant.components.sabnzbd.const import CONFIG_ENTRY_VERSION as VERSION
+from homeassistant.components.sabnzbd import DEFAULT_NAME, DOMAIN
+from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_URL
 from homeassistant.helpers.device_registry import DeviceEntryType
 
 from tests.common import MockConfigEntry, mock_device_registry, mock_registry
@@ -16,7 +16,11 @@ MOCK_UNIQUE_ID = "someuniqueid"
 
 MOCK_DEVICE_ID = "somedeviceid"
 
-MOCK_DATA_VERSION_1 = {KEY_API: "api_key"}
+MOCK_DATA_VERSION_1 = {
+    CONF_API_KEY: "api_key",
+    CONF_URL: "http://127.0.0.1:8080",
+    CONF_NAME: "name",
+}
 
 MOCK_ENTRY_VERSION_1 = MockConfigEntry(
     domain=DOMAIN, data=MOCK_DATA_VERSION_1, entry_id=MOCK_ENTRY_ID, version=1
@@ -35,7 +39,7 @@ def entity_registry(hass):
     return mock_registry(hass)
 
 
-async def test_config_flow_entry_migrate(hass, device_registry, entity_registry):
+async def test_unique_id_migrate(hass, device_registry, entity_registry):
     """Test that config flow entry is migrated correctly."""
     # Start with the config entry at Version 1.
     manager = hass.config_entries
@@ -62,13 +66,16 @@ async def test_config_flow_entry_migrate(hass, device_registry, entity_registry)
     assert mock_e_entry.unique_id == MOCK_UNIQUE_ID
 
     with patch(
+        "homeassistant.helpers.device_registry.async_get",
+        return_value=device_registry,
+    ), patch(
         "homeassistant.helpers.entity_registry.async_get",
         return_value=entity_registry,
     ), patch(
-        "homeassistant.helpers.device_registry.async_get",
-        return_value=device_registry,
+        "homeassistant.components.sabnzbd.sab.SabnzbdApi.check_available",
+        return_value=True,
     ):
-        await sabnzbd.async_migrate_entry(hass, mock_entry)
+        await sabnzbd.migrate_unique_id(hass, mock_entry)
 
     await hass.async_block_till_done()
 
@@ -78,9 +85,9 @@ async def test_config_flow_entry_migrate(hass, device_registry, entity_registry)
     assert mock_entity.entity_id == mock_entity_id
     assert mock_entity.unique_id == f"{MOCK_ENTRY_ID}_{MOCK_UNIQUE_ID}"
     assert mock_entity.device_id == mock_d_entry.id
+
+    sabnzbd.update_device_identifiers(hass, mock_entry)
+
     assert device_registry.devices[mock_d_entry.id].identifiers == {
         (DOMAIN, mock_entry.entry_id)
     }
-
-    # Test that config entry is at the current version.
-    assert mock_entry.version == VERSION
