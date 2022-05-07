@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import LOGGER
+from .const import DATA_KEYS, LOGGER
 
 
 class DelugeDataUpdateCoordinator(DataUpdateCoordinator):
@@ -38,16 +38,12 @@ class DelugeDataUpdateCoordinator(DataUpdateCoordinator):
         """Get the latest data from Deluge and updates the state."""
         data = {}
         try:
-            data[Platform.SENSOR] = await self.hass.async_add_executor_job(
+            _data = await self.hass.async_add_executor_job(
                 self.api.call,
                 "core.get_session_status",
-                [
-                    "upload_rate",
-                    "download_rate",
-                    "dht_upload_rate",
-                    "dht_download_rate",
-                ],
+                DATA_KEYS,
             )
+            data[Platform.SENSOR] = {k.decode(): v for k, v in _data.items()}
             data[Platform.SWITCH] = await self.hass.async_add_executor_job(
                 self.api.call, "core.get_torrents_status", {}, ["paused"]
             )
