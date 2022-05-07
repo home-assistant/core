@@ -10,10 +10,7 @@ from fiblary3.client.v4.client import (
     Client as FibaroClientV4,
     StateHandler as StateHandlerV4,
 )
-from fiblary3.client.v5.client import (
-    Client as FibaroClientV5,
-    StateHandler as StateHandlerV5,
-)
+from fiblary3.client.v5.client import StateHandler as StateHandlerV5
 from fiblary3.common.exceptions import HTTPException
 import voluptuous as vol
 
@@ -141,18 +138,12 @@ class FibaroController:
         should do that only when you use the FibaroController for login test as only
         the login and info API's are equal throughout the different versions.
         """
-        if (
-            serial_number is None
-            or serial_number.upper().startswith("HC2")
-            or serial_number.upper().startswith("HCL")
-        ):
-            self._client = FibaroClientV4(
-                config[CONF_URL], config[CONF_USERNAME], config[CONF_PASSWORD]
-            )
-        else:
-            self._client = FibaroClientV5(
-                config[CONF_URL], config[CONF_USERNAME], config[CONF_PASSWORD]
-            )
+
+        # Only use V4 API as it works better even for HC3, after the library is fixed, we should
+        # add here support for the newer library version V5 again.
+        self._client = FibaroClientV4(
+            config[CONF_URL], config[CONF_USERNAME], config[CONF_PASSWORD]
+        )
 
         self._scene_map = None
         # Whether to import devices from plugins
