@@ -10,6 +10,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import scoped_session, sessionmaker
 import voluptuous as vol
 
+from homeassistant.components.diagnostics.util import redact_url
 from homeassistant.components.recorder import CONF_DB_URL, DEFAULT_DB_FILE, DEFAULT_URL
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
@@ -26,14 +27,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_COLUMN_NAME, CONF_QUERIES, CONF_QUERY, DB_URL_RE, DOMAIN
+from .const import CONF_COLUMN_NAME, CONF_QUERIES, CONF_QUERY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-
-def redact_credentials(data: str) -> str:
-    """Redact credentials from string data."""
-    return DB_URL_RE.sub("//****:****@", data)
 
 
 _QUERY_SCHEME = vol.Schema(
@@ -114,7 +110,7 @@ async def async_setup_entry(
         engine = sqlalchemy.create_engine(db_url)
         sessmaker = scoped_session(sessionmaker(bind=engine))
     except SQLAlchemyError as err:
-        _LOGGER.error("Can not open database %s", {redact_credentials(str(err))})
+        _LOGGER.error("Can not open database %s", {redact_url(str(err))})
         return
 
     # MSSQL uses TOP and not LIMIT
@@ -184,7 +180,7 @@ class SQLSensor(SensorEntity):
             _LOGGER.error(
                 "Error executing query %s: %s",
                 self._query,
-                redact_credentials(str(err)),
+                redact_url(str(err)),
             )
             return
 
