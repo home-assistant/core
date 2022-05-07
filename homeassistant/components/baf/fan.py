@@ -21,7 +21,7 @@ from homeassistant.util.percentage import (
 )
 
 from .const import (
-    DEFAULT_SPEED,
+    DEFAULT_PERCENTAGE,
     DOMAIN,
     PRESET_MODE_AUTO,
     SPEED_COUNT,
@@ -89,11 +89,8 @@ class BAFFan(BAFEntity, FanEntity):
         """Turn the fan on with a percentage or preset mode."""
         if preset_mode is not None:
             await self.async_set_preset_mode(preset_mode)
-        elif percentage is None:
-            self._device.fan_mode = OffOnAuto.ON
-            self._device.speed = DEFAULT_SPEED
-        else:
-            await self.async_set_percentage(percentage)
+            return
+        await self.async_set_percentage(percentage or DEFAULT_PERCENTAGE)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
