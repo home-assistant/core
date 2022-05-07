@@ -19,10 +19,8 @@ _LOGGER = logging.getLogger(__name__)
 UPDATE_INTERVAL = timedelta(minutes=1)
 
 
-class HistoryStatsUpdateCoordinator(DataUpdateCoordinator):
+class HistoryStatsUpdateCoordinator(DataUpdateCoordinator[HistoryStatsState]):
     """DataUpdateCoordinator to gather data for a specific TPLink device."""
-
-    data: HistoryStatsState
 
     def __init__(
         self,
