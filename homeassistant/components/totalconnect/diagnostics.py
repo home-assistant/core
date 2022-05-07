@@ -19,6 +19,7 @@ TO_REDACT = [
     "sensor_serial_number",
 ]
 
+# Private variable access needed for diagnostics
 # flake8: noqa
 # pylint: disable=protected-access
 
@@ -32,17 +33,17 @@ async def async_get_config_entry_diagnostics(
     data = {}
     data["client"] = {
         "auto_bypass_low_battery": client.auto_bypass_low_battery,
-        "module_flags": client._module_flags,  # noqa
+        "module_flags": client._module_flags,
         "retry_delay": client.retry_delay,
-        "invalid_credentials": client._invalid_credentials,  # noqa
+        "invalid_credentials": client._invalid_credentials,
     }
 
     data["user"] = {
-        "master": client._user._master_user,  # noqa
-        "user_admin": client._user._user_admin,  # noqa
-        "config_admin": client._user._config_admin,  # noqa
-        "security_problem": client._user.security_problem(),  # noqa
-        "features": client._user._features,  # noqa
+        "master": client._user._master_user,
+        "user_admin": client._user._user_admin,
+        "config_admin": client._user._config_admin,
+        "security_problem": client._user.security_problem(),
+        "features": client._user._features,
     }
 
     data["locations"] = {}
@@ -50,7 +51,7 @@ async def async_get_config_entry_diagnostics(
         new_location = {
             "location_id": location.location_id,
             "name": location.location_name,
-            "module_flags": location._module_flags,  # noqa
+            "module_flags": location._module_flags,
             "security_device_id": location.security_device_id,
             "ac_loss": location.ac_loss,
             "low_battery": location.low_battery,
