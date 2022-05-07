@@ -1,9 +1,0 @@
-{
-  "domain": "ua_air_raid_siren",
-  "name": "Ukraine Air Raid Siren",
-  "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/ukraine_air_raid",
-  "requirements": ["ukrainealarm==0.0.1"],
-  "codeowners": ["@PaulAnnekov"],
-  "iot_class": "cloud_polling"
-}

@@ -1,4 +1,4 @@
-"""The openweathermap component."""
+"""The ukraine_alarm component."""
 from __future__ import annotations
 
 from datetime import timedelta
@@ -30,13 +30,13 @@ UPDATE_INTERVAL = timedelta(seconds=10)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up OpenWeatherMap as config entry."""
+    """Set up Ukraine Alarm as config entry."""
     api_key = entry.data[CONF_API_KEY]
     region_id = entry.data.get(CONF_REGION)
 
     websession = async_get_clientsession(hass)
 
-    coordinator = UAAirRaidSirenDataUpdateCoordinator(
+    coordinator = UkraineAlarmDataUpdateCoordinator(
         hass, websession, api_key, region_id
     )
     await coordinator.async_config_entry_first_refresh()
@@ -65,8 +65,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class UAAirRaidSirenDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
-    """Class to manage fetching AccuWeather data API."""
+class UkraineAlarmDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+    """Class to manage fetching Ukraine Alarm API."""
 
     def __init__(
         self,
@@ -86,7 +86,7 @@ class UAAirRaidSirenDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]])
         try:
             res = await self.ukrainealarm.get_alerts(self.region_id)
         except aiohttp.ClientError as error:
-            raise UpdateFailed(f"Error fetching status from API: {error}") from error
+            raise UpdateFailed(f"Error fetching alerts from API: {error}") from error
 
         current = {
             ALERT_TYPE_AIR: False,

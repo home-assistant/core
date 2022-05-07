@@ -1056,7 +1056,7 @@ build.json @home-assistant/supervisor
 /tests/components/twentemilieu/ @frenck
 /homeassistant/components/twinkly/ @dr1rrb @Robbie1221
 /tests/components/twinkly/ @dr1rrb @Robbie1221
-/homeassistant/components/ua_air_raid_siren/ @PaulAnnekov
+/homeassistant/components/ukraine_alarm/ @PaulAnnekov
 /homeassistant/components/unifi/ @Kane610
 /tests/components/unifi/ @Kane610
 /homeassistant/components/unifiled/ @florisvdk

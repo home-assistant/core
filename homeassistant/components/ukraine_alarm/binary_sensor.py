@@ -1,4 +1,4 @@
-"""Support for the OpenWeatherMap (OWM) service."""
+"""binary sensors for Ukraine Alarm integration."""
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import (
@@ -10,8 +10,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import UAAirRaidSirenDataUpdateCoordinator
+from . import UkraineAlarmDataUpdateCoordinator
 from .const import ATTRIBUTION, BINARY_SENSOR_TYPES, DEFAULT_NAME, DOMAIN, MANUFACTURER
 
 
@@ -20,15 +21,15 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up OpenWeatherMap sensor entities based on a config entry."""
+    """Set up Ukraine Alarm binary sensor entities based on a config entry."""
     # !!! get name from region name
     name = DEFAULT_NAME  # config_entry.data[CONF_NAME]
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    entities: list[UaAirRaidSirenSensor] = []
+    entities: list[UkraineAlarmSensor] = []
     for description in BINARY_SENSOR_TYPES:
         entities.append(
-            UaAirRaidSirenSensor(
+            UkraineAlarmSensor(
                 name,
                 config_entry.unique_id,
                 description,
@@ -39,8 +40,8 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class UaAirRaidSirenSensor(BinarySensorEntity):
-    """Abstract class for an OpenWeatherMap sensor."""
+class UkraineAlarmSensor(CoordinatorEntity, BinarySensorEntity):
+    """Class for a Ukraine Alarm binary sensor."""
 
     _attr_attribution = ATTRIBUTION
 
@@ -49,11 +50,12 @@ class UaAirRaidSirenSensor(BinarySensorEntity):
         name,
         unique_id,
         description: BinarySensorEntityDescription,
-        coordinator: UAAirRaidSirenDataUpdateCoordinator,
+        coordinator: UkraineAlarmDataUpdateCoordinator,
     ) -> None:
         """Initialize the sensor."""
+        super().__init__(coordinator)
+
         self.entity_description = description
-        self._coordinator = coordinator
 
         self._attr_name = f"{name} {description.name}"
         self._attr_unique_id = f"{unique_id}-{description.key}".lower()
@@ -65,11 +67,6 @@ class UaAirRaidSirenSensor(BinarySensorEntity):
         )
 
     @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._coordinator.last_update_success
-
-    @property
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
-        return self._coordinator.data.get(self.entity_description.key, None)
+        return self.coordinator.data.get(self.entity_description.key, None)

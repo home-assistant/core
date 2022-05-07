@@ -1,4 +1,4 @@
-"""Consts for the OpenWeatherMap."""
+"""Consts for the Ukraine Alarm."""
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import (
@@ -7,20 +7,15 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import Platform
 
-DOMAIN = "ua_air_raid_siren"
-DEFAULT_NAME = "Ukraine Air Raid Siren"
-DEFAULT_LANGUAGE = "en"
+DOMAIN = "ukraine_alarm"
+DEFAULT_NAME = "Ukraine Alarm"
 ATTRIBUTION = "Data provided by Ukraine Alarm"
 MANUFACTURER = "Ukraine Alarm"
-CONF_LANGUAGE = "language"
 CONFIG_FLOW_VERSION = 2
-ENTRY_NAME = "name"
-ENTRY_WEATHER_COORDINATOR = "weather_coordinator"
 ALERT_TYPE_UNKNOWN = "UNKNOWN"
 ALERT_TYPE_AIR = "AIR"
-ALERT_TYPE_ARTILLERY = "URBAN_ARTILLERY"
+ALERT_TYPE_ARTILLERY = "ARTILLERY"
 ALERT_TYPE_URBAN_FIGHTS = "URBAN_FIGHTS"
-UPDATE_LISTENER = "update_listener"
 PLATFORMS = [Platform.BINARY_SENSOR]
 
 BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
@@ -28,24 +23,22 @@ BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
         key=ALERT_TYPE_UNKNOWN,
         name="Unknown",
         device_class=BinarySensorDeviceClass.SAFETY,
-        # icon
     ),
     BinarySensorEntityDescription(
         key=ALERT_TYPE_AIR,
         name="Air",
         device_class=BinarySensorDeviceClass.SAFETY,
-        # icon
+        icon="mdi:cloud",
     ),
     BinarySensorEntityDescription(
         key=ALERT_TYPE_URBAN_FIGHTS,
         name="Urban Fights",
         device_class=BinarySensorDeviceClass.SAFETY,
-        # icon
+        icon="mdi:pistol",
     ),
     BinarySensorEntityDescription(
         key=ALERT_TYPE_ARTILLERY,
         name="Artillery",
         device_class=BinarySensorDeviceClass.SAFETY,
-        # icon
     ),
 )

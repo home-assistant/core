@@ -12,20 +12,9 @@
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
-          "region": "Region",
-          "name": "Name"
+          "region": "Region"
         },
-        "description": "To generate API key go to https://api.ukrainealarm.com/"
-      }
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "language": "??????????? Language",
-          "mode": "[%key:common::config_flow::data::mode%]"
-        }
+        "description": "Set up Ukraine Alarm integration. To generate API key go to https://api.ukrainealarm.com/"
       }
     }
   }

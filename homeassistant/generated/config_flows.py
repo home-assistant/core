@@ -359,7 +359,7 @@ FLOWS = {
         "twentemilieu",
         "twilio",
         "twinkly",
-        "ua_air_raid_siren",
+        "ukraine_alarm",
         "unifi",
         "unifiprotect",
         "upb",
