@@ -11,7 +11,6 @@ DOMAIN = "ukraine_alarm"
 DEFAULT_NAME = "Ukraine Alarm"
 ATTRIBUTION = "Data provided by Ukraine Alarm"
 MANUFACTURER = "Ukraine Alarm"
-CONFIG_FLOW_VERSION = 2
 ALERT_TYPE_UNKNOWN = "UNKNOWN"
 ALERT_TYPE_AIR = "AIR"
 ALERT_TYPE_ARTILLERY = "ARTILLERY"

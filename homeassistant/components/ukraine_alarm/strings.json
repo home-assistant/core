@@ -15,6 +15,15 @@
           "region": "Region"
         },
         "description": "Set up Ukraine Alarm integration. To generate API key go to https://api.ukrainealarm.com/"
+      },
+      "state": {
+        "description": "Choose state to monitor"
+      },
+      "district": {
+        "description": "If you want to monitor not only state, choose its specific district"
+      },
+      "community": {
+        "description": "If you want to monitor not only state and district, choose its specific community"
       }
     }
   }
