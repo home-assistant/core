@@ -38,7 +38,7 @@ import homeassistant.util.temperature as temperature_util
 from homeassistant.util.unit_system import UnitSystem
 import homeassistant.util.volume as volume_util
 
-from .const import DATA_INSTANCE, DOMAIN, MAX_ROWS_TO_PURGE
+from .const import DATA_INSTANCE, DOMAIN, MAX_ROWS_TO_PURGE, SupportedDialect
 from .models import (
     StatisticData,
     StatisticMetaData,
@@ -1342,10 +1342,13 @@ def _filter_unique_constraint_integrity_error(
         dialect_name = instance.engine.dialect.name
 
         ignore = False
-        if dialect_name == "sqlite" and "UNIQUE constraint failed" in str(err):
+        if (
+            dialect_name == SupportedDialect.SQLITE
+            and "UNIQUE constraint failed" in str(err)
+        ):
             ignore = True
         if (
-            dialect_name == "postgresql"
+            dialect_name == SupportedDialect.POSTGRESQL
             and hasattr(err.orig, "pgcode")
             and err.orig.pgcode == "23505"
         ):
