@@ -53,7 +53,7 @@ async def validate_input(
         data[CONF_API_KEY],
     )
     try:
-        async with async_timeout.timeout(40):
+        async with async_timeout.timeout(30):
             await websocket_client.connect(session=async_get_clientsession(hass))
             await websocket_client.get_data(["system"])
             while True:

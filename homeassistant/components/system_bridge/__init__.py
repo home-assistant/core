@@ -58,7 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.data[CONF_API_KEY],
     )
     try:
-        async with async_timeout.timeout(40):
+        async with async_timeout.timeout(30):
             await websocket_client.connect(session=async_get_clientsession(hass))
             await websocket_client.get_data(MODULES)
             message = await websocket_client.receive_message()
