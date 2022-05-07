@@ -3,7 +3,10 @@ from enum import IntEnum
 
 DOMAIN = "baf"
 
-QUERY_INTERVAL = 180
+# Most properties are pushed, only the
+# query every 5 minutes so we keep the RPM
+# sensors up to date
+QUERY_INTERVAL = 300
 
 RUN_TIMEOUT = 20
 
