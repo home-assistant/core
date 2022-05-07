@@ -53,7 +53,11 @@ class UkraineAlarmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         return self.async_show_form(
-            step_id="user", data_schema=schema, errors=errors, last_step=False
+            step_id="user",
+            data_schema=schema,
+            description_placeholders={"api_url": "https://api.ukrainealarm.com/"},
+            errors=errors,
+            last_step=False,
         )
 
     async def async_step_state(self, user_input=None):

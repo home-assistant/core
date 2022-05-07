@@ -5,7 +5,7 @@
                 "data": {
                     "region": "Region"
                 },
-                "description": "Set up the Ukraine Alarm integration. To generate an API key go to https://api.ukrainealarm.com/",
+                "description": "Set up the Ukraine Alarm integration. To generate an API key go to {api_url}",
                 "title": "Ukraine Alarm"
             },
             "state": {
