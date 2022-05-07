@@ -42,12 +42,12 @@ FAN_NUMBER_DESCRIPTIONS = (
         key="comfort_min_speed",
         name="Comfort Minimum Speed",
         min_value=0,
-        max_value=SPEED_RANGE[1],
+        max_value=SPEED_RANGE[1] - 1,
     ),
     NumberEntityDescription(
         key="comfort_max_speed",
         name="Comfort Maximum Speed",
-        min_value=0,
+        min_value=1,
         max_value=SPEED_RANGE[1],
     ),
     NumberEntityDescription(
