@@ -11,7 +11,6 @@ from .const import (
     MOCK_SUCCESFUL_LOGIN_RESPONSE,
     MOCK_UNSUCCESFUL_CONNECTION_STATE,
     MOCK_UNSUCCESFUL_LOGIN_RESPONSE,
-    MOCK_USER_SETTINGS,
     TEST_PASSWORD,
     TEST_URL,
     TEST_USERNAME,
@@ -48,10 +47,7 @@ async def test_form(hass: HomeAssistant):
     ) as mock_login, patch(
         "homeassistant.components.jellyfin.async_setup_entry",
         return_value=True,
-    ) as mock_setup_entry, patch(
-        "homeassistant.components.jellyfin.client_wrapper.API.get_user_settings",
-        return_value=MOCK_USER_SETTINGS,
-    ) as mock_set_id:
+    ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -73,7 +69,6 @@ async def test_form(hass: HomeAssistant):
     assert len(mock_connect.mock_calls) == 1
     assert len(mock_login.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
-    assert len(mock_set_id.mock_calls) == 1
 
 
 async def test_form_cannot_connect(hass: HomeAssistant):

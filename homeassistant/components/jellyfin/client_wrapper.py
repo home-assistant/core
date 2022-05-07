@@ -5,7 +5,6 @@ import socket
 from typing import Any
 
 from jellyfin_apiclient_python import Jellyfin, JellyfinClient
-from jellyfin_apiclient_python.api import API
 from jellyfin_apiclient_python.connection_manager import (
     CONNECTION_STATE,
     ConnectionManager,
@@ -20,17 +19,13 @@ from .const import CLIENT_VERSION, USER_AGENT, USER_APP_NAME
 
 async def validate_input(
     hass: HomeAssistant, user_input: dict[str, Any], client: JellyfinClient
-) -> str:
+) -> None:
     """Validate that the provided url and credentials can be used to connect."""
     url = user_input[CONF_URL]
     username = user_input[CONF_USERNAME]
     password = user_input[CONF_PASSWORD]
 
-    userid = await hass.async_add_executor_job(
-        _connect, client, url, username, password
-    )
-
-    return userid
+    await hass.async_add_executor_job(_connect, client, url, username, password)
 
 
 def create_client(client_id: str) -> JellyfinClient:
@@ -49,13 +44,12 @@ def _setup_client(client: JellyfinClient, client_id: str) -> None:
     client.config.http(USER_AGENT)
 
 
-def _connect(client: JellyfinClient, url: str, username: str, password: str) -> str:
+def _connect(client: JellyfinClient, url: str, username: str, password: str) -> None:
     """Connect to the Jellyfin server and assert that the user can login."""
     client.config.data["auth.ssl"] = url.startswith("https")
 
     _connect_to_address(client.auth, url)
     _login(client.auth, url, username, password)
-    return _get_id(client.jellyfin)
 
 
 def _connect_to_address(connection_manager: ConnectionManager, url: str) -> None:
@@ -75,13 +69,6 @@ def _login(
     response = connection_manager.login(url, username, password)
     if "AccessToken" not in response:
         raise InvalidAuth
-
-
-def _get_id(api: API) -> str:
-    """Set the unique userid from a Jellyfin server."""
-    settings: dict[str, Any] = api.get_user_settings()
-    userid: str = settings["Id"]
-    return userid
 
 
 class CannotConnect(exceptions.HomeAssistantError):
