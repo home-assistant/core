@@ -409,9 +409,8 @@ def humanify(
                 yield data
 
             elif row.event_type in external_events:
-                event = row_indexer.get_event(row)
-                domain, describe_event = external_events[event.event_type]
-                data = describe_event(event)
+                domain, describe_event = external_events[row.event_type]
+                data = describe_event(row_indexer.get_event(row))
                 data["when"] = _time_fired_isoformat_from_row(row)
                 data["domain"] = domain
                 if row.context_user_id:
@@ -467,8 +466,8 @@ def humanify(
                     "entity_id": entity_id,
                 }
 
-                if event.context_user_id:
-                    data["context_user_id"] = event.context_user_id
+                if row.context_user_id:
+                    data["context_user_id"] = row.context_user_id
 
                 _augment_data_with_context(
                     data,
@@ -746,68 +745,59 @@ def _augment_data_with_context(
         str, tuple[str, Callable[[LazyEventPartialState], dict[str, Any]]]
     ],
 ) -> None:
-    if not (context_event := row_indexer.get_by_context_id(row.context_id)):
+    if not (context_row := row_indexer.get_row_by_context_id(row.context_id)):
         return
 
-    event = row_indexer.get_event(row)
-    if event == context_event:
+    if row == context_row:
         # This is the first event with the given ID. Was it directly caused by
         # a parent event?
-        if event.context_parent_id:
-            context_event = row_indexer.get_by_context_id(event.context_parent_id)
+        if row.context_parent_id:
+            context_row = row_indexer.get_row_by_context_id(row.context_parent_id)
         # Ensure the (parent) context_event exists and is not the root cause of
         # this log entry.
-        if not context_event or event == context_event:
+        if not context_row or row == context_row:
             return
 
-    event_type = context_event.event_type
+    event_type = context_row.event_type
 
     # State change
-    if context_entity_id := context_event.entity_id:
+    if context_entity_id := context_row.entity_id:
         data["context_entity_id"] = context_entity_id
-        data["context_entity_id_name"] = _entity_name_from_event(
-            context_entity_id, context_event, entity_attr_cache
+        data["context_entity_id_name"] = _entity_name_from_row(
+            context_entity_id, context_row, entity_attr_cache
         )
         data["context_event_type"] = event_type
         return
 
-    event_data = context_event.data
     # Call service
     if event_type == EVENT_CALL_SERVICE:
-        event_data = context_event.data
+        event = row_indexer.get_event(context_row)
+        event_data = event.data
         data["context_domain"] = event_data.get(ATTR_DOMAIN)
         data["context_service"] = event_data.get(ATTR_SERVICE)
         data["context_event_type"] = event_type
         return
 
-    if not entity_id or context_event == event:
+    if not entity_id or context_row == row:
         return
 
-    if (attr_entity_id := _extract_entity_id_from_row(context_event.row)) is None or (
+    if (attr_entity_id := _extract_entity_id_from_row(context_row)) is None or (
         event_type in SCRIPT_AUTOMATION_EVENTS and attr_entity_id == entity_id
     ):
         return
 
     data["context_entity_id"] = attr_entity_id
-    data["context_entity_id_name"] = _entity_name_from_event(
-        attr_entity_id, context_event, entity_attr_cache
+    data["context_entity_id_name"] = _entity_name_from_row(
+        attr_entity_id, context_row, entity_attr_cache
     )
     data["context_event_type"] = event_type
 
     if event_type in external_events:
         domain, describe_event = external_events[event_type]
         data["context_domain"] = domain
-        if name := describe_event(context_event).get(ATTR_NAME):
+        event = row_indexer.get_event(context_row)
+        if name := describe_event(event).get(ATTR_NAME):
             data["context_name"] = name
-
-
-def _entity_name_from_event(
-    entity_id: str,
-    event: LazyEventPartialState,
-    entity_attr_cache: EntityAttributeCache,
-) -> str:
-    """Extract the entity name from the event using the cache if possible."""
-    return _entity_name_from_row(entity_id, event.row, entity_attr_cache)
 
 
 def _entity_name_from_row(
@@ -887,7 +877,13 @@ class RowIndexer:
         )
         return event
 
-    def get_by_context_id(self, context_id: str | None) -> LazyEventPartialState | None:
+    def get_row_by_context_id(self, context_id: str | None) -> Row | None:
+        """Get an event from the cache or create it from the row."""
+        return self.context_id_cache.get(context_id)
+
+    def get_event_by_context_id(
+        self, context_id: str | None
+    ) -> LazyEventPartialState | None:
         """Get an event from the cache or create it from the row."""
         if (row := self.context_id_cache.get(context_id)) is not None:
             return self.get_event(row)
@@ -907,7 +903,7 @@ class LazyEventPartialState:
         "context_id",
         "context_user_id",
         "context_parent_id",
-        "time_fired_minute",
+        "data",
     ]
 
     def __init__(
@@ -919,29 +915,21 @@ class LazyEventPartialState:
         self.row = row
         self._event_data: dict[str, Any] | None = None
         self._event_data_cache = event_data_cache
-
         self.event_type: str = self.row.event_type
         self.entity_id: str | None = self.row.entity_id
         self.state = self.row.state
         self.context_id: str | None = self.row.context_id
         self.context_user_id: str | None = self.row.context_user_id
         self.context_parent_id: str | None = self.row.context_parent_id
-        self.time_fired_minute: int = self.row.time_fired.minute
-
-    @property
-    def data(self) -> dict[str, Any]:
-        """Event data."""
-        if self._event_data is None:
-            source: str = self.row.shared_data or self.row.event_data
-            if not source:
-                self._event_data = {}
-            elif event_data := self._event_data_cache.get(source):
-                self._event_data = event_data
-            else:
-                self._event_data = self._event_data_cache[source] = cast(
-                    dict[str, Any], json.loads(source)
-                )
-        return self._event_data
+        source: str = self.row.shared_data or self.row.event_data
+        if not source:
+            self.data = {}
+        elif event_data := self._event_data_cache.get(source):
+            self.data = event_data
+        else:
+            self.data = self._event_data_cache[source] = cast(
+                dict[str, Any], json.loads(source)
+            )
 
 
 class EntityAttributeCache:
