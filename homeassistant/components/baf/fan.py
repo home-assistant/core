@@ -4,7 +4,7 @@ from __future__ import annotations
 import math
 from typing import Any
 
-from aiobafi6 import Device
+from aiobafi6 import Device, OffOnAuto
 
 from homeassistant import config_entries
 from homeassistant.components.fan import (
@@ -20,7 +20,7 @@ from homeassistant.util.percentage import (
     ranged_value_to_percentage,
 )
 
-from .const import DOMAIN, PRESET_MODE_AUTO, SPEED_COUNT, SPEED_RANGE, OffOnAuto
+from .const import DOMAIN, PRESET_MODE_AUTO, SPEED_COUNT, SPEED_RANGE
 from .entity import BAFEntity
 from .models import BAFData
 
