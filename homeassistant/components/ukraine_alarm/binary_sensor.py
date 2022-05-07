@@ -21,7 +21,6 @@ from .const import (
     ALERT_TYPE_UNKNOWN,
     ALERT_TYPE_URBAN_FIGHTS,
     ATTRIBUTION,
-    DEFAULT_NAME,
     DOMAIN,
     MANUFACTURER,
 )
@@ -97,7 +96,7 @@ class UkraineAlarmSensor(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, unique_id)},
             manufacturer=MANUFACTURER,
-            name=DEFAULT_NAME,
+            name=name,
         )
 
     @property

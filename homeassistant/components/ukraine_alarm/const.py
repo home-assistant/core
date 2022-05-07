@@ -4,7 +4,6 @@ from __future__ import annotations
 from homeassistant.const import Platform
 
 DOMAIN = "ukraine_alarm"
-DEFAULT_NAME = "Ukraine Alarm"
 ATTRIBUTION = "Data provided by Ukraine Alarm"
 MANUFACTURER = "Ukraine Alarm"
 ALERT_TYPE_UNKNOWN = "UNKNOWN"
