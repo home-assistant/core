@@ -3,7 +3,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.diagnostics import async_redact_data, redact_url
+from homeassistant.components.diagnostics import async_redact_data
+from homeassistant.components.sql.sensor import redact_credentials
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -23,7 +24,7 @@ async def async_get_config_entry_diagnostics(
     options = async_redact_data(entry.options, TO_REDACT)
     for key in (CONF_STREAM_SOURCE, CONF_STILL_IMAGE_URL):
         if (value := options.get(key)) is not None:
-            options[key] = redact_url(value)
+            options[key] = redact_credentials(value)
 
     return {
         "title": entry.title,

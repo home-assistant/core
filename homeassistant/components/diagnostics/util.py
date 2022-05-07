@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
-import re
 from typing import Any, TypeVar, cast, overload
 
 from homeassistant.core import callback
@@ -10,7 +9,6 @@ from homeassistant.core import callback
 from .const import REDACTED
 
 _T = TypeVar("_T")
-URL_RE = re.compile("//.*:.*@")
 
 
 @overload
@@ -47,8 +45,3 @@ def async_redact_data(data: _T, to_redact: Iterable[Any]) -> _T:
             redacted[key] = [async_redact_data(item, to_redact) for item in value]
 
     return cast(_T, redacted)
-
-
-def redact_url(data: str) -> str:
-    """Redact credentials from string containing a URL."""
-    return URL_RE.sub("//****:****@", data)
