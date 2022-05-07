@@ -38,10 +38,10 @@ import homeassistant.util.dt as dt_util
 from . import migration, statistics
 from .const import (
     DB_WORKER_PREFIX,
-    DIALECT_SQLITE,
     KEEPALIVE_TIME,
     MAX_QUEUE_BACKLOG,
     SQLITE_URL_PREFIX,
+    SupportedDialect,
 )
 from .executor import DBInterruptibleThreadPoolExecutor
 from .models import (
@@ -195,9 +195,9 @@ class Recorder(threading.Thread):
         return self._queue.qsize()
 
     @property
-    def dialect_name(self) -> str | None:
+    def dialect_name(self) -> SupportedDialect | None:
         """Return the dialect the recorder uses."""
-        return self.engine.dialect.name if self.engine else None
+        return SupportedDialect(self.engine.dialect.name) if self.engine else None
 
     @property
     def _using_file_sqlite(self) -> bool:
@@ -474,7 +474,7 @@ class Recorder(threading.Thread):
 
         # If the db is using a socket connection, we need to keep alive
         # to prevent errors from unexpected disconnects
-        if self.dialect_name != DIALECT_SQLITE:
+        if self.dialect_name != SupportedDialect.SQLITE:
             self._keep_alive_listener = async_track_time_interval(
                 self.hass, self._async_keep_alive, timedelta(seconds=KEEPALIVE_TIME)
             )
@@ -940,7 +940,7 @@ class Recorder(threading.Thread):
 
     async def lock_database(self) -> bool:
         """Lock database so it can be backed up safely."""
-        if self.dialect_name != DIALECT_SQLITE:
+        if self.dialect_name != SupportedDialect.SQLITE:
             _LOGGER.debug(
                 "Not a SQLite database or not connected, locking not necessary"
             )
@@ -969,7 +969,7 @@ class Recorder(threading.Thread):
 
         Returns true if database lock has been held throughout the process.
         """
-        if self.dialect_name != DIALECT_SQLITE:
+        if self.dialect_name != SupportedDialect.SQLITE:
             _LOGGER.debug(
                 "Not a SQLite database or not connected, unlocking not necessary"
             )

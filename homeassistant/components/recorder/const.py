@@ -4,6 +4,7 @@ from functools import partial
 import json
 from typing import Final
 
+from homeassistant.backports.enum import StrEnum
 from homeassistant.const import ATTR_ATTRIBUTION, ATTR_RESTORED, ATTR_SUPPORTED_FEATURES
 from homeassistant.helpers.json import JSONEncoder
 
@@ -38,6 +39,10 @@ KEEPALIVE_TIME = 30
 
 EXCLUDE_ATTRIBUTES = f"{DOMAIN}_exclude_attributes_by_domain"
 
-DIALECT_SQLITE = "sqlite"
-DIALECT_MYSQL = "mysql"
-DIALECT_POSTGRESQL = "postgresql"
+
+class SupportedDialect(StrEnum):
+    """Supported dialects."""
+
+    SQLITE = "sqlite"
+    MYSQL = "mysql"
+    POSTGRESQL = "postgresql"

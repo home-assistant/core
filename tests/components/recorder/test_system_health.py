@@ -5,7 +5,7 @@ from unittest.mock import ANY, Mock, patch
 import pytest
 
 from homeassistant.components.recorder import get_instance
-from homeassistant.components.recorder.const import DIALECT_MYSQL, DIALECT_POSTGRESQL
+from homeassistant.components.recorder.const import SupportedDialect
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -27,7 +27,9 @@ async def test_recorder_system_health(hass, recorder_mock):
     }
 
 
-@pytest.mark.parametrize("dialect_name", [DIALECT_MYSQL, DIALECT_POSTGRESQL])
+@pytest.mark.parametrize(
+    "dialect_name", [SupportedDialect.MYSQL, SupportedDialect.POSTGRESQL]
+)
 async def test_recorder_system_health_alternate_dbms(hass, recorder_mock, dialect_name):
     """Test recorder system health."""
     assert await async_setup_component(hass, "system_health", {})
