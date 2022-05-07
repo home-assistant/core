@@ -3,7 +3,7 @@ from enum import IntEnum
 
 DOMAIN = "baf"
 
-QUERY_INTERVAL = 60
+QUERY_INTERVAL = 180
 
 RUN_TIMEOUT = 20
 
