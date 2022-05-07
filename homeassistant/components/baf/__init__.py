@@ -21,7 +21,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Big Ass Fans from a config entry."""
     ip_address = entry.data[CONF_IP_ADDRESS]
 
-    service = Service(ip_addresses=[ip_address], port=PORT)
+    service = Service(ip_addresses=[ip_address], uuid=entry.unique_id, port=PORT)
     device = Device(service, query_interval_seconds=QUERY_INTERVAL)
     run_task = device.run()
 
