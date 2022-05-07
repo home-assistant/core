@@ -15,14 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import (
-    ALERT_TYPE_AIR,
-    ALERT_TYPE_ARTILLERY,
-    ALERT_TYPE_UNKNOWN,
-    ALERT_TYPE_URBAN_FIGHTS,
-    DOMAIN,
-    PLATFORMS,
-)
+from .const import ALERT_TYPES, DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,7 +25,7 @@ UPDATE_INTERVAL = timedelta(seconds=10)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Ukraine Alarm as config entry."""
     api_key = entry.data[CONF_API_KEY]
-    region_id = entry.data.get(CONF_REGION)
+    region_id = entry.data[CONF_REGION]
 
     websession = async_get_clientsession(hass)
 
@@ -88,20 +81,8 @@ class UkraineAlarmDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except aiohttp.ClientError as error:
             raise UpdateFailed(f"Error fetching alerts from API: {error}") from error
 
-        current = {
-            ALERT_TYPE_AIR: False,
-            ALERT_TYPE_UNKNOWN: False,
-            ALERT_TYPE_ARTILLERY: False,
-            ALERT_TYPE_URBAN_FIGHTS: False,
-        }
+        current = {alert_type: False for alert_type in ALERT_TYPES}
         for alert in res[0]["activeAlerts"]:
-            if alert["type"] == ALERT_TYPE_AIR:
-                current[ALERT_TYPE_AIR] = True
-            if alert["type"] == ALERT_TYPE_UNKNOWN:
-                current[ALERT_TYPE_UNKNOWN] = True
-            if alert["type"] == ALERT_TYPE_ARTILLERY:
-                current[ALERT_TYPE_ARTILLERY] = True
-            if alert["type"] == ALERT_TYPE_URBAN_FIGHTS:
-                current[ALERT_TYPE_URBAN_FIGHTS] = True
+            current[alert["type"]] = True
 
         return current

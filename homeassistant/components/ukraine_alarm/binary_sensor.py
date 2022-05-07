@@ -26,18 +26,15 @@ async def async_setup_entry(
     name = config_entry.data[CONF_NAME]
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    entities: list[UkraineAlarmSensor] = []
-    for description in BINARY_SENSOR_TYPES:
-        entities.append(
-            UkraineAlarmSensor(
-                name,
-                config_entry.unique_id,
-                description,
-                coordinator,
-            )
+    async_add_entities(
+        UkraineAlarmSensor(
+            name,
+            config_entry.unique_id,
+            description,
+            coordinator,
         )
-
-    async_add_entities(entities)
+        for description in BINARY_SENSOR_TYPES
+    )
 
 
 class UkraineAlarmSensor(CoordinatorEntity, BinarySensorEntity):
