@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -126,7 +127,7 @@ class FibaroController:
     """Initiate Fibaro Controller Class."""
 
     def __init__(
-        self, config: dict[str, Any], serial_number: str | None = None
+        self, config: Mapping[str, Any], serial_number: str | None = None
     ) -> None:
         """Initialize the Fibaro controller.
 
@@ -437,7 +438,9 @@ async def async_setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
     return True
 
 
-def _init_controller(data: dict[str, Any], serial_number: str) -> FibaroController:
+def _init_controller(
+    data: Mapping[str, Any], serial_number: str | None
+) -> FibaroController:
     """Validate the user input allows us to connect to fibaro."""
     controller = FibaroController(data, serial_number)
     controller.connect_with_error_handling()

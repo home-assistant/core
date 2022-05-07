@@ -15,7 +15,7 @@ ciso8601==2.2.0
 cryptography==36.0.2
 fnvhash==0.1.0
 hass-nabucasa==0.54.0
-home-assistant-frontend==20220427.0
+home-assistant-frontend==20220504.0
 httpx==0.22.0
 ifaddr==0.1.7
 jinja2==3.1.1
@@ -29,12 +29,12 @@ pyudev==0.22.0
 pyyaml==6.0
 requests==2.27.1
 scapy==2.4.5
-sqlalchemy==1.4.35
+sqlalchemy==1.4.36
 typing-extensions>=3.10.0.2,<5.0
 voluptuous-serialize==2.5.0
 voluptuous==0.13.1
 yarl==1.7.2
-zeroconf==0.38.4
+zeroconf==0.38.6
 
 # Constrain pycryptodome to avoid vulnerability
 # see https://github.com/home-assistant/core/pull/16238
@@ -51,6 +51,7 @@ httplib2>=0.19.0
 # upgrades intentionally. It is a large package to build from source and we
 # want to ensure we have wheels built.
 grpcio==1.45.0
+grpcio-status==1.45.0
 
 # libcst >=0.4.0 requires a newer Rust than we currently have available,
 # thus our wheels builds fail. This pins it to the last working version,

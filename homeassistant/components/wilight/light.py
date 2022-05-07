@@ -49,6 +49,9 @@ async def async_setup_entry(
 class WiLightLightOnOff(WiLightDevice, LightEntity):
     """Representation of a WiLights light on-off."""
 
+    _attr_color_mode = ColorMode.ONOFF
+    _attr_supported_color_modes = {ColorMode.ONOFF}
+
     @property
     def is_on(self):
         """Return true if device is on."""

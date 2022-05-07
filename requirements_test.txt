@@ -11,9 +11,9 @@ codecov==2.1.12
 coverage==6.3.2
 freezegun==1.2.1
 mock-open==1.4.0
-mypy==0.942
+mypy==0.950
 pre-commit==2.17.0
-pylint==2.13.7
+pylint==2.13.8
 pipdeptree==2.2.1
 pylint-strict-informational==0.1
 pytest-aiohttp==0.3.0
