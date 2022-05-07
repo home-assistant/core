@@ -6,6 +6,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
@@ -22,8 +23,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Ukraine Alarm binary sensor entities based on a config entry."""
-    # !!! get name from region name
-    name = DEFAULT_NAME  # config_entry.data[CONF_NAME]
+    name = config_entry.data[CONF_NAME]
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     entities: list[UkraineAlarmSensor] = []

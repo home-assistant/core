@@ -4,7 +4,7 @@ from ukrainealarm.client import Client
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_API_KEY, CONF_REGION
+from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_REGION
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
@@ -129,6 +129,7 @@ class UkraineAlarmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data={
                 CONF_API_KEY: self.api_key,
                 CONF_REGION: self.selected_region["regionId"],
+                CONF_NAME: self.selected_region["regionName"],
             },
         )
 
