@@ -532,6 +532,14 @@ omit =
     homeassistant/components/icloud/account.py
     homeassistant/components/icloud/device_tracker.py
     homeassistant/components/icloud/sensor.py
+    homeassistant/components/ids_hyyp/__init__.py
+    homeassistant/components/ids_hyyp/alarm_control_panel.py
+    homeassistant/components/ids_hyyp/binary_sensor.py
+    homeassistant/components/ids_hyyp/const.py
+    homeassistant/components/ids_hyyp/coordinator.py
+    homeassistant/components/ids_hyyp/entity.py
+    homeassistant/components/ids_hyyp/sensor.py
+    homeassistant/components/ids_hyyp/switch.py
     homeassistant/components/izone/climate.py
     homeassistant/components/izone/discovery.py
     homeassistant/components/izone/__init__.py

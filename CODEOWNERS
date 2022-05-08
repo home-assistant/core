@@ -490,6 +490,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/icloud/ @Quentame @nzapponi
 /tests/components/icloud/ @Quentame @nzapponi
 /homeassistant/components/ids_hyyp/ @RenierM26
+/tests/components/ids_hyyp/ @RenierM26
 /homeassistant/components/ign_sismologia/ @exxamalte
 /tests/components/ign_sismologia/ @exxamalte
 /homeassistant/components/image/ @home-assistant/core
