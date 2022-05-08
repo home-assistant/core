@@ -260,7 +260,6 @@ async def test_node_metadata(hass, wallmote_central_scene, integration, hass_ws_
         result["device_database_url"]
         == "https://devices.zwave-js.io/?jumpTo=0x0086:0x0002:0x0082:0.0"
     )
-    assert result["comments"] == [{"level": "info", "text": "test"}]
 
     # Test getting non-existent node fails
     await ws_client.send_json(
@@ -289,6 +288,26 @@ async def test_node_metadata(hass, wallmote_central_scene, integration, hass_ws_
 
     assert not msg["success"]
     assert msg["error"]["code"] == ERR_NOT_LOADED
+
+
+async def test_node_comments(hass, wallmote_central_scene, integration, hass_ws_client):
+    """Test the node comments websocket command."""
+    ws_client = await hass_ws_client(hass)
+
+    dev_reg = dr.async_get(hass)
+    device = dev_reg.async_get_device({(DOMAIN, "3245146787-35")})
+    assert device
+
+    await ws_client.send_json(
+        {
+            ID: 3,
+            TYPE: "zwave_js/node_comments",
+            DEVICE_ID: device.id,
+        }
+    )
+    msg = await ws_client.receive_json()
+    result = msg["result"]
+    assert result == [{"level": "info", "text": "test"}]
 
 
 async def test_add_node(

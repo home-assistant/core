@@ -323,6 +323,7 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_network_status)
     websocket_api.async_register_command(hass, websocket_node_status)
     websocket_api.async_register_command(hass, websocket_node_metadata)
+    websocket_api.async_register_command(hass, websocket_node_comments)
     websocket_api.async_register_command(hass, websocket_add_node)
     websocket_api.async_register_command(hass, websocket_grant_security_classes)
     websocket_api.async_register_command(hass, websocket_validate_dsk_and_enter_pin)
@@ -499,11 +500,31 @@ async def websocket_node_metadata(
         "wakeup": node.device_config.metadata.wakeup,
         "reset": node.device_config.metadata.reset,
         "device_database_url": node.device_database_url,
-        "comments": node.device_config.metadata.comments,
     }
     connection.send_result(
         msg[ID],
         data,
+    )
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/node_comments",
+        vol.Required(DEVICE_ID): str,
+    }
+)
+@websocket_api.async_response
+@async_get_node
+async def websocket_node_comments(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict,
+    node: Node,
+) -> None:
+    """Get the comments of a Z-Wave JS node."""
+    connection.send_result(
+        msg[ID],
+        node.device_config.metadata.comments,
     )
 
 
