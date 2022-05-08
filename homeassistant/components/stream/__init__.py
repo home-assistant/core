@@ -88,17 +88,17 @@ def create_stream(
         raise HomeAssistantError("Stream integration is not set up.")
 
     # Convert extra stream options into PyAV options
-    stream_options = convert_stream_options(options)
+    pyav_options = convert_stream_options(options)
     # For RTSP streams, prefer TCP
     if isinstance(stream_source, str) and stream_source[:7] == "rtsp://":
-        stream_options = {
+        pyav_options = {
             "rtsp_flags": "prefer_tcp",
             "stimeout": "5000000",
-            **stream_options,
+            **pyav_options,
         }
 
     stream = Stream(
-        hass, stream_source, options=stream_options, stream_label=stream_label
+        hass, stream_source, options=pyav_options, stream_label=stream_label
     )
     hass.data[DOMAIN][ATTR_STREAMS].append(stream)
     return stream
