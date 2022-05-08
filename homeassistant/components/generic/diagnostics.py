@@ -1,8 +1,9 @@
 """Diagnostics support for generic (IP camera)."""
 from __future__ import annotations
 
-import re
 from typing import Any
+
+import yarl
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
@@ -16,13 +17,15 @@ TO_REDACT = {
     CONF_USERNAME,
 }
 
+
 # A very similar redact function is in components.sql.  Possible to be made common.
-URL_RE = re.compile("//.*:.*@")
-
-
-def redact_credentials(data: str) -> str:
-    """Redact credentials from string data."""
-    return URL_RE.sub("//****:****@", data)
+def redact_url(data: str) -> str:
+    """Redact credentials from string url."""
+    url = yarl.URL(data)
+    if url.user is not None:
+        url = url.with_user("****")
+        url = url.with_password("****")
+    return str(url)
 
 
 async def async_get_config_entry_diagnostics(
@@ -32,7 +35,7 @@ async def async_get_config_entry_diagnostics(
     options = async_redact_data(entry.options, TO_REDACT)
     for key in (CONF_STREAM_SOURCE, CONF_STILL_IMAGE_URL):
         if (value := options.get(key)) is not None:
-            options[key] = redact_credentials(value)
+            options[key] = redact_url(value)
 
     return {
         "title": entry.title,
