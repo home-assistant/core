@@ -505,10 +505,9 @@ def _get_events(
         """Yield Events that are not filtered away."""
         for row in query.yield_per(1000):
             context_id_cache.setdefault(row.context_id, row)
-            if row.event_type == EVENT_CALL_SERVICE:
-                continue
-            if row.event_type == EVENT_STATE_CHANGED or _keep_row(
-                hass, row, entities_filter
+            if row.event_type != EVENT_CALL_SERVICE and (
+                row.event_type == EVENT_STATE_CHANGED
+                or _keep_row(hass, row, entities_filter)
             ):
                 yield row
 
