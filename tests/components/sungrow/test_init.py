@@ -1,6 +1,7 @@
 """Test the Sungrow Solar Energy sensor."""
 from unittest.mock import patch
 
+from homeassistant.components.sungrow.config_flow import CannotConnect
 from homeassistant.components.sungrow.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -42,10 +43,24 @@ async def test_device_info(hass: HomeAssistant) -> None:
 
 
 async def test_device_data(hass: HomeAssistant) -> None:
-    """Test device info."""
+    """Test device data."""
     with patch(
         "homeassistant.components.sungrow.SungrowData.update",
         return_value=inverter_data,
+    ) as mock_client:
+        entry = create_entry(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        await hass.data[DOMAIN][entry.entry_id].async_refresh()
+
+    mock_client.assert_called_once()
+
+
+async def test_device_data_not_available(hass: HomeAssistant) -> None:
+    """Test device data."""
+    with patch(
+        "homeassistant.components.sungrow.SungrowData.update",
+        side_effect=CannotConnect,
     ) as mock_client:
         entry = create_entry(hass)
         await hass.config_entries.async_setup(entry.entry_id)
