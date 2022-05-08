@@ -8,11 +8,23 @@ from aiobafi6 import Device
 from homeassistant import config_entries
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .entity import BAFEntity
 from .models import BAFData
+
+PROPERTY_CATEGORY = {
+    "legacy_ir_remote_enable": EntityCategory.CONFIG,
+    "led_indicators_enable": EntityCategory.CONFIG,
+    "comfort_heat_assist_enable": EntityCategory.CONFIG,
+    "eco_enable": EntityCategory.CONFIG,
+    "motion_sense_enable": EntityCategory.CONFIG,
+    "return_to_auto_enable": EntityCategory.CONFIG,
+    "light_dim_to_warm_enable": EntityCategory.CONFIG,
+    "light_return_to_auto_enable": EntityCategory.CONFIG,
+}
 
 BASE_PROPERTY_NAMES = {
     "legacy_ir_remote_enable": "Legacy IR Remote",
@@ -20,7 +32,9 @@ BASE_PROPERTY_NAMES = {
 }
 
 BASE_SWITCHES = [
-    SwitchEntityDescription(key=key, name=name)
+    SwitchEntityDescription(
+        key=key, name=name, entity_category=PROPERTY_CATEGORY.get(key)
+    )
     for key, name in BASE_PROPERTY_NAMES.items()
 ]
 
@@ -34,7 +48,9 @@ FAN_PROPERTY_NAMES = {
 }
 
 FAN_SWITCHES = [
-    SwitchEntityDescription(key=key, name=name)
+    SwitchEntityDescription(
+        key=key, name=name, entity_category=PROPERTY_CATEGORY.get(key)
+    )
     for key, name in FAN_PROPERTY_NAMES.items()
 ]
 
@@ -44,7 +60,9 @@ LIGHT_PROPERTY_NAMES = {
 }
 
 LIGHT_SWITCHES = [
-    SwitchEntityDescription(key=key, name=name)
+    SwitchEntityDescription(
+        key=key, name=name, entity_category=PROPERTY_CATEGORY.get(key)
+    )
     for key, name in LIGHT_PROPERTY_NAMES.items()
 ]
 
