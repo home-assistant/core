@@ -4,12 +4,13 @@ from __future__ import annotations
 from typing import Any
 
 import voluptuous as vol
+from zamg import ZamgData
 
 from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_STATION_ID, DOMAIN, LOGGER
-from .sensor import ZamgData, closest_station, zamg_stations
 
 
 class ZamgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -17,21 +18,26 @@ class ZamgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    _client: ZamgData
+    _client: ZamgData | None = None
 
     async def async_step_user(self, user_input: dict[str, Any] | None = None):
         """Handle a flow initiated by the user."""
         errors: dict[str, Any] = {}
 
+        if self._client is None:
+            self._client = ZamgData()
+            self._client.session = async_get_clientsession(self.hass)
+            LOGGER.debug("config_flow: created new client")
+
         if user_input is None:
-            closest_station_id = await self.hass.async_add_executor_job(
-                closest_station,
+            closest_station_id = await self._client.closest_station(
                 self.hass.config.latitude,
                 self.hass.config.longitude,
                 self.hass.config.config_dir,
             )
+            LOGGER.debug("config_flow: closest station = %s", str(closest_station_id))
+            stations = await self._client.zamg_stations(self.hass.config.config_dir)
             user_input = {}
-            stations = zamg_stations(self.hass.config.config_dir)
 
             schema = vol.Schema(
                 {
@@ -54,8 +60,8 @@ class ZamgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
 
         try:
-            self._client = ZamgData(station_id)
-            await self.hass.async_add_executor_job(self._client.update)
+            self._client.set_default_station(station_id)
+            await self._client.update()
         except (ValueError, TypeError) as err:
             LOGGER.error("Config_flow: Received error from ZAMG: %s", err)
             errors["base"] = "cannot_connect"
@@ -64,7 +70,7 @@ class ZamgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         return self.async_create_entry(
-            title=self._client.get_data("station_name"),
+            title=self._client.get_data("Name"),
             data={CONF_STATION_ID: station_id},
         )
 
@@ -76,13 +82,15 @@ class ZamgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         try:
-            self._client = ZamgData(config[CONF_STATION_ID])
-            await self.hass.async_add_executor_job(self._client.update)
+            if self._client is None:
+                self._client = ZamgData(config[CONF_STATION_ID])
+                self._client.session = async_get_clientsession(self.hass)
+            await self._client.update()
         except (ValueError, TypeError) as err:
             LOGGER.error("Received error from ZAMG: %s", err)
             return self.async_abort(reason="unknown")
 
         return self.async_create_entry(
-            title=self._client.get_data("station_name"),
+            title=self._client.get_data("Name"),
             data={CONF_STATION_ID: config[CONF_STATION_ID]},
         )

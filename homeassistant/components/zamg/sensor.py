@@ -1,17 +1,11 @@
 """Sensor for zamg the Austrian "Zentralanstalt für Meteorologie und Geodynamik" integration."""
 from __future__ import annotations
 
-import csv
 from dataclasses import dataclass
-from datetime import datetime, timedelta
-import gzip
-import json
-import logging
-import os
 from typing import Union
 
-import requests
 import voluptuous as vol
+from zamg import ZamgData
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -32,7 +26,6 @@ from homeassistant.const import (
     PRESSURE_HPA,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
-    __version__,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -41,7 +34,6 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util import Throttle, dt as dt_util
 
 from .const import (
     ATTR_STATION,
@@ -50,9 +42,8 @@ from .const import (
     CONF_STATION_ID,
     DEFAULT_NAME,
     DOMAIN,
+    LOGGER,
     MANUFACTURER_URL,
-    MIN_TIME_BETWEEN_UPDATES,
-    VIENNA_TIME_ZONE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -167,13 +158,13 @@ SENSOR_TYPES: tuple[ZamgSensorEntityDescription, ...] = (
         col_heading=f"TP {TEMP_CELSIUS}",
         dtype=float,
     ),
-    # The following probably not useful for general consumption,
-    # but we need them to fill in internal attributes
+    # The following is probably not useful for general
     ZamgSensorEntityDescription(
         key="station_name",
         name="Station Name",
         col_heading="Name",
         dtype=str,
+        entity_registry_enabled_default=False,
     ),
     ZamgSensorEntityDescription(
         key="station_elevation",
@@ -181,18 +172,21 @@ SENSOR_TYPES: tuple[ZamgSensorEntityDescription, ...] = (
         native_unit_of_measurement=LENGTH_METERS,
         col_heading=f"Höhe {LENGTH_METERS}",
         dtype=int,
+        entity_registry_enabled_default=False,
     ),
     ZamgSensorEntityDescription(
         key="update_date",
         name="Update Date",
         col_heading="Datum",
         dtype=str,
+        entity_registry_enabled_default=False,
     ),
     ZamgSensorEntityDescription(
         key="update_time",
         name="Update Time",
         col_heading="Zeit",
         dtype=str,
+        entity_registry_enabled_default=False,
     ),
 )
 
@@ -229,29 +223,31 @@ def setup_platform(
     name = config[CONF_NAME]
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
+    station_id = config.get(CONF_STATION_ID)
 
-    station_id = config.get(CONF_STATION_ID) or closest_station(
+    probe = ZamgData(station_id)
+
+    station_id = station_id or probe.closest_station(
         latitude, longitude, hass.config.config_dir
     )
-    if station_id not in _get_ogd_stations():
-        _LOGGER.error(
+    if station_id not in probe.zamg_stations():
+        LOGGER.error(
             "Configured ZAMG %s (%s) is not a known station",
             CONF_STATION_ID,
             station_id,
         )
         return
 
-    probe = ZamgData(station_id=station_id)
     try:
         probe.update()
     except (ValueError, TypeError) as err:
-        _LOGGER.error("Sensor: Received error from ZAMG: %s", err)
+        LOGGER.error("Sensor: Received error from ZAMG: %s", err)
         return
 
     monitored_conditions = config[CONF_MONITORED_CONDITIONS]
     add_entities(
         [
-            ZamgSensor(probe, name, description)
+            ZamgSensor(probe, name, station_id, description)
             for description in SENSOR_TYPES
             if description.key in monitored_conditions
         ],
@@ -266,7 +262,7 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        ZamgSensor(coordinator, entry.title, description)
+        ZamgSensor(coordinator, entry.title, entry.data[CONF_STATION_ID], description)
         for description in SENSOR_TYPES
     )
 
@@ -277,17 +273,18 @@ class ZamgSensor(CoordinatorEntity, SensorEntity):
     _attr_attribution = ATTRIBUTION
     entity_description: ZamgSensorEntityDescription
 
-    def __init__(self, coordinator, name, description: ZamgSensorEntityDescription):
+    def __init__(
+        self, coordinator, name, station_id, description: ZamgSensorEntityDescription
+    ):
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_name = f"{name} {description.name}"
-        self._attr_unique_id = (
-            f"{coordinator.data.get(CONF_STATION_ID)}_{description.key}"
-        )
+        self._attr_unique_id = f"{station_id}_{description.key}"
+        self.station_id = f"{station_id}"
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, coordinator.data.get(CONF_STATION_ID))},
+            identifiers={(DOMAIN, station_id)},
             manufacturer=ATTRIBUTION,
             configuration_url=MANUFACTURER_URL,
             name=coordinator.name,
@@ -296,146 +293,25 @@ class ZamgSensor(CoordinatorEntity, SensorEntity):
     @property
     def native_value(self):
         """Return the state of the sensor."""
-        return self.coordinator.data.get(self.entity_description.key)
+        val = self.coordinator.data[self.station_id].get(
+            self.entity_description.col_heading
+        )
+        try:
+            if self.entity_description.dtype == float:
+                return float(val.replace(",", "."))
+            if self.entity_description.dtype == int:
+                return int(val.replace(",", "."))
+            return val
+        except ValueError:
+            return val
 
     @property
     def extra_state_attributes(self):
         """Return the state attributes."""
-        update_time = datetime.strptime(
-            f"{self.coordinator.data.get('update_date')} {self.coordinator.data.get('update_time')}",
-            "%d-%m-%Y %H:%M",
-        )
+        update_time = self.coordinator.data.get("last_update", "")
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,
-            ATTR_STATION: self.coordinator.data.get("station_name"),
-            CONF_STATION_ID: self.coordinator.data.get(CONF_STATION_ID),
+            ATTR_STATION: self.coordinator.data[self.station_id].get("Name"),
+            CONF_STATION_ID: self.station_id,
             ATTR_UPDATED: update_time.isoformat(),
         }
-
-
-class ZamgData:
-    """The class for handling the data retrieval."""
-
-    API_URL = "http://www.zamg.ac.at/ogd/"
-    API_HEADERS = {"User-Agent": f"home-assistant.zamg/ {__version__}"}
-
-    def __init__(self, station_id):
-        """Initialize the probe."""
-        self._station_id = station_id
-        self.data = {}
-
-    @property
-    def last_update(self):
-        """Return the timestamp of the most recent data."""
-        date, time = self.data.get("update_date"), self.data.get("update_time")
-        if date is not None and time is not None:
-            return datetime.strptime(date + time, "%d-%m-%Y%H:%M").replace(
-                tzinfo=VIENNA_TIME_ZONE
-            )
-
-    @property
-    def station_id(self) -> str:
-        """Return the station id."""
-        return self._station_id
-
-    @classmethod
-    def current_observations(cls):
-        """Fetch the latest CSV data."""
-        try:
-            response = requests.get(cls.API_URL, headers=cls.API_HEADERS, timeout=15)
-            response.raise_for_status()
-            response.encoding = "UTF8"
-            return csv.DictReader(
-                response.text.splitlines(), delimiter=";", quotechar='"'
-            )
-        except requests.exceptions.HTTPError:
-            _LOGGER.error("While fetching data")
-
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
-        """Get the latest data from ZAMG."""
-        if self.last_update and (
-            self.last_update + timedelta(hours=1)
-            > datetime.utcnow().replace(tzinfo=dt_util.UTC)
-        ):
-            return  # Not time to update yet; data is only hourly
-
-        for row in self.current_observations():
-            if row.get("Station") == self._station_id:
-                self.data = {
-                    API_FIELDS[col_heading][0]: API_FIELDS[col_heading][1](
-                        v.replace(",", ".")
-                    )
-                    for col_heading, v in row.items()
-                    if col_heading in API_FIELDS and v
-                }
-                break
-        else:
-            raise ValueError(f"No weather data for station {self._station_id}")
-
-    def get_data(self, variable):
-        """Get the data."""
-        return self.data.get(variable)
-
-
-def _get_ogd_stations():
-    """Return all stations in the OGD dataset."""
-    return {r["Station"] for r in ZamgData.current_observations()}
-
-
-def _get_zamg_stations():
-    """Return {CONF_STATION: (lat, lon, name)} for all stations, for auto-config."""
-    capital_stations = _get_ogd_stations()
-    req = requests.get(
-        "https://www.zamg.ac.at/cms/en/documents/climate/"
-        "doc_metnetwork/zamg-observation-points",
-        timeout=15,
-    )
-
-    def to_float(val: str):
-        try:
-            return float(val.replace(",", "."))
-        except ValueError:
-            return val
-
-    stations = {}
-    for row in csv.DictReader(req.text.splitlines(), delimiter=";", quotechar='"'):
-        if row.get("synnr") in capital_stations:
-            try:
-                stations[row["synnr"]] = tuple(
-                    to_float(row[coord])
-                    for coord in ("breite_dezi", "länge_dezi", "name")
-                )
-            except KeyError:
-                _LOGGER.error("ZAMG schema changed again, cannot autodetect station")
-    return stations
-
-
-def zamg_stations(cache_dir):
-    """Return {CONF_STATION: (lat, lon, name)} for all stations, for auto-config.
-
-    Results from internet requests are cached as compressed json, making
-    subsequent calls very much faster.
-    """
-    cache_file = os.path.join(cache_dir, ".zamg-stations.json.gz")
-    if not os.path.isfile(cache_file):
-        stations = _get_zamg_stations()
-        with gzip.open(cache_file, "wt") as cache:
-            json.dump(stations, cache, sort_keys=True)
-        return stations
-    with gzip.open(cache_file, "rt") as cache:
-        return {k: tuple(v) for k, v in json.load(cache).items()}
-
-
-def closest_station(lat, lon, cache_dir):
-    """Return the ZONE_ID.WMO_ID of the closest station to our lat/lon."""
-    if lat is None or lon is None or not os.path.isdir(cache_dir):
-        return
-    stations = zamg_stations(cache_dir)
-
-    def comparable_dist(zamg_id):
-        """Calculate the pseudo-distance from lat/lon."""
-        station_lat, station_lon, _ = stations[zamg_id]
-        return (lat - station_lat) ** 2 + (lon - station_lon) ** 2
-
-    return min(stations, key=comparable_dist)

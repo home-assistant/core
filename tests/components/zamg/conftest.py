@@ -51,18 +51,19 @@ def mock_zamg_config_flow(
 @pytest.fixture
 def mock_zamg(request: pytest.FixtureRequest) -> Generator[None, MagicMock, None]:
     """Return a mocked Zamg client."""
-    fixture: str = "zamg/data.json"
-    if hasattr(request, "param") and request.param:
-        fixture = request.param
 
-    device = ZamgDevice(json.loads(load_fixture(fixture)))
     with patch(
-        "homeassistant.components.zamg.sensor.ZamgData", autospec=True
+        "homeassistant.components.zamg.config_flow.ZamgData", autospec=True
     ) as zamg_mock:
         zamg = zamg_mock.return_value
-        zamg.update.return_value = device
-        zamg.get_data.return_value = device.get_data(TEST_STATION_ID)
-        zamg.current_observations.return_value = ValueError()
+        zamg.update.return_value = {TEST_STATION_ID: {"Name": TEST_STATION_NAME}}
+        zamg.zamg_stations.return_value = {
+            TEST_STATION_ID: (46.99305556, 15.43916667, TEST_STATION_NAME),
+            "11244": (46.8722229, 15.90361118, "BAD GLEICHENBERG"),
+        }
+        zamg.closest_station.return_value = TEST_STATION_ID
+        # zamg.get_data.data = {TEST_STATION_ID: {"Name": TEST_STATION_NAME}}
+        zamg.get_data.return_value = TEST_STATION_ID
         yield zamg
 
 
@@ -71,25 +72,14 @@ def mock_zamg_stations(
     request: pytest.FixtureRequest,
 ) -> Generator[None, MagicMock, None]:
     """Return a mocked Zamg client."""
-    with patch("homeassistant.components.zamg.sensor.zamg_stations") as zamg_mock:
+    with patch(
+        "homeassistant.components.zamg.config_flow.ZamgData.zamg_stations"
+    ) as zamg_mock:
         zamg_mock.return_value = {
             "11240": (46.99305556, 15.43916667, "GRAZ-FLUGHAFEN"),
             "11244": (46.87222222, 15.90361111, "BAD GLEICHENBERG"),
         }
         yield zamg_mock
-
-
-@pytest.fixture
-def mock_closest_station(
-    request: pytest.FixtureRequest,
-) -> Generator[None, MagicMock, None]:
-    """Return a mocked Zamg client."""
-    with patch(
-        "homeassistant.components.zamg.sensor.closest_station", autospec=True
-    ) as zamg_mock:
-        zamg = zamg_mock.return_value
-        zamg.update.return_value = TEST_STATION_ID
-        yield zamg
 
 
 @pytest.fixture
