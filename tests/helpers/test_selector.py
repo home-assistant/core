@@ -351,7 +351,7 @@ def test_object_selector_schema(schema, valid_selections, invalid_selections):
     (
         ({}, ("abc123",), (None,)),
         ({"multiline": True}, (), ()),
-        ({"multiline": False}, (), ()),
+        ({"multiline": False, "type": "email"}, (), ()),
     ),
 )
 def test_text_selector_schema(schema, valid_selections, invalid_selections):
@@ -402,7 +402,7 @@ def test_text_selector_schema(schema, valid_selections, invalid_selections):
             (0, None, ["red"]),
         ),
         (
-            {"options": [], "custom_value": True, "multiple": True},
+            {"options": [], "custom_value": True, "multiple": True, "mode": "list"},
             (["red"], ["green", "blue"], []),
             (0, None, "red"),
         ),
