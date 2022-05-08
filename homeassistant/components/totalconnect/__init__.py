@@ -31,10 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     conf = entry.data
     username = conf[CONF_USERNAME]
     password = conf[CONF_PASSWORD]
-    if AUTO_BYPASS in entry.options:
-        bypass = entry.options[AUTO_BYPASS]
-    else:
-        bypass = False
+    bypass = entry.options.get(AUTO_BYPASS, False)
 
     if CONF_USERCODES not in conf:
         # should only happen for those who used UI before we added usercodes
@@ -75,12 +72,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Update listener."""
-    if AUTO_BYPASS in entry.options:
-        client = hass.data[DOMAIN][entry.entry_id].client
-        for location_id in client.locations:
-            client.locations[location_id].auto_bypass_low_battery = entry.options[
-                AUTO_BYPASS
-            ]
+    bypass = entry.options.get(AUTO_BYPASS, False)
+    client = hass.data[DOMAIN][entry.entry_id].client
+    for location_id in client.locations:
+        client.locations[location_id].auto_bypass_low_battery = bypass
 
 
 class TotalConnectDataUpdateCoordinator(DataUpdateCoordinator):
