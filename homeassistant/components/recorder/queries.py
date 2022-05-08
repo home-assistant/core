@@ -537,6 +537,17 @@ def delete_statistics_runs_rows(statistics_runs: list[int]) -> StatementLambdaEl
     )
 
 
+def delete_statistics_short_term_rows(
+    short_term_statistics: list[int],
+) -> StatementLambdaElement:
+    """Delete statistics_short_term rows."""
+    return lambda_stmt(
+        lambda: delete(StatisticsShortTerm, synchronize_session=False).where(
+            StatisticsShortTerm.id.in_(short_term_statistics)
+        )
+    )
+
+
 def find_events_to_purge(purge_before: datetime) -> StatementLambdaElement:
     """Find events to purge."""
     return lambda_stmt(

@@ -14,14 +14,7 @@ from sqlalchemy.sql.expression import distinct
 from homeassistant.const import EVENT_STATE_CHANGED
 
 from .const import MAX_ROWS_TO_PURGE, SupportedDialect
-from .models import (
-    Events,
-    RecorderRuns,
-    StateAttributes,
-    States,
-    StatisticsRuns,
-    StatisticsShortTerm,
-)
+from .models import Events, RecorderRuns, StateAttributes, States, StatisticsRuns
 from .queries import (
     attributes_ids_exist_in_states,
     attributes_ids_exist_in_states_sqlite,
@@ -31,6 +24,7 @@ from .queries import (
     delete_states_attributes_rows,
     delete_states_rows,
     delete_statistics_runs_rows,
+    delete_statistics_short_term_rows,
     disconnect_states_rows,
     find_events_to_purge,
     find_short_term_statistics_to_purge,
@@ -368,10 +362,8 @@ def _purge_short_term_statistics(
     session: Session, short_term_statistics: list[int]
 ) -> None:
     """Delete by id."""
-    deleted_rows = (
-        session.query(StatisticsShortTerm)
-        .filter(StatisticsShortTerm.id.in_(short_term_statistics))
-        .delete(synchronize_session=False)
+    deleted_rows = session.execute(
+        delete_statistics_short_term_rows(short_term_statistics)
     )
     _LOGGER.debug("Deleted %s short term statistics", deleted_rows)
 
