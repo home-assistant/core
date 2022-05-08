@@ -1,6 +1,7 @@
 """Test pool."""
 import threading
 
+import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -28,30 +29,29 @@ def test_recorder_pool(caplog):
         connections.append(session.connection().connection.connection)
         session.close()
 
-    _get_connection_twice()
-    assert "accesses the database without the database executor" in caplog.text
-    assert connections[0] != connections[1]
+    with pytest.raises(RuntimeError):
+        _get_connection_twice()
 
     caplog.clear()
     new_thread = threading.Thread(target=_get_connection_twice)
     new_thread.start()
     new_thread.join()
     assert "accesses the database without the database executor" in caplog.text
-    assert connections[2] != connections[3]
+    assert connections[0] != connections[1]
 
     caplog.clear()
     new_thread = threading.Thread(target=_get_connection_twice, name=DB_WORKER_PREFIX)
     new_thread.start()
     new_thread.join()
     assert "accesses the database without the database executor" not in caplog.text
-    assert connections[4] == connections[5]
+    assert connections[2] == connections[3]
 
     caplog.clear()
     new_thread = threading.Thread(target=_get_connection_twice, name="Recorder")
     new_thread.start()
     new_thread.join()
     assert "accesses the database without the database executor" not in caplog.text
-    assert connections[6] == connections[7]
+    assert connections[4] == connections[5]
 
     shutdown = True
     caplog.clear()
@@ -59,4 +59,4 @@ def test_recorder_pool(caplog):
     new_thread.start()
     new_thread.join()
     assert "accesses the database without the database executor" not in caplog.text
-    assert connections[8] != connections[9]
+    assert connections[6] != connections[7]
