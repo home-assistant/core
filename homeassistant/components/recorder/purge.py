@@ -15,7 +15,6 @@ from homeassistant.const import EVENT_STATE_CHANGED
 
 from .const import MAX_ROWS_TO_PURGE, SupportedDialect
 from .models import (
-    EventData,
     Events,
     RecorderRuns,
     StateAttributes,
@@ -27,8 +26,14 @@ from .queries import (
     attributes_ids_exist_in_states,
     attributes_ids_exist_in_states_sqlite,
     data_ids_exist_in_events,
+    data_ids_exist_in_events_sqlite,
+    delete_event_data_rows,
+    delete_states_attributes_rows,
     delete_states_rows,
     disconnect_states_rows,
+    find_events_to_purge,
+    find_short_term_statistics_to_purge,
+    find_states_to_purge,
 )
 from .repack import repack_database
 from .util import retryable_database_job, session_scope
@@ -107,19 +112,9 @@ def _select_event_state_attributes_ids_data_ids_to_purge(
     session: Session, purge_before: datetime
 ) -> tuple[set[int], set[int], set[int], set[int]]:
     """Return a list of event, state, and attribute ids to purge."""
-    events = (
-        session.query(Events.event_id, Events.data_id)
-        .filter(Events.time_fired < purge_before)
-        .limit(MAX_ROWS_TO_PURGE)
-        .all()
-    )
+    events = session.execute(find_events_to_purge(purge_before)).all()
     _LOGGER.debug("Selected %s event ids to remove", len(events))
-    states = (
-        session.query(States.state_id, States.attributes_id)
-        .filter(States.last_updated < purge_before)
-        .limit(MAX_ROWS_TO_PURGE)
-        .all()
-    )
+    states = session.execute(find_states_to_purge(purge_before)).all()
     _LOGGER.debug("Selected %s state ids to remove", len(states))
     event_ids = set()
     state_ids = set()
@@ -216,9 +211,9 @@ def _select_unused_event_data_ids(
     if using_sqlite:
         seen_ids = {
             state[0]
-            for state in session.query(distinct(Events.data_id))
-            .filter(Events.data_id.in_(data_ids))
-            .all()
+            for state in session.execute(
+                data_ids_exist_in_events_sqlite(data_ids)
+            ).all()
         }
     else:
         seen_ids = set()
@@ -261,12 +256,9 @@ def _select_short_term_statistics_to_purge(
     session: Session, purge_before: datetime
 ) -> list[int]:
     """Return a list of short term statistics to purge."""
-    statistics = (
-        session.query(StatisticsShortTerm.id)
-        .filter(StatisticsShortTerm.start < purge_before)
-        .limit(MAX_ROWS_TO_PURGE)
-        .all()
-    )
+    statistics = session.execute(
+        find_short_term_statistics_to_purge(purge_before)
+    ).all()
     _LOGGER.debug("Selected %s short term statistics to remove", len(statistics))
     return [statistic.id for statistic in statistics]
 
@@ -346,12 +338,7 @@ def _purge_attributes_ids(
     instance: Recorder, session: Session, attributes_ids: set[int]
 ) -> None:
     """Delete old attributes ids."""
-
-    deleted_rows = (
-        session.query(StateAttributes)
-        .filter(StateAttributes.attributes_id.in_(attributes_ids))
-        .delete(synchronize_session=False)
-    )
+    deleted_rows = session.execute(delete_states_attributes_rows(attributes_ids))
     _LOGGER.debug("Deleted %s attribute states", deleted_rows)
 
     # Evict any entries in the state_attributes_ids cache referring to a purged state
@@ -363,11 +350,7 @@ def _purge_event_data_ids(
 ) -> None:
     """Delete old event data ids."""
 
-    deleted_rows = (
-        session.query(EventData)
-        .filter(EventData.data_id.in_(data_ids))
-        .delete(synchronize_session=False)
-    )
+    deleted_rows = session.execute(delete_event_data_rows(data_ids))
     _LOGGER.debug("Deleted %s data events", deleted_rows)
 
     # Evict any entries in the event_data_ids cache referring to a purged state

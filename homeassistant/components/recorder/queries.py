@@ -1,11 +1,14 @@
 """Queries for the recorder."""
 from __future__ import annotations
 
+from datetime import datetime
+
 from sqlalchemy import delete, distinct, func, lambda_stmt, select, union_all, update
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 from sqlalchemy.sql.selectable import Select
 
-from .models import EventData, Events, StateAttributes, States
+from .const import MAX_ROWS_TO_PURGE
+from .models import EventData, Events, StateAttributes, States, StatisticsShortTerm
 
 
 def find_shared_attributes_id(
@@ -256,6 +259,15 @@ def attributes_ids_exist_in_states(
     )
 
 
+def data_ids_exist_in_events_sqlite(
+    data_ids: set[int],
+) -> StatementLambdaElement:
+    """Find data ids that exist in the events table."""
+    return lambda_stmt(
+        lambda: select(distinct(Events.data_id)).filter(Events.data_id.in_(data_ids))
+    )
+
+
 def _event_data_id_exist(data_id: int | None) -> Select:
     """Check if a event data id exists in the events table."""
     return select(func.min(Events.data_id)).where(Events.data_id == data_id)
@@ -488,4 +500,51 @@ def delete_states_rows(state_ids: set[int]) -> StatementLambdaElement:
         lambda: delete(States, synchronize_session=False).where(
             States.state_id.in_(state_ids)
         )
+    )
+
+
+def delete_event_data_rows(data_ids: set[int]) -> StatementLambdaElement:
+    """Delete event_data rows."""
+    return lambda_stmt(
+        lambda: delete(EventData, synchronize_session=False).where(
+            EventData.data_id.in_(data_ids)
+        )
+    )
+
+
+def delete_states_attributes_rows(attributes_ids: set[int]) -> StatementLambdaElement:
+    """Delete states_attributes rows."""
+    return lambda_stmt(
+        lambda: delete(StateAttributes, synchronize_session=False).where(
+            StateAttributes.attributes_id.in_(attributes_ids)
+        )
+    )
+
+
+def find_events_to_purge(purge_before: datetime) -> StatementLambdaElement:
+    """Find events to purge."""
+    return lambda_stmt(
+        lambda: select(Events.event_id, Events.data_id)
+        .filter(Events.time_fired < purge_before)
+        .limit(MAX_ROWS_TO_PURGE)
+    )
+
+
+def find_states_to_purge(purge_before: datetime) -> StatementLambdaElement:
+    """Find states to purge."""
+    return lambda_stmt(
+        lambda: select(States.state_id, States.attributes_id)
+        .filter(States.last_updated < purge_before)
+        .limit(MAX_ROWS_TO_PURGE)
+    )
+
+
+def find_short_term_statistics_to_purge(
+    purge_before: datetime,
+) -> StatementLambdaElement:
+    """Find short term statistics to purge."""
+    return lambda_stmt(
+        lambda: select(StatisticsShortTerm.id)
+        .filter(StatisticsShortTerm.start < purge_before)
+        .limit(MAX_ROWS_TO_PURGE)
     )
