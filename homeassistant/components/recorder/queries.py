@@ -1,6 +1,7 @@
 """Queries for the recorder."""
 from __future__ import annotations
 
+from collections.abc import Iterable
 from datetime import datetime
 
 from sqlalchemy import delete, distinct, func, lambda_stmt, select, union_all, update
@@ -11,6 +12,7 @@ from .const import MAX_ROWS_TO_PURGE
 from .models import (
     EventData,
     Events,
+    RecorderRuns,
     StateAttributes,
     States,
     StatisticsRuns,
@@ -44,7 +46,7 @@ def _state_attrs_exist(attr: int | None) -> Select:
 
 
 def attributes_ids_exist_in_states_sqlite(
-    attributes_ids: set[int],
+    attributes_ids: Iterable[int],
 ) -> StatementLambdaElement:
     """Find attributes ids that exist in the states table."""
     return lambda_stmt(
@@ -267,7 +269,7 @@ def attributes_ids_exist_in_states(
 
 
 def data_ids_exist_in_events_sqlite(
-    data_ids: set[int],
+    data_ids: Iterable[int],
 ) -> StatementLambdaElement:
     """Find data ids that exist in the events table."""
     return lambda_stmt(
@@ -492,7 +494,7 @@ def data_ids_exist_in_events(
     )
 
 
-def disconnect_states_rows(state_ids: set[int]) -> StatementLambdaElement:
+def disconnect_states_rows(state_ids: Iterable[int]) -> StatementLambdaElement:
     """Disconnect states rows."""
     return lambda_stmt(
         lambda: update(States, synchronize_session=False)
@@ -501,7 +503,7 @@ def disconnect_states_rows(state_ids: set[int]) -> StatementLambdaElement:
     )
 
 
-def delete_states_rows(state_ids: set[int]) -> StatementLambdaElement:
+def delete_states_rows(state_ids: Iterable[int]) -> StatementLambdaElement:
     """Delete states rows."""
     return lambda_stmt(
         lambda: delete(States, synchronize_session=False).where(
@@ -510,7 +512,7 @@ def delete_states_rows(state_ids: set[int]) -> StatementLambdaElement:
     )
 
 
-def delete_event_data_rows(data_ids: set[int]) -> StatementLambdaElement:
+def delete_event_data_rows(data_ids: Iterable[int]) -> StatementLambdaElement:
     """Delete event_data rows."""
     return lambda_stmt(
         lambda: delete(EventData, synchronize_session=False).where(
@@ -519,7 +521,9 @@ def delete_event_data_rows(data_ids: set[int]) -> StatementLambdaElement:
     )
 
 
-def delete_states_attributes_rows(attributes_ids: set[int]) -> StatementLambdaElement:
+def delete_states_attributes_rows(
+    attributes_ids: Iterable[int],
+) -> StatementLambdaElement:
     """Delete states_attributes rows."""
     return lambda_stmt(
         lambda: delete(StateAttributes, synchronize_session=False).where(
@@ -528,7 +532,9 @@ def delete_states_attributes_rows(attributes_ids: set[int]) -> StatementLambdaEl
     )
 
 
-def delete_statistics_runs_rows(statistics_runs: list[int]) -> StatementLambdaElement:
+def delete_statistics_runs_rows(
+    statistics_runs: Iterable[int],
+) -> StatementLambdaElement:
     """Delete statistics_runs rows."""
     return lambda_stmt(
         lambda: delete(StatisticsRuns, synchronize_session=False).where(
@@ -538,13 +544,35 @@ def delete_statistics_runs_rows(statistics_runs: list[int]) -> StatementLambdaEl
 
 
 def delete_statistics_short_term_rows(
-    short_term_statistics: list[int],
+    short_term_statistics: Iterable[int],
 ) -> StatementLambdaElement:
     """Delete statistics_short_term rows."""
     return lambda_stmt(
         lambda: delete(StatisticsShortTerm, synchronize_session=False).where(
             StatisticsShortTerm.id.in_(short_term_statistics)
         )
+    )
+
+
+def delete_event_rows(
+    event_ids: Iterable[int],
+) -> StatementLambdaElement:
+    """Delete statistics_short_term rows."""
+    return lambda_stmt(
+        lambda: delete(Events, synchronize_session=False).where(
+            Events.event_id.in_(event_ids)
+        )
+    )
+
+
+def delete_recorder_runs_rows(
+    purge_before: datetime, current_run_id: int
+) -> StatementLambdaElement:
+    """Delete recorder_runs rows."""
+    return lambda_stmt(
+        lambda: delete(RecorderRuns, synchronize_session=False)
+        .filter(RecorderRuns.start < purge_before)
+        .filter(RecorderRuns.run_id != current_run_id)
     )
 
 
@@ -575,3 +603,19 @@ def find_short_term_statistics_to_purge(
         .filter(StatisticsShortTerm.start < purge_before)
         .limit(MAX_ROWS_TO_PURGE)
     )
+
+
+def find_statistics_runs_to_purge(
+    purge_before: datetime,
+) -> StatementLambdaElement:
+    """Find statistics_runs to purge."""
+    return lambda_stmt(
+        lambda: select(StatisticsRuns.run_id)
+        .filter(StatisticsRuns.start < purge_before)
+        .limit(MAX_ROWS_TO_PURGE)
+    )
+
+
+def find_latest_statistics_runs_run_id() -> StatementLambdaElement:
+    """Find the latest statistics_runs run_id."""
+    return lambda_stmt(lambda: select(func.max(StatisticsRuns.run_id)))

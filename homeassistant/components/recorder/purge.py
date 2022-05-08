@@ -7,28 +7,31 @@ from itertools import zip_longest
 import logging
 from typing import TYPE_CHECKING
 
-from sqlalchemy import func
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.expression import distinct
 
 from homeassistant.const import EVENT_STATE_CHANGED
 
 from .const import MAX_ROWS_TO_PURGE, SupportedDialect
-from .models import Events, RecorderRuns, StateAttributes, States, StatisticsRuns
+from .models import Events, StateAttributes, States
 from .queries import (
     attributes_ids_exist_in_states,
     attributes_ids_exist_in_states_sqlite,
     data_ids_exist_in_events,
     data_ids_exist_in_events_sqlite,
     delete_event_data_rows,
+    delete_event_rows,
+    delete_recorder_runs_rows,
     delete_states_attributes_rows,
     delete_states_rows,
     delete_statistics_runs_rows,
     delete_statistics_short_term_rows,
     disconnect_states_rows,
     find_events_to_purge,
+    find_latest_statistics_runs_run_id,
     find_short_term_statistics_to_purge,
     find_states_to_purge,
+    find_statistics_runs_to_purge,
 )
 from .repack import repack_database
 from .util import retryable_database_job, session_scope
@@ -230,16 +233,11 @@ def _select_statistics_runs_to_purge(
     session: Session, purge_before: datetime
 ) -> list[int]:
     """Return a list of statistic runs to purge, but take care to keep the newest run."""
-    statistic_runs = (
-        session.query(StatisticsRuns.run_id)
-        .filter(StatisticsRuns.start < purge_before)
-        .limit(MAX_ROWS_TO_PURGE)
-        .all()
-    )
+    statistic_runs = session.execute(find_statistics_runs_to_purge(purge_before)).all()
     statistic_runs_list = [run.run_id for run in statistic_runs]
     # Exclude the newest statistics run
     if (
-        last_run := session.query(func.max(StatisticsRuns.run_id)).scalar()
+        last_run := session.execute(find_latest_statistics_runs_run_id()).scalar()
     ) and last_run in statistic_runs_list:
         statistic_runs_list.remove(last_run)
 
@@ -370,11 +368,7 @@ def _purge_short_term_statistics(
 
 def _purge_event_ids(session: Session, event_ids: Iterable[int]) -> None:
     """Delete by event id."""
-    deleted_rows = (
-        session.query(Events)
-        .filter(Events.event_id.in_(event_ids))
-        .delete(synchronize_session=False)
-    )
+    deleted_rows = session.execute(delete_event_rows(event_ids))
     _LOGGER.debug("Deleted %s events", deleted_rows)
 
 
@@ -383,11 +377,8 @@ def _purge_old_recorder_runs(
 ) -> None:
     """Purge all old recorder runs."""
     # Recorder runs is small, no need to batch run it
-    deleted_rows = (
-        session.query(RecorderRuns)
-        .filter(RecorderRuns.start < purge_before)
-        .filter(RecorderRuns.run_id != instance.run_history.current.run_id)
-        .delete(synchronize_session=False)
+    deleted_rows = session.execute(
+        delete_recorder_runs_rows(purge_before, instance.run_history.current.run_id)
     )
     _LOGGER.debug("Deleted %s recorder_runs", deleted_rows)
 
