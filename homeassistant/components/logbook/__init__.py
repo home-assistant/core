@@ -866,7 +866,7 @@ class RowIndexer:
     """A class to index rows by context_id and convert them to LazyEventPartialState."""
 
     def __init__(self, event_data_cache: dict[str, dict[str, Any]]) -> None:
-        """Init the linker."""
+        """Init the indexer."""
         self._event_data_cache = event_data_cache
         self.context_id_cache: dict[str | None, Row | None] = {None: None}
         self.event_cache: dict[Row, LazyEventPartialState] = {}
@@ -883,14 +883,6 @@ class RowIndexer:
     def get_row_by_context_id(self, context_id: str | None) -> Row | None:
         """Get an event from the cache or create it from the row."""
         return self.context_id_cache.get(context_id)
-
-    def get_event_by_context_id(
-        self, context_id: str | None
-    ) -> LazyEventPartialState | None:
-        """Get an event from the cache or create it from the row."""
-        if (row := self.context_id_cache.get(context_id)) is not None:
-            return self.get_event(row)
-        return None
 
 
 class LazyEventPartialState:
