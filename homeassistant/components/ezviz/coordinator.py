@@ -13,11 +13,8 @@ from pyezviz.exceptions import (
 )
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import (
-    ConfigEntryAuthFailed,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
+from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
 

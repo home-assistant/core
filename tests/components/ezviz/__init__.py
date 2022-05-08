@@ -3,8 +3,8 @@ from unittest.mock import patch
 
 from homeassistant.components.ezviz.const import (
     ATTR_SERIAL,
+    ATTR_TYPE_CAMERA,
     ATTR_TYPE_CLOUD,
-    CONF_CAMERAS,
     CONF_FFMPEG_ARGUMENTS,
     CONF_RFSESSION_ID,
     CONF_SESSION_ID,
@@ -59,21 +59,6 @@ USER_INPUT_CAMERA = {
     CONF_PASSWORD: "test-password",
     CONF_USERNAME: "test-username",
     CONF_TYPE: ATTR_TYPE_CAMERA,
-}
-
-YAML_CONFIG = {
-    CONF_USERNAME: "test-username",
-    CONF_PASSWORD: "test-password",
-    CONF_URL: "apiieu.ezvizlife.com",
-    CONF_CAMERAS: {
-        "C666666": {CONF_USERNAME: "test-username", CONF_PASSWORD: "test-password"}
-    },
-}
-
-YAML_CONFIG_CAMERA = {
-    ATTR_SERIAL: "C666666",
-    CONF_USERNAME: "test-username",
-    CONF_PASSWORD: "test-password",
 }
 
 DISCOVERY_INFO = {
