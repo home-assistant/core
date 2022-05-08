@@ -35,7 +35,7 @@ from homeassistant.const import (
 )
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import config_validation as cv, template as template_helper
+from homeassistant.helpers import template as template_helper
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.util import slugify
 
@@ -141,6 +141,8 @@ async def async_test_still(hass, info) -> tuple[dict[str, str], str | None]:
     fmt = None
     if not (url := info.get(CONF_STILL_IMAGE_URL)):
         return {}, info.get(CONF_CONTENT_TYPE, "image/jpeg")
+    if not isinstance(url, template_helper.Template) and url:
+        url = template_helper.Template(url, hass)
     try:
         if not isinstance(url, template_helper.Template):
             url = template_helper.Template(url, hass)
@@ -199,8 +201,7 @@ async def async_test_stream(hass, info) -> dict[str, str]:
     if not (stream_source := info.get(CONF_STREAM_SOURCE)):
         return {}
     if not isinstance(stream_source, template_helper.Template):
-        stream_source = cv.template(stream_source)
-        stream_source.hass = hass
+        stream_source = template_helper.Template(stream_source, hass)
     try:
         stream_source = stream_source.async_render(parse_result=False)
     except TemplateError as err:
