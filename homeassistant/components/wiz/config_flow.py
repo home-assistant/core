@@ -103,7 +103,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="discovery_confirm",
             description_placeholders=placeholders,
-            data_schema=vol.Schema({}),
         )
 
     async def async_step_pick_device(

@@ -1,4 +1,6 @@
 """Binary sensor platform for mobile_app."""
+from typing import Any
+
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_UNIQUE_ID, CONF_WEBHOOK_ID, STATE_ON
@@ -18,7 +20,6 @@ from .const import (
     ATTR_SENSOR_TYPE,
     ATTR_SENSOR_TYPE_BINARY_SENSOR as ENTITY_TYPE,
     ATTR_SENSOR_UNIQUE_ID,
-    DATA_DEVICES,
     DOMAIN,
 )
 from .entity import MobileAppEntity, unique_id
@@ -39,7 +40,7 @@ async def async_setup_entry(
     for entry in entries:
         if entry.domain != ENTITY_TYPE or entry.disabled_by:
             continue
-        config = {
+        config: dict[str, Any] = {
             ATTR_SENSOR_ATTRIBUTES: {},
             ATTR_SENSOR_DEVICE_CLASS: entry.device_class or entry.original_device_class,
             ATTR_SENSOR_ICON: entry.original_icon,
@@ -49,7 +50,7 @@ async def async_setup_entry(
             ATTR_SENSOR_UNIQUE_ID: entry.unique_id,
             ATTR_SENSOR_ENTITY_CATEGORY: entry.entity_category,
         }
-        entities.append(MobileAppBinarySensor(config, entry.device_id, config_entry))
+        entities.append(MobileAppBinarySensor(config, config_entry))
 
     async_add_entities(entities)
 
@@ -65,9 +66,7 @@ async def async_setup_entry(
             CONF_NAME
         ] = f"{config_entry.data[ATTR_DEVICE_NAME]} {data[ATTR_SENSOR_NAME]}"
 
-        device = hass.data[DOMAIN][DATA_DEVICES][data[CONF_WEBHOOK_ID]]
-
-        async_add_entities([MobileAppBinarySensor(data, device, config_entry)])
+        async_add_entities([MobileAppBinarySensor(data, config_entry)])
 
     async_dispatcher_connect(
         hass,

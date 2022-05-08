@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 import logging
-from typing import Any, Generic
+from typing import Any
 
 from pyunifiprotect.data import (
     NVR,
@@ -54,13 +54,13 @@ DEVICE_CLASS_DETECTION = "unifiprotect__detection"
 
 @dataclass
 class ProtectSensorEntityDescription(
-    ProtectRequiredKeysMixin, SensorEntityDescription, Generic[T]
+    ProtectRequiredKeysMixin[T], SensorEntityDescription
 ):
     """Describes UniFi Protect Sensor entity."""
 
     precision: int | None = None
 
-    def get_ufp_value(self, obj: ProtectDeviceModel) -> Any:
+    def get_ufp_value(self, obj: T) -> Any:
         """Return value from UniFi Protect device."""
         value = super().get_ufp_value(obj)
 
@@ -154,6 +154,7 @@ CAMERA_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         name="Oldest Recording",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         ufp_value="stats.video.recording_start",
     ),
     ProtectSensorEntityDescription(
@@ -185,6 +186,15 @@ CAMERA_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         # (i.e. is not G4 Doorbell or not on 1.20.1+)
         ufp_required_field="voltage",
         precision=2,
+    ),
+    ProtectSensorEntityDescription(
+        key="doorbell_last_trip_time",
+        name="Last Doorbell Ring",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        icon="mdi:doorbell-video",
+        ufp_required_field="feature_flags.has_chime",
+        ufp_value="last_ring",
+        entity_registry_enabled_default=False,
     ),
 )
 
@@ -251,6 +261,27 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         name="Alarm Sound Detected",
         ufp_value_fn=_get_alarm_sound,
         ufp_enabled="is_alarm_sensor_enabled",
+    ),
+    ProtectSensorEntityDescription(
+        key="door_last_trip_time",
+        name="Last Open",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        ufp_value="open_status_changed_at",
+        entity_registry_enabled_default=False,
+    ),
+    ProtectSensorEntityDescription(
+        key="motion_last_trip_time",
+        name="Last Motion Detected",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        ufp_value="motion_detected_at",
+        entity_registry_enabled_default=False,
+    ),
+    ProtectSensorEntityDescription(
+        key="tampering_last_trip_time",
+        name="Last Tampering Detected",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        ufp_value="tampering_detected_at",
+        entity_registry_enabled_default=False,
     ),
 )
 
@@ -399,6 +430,27 @@ MOTION_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
 )
 
 
+LIGHT_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
+    ProtectSensorEntityDescription(
+        key="motion_last_trip_time",
+        name="Last Motion Detected",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        ufp_value="last_motion",
+        entity_registry_enabled_default=False,
+    ),
+)
+
+MOTION_TRIP_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
+    ProtectSensorEntityDescription(
+        key="motion_last_trip_time",
+        name="Last Motion Detected",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        ufp_value="last_motion",
+        entity_registry_enabled_default=False,
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -412,6 +464,7 @@ async def async_setup_entry(
         all_descs=ALL_DEVICES_SENSORS,
         camera_descs=CAMERA_SENSORS + CAMERA_DISABLED_SENSORS,
         sense_descs=SENSE_SENSORS,
+        light_descs=LIGHT_SENSORS,
         lock_descs=DOORLOCK_SENSORS,
     )
     entities += _async_motion_entities(data)
@@ -426,6 +479,14 @@ def _async_motion_entities(
 ) -> list[ProtectDeviceEntity]:
     entities: list[ProtectDeviceEntity] = []
     for device in data.api.bootstrap.cameras.values():
+        for description in MOTION_TRIP_SENSORS:
+            entities.append(ProtectDeviceSensor(data, device, description))
+            _LOGGER.debug(
+                "Adding trip sensor entity %s for %s",
+                description.name,
+                device.name,
+            )
+
         if not device.feature_flags.has_smart_detect:
             continue
 

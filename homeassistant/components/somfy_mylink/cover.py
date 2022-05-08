@@ -79,6 +79,7 @@ class SomfyShade(RestoreEntity, CoverEntity):
         self._attr_unique_id = target_id
         self._attr_name = name
         self._reverse = reverse
+        self._attr_is_closed = None
         self._attr_device_class = device_class
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._target_id)},

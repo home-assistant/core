@@ -5,12 +5,12 @@ set_theme:
   description: Set a theme unless the client selected per-device theme.
   fields:
     name:
-      name: Name
-      description: Name of a predefined theme, 'default' or 'none'.
+      name: Theme
+      description: Name of a predefined theme
       required: true
       example: "default"
       selector:
-        text:
+        theme:
     mode:
       name: Mode
       description: The mode the theme is for.
@@ -18,8 +18,10 @@ set_theme:
       selector:
         select:
           options:
-            - "dark"
-            - "light"
+            - label: "Dark"
+              value: "dark"
+            - label: "Light"
+              value: "light"
 
 reload_themes:
   name: Reload themes

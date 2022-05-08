@@ -19,23 +19,14 @@ from homeassistant.components.light import (
     ATTR_WHITE,
     ATTR_WHITE_VALUE,
     ATTR_XY_COLOR,
-    COLOR_MODE_BRIGHTNESS,
-    COLOR_MODE_COLOR_TEMP,
-    COLOR_MODE_HS,
-    COLOR_MODE_ONOFF,
-    COLOR_MODE_RGB,
-    COLOR_MODE_RGBW,
-    COLOR_MODE_RGBWW,
-    COLOR_MODE_UNKNOWN,
-    COLOR_MODE_WHITE,
-    COLOR_MODE_XY,
     ENTITY_ID_FORMAT,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
-    SUPPORT_EFFECT,
     SUPPORT_WHITE_VALUE,
+    ColorMode,
     LightEntity,
+    LightEntityFeature,
     valid_supported_color_modes,
 )
 from homeassistant.const import (
@@ -230,12 +221,22 @@ _PLATFORM_SCHEMA_BASE = (
 )
 
 PLATFORM_SCHEMA_BASIC = vol.All(
+    # CONF_WHITE_VALUE_* is deprecated, support will be removed in release 2022.9
+    cv.deprecated(CONF_WHITE_VALUE_COMMAND_TOPIC),
+    cv.deprecated(CONF_WHITE_VALUE_SCALE),
+    cv.deprecated(CONF_WHITE_VALUE_STATE_TOPIC),
+    cv.deprecated(CONF_WHITE_VALUE_TEMPLATE),
     _PLATFORM_SCHEMA_BASE,
 )
 
 DISCOVERY_SCHEMA_BASIC = vol.All(
     # CONF_VALUE_TEMPLATE is no longer supported, support was removed in 2022.2
     cv.removed(CONF_VALUE_TEMPLATE),
+    # CONF_WHITE_VALUE_* is deprecated, support will be removed in release 2022.9
+    cv.deprecated(CONF_WHITE_VALUE_COMMAND_TOPIC),
+    cv.deprecated(CONF_WHITE_VALUE_SCALE),
+    cv.deprecated(CONF_WHITE_VALUE_STATE_TOPIC),
+    cv.deprecated(CONF_WHITE_VALUE_TEMPLATE),
     _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
 )
 
@@ -384,35 +385,35 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         self._optimistic_xy_color = optimistic or topic[CONF_XY_STATE_TOPIC] is None
         supported_color_modes = set()
         if topic[CONF_COLOR_TEMP_COMMAND_TOPIC] is not None:
-            supported_color_modes.add(COLOR_MODE_COLOR_TEMP)
-            self._color_mode = COLOR_MODE_COLOR_TEMP
+            supported_color_modes.add(ColorMode.COLOR_TEMP)
+            self._color_mode = ColorMode.COLOR_TEMP
         if topic[CONF_HS_COMMAND_TOPIC] is not None:
-            supported_color_modes.add(COLOR_MODE_HS)
-            self._color_mode = COLOR_MODE_HS
+            supported_color_modes.add(ColorMode.HS)
+            self._color_mode = ColorMode.HS
         if topic[CONF_RGB_COMMAND_TOPIC] is not None:
-            supported_color_modes.add(COLOR_MODE_RGB)
-            self._color_mode = COLOR_MODE_RGB
+            supported_color_modes.add(ColorMode.RGB)
+            self._color_mode = ColorMode.RGB
         if topic[CONF_RGBW_COMMAND_TOPIC] is not None:
-            supported_color_modes.add(COLOR_MODE_RGBW)
-            self._color_mode = COLOR_MODE_RGBW
+            supported_color_modes.add(ColorMode.RGBW)
+            self._color_mode = ColorMode.RGBW
         if topic[CONF_RGBWW_COMMAND_TOPIC] is not None:
-            supported_color_modes.add(COLOR_MODE_RGBWW)
-            self._color_mode = COLOR_MODE_RGBWW
+            supported_color_modes.add(ColorMode.RGBWW)
+            self._color_mode = ColorMode.RGBWW
         if topic[CONF_WHITE_COMMAND_TOPIC] is not None:
-            supported_color_modes.add(COLOR_MODE_WHITE)
+            supported_color_modes.add(ColorMode.WHITE)
         if topic[CONF_XY_COMMAND_TOPIC] is not None:
-            supported_color_modes.add(COLOR_MODE_XY)
-            self._color_mode = COLOR_MODE_XY
+            supported_color_modes.add(ColorMode.XY)
+            self._color_mode = ColorMode.XY
         if len(supported_color_modes) > 1:
-            self._color_mode = COLOR_MODE_UNKNOWN
+            self._color_mode = ColorMode.UNKNOWN
 
         if not supported_color_modes:
             if topic[CONF_BRIGHTNESS_COMMAND_TOPIC] is not None:
-                self._color_mode = COLOR_MODE_BRIGHTNESS
-                supported_color_modes.add(COLOR_MODE_BRIGHTNESS)
+                self._color_mode = ColorMode.BRIGHTNESS
+                supported_color_modes.add(ColorMode.BRIGHTNESS)
             else:
-                self._color_mode = COLOR_MODE_ONOFF
-                supported_color_modes.add(COLOR_MODE_ONOFF)
+                self._color_mode = ColorMode.ONOFF
+                supported_color_modes.add(ColorMode.ONOFF)
 
         # Validate the color_modes configuration
         self._supported_color_modes = valid_supported_color_modes(supported_color_modes)
@@ -503,7 +504,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         def rgb_received(msg):
             """Handle new MQTT messages for RGB."""
             rgb = _rgbx_received(
-                msg, CONF_RGB_VALUE_TEMPLATE, COLOR_MODE_RGB, lambda *x: x
+                msg, CONF_RGB_VALUE_TEMPLATE, ColorMode.RGB, lambda *x: x
             )
             if not rgb:
                 return
@@ -522,7 +523,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             rgbw = _rgbx_received(
                 msg,
                 CONF_RGBW_VALUE_TEMPLATE,
-                COLOR_MODE_RGBW,
+                ColorMode.RGBW,
                 color_util.color_rgbw_to_rgb,
             )
             if not rgbw:
@@ -539,7 +540,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             rgbww = _rgbx_received(
                 msg,
                 CONF_RGBWW_VALUE_TEMPLATE,
-                COLOR_MODE_RGBWW,
+                ColorMode.RGBWW,
                 color_util.color_rgbww_to_rgb,
             )
             if not rgbww:
@@ -577,7 +578,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
                 return
 
             if self._optimistic_color_mode:
-                self._color_mode = COLOR_MODE_COLOR_TEMP
+                self._color_mode = ColorMode.COLOR_TEMP
             self._color_temp = int(payload)
             self.async_write_ha_state()
 
@@ -610,7 +611,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             try:
                 hs_color = tuple(float(val) for val in payload.split(",", 2))
                 if self._optimistic_color_mode:
-                    self._color_mode = COLOR_MODE_HS
+                    self._color_mode = ColorMode.HS
                 self._hs_color = hs_color
                 self.async_write_ha_state()
             except ValueError:
@@ -647,7 +648,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
 
             xy_color = tuple(float(val) for val in payload.split(","))
             if self._optimistic_color_mode:
-                self._color_mode = COLOR_MODE_XY
+                self._color_mode = ColorMode.XY
             if self._legacy_mode:
                 self._hs_color = color_util.color_xy_to_hs(*xy_color)
             else:
@@ -798,7 +799,8 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         """Flag supported features."""
         supported_features = 0
         supported_features |= (
-            self._topic[CONF_EFFECT_COMMAND_TOPIC] is not None and SUPPORT_EFFECT
+            self._topic[CONF_EFFECT_COMMAND_TOPIC] is not None
+            and LightEntityFeature.EFFECT
         )
         if not self._legacy_mode:
             return supported_features
@@ -863,9 +865,9 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             """Render RGBx payload."""
             if tpl := self._command_templates[template]:
                 keys = ["red", "green", "blue"]
-                if color_mode == COLOR_MODE_RGBW:
+                if color_mode == ColorMode.RGBW:
                     keys.append("white")
-                elif color_mode == COLOR_MODE_RGBWW:
+                elif color_mode == ColorMode.RGBWW:
                     keys.extend(["cold_white", "warm_white"])
                 rgb_color_str = tpl(variables=zip(keys, color))
             else:
@@ -905,7 +907,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         ):
             # Legacy mode: Convert HS to RGB
             rgb = scale_rgbx(color_util.color_hsv_to_RGB(*hs_color, 100))
-            rgb_s = render_rgbx(rgb, CONF_RGB_COMMAND_TEMPLATE, COLOR_MODE_RGB)
+            rgb_s = render_rgbx(rgb, CONF_RGB_COMMAND_TEMPLATE, ColorMode.RGB)
             await publish(CONF_RGB_COMMAND_TOPIC, rgb_s)
             should_update |= set_optimistic(
                 ATTR_HS_COLOR, hs_color, condition_attribute=ATTR_RGB_COLOR
@@ -913,7 +915,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
 
         if hs_color and self._topic[CONF_HS_COMMAND_TOPIC] is not None:
             await publish(CONF_HS_COMMAND_TOPIC, f"{hs_color[0]},{hs_color[1]}")
-            should_update |= set_optimistic(ATTR_HS_COLOR, hs_color, COLOR_MODE_HS)
+            should_update |= set_optimistic(ATTR_HS_COLOR, hs_color, ColorMode.HS)
 
         if (
             hs_color
@@ -933,9 +935,9 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             and not self._legacy_mode
         ):
             scaled = scale_rgbx(rgb)
-            rgb_s = render_rgbx(scaled, CONF_RGB_COMMAND_TEMPLATE, COLOR_MODE_RGB)
+            rgb_s = render_rgbx(scaled, CONF_RGB_COMMAND_TEMPLATE, ColorMode.RGB)
             await publish(CONF_RGB_COMMAND_TOPIC, rgb_s)
-            should_update |= set_optimistic(ATTR_RGB_COLOR, rgb, COLOR_MODE_RGB)
+            should_update |= set_optimistic(ATTR_RGB_COLOR, rgb, ColorMode.RGB)
 
         if (
             (rgbw := kwargs.get(ATTR_RGBW_COLOR))
@@ -943,9 +945,9 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             and not self._legacy_mode
         ):
             scaled = scale_rgbx(rgbw)
-            rgbw_s = render_rgbx(scaled, CONF_RGBW_COMMAND_TEMPLATE, COLOR_MODE_RGBW)
+            rgbw_s = render_rgbx(scaled, CONF_RGBW_COMMAND_TEMPLATE, ColorMode.RGBW)
             await publish(CONF_RGBW_COMMAND_TOPIC, rgbw_s)
-            should_update |= set_optimistic(ATTR_RGBW_COLOR, rgbw, COLOR_MODE_RGBW)
+            should_update |= set_optimistic(ATTR_RGBW_COLOR, rgbw, ColorMode.RGBW)
 
         if (
             (rgbww := kwargs.get(ATTR_RGBWW_COLOR))
@@ -953,9 +955,9 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             and not self._legacy_mode
         ):
             scaled = scale_rgbx(rgbww)
-            rgbww_s = render_rgbx(scaled, CONF_RGBWW_COMMAND_TEMPLATE, COLOR_MODE_RGBWW)
+            rgbww_s = render_rgbx(scaled, CONF_RGBWW_COMMAND_TEMPLATE, ColorMode.RGBWW)
             await publish(CONF_RGBWW_COMMAND_TOPIC, rgbww_s)
-            should_update |= set_optimistic(ATTR_RGBWW_COLOR, rgbww, COLOR_MODE_RGBWW)
+            should_update |= set_optimistic(ATTR_RGBWW_COLOR, rgbww, ColorMode.RGBWW)
 
         if (
             (xy_color := kwargs.get(ATTR_XY_COLOR))
@@ -963,7 +965,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             and not self._legacy_mode
         ):
             await publish(CONF_XY_COMMAND_TOPIC, f"{xy_color[0]},{xy_color[1]}")
-            should_update |= set_optimistic(ATTR_XY_COLOR, xy_color, COLOR_MODE_XY)
+            should_update |= set_optimistic(ATTR_XY_COLOR, xy_color, ColorMode.XY)
 
         if (
             ATTR_BRIGHTNESS in kwargs
@@ -990,7 +992,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             hs_color = self._hs_color if self._hs_color is not None else (0, 0)
             brightness = kwargs[ATTR_BRIGHTNESS]
             rgb = scale_rgbx(color_util.color_hsv_to_RGB(*hs_color, 100), brightness)
-            rgb_s = render_rgbx(rgb, CONF_RGB_COMMAND_TEMPLATE, COLOR_MODE_RGB)
+            rgb_s = render_rgbx(rgb, CONF_RGB_COMMAND_TEMPLATE, ColorMode.RGB)
             await publish(CONF_RGB_COMMAND_TOPIC, rgb_s)
             should_update |= set_optimistic(ATTR_BRIGHTNESS, kwargs[ATTR_BRIGHTNESS])
         elif (
@@ -1001,7 +1003,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         ):
             rgb_color = self._rgb_color if self._rgb_color is not None else (255,) * 3
             rgb = scale_rgbx(rgb_color, kwargs[ATTR_BRIGHTNESS])
-            rgb_s = render_rgbx(rgb, CONF_RGB_COMMAND_TEMPLATE, COLOR_MODE_RGB)
+            rgb_s = render_rgbx(rgb, CONF_RGB_COMMAND_TEMPLATE, ColorMode.RGB)
             await publish(CONF_RGB_COMMAND_TOPIC, rgb_s)
             should_update |= set_optimistic(ATTR_BRIGHTNESS, kwargs[ATTR_BRIGHTNESS])
         elif (
@@ -1014,7 +1016,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
                 self._rgbw_color if self._rgbw_color is not None else (255,) * 4
             )
             rgbw = scale_rgbx(rgbw_color, kwargs[ATTR_BRIGHTNESS])
-            rgbw_s = render_rgbx(rgbw, CONF_RGBW_COMMAND_TEMPLATE, COLOR_MODE_RGBW)
+            rgbw_s = render_rgbx(rgbw, CONF_RGBW_COMMAND_TEMPLATE, ColorMode.RGBW)
             await publish(CONF_RGBW_COMMAND_TOPIC, rgbw_s)
             should_update |= set_optimistic(ATTR_BRIGHTNESS, kwargs[ATTR_BRIGHTNESS])
         elif (
@@ -1027,7 +1029,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
                 self._rgbww_color if self._rgbww_color is not None else (255,) * 5
             )
             rgbww = scale_rgbx(rgbww_color, kwargs[ATTR_BRIGHTNESS])
-            rgbww_s = render_rgbx(rgbww, CONF_RGBWW_COMMAND_TEMPLATE, COLOR_MODE_RGBWW)
+            rgbww_s = render_rgbx(rgbww, CONF_RGBWW_COMMAND_TEMPLATE, ColorMode.RGBWW)
             await publish(CONF_RGBWW_COMMAND_TOPIC, rgbww_s)
             should_update |= set_optimistic(ATTR_BRIGHTNESS, kwargs[ATTR_BRIGHTNESS])
         if (
@@ -1040,7 +1042,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
 
             await publish(CONF_COLOR_TEMP_COMMAND_TOPIC, color_temp)
             should_update |= set_optimistic(
-                ATTR_COLOR_TEMP, kwargs[ATTR_COLOR_TEMP], COLOR_MODE_COLOR_TEMP
+                ATTR_COLOR_TEMP, kwargs[ATTR_COLOR_TEMP], ColorMode.COLOR_TEMP
             )
 
         if ATTR_EFFECT in kwargs and self._topic[CONF_EFFECT_COMMAND_TOPIC] is not None:
@@ -1059,7 +1061,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             should_update |= set_optimistic(
                 ATTR_BRIGHTNESS,
                 kwargs[ATTR_WHITE],
-                COLOR_MODE_WHITE,
+                ColorMode.WHITE,
             )
 
         if (

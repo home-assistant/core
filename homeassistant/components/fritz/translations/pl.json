@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
             "already_in_progress": "Konfiguracja jest ju\u017c w toku",
+            "ignore_ip6_link_local": "Adres lokalny \u0142\u0105cza IPv6 nie jest obs\u0142ugiwany.",
             "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119"
         },
         "error": {
@@ -10,7 +11,8 @@
             "already_in_progress": "Konfiguracja jest ju\u017c w toku",
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
             "connection_error": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
-            "invalid_auth": "Niepoprawne uwierzytelnienie"
+            "invalid_auth": "Niepoprawne uwierzytelnienie",
+            "upnp_not_configured": "Brak ustawie\u0144 UPnP w urz\u0105dzeniu."
         },
         "flow_title": "{name}",
         "step": {
@@ -56,7 +58,8 @@
         "step": {
             "init": {
                 "data": {
-                    "consider_home": "Czas w sekundach, zanim urz\u0105dzenie otrzyma stan \"w domu\""
+                    "consider_home": "Czas w sekundach, zanim urz\u0105dzenie otrzyma stan \"w domu\"",
+                    "old_discovery": "W\u0142\u0105cz star\u0105 metod\u0119 wykrywania"
                 }
             }
         }

@@ -9,10 +9,8 @@ from aioesphomeapi import FanDirection, FanInfo, FanSpeed, FanState
 from homeassistant.components.fan import (
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
-    SUPPORT_DIRECTION,
-    SUPPORT_OSCILLATE,
-    SUPPORT_SET_SPEED,
     FanEntity,
+    FanEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -92,7 +90,6 @@ class EsphomeFan(EsphomeEntity[FanInfo, FanState], FanEntity):
 
     async def async_turn_on(
         self,
-        speed: str | None = None,
         percentage: int | None = None,
         preset_mode: str | None = None,
         **kwargs: Any,
@@ -162,9 +159,9 @@ class EsphomeFan(EsphomeEntity[FanInfo, FanState], FanEntity):
         """Flag supported features."""
         flags = 0
         if self._static_info.supports_oscillation:
-            flags |= SUPPORT_OSCILLATE
+            flags |= FanEntityFeature.OSCILLATE
         if self._static_info.supports_speed:
-            flags |= SUPPORT_SET_SPEED
+            flags |= FanEntityFeature.SET_SPEED
         if self._static_info.supports_direction:
-            flags |= SUPPORT_DIRECTION
+            flags |= FanEntityFeature.DIRECTION
         return flags

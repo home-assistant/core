@@ -54,6 +54,11 @@ async def test_exception_handling():
             "Failed to do X",
         ),
         (ValueError("Really bad"), websocket_api.ERR_UNKNOWN_ERROR, "Unknown error"),
+        (
+            exceptions.HomeAssistantError(),
+            websocket_api.ERR_UNKNOWN_ERROR,
+            "Unknown error",
+        ),
     ):
         send_messages.clear()
         conn.async_handle_exception({"id": 5}, exc)

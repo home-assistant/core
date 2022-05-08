@@ -430,6 +430,7 @@ async def test_websocket_status(
         "remote_connected": False,
         "remote_certificate": None,
         "http_use_ssl": False,
+        "active_subscription": False,
     }
 
 
@@ -438,7 +439,11 @@ async def test_websocket_status_not_logged_in(hass, hass_ws_client):
     client = await hass_ws_client(hass)
     await client.send_json({"id": 5, "type": "cloud/status"})
     response = await client.receive_json()
-    assert response["result"] == {"logged_in": False, "cloud": "disconnected"}
+    assert response["result"] == {
+        "logged_in": False,
+        "cloud": "disconnected",
+        "http_use_ssl": False,
+    }
 
 
 async def test_websocket_subscription_info(

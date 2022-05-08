@@ -6,7 +6,7 @@
             "no_devices_found": "Aucun appareil trouv\u00e9 sur le r\u00e9seau"
         },
         "error": {
-            "invalid_auth": "Authentification invalide"
+            "invalid_auth": "Authentification non valide"
         },
         "flow_title": "{name}",
         "step": {

@@ -8,8 +8,7 @@ from plumlightpad import Plum
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_HS_COLOR,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -115,11 +114,16 @@ class PlumLight(LightEntity):
         return self._brightness > 0
 
     @property
-    def supported_features(self):
+    def color_mode(self) -> ColorMode:
         """Flag supported features."""
         if self._load.dimmable:
-            return SUPPORT_BRIGHTNESS
-        return 0
+            return ColorMode.BRIGHTNESS
+        return ColorMode.ONOFF
+
+    @property
+    def supported_color_modes(self) -> set[ColorMode]:
+        """Flag supported color modes."""
+        return {self.color_mode}
 
     async def async_turn_on(self, **kwargs):
         """Turn the light on."""
@@ -135,6 +139,9 @@ class PlumLight(LightEntity):
 
 class GlowRing(LightEntity):
     """Representation of a Plum Lightpad dimmer glow ring."""
+
+    _attr_color_mode = ColorMode.HS
+    _attr_supported_color_modes = {ColorMode.HS}
 
     def __init__(self, lightpad):
         """Initialize the light."""
@@ -214,11 +221,6 @@ class GlowRing(LightEntity):
     def icon(self):
         """Return the crop-portrait icon representing the glow ring."""
         return "mdi:crop-portrait"
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_BRIGHTNESS | SUPPORT_COLOR
 
     async def async_turn_on(self, **kwargs):
         """Turn the light on."""

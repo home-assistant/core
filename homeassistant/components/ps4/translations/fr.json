@@ -15,7 +15,7 @@
         },
         "step": {
             "creds": {
-                "description": "Informations d\u2019identification n\u00e9cessaires. Appuyez sur \u00ab\u00a0Envoyer\u00a0\u00bb puis dans la PS4 2\u00e8me \u00e9cran App, actualisez les p\u00e9riph\u00e9riques et s\u00e9lectionnez le dispositif \u00ab\u00a0Home Assistant\u00a0\u00bb pour continuer.",
+                "description": "Informations d'identification requises. Appuyez sur \u00ab\u00a0Envoyer\u00a0\u00bb, puis dans l'application PS4 Second Screen, actualisez les appareils et s\u00e9lectionnez l'appareil \u00ab\u00a0Home Assistant\u00a0\u00bb pour continuer.",
                 "title": "PlayStation 4"
             },
             "link": {
@@ -25,7 +25,10 @@
                     "name": "Nom",
                     "region": "R\u00e9gion"
                 },
-                "description": "Entrez vos informations PlayStation 4. Pour \"Code PIN\", acc\u00e9dez \u00e0 \"Param\u00e8tres\" sur votre console PlayStation 4. Ensuite, acc\u00e9dez \u00e0 \"Param\u00e8tres de connexion de l'application mobile\" et s\u00e9lectionnez \"Ajouter un p\u00e9riph\u00e9rique\". Entrez le code PIN qui est affich\u00e9. Consultez la documentation pour plus d'informations.",
+                "data_description": {
+                    "code": "Acc\u00e9dez aux \u00ab\u00a0Param\u00e8tres\u00a0\u00bb sur votre console PlayStation\u00a04, puis acc\u00e9dez \u00e0 \u00ab\u00a0Param\u00e8tres de connexion de l'application mobile\u00a0\u00bb et s\u00e9lectionnez \u00ab\u00a0Ajouter un appareil\u00a0\u00bb afin d'obtenir le code PIN."
+                },
+                "description": "Saisissez les informations de votre PlayStation\u00a04. Pour le Code PIN, acc\u00e9dez aux \u00ab\u00a0Param\u00e8tres\u00a0\u00bb sur votre console PlayStation\u00a04, puis acc\u00e9dez \u00e0 \u00ab\u00a0Param\u00e8tres de connexion de l'application mobile\u00a0\u00bb et s\u00e9lectionnez \u00ab\u00a0Ajouter un appareil\u00a0\u00bb. Entrez le Code PIN affich\u00e9. Consultez la [documentation](https://www.home-assistant.io/components/ps4/) pour plus d'informations.",
                 "title": "PlayStation 4"
             },
             "mode": {
@@ -33,7 +36,10 @@
                     "ip_address": "Adresse IP (laissez vide si vous utilisez la d\u00e9couverte automatique).",
                     "mode": "Mode de configuration"
                 },
-                "description": "S\u00e9lectionnez le mode de configuration. Le champ Adresse IP peut rester vide si vous s\u00e9lectionnez D\u00e9couverte automatique, car les p\u00e9riph\u00e9riques seront automatiquement d\u00e9couverts.",
+                "data_description": {
+                    "ip_address": "Laissez le champ vide si vous s\u00e9lectionnez la d\u00e9couverte automatique."
+                },
+                "description": "S\u00e9lectionnez le mode de configuration. Le champ Adresse IP peut \u00eatre laiss\u00e9 vide si vous s\u00e9lectionnez D\u00e9couverte automatique, car les appareils seront automatiquement d\u00e9couverts.",
                 "title": "PlayStation 4"
             }
         }

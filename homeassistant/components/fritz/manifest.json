@@ -2,17 +2,9 @@
   "domain": "fritz",
   "name": "AVM FRITZ!Box Tools",
   "documentation": "https://www.home-assistant.io/integrations/fritz",
-  "requirements": [
-    "fritzconnection==1.8.0",
-    "xmltodict==0.12.0"
-  ],
+  "requirements": ["fritzconnection==1.8.0", "xmltodict==0.12.0"],
   "dependencies": ["network"],
-  "codeowners": [
-    "@mammuth",
-    "@AaronDavidSchneider",
-    "@chemelli74",
-    "@mib1185"
-  ],
+  "codeowners": ["@mammuth", "@AaronDavidSchneider", "@chemelli74", "@mib1185"],
   "config_flow": true,
   "ssdp": [
     {

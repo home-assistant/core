@@ -5,10 +5,6 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.homeassistant import (
-    DOMAIN as HA_DOMAIN,
-    SERVICE_UPDATE_ENTITY,
-)
 from homeassistant.components.moon.sensor import (
     MOON_ICONS,
     STATE_FIRST_QUARTER,
@@ -20,9 +16,11 @@ from homeassistant.components.moon.sensor import (
     STATE_WAXING_CRESCENT,
     STATE_WAXING_GIBBOUS,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ICON
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
+from homeassistant.helpers import entity_registry as er
+
+from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
@@ -39,33 +37,27 @@ from homeassistant.setup import async_setup_component
     ],
 )
 async def test_moon_day(
-    hass: HomeAssistant, moon_value: float, native_value: str, icon: str
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    moon_value: float,
+    native_value: str,
+    icon: str,
 ) -> None:
     """Test the Moon sensor."""
-    config = {"sensor": {"platform": "moon"}}
-
-    await async_setup_component(hass, HA_DOMAIN, {})
-    assert await async_setup_component(hass, "sensor", config)
-    await hass.async_block_till_done()
-
-    assert hass.states.get("sensor.moon")
+    mock_config_entry.add_to_hass(hass)
 
     with patch(
         "homeassistant.components.moon.sensor.moon.phase", return_value=moon_value
     ):
-        await async_update_entity(hass, "sensor.moon")
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
     state = hass.states.get("sensor.moon")
+    assert state
     assert state.state == native_value
-    assert state.attributes["icon"] == icon
+    assert state.attributes[ATTR_ICON] == icon
 
-
-async def async_update_entity(hass: HomeAssistant, entity_id: str) -> None:
-    """Run an update action for an entity."""
-    await hass.services.async_call(
-        HA_DOMAIN,
-        SERVICE_UPDATE_ENTITY,
-        {ATTR_ENTITY_ID: entity_id},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
+    entity_registry = er.async_get(hass)
+    entry = entity_registry.async_get("sensor.moon")
+    assert entry
+    assert entry.unique_id == mock_config_entry.entry_id

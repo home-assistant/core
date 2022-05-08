@@ -6,11 +6,9 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_API_KEY, CONF_NAME
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_FORM
-
-from tests.common import MockConfigEntry
 
 DOMAIN = "trafikverket_weatherstation"
 CONF_STATION = "station"
@@ -47,67 +45,6 @@ async def test_form(hass: HomeAssistant) -> None:
         "station": "Vallby",
     }
     assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_import_flow_success(hass: HomeAssistant) -> None:
-    """Test a successful import of yaml."""
-
-    with patch(
-        "homeassistant.components.trafikverket_weatherstation.config_flow.TrafikverketWeather.async_get_weather",
-    ), patch(
-        "homeassistant.components.trafikverket_weatherstation.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={
-                CONF_NAME: "Vallby",
-                CONF_API_KEY: "1234567890",
-                CONF_STATION: "Vallby",
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result2["type"] == "create_entry"
-    assert result2["title"] == "Vallby"
-    assert result2["data"] == {
-        "api_key": "1234567890",
-        "station": "Vallby",
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_import_flow_already_exist(hass: HomeAssistant) -> None:
-    """Test import of yaml already exist."""
-
-    MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_API_KEY: "1234567890",
-            CONF_STATION: "Vallby",
-        },
-    ).add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.trafikverket_weatherstation.async_setup_entry",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.trafikverket_weatherstation.config_flow.TrafikverketWeather.async_get_weather",
-    ):
-        result3 = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={
-                CONF_NAME: "Vallby",
-                CONF_API_KEY: "1234567890",
-                CONF_STATION: "Vallby",
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result3["type"] == "abort"
-    assert result3["reason"] == "already_configured"
 
 
 @pytest.mark.parametrize(

@@ -30,7 +30,7 @@
             "is_voltage": "Tensione attuale di {entity_name}"
         },
         "trigger_type": {
-            "apparent_power": "variazioni di potenza apparente di {entity_name}",
+            "apparent_power": "Variazioni di potenza apparente di {entity_name}",
             "battery_level": "variazioni del livello di batteria di {entity_name} ",
             "carbon_dioxide": "Variazioni della concentrazione di anidride carbonica di {entity_name}",
             "carbon_monoxide": "Variazioni nella concentrazione di monossido di carbonio di {entity_name}",
@@ -50,7 +50,7 @@
             "power": "Variazioni di alimentazione di {entity_name}",
             "power_factor": "variazioni del fattore di potenza di {entity_name}",
             "pressure": "Variazioni della pressione di {entity_name}",
-            "reactive_power": "variazioni di potenza reattiva di {entity_name}",
+            "reactive_power": "Variazioni di potenza reattiva di {entity_name}",
             "signal_strength": "Variazioni della potenza del segnale di {entity_name}",
             "sulphur_dioxide": "Variazioni della concentrazione di anidride solforosa di {entity_name}",
             "temperature": "Variazioni di temperatura di {entity_name}",

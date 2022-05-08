@@ -15,6 +15,8 @@ from homeassistant.components.climate.const import (
     ATTR_HVAC_MODES,
     ATTR_MAX_TEMP,
     ATTR_MIN_TEMP,
+    ATTR_PRESET_MODE,
+    ATTR_PRESET_MODES,
     ATTR_SWING_MODE,
     ATTR_SWING_MODES,
     ATTR_TARGET_TEMP_HIGH,
@@ -74,6 +76,7 @@ from homeassistant.components.homekit.type_thermostats import (
 from homeassistant.components.water_heater import DOMAIN as DOMAIN_WATER_HEATER
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_FRIENDLY_NAME,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
     CONF_TEMPERATURE_UNIT,
@@ -2349,3 +2352,127 @@ async def test_thermostat_with_fan_modes_with_off(hass, hk_driver, events):
     assert len(call_set_fan_mode) == 2
     assert call_set_fan_mode[-1].data[ATTR_ENTITY_ID] == entity_id
     assert call_set_fan_mode[-1].data[ATTR_FAN_MODE] == FAN_OFF
+
+
+async def test_thermostat_with_fan_modes_set_to_none(hass, hk_driver, events):
+    """Test a thermostate with fan modes set to None."""
+    entity_id = "climate.test"
+    hass.states.async_set(
+        entity_id,
+        HVAC_MODE_OFF,
+        {
+            ATTR_SUPPORTED_FEATURES: SUPPORT_TARGET_TEMPERATURE
+            | SUPPORT_TARGET_TEMPERATURE_RANGE
+            | SUPPORT_FAN_MODE
+            | SUPPORT_SWING_MODE,
+            ATTR_FAN_MODES: None,
+            ATTR_SWING_MODES: [SWING_BOTH, SWING_OFF, SWING_HORIZONTAL],
+            ATTR_HVAC_ACTION: CURRENT_HVAC_IDLE,
+            ATTR_FAN_MODE: FAN_AUTO,
+            ATTR_SWING_MODE: SWING_BOTH,
+            ATTR_HVAC_MODES: [
+                HVAC_MODE_HEAT,
+                HVAC_MODE_HEAT_COOL,
+                HVAC_MODE_FAN_ONLY,
+                HVAC_MODE_COOL,
+                HVAC_MODE_OFF,
+                HVAC_MODE_AUTO,
+            ],
+        },
+    )
+    await hass.async_block_till_done()
+    acc = Thermostat(hass, hk_driver, "Climate", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+
+    await acc.run()
+    await hass.async_block_till_done()
+
+    assert acc.char_cooling_thresh_temp.value == 23.0
+    assert acc.char_heating_thresh_temp.value == 19.0
+    assert acc.ordered_fan_speeds == []
+    assert CHAR_ROTATION_SPEED not in acc.fan_chars
+    assert CHAR_TARGET_FAN_STATE not in acc.fan_chars
+    assert CHAR_SWING_MODE in acc.fan_chars
+    assert CHAR_CURRENT_FAN_STATE in acc.fan_chars
+
+
+async def test_thermostat_with_fan_modes_set_to_none_not_supported(
+    hass, hk_driver, events
+):
+    """Test a thermostate with fan modes set to None and supported feature missing."""
+    entity_id = "climate.test"
+    hass.states.async_set(
+        entity_id,
+        HVAC_MODE_OFF,
+        {
+            ATTR_SUPPORTED_FEATURES: SUPPORT_TARGET_TEMPERATURE
+            | SUPPORT_TARGET_TEMPERATURE_RANGE
+            | SUPPORT_SWING_MODE,
+            ATTR_FAN_MODES: None,
+            ATTR_SWING_MODES: [SWING_BOTH, SWING_OFF, SWING_HORIZONTAL],
+            ATTR_HVAC_ACTION: CURRENT_HVAC_IDLE,
+            ATTR_FAN_MODE: FAN_AUTO,
+            ATTR_SWING_MODE: SWING_BOTH,
+            ATTR_HVAC_MODES: [
+                HVAC_MODE_HEAT,
+                HVAC_MODE_HEAT_COOL,
+                HVAC_MODE_FAN_ONLY,
+                HVAC_MODE_COOL,
+                HVAC_MODE_OFF,
+                HVAC_MODE_AUTO,
+            ],
+        },
+    )
+    await hass.async_block_till_done()
+    acc = Thermostat(hass, hk_driver, "Climate", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+
+    await acc.run()
+    await hass.async_block_till_done()
+
+    assert acc.char_cooling_thresh_temp.value == 23.0
+    assert acc.char_heating_thresh_temp.value == 19.0
+    assert acc.ordered_fan_speeds == []
+    assert CHAR_ROTATION_SPEED not in acc.fan_chars
+    assert CHAR_TARGET_FAN_STATE not in acc.fan_chars
+    assert CHAR_SWING_MODE in acc.fan_chars
+    assert CHAR_CURRENT_FAN_STATE in acc.fan_chars
+
+
+async def test_thermostat_with_supported_features_target_temp_but_fan_mode_set(
+    hass, hk_driver, events
+):
+    """Test a thermostate with fan mode and supported feature missing."""
+    entity_id = "climate.test"
+    hass.states.async_set(
+        entity_id,
+        HVAC_MODE_OFF,
+        {
+            ATTR_SUPPORTED_FEATURES: SUPPORT_TARGET_TEMPERATURE,
+            ATTR_MIN_TEMP: 44.6,
+            ATTR_MAX_TEMP: 95,
+            ATTR_PRESET_MODES: ["home", "away"],
+            ATTR_TEMPERATURE: 67,
+            ATTR_TARGET_TEMP_HIGH: None,
+            ATTR_TARGET_TEMP_LOW: None,
+            ATTR_FAN_MODE: FAN_AUTO,
+            ATTR_FAN_MODES: None,
+            ATTR_HVAC_ACTION: CURRENT_HVAC_IDLE,
+            ATTR_FAN_MODE: FAN_AUTO,
+            ATTR_PRESET_MODE: "home",
+            ATTR_FRIENDLY_NAME: "Rec Room",
+            ATTR_HVAC_MODES: [
+                HVAC_MODE_OFF,
+                HVAC_MODE_HEAT,
+            ],
+        },
+    )
+    await hass.async_block_till_done()
+    acc = Thermostat(hass, hk_driver, "Climate", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+
+    await acc.run()
+    await hass.async_block_till_done()
+
+    assert acc.ordered_fan_speeds == []
+    assert not acc.fan_chars

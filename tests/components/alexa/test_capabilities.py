@@ -27,7 +27,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 
-from . import (
+from .test_common import (
     assert_request_calls_service,
     assert_request_fails,
     get_default_config,
@@ -55,7 +55,7 @@ async def test_api_adjust_brightness(hass, adjust):
 
     call_light = async_mock_service(hass, "light", "turn_on")
 
-    msg = await smart_home.async_handle_message(hass, get_default_config(), request)
+    msg = await smart_home.async_handle_message(hass, get_default_config(hass), request)
     await hass.async_block_till_done()
 
     assert "event" in msg
@@ -85,7 +85,7 @@ async def test_api_set_color_rgb(hass):
 
     call_light = async_mock_service(hass, "light", "turn_on")
 
-    msg = await smart_home.async_handle_message(hass, get_default_config(), request)
+    msg = await smart_home.async_handle_message(hass, get_default_config(hass), request)
     await hass.async_block_till_done()
 
     assert "event" in msg
@@ -111,7 +111,7 @@ async def test_api_set_color_temperature(hass):
 
     call_light = async_mock_service(hass, "light", "turn_on")
 
-    msg = await smart_home.async_handle_message(hass, get_default_config(), request)
+    msg = await smart_home.async_handle_message(hass, get_default_config(hass), request)
     await hass.async_block_till_done()
 
     assert "event" in msg
@@ -139,7 +139,7 @@ async def test_api_decrease_color_temp(hass, result, initial):
 
     call_light = async_mock_service(hass, "light", "turn_on")
 
-    msg = await smart_home.async_handle_message(hass, get_default_config(), request)
+    msg = await smart_home.async_handle_message(hass, get_default_config(hass), request)
     await hass.async_block_till_done()
 
     assert "event" in msg
@@ -167,7 +167,7 @@ async def test_api_increase_color_temp(hass, result, initial):
 
     call_light = async_mock_service(hass, "light", "turn_on")
 
-    msg = await smart_home.async_handle_message(hass, get_default_config(), request)
+    msg = await smart_home.async_handle_message(hass, get_default_config(hass), request)
     await hass.async_block_till_done()
 
     assert "event" in msg
@@ -182,7 +182,7 @@ async def test_api_increase_color_temp(hass, result, initial):
 @pytest.mark.parametrize(
     "domain,payload,source_list,idx",
     [
-        ("media_player", "GAME CONSOLE", ["tv", "game console"], 1),
+        ("media_player", "GAME CONSOLE", ["tv", "game console", 10000], 1),
         ("media_player", "SATELLITE TV", ["satellite-tv", "game console"], 0),
         ("media_player", "SATELLITE TV", ["satellite_tv", "game console"], 0),
         ("media_player", "BAD DEVICE", ["satellite_tv", "game console"], None),

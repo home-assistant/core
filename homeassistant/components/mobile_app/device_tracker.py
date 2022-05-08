@@ -15,6 +15,7 @@ from homeassistant.const import (
     ATTR_LONGITUDE,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
@@ -37,7 +38,6 @@ async def async_setup_entry(
     """Set up OwnTracks based off an entry."""
     entity = MobileAppEntity(entry)
     async_add_entities([entity])
-    return True
 
 
 class MobileAppEntity(TrackerEntity, RestoreEntity):
@@ -115,8 +115,10 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
     async def async_added_to_hass(self):
         """Call when entity about to be added to Home Assistant."""
         await super().async_added_to_hass()
-        self._dispatch_unsub = self.hass.helpers.dispatcher.async_dispatcher_connect(
-            SIGNAL_LOCATION_UPDATE.format(self._entry.entry_id), self.update_data
+        self._dispatch_unsub = async_dispatcher_connect(
+            self.hass,
+            SIGNAL_LOCATION_UPDATE.format(self._entry.entry_id),
+            self.update_data,
         )
 
         # Don't restore if we got set up with data.

@@ -6,7 +6,7 @@ import json
 import logging
 import os
 
-from google.cloud import pubsub_v1
+from google.cloud.pubsub_v1 import PublisherClient
 import voluptuous as vol
 
 from homeassistant.const import EVENT_STATE_CHANGED, STATE_UNAVAILABLE, STATE_UNKNOWN
@@ -52,13 +52,9 @@ def setup(hass: HomeAssistant, yaml_config: ConfigType) -> bool:
 
     entities_filter = config[CONF_FILTER]
 
-    publisher = pubsub_v1.PublisherClient.from_service_account_json(
-        service_principal_path
-    )
+    publisher = PublisherClient.from_service_account_json(service_principal_path)
 
-    topic_path = publisher.topic_path(  # pylint: disable=no-member
-        project_id, topic_name
-    )
+    topic_path = publisher.topic_path(project_id, topic_name)
 
     encoder = DateTimeJSONEncoder()
 

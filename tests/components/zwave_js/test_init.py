@@ -811,7 +811,7 @@ async def test_removed_device(
     # Check how many entities there are
     ent_reg = er.async_get(hass)
     entity_entries = er.async_entries_for_config_entry(ent_reg, integration.entry_id)
-    assert len(entity_entries) == 28
+    assert len(entity_entries) == 29
 
     # Remove a node and reload the entry
     old_node = client.driver.controller.nodes.pop(13)
@@ -934,6 +934,7 @@ async def test_replace_same_node(
                     "commandsDroppedTX": 0,
                     "timeoutResponse": 0,
                 },
+                "isControllerNode": False,
             },
             "result": {},
         },
@@ -1052,6 +1053,7 @@ async def test_replace_different_node(
                     "commandsDroppedTX": 0,
                     "timeoutResponse": 0,
                 },
+                "isControllerNode": False,
             },
             "result": {},
         },

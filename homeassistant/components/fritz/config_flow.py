@@ -1,11 +1,13 @@
 """Config flow to configure the FRITZ!Box Tools integration."""
 from __future__ import annotations
 
+import ipaddress
 import logging
 import socket
 from typing import Any
 from urllib.parse import ParseResult, urlparse
 
+from fritzconnection import FritzConnection
 from fritzconnection.core.exceptions import FritzConnectionException, FritzSecurityError
 import voluptuous as vol
 
@@ -19,14 +21,16 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNA
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
-from .common import AvmWrapper
 from .const import (
+    CONF_OLD_DISCOVERY,
+    DEFAULT_CONF_OLD_DISCOVERY,
     DEFAULT_HOST,
     DEFAULT_PORT,
     DOMAIN,
     ERROR_AUTH_INVALID,
     ERROR_CANNOT_CONNECT,
     ERROR_UNKNOWN,
+    ERROR_UPNP_NOT_CONFIGURED,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -46,29 +50,25 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize FRITZ!Box Tools flow."""
         self._host: str | None = None
-        self._entry: ConfigEntry
-        self._name: str
-        self._password: str
+        self._entry: ConfigEntry | None = None
+        self._name: str = ""
+        self._password: str = ""
         self._port: int | None = None
-        self._username: str
-        self.avm_wrapper: AvmWrapper
+        self._username: str = ""
+        self._model: str = ""
 
-    async def fritz_tools_init(self) -> str | None:
+    def fritz_tools_init(self) -> str | None:
         """Initialize FRITZ!Box Tools class."""
 
-        if not self._host or not self._port:
-            return None
-
-        self.avm_wrapper = AvmWrapper(
-            hass=self.hass,
-            host=self._host,
-            port=self._port,
-            username=self._username,
-            password=self._password,
-        )
-
         try:
-            await self.avm_wrapper.async_setup()
+            connection = FritzConnection(
+                address=self._host,
+                port=self._port,
+                user=self._username,
+                password=self._password,
+                timeout=60.0,
+                pool_maxsize=30,
+            )
         except FritzSecurityError:
             return ERROR_AUTH_INVALID
         except FritzConnectionException:
@@ -76,6 +76,14 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             return ERROR_UNKNOWN
+
+        self._model = connection.call_action("DeviceInfo:1", "GetInfo")["NewModelName"]
+
+        if (
+            "X_AVM-DE_UPnP1" in connection.services
+            and not connection.call_action("X_AVM-DE_UPnP1", "GetInfo")["NewEnable"]
+        ):
+            return ERROR_UPNP_NOT_CONFIGURED
 
         return None
 
@@ -100,13 +108,14 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(
             title=self._name,
             data={
-                CONF_HOST: self.avm_wrapper.host,
-                CONF_PASSWORD: self.avm_wrapper.password,
-                CONF_PORT: self.avm_wrapper.port,
-                CONF_USERNAME: self.avm_wrapper.username,
+                CONF_HOST: self._host,
+                CONF_PASSWORD: self._password,
+                CONF_PORT: self._port,
+                CONF_USERNAME: self._username,
             },
             options={
                 CONF_CONSIDER_HOME: DEFAULT_CONSIDER_HOME.total_seconds(),
+                CONF_OLD_DISCOVERY: DEFAULT_CONF_OLD_DISCOVERY,
             },
         )
 
@@ -120,6 +129,9 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
             or discovery_info.upnp[ssdp.ATTR_UPNP_MODEL_NAME]
         )
         self.context[CONF_HOST] = self._host
+
+        if not self._host or ipaddress.ip_address(self._host).is_link_local:
+            return self.async_abort(reason="ignore_ip6_link_local")
 
         if uuid := discovery_info.upnp.get(ssdp.ATTR_UPNP_UDN):
             if uuid.startswith("uuid:"):
@@ -136,9 +148,13 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
                 self.hass.config_entries.async_update_entry(entry, unique_id=uuid)
             return self.async_abort(reason="already_configured")
 
-        self.context["title_placeholders"] = {
-            "name": self._name.replace("FRITZ!Box ", "")
-        }
+        self.context.update(
+            {
+                "title_placeholders": {"name": self._name.replace("FRITZ!Box ", "")},
+                "configuration_url": f"http://{self._host}",
+            }
+        )
+
         return await self.async_step_confirm()
 
     async def async_step_confirm(
@@ -153,7 +169,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         self._username = user_input[CONF_USERNAME]
         self._password = user_input[CONF_PASSWORD]
 
-        error = await self.fritz_tools_init()
+        error = await self.hass.async_add_executor_job(self.fritz_tools_init)
 
         if error:
             errors["base"] = error
@@ -203,8 +219,8 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         self._username = user_input[CONF_USERNAME]
         self._password = user_input[CONF_PASSWORD]
 
-        if not (error := await self.fritz_tools_init()):
-            self._name = self.avm_wrapper.model
+        if not (error := await self.hass.async_add_executor_job(self.fritz_tools_init)):
+            self._name = self._model
 
             if await self.async_check_configured_entry():
                 error = "already_configured"
@@ -216,10 +232,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(self, data: dict[str, Any]) -> FlowResult:
         """Handle flow upon an API authentication error."""
-        if cfg_entry := self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        ):
-            self._entry = cfg_entry
+        self._entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         self._host = data[CONF_HOST]
         self._port = data[CONF_PORT]
         self._username = data[CONF_USERNAME]
@@ -255,11 +268,12 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         self._username = user_input[CONF_USERNAME]
         self._password = user_input[CONF_PASSWORD]
 
-        if error := await self.fritz_tools_init():
+        if error := await self.hass.async_add_executor_job(self.fritz_tools_init):
             return self._show_setup_form_reauth_confirm(
                 user_input=user_input, errors={"base": error}
             )
 
+        assert isinstance(self._entry, ConfigEntry)
         self.hass.config_entries.async_update_entry(
             self._entry,
             data={
@@ -296,6 +310,12 @@ class FritzBoxToolsOptionsFlowHandler(OptionsFlow):
                         CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.total_seconds()
                     ),
                 ): vol.All(vol.Coerce(int), vol.Clamp(min=0, max=900)),
+                vol.Optional(
+                    CONF_OLD_DISCOVERY,
+                    default=self.config_entry.options.get(
+                        CONF_OLD_DISCOVERY, DEFAULT_CONF_OLD_DISCOVERY
+                    ),
+                ): bool,
             }
         )
         return self.async_show_form(step_id="init", data_schema=data_schema)

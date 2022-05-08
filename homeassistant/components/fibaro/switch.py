@@ -1,27 +1,30 @@
 """Support for Fibaro switches."""
 from __future__ import annotations
 
-from homeassistant.components.switch import DOMAIN, SwitchEntity
+from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import convert
 
 from . import FIBARO_DEVICES, FibaroDevice
+from .const import DOMAIN
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Fibaro switches."""
-    if discovery_info is None:
-        return
-
-    add_entities(
-        [FibaroSwitch(device) for device in hass.data[FIBARO_DEVICES]["switch"]], True
+    async_add_entities(
+        [
+            FibaroSwitch(device)
+            for device in hass.data[DOMAIN][entry.entry_id][FIBARO_DEVICES][
+                Platform.SWITCH
+            ]
+        ],
+        True,
     )
 
 
@@ -32,7 +35,7 @@ class FibaroSwitch(FibaroDevice, SwitchEntity):
         """Initialize the Fibaro device."""
         self._state = False
         super().__init__(fibaro_device)
-        self.entity_id = f"{DOMAIN}.{self.ha_id}"
+        self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
 
     def turn_on(self, **kwargs):
         """Turn device on."""
@@ -43,20 +46,6 @@ class FibaroSwitch(FibaroDevice, SwitchEntity):
         """Turn device off."""
         self.call_turn_off()
         self._state = False
-
-    @property
-    def current_power_w(self):
-        """Return the current power usage in W."""
-        if "power" in self.fibaro_device.interfaces:
-            return convert(self.fibaro_device.properties.power, float, 0.0)
-        return None
-
-    @property
-    def today_energy_kwh(self):
-        """Return the today total energy usage in kWh."""
-        if "energy" in self.fibaro_device.interfaces:
-            return convert(self.fibaro_device.properties.energy, float, 0.0)
-        return None
 
     @property
     def is_on(self):

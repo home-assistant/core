@@ -12,11 +12,9 @@ from homeassistant.components.cover import (
     STATE_CLOSING,
     STATE_OPEN,
     STATE_OPENING,
-    SUPPORT_CLOSE,
-    SUPPORT_OPEN,
-    SUPPORT_SET_POSITION,
     CoverDeviceClass,
     CoverEntity,
+    CoverEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_BATTERY_LEVEL
@@ -77,9 +75,11 @@ class SmartThingsCover(SmartThingsEntity, CoverEntity):
         self._device_class = None
         self._state = None
         self._state_attrs = None
-        self._supported_features = SUPPORT_OPEN | SUPPORT_CLOSE
+        self._attr_supported_features = (
+            CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
+        )
         if Capability.switch_level in device.capabilities:
-            self._supported_features |= SUPPORT_SET_POSITION
+            self._attr_supported_features |= CoverEntityFeature.SET_POSITION
 
     async def async_close_cover(self, **kwargs):
         """Close cover."""
@@ -99,7 +99,7 @@ class SmartThingsCover(SmartThingsEntity, CoverEntity):
 
     async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
-        if not self._supported_features & SUPPORT_SET_POSITION:
+        if not self._attr_supported_features & CoverEntityFeature.SET_POSITION:
             return
         # Do not set_status=True as device will report progress.
         await self._device.set_level(kwargs[ATTR_POSITION], 0)
@@ -144,7 +144,7 @@ class SmartThingsCover(SmartThingsEntity, CoverEntity):
     @property
     def current_cover_position(self):
         """Return current position of cover."""
-        if not self._supported_features & SUPPORT_SET_POSITION:
+        if not self._attr_supported_features & CoverEntityFeature.SET_POSITION:
             return None
         return self._device.status.level
 
@@ -157,8 +157,3 @@ class SmartThingsCover(SmartThingsEntity, CoverEntity):
     def extra_state_attributes(self):
         """Get additional state attributes."""
         return self._state_attrs
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return self._supported_features

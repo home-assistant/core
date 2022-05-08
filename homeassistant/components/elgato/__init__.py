@@ -1,13 +1,13 @@
 """Support for Elgato Lights."""
 from typing import NamedTuple
 
-from elgato import Elgato, Info, State
+from elgato import Elgato, ElgatoConnectionError, Info, State
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER, SCAN_INTERVAL
 
@@ -31,12 +31,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         session=session,
     )
 
+    async def _async_update_data() -> State:
+        """Fetch Elgato data."""
+        try:
+            return await elgato.state()
+        except ElgatoConnectionError as err:
+            raise UpdateFailed(err) from err
+
     coordinator: DataUpdateCoordinator[State] = DataUpdateCoordinator(
         hass,
         LOGGER,
         name=f"{DOMAIN}_{entry.data[CONF_HOST]}",
         update_interval=SCAN_INTERVAL,
-        update_method=elgato.state,
+        update_method=_async_update_data,
     )
     await coordinator.async_config_entry_first_refresh()
 

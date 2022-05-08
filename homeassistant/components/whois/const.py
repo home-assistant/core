@@ -14,8 +14,6 @@ LOGGER = logging.getLogger(__package__)
 
 SCAN_INTERVAL = timedelta(hours=24)
 
-DEFAULT_NAME = "Whois"
-
 ATTR_EXPIRES = "expires"
 ATTR_NAME_SERVERS = "name_servers"
 ATTR_REGISTRAR = "registrar"

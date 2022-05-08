@@ -1,4 +1,200 @@
 {
+    "config": {
+        "step": {
+            "binary_sensor": {
+                "data": {
+                    "all": "Alle Entit\u00e4ten",
+                    "entities": "Mitglieder",
+                    "hide_members": "Mitglieder ausblenden",
+                    "name": "Name"
+                },
+                "description": "Wenn \"alle Entit\u00e4ten\" aktiviert ist, ist der Status der Gruppe nur dann eingeschaltet, wenn alle Mitglieder eingeschaltet sind. Wenn \"alle Entit\u00e4ten\" deaktiviert ist, ist der Status der Gruppe eingeschaltet, wenn irgendein Mitglied eingeschaltet ist.",
+                "title": "Gruppe hinzuf\u00fcgen"
+            },
+            "cover": {
+                "data": {
+                    "entities": "Mitglieder",
+                    "hide_members": "Mitglieder ausblenden",
+                    "name": "Name",
+                    "title": "Gruppe hinzuf\u00fcgen"
+                },
+                "description": "Gruppenoptionen ausw\u00e4hlen",
+                "title": "Gruppe hinzuf\u00fcgen"
+            },
+            "cover_options": {
+                "data": {
+                    "entities": "Gruppenmitglieder"
+                },
+                "description": "Gruppenoptionen ausw\u00e4hlen"
+            },
+            "fan": {
+                "data": {
+                    "entities": "Mitglieder",
+                    "hide_members": "Mitglieder ausblenden",
+                    "name": "Name",
+                    "title": "Gruppe hinzuf\u00fcgen"
+                },
+                "description": "Gruppenoptionen ausw\u00e4hlen",
+                "title": "Gruppe hinzuf\u00fcgen"
+            },
+            "fan_options": {
+                "data": {
+                    "entities": "Gruppenmitglieder"
+                },
+                "description": "Gruppenoptionen ausw\u00e4hlen"
+            },
+            "init": {
+                "data": {
+                    "group_type": "Gruppentyp"
+                },
+                "description": "Gruppentyp ausw\u00e4hlen"
+            },
+            "light": {
+                "data": {
+                    "all": "Alle Entit\u00e4ten",
+                    "entities": "Mitglieder",
+                    "hide_members": "Mitglieder ausblenden",
+                    "name": "Name",
+                    "title": "Gruppe hinzuf\u00fcgen"
+                },
+                "description": "Wenn \"alle Entit\u00e4ten\" aktiviert ist, ist der Status der Gruppe nur dann eingeschaltet, wenn alle Mitglieder eingeschaltet sind. Wenn \"alle Entit\u00e4ten\" deaktiviert ist, ist der Status der Gruppe eingeschaltet, wenn irgendein Mitglied eingeschaltet ist.",
+                "title": "Gruppe hinzuf\u00fcgen"
+            },
+            "light_options": {
+                "data": {
+                    "entities": "Gruppenmitglieder"
+                },
+                "description": "Gruppenoptionen ausw\u00e4hlen"
+            },
+            "lock": {
+                "data": {
+                    "entities": "Mitglieder",
+                    "hide_members": "Mitglieder ausblenden",
+                    "name": "Name"
+                },
+                "title": "Gruppe hinzuf\u00fcgen"
+            },
+            "media_player": {
+                "data": {
+                    "entities": "Mitglieder",
+                    "hide_members": "Mitglieder ausblenden",
+                    "name": "Name",
+                    "title": "Gruppe hinzuf\u00fcgen"
+                },
+                "description": "Gruppenoptionen ausw\u00e4hlen",
+                "title": "Gruppe hinzuf\u00fcgen"
+            },
+            "media_player_options": {
+                "data": {
+                    "entities": "Gruppenmitglieder"
+                },
+                "description": "Gruppenoptionen ausw\u00e4hlen"
+            },
+            "switch": {
+                "data": {
+                    "entities": "Mitglieder",
+                    "hide_members": "Mitglieder ausblenden",
+                    "name": "Name"
+                },
+                "title": "Gruppe hinzuf\u00fcgen"
+            },
+            "user": {
+                "data": {
+                    "group_type": "Gruppentyp"
+                },
+                "description": "Mit Gruppen kannst du eine neue Entit\u00e4t erstellen, die mehrere Entit\u00e4ten desselben Typs darstellt.",
+                "menu_options": {
+                    "binary_sensor": "Bin\u00e4rer Sensor-Gruppe",
+                    "cover": "Abdeckung-Gruppe",
+                    "fan": "L\u00fcfter-Gruppe",
+                    "light": "Licht-Gruppe",
+                    "lock": "Gruppe sperren",
+                    "media_player": "Media-Player-Gruppe",
+                    "switch": "Gruppe wechseln"
+                },
+                "title": "Gruppe hinzuf\u00fcgen"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "binary_sensor": {
+                "data": {
+                    "all": "Alle Entit\u00e4ten",
+                    "entities": "Mitglieder",
+                    "hide_members": "Mitglieder ausblenden"
+                },
+                "description": "Wenn \"alle Entit\u00e4ten\" aktiviert ist, ist der Status der Gruppe nur dann eingeschaltet, wenn alle Mitglieder eingeschaltet sind. Wenn \"alle Entit\u00e4ten\" deaktiviert ist, ist der Status der Gruppe eingeschaltet, wenn irgendein Mitglied eingeschaltet ist."
+            },
+            "binary_sensor_options": {
+                "data": {
+                    "all": "Alle Entit\u00e4ten",
+                    "entities": "Mitglieder"
+                }
+            },
+            "cover": {
+                "data": {
+                    "entities": "Mitglieder",
+                    "hide_members": "Mitglieder ausblenden"
+                }
+            },
+            "cover_options": {
+                "data": {
+                    "entities": "Mitglieder"
+                }
+            },
+            "fan": {
+                "data": {
+                    "entities": "Mitglieder",
+                    "hide_members": "Mitglieder ausblenden"
+                }
+            },
+            "fan_options": {
+                "data": {
+                    "entities": "Mitglieder"
+                }
+            },
+            "light": {
+                "data": {
+                    "all": "Alle Entit\u00e4ten",
+                    "entities": "Mitglieder",
+                    "hide_members": "Mitglieder ausblenden"
+                },
+                "description": "Wenn \"alle Entit\u00e4ten\" aktiviert ist, ist der Status der Gruppe nur dann eingeschaltet, wenn alle Mitglieder eingeschaltet sind. Wenn \"alle Entit\u00e4ten\" deaktiviert ist, ist der Status der Gruppe eingeschaltet, wenn irgendein Mitglied eingeschaltet ist."
+            },
+            "light_options": {
+                "data": {
+                    "all": "Alle Entit\u00e4ten",
+                    "entities": "Mitglieder"
+                }
+            },
+            "lock": {
+                "data": {
+                    "entities": "Mitglieder",
+                    "hide_members": "Mitglieder ausblenden"
+                }
+            },
+            "media_player": {
+                "data": {
+                    "entities": "Mitglieder",
+                    "hide_members": "Mitglieder ausblenden"
+                }
+            },
+            "media_player_options": {
+                "data": {
+                    "entities": "Mitglieder"
+                }
+            },
+            "switch": {
+                "data": {
+                    "all": "Alle Entit\u00e4ten",
+                    "entities": "Mitglieder",
+                    "hide_members": "Mitglieder ausblenden"
+                },
+                "description": "Wenn \"alle Entit\u00e4ten\" aktiviert ist, ist der Status der Gruppe nur dann eingeschaltet, wenn alle Mitglieder eingeschaltet sind. Wenn \"alle Entit\u00e4ten\" deaktiviert ist, ist der Status der Gruppe eingeschaltet, wenn irgendein Mitglied eingeschaltet ist."
+            }
+        }
+    },
     "state": {
         "_": {
             "closed": "Geschlossen",

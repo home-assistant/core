@@ -28,8 +28,8 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
-from .common import AvmWrapper, FritzBoxBaseEntity
-from .const import DOMAIN, DSL_CONNECTION, UPTIME_DEVIATION, MeshRoles
+from .common import AvmWrapper, ConnectionInfo, FritzBoxBaseEntity
+from .const import DOMAIN, DSL_CONNECTION, UPTIME_DEVIATION
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -135,15 +135,6 @@ def _retrieve_link_attenuation_received_state(
 
 
 @dataclass
-class ConnectionInfo:
-    """Fritz sensor connection information class."""
-
-    connection: str
-    mesh_role: MeshRoles
-    wan_enabled: bool
-
-
-@dataclass
 class FritzRequireKeysMixin:
     """Fritz sensor data class."""
 
@@ -170,7 +161,7 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=_retrieve_device_uptime_state,
-        is_suitable=lambda info: info.mesh_role != MeshRoles.NONE,
+        is_suitable=lambda info: True,
     ),
     FritzSensorEntityDescription(
         key="connection_uptime",
@@ -283,18 +274,7 @@ async def async_setup_entry(
     _LOGGER.debug("Setting up FRITZ!Box sensors")
     avm_wrapper: AvmWrapper = hass.data[DOMAIN][entry.entry_id]
 
-    link_properties = await avm_wrapper.async_get_wan_link_properties()
-    connection_info = ConnectionInfo(
-        connection=link_properties.get("NewWANAccessType", "").lower(),
-        mesh_role=avm_wrapper.mesh_role,
-        wan_enabled=avm_wrapper.device_is_router,
-    )
-
-    _LOGGER.debug(
-        "ConnectionInfo for FritzBox %s: %s",
-        avm_wrapper.host,
-        connection_info,
-    )
+    connection_info = await avm_wrapper.async_get_connection_info()
 
     entities = [
         FritzBoxSensor(avm_wrapper, entry.title, description)
@@ -328,14 +308,13 @@ class FritzBoxSensor(FritzBoxBaseEntity, SensorEntity):
         """Update data."""
         _LOGGER.debug("Updating FRITZ!Box sensors")
 
+        status: FritzStatus = self._avm_wrapper.fritz_status
         try:
-            status: FritzStatus = self._avm_wrapper.fritz_status
-            self._attr_available = True
+            self._attr_native_value = (
+                self._last_device_value
+            ) = self.entity_description.value_fn(status, self._last_device_value)
         except FritzConnectionException:
             _LOGGER.error("Error getting the state from the FRITZ!Box", exc_info=True)
             self._attr_available = False
             return
-
-        self._attr_native_value = (
-            self._last_device_value
-        ) = self.entity_description.value_fn(status, self._last_device_value)
+        self._attr_available = True

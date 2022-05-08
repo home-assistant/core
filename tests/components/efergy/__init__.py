@@ -1,12 +1,11 @@
 """Tests for Efergy integration."""
 from unittest.mock import AsyncMock, patch
 
-from pyefergy import Efergy, exceptions
+from pyefergy import exceptions
 
 from homeassistant.components.efergy import DOMAIN
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, load_fixture
@@ -56,10 +55,6 @@ async def mock_responses(
 ):
     """Mock responses from Efergy."""
     base_url = "https://engage.efergy.com/mobile_proxy/"
-    api = Efergy(
-        token, session=async_get_clientsession(hass), utc_offset="America/New_York"
-    )
-    assert api._utc_offset == 300
     if error:
         aioclient_mock.get(
             f"{base_url}getInstant?token={token}",

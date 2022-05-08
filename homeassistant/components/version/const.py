@@ -31,7 +31,6 @@ ATTR_VERSION_SOURCE: Final = CONF_VERSION_SOURCE
 ATTR_SOURCE: Final = CONF_SOURCE
 
 SOURCE_DOCKER: Final = "docker"  # Kept to not break existing configurations
-SOURCE_HASSIO: Final = "hassio"  # Kept to not break existing configurations
 
 VERSION_SOURCE_DOCKER_HUB: Final = "Docker Hub"
 VERSION_SOURCE_HAIO: Final = "Home Assistant Website"
@@ -44,7 +43,6 @@ DEFAULT_BOARD: Final = "OVA"
 DEFAULT_CHANNEL: Final = "stable"
 DEFAULT_IMAGE: Final = "default"
 DEFAULT_NAME_CURRENT: Final = "Current Version"
-DEFAULT_NAME_LATEST: Final = "Latest Version"
 DEFAULT_NAME: Final = ""
 DEFAULT_SOURCE: Final = "local"
 DEFAULT_CONFIGURATION: Final[dict[str, Any]] = {
@@ -88,11 +86,6 @@ VERSION_SOURCE_MAP: Final[dict[str, str]] = {
     VERSION_SOURCE_DOCKER_HUB: "container",
     VERSION_SOURCE_PYPI: "pypi",
 }
-
-VERSION_SOURCE_MAP_INVERTED: Final[dict[str, str]] = {
-    value: key for key, value in VERSION_SOURCE_MAP.items()
-}
-
 
 VALID_SOURCES: Final[list[str]] = HA_VERSION_SOURCES + [
     "hassio",  # Kept to not break existing configurations

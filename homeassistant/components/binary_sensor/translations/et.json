@@ -134,6 +134,10 @@
             "off": "Ei lae",
             "on": "Laeb"
         },
+        "carbon_monoxide": {
+            "off": "Korras",
+            "on": "Tuvastatud"
+        },
         "co": {
             "off": "Puudub",
             "on": "Tuvastatud"

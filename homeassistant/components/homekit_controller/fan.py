@@ -9,10 +9,8 @@ from aiohomekit.model.services import Service, ServicesTypes
 from homeassistant.components.fan import (
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
-    SUPPORT_DIRECTION,
-    SUPPORT_OSCILLATE,
-    SUPPORT_SET_SPEED,
     FanEntity,
+    FanEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -76,13 +74,13 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
         features = 0
 
         if self.service.has(CharacteristicsTypes.ROTATION_DIRECTION):
-            features |= SUPPORT_DIRECTION
+            features |= FanEntityFeature.DIRECTION
 
         if self.service.has(CharacteristicsTypes.ROTATION_SPEED):
-            features |= SUPPORT_SET_SPEED
+            features |= FanEntityFeature.SET_SPEED
 
         if self.service.has(CharacteristicsTypes.SWING_MODE):
-            features |= SUPPORT_OSCILLATE
+            features |= FanEntityFeature.OSCILLATE
 
         return features
 
@@ -117,7 +115,6 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
 
     async def async_turn_on(
         self,
-        speed: str | None = None,
         percentage: int | None = None,
         preset_mode: str | None = None,
         **kwargs: Any,
@@ -128,7 +125,10 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
         if not self.is_on:
             characteristics[self.on_characteristic] = True
 
-        if percentage is not None and self.supported_features & SUPPORT_SET_SPEED:
+        if (
+            percentage is not None
+            and self.supported_features & FanEntityFeature.SET_SPEED
+        ):
             characteristics[CharacteristicsTypes.ROTATION_SPEED] = percentage
 
         if characteristics:

@@ -181,6 +181,12 @@ send_sticker:
       example: "/path/to/the/sticker.webp"
       selector:
         text:
+    sticker_id:
+      name: Sticker ID
+      description: ID of a sticker that exists on telegram servers
+      example: CAACAgIAAxkBAAEDDldhZD-hqWclr6krLq-FWSfCrGNmOQAC9gAD9HsZAAFeYY-ltPYnrCEE
+      selector:
+        text:
     username:
       name: Username
       description: Username for a URL which require HTTP authentication.

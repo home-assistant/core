@@ -17,23 +17,6 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_import(self, conf: dict):
-        """Import a configuration from config.yaml."""
-        if self._async_current_entries():
-            return self.async_abort(reason="already_setup")
-
-        user, error = await self._check_connection(conf[CONF_ACCESS_TOKEN])
-        if error is not None:
-            return self.async_abort(reason=error)
-
-        await self.async_set_unique_id(user.email)
-        self._abort_if_unique_id_configured()
-
-        return self.async_create_entry(
-            title=f"{user.email} ({user.user_id})",
-            data={CONF_ACCESS_TOKEN: conf[CONF_ACCESS_TOKEN]},
-        )
-
     async def async_step_user(self, user_input: dict | None = None):
         """Handle a flow initialized by the user."""
         errors = {}

@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_CONDITION,
     CONF_DEVICE_ID,
     CONF_ENTITY_ID,
+    CONF_EVENT_DATA,
     CONF_ID,
     CONF_MODE,
     CONF_PLATFORM,
@@ -47,6 +48,9 @@ from homeassistant.helpers import condition, extract_domain_configs
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.integration_platform import (
+    async_process_integration_platform_for_component,
+)
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.script import (
     ATTR_CUR,
@@ -54,6 +58,7 @@ from homeassistant.helpers.script import (
     CONF_MAX,
     CONF_MAX_EXCEEDED,
     Script,
+    script_stack_cv,
 )
 from homeassistant.helpers.script_variables import ScriptVariables
 from homeassistant.helpers.service import (
@@ -226,6 +231,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up all automations."""
     hass.data[DOMAIN] = component = EntityComponent(LOGGER, DOMAIN, hass)
 
+    # Process integration platforms right away since
+    # we will create entities before firing EVENT_COMPONENT_LOADED
+    await async_process_integration_platform_for_component(hass, DOMAIN)
+
     # To register the automation blueprints
     async_get_blueprints(hass)
 
@@ -352,9 +361,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
                 referenced |= condition.async_extract_devices(conf)
 
         for conf in self._trigger_config:
-            device = _trigger_extract_device(conf)
-            if device is not None:
-                referenced.add(device)
+            referenced |= set(_trigger_extract_device(conf))
 
         self._referenced_devices = referenced
         return referenced
@@ -504,6 +511,10 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
                 self.hass.bus.async_fire(
                     EVENT_AUTOMATION_TRIGGERED, event_data, context=trigger_context
                 )
+
+            # Make a new empty script stack; automations are allowed
+            # to recursively trigger themselves
+            script_stack_cv.set([])
 
             try:
                 with trace_path("action"):
@@ -752,12 +763,22 @@ async def _async_process_if(hass, name, config, p_config):
 
 
 @callback
-def _trigger_extract_device(trigger_conf: dict) -> str | None:
+def _trigger_extract_device(trigger_conf: dict) -> list[str]:
     """Extract devices from a trigger config."""
-    if trigger_conf[CONF_PLATFORM] != "device":
-        return None
+    if trigger_conf[CONF_PLATFORM] == "device":
+        return [trigger_conf[CONF_DEVICE_ID]]
 
-    return trigger_conf[CONF_DEVICE_ID]
+    if (
+        trigger_conf[CONF_PLATFORM] == "event"
+        and CONF_EVENT_DATA in trigger_conf
+        and CONF_DEVICE_ID in trigger_conf[CONF_EVENT_DATA]
+    ):
+        return [trigger_conf[CONF_EVENT_DATA][CONF_DEVICE_ID]]
+
+    if trigger_conf[CONF_PLATFORM] == "tag" and CONF_DEVICE_ID in trigger_conf:
+        return trigger_conf[CONF_DEVICE_ID]
+
+    return []
 
 
 @callback
@@ -765,6 +786,9 @@ def _trigger_extract_entities(trigger_conf: dict) -> list[str]:
     """Extract entities from a trigger config."""
     if trigger_conf[CONF_PLATFORM] in ("state", "numeric_state"):
         return trigger_conf[CONF_ENTITY_ID]
+
+    if trigger_conf[CONF_PLATFORM] == "calendar":
+        return [trigger_conf[CONF_ENTITY_ID]]
 
     if trigger_conf[CONF_PLATFORM] == "zone":
         return trigger_conf[CONF_ENTITY_ID] + [trigger_conf[CONF_ZONE]]
@@ -774,5 +798,12 @@ def _trigger_extract_entities(trigger_conf: dict) -> list[str]:
 
     if trigger_conf[CONF_PLATFORM] == "sun":
         return ["sun.sun"]
+
+    if (
+        trigger_conf[CONF_PLATFORM] == "event"
+        and CONF_EVENT_DATA in trigger_conf
+        and CONF_ENTITY_ID in trigger_conf[CONF_EVENT_DATA]
+    ):
+        return [trigger_conf[CONF_EVENT_DATA][CONF_ENTITY_ID]]
 
     return []

@@ -34,9 +34,9 @@ async def async_provide_implementation(hass: HomeAssistant, domain: str):
 
     for service in services:
         if service["service"] == domain and CURRENT_VERSION >= service["min_version"]:
-            return CloudOAuth2Implementation(hass, domain)
+            return [CloudOAuth2Implementation(hass, domain)]
 
-    return
+    return []
 
 
 async def _get_services(hass):

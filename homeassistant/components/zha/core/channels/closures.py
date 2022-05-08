@@ -33,7 +33,8 @@ class DoorLockChannel(ZigbeeChannel):
         ):
             return
 
-        command_name = self._cluster.client_commands.get(command_id, [command_id])[0]
+        command_name = self._cluster.client_commands[command_id].name
+
         if command_name == "operation_event_notification":
             self.zha_send_event(
                 command_name,
@@ -47,7 +48,7 @@ class DoorLockChannel(ZigbeeChannel):
     @callback
     def attribute_updated(self, attrid, value):
         """Handle attribute update from lock cluster."""
-        attr_name = self.cluster.attributes.get(attrid, [attrid])[0]
+        attr_name = self._get_attribute_name(attrid)
         self.debug(
             "Attribute report '%s'[%s] = %s", self.cluster.name, attr_name, value
         )
@@ -140,7 +141,7 @@ class WindowCovering(ZigbeeChannel):
     @callback
     def attribute_updated(self, attrid, value):
         """Handle attribute update from window_covering cluster."""
-        attr_name = self.cluster.attributes.get(attrid, [attrid])[0]
+        attr_name = self._get_attribute_name(attrid)
         self.debug(
             "Attribute report '%s'[%s] = %s", self.cluster.name, attr_name, value
         )

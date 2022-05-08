@@ -5,9 +5,9 @@
             "unknown": "Erreur inattendue"
         },
         "error": {
-            "invalid_2fa": "Authentification \u00e0 2 facteurs invalide, veuillez r\u00e9essayer.",
+            "invalid_2fa": "Authentification \u00e0 deux facteurs non valide, veuillez r\u00e9essayer.",
             "invalid_2fa_method": "M\u00e9thode 2FA non valide (v\u00e9rifiez sur le t\u00e9l\u00e9phone).",
-            "invalid_login": "Login invalide, veuillez r\u00e9essayer."
+            "invalid_login": "Identifiant non valide, veuillez r\u00e9essayer."
         },
         "step": {
             "2fa": {
@@ -20,11 +20,11 @@
             "user": {
                 "data": {
                     "authorization_code": "Code d'autorisation (requis pour l'authentification manuelle)",
-                    "email": "Email",
+                    "email": "Courriel",
                     "password": "Mot de passe"
                 },
                 "description": "Vide",
-                "title": "Connexion \u00e0 Google Hangouts"
+                "title": "Connexion \u00e0 Google Chat"
             }
         }
     }

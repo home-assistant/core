@@ -1,4 +1,14 @@
 {
+    "config": {
+        "step": {
+            "init": {
+                "data": {
+                    "entity_id": "Entit\u00e0 dell'interruttore"
+                },
+                "description": "Seleziona l'interruttore per l'interruttore della luce."
+            }
+        }
+    },
     "device_automation": {
         "action_type": {
             "toggle": "Attiva/Disattiva {entity_name}",

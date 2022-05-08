@@ -6,8 +6,7 @@ import struct
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_HS_COLOR,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -41,6 +40,9 @@ async def async_setup_entry(
 class XiaomiGatewayLight(XiaomiDevice, LightEntity):
     """Representation of a XiaomiGatewayLight."""
 
+    _attr_color_mode = ColorMode.HS
+    _attr_supported_color_modes = {ColorMode.HS}
+
     def __init__(self, device, name, xiaomi_hub, config_entry):
         """Initialize the XiaomiGatewayLight."""
         self._data_key = "rgb"
@@ -61,8 +63,7 @@ class XiaomiGatewayLight(XiaomiDevice, LightEntity):
             return False
 
         if value == 0:
-            if self._state:
-                self._state = False
+            self._state = False
             return True
 
         rgbhexstr = f"{value:x}"
@@ -94,11 +95,6 @@ class XiaomiGatewayLight(XiaomiDevice, LightEntity):
     def hs_color(self):
         """Return the hs color value."""
         return self._hs
-
-    @property
-    def supported_features(self):
-        """Return the supported features."""
-        return SUPPORT_BRIGHTNESS | SUPPORT_COLOR
 
     def turn_on(self, **kwargs):
         """Turn the light on."""

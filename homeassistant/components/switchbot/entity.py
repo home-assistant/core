@@ -12,7 +12,7 @@ from .const import MANUFACTURER
 from .coordinator import SwitchbotDataUpdateCoordinator
 
 
-class SwitchbotEntity(CoordinatorEntity, Entity):
+class SwitchbotEntity(CoordinatorEntity[SwitchbotDataUpdateCoordinator], Entity):
     """Generic entity encapsulating common features of Switchbot device."""
 
     def __init__(

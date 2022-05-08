@@ -2,7 +2,7 @@
 # pylint: disable=protected-access
 
 from datetime import datetime, timedelta
-from ipaddress import IPv4Address, IPv6Address
+from ipaddress import IPv4Address
 from unittest.mock import ANY, AsyncMock, patch
 
 from async_upnp_client.ssdp import udn_from_headers
@@ -25,7 +25,7 @@ from tests.common import async_fire_time_changed
 
 
 def _ssdp_headers(headers):
-    ssdp_headers = CaseInsensitiveDict(headers, _timestamp=datetime(2021, 1, 1, 12, 00))
+    ssdp_headers = CaseInsensitiveDict(headers, _timestamp=datetime.now())
     ssdp_headers["_udn"] = udn_from_headers(ssdp_headers)
     return ssdp_headers
 
@@ -47,6 +47,60 @@ async def test_ssdp_flow_dispatched_on_st(mock_get_ssdp, hass, caplog, mock_flow
     mock_ssdp_search_response = _ssdp_headers(
         {
             "st": "mock-st",
+            "location": "http://1.1.1.1",
+            "usn": "uuid:mock-udn::mock-st",
+            "server": "mock-server",
+            "ext": "",
+        }
+    )
+    ssdp_listener = await init_ssdp_component(hass)
+    await ssdp_listener._on_search(mock_ssdp_search_response)
+    await hass.async_block_till_done()
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+
+    assert len(mock_flow_init.mock_calls) == 1
+    assert mock_flow_init.mock_calls[0][1][0] == "mock-domain"
+    assert mock_flow_init.mock_calls[0][2]["context"] == {
+        "source": config_entries.SOURCE_SSDP
+    }
+    mock_call_data: ssdp.SsdpServiceInfo = mock_flow_init.mock_calls[0][2]["data"]
+    assert mock_call_data.ssdp_st == "mock-st"
+    assert mock_call_data.ssdp_location == "http://1.1.1.1"
+    assert mock_call_data.ssdp_usn == "uuid:mock-udn::mock-st"
+    assert mock_call_data.ssdp_server == "mock-server"
+    assert mock_call_data.ssdp_ext == ""
+    assert mock_call_data.ssdp_udn == ANY
+    assert mock_call_data.ssdp_headers["_timestamp"] == ANY
+    assert mock_call_data.x_homeassistant_matching_domains == {"mock-domain"}
+    assert mock_call_data.upnp == {ssdp.ATTR_UPNP_UDN: "uuid:mock-udn"}
+    assert "Failed to fetch ssdp data" not in caplog.text
+    # Compatibility with old dict access (to be removed after 2022.6)
+    assert mock_call_data[ssdp.ATTR_SSDP_ST] == "mock-st"
+    assert mock_call_data[ssdp.ATTR_SSDP_LOCATION] == "http://1.1.1.1"
+    assert mock_call_data[ssdp.ATTR_SSDP_USN] == "uuid:mock-udn::mock-st"
+    assert mock_call_data[ssdp.ATTR_SSDP_SERVER] == "mock-server"
+    assert mock_call_data[ssdp.ATTR_SSDP_EXT] == ""
+    assert mock_call_data[ssdp.ATTR_UPNP_UDN] == "uuid:mock-udn"
+    assert mock_call_data[ssdp.ATTR_SSDP_UDN] == ANY
+    assert mock_call_data["_timestamp"] == ANY
+    assert mock_call_data[ssdp.ATTR_HA_MATCHING_DOMAINS] == {"mock-domain"}
+    # End compatibility checks
+
+
+@patch(
+    "homeassistant.components.ssdp.async_get_ssdp",
+    return_value={"mock-domain": [{"manufacturerURL": "mock-url"}]},
+)
+@pytest.mark.usefixtures("mock_get_source_ip")
+async def test_ssdp_flow_dispatched_on_manufacturer_url(
+    mock_get_ssdp, hass, caplog, mock_flow_init
+):
+    """Test matching based on manufacturerURL."""
+    mock_ssdp_search_response = _ssdp_headers(
+        {
+            "st": "mock-st",
+            "manufacturerURL": "mock-url",
             "location": "http://1.1.1.1",
             "usn": "uuid:mock-udn::mock-st",
             "server": "mock-server",
@@ -386,7 +440,7 @@ async def test_discovery_from_advertisement_sets_ssdp_st(
     # End compatibility checks
 
 
-@patch(  # XXX TODO: Isn't this duplicate with mock_get_source_ip?
+@patch(
     "homeassistant.components.ssdp.Scanner._async_build_source_set",
     return_value={IPv4Address("192.168.1.1")},
 )
@@ -486,7 +540,7 @@ async def test_scan_with_registered_callback(
         mock_call_data.ssdp_usn == "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL::mock-st"
     )
     assert mock_call_data.ssdp_headers["x-rincon-bootseq"] == "55"
-    assert mock_call_data.ssdp_udn == ANY
+    assert mock_call_data.ssdp_udn == "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL"
     assert mock_call_data.ssdp_headers["_timestamp"] == ANY
     assert mock_call_data.x_homeassistant_matching_domains == set()
     assert mock_call_data.upnp == {
@@ -711,7 +765,7 @@ _ADAPTERS_WITH_MANUAL_CONFIG = [
 @patch(
     "homeassistant.components.ssdp.network.async_get_adapters",
     return_value=_ADAPTERS_WITH_MANUAL_CONFIG,
-)  # XXX TODO: Isn't this duplicate with mock_get_source_ip?
+)
 async def test_async_detect_interfaces_setting_empty_route(
     mock_get_adapters, mock_get_ssdp, hass
 ):
@@ -719,8 +773,8 @@ async def test_async_detect_interfaces_setting_empty_route(
     await init_ssdp_component(hass)
 
     ssdp_listeners = hass.data[ssdp.DOMAIN]._ssdp_listeners
-    source_ips = {ssdp_listener.source_ip for ssdp_listener in ssdp_listeners}
-    assert source_ips == {IPv6Address("2001:db8::"), IPv4Address("192.168.1.5")}
+    sources = {ssdp_listener.source for ssdp_listener in ssdp_listeners}
+    assert sources == {("2001:db8::%1", 0, 0, 1), ("192.168.1.5", 0)}
 
 
 @pytest.mark.usefixtures("mock_get_source_ip")
@@ -737,14 +791,14 @@ async def test_async_detect_interfaces_setting_empty_route(
 @patch(
     "homeassistant.components.ssdp.network.async_get_adapters",
     return_value=_ADAPTERS_WITH_MANUAL_CONFIG,
-)  # XXX TODO: Isn't this duplicate with mock_get_source_ip?
+)
 async def test_bind_failure_skips_adapter(
     mock_get_adapters, mock_get_ssdp, hass, caplog
 ):
     """Test that an adapter with a bind failure is skipped."""
 
     async def _async_start(self):
-        if self.source_ip == IPv6Address("2001:db8::"):
+        if self.source == ("2001:db8::%1", 0, 0, 1):
             raise OSError
 
     SsdpListener.async_start = _async_start
@@ -753,10 +807,8 @@ async def test_bind_failure_skips_adapter(
     assert "Failed to setup listener for" in caplog.text
 
     ssdp_listeners = hass.data[ssdp.DOMAIN]._ssdp_listeners
-    source_ips = {ssdp_listener.source_ip for ssdp_listener in ssdp_listeners}
-    assert source_ips == {
-        IPv4Address("192.168.1.5")
-    }  # Note no SsdpListener for IPv6 address.
+    sources = {ssdp_listener.source for ssdp_listener in ssdp_listeners}
+    assert sources == {("192.168.1.5", 0)}  # Note no SsdpListener for IPv6 address.
 
 
 @pytest.mark.usefixtures("mock_get_source_ip")
@@ -773,7 +825,7 @@ async def test_bind_failure_skips_adapter(
 @patch(
     "homeassistant.components.ssdp.network.async_get_adapters",
     return_value=_ADAPTERS_WITH_MANUAL_CONFIG,
-)  # XXX TODO: Isn't this duplicate with mock_get_source_ip?
+)
 async def test_ipv4_does_additional_search_for_sonos(
     mock_get_adapters, mock_get_ssdp, hass
 ):

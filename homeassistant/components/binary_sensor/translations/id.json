@@ -134,6 +134,10 @@
             "off": "Tidak mengisi daya",
             "on": "Mengisi daya"
         },
+        "carbon_monoxide": {
+            "off": "Tidak ada",
+            "on": "Terdeteksi"
+        },
         "co": {
             "off": "Tidak ada",
             "on": "Terdeteksi"

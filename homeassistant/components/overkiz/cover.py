@@ -1,5 +1,5 @@
 """Support for Overkiz covers - shutters etc."""
-from pyoverkiz.enums import UIClass
+from pyoverkiz.enums import OverkizCommand, UIClass
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -10,7 +10,7 @@ from . import HomeAssistantOverkizData
 from .const import DOMAIN
 from .cover_entities.awning import Awning
 from .cover_entities.generic_cover import OverkizGenericCover
-from .cover_entities.vertical_cover import VerticalCover
+from .cover_entities.vertical_cover import LowSpeedCover, VerticalCover
 
 
 async def async_setup_entry(
@@ -29,6 +29,12 @@ async def async_setup_entry(
         VerticalCover(device.device_url, data.coordinator)
         for device in data.platforms[Platform.COVER]
         if device.ui_class != UIClass.AWNING
+    ]
+
+    entities += [
+        LowSpeedCover(device.device_url, data.coordinator)
+        for device in data.platforms[Platform.COVER]
+        if OverkizCommand.SET_CLOSURE_AND_LINEAR_SPEED in device.definition.commands
     ]
 
     async_add_entities(entities)
