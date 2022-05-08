@@ -1,6 +1,6 @@
 """Test the Ukraine Alarm config flow."""
 import asyncio
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from aioaseko import ClientError
 from aiohttp import ClientConnectionError, ClientResponseError
