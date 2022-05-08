@@ -787,15 +787,16 @@ class AqaraSensorEntity(AqaraEntity, SensorEntity):
         if point_value is None or point_value == "":
             return None
         value: float = 0
+        try:
+            if self.entity_description.scale is not None:
+                value = float(point_value) * self.entity_description.scale
+            else:
+                value = float(point_value)
+            if self.entity_description.precision is not None:
+                if self.entity_description.precision == 0:
+                    return round(value)
 
-        if self.entity_description.scale is not None:
-            value = float(point_value) * self.entity_description.scale
-        else:
-            value = float(point_value)
-        if self.entity_description.precision is not None:
-            if self.entity_description.precision == 0:
-                return round(value)
-
-            return round(value, self.entity_description.precision)
-
+                return round(value, self.entity_description.precision)
+        except ValueError:
+            pass
         return value
