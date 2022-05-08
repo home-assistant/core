@@ -1,0 +1,1 @@
+copy aqara to tests/components

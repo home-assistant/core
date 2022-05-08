@@ -1,0 +1,213 @@
+{
+  "code": 0,
+  "message": "Success",
+  "msgDetails": "null",
+  "requestId": "2960.178264.16504416282680845",
+  "result": [
+    {
+      "resourceId": "14.35.85",
+      "name": "\u7761\u7720\u8d28\u91cf",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "resourceId": "13.1.85",
+      "name": "\u6309\u94ae",
+      "subjectId": "lumi.158d0003d39c9a"
+    },
+    {
+      "resourceId": "4.21.85",
+      "name": "\u6bdb\u5dfe\u67b6",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "resourceId": "8.0.2093",
+      "name": "\u98ce\u6247",
+      "subjectId": "ir.866089998112366592"
+    },
+    {
+      "resourceId": "3.1.85",
+      "name": "Motion Sensor",
+      "subjectId": "lumi.4cf8cdf3c884097"
+    },
+    {
+      "resourceId": "0.1.85",
+      "name": "\u6e29\u5ea6",
+      "subjectId": "lumi.4cf8cdf3c7f78f9"
+    },
+    {
+      "resourceId": "0.2.85",
+      "name": "\u6e7f\u5ea6",
+      "subjectId": "lumi.4cf8cdf3c7f78f9"
+    },
+    {
+      "resourceId": "0.3.85",
+      "name": "TVOC\u6d53\u5ea6",
+      "subjectId": "lumi.4cf8cdf3c7f78f9"
+    },
+    {
+      "resourceId": "4.1.85",
+      "name": "\u4e3b\u5367\u65b0\u98ce\u673a",
+      "subjectId": "lumi.158d000200c14e"
+    },
+    {
+      "resourceId": "13.1.85",
+      "name": "\u6309\u94ae1",
+      "subjectId": "lumi.158d0003d3c6e1"
+    },
+    {
+      "resourceId": "13.2.85",
+      "name": "\u6309\u94ae2",
+      "subjectId": "lumi.158d0003d3c6e1"
+    },
+    {
+      "resourceId": "0.3.85",
+      "name": "\u5149\u7167\u5ea6",
+      "subjectId": "lumi.4cf8cdf3c758a2d"
+    },
+    {
+      "resourceId": "3.1.85",
+      "name": "\u4eba\u4f53\u4f20\u611f\u5668",
+      "subjectId": "lumi.4cf8cdf3c758a2d"
+    },
+    {
+      "resourceId": "4.1.85",
+      "name": "\u667a\u80fd\u955c\u7535\u91cf\u7edf\u8ba1\u63d2\u5ea7",
+      "subjectId": "lumi.158d0000f29bd6"
+    },
+    {
+      "resourceId": "0.1.85",
+      "name": "\u6e29\u5ea6",
+      "subjectId": "lumi.4cf8cdf3c7f7a25"
+    },
+    {
+      "resourceId": "0.2.85",
+      "name": "\u6e7f\u5ea6",
+      "subjectId": "lumi.4cf8cdf3c7f7a25"
+    },
+    {
+      "resourceId": "0.3.85",
+      "name": "TVOC\u6d53\u5ea6",
+      "subjectId": "lumi.4cf8cdf3c7f7a25"
+    },
+    {
+      "resourceId": "13.1.85",
+      "name": "Button",
+      "subjectId": "lumi.158d00010fd5fb"
+    },
+    {
+      "resourceId": "0.3.85",
+      "name": "\u5149\u7167\u5ea6",
+      "subjectId": "lumi.4cf8cdf3c7585ed"
+    },
+    {
+      "resourceId": "3.1.85",
+      "name": "\u4eba\u4f53\u4f20\u611f\u5668",
+      "subjectId": "lumi.4cf8cdf3c7585ed"
+    },
+    {
+      "resourceId": "4.1.85",
+      "name": "Outlet",
+      "subjectId": "lumi.158d0001e5b69b"
+    },
+    {
+      "resourceId": "4.1.85",
+      "name": "\u5ba2\u5385\u5438\u9876\u706f",
+      "subjectId": "lumi.4cf8cdf3c76019a"
+    },
+    {
+      "resourceId": "0.3.85",
+      "name": "\u5149\u7167\u5ea6",
+      "subjectId": "lumi.4cf8cdf3c747fa4"
+    },
+    {
+      "resourceId": "4.1.85",
+      "name": "\u955c\u706f",
+      "subjectId": "lumi.54ef4410004773a6"
+    },
+    {
+      "resourceId": "14.10.85",
+      "name": "\u5ba2\u5385\u7a7a\u8c03",
+      "subjectId": "lumi.158d000216a61f"
+    },
+    {
+      "resourceId": "14.2.85",
+      "name": "\u53f3\u7a97\u5e18",
+      "subjectId": "lumi.4cf8cdf3c7da659"
+    },
+    {
+      "resourceId": "4.1.85",
+      "name": "\u63d2\u5ea7",
+      "subjectId": "lumi.158d0002014d29"
+    },
+    {
+      "resourceId": "0.1.85",
+      "name": "Temperature",
+      "subjectId": "lumi.4cf8cdf3c7f7a12"
+    },
+    {
+      "resourceId": "0.2.85",
+      "name": "Humidity",
+      "subjectId": "lumi.4cf8cdf3c7f7a12"
+    },
+    {
+      "resourceId": "0.3.85",
+      "name": "TVOC Concentration\u201d",
+      "subjectId": "lumi.4cf8cdf3c7f7a12"
+    },
+    {
+      "resourceId": "3.1.85",
+      "name": "Motion Sensor",
+      "subjectId": "lumi.158d00012a8a3f"
+    },
+    {
+      "resourceId": "0.1.85",
+      "name": "\u6e29\u5ea6",
+      "subjectId": "lumi.158d00048520a1"
+    },
+    {
+      "resourceId": "0.2.85",
+      "name": "\u6e7f\u5ea6",
+      "subjectId": "lumi.158d00048520a1"
+    },
+    {
+      "resourceId": "0.3.85",
+      "name": "\u5927\u6c14\u538b",
+      "subjectId": "lumi.158d00048520a1"
+    },
+    {
+      "resourceId": "14.15.85",
+      "name": "\u6444\u50cf\u673a",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "resourceId": "14.10.85",
+      "name": "\u7a7a\u8c03",
+      "subjectId": "virtual.57362614367713"
+    },
+    {
+      "resourceId": "4.1.85",
+      "name": "\u63d2\u5ea7",
+      "subjectId": "lumi1.6490c179afac"
+    },
+    {
+      "resourceId": "8.0.2116",
+      "name": "\u7a7a\u8c03",
+      "subjectId": "lumi1.6490c179afac"
+    },
+    {
+      "resourceId": "4.7.85",
+      "name": "bed control",
+      "subjectId": "lumi.12345"
+    },
+    {
+      "resourceId": "14.48.85",
+      "name": "control xxx",
+      "subjectId": "lumi.12345"
+    },
+    {
+      "resourceId": "4.32.85",
+      "name": "control ooo",
+      "subjectId": "lumi.12345"
+    }
+  ]
+}

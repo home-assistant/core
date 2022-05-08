@@ -1,0 +1,32 @@
+{
+  "code": 0,
+  "message": "Success",
+  "msgDetails": "None",
+  "requestId": "2960.1209.16505260858914145",
+  "result": {
+    "data": [
+      {
+        "positionName": "default",
+        "positionId": "real1.933736748533063680",
+        "createTime": 1642661788859,
+        "description": "",
+        "parentPositionId": ""
+      },
+      {
+        "positionName": "office",
+        "positionId": "real1.743791439074398208",
+        "createTime": 1597375298048,
+        "description": "",
+        "parentPositionId": ""
+      },
+      {
+        "positionName": "home",
+        "positionId": "real1.5180288992707410",
+        "createTime": 1551366457289,
+        "description": "",
+        "parentPositionId": ""
+      }
+    ],
+    "totalCount": 3
+  }
+}

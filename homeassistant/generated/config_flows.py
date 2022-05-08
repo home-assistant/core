@@ -30,6 +30,7 @@ FLOWS = {
         "ambient_station",
         "androidtv",
         "apple_tv",
+        "aqara",
         "arcam_fmj",
         "aseko_pool_live",
         "asuswrt",
