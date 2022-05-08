@@ -43,6 +43,7 @@ ATTR_PROBLEM = "problem"
 ATTR_SENSORS = "sensors"
 PROBLEM_NONE = "none"
 ATTR_MAX_BRIGHTNESS_HISTORY = "max_brightness"
+ATTR_LIMITS = "limits"
 
 # we're not returning only one value, we're returning a dict here. So we need
 # to have a separate literal for it to avoid confusion.
@@ -66,10 +67,14 @@ CONF_SENSOR_TEMPERATURE = READING_TEMPERATURE
 CONF_SENSOR_BRIGHTNESS = READING_BRIGHTNESS
 
 DEFAULT_MIN_BATTERY_LEVEL = 20
+DEFAULT_MIN_TEMPERATURE = 10
+DEFAULT_MAX_TEMPERATURE = 40
 DEFAULT_MIN_MOISTURE = 20
 DEFAULT_MAX_MOISTURE = 60
 DEFAULT_MIN_CONDUCTIVITY = 500
 DEFAULT_MAX_CONDUCTIVITY = 3000
+DEFAULT_MIN_BRIGHTNESS = 0
+DEFAULT_MAX_BRIGHTNESS = 100000
 DEFAULT_CHECK_DAYS = 3
 
 SCHEMA_SENSORS = vol.Schema(
@@ -88,8 +93,12 @@ PLANT_SCHEMA = vol.Schema(
         vol.Optional(
             CONF_MIN_BATTERY_LEVEL, default=DEFAULT_MIN_BATTERY_LEVEL
         ): cv.positive_int,
-        vol.Optional(CONF_MIN_TEMPERATURE): vol.Coerce(float),
-        vol.Optional(CONF_MAX_TEMPERATURE): vol.Coerce(float),
+        vol.Optional(CONF_MIN_TEMPERATURE, default=DEFAULT_MIN_TEMPERATURE): vol.Coerce(
+            float
+        ),
+        vol.Optional(CONF_MAX_TEMPERATURE, default=DEFAULT_MAX_TEMPERATURE): vol.Coerce(
+            float
+        ),
         vol.Optional(CONF_MIN_MOISTURE, default=DEFAULT_MIN_MOISTURE): cv.positive_int,
         vol.Optional(CONF_MAX_MOISTURE, default=DEFAULT_MAX_MOISTURE): cv.positive_int,
         vol.Optional(
@@ -98,8 +107,12 @@ PLANT_SCHEMA = vol.Schema(
         vol.Optional(
             CONF_MAX_CONDUCTIVITY, default=DEFAULT_MAX_CONDUCTIVITY
         ): cv.positive_int,
-        vol.Optional(CONF_MIN_BRIGHTNESS): cv.positive_int,
-        vol.Optional(CONF_MAX_BRIGHTNESS): cv.positive_int,
+        vol.Optional(
+            CONF_MIN_BRIGHTNESS, default=DEFAULT_MIN_BRIGHTNESS
+        ): cv.positive_int,
+        vol.Optional(
+            CONF_MAX_BRIGHTNESS, default=DEFAULT_MAX_BRIGHTNESS
+        ): cv.positive_int,
         vol.Optional(CONF_CHECK_DAYS, default=DEFAULT_CHECK_DAYS): cv.positive_int,
     }
 )
@@ -349,6 +362,7 @@ class Plant(Entity):
             ATTR_PROBLEM: self._problems,
             ATTR_SENSORS: self._readingmap,
             ATTR_DICT_OF_UNITS_OF_MEASUREMENT: self._unit_of_measurement,
+            ATTR_LIMITS: {},
         }
 
         for reading in self._sensormap.values():
@@ -356,6 +370,20 @@ class Plant(Entity):
 
         if self._brightness_history.max is not None:
             attrib[ATTR_MAX_BRIGHTNESS_HISTORY] = self._brightness_history.max
+
+        attributes = (
+            CONF_MIN_TEMPERATURE,
+            CONF_MAX_TEMPERATURE,
+            CONF_MIN_MOISTURE,
+            CONF_MAX_MOISTURE,
+            CONF_MIN_CONDUCTIVITY,
+            CONF_MAX_CONDUCTIVITY,
+            CONF_MIN_BRIGHTNESS,
+            CONF_MAX_BRIGHTNESS,
+        )
+
+        for var in attributes:
+            attrib[ATTR_LIMITS][var] = self._config.get(var)
 
         return attrib
 
