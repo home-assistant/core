@@ -797,12 +797,16 @@ class ContextAugmenter:
         if _rows_match(row, context_row):
             # This is the first event with the given ID. Was it directly caused by
             # a parent event?
-            if row.context_parent_id:
-                context_row = self.context_lookup.get(row.context_parent_id)
-                # Ensure the (parent) context_event exists and is not the root cause of
-                # this log entry.
-                if not context_row or _rows_match(row, context_row):
-                    return
+            if (
+                not row.context_parent_id
+                or (context_row := self.context_lookup.get(row.context_parent_id))
+                is None
+            ):
+                return
+            # Ensure the (parent) context_event exists and is not the root cause of
+            # this log entry.
+            if _rows_match(row, context_row):
+                return
 
         event_type = context_row.event_type
 
