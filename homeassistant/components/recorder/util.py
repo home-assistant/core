@@ -27,13 +27,9 @@ import homeassistant.util.dt as dt_util
 
 from .const import DATA_INSTANCE, SQLITE_URL_PREFIX, SupportedDialect
 from .models import (
-    ALL_TABLES,
     TABLE_RECORDER_RUNS,
     TABLE_SCHEMA_CHANGES,
-    TABLE_STATISTICS,
-    TABLE_STATISTICS_META,
-    TABLE_STATISTICS_RUNS,
-    TABLE_STATISTICS_SHORT_TERM,
+    TABLES_TO_CHECK,
     RecorderRuns,
     process_timestamp,
 )
@@ -213,15 +209,7 @@ def last_run_was_recently_clean(cursor: CursorFetchStrategy) -> bool:
 def basic_sanity_check(cursor: CursorFetchStrategy) -> bool:
     """Check tables to make sure select does not fail."""
 
-    for table in ALL_TABLES:
-        # The statistics tables may not be present in old databases
-        if table in [
-            TABLE_STATISTICS,
-            TABLE_STATISTICS_META,
-            TABLE_STATISTICS_RUNS,
-            TABLE_STATISTICS_SHORT_TERM,
-        ]:
-            continue
+    for table in TABLES_TO_CHECK:
         if table in (TABLE_RECORDER_RUNS, TABLE_SCHEMA_CHANGES):
             cursor.execute(f"SELECT * FROM {table};")  # nosec # not injection
         else:
