@@ -9,7 +9,11 @@ from homeassistant.components.ids_hyyp.const import (
 )
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_TIMEOUT, CONF_TOKEN
-from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
+from homeassistant.data_entry_flow import (
+    RESULT_TYPE_ABORT,
+    RESULT_TYPE_CREATE_ENTRY,
+    RESULT_TYPE_FORM,
+)
 
 from . import USER_INPUT, init_integration, patch_async_setup_entry
 
@@ -52,39 +56,46 @@ async def test_user_form_exception(hass, ids_hyyp_config_flow):
         DOMAIN, context={"source": SOURCE_USER}
     )
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        USER_INPUT,
+    )
+
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "user"
-    assert result["errors"] == {}
+    assert result["errors"] == {"base": "invalid_host"}
 
     ids_hyyp_config_flow.side_effect = HTTPError
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        USER_INPUT,
     )
 
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "user"
-    assert result["errors"] == {}
+    assert result["errors"] == {"base": "cannot_connect"}
 
     ids_hyyp_config_flow.side_effect = HyypApiError
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        USER_INPUT,
     )
 
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "user"
-    assert result["errors"] == {}
+    assert result["errors"] == {"base": "invalid_auth"}
 
     ids_hyyp_config_flow.side_effect = Exception
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        USER_INPUT,
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {}
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "unknown"
 
 
 async def test_options_flow(hass):
