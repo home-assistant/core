@@ -270,7 +270,7 @@ async def test_server_error(hass: HomeAssistant, mock_get_regions) -> None:
     assert result2["errors"] == {"base": "unknown"}
 
 
-async def test_cannot_connect(hass: HomeAssistant, mock_get_regions) -> None:
+async def test_cannot_connect(hass: HomeAssistant, mock_get_regions: AsyncMock) -> None:
     """Test we can create entry for just region."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -290,7 +290,9 @@ async def test_cannot_connect(hass: HomeAssistant, mock_get_regions) -> None:
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_unknown_client_error(hass: HomeAssistant, mock_get_regions) -> None:
+async def test_unknown_client_error(
+    hass: HomeAssistant, mock_get_regions: AsyncMock
+) -> None:
     """Test we can create entry for just region."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -310,7 +312,7 @@ async def test_unknown_client_error(hass: HomeAssistant, mock_get_regions) -> No
     assert result2["errors"] == {"base": "unknown"}
 
 
-async def test_timeout_error(hass: HomeAssistant, mock_get_regions) -> None:
+async def test_timeout_error(hass: HomeAssistant, mock_get_regions: AsyncMock) -> None:
     """Test we can create entry for just region."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -330,7 +332,9 @@ async def test_timeout_error(hass: HomeAssistant, mock_get_regions) -> None:
     assert result2["errors"] == {"base": "timeout"}
 
 
-async def test_no_regions_returned(hass: HomeAssistant, mock_get_regions) -> None:
+async def test_no_regions_returned(
+    hass: HomeAssistant, mock_get_regions: AsyncMock
+) -> None:
     """Test we can create entry for just region."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
