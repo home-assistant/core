@@ -1,0 +1,35 @@
+{
+  "config": {
+    "abort": {
+      "already_configured_account": "Account is already configured",
+      "unknown": "Unexpected error"
+    },
+    "error": {
+      "cannot_connect": "Failed to connect",
+      "invalid_auth": "Invalid authentication",
+      "invalid_host": "Invalid hostname or IP address"
+    },
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "data": {
+          "password": "Password",
+          "pkg": "Package variant",
+          "email": "Email"
+        },
+        "title": "Connect to IDS Hyyp"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "timeout": "Request Timeout (seconds)",
+          "bypass_code": "Bypass code",
+          "arm_code": "Arm code"
+        }
+      }
+    }
+  }
+}

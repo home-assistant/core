@@ -1,0 +1,16 @@
+zone_bypass_code:
+  name: Bypass Zone
+  description: Bypass zone if code not saved in options.
+  target:
+    entity:
+      integration: ids_hyyp
+      domain: switch
+  fields:
+    bypass_code:
+      name: Zone bypass code
+      description: Partition or Site level bypass code.
+      required: true
+      example: 1234
+      default: 1234
+      selector:
+        text:

@@ -1,0 +1,35 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "title": "Connect to IDS Hyyp",
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "pkg": "Package variant"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]"
+    },
+    "abort": {
+      "already_configured_account": "[%key:common::config_flow::abort::already_configured_account%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "timeout": "Request Timeout (seconds)",
+          "bypass_code": "Bypass code",
+          "arm_code": "Arm code"
+        }
+      }
+    }
+  }
+}

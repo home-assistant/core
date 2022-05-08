@@ -165,6 +165,7 @@ FLOWS = {
         "ialarm",
         "iaqualink",
         "icloud",
+        "ids_hyyp",
         "ifttt",
         "insteon",
         "intellifire",
