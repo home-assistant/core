@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 from sqlalchemy import text
 
 from .const import SupportedDialect
+from .models import ALL_TABLES
 
 if TYPE_CHECKING:
     from . import Recorder
@@ -41,6 +42,6 @@ def repack_database(instance: Recorder) -> None:
     if dialect_name == SupportedDialect.MYSQL:
         _LOGGER.debug("Optimizing SQL DB to free space")
         with instance.engine.connect() as conn:
-            conn.execute(text("OPTIMIZE TABLE states, events, recorder_runs"))
+            conn.execute(text(f"OPTIMIZE TABLE {','.join(ALL_TABLES)}"))
             conn.commit()
         return
