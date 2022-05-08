@@ -230,7 +230,7 @@ async def test_state_district_community(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_invalid_api(hass: HomeAssistant, mock_get_regions) -> None:
+async def test_invalid_api(hass: HomeAssistant, mock_get_regions: AsyncMock) -> None:
     """Test we can create entry for just region."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
