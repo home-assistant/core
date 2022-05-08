@@ -3,6 +3,7 @@
         "abort": {
             "all_student_already_configured": "\u6240\u6709\u5b78\u751f\u90fd\u5df2\u7d93\u65b0\u589e\u3002",
             "already_configured": "\u8a72\u5b78\u751f\u5df2\u7d93\u65b0\u589e\u3002",
+            "no_matching_entries": "\u627e\u4e0d\u5230\u76f8\u7b26\u7684\u5be6\u9ad4\uff0c\u8acb\u4f7f\u7528\u5176\u4ed6\u5e33\u865f\u6216\u79fb\u9664\u5305\u542b\u904e\u671f\u5b78\u751f\u4e4b\u6574\u5408..",
             "reauth_successful": "\u91cd\u65b0\u8a8d\u8b49\u6210\u529f"
         },
         "error": {
@@ -30,6 +31,14 @@
                 "description": "\u4f7f\u7528\u884c\u52d5 App \u8a3b\u518a\u9801\u9762\u767b\u5165 Vulcan \u5e33\u865f\u3002"
             },
             "reauth": {
+                "data": {
+                    "pin": "Pin",
+                    "region": "\u7b26\u865f",
+                    "token": "\u6b0a\u6756"
+                },
+                "description": "\u4f7f\u7528\u884c\u52d5 App \u8a3b\u518a\u9801\u9762\u767b\u5165 Vulcan \u5e33\u865f\u3002"
+            },
+            "reauth_confirm": {
                 "data": {
                     "pin": "Pin",
                     "region": "\u7b26\u865f",

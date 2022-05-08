@@ -21,6 +21,7 @@ from sqlalchemy.sql.expression import true
 
 from homeassistant.core import HomeAssistant
 
+from .const import SupportedDialect
 from .models import (
     SCHEMA_VERSION,
     TABLE_STATES,
@@ -263,7 +264,7 @@ def _modify_columns(
     columns_def: list[str],
 ) -> None:
     """Modify columns in a table."""
-    if engine.dialect.name == "sqlite":
+    if engine.dialect.name == SupportedDialect.SQLITE:
         _LOGGER.debug(
             "Skipping to modify columns %s in table %s; "
             "Modifying column length in SQLite is unnecessary, "
@@ -281,7 +282,7 @@ def _modify_columns(
         table_name,
     )
 
-    if engine.dialect.name == "postgresql":
+    if engine.dialect.name == SupportedDialect.POSTGRESQL:
         columns_def = [
             "ALTER {column} TYPE {type}".format(
                 **dict(zip(["column", "type"], col_def.split(" ", 1)))
@@ -408,7 +409,7 @@ def _apply_update(  # noqa: C901
 ) -> None:
     """Perform operations to bring schema up to date."""
     dialect = engine.dialect.name
-    big_int = "INTEGER(20)" if dialect == "mysql" else "INTEGER"
+    big_int = "INTEGER(20)" if dialect == SupportedDialect.MYSQL else "INTEGER"
 
     if new_version == 1:
         _create_index(session_maker, "events", "ix_events_time_fired")
@@ -487,11 +488,11 @@ def _apply_update(  # noqa: C901
         _create_index(session_maker, "states", "ix_states_old_state_id")
         _update_states_table_with_foreign_key_options(session_maker, engine)
     elif new_version == 12:
-        if engine.dialect.name == "mysql":
+        if engine.dialect.name == SupportedDialect.MYSQL:
             _modify_columns(session_maker, engine, "events", ["event_data LONGTEXT"])
             _modify_columns(session_maker, engine, "states", ["attributes LONGTEXT"])
     elif new_version == 13:
-        if engine.dialect.name == "mysql":
+        if engine.dialect.name == SupportedDialect.MYSQL:
             _modify_columns(
                 session_maker,
                 engine,
@@ -545,7 +546,7 @@ def _apply_update(  # noqa: C901
             session.add(StatisticsRuns(start=get_start_time()))
     elif new_version == 20:
         # This changed the precision of statistics from float to double
-        if engine.dialect.name in ["mysql", "postgresql"]:
+        if engine.dialect.name in [SupportedDialect.MYSQL, SupportedDialect.POSTGRESQL]:
             _modify_columns(
                 session_maker,
                 engine,
@@ -560,7 +561,7 @@ def _apply_update(  # noqa: C901
             )
     elif new_version == 21:
         # Try to change the character set of the statistic_meta table
-        if engine.dialect.name == "mysql":
+        if engine.dialect.name == SupportedDialect.MYSQL:
             for table in ("events", "states", "statistics_meta"):
                 _LOGGER.warning(
                     "Updating character set and collation of table %s to utf8mb4. "

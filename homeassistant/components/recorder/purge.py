@@ -13,7 +13,7 @@ from sqlalchemy.sql.expression import distinct
 
 from homeassistant.const import EVENT_STATE_CHANGED
 
-from .const import MAX_ROWS_TO_PURGE
+from .const import MAX_ROWS_TO_PURGE, SupportedDialect
 from .models import (
     EventData,
     Events,
@@ -45,7 +45,7 @@ def purge_old_data(
         "Purging states and events before target %s",
         purge_before.isoformat(sep=" ", timespec="seconds"),
     )
-    using_sqlite = instance.using_sqlite()
+    using_sqlite = instance.dialect_name == SupportedDialect.SQLITE
 
     with session_scope(session=instance.get_session()) as session:
         # Purge a max of MAX_ROWS_TO_PURGE, based on the oldest states or events record
@@ -425,7 +425,7 @@ def _purge_old_recorder_runs(
 def _purge_filtered_data(instance: Recorder, session: Session) -> bool:
     """Remove filtered states and events that shouldn't be in the database."""
     _LOGGER.debug("Cleanup filtered data")
-    using_sqlite = instance.using_sqlite()
+    using_sqlite = instance.dialect_name == SupportedDialect.SQLITE
 
     # Check if excluded entity_ids are in database
     excluded_entity_ids: list[str] = [
@@ -484,7 +484,7 @@ def _purge_filtered_events(
     instance: Recorder, session: Session, excluded_event_types: list[str]
 ) -> None:
     """Remove filtered events and linked states."""
-    using_sqlite = instance.using_sqlite()
+    using_sqlite = instance.dialect_name == SupportedDialect.SQLITE
     event_ids, data_ids = zip(
         *(
             session.query(Events.event_id, Events.data_id)
@@ -514,7 +514,7 @@ def _purge_filtered_events(
 @retryable_database_job("purge")
 def purge_entity_data(instance: Recorder, entity_filter: Callable[[str], bool]) -> bool:
     """Purge states and events of specified entities."""
-    using_sqlite = instance.using_sqlite()
+    using_sqlite = instance.dialect_name == SupportedDialect.SQLITE
     with session_scope(session=instance.get_session()) as session:
         selected_entity_ids: list[str] = [
             entity_id
