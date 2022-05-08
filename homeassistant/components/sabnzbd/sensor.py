@@ -165,7 +165,6 @@ class SabnzbdSensor(SensorEntity):
             self.entity_description.key
         )
 
-
         if self._attr_native_value is not None:
             if self.entity_description.key == SPEED_KEY:
                 self._attr_native_value = round(
