@@ -478,7 +478,7 @@ def _get_events(
 
     entity_name_cache = EntityNameCache(hass)
     event_data_cache: dict[str, dict[str, Any]] = {}
-    context_lookup: dict[str | None, LazyEventPartialState | None] = {None: None}
+    context_lookup: dict[str | None, Row | None] = {None: None}
     event_cache = EventCache(event_data_cache)
     external_events = hass.data.get(DOMAIN, {})
     context_augmenter = ContextAugmenter(
