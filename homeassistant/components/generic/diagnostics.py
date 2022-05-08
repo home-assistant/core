@@ -24,6 +24,7 @@ def redact_url(data: str) -> str:
     url = yarl.URL(data)
     if url.user is not None:
         url = url.with_user("****")
+    if url.password is not None:
         url = url.with_password("****")
     return str(url)
 
