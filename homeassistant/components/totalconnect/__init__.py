@@ -31,7 +31,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     conf = entry.data
     username = conf[CONF_USERNAME]
     password = conf[CONF_PASSWORD]
-    bypass = entry.options.get(AUTO_BYPASS)
+    if AUTO_BYPASS in entry.options:
+        bypass = entry.options[AUTO_BYPASS]
+    else:
+        bypass = False
 
     if CONF_USERCODES not in conf:
         # should only happen for those who used UI before we added usercodes

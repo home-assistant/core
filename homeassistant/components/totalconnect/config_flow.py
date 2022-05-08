@@ -183,13 +183,18 @@ class TotalConnectOptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
+        if AUTO_BYPASS in self.config_entry.options:
+            default_value = self.config_entry.options[AUTO_BYPASS]
+        else:
+            default_value = False
+
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema(
                 {
                     vol.Required(
                         AUTO_BYPASS,
-                        default=self.config_entry.options.get(AUTO_BYPASS),
+                        default=default_value,
                     ): bool
                 }
             ),
