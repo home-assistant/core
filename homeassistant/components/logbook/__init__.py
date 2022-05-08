@@ -799,10 +799,10 @@ class ContextAugmenter:
             # a parent event?
             if row.context_parent_id:
                 context_row = self.context_lookup.get(row.context_parent_id)
-                # Ensure the (parent) context_event exists and is not the root cause of
-                # this log entry.
-                if not context_row or _rows_match(row, context_row):
-                    return
+            # Ensure the (parent) context_event exists and is not the root cause of
+            # this log entry.
+            if not context_row or _rows_match(row, context_row):
+                return
 
         event_type = context_row.event_type
 
