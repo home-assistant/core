@@ -46,7 +46,7 @@ from .const import (
     MAX_SEGMENTS,
     OUTPUT_IDLE_TIMEOUT,
     RECORDER_PROVIDER,
-    RTSP_TRANS_PROTOCOLS,
+    RTSP_TRANSPORTS,
     SEGMENT_DURATION_ADJUSTER,
     STREAM_RESTART_INCREMENT,
     STREAM_RESTART_RESET_TIME,
@@ -474,7 +474,7 @@ def _should_retry() -> bool:
 
 STREAM_OPTIONS_SCHEMA: Final = vol.Schema(
     {
-        vol.Optional(CONF_RTSP_TRANSPORT): vol.In(RTSP_TRANS_PROTOCOLS),
+        vol.Optional(CONF_RTSP_TRANSPORT): vol.In(RTSP_TRANSPORTS),
     }
 )
 

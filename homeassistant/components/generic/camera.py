@@ -12,7 +12,7 @@ from homeassistant.components.camera import (
     Camera,
     CameraEntityFeature,
 )
-from homeassistant.components.stream import CONF_RTSP_TRANSPORT, RTSP_TRANS_PROTOCOLS
+from homeassistant.components.stream import CONF_RTSP_TRANSPORT, RTSP_TRANSPORTS
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_AUTHENTICATION,
@@ -61,7 +61,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             cv.small_float, cv.positive_int
         ),
         vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
-        vol.Optional(CONF_RTSP_TRANSPORT): vol.In(RTSP_TRANS_PROTOCOLS),
+        vol.Optional(CONF_RTSP_TRANSPORT): vol.In(RTSP_TRANSPORTS),
     }
 )
 

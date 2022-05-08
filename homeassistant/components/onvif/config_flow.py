@@ -13,7 +13,7 @@ from zeep.exceptions import Fault
 
 from homeassistant import config_entries
 from homeassistant.components.ffmpeg import CONF_EXTRA_ARGUMENTS
-from homeassistant.components.stream import CONF_RTSP_TRANSPORT, RTSP_TRANS_PROTOCOLS
+from homeassistant.components.stream import CONF_RTSP_TRANSPORT, RTSP_TRANSPORTS
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -287,9 +287,9 @@ class OnvifOptionsFlowHandler(config_entries.OptionsFlow):
                     vol.Optional(
                         CONF_RTSP_TRANSPORT,
                         default=self.config_entry.options.get(
-                            CONF_RTSP_TRANSPORT, RTSP_TRANS_PROTOCOLS[0]
+                            CONF_RTSP_TRANSPORT, next(iter(RTSP_TRANSPORTS))
                         ),
-                    ): vol.In(RTSP_TRANS_PROTOCOLS),
+                    ): vol.In(RTSP_TRANSPORTS),
                 }
             ),
         )

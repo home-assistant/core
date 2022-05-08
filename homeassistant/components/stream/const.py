@@ -45,4 +45,9 @@ CONF_SEGMENT_DURATION = "segment_duration"
 
 CONF_PREFER_TCP = "prefer_tcp"
 CONF_RTSP_TRANSPORT = "rtsp_transport"
-RTSP_TRANS_PROTOCOLS = ["tcp", "udp", "udp_multicast", "http"]
+RTSP_TRANSPORTS = {
+    "tcp": "TCP",
+    "udp": "UDP",
+    "udp_multicast": "UDP Multicast",
+    "http": "HTTP",
+}

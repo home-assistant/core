@@ -16,7 +16,7 @@ from httpx import HTTPStatusError, RequestError, TimeoutException
 import voluptuous as vol
 import yarl
 
-from homeassistant.components.stream import CONF_RTSP_TRANSPORT, RTSP_TRANS_PROTOCOLS
+from homeassistant.components.stream import CONF_RTSP_TRANSPORT, RTSP_TRANSPORTS
 from homeassistant.components.stream.const import SOURCE_TIMEOUT
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import (
@@ -78,7 +78,7 @@ def build_schema(
         vol.Optional(
             CONF_RTSP_TRANSPORT,
             description={"suggested_value": user_input.get(CONF_RTSP_TRANSPORT)},
-        ): vol.In(RTSP_TRANS_PROTOCOLS),
+        ): vol.In(RTSP_TRANSPORTS),
         vol.Optional(
             CONF_AUTHENTICATION,
             description={"suggested_value": user_input.get(CONF_AUTHENTICATION)},
