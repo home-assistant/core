@@ -485,8 +485,7 @@ def convert_stream_options(stream_options: dict[str, Any]) -> dict[str, str]:
     try:
         STREAM_OPTIONS_SCHEMA(stream_options)
     except vol.Invalid as exc:
-        _LOGGER.error("Invalid stream options: %s", exc)
-        return pyav_options
+        raise HomeAssistantError("Invalid stream options") from exc
 
     if rtsp_transport := stream_options.get(CONF_RTSP_TRANSPORT):
         pyav_options["rtsp_transport"] = rtsp_transport
