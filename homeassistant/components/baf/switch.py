@@ -19,6 +19,7 @@ PROPERTY_CATEGORY = {
     "legacy_ir_remote_enable": EntityCategory.CONFIG,
     "led_indicators_enable": EntityCategory.CONFIG,
     "comfort_heat_assist_enable": EntityCategory.CONFIG,
+    "fan_beep_enable": EntityCategory.CONFIG,
     "eco_enable": EntityCategory.CONFIG,
     "motion_sense_enable": EntityCategory.CONFIG,
     "return_to_auto_enable": EntityCategory.CONFIG,
