@@ -1440,9 +1440,7 @@ async def test_database_connection_keep_alive(
     caplog: pytest.LogCaptureFixture,
 ):
     """Test we keep alive socket based dialects."""
-    with patch(
-        "homeassistant.components.recorder.Recorder.using_sqlite", return_value=False
-    ):
+    with patch("homeassistant.components.recorder.Recorder.dialect_name"):
         instance = await async_setup_recorder_instance(hass)
         # We have to mock this since we don't have a mock
         # MySQL server available in tests.
