@@ -20,6 +20,16 @@ DEBUG_MUTEX_POOL_TRACE = False
 POOL_SIZE = 5
 
 
+def _raise_if_main_thread() -> None:
+    """Raise an exception if we are running in the main thread."""
+    if threading.current_thread() == threading.main_thread():
+        raise RuntimeError(
+            "Detected database access from the event loop; This is causing stability issues; "
+            "Use homeassistant.components.recorder.get_instance(hass).async_add_executor_job() "
+            "for database operations"
+        )
+
+
 class RecorderPool(SingletonThreadPool, NullPool):  # type: ignore[misc]
     """A hybrid of NullPool and SingletonThreadPool.
 
@@ -62,6 +72,7 @@ class RecorderPool(SingletonThreadPool, NullPool):  # type: ignore[misc]
     def _do_get(self) -> Any:
         if self.recorder_or_dbworker:
             return super()._do_get()
+        _raise_if_main_thread()
         report(
             "accesses the database without the database executor; "
             "Use homeassistant.components.recorder.get_instance(hass).async_add_executor_job() "

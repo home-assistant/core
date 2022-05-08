@@ -597,8 +597,12 @@ def test_periodic_db_cleanups(hass_recorder):
     assert str(text_obj) == "PRAGMA wal_checkpoint(TRUNCATE);"
 
 
+@patch("homeassistant.components.recorder.pool._raise_if_main_thread")
 async def test_write_lock_db(
-    hass: HomeAssistant, async_setup_recorder_instance: SetupRecorderInstanceT, tmp_path
+    mock_main_thread,
+    hass: HomeAssistant,
+    async_setup_recorder_instance: SetupRecorderInstanceT,
+    tmp_path,
 ):
     """Test database write lock."""
     from sqlalchemy.exc import OperationalError
