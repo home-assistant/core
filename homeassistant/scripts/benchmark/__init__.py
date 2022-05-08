@@ -16,7 +16,6 @@ from homeassistant.components.websocket_api.const import JSON_DUMP
 from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.helpers.entityfilter import convert_include_exclude_filter
 from homeassistant.helpers.json import JSONEncoder
-from homeassistant.util import dt as dt_util
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 # mypy: no-warn-return-any
@@ -222,18 +221,6 @@ async def state_changed_event_filter_helper(hass):
     assert count == 0
 
     return timer() - start
-
-
-@benchmark
-async def logbook_filtering_state(hass):
-    """Filter state changes."""
-    return await _logbook_filtering(hass, 1, 1)
-
-
-@benchmark
-async def logbook_filtering_attributes(hass):
-    """Filter attribute changes."""
-    return await _logbook_filtering(hass, 1, 2)
 
 
 @benchmark
