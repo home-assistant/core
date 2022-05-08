@@ -2,7 +2,7 @@
 import asyncio
 from unittest.mock import AsyncMock, patch
 
-from aiohttp import ClientConnectionError, ClientResponseError
+from aiohttp import ClientConnectionError, ClientError, ClientResponseError
 import pytest
 
 from homeassistant import config_entries
