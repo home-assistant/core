@@ -9,7 +9,7 @@ from sqlalchemy.exc import DatabaseError, OperationalError
 from sqlalchemy.orm.session import Session
 
 from homeassistant.components import recorder
-from homeassistant.components.recorder.const import MAX_ROWS_TO_PURGE
+from homeassistant.components.recorder.const import MAX_ROWS_TO_PURGE, SupportedDialect
 from homeassistant.components.recorder.models import (
     Events,
     RecorderRuns,
@@ -43,8 +43,10 @@ from tests.common import SetupRecorderInstanceT
 def mock_use_sqlite(request):
     """Pytest fixture to switch purge method."""
     with patch(
-        "homeassistant.components.recorder.Recorder.using_sqlite",
-        return_value=request.param,
+        "homeassistant.components.recorder.core.Recorder.dialect_name",
+        return_value=SupportedDialect.SQLITE
+        if request.param
+        else SupportedDialect.MYSQL,
     ):
         yield
 
