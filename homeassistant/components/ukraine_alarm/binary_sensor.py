@@ -47,6 +47,7 @@ BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
         key=ALERT_TYPE_ARTILLERY,
         name="Artillery",
         device_class=BinarySensorDeviceClass.SAFETY,
+        icon="mdi:tank",
     ),
 )
 
