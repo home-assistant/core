@@ -23,7 +23,13 @@ from .models import (
     StatisticsRuns,
     StatisticsShortTerm,
 )
-from .queries import attributes_ids_exist_in_states, data_ids_exist_in_events
+from .queries import (
+    attributes_ids_exist_in_states,
+    attributes_ids_exist_in_states_sqlite,
+    data_ids_exist_in_events,
+    delete_states_rows,
+    disconnect_states_rows,
+)
 from .repack import repack_database
 from .util import retryable_database_job, session_scope
 
@@ -152,9 +158,9 @@ def _select_unused_attributes_ids(
         #
         seen_ids = {
             state[0]
-            for state in session.query(distinct(States.attributes_id))
-            .filter(States.attributes_id.in_(attributes_ids))
-            .all()
+            for state in session.execute(
+                attributes_ids_exist_in_states_sqlite(attributes_ids)
+            ).all()
         }
     else:
         #
@@ -272,18 +278,10 @@ def _purge_state_ids(instance: Recorder, session: Session, state_ids: set[int]) 
     # the delete does not fail due to a foreign key constraint
     # since some databases (MSSQL) cannot do the ON DELETE SET NULL
     # for us.
-    disconnected_rows = (
-        session.query(States)
-        .filter(States.old_state_id.in_(state_ids))
-        .update({"old_state_id": None}, synchronize_session=False)
-    )
+    disconnected_rows = session.execute(disconnect_states_rows(state_ids))
     _LOGGER.debug("Updated %s states to remove old_state_id", disconnected_rows)
 
-    deleted_rows = (
-        session.query(States)
-        .filter(States.state_id.in_(state_ids))
-        .delete(synchronize_session=False)
-    )
+    deleted_rows = session.execute(delete_states_rows(state_ids))
     _LOGGER.debug("Deleted %s states", deleted_rows)
 
     # Evict eny entries in the old_states cache referring to a purged state

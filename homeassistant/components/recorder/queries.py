@@ -1,7 +1,7 @@
 """Queries for the recorder."""
 from __future__ import annotations
 
-from sqlalchemy import func, lambda_stmt, select, union_all
+from sqlalchemy import delete, distinct, func, lambda_stmt, select, union_all, update
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 from sqlalchemy.sql.selectable import Select
 
@@ -31,6 +31,17 @@ def find_shared_data_id(attr_hash: int, shared_data: str) -> StatementLambdaElem
 def _state_attrs_exist(attr: int | None) -> Select:
     """Check if a state attributes id exists in the states table."""
     return select(func.min(States.attributes_id)).where(States.attributes_id == attr)
+
+
+def attributes_ids_exist_in_states_sqlite(
+    attributes_ids: set[int],
+) -> StatementLambdaElement:
+    """Find attributes ids that exist in the states table."""
+    return lambda_stmt(
+        lambda: select(distinct(States.attributes_id)).filter(
+            States.attributes_id.in_(attributes_ids)
+        )
+    )
 
 
 def attributes_ids_exist_in_states(
@@ -458,5 +469,23 @@ def data_ids_exist_in_events(
             _event_data_id_exist(id98),
             _event_data_id_exist(id99),
             _event_data_id_exist(id100),
+        )
+    )
+
+
+def disconnect_states_rows(state_ids: set[int]) -> StatementLambdaElement:
+    """Disconnect states rows."""
+    return lambda_stmt(
+        lambda: update(States, synchronize_session=False)
+        .where(States.old_state_id.in_(state_ids))
+        .values(old_state_id=None)
+    )
+
+
+def delete_states_rows(state_ids: set[int]) -> StatementLambdaElement:
+    """Delete states rows."""
+    return lambda_stmt(
+        lambda: delete(States, synchronize_session=False).where(
+            States.state_id.in_(state_ids)
         )
     )
