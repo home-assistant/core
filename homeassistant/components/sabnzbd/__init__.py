@@ -14,7 +14,6 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SENSORS,
     CONF_SSL,
-    CONF_URL,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
@@ -42,7 +41,7 @@ from .const import (
     UPDATE_INTERVAL,
 )
 from .sab import get_client
-from .sensor import SENSOR_KEYS
+from .sensor import OLD_SENSOR_KEYS
 
 PLATFORMS = ["sensor"]
 _LOGGER = logging.getLogger(__name__)
@@ -76,12 +75,11 @@ CONFIG_SCHEMA = vol.Schema(
                 {
                     vol.Required(CONF_API_KEY): str,
                     vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
-                    vol.Required(CONF_URL): str,
                     vol.Optional(CONF_PATH): str,
                     vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
                     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
                     vol.Optional(CONF_SENSORS): vol.All(
-                        cv.ensure_list, [vol.In(SENSOR_KEYS)]
+                        cv.ensure_list, [vol.In(OLD_SENSOR_KEYS)]
                     ),
                     vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
                 },
