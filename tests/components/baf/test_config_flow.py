@@ -24,7 +24,7 @@ async def test_form_user(hass):
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with patch("homeassistant.components.baf.config_flow.Device.run",), patch(
+    with patch("homeassistant.components.baf.config_flow.Device.async_run",), patch(
         "homeassistant.components.baf.config_flow.Device.async_wait_available",
     ), patch(
         "homeassistant.components.baf.async_setup_entry",
@@ -48,7 +48,7 @@ async def test_form_cannot_connect(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch("homeassistant.components.baf.config_flow.Device.run",), patch(
+    with patch("homeassistant.components.baf.config_flow.Device.async_run",), patch(
         "homeassistant.components.baf.config_flow.Device.async_wait_available",
         side_effect=asyncio.TimeoutError,
     ):
@@ -67,7 +67,7 @@ async def test_form_unknown_exception(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch("homeassistant.components.baf.config_flow.Device.run",), patch(
+    with patch("homeassistant.components.baf.config_flow.Device.async_run",), patch(
         "homeassistant.components.baf.config_flow.Device.async_wait_available",
         side_effect=Exception,
     ):

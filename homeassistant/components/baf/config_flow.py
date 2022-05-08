@@ -23,13 +23,13 @@ _LOGGER = logging.getLogger(__name__)
 async def async_try_connect(ip_address: str) -> Device:
     """Validate we can connect to a device."""
     device = Device(Service(ip_addresses=[ip_address], port=PORT))
-    run_task = device.run()
+    run_future = device.async_run()
     try:
         await asyncio.wait_for(device.async_wait_available(), timeout=RUN_TIMEOUT)
     except asyncio.TimeoutError as ex:
         raise CannotConnect from ex
     finally:
-        run_task.cancel()
+        run_future.cancel()
     return device
 
 

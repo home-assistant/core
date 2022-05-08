@@ -23,15 +23,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     service = Service(ip_addresses=[ip_address], uuid=entry.unique_id, port=PORT)
     device = Device(service, query_interval_seconds=QUERY_INTERVAL)
-    run_task = device.run()
+    run_future = device.async_run()
 
     try:
         await asyncio.wait_for(device.async_wait_available(), timeout=RUN_TIMEOUT)
     except asyncio.TimeoutError as ex:
-        run_task.cancel()
+        run_future.cancel()
         raise ConfigEntryNotReady(f"Timed out connecting to {ip_address}") from ex
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = BAFData(device, run_task)
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = BAFData(device, run_future)
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
@@ -41,6 +41,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         data: BAFData = hass.data[DOMAIN].pop(entry.entry_id)
-        data.run_task.cancel()
+        data.run_future.cancel()
 
     return unload_ok
