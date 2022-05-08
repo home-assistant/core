@@ -711,7 +711,7 @@ def _keep_row(
     if event_type in HOMEASSISTANT_EVENTS:
         return entities_filter is None or entities_filter(HA_DOMAIN_ENTITY_ID)
 
-    if entity_id := _row_data_extract(row, ENTITY_ID_JSON_EXTRACT):
+    if entity_id := _row_event_data_extract(row, ENTITY_ID_JSON_EXTRACT):
         return entities_filter is None or entities_filter(entity_id)
 
     if event_type in hass.data[DOMAIN]:
@@ -719,7 +719,7 @@ def _keep_row(
         # the event for filtering.
         domain = hass.data[DOMAIN][event_type][0]
     else:
-        domain = _row_data_extract(row, DOMAIN_JSON_EXTRACT)
+        domain = _row_event_data_extract(row, DOMAIN_JSON_EXTRACT)
 
     return domain is not None and (
         entities_filter is None or entities_filter(f"{domain}._")
@@ -749,14 +749,14 @@ def _rows_match(row: Row, other_row: Row) -> bool:
     return bool(row.context_id == other_row.context_id and row == other_row)
 
 
-def _row_data_extract(row: Row, extractor: re.Pattern) -> str | None:
-    """Extract from a event row."""
+def _row_event_data_extract(row: Row, extractor: re.Pattern) -> str | None:
+    """Extract from event_data row."""
     result = extractor.search(row.shared_data or row.event_data or "")
     return result.group(1) if result else None
 
 
 def _row_attributes_extract(row: Row, extractor: re.Pattern) -> str | None:
-    """Extract from a states row."""
+    """Extract from attributes row."""
     result = extractor.search(row.shared_attrs or row.attributes or "")
     return result.group(1) if result else None
 
@@ -823,7 +823,9 @@ class ContextAugmenter:
             return
 
         if (
-            attr_entity_id := _row_data_extract(context_row, ENTITY_ID_JSON_EXTRACT)
+            attr_entity_id := _row_event_data_extract(
+                context_row, ENTITY_ID_JSON_EXTRACT
+            )
         ) is None or (
             event_type in SCRIPT_AUTOMATION_EVENTS and attr_entity_id == entity_id
         ):
