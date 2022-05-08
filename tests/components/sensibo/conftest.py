@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+from typing import Any
 from unittest.mock import patch
 
 from pysensibo import SensiboClient
@@ -50,15 +51,21 @@ async def load_int(hass: HomeAssistant, get_data: SensiboData) -> MockConfigEntr
 
 @pytest.fixture(name="get_data")
 async def get_data_from_library(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, load_json: dict[str, Any]
 ) -> SensiboData:
     """Retrieve data from upstream Sensibo library."""
 
-    data_fixture = load_fixture("data.json", "sensibo")
-    json_data = json.loads(data_fixture)
-
     client = SensiboClient("123467890", aioclient_mock.create_session(hass.loop))
-    with patch("pysensibo.SensiboClient.async_get_devices", return_value=json_data):
+    with patch("pysensibo.SensiboClient.async_get_devices", return_value=load_json):
         output = await client.async_get_devices_data()
     await client._session.close()  # pylint: disable=protected-access
     return output
+
+
+@pytest.fixture(name="load_json")
+async def load_json_from_fixture() -> SensiboData:
+    """Load fixture with json data and return."""
+
+    data_fixture = load_fixture("data.json", "sensibo")
+    json_data: dict[str, Any] = json.loads(data_fixture)
+    return json_data
