@@ -21,12 +21,12 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import async_get
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
-from ...helpers.device_registry import async_get
-from ...helpers.entity_registry import RegistryEntry, async_migrate_entries
 from .const import (
     ATTR_API_KEY,
     ATTR_SPEED,

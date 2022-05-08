@@ -3,8 +3,8 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import sabnzbd
-from homeassistant.components.sabnzbd import DEFAULT_NAME, DOMAIN
+from homeassistant.components.sabnzbd import DEFAULT_NAME, DOMAIN, SENSOR_KEYS
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_URL
 from homeassistant.helpers.device_registry import DeviceEntryType
 
@@ -42,9 +42,8 @@ def entity_registry(hass):
 async def test_unique_id_migrate(hass, device_registry, entity_registry):
     """Test that config flow entry is migrated correctly."""
     # Start with the config entry at Version 1.
-    manager = hass.config_entries
     mock_entry = MOCK_ENTRY_VERSION_1
-    mock_entry.add_to_manager(manager)
+    mock_entry.add_to_hass(hass)
 
     mock_d_entry = device_registry.async_get_or_create(
         config_entry_id=mock_entry.entry_id,
@@ -53,41 +52,34 @@ async def test_unique_id_migrate(hass, device_registry, entity_registry):
         entry_type=DeviceEntryType.SERVICE,
     )
 
-    mock_entity_id = f"sabnzbd.sabnzbd_{MOCK_UNIQUE_ID}"
-    mock_e_entry = entity_registry.async_get_or_create(
-        DOMAIN,
-        DOMAIN,
-        unique_id=MOCK_UNIQUE_ID,
-        config_entry=mock_entry,
-        device_id=mock_d_entry.id,
-    )
-    assert len(entity_registry.entities) == 1
-    assert mock_e_entry.entity_id == mock_entity_id
-    assert mock_e_entry.unique_id == MOCK_UNIQUE_ID
+    entity_id_sensor_key = []
+
+    for sensor_key in SENSOR_KEYS:
+        mock_entity_id = f"{SENSOR_DOMAIN}.{DOMAIN}_{sensor_key}"
+        entity_registry.async_get_or_create(
+            SENSOR_DOMAIN,
+            DOMAIN,
+            unique_id=sensor_key,
+            config_entry=mock_entry,
+            device_id=mock_d_entry.id,
+        )
+        entity = entity_registry.async_get(mock_entity_id)
+        assert entity.entity_id == mock_entity_id
+        assert entity.unique_id == sensor_key
+        entity_id_sensor_key.append((mock_entity_id, sensor_key))
 
     with patch(
-        "homeassistant.helpers.device_registry.async_get",
-        return_value=device_registry,
-    ), patch(
-        "homeassistant.helpers.entity_registry.async_get",
-        return_value=entity_registry,
-    ), patch(
         "homeassistant.components.sabnzbd.sab.SabnzbdApi.check_available",
         return_value=True,
     ):
-        await sabnzbd.migrate_unique_id(hass, mock_entry)
+        await hass.config_entries.async_setup(mock_entry.entry_id)
 
     await hass.async_block_till_done()
 
-    assert len(entity_registry.entities) == 1
-    mock_entity = entity_registry.entities.data.popitem()[1]
+    for es_item in entity_id_sensor_key:
+        entity = entity_registry.async_get(es_item[0])
+        assert entity.unique_id == f"{MOCK_ENTRY_ID}_{es_item[1]}"
 
-    assert mock_entity.entity_id == mock_entity_id
-    assert mock_entity.unique_id == f"{MOCK_ENTRY_ID}_{MOCK_UNIQUE_ID}"
-    assert mock_entity.device_id == mock_d_entry.id
-
-    sabnzbd.update_device_identifiers(hass, mock_entry)
-
-    assert device_registry.devices[mock_d_entry.id].identifiers == {
-        (DOMAIN, mock_entry.entry_id)
+    assert device_registry.async_get(mock_d_entry.id).identifiers == {
+        (DOMAIN, MOCK_ENTRY_ID)
     }
