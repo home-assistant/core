@@ -307,7 +307,7 @@ async def test_node_comments(hass, wallmote_central_scene, integration, hass_ws_
     )
     msg = await ws_client.receive_json()
     result = msg["result"]
-    assert result == [{"level": "info", "text": "test"}]
+    assert result["comments"] == [{"level": "info", "text": "test"}]
 
 
 async def test_add_node(

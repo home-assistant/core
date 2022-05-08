@@ -524,7 +524,7 @@ async def websocket_node_comments(
     """Get the comments of a Z-Wave JS node."""
     connection.send_result(
         msg[ID],
-        node.device_config.metadata.comments,
+        {"comments": node.device_config.metadata.comments},
     )
 
 
