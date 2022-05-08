@@ -61,12 +61,11 @@ TABLE_STATISTICS_META = "statistics_meta"
 TABLE_STATISTICS_RUNS = "statistics_runs"
 TABLE_STATISTICS_SHORT_TERM = "statistics_short_term"
 
-# Only add TABLE_STATE_ATTRIBUTES and TABLE_EVENT_DATA
-# to the below list once we want to check for their
-# instance in the sanity check.
 ALL_TABLES = [
     TABLE_STATES,
+    TABLE_STATE_ATTRIBUTES,
     TABLE_EVENTS,
+    TABLE_EVENT_DATA,
     TABLE_RECORDER_RUNS,
     TABLE_SCHEMA_CHANGES,
     TABLE_STATISTICS,
@@ -74,6 +73,14 @@ ALL_TABLES = [
     TABLE_STATISTICS_RUNS,
     TABLE_STATISTICS_SHORT_TERM,
 ]
+
+TABLES_TO_CHECK = [
+    TABLE_STATES,
+    TABLE_EVENTS,
+    TABLE_RECORDER_RUNS,
+    TABLE_SCHEMA_CHANGES,
+]
+
 
 EMPTY_JSON_OBJECT = "{}"
 

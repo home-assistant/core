@@ -899,7 +899,6 @@ build.json @home-assistant/supervisor
 /tests/components/shell_command/ @home-assistant/core
 /homeassistant/components/shelly/ @balloob @bieniu @thecode @chemelli74
 /tests/components/shelly/ @balloob @bieniu @thecode @chemelli74
-/homeassistant/components/shiftr/ @fabaff
 /homeassistant/components/shodan/ @fabaff
 /homeassistant/components/sia/ @eavanvalkenburg
 /tests/components/sia/ @eavanvalkenburg
@@ -1072,6 +1071,8 @@ build.json @home-assistant/supervisor
 /tests/components/twentemilieu/ @frenck
 /homeassistant/components/twinkly/ @dr1rrb @Robbie1221
 /tests/components/twinkly/ @dr1rrb @Robbie1221
+/homeassistant/components/ukraine_alarm/ @PaulAnnekov
+/tests/components/ukraine_alarm/ @PaulAnnekov
 /homeassistant/components/unifi/ @Kane610
 /tests/components/unifi/ @Kane610
 /homeassistant/components/unifiled/ @florisvdk
@@ -1123,7 +1124,6 @@ build.json @home-assistant/supervisor
 /tests/components/vizio/ @raman325
 /homeassistant/components/vlc_telnet/ @rodripf @MartinHjelmare
 /tests/components/vlc_telnet/ @rodripf @MartinHjelmare
-/homeassistant/components/volkszaehler/ @fabaff
 /homeassistant/components/volumio/ @OnFreund
 /tests/components/volumio/ @OnFreund
 /homeassistant/components/volvooncall/ @molobrakos @decompil3d

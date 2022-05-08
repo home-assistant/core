@@ -339,7 +339,7 @@ bsblan==0.5.0
 buienradar==1.0.5
 
 # homeassistant.components.caldav
-caldav==0.8.2
+caldav==0.9.0
 
 # homeassistant.components.co2signal
 co2signal==0.4.2
@@ -580,7 +580,7 @@ hole==0.7.0
 holidays==0.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220504.0
+home-assistant-frontend==20220504.1
 
 # homeassistant.components.home_connect
 homeconnect==0.7.0
@@ -868,7 +868,7 @@ pushbullet.py==0.11.0
 pvo==0.2.2
 
 # homeassistant.components.canary
-py-canary==0.5.1
+py-canary==0.5.2
 
 # homeassistant.components.cpuspeed
 py-cpuinfo==8.0.0
@@ -1504,7 +1504,7 @@ tololib==0.1.0b3
 toonapi==0.2.1
 
 # homeassistant.components.totalconnect
-total_connect_client==2022.3
+total_connect_client==2022.5
 
 # homeassistant.components.transmission
 transmissionrpc==0.11
@@ -1526,6 +1526,9 @@ twitchAPI==2.5.2
 
 # homeassistant.components.rainforest_eagle
 uEagle==0.0.2
+
+# homeassistant.components.ukraine_alarm
+ukrainealarm==0.0.1
 
 # homeassistant.components.unifiprotect
 unifi-discovery==1.1.2

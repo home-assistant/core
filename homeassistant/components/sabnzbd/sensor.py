@@ -32,13 +32,15 @@ class SabnzbdSensorEntityDescription(SensorEntityDescription, SabnzbdRequiredKey
     """Describes Sabnzbd sensor entity."""
 
 
+SPEED_KEY = "kbpersec"
+
 SENSOR_TYPES: tuple[SabnzbdSensorEntityDescription, ...] = (
     SabnzbdSensorEntityDescription(
         key="status",
         name="Status",
     ),
     SabnzbdSensorEntityDescription(
-        key="kbpersec",
+        key=SPEED_KEY,
         name="Speed",
         native_unit_of_measurement=DATA_RATE_MEGABYTES_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
@@ -163,12 +165,12 @@ class SabnzbdSensor(SensorEntity):
             self.entity_description.key
         )
 
+
         if self._attr_native_value is not None:
-            if self.entity_description.key == "speed":
+            if self.entity_description.key == SPEED_KEY:
                 self._attr_native_value = round(
                     float(self._attr_native_value) / 1024, 1
                 )
             elif "size" in self.entity_description.key:
                 self._attr_native_value = round(float(self._attr_native_value), 2)
-
         self.schedule_update_ha_state()
