@@ -12,7 +12,7 @@ class BAFData:
     """Data for the baf integration."""
 
     device: Device
-    run_task: asyncio.Task
+    run_future: asyncio.Future
 
 
 @dataclass
