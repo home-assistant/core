@@ -497,27 +497,28 @@ def data_ids_exist_in_events(
 def disconnect_states_rows(state_ids: Iterable[int]) -> StatementLambdaElement:
     """Disconnect states rows."""
     return lambda_stmt(
-        lambda: update(States, synchronize_session=False)
+        lambda: update(States)
         .where(States.old_state_id.in_(state_ids))
         .values(old_state_id=None)
+        .execution_options(synchronize_session=False)
     )
 
 
 def delete_states_rows(state_ids: Iterable[int]) -> StatementLambdaElement:
     """Delete states rows."""
     return lambda_stmt(
-        lambda: delete(States, synchronize_session=False).where(
-            States.state_id.in_(state_ids)
-        )
+        lambda: delete(States)
+        .where(States.state_id.in_(state_ids))
+        .execution_options(synchronize_session=False)
     )
 
 
 def delete_event_data_rows(data_ids: Iterable[int]) -> StatementLambdaElement:
     """Delete event_data rows."""
     return lambda_stmt(
-        lambda: delete(EventData, synchronize_session=False).where(
-            EventData.data_id.in_(data_ids)
-        )
+        lambda: delete(EventData)
+        .where(EventData.data_id.in_(data_ids))
+        .execution_options(synchronize_session=False)
     )
 
 
@@ -526,9 +527,9 @@ def delete_states_attributes_rows(
 ) -> StatementLambdaElement:
     """Delete states_attributes rows."""
     return lambda_stmt(
-        lambda: delete(StateAttributes, synchronize_session=False).where(
-            StateAttributes.attributes_id.in_(attributes_ids)
-        )
+        lambda: delete(StateAttributes)
+        .where(StateAttributes.attributes_id.in_(attributes_ids))
+        .execution_options(synchronize_session=False)
     )
 
 
@@ -537,9 +538,9 @@ def delete_statistics_runs_rows(
 ) -> StatementLambdaElement:
     """Delete statistics_runs rows."""
     return lambda_stmt(
-        lambda: delete(StatisticsRuns, synchronize_session=False).where(
-            StatisticsRuns.run_id.in_(statistics_runs)
-        )
+        lambda: delete(StatisticsRuns)
+        .where(StatisticsRuns.run_id.in_(statistics_runs))
+        .execution_options(synchronize_session=False)
     )
 
 
@@ -548,9 +549,9 @@ def delete_statistics_short_term_rows(
 ) -> StatementLambdaElement:
     """Delete statistics_short_term rows."""
     return lambda_stmt(
-        lambda: delete(StatisticsShortTerm, synchronize_session=False).where(
-            StatisticsShortTerm.id.in_(short_term_statistics)
-        )
+        lambda: delete(StatisticsShortTerm)
+        .where(StatisticsShortTerm.id.in_(short_term_statistics))
+        .execution_options(synchronize_session=False)
     )
 
 
@@ -559,9 +560,9 @@ def delete_event_rows(
 ) -> StatementLambdaElement:
     """Delete statistics_short_term rows."""
     return lambda_stmt(
-        lambda: delete(Events, synchronize_session=False).where(
-            Events.event_id.in_(event_ids)
-        )
+        lambda: delete(Events)
+        .where(Events.event_id.in_(event_ids))
+        .execution_options(synchronize_session=False)
     )
 
 
@@ -570,9 +571,10 @@ def delete_recorder_runs_rows(
 ) -> StatementLambdaElement:
     """Delete recorder_runs rows."""
     return lambda_stmt(
-        lambda: delete(RecorderRuns, synchronize_session=False)
+        lambda: delete(RecorderRuns)
         .filter(RecorderRuns.start < purge_before)
         .filter(RecorderRuns.run_id != current_run_id)
+        .execution_options(synchronize_session=False)
     )
 
 
