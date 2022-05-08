@@ -636,7 +636,7 @@ fastdotcom==0.0.3
 feedparser==6.0.2
 
 # homeassistant.components.fibaro
-fiblary3==0.1.8
+fiblary3-fork==0.1.12
 
 # homeassistant.components.fints
 fints==1.0.1

@@ -448,7 +448,7 @@ faadelays==0.0.7
 feedparser==6.0.2
 
 # homeassistant.components.fibaro
-fiblary3==0.1.8
+fiblary3-fork==0.1.12
 
 # homeassistant.components.fivem
 fivem-api==0.1.2
