@@ -8,7 +8,14 @@ from sqlalchemy.sql.lambdas import StatementLambdaElement
 from sqlalchemy.sql.selectable import Select
 
 from .const import MAX_ROWS_TO_PURGE
-from .models import EventData, Events, StateAttributes, States, StatisticsShortTerm
+from .models import (
+    EventData,
+    Events,
+    StateAttributes,
+    States,
+    StatisticsRuns,
+    StatisticsShortTerm,
+)
 
 
 def find_shared_attributes_id(
@@ -517,6 +524,15 @@ def delete_states_attributes_rows(attributes_ids: set[int]) -> StatementLambdaEl
     return lambda_stmt(
         lambda: delete(StateAttributes, synchronize_session=False).where(
             StateAttributes.attributes_id.in_(attributes_ids)
+        )
+    )
+
+
+def delete_statistics_runs_rows(statistics_runs: list[int]) -> StatementLambdaElement:
+    """Delete statistics_runs rows."""
+    return lambda_stmt(
+        lambda: delete(StatisticsRuns, synchronize_session=False).where(
+            StatisticsRuns.run_id.in_(statistics_runs)
         )
     )
 

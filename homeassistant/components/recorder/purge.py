@@ -30,6 +30,7 @@ from .queries import (
     delete_event_data_rows,
     delete_states_attributes_rows,
     delete_states_rows,
+    delete_statistics_runs_rows,
     disconnect_states_rows,
     find_events_to_purge,
     find_short_term_statistics_to_purge,
@@ -359,11 +360,7 @@ def _purge_event_data_ids(
 
 def _purge_statistics_runs(session: Session, statistics_runs: list[int]) -> None:
     """Delete by run_id."""
-    deleted_rows = (
-        session.query(StatisticsRuns)
-        .filter(StatisticsRuns.run_id.in_(statistics_runs))
-        .delete(synchronize_session=False)
-    )
+    deleted_rows = session.execute(delete_statistics_runs_rows(statistics_runs))
     _LOGGER.debug("Deleted %s statistic runs", deleted_rows)
 
 
