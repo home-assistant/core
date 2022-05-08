@@ -8,7 +8,7 @@ from unittest.mock import patch, sentinel
 import pytest
 from pytest import approx
 
-from homeassistant.components import history, recorder
+from homeassistant.components import history
 from homeassistant.components.recorder.history import get_significant_states
 from homeassistant.components.recorder.models import process_timestamp
 import homeassistant.core as ha
@@ -20,6 +20,7 @@ from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
 from tests.components.recorder.common import (
     async_recorder_block_till_done,
     async_wait_recording_done,
+    do_adhoc_statistics,
     wait_recording_done,
 )
 
@@ -879,7 +880,7 @@ async def test_statistics_during_period(
     hass.states.async_set("sensor.test", state, attributes=attributes)
     await async_wait_recording_done(hass)
 
-    hass.data[recorder.DATA_INSTANCE].do_adhoc_statistics(start=now)
+    do_adhoc_statistics(hass, start=now)
     await async_wait_recording_done(hass)
 
     client = await hass_ws_client()
@@ -1021,7 +1022,7 @@ async def test_list_statistic_ids(
         }
     ]
 
-    hass.data[recorder.DATA_INSTANCE].do_adhoc_statistics(start=now)
+    do_adhoc_statistics(hass, start=now)
     await async_recorder_block_till_done(hass)
     # Remove the state, statistics will now be fetched from the database
     hass.states.async_remove("sensor.test")
