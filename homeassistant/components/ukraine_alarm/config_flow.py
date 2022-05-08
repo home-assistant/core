@@ -1,4 +1,8 @@
 """Config flow for Ukraine Alarm."""
+from __future__ import annotations
+
+import asyncio
+
 import aiohttp
 from ukrainealarm.client import Client
 import voluptuous as vol
@@ -37,8 +41,10 @@ class UkraineAlarmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except aiohttp.ClientError:
                 errors["base"] = "unknown"
+            except asyncio.TimeoutError:
+                errors["base"] = "timeout"
 
-            if not regions:
+            if not errors and not regions:
                 errors["base"] = "unknown"
 
             if not errors:
@@ -62,58 +68,35 @@ class UkraineAlarmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_state(self, user_input=None):
         """Handle user-chosen state."""
-        if user_input is not None:
-            self.selected_region = _find(self.states, user_input[CONF_REGION])
-            if self.selected_region["regionChildIds"]:
-                return await self.async_step_district()
-            return await self._async_finish_flow()
-
-        regions_object = _make_regions_object(self.states)
-
-        schema = vol.Schema(
-            {
-                vol.Required(CONF_REGION): vol.In(regions_object),
-            }
-        )
-
-        return self.async_show_form(
-            step_id="state", data_schema=schema, last_step=False
-        )
+        return await self._handle_pick_region("state", "district", user_input)
 
     async def async_step_district(self, user_input=None):
         """Handle user-chosen district."""
-        if user_input is not None:
-            if CONF_REGION not in user_input:
-                return await self._async_finish_flow()
-            self.selected_region = _find(
-                self.selected_region["regionChildIds"], user_input[CONF_REGION]
-            )
-            if self.selected_region["regionChildIds"]:
-                return await self.async_step_community()
-            return await self._async_finish_flow()
-
-        regions_object = _make_regions_object(self.selected_region["regionChildIds"])
-
-        schema = vol.Schema(
-            {
-                vol.Optional(CONF_REGION): vol.In(regions_object),
-            }
-        )
-
-        return self.async_show_form(
-            step_id="district", data_schema=schema, last_step=False
-        )
+        return await self._handle_pick_region("district", "community", user_input)
 
     async def async_step_community(self, user_input=None):
         """Handle user-chosen community."""
+        return await self._handle_pick_region("community", None, user_input, True)
+
+    async def _handle_pick_region(
+        self, step_id: str, next_step: str | None, user_input, last_step=False
+    ):
+        """Handle picking a (sub)region."""
+        if self.selected_region:
+            source = self.selected_region["regionChildIds"]
+        else:
+            source = self.states
+
         if user_input is not None:
             if CONF_REGION in user_input:
-                self.selected_region = _find(
-                    self.selected_region["regionChildIds"], user_input[CONF_REGION]
-                )
+                self.selected_region = _find(source, user_input[CONF_REGION])
+
+                if next_step and self.selected_region["regionChildIds"]:
+                    return await getattr(self, f"async_step_{next_step}")()
+
             return await self._async_finish_flow()
 
-        regions_object = _make_regions_object(self.selected_region["regionChildIds"])
+        regions_object = _make_regions_object(source)
 
         schema = vol.Schema(
             {
@@ -122,7 +105,7 @@ class UkraineAlarmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         return self.async_show_form(
-            step_id="community", data_schema=schema, last_step=True
+            step_id=step_id, data_schema=schema, last_step=last_step
         )
 
     async def _async_finish_flow(self):

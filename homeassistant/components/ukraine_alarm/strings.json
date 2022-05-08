@@ -6,7 +6,8 @@
     "error": {
       "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "timeout": "[%key:common::config_flow::error::timeout_connect%]"
     },
     "step": {
       "user": {
