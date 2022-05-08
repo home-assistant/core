@@ -327,8 +327,9 @@ class LogbookView(HomeAssistantView):
 def humanify(
     hass: HomeAssistant,
     rows: Generator[Row, None, None],
-    entity_attr_cache: EntityAttributeCache,
-    row_indexer: RowIndexer,
+    entity_name_cache: EntityNameCache,
+    event_cache: EventCache,
+    context_augmenter: ContextAugmenter,
 ) -> Generator[dict[str, Any], None, None]:
     """Generate a converted list of events into Entry objects.
 
@@ -386,7 +387,7 @@ def humanify(
 
                 data = {
                     "when": _time_fired_isoformat_from_row(row),
-                    "name": _entity_name_from_row(entity_id, row, entity_attr_cache),
+                    "name": entity_name_cache.get(entity_id, row),
                     "state": row.state,
                     "entity_id": entity_id,
                 }
@@ -397,33 +398,20 @@ def humanify(
                 if row.context_user_id:
                     data["context_user_id"] = row.context_user_id
 
-                _augment_data_with_context(
-                    data,
-                    entity_id,
-                    row,
-                    row_indexer,
-                    entity_attr_cache,
-                    external_events,
-                )
+                context_augmenter.augment(data, entity_id, row)
 
                 yield data
 
             elif row.event_type in external_events:
                 domain, describe_event = external_events[row.event_type]
-                data = describe_event(row_indexer.get_event(row))
+                data = describe_event(event_cache.get(row))
                 data["when"] = _time_fired_isoformat_from_row(row)
                 data["domain"] = domain
                 if row.context_user_id:
                     data["context_user_id"] = row.context_user_id
 
-                _augment_data_with_context(
-                    data,
-                    data.get(ATTR_ENTITY_ID),
-                    row,
-                    row_indexer,
-                    entity_attr_cache,
-                    external_events,
-                )
+                entity_id = data.get(ATTR_ENTITY_ID)
+                context_augmenter.augment(data, entity_id, row)
                 yield data
 
             elif row.event_type == EVENT_HOMEASSISTANT_START:
@@ -450,7 +438,7 @@ def humanify(
                 }
 
             elif row.event_type == EVENT_LOGBOOK_ENTRY:
-                event = row_indexer.get_event(row)
+                event = event_cache.get(row)
                 event_data = event.data
                 domain = event_data.get(ATTR_DOMAIN)
                 entity_id = event_data.get(ATTR_ENTITY_ID)
@@ -469,15 +457,7 @@ def humanify(
                 if row.context_user_id:
                     data["context_user_id"] = row.context_user_id
 
-                _augment_data_with_context(
-                    data,
-                    entity_id,
-                    row,
-                    row_indexer,
-                    entity_attr_cache,
-                    external_events,
-                )
-
+                context_augmenter.augment(data, entity_id, row)
                 yield data
 
 
@@ -496,15 +476,19 @@ def _get_events(
         entity_ids and context_id
     ), "can't pass in both entity_ids and context_id"
 
-    entity_attr_cache = EntityAttributeCache(hass)
+    entity_name_cache = EntityNameCache(hass)
     event_data_cache: dict[str, dict[str, Any]] = {}
-    row_indexer = RowIndexer(event_data_cache)
-    context_id_cache = row_indexer.context_id_cache
+    context_lookup: dict[str | None, LazyEventPartialState | None] = {None: None}
+    event_cache = EventCache(event_data_cache)
+    external_events = hass.data.get(DOMAIN, {})
+    context_augmenter = ContextAugmenter(
+        context_lookup, entity_name_cache, external_events, event_cache
+    )
 
     def yield_rows(query: Query) -> Generator[Row, None, None]:
         """Yield Events that are not filtered away."""
         for row in query.yield_per(1000):
-            context_id_cache.setdefault(row.context_id, row)
+            context_lookup.setdefault(row.context_id, row)
             if row.event_type != EVENT_CALL_SERVICE and (
                 row.event_type == EVENT_STATE_CHANGED
                 or _keep_row(hass, row, entities_filter)
@@ -563,7 +547,15 @@ def _get_events(
 
         query = query.order_by(Events.time_fired)
 
-        return list(humanify(hass, yield_rows(query), entity_attr_cache, row_indexer))
+        return list(
+            humanify(
+                hass,
+                yield_rows(query),
+                entity_name_cache,
+                event_cache,
+                context_augmenter,
+            )
+        )
 
 
 def _generate_events_query_without_data(session: Session) -> Query:
@@ -738,80 +730,79 @@ def _rows_match(row: Row, other_row: Row) -> bool:
     return bool(row.context_id == other_row.context_id and row == other_row)
 
 
-def _augment_data_with_context(
-    data: dict[str, Any],
-    entity_id: str | None,
-    row: Row,
-    row_indexer: RowIndexer,
-    entity_attr_cache: EntityAttributeCache,
-    external_events: dict[
-        str, tuple[str, Callable[[LazyEventPartialState], dict[str, Any]]]
-    ],
-) -> None:
-    if not (context_row := row_indexer.get_row_by_context_id(row.context_id)):
-        return
+class ContextAugmenter:
+    """Augment data with context trace."""
 
-    if _rows_match(row, context_row):
-        # This is the first event with the given ID. Was it directly caused by
-        # a parent event?
-        if row.context_parent_id:
-            context_row = row_indexer.get_row_by_context_id(row.context_parent_id)
-        # Ensure the (parent) context_event exists and is not the root cause of
-        # this log entry.
-        if not context_row or _rows_match(row, context_row):
+    def __init__(
+        self,
+        context_lookup: dict[str | None, LazyEventPartialState | None],
+        entity_name_cache: EntityNameCache,
+        external_events: dict[
+            str, tuple[str, Callable[[LazyEventPartialState], dict[str, Any]]]
+        ],
+        event_cache: EventCache,
+    ) -> None:
+        """Init the augmenter."""
+        self.context_lookup = context_lookup
+        self.entity_name_cache = entity_name_cache
+        self.external_events = external_events
+        self.event_cache = event_cache
+
+    def augment(self, data: dict[str, Any], entity_id: str | None, row: Row) -> None:
+        """Augment data from the row and cache."""
+        if not (context_row := self.context_lookup.get(row.context_id)):
             return
 
-    event_type = context_row.event_type
+        if _rows_match(row, context_row):
+            # This is the first event with the given ID. Was it directly caused by
+            # a parent event?
+            if row.context_parent_id:
+                context_row = self.context_lookup.get(row.context_parent_id)
+            # Ensure the (parent) context_event exists and is not the root cause of
+            # this log entry.
+            if not context_row or _rows_match(row, context_row):
+                return
 
-    # State change
-    if context_entity_id := context_row.entity_id:
-        data["context_entity_id"] = context_entity_id
-        data["context_entity_id_name"] = _entity_name_from_row(
-            context_entity_id, context_row, entity_attr_cache
+        event_type = context_row.event_type
+
+        # State change
+        if context_entity_id := context_row.entity_id:
+            data["context_entity_id"] = context_entity_id
+            data["context_entity_id_name"] = self.entity_name_cache.get(
+                context_entity_id, context_row
+            )
+            data["context_event_type"] = event_type
+            return
+
+        # Call service
+        if event_type == EVENT_CALL_SERVICE:
+            event = self.event_cache.get(context_row)
+            event_data = event.data
+            data["context_domain"] = event_data.get(ATTR_DOMAIN)
+            data["context_service"] = event_data.get(ATTR_SERVICE)
+            data["context_event_type"] = event_type
+            return
+
+        if not entity_id or _rows_match(row, context_row):
+            return
+
+        if (attr_entity_id := _extract_entity_id_from_row(context_row)) is None or (
+            event_type in SCRIPT_AUTOMATION_EVENTS and attr_entity_id == entity_id
+        ):
+            return
+
+        data["context_entity_id"] = attr_entity_id
+        data["context_entity_id_name"] = self.entity_name_cache.get(
+            attr_entity_id, context_row
         )
         data["context_event_type"] = event_type
-        return
 
-    # Call service
-    if event_type == EVENT_CALL_SERVICE:
-        event = row_indexer.get_event(context_row)
-        event_data = event.data
-        data["context_domain"] = event_data.get(ATTR_DOMAIN)
-        data["context_service"] = event_data.get(ATTR_SERVICE)
-        data["context_event_type"] = event_type
-        return
-
-    if not entity_id or _rows_match(row, context_row):
-        return
-
-    if (attr_entity_id := _extract_entity_id_from_row(context_row)) is None or (
-        event_type in SCRIPT_AUTOMATION_EVENTS and attr_entity_id == entity_id
-    ):
-        return
-
-    data["context_entity_id"] = attr_entity_id
-    data["context_entity_id_name"] = _entity_name_from_row(
-        attr_entity_id, context_row, entity_attr_cache
-    )
-    data["context_event_type"] = event_type
-
-    if event_type in external_events:
-        domain, describe_event = external_events[event_type]
-        data["context_domain"] = domain
-        event = row_indexer.get_event(context_row)
-        if name := describe_event(event).get(ATTR_NAME):
-            data["context_name"] = name
-
-
-def _entity_name_from_row(
-    entity_id: str,
-    row: Row,
-    entity_attr_cache: EntityAttributeCache,
-) -> str:
-    """Extract the entity name from the event using the cache if possible."""
-    return entity_attr_cache.get(entity_id, ATTR_FRIENDLY_NAME, row) or split_entity_id(
-        entity_id
-    )[1].replace("_", " ")
+        if event_type in self.external_events:
+            domain, describe_event = self.external_events[event_type]
+            data["context_domain"] = domain
+            event = self.event_cache.get(context_row)
+            if name := describe_event(event).get(ATTR_NAME):
+                data["context_name"] = name
 
 
 def _is_sensor_continuous(
@@ -862,16 +853,15 @@ def _time_fired_isoformat_from_row(row: Row) -> dt | None:
     return process_timestamp_to_utc_isoformat(row.time_fired) or dt_util.utcnow()
 
 
-class RowIndexer:
-    """A class to index rows by context_id and convert them to LazyEventPartialState."""
+class EventCache:
+    """Cache LazyEventPartialState by row."""
 
     def __init__(self, event_data_cache: dict[str, dict[str, Any]]) -> None:
-        """Init the indexer."""
+        """Init the cache."""
         self._event_data_cache = event_data_cache
-        self.context_id_cache: dict[str | None, Row | None] = {None: None}
         self.event_cache: dict[Row, LazyEventPartialState] = {}
 
-    def get_event(self, row: Row) -> LazyEventPartialState:
+    def get(self, row: Row) -> LazyEventPartialState:
         """Get the event from the row."""
         if event := self.event_cache.get(row):
             return event
@@ -879,10 +869,6 @@ class RowIndexer:
             row, self._event_data_cache
         )
         return event
-
-    def get_row_by_context_id(self, context_id: str | None) -> Row | None:
-        """Get an event from the cache or create it from the row."""
-        return self.context_id_cache.get(context_id)
 
 
 class LazyEventPartialState:
@@ -927,8 +913,8 @@ class LazyEventPartialState:
             )
 
 
-class EntityAttributeCache:
-    """A cache to lookup static entity_id attribute.
+class EntityNameCache:
+    """A cache to lookup the name for an entity.
 
     This class should not be used to lookup attributes
     that are expected to change state.
@@ -937,27 +923,19 @@ class EntityAttributeCache:
     def __init__(self, hass: HomeAssistant) -> None:
         """Init the cache."""
         self._hass = hass
-        self._cache: dict[str, dict[str, Any]] = {}
+        self._names: dict[str, str] = {}
 
-    def get(self, entity_id: str, attribute: str, row: Row) -> Any:
-        """Lookup an attribute for an entity or get it from the cache."""
-        if entity_id in self._cache:
-            if attribute in self._cache[entity_id]:
-                return self._cache[entity_id][attribute]
+    def get(self, entity_id: str, row: Row) -> Any:
+        """Lookup an the friendly name."""
+        if entity_id in self._names:
+            return self._names[entity_id]
+        if (current_state := self._hass.states.get(entity_id)) and (
+            friendly_name := current_state.attributes.get(ATTR_FRIENDLY_NAME)
+        ):
+            self._names[entity_id] = friendly_name
+        elif extracted_name := _extract_friendly_name_from_row(row):
+            self._names[entity_id] = extracted_name
         else:
-            cache = self._cache[entity_id] = {}
+            return split_entity_id(entity_id)[1].replace("_", " ")
 
-        if current_state := self._hass.states.get(entity_id):
-            # Try the current state as its faster than decoding the
-            # attributes
-            cache[attribute] = current_state.attributes.get(attribute)
-        else:
-            # If the entity has been removed, decode the attributes
-            # instead
-            if attribute != ATTR_FRIENDLY_NAME:
-                raise ValueError(
-                    f"{attribute} is not supported by {self.__class__.__name__}"
-                )
-            cache[attribute] = _extract_friendly_name_from_row(row)
-
-        return cache[attribute]
+        return self._names[entity_id]
