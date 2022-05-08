@@ -1,11 +1,20 @@
 """Test the Aladdin Connect Cover."""
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
+
+import pytest
 
 from homeassistant.components.aladdin_connect.const import DOMAIN
 import homeassistant.components.aladdin_connect.cover as cover
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_OPENING
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    STATE_CLOSED,
+    STATE_CLOSING,
+    STATE_OPEN,
+    STATE_OPENING,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -266,7 +275,8 @@ async def test_open_cover(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             "homeassistant", "update_entity", {"entity_id": "cover.home"}, blocking=True
         )
-    # assert hass.states.get("cover.home").is_available is False
+    assert hass.states.get("cover.home").state
+
     with patch(
         "homeassistant.components.aladdin_connect.cover.AladdinConnectClient.get_doors",
         return_value=[DEVICE_CONFIG_BAD_NO_DOOR],
@@ -274,11 +284,26 @@ async def test_open_cover(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             "homeassistant", "update_entity", {"entity_id": "cover.home"}, blocking=True
         )
+    assert hass.states.get("cover.home").state
 
 
-async def test_yaml_info_cover(hass):
+async def test_yaml_import(hass: HomeAssistant, caplog: pytest.LogCaptureFixture):
     """Test setup YAML import."""
     assert COVER_DOMAIN not in hass.config.components
-    hass.async_create_task = AsyncMock()
-    await cover.async_setup_platform(hass, YAML_CONFIG, None)
-    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.aladdin_connect.cover.AladdinConnectClient.login",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.aladdin_connect.cover.AladdinConnectClient.get_doors",
+        return_value=[DEVICE_CONFIG_CLOSED],
+    ):
+        await cover.async_setup_platform(hass, YAML_CONFIG, None)
+        await hass.async_block_till_done()
+
+    assert "Configuring aladdin_connect through yaml is deprecated" in caplog.text
+
+    assert hass.config_entries.async_entries(DOMAIN)
+    config_data = hass.config_entries.async_entries(DOMAIN)[0].data
+    assert config_data[CONF_USERNAME] == "test-user"
+    assert config_data[CONF_PASSWORD] == "test-password"
