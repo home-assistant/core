@@ -1052,6 +1052,9 @@ pyhiveapi==0.5.13
 # homeassistant.components.homematic
 pyhomematic==0.1.77
 
+# homeassistant.components.ids_hyyp
+pyhyypapi==0.0.0.5
+
 # homeassistant.components.ialarm
 pyialarm==2.2.0
 
