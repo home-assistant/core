@@ -12,6 +12,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -44,18 +45,26 @@ FAN_SENSORS = (
         name="Current RPM",
         native_unit_of_measurement="RPM",
         entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="target_rpm",
         name="Target RPM",
         native_unit_of_measurement="RPM",
         entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
-        key="wifi_ssid", name="WiFi SSID", entity_registry_enabled_default=False
+        key="wifi_ssid",
+        name="WiFi SSID",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
-        key="ip_address", name="IP Address", entity_registry_enabled_default=False
+        key="ip_address",
+        name="IP Address",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
 
