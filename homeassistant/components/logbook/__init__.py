@@ -731,7 +731,7 @@ class ContextAugmenter:
 
     def __init__(
         self,
-        context_lookup: dict[str | None, LazyEventPartialState | None],
+        context_lookup: dict[str | None, Row | None],
         entity_name_cache: EntityNameCache,
         external_events: dict[
             str, tuple[str, Callable[[LazyEventPartialState], dict[str, Any]]]
