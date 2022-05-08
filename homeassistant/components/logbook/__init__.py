@@ -828,14 +828,11 @@ class ContextAugmenter:
             data["context_event_type"] = event_type
             return
 
-        if not entity_id or _rows_match(row, context_row):
+        if not entity_id:
             return
 
-        if (
-            attr_entity_id := _row_event_data_extract(
-                context_row, ENTITY_ID_JSON_EXTRACT
-            )
-        ) is None or (
+        attr_entity_id = _row_event_data_extract(context_row, ENTITY_ID_JSON_EXTRACT)
+        if attr_entity_id is None or (
             event_type in SCRIPT_AUTOMATION_EVENTS and attr_entity_id == entity_id
         ):
             return
@@ -926,7 +923,7 @@ class EntityNameCache:
         self._hass = hass
         self._names: dict[str, str] = {}
 
-    def get(self, entity_id: str, row: Row) -> Any:
+    def get(self, entity_id: str, row: Row) -> str:
         """Lookup an the friendly name."""
         if entity_id in self._names:
             return self._names[entity_id]
