@@ -746,7 +746,12 @@ def _is_sensor_continuous(
 
 
 def _rows_match(row: Row, other_row: Row) -> bool:
-    return bool(row.context_id == other_row.context_id and row == other_row)
+    """Check of rows match by using the same method as Events __hash__."""
+    return bool(
+        row.event_type == other_row.event_type
+        and row.context_id == other_row.context_id
+        and row.time_fired == other_row.time_fired
+    )
 
 
 def _row_event_data_extract(row: Row, extractor: re.Pattern) -> str | None:
@@ -794,10 +799,10 @@ class ContextAugmenter:
             # a parent event?
             if row.context_parent_id:
                 context_row = self.context_lookup.get(row.context_parent_id)
-            # Ensure the (parent) context_event exists and is not the root cause of
-            # this log entry.
-            if not context_row or _rows_match(row, context_row):
-                return
+                # Ensure the (parent) context_event exists and is not the root cause of
+                # this log entry.
+                if not context_row or _rows_match(row, context_row):
+                    return
 
         event_type = context_row.event_type
 
