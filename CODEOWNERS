@@ -899,7 +899,6 @@ build.json @home-assistant/supervisor
 /tests/components/shell_command/ @home-assistant/core
 /homeassistant/components/shelly/ @balloob @bieniu @thecode @chemelli74
 /tests/components/shelly/ @balloob @bieniu @thecode @chemelli74
-/homeassistant/components/shiftr/ @fabaff
 /homeassistant/components/shodan/ @fabaff
 /homeassistant/components/sia/ @eavanvalkenburg
 /tests/components/sia/ @eavanvalkenburg
