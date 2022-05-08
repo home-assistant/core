@@ -185,6 +185,6 @@ class FibaroLight(FibaroDevice, LightEntity):
             rgbw_list = [int(i) for i in rgbw_s.split(",")][:4]
 
             if self._attr_color_mode == ColorMode.RGB:
-                self._attr_rgb_color = tuple(*rgbw_list[:3])
+                self._attr_rgb_color = tuple(rgbw_list[:3])
             else:
                 self._attr_rgbw_color = tuple(rgbw_list)

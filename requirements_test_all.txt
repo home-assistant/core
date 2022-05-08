@@ -342,7 +342,7 @@ bsblan==0.5.0
 buienradar==1.0.5
 
 # homeassistant.components.caldav
-caldav==0.8.2
+caldav==0.9.0
 
 # homeassistant.components.co2signal
 co2signal==0.4.2
@@ -871,7 +871,7 @@ pushbullet.py==0.11.0
 pvo==0.2.2
 
 # homeassistant.components.canary
-py-canary==0.5.1
+py-canary==0.5.2
 
 # homeassistant.components.cpuspeed
 py-cpuinfo==8.0.0
@@ -1507,7 +1507,7 @@ tololib==0.1.0b3
 toonapi==0.2.1
 
 # homeassistant.components.totalconnect
-total_connect_client==2022.3
+total_connect_client==2022.5
 
 # homeassistant.components.transmission
 transmissionrpc==0.11
