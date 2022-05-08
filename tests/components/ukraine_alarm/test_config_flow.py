@@ -16,7 +16,7 @@ MOCK_API_KEY = "mock-api-key"
 
 def _region(rid, recurse=0, depth=0):
     if depth == 0:
-        name_prefix = "Region"
+        name_prefix = "State"
     elif depth == 1:
         name_prefix = "District"
     else:
@@ -50,8 +50,8 @@ def mock_get_regions():
         yield mock_get
 
 
-async def test_region(hass: HomeAssistant) -> None:
-    """Test we can create entry for just region."""
+async def test_state(hass: HomeAssistant) -> None:
+    """Test we can create entry for state."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -78,7 +78,7 @@ async def test_region(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result3["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result3["title"] == "Region 1"
+    assert result3["title"] == "State 1"
     assert result3["data"] == {
         "api_key": MOCK_API_KEY,
         "region": "1",
@@ -87,8 +87,8 @@ async def test_region(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_region_district(hass: HomeAssistant) -> None:
-    """Test we can create entry for region + district."""
+async def test_state_district(hass: HomeAssistant) -> None:
+    """Test we can create entry for state + district."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -132,8 +132,53 @@ async def test_region_district(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_region_district_community(hass: HomeAssistant) -> None:
-    """Test we can create entry for region + district + community."""
+async def test_state_district_pick_region(hass: HomeAssistant) -> None:
+    """Test we can create entry for region which has districts."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == RESULT_TYPE_FORM
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "api_key": MOCK_API_KEY,
+        },
+    )
+    assert result2["type"] == RESULT_TYPE_FORM
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "region": "2",
+        },
+    )
+    assert result3["type"] == RESULT_TYPE_FORM
+
+    with patch(
+        "homeassistant.components.ukraine_alarm.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result4 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "region": "2",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result4["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result4["title"] == "State 2"
+    assert result4["data"] == {
+        "api_key": MOCK_API_KEY,
+        "region": "2",
+        "name": result4["title"],
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_state_district_community(hass: HomeAssistant) -> None:
+    """Test we can create entry for state + district + community."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )

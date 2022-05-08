@@ -88,7 +88,11 @@ class UkraineAlarmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             source = self.states
 
         if user_input is not None:
-            if CONF_REGION in user_input:
+            # Only offer to browse subchildren if picked region wasn't the previously picked one
+            if (
+                not self.selected_region
+                or user_input[CONF_REGION] != self.selected_region["regionId"]
+            ):
                 self.selected_region = _find(source, user_input[CONF_REGION])
 
                 if next_step and self.selected_region["regionChildIds"]:
@@ -96,11 +100,17 @@ class UkraineAlarmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             return await self._async_finish_flow()
 
-        regions_object = _make_regions_object(source)
+        regions = {}
+        if self.selected_region:
+            regions[self.selected_region["regionId"]] = self.selected_region[
+                "regionName"
+            ]
+
+        regions.update(_make_regions_object(source))
 
         schema = vol.Schema(
             {
-                vol.Optional(CONF_REGION): vol.In(regions_object),
+                vol.Required(CONF_REGION): vol.In(regions),
             }
         )
 
