@@ -3,7 +3,7 @@
   "name": "Fibaro",
   "documentation": "https://www.home-assistant.io/integrations/fibaro",
   "requirements": ["fiblary3-fork==0.1.12"],
-  "codeowners": ["@rappenze"],
+  "codeowners": ["@rappenze", "@graham33"],
   "iot_class": "local_push",
   "config_flow": true,
   "loggers": ["fiblary3"]
