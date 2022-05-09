@@ -127,7 +127,10 @@ class SelectedEntities:
         if not parts:
             return
 
-        _LOGGER.warning("Unable to find referenced %s", ", ".join(parts))
+        _LOGGER.warning(
+            "Unable to find referenced %s or it is/they are currently not available",
+            ", ".join(parts),
+        )
 
 
 @bind_hass
