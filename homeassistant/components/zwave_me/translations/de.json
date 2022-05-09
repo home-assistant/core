@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Ger\u00e4t ist bereits eingerichtet",
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
             "no_valid_uuid_set": "Keine g\u00fcltige UUID gesetzt"
         },
         "error": {
@@ -10,10 +10,10 @@
         "step": {
             "user": {
                 "data": {
-                    "token": "Token",
+                    "token": "API-Token",
                     "url": "URL"
                 },
-                "description": "Gib die IP-Adresse des Z-Way-Servers und das Z-Way-Zugangs-Token ein. Der IP-Adresse kann wss:// vorangestellt werden, wenn HTTPS anstelle von HTTP verwendet werden soll. Um das Token zu erhalten, gehe auf Z-Way-Benutzeroberfl\u00e4che > Men\u00fc > Einstellungen > Benutzer > API-Token. Es wird empfohlen, einen neuen Benutzer f\u00fcr Home Assistant zu erstellen und den Ger\u00e4ten, die du \u00fcber den Home Assistant steuern m\u00f6chtest, Zugriff zu gew\u00e4hren. Es ist auch m\u00f6glich, den Fernzugriff \u00fcber find.z-wave.me zu nutzen, um ein entferntes Z-Way zu verbinden. Gib wss://find.z-wave.me in das IP-Feld ein und kopiere das Token mit globalem Geltungsbereich (logge dich dazu \u00fcber find.z-wave.me bei Z-Way ein)."
+                "description": "Gib die IP-Adresse mit Port und Zugangs-Token des Z-Way-Servers ein. Um das Token zu erhalten, gehe zur Z-Way-Benutzeroberfl\u00e4che Smart Home UI > Men\u00fc > Einstellungen > Benutzer > Administrator > API-Token.\n\nBeispiel f\u00fcr die Verbindung zu Z-Way im lokalen Netzwerk:\nURL: {local_url}\nToken: {local_token}\n\nBeispiel f\u00fcr die Verbindung zu Z-Way \u00fcber den Fernzugriff find.z-wave.me:\nURL: {find_url}\nToken: {find_token}\n\nBeispiel f\u00fcr eine Verbindung zu Z-Way mit einer statischen \u00f6ffentlichen IP-Adresse:\nURL: {remote_url}\nToken: {local_token}\n\nWenn du dich \u00fcber find.z-wave.me verbindest, musst du ein Token mit globalem Geltungsbereich verwenden (logge dich dazu \u00fcber find.z-wave.me bei Z-Way ein)."
             }
         }
     }

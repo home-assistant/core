@@ -8,7 +8,7 @@
         "flow_title": "{name}",
         "step": {
             "confirm": {
-                "description": "Vuoi configurare WiLight {name}? \n\nSupporta: {components}",
+                "description": "Sono supportati i seguenti componenti: {components}",
                 "title": "WiLight"
             }
         }

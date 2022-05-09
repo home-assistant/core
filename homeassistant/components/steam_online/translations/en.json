@@ -6,22 +6,22 @@
         },
         "error": {
             "cannot_connect": "Failed to connect",
-            "invalid_auth": "Invalid authentication",
             "invalid_account": "Invalid account ID",
+            "invalid_auth": "Invalid authentication",
             "unknown": "Unexpected error"
         },
         "step": {
+            "reauth_confirm": {
+                "description": "The Steam integration needs to be manually re-authenticated\n\nYou can find your key here: {api_key_url}",
+                "title": "Reauthenticate Integration"
+            },
             "user": {
                 "data": {
-                    "api_key": "API Key",
-                    "account": "Steam account ID"
+                    "account": "Steam account ID",
+                    "api_key": "API Key"
                 },
-                "description": "Documentation: https://www.home-assistant.io/integrations/steam_online\n\nUse https://steamid.io/ to find your Steam account ID"
-            },
-            "reauth_confirm": {
-                "title": "Reauthenticate Integration",
-                "description": "The Steam integration needs to be manually re-authenticated\n\nYou can find your key here: https://steamcommunity.com/dev/apikey"
-              }
+                "description": "Use {account_id_url} to find your Steam account ID"
+            }
         }
     },
     "options": {

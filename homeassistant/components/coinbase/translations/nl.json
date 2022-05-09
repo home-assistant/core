@@ -36,7 +36,8 @@
                 "data": {
                     "account_balance_currencies": "Wallet-saldi om te rapporteren.",
                     "exchange_base": "Basisvaluta voor wisselkoerssensoren.",
-                    "exchange_rate_currencies": "Wisselkoersen om te rapporteren."
+                    "exchange_rate_currencies": "Wisselkoersen om te rapporteren.",
+                    "exchnage_rate_precision": "Aantal decimalen voor wisselkoersen."
                 },
                 "description": "Coinbase-opties aanpassen"
             }

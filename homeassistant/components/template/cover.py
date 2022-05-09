@@ -222,8 +222,9 @@ class CoverTemplate(TemplateEntity, CoverEntity):
             self._is_closing = state == STATE_CLOSING
         else:
             _LOGGER.error(
-                "Received invalid cover is_on state: %s. Expected: %s",
+                "Received invalid cover is_on state: %s for entity %s. Expected: %s",
                 state,
+                self.entity_id,
                 ", ".join(_VALID_STATES),
             )
             if not self._position_template:
@@ -241,7 +242,7 @@ class CoverTemplate(TemplateEntity, CoverEntity):
         if state < 0 or state > 100:
             self._position = None
             _LOGGER.error(
-                "Cover position value must be" " between 0 and 100." " Value was: %.2f",
+                "Cover position value must be between 0 and 100. Value was: %.2f",
                 state,
             )
         else:

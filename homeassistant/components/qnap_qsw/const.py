@@ -3,6 +3,7 @@
 from typing import Final
 
 ATTR_MAX: Final = "max"
+ATTR_MESSAGE: Final = "message"
 
 DOMAIN: Final = "qnap_qsw"
 MANUFACTURER: Final = "QNAP"

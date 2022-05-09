@@ -18,9 +18,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import QswEntity
 from .const import DOMAIN, QSW_REBOOT
 from .coordinator import QswUpdateCoordinator
+from .entity import QswEntity
 
 
 @dataclass

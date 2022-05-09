@@ -139,6 +139,7 @@ homeassistant.components.lcn.*
 homeassistant.components.light.*
 homeassistant.components.local_ip.*
 homeassistant.components.lock.*
+homeassistant.components.logbook.*
 homeassistant.components.lookin.*
 homeassistant.components.luftdaten.*
 homeassistant.components.mailbox.*
@@ -176,18 +177,7 @@ homeassistant.components.pure_energie.*
 homeassistant.components.rainmachine.*
 homeassistant.components.rdw.*
 homeassistant.components.recollect_waste.*
-homeassistant.components.recorder
-homeassistant.components.recorder.const
-homeassistant.components.recorder.backup
-homeassistant.components.recorder.executor
-homeassistant.components.recorder.history
-homeassistant.components.recorder.models
-homeassistant.components.recorder.pool
-homeassistant.components.recorder.purge
-homeassistant.components.recorder.repack
-homeassistant.components.recorder.statistics
-homeassistant.components.recorder.util
-homeassistant.components.recorder.websocket_api
+homeassistant.components.recorder.*
 homeassistant.components.remote.*
 homeassistant.components.renault.*
 homeassistant.components.ridwell.*

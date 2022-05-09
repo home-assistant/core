@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from enum import Enum
 import functools
+import logging
 
 from zigpy.zcl.clusters.general import OnOff
 from zigpy.zcl.clusters.security import IasWd
@@ -30,6 +31,7 @@ from .entity import ZhaEntity
 CONFIG_DIAGNOSTIC_MATCH = functools.partial(
     ZHA_ENTITIES.config_diagnostic_match, Platform.SELECT
 )
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -47,7 +49,6 @@ async def async_setup_entry(
             discovery.async_add_entities,
             async_add_entities,
             entities_to_create,
-            update_before_add=False,
         ),
     )
     config_entry.async_on_unload(unsub)
@@ -84,12 +85,6 @@ class ZHAEnumSelectEntity(ZhaEntity, SelectEntity):
         """Change the selected option."""
         self._channel.data_cache[self._attr_name] = self._enum[option.replace(" ", "_")]
         self.async_write_ha_state()
-
-    async def async_added_to_hass(self) -> None:
-        """Run when about to be added to hass."""
-        await super().async_added_to_hass()
-        if last_state := await self.async_get_last_state():
-            self.async_restore_last_state(last_state)
 
     @callback
     def async_restore_last_state(self, last_state) -> None:
@@ -163,7 +158,15 @@ class ZCLEnumSelectEntity(ZhaEntity, SelectEntity):
         Return entity if it is a supported configuration, otherwise return None
         """
         channel = channels[0]
-        if cls._select_attr in channel.cluster.unsupported_attributes:
+        if (
+            cls._select_attr in channel.cluster.unsupported_attributes
+            or channel.cluster.get(cls._select_attr) is None
+        ):
+            _LOGGER.debug(
+                "%s is not supported - skipping %s entity creation",
+                cls._select_attr,
+                cls.__name__,
+            )
             return None
 
         return cls(unique_id, zha_device, channels, **kwargs)

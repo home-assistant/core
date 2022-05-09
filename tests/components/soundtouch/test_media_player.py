@@ -488,7 +488,7 @@ async def test_media_commands(mocked_status, mocked_volume, hass, one_device):
     assert mocked_volume.call_count == 2
 
     entity_1_state = hass.states.get("media_player.soundtouch_1")
-    assert entity_1_state.attributes["supported_features"] == 20413
+    assert entity_1_state.attributes["supported_features"] == 151485
 
 
 @patch("libsoundtouch.device.SoundTouchDevice.power_off")

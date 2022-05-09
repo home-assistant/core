@@ -148,7 +148,7 @@ def ws_info(
     """Return status of the recorder."""
     instance: Recorder = hass.data[DATA_INSTANCE]
 
-    backlog = instance.queue.qsize() if instance and instance.queue else None
+    backlog = instance.backlog if instance else None
     migration_in_progress = async_migration_in_progress(hass)
     recording = instance.recording if instance else False
     thread_alive = instance.is_alive() if instance else False
