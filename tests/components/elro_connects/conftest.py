@@ -37,7 +37,22 @@ def mock_k1_connector() -> dict[AsyncMock]:
 
 
 @pytest.fixture
-def mock_k1_api() -> dict[AsyncMock]:
+def mock_entry(hass: HomeAssistant) -> ConfigEntry:
+    """Mock a Elro Connects config entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "1.1.1.1",
+            CONF_CONNECTOR_ID: "ST_deadbeef0000",
+            CONF_PORT: 1025,
+        },
+    )
+    entry.add_to_hass(hass)
+    return entry
+
+
+@pytest.fixture
+def mock_k1_api(hass: HomeAssistant) -> dict[AsyncMock]:
     """Mock the Elro K1 API."""
     with patch("elro.api.K1.async_connect", AsyncMock(),) as mock_connect, patch(
         "elro.api.K1.async_disconnect",
@@ -55,18 +70,3 @@ def mock_k1_api() -> dict[AsyncMock]:
             "configure": mock_configure,
             "result": mock_result,
         }
-
-
-@pytest.fixture
-def mock_entry(hass: HomeAssistant) -> ConfigEntry:
-    """Mock a Elro Connects config entry."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_HOST: "1.1.1.1",
-            CONF_CONNECTOR_ID: "ST_deadbeef0000",
-            CONF_PORT: 1025,
-        },
-    )
-    entry.add_to_hass(hass)
-    return entry

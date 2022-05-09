@@ -24,7 +24,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import CONF_CONNECTOR_ID, DOMAIN
+from .const import DOMAIN
 from .device import ElroConnectsEntity, ElroConnectsK1
 
 _LOGGER = logging.getLogger(__name__)
@@ -70,14 +70,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up the sensor platform."""
     elro_connects_api: ElroConnectsK1 = hass.data[DOMAIN][config_entry.entry_id]
-    connector_id: str = config_entry.data[CONF_CONNECTOR_ID]
     device_status: dict[int, dict] = elro_connects_api.coordinator.data
 
     async_add_entities(
         [
             ElroConnectsSiren(
                 elro_connects_api,
-                connector_id,
+                config_entry,
                 device_id,
                 SIREN_DEVICE_TYPES[attributes[ATTR_DEVICE_TYPE]],
             )
@@ -93,7 +92,7 @@ class ElroConnectsSiren(ElroConnectsEntity, SirenEntity):
     def __init__(
         self,
         elro_connects_api: ElroConnectsK1,
-        connector_id: str,
+        entry: ConfigEntry,
         device_id: int,
         description: SirenEntityDescription,
     ) -> None:
@@ -105,8 +104,8 @@ class ElroConnectsSiren(ElroConnectsEntity, SirenEntity):
         )
         ElroConnectsEntity.__init__(
             self,
-            elro_connects_api.coordinator,
-            connector_id,
+            elro_connects_api,
+            entry,
             device_id,
             description,
         )
