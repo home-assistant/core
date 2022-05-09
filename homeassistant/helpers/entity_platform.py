@@ -519,8 +519,8 @@ class EntityPlatform:
                 config_entry=self.config_entry,
                 device_id=device_id,
                 disabled_by=disabled_by,
-                hidden_by=hidden_by,
                 entity_category=entity.entity_category,
+                hidden_by=hidden_by,
                 known_object_ids=self.entities.keys(),
                 original_device_class=entity.device_class,
                 original_icon=entity.icon,
@@ -611,7 +611,7 @@ class EntityPlatform:
             self.hass.states.async_reserve(entity.entity_id)
 
         def remove_entity_cb() -> None:
-            """Remove entity from entities list."""
+            """Remove entity from entities dict."""
             self.entities.pop(entity_id)
 
         entity.async_on_remove(remove_entity_cb)

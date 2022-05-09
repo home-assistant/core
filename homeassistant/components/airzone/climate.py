@@ -123,7 +123,7 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
         }
         _LOGGER.debug("update_hvac_params=%s", _params)
         try:
-            await self.coordinator.airzone.put_hvac(_params)
+            await self.coordinator.airzone.set_hvac_parameters(_params)
         except AirzoneError as error:
             raise HomeAssistantError(
                 f"Failed to set zone {self.name}: {error}"

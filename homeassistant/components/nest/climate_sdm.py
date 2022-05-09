@@ -71,6 +71,8 @@ FAN_MODE_MAP = {
 FAN_INV_MODE_MAP = {v: k for k, v in FAN_MODE_MAP.items()}
 
 MAX_FAN_DURATION = 43200  # 15 hours is the max in the SDM API
+MIN_TEMP = 10
+MAX_TEMP = 32
 
 
 async def async_setup_sdm_entry(
@@ -93,6 +95,9 @@ async def async_setup_sdm_entry(
 
 class ThermostatEntity(ClimateEntity):
     """A nest thermostat climate entity."""
+
+    _attr_min_temp = MIN_TEMP
+    _attr_max_temp = MAX_TEMP
 
     def __init__(self, device: Device) -> None:
         """Initialize ThermostatEntity."""

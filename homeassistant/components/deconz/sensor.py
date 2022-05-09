@@ -112,7 +112,7 @@ ENTITY_DESCRIPTIONS = {
         DeconzSensorDescription(
             key="consumption",
             value_fn=lambda device: device.scaled_consumption
-            if isinstance(device, Consumption)
+            if isinstance(device, Consumption) and isinstance(device.consumption, int)
             else None,
             update_key="consumption",
             device_class=SensorDeviceClass.ENERGY,
@@ -144,7 +144,7 @@ ENTITY_DESCRIPTIONS = {
         DeconzSensorDescription(
             key="humidity",
             value_fn=lambda device: device.scaled_humidity
-            if isinstance(device, Humidity)
+            if isinstance(device, Humidity) and isinstance(device.humidity, int)
             else None,
             update_key="humidity",
             device_class=SensorDeviceClass.HUMIDITY,
@@ -156,10 +156,11 @@ ENTITY_DESCRIPTIONS = {
         DeconzSensorDescription(
             key="light_level",
             value_fn=lambda device: device.scaled_light_level
-            if isinstance(device, LightLevel)
+            if isinstance(device, LightLevel) and isinstance(device.light_level, int)
             else None,
             update_key="lightlevel",
             device_class=SensorDeviceClass.ILLUMINANCE,
+            state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=LIGHT_LUX,
         )
     ],
@@ -189,7 +190,7 @@ ENTITY_DESCRIPTIONS = {
         DeconzSensorDescription(
             key="temperature",
             value_fn=lambda device: device.scaled_temperature
-            if isinstance(device, Temperature)
+            if isinstance(device, Temperature) and isinstance(device.temperature, int)
             else None,
             update_key="temperature",
             device_class=SensorDeviceClass.TEMPERATURE,

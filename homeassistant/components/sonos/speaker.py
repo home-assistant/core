@@ -189,7 +189,12 @@ class SonosSpeaker:
 
     def setup(self, entry: ConfigEntry) -> None:
         """Run initial setup of the speaker."""
-        self.set_basic_info()
+        self.media.play_mode = self.soco.play_mode
+        self.update_volume()
+        self.update_groups()
+        if self.is_coordinator:
+            self.media.poll_media()
+
         future = asyncio.run_coroutine_threadsafe(
             self.async_setup_dispatchers(entry), self.hass.loop
         )
@@ -246,11 +251,6 @@ class SonosSpeaker:
     def async_write_entity_states(self) -> None:
         """Write states for associated SonosEntity instances."""
         async_dispatcher_send(self.hass, f"{SONOS_STATE_UPDATED}-{self.soco.uid}")
-
-    def set_basic_info(self) -> None:
-        """Set basic information when speaker is reconnected."""
-        self.media.play_mode = self.soco.play_mode
-        self.update_volume()
 
     #
     # Properties
@@ -456,6 +456,34 @@ class SonosSpeaker:
     @callback
     def async_dispatch_media_update(self, event: SonosEvent) -> None:
         """Update information about currently playing media from an event."""
+        # The new coordinator can be provided in a media update event but
+        # before the ZoneGroupState updates. If this happens the playback
+        # state will be incorrect and should be ignored. Switching to the
+        # new coordinator will use its media. The regrouping process will
+        # be completed during the next ZoneGroupState update.
+        av_transport_uri = event.variables.get("av_transport_uri", "")
+        current_track_uri = event.variables.get("current_track_uri", "")
+        if av_transport_uri == current_track_uri and av_transport_uri.startswith(
+            "x-rincon:"
+        ):
+            new_coordinator_uid = av_transport_uri.split(":")[-1]
+            if new_coordinator_speaker := self.hass.data[DATA_SONOS].discovered.get(
+                new_coordinator_uid
+            ):
+                _LOGGER.debug(
+                    "Media update coordinator (%s) received for %s",
+                    new_coordinator_speaker.zone_name,
+                    self.zone_name,
+                )
+                self.coordinator = new_coordinator_speaker
+            else:
+                _LOGGER.debug(
+                    "Media update coordinator (%s) for %s not yet available",
+                    new_coordinator_uid,
+                    self.zone_name,
+                )
+            return
+
         if crossfade := event.variables.get("current_crossfade_mode"):
             self.cross_fade = bool(int(crossfade))
 
@@ -721,18 +749,18 @@ class SonosSpeaker:
         def _get_soco_group() -> list[str]:
             """Ask SoCo cache for existing topology."""
             coordinator_uid = self.soco.uid
-            slave_uids = []
+            joined_uids = []
 
             with contextlib.suppress(OSError, SoCoException):
                 if self.soco.group and self.soco.group.coordinator:
                     coordinator_uid = self.soco.group.coordinator.uid
-                    slave_uids = [
+                    joined_uids = [
                         p.uid
                         for p in self.soco.group.members
                         if p.uid != coordinator_uid and p.is_visible
                     ]
 
-            return [coordinator_uid] + slave_uids
+            return [coordinator_uid] + joined_uids
 
         async def _async_extract_group(event: SonosEvent | None) -> list[str]:
             """Extract group layout from a topology event."""
@@ -774,6 +802,7 @@ class SonosSpeaker:
                         self.zone_name,
                         uid,
                     )
+                    return
 
             if self.sonos_group_entities == sonos_group_entities:
                 # Useful in polling mode for speakers with stereo pairs or surrounds
@@ -785,13 +814,13 @@ class SonosSpeaker:
             self.sonos_group_entities = sonos_group_entities
             self.async_write_entity_states()
 
-            for slave_uid in group[1:]:
-                slave = self.hass.data[DATA_SONOS].discovered.get(slave_uid)
-                if slave:
-                    slave.coordinator = self
-                    slave.sonos_group = sonos_group
-                    slave.sonos_group_entities = sonos_group_entities
-                    slave.async_write_entity_states()
+            for joined_uid in group[1:]:
+                joined_speaker = self.hass.data[DATA_SONOS].discovered.get(joined_uid)
+                if joined_speaker:
+                    joined_speaker.coordinator = self
+                    joined_speaker.sonos_group = sonos_group
+                    joined_speaker.sonos_group_entities = sonos_group_entities
+                    joined_speaker.async_write_entity_states()
 
             _LOGGER.debug("Regrouped %s: %s", self.zone_name, self.sonos_group_entities)
 
@@ -809,7 +838,7 @@ class SonosSpeaker:
         return _async_handle_group_event(event)
 
     @soco_error()
-    def join(self, slaves: list[SonosSpeaker]) -> list[SonosSpeaker]:
+    def join(self, speakers: list[SonosSpeaker]) -> list[SonosSpeaker]:
         """Form a group with other players."""
         if self.coordinator:
             self.unjoin()
@@ -817,12 +846,12 @@ class SonosSpeaker:
         else:
             group = self.sonos_group.copy()
 
-        for slave in slaves:
-            if slave.soco.uid != self.soco.uid:
-                slave.soco.join(self.soco)
-                slave.coordinator = self
-                if slave not in group:
-                    group.append(slave)
+        for speaker in speakers:
+            if speaker.soco.uid != self.soco.uid:
+                speaker.soco.join(self.soco)
+                speaker.coordinator = self
+                if speaker not in group:
+                    group.append(speaker)
 
         return group
 
@@ -851,11 +880,11 @@ class SonosSpeaker:
 
         def _unjoin_all(speakers: list[SonosSpeaker]) -> None:
             """Sync helper."""
-            # Unjoin slaves first to prevent inheritance of queues
+            # Detach all joined speakers first to prevent inheritance of queues
             coordinators = [s for s in speakers if s.is_coordinator]
-            slaves = [s for s in speakers if not s.is_coordinator]
+            joined_speakers = [s for s in speakers if not s.is_coordinator]
 
-            for speaker in slaves + coordinators:
+            for speaker in joined_speakers + coordinators:
                 speaker.unjoin()
 
         async with hass.data[DATA_SONOS].topology_condition:
@@ -899,7 +928,7 @@ class SonosSpeaker:
             assert self.soco_snapshot is not None
             self.soco_snapshot.restore()
         except (TypeError, AssertionError, AttributeError, SoCoException) as ex:
-            # Can happen if restoring a coordinator onto a current slave
+            # Can happen if restoring a coordinator onto a current group member
             _LOGGER.warning("Error on restore %s: %s", self.zone_name, ex)
 
         self.soco_snapshot = None
@@ -1007,7 +1036,7 @@ class SonosSpeaker:
                 if coordinator != current_group[0]:
                     return False
 
-                # Test that slaves match
+                # Test that joined members match
                 if set(group[1:]) != set(current_group[1:]):
                     return False
 

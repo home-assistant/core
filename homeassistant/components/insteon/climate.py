@@ -1,8 +1,8 @@
 """Support for Insteon thermostat."""
 from __future__ import annotations
 
+from pyinsteon.config import CELSIUS
 from pyinsteon.constants import ThermostatMode
-from pyinsteon.operating_flag import CELSIUS
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (

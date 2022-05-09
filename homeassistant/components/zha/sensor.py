@@ -103,7 +103,6 @@ async def async_setup_entry(
             discovery.async_add_entities,
             async_add_entities,
             entities_to_create,
-            update_before_add=False,
         ),
     )
     config_entry.async_on_unload(unsub)
@@ -346,7 +345,7 @@ class ElectricalMeasurementFrequency(ElectricalMeasurement, id_suffix="ac_freque
     """Frequency measurement."""
 
     SENSOR_ATTR = "ac_frequency"
-    _device_class: SensorDeviceClass = SensorDeviceClass.FREQUENCY
+    _attr_device_class: SensorDeviceClass = SensorDeviceClass.FREQUENCY
     _unit = FREQUENCY_HERTZ
     _div_mul_prefix = "ac_frequency"
 
@@ -361,7 +360,7 @@ class ElectricalMeasurementPowerFactor(ElectricalMeasurement, id_suffix="power_f
     """Frequency measurement."""
 
     SENSOR_ATTR = "power_factor"
-    _device_class: SensorDeviceClass = SensorDeviceClass.POWER_FACTOR
+    _attr_device_class: SensorDeviceClass = SensorDeviceClass.POWER_FACTOR
     _unit = PERCENTAGE
 
     @property
@@ -719,8 +718,8 @@ class SinopeHVACAction(ThermostatHVACAction):
 class RSSISensor(Sensor, id_suffix="rssi"):
     """RSSI sensor for a device."""
 
-    _state_class: SensorStateClass = SensorStateClass.MEASUREMENT
-    _device_class: SensorDeviceClass = SensorDeviceClass.SIGNAL_STRENGTH
+    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+    _attr_device_class: SensorDeviceClass = SensorDeviceClass.SIGNAL_STRENGTH
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_entity_registry_enabled_default = False
 

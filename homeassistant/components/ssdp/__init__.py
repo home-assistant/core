@@ -44,6 +44,8 @@ ATTR_SSDP_SERVER = "ssdp_server"
 ATTR_SSDP_BOOTID = "BOOTID.UPNP.ORG"
 ATTR_SSDP_NEXTBOOTID = "NEXTBOOTID.UPNP.ORG"
 # Attributes for accessing info from retrieved UPnP device description
+ATTR_ST = "st"
+ATTR_NT = "nt"
 ATTR_UPNP_DEVICE_TYPE = "deviceType"
 ATTR_UPNP_FRIENDLY_NAME = "friendlyName"
 ATTR_UPNP_MANUFACTURER = "manufacturer"
@@ -60,7 +62,13 @@ ATTR_UPNP_PRESENTATION_URL = "presentationURL"
 # Attributes for accessing info added by Home Assistant
 ATTR_HA_MATCHING_DOMAINS = "x_homeassistant_matching_domains"
 
-PRIMARY_MATCH_KEYS = [ATTR_UPNP_MANUFACTURER, "st", ATTR_UPNP_DEVICE_TYPE, "nt"]
+PRIMARY_MATCH_KEYS = [
+    ATTR_UPNP_MANUFACTURER,
+    ATTR_ST,
+    ATTR_UPNP_DEVICE_TYPE,
+    ATTR_NT,
+    ATTR_UPNP_MANUFACTURER_URL,
+]
 
 _LOGGER = logging.getLogger(__name__)
 

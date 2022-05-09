@@ -522,11 +522,29 @@ def test_validate_topic():
 
     # Topics "SHOULD NOT" include these special characters
     # (not MUST NOT, RFC2119). The receiver MAY close the connection.
-    mqtt.util.valid_topic("\u0001")
-    mqtt.util.valid_topic("\u001F")
-    mqtt.util.valid_topic("\u009F")
-    mqtt.util.valid_topic("\u009F")
-    mqtt.util.valid_topic("\uffff")
+    # We enforce this because mosquitto does: https://github.com/eclipse/mosquitto/commit/94fdc9cb44c829ff79c74e1daa6f7d04283dfffd
+    with pytest.raises(vol.Invalid):
+        mqtt.util.valid_topic("\u0001")
+    with pytest.raises(vol.Invalid):
+        mqtt.util.valid_topic("\u001F")
+    with pytest.raises(vol.Invalid):
+        mqtt.util.valid_topic("\u007F")
+    with pytest.raises(vol.Invalid):
+        mqtt.util.valid_topic("\u009F")
+    with pytest.raises(vol.Invalid):
+        mqtt.util.valid_topic("\ufdd0")
+    with pytest.raises(vol.Invalid):
+        mqtt.util.valid_topic("\ufdef")
+    with pytest.raises(vol.Invalid):
+        mqtt.util.valid_topic("\ufffe")
+    with pytest.raises(vol.Invalid):
+        mqtt.util.valid_topic("\ufffe")
+    with pytest.raises(vol.Invalid):
+        mqtt.util.valid_topic("\uffff")
+    with pytest.raises(vol.Invalid):
+        mqtt.util.valid_topic("\U0001fffe")
+    with pytest.raises(vol.Invalid):
+        mqtt.util.valid_topic("\U0001ffff")
 
 
 def test_validate_subscribe_topic():

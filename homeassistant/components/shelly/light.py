@@ -380,6 +380,9 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
 class RpcShellyLight(ShellyRpcEntity, LightEntity):
     """Entity that controls a light on RPC based Shelly devices."""
 
+    _attr_color_mode = ColorMode.ONOFF
+    _attr_supported_color_modes = {ColorMode.ONOFF}
+
     def __init__(self, wrapper: RpcDeviceWrapper, id_: int) -> None:
         """Initialize light."""
         super().__init__(wrapper, f"switch:{id_}")

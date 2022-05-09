@@ -20,7 +20,7 @@
                     "host": "Nazwa hosta lub adres IP",
                     "name": "Nazwa"
                 },
-                "description": "Najpierw musisz pobra\u0107 aplikacj\u0119 Goal Zero: https://www.goalzero.com/product-features/yeti-app/\n\nPost\u0119puj zgodnie z instrukcjami, aby pod\u0142\u0105czy\u0107 Yeti do sieci Wi-Fi. Zaleca si\u0119 rezerwacj\u0119 DHCP w ustawieniach routera. Je\u015bli tego nie ustawisz, urz\u0105dzenie mo\u017ce sta\u0107 si\u0119 niedost\u0119pne, do czasu a\u017c Home Assistant wykryje nowy adres IP. Post\u0119puj wg instrukcji obs\u0142ugi routera.",
+                "description": "Zapoznaj si\u0119 z dokumentacj\u0105, aby upewni\u0107 si\u0119, \u017ce wszystkie wymagania s\u0105 spe\u0142nione.",
                 "title": "Goal Zero Yeti"
             }
         }

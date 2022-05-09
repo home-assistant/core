@@ -1,0 +1,23 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Namn"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "name": "Namn"
+                },
+                "data_description": {
+                    "name": "Namn som kommer att anv\u00e4ndas f\u00f6r Config Entry och \u00e4ven sensorn"
+                }
+            }
+        }
+    }
+}

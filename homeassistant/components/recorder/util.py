@@ -8,7 +8,7 @@ import functools
 import logging
 import os
 import time
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from awesomeversion import (
     AwesomeVersion,
@@ -20,25 +20,25 @@ from sqlalchemy.engine.cursor import CursorFetchStrategy
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.orm.query import Query
 from sqlalchemy.orm.session import Session
+from typing_extensions import Concatenate, ParamSpec
 
 from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
-from .const import DATA_INSTANCE, SQLITE_URL_PREFIX
+from .const import DATA_INSTANCE, SQLITE_URL_PREFIX, SupportedDialect
 from .models import (
-    ALL_TABLES,
     TABLE_RECORDER_RUNS,
     TABLE_SCHEMA_CHANGES,
-    TABLE_STATISTICS,
-    TABLE_STATISTICS_META,
-    TABLE_STATISTICS_RUNS,
-    TABLE_STATISTICS_SHORT_TERM,
+    TABLES_TO_CHECK,
     RecorderRuns,
     process_timestamp,
 )
 
 if TYPE_CHECKING:
     from . import Recorder
+
+_RecorderT = TypeVar("_RecorderT", bound="Recorder")
+_P = ParamSpec("_P")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -209,15 +209,7 @@ def last_run_was_recently_clean(cursor: CursorFetchStrategy) -> bool:
 def basic_sanity_check(cursor: CursorFetchStrategy) -> bool:
     """Check tables to make sure select does not fail."""
 
-    for table in ALL_TABLES:
-        # The statistics tables may not be present in old databases
-        if table in [
-            TABLE_STATISTICS,
-            TABLE_STATISTICS_META,
-            TABLE_STATISTICS_RUNS,
-            TABLE_STATISTICS_SHORT_TERM,
-        ]:
-            continue
+    for table in TABLES_TO_CHECK:
         if table in (TABLE_RECORDER_RUNS, TABLE_SCHEMA_CHANGES):
             cursor.execute(f"SELECT * FROM {table};")  # nosec # not injection
         else:
@@ -349,7 +341,7 @@ def setup_connection_for_dialect(
     # Returns False if the the connection needs to be setup
     # on the next connection, returns True if the connection
     # never needs to be setup again.
-    if dialect_name == "sqlite":
+    if dialect_name == SupportedDialect.SQLITE:
         if first_connection:
             old_isolation = dbapi_connection.isolation_level
             dbapi_connection.isolation_level = None
@@ -377,7 +369,7 @@ def setup_connection_for_dialect(
         # enable support for foreign keys
         execute_on_connection(dbapi_connection, "PRAGMA foreign_keys=ON")
 
-    elif dialect_name == "mysql":
+    elif dialect_name == SupportedDialect.MYSQL:
         execute_on_connection(dbapi_connection, "SET session wait_timeout=28800")
         if first_connection:
             result = query_on_connection(dbapi_connection, "SELECT VERSION()")
@@ -404,7 +396,7 @@ def setup_connection_for_dialect(
                         version or version_string, "MySQL", MIN_VERSION_MYSQL
                     )
 
-    elif dialect_name == "postgresql":
+    elif dialect_name == SupportedDialect.POSTGRESQL:
         if first_connection:
             # server_version_num was added in 2006
             result = query_on_connection(dbapi_connection, "SHOW server_version")
@@ -430,21 +422,28 @@ def end_incomplete_runs(session: Session, start_time: datetime) -> None:
         session.add(run)
 
 
-def retryable_database_job(description: str) -> Callable:
+def retryable_database_job(
+    description: str,
+) -> Callable[
+    [Callable[Concatenate[_RecorderT, _P], bool]],
+    Callable[Concatenate[_RecorderT, _P], bool],
+]:
     """Try to execute a database job.
 
     The job should return True if it finished, and False if it needs to be rescheduled.
     """
 
-    def decorator(job: Callable[[Any], bool]) -> Callable:
+    def decorator(
+        job: Callable[Concatenate[_RecorderT, _P], bool]
+    ) -> Callable[Concatenate[_RecorderT, _P], bool]:
         @functools.wraps(job)
-        def wrapper(instance: Recorder, *args: Any, **kwargs: Any) -> bool:
+        def wrapper(instance: _RecorderT, *args: _P.args, **kwargs: _P.kwargs) -> bool:
             try:
                 return job(instance, *args, **kwargs)
             except OperationalError as err:
                 assert instance.engine is not None
                 if (
-                    instance.engine.dialect.name == "mysql"
+                    instance.engine.dialect.name == SupportedDialect.MYSQL
                     and err.orig.args[0] in RETRYABLE_MYSQL_ERRORS
                 ):
                     _LOGGER.info(
@@ -470,7 +469,7 @@ def periodic_db_cleanups(instance: Recorder) -> None:
     These cleanups will happen nightly or after any purge.
     """
     assert instance.engine is not None
-    if instance.engine.dialect.name == "sqlite":
+    if instance.engine.dialect.name == SupportedDialect.SQLITE:
         # Execute sqlite to create a wal checkpoint and free up disk space
         _LOGGER.debug("WAL checkpoint")
         with instance.engine.connect() as connection:
