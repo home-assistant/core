@@ -1,7 +1,6 @@
 """Support for Powerview scenes from a Powerview hub."""
 
 import asyncio
-from datetime import timedelta
 
 from aiohttp.client_exceptions import ServerDisconnectedError
 from aiopvapi.helpers.aiorequest import PvApiConnectionError, PvApiResponseStatusError
@@ -51,7 +50,6 @@ ROOM_ID = "id"
 SHADE_RESPONSE = "shade"
 SHADE_BATTERY_LEVEL = "batteryStrength"
 SHADE_BATTERY_LEVEL_MAX = 200
-SHADE_BATTERY_KIND = "batteryKind"
 
 SHADE_BATTERY_SENSOR_EXCLUDE = [1]
 SHADE_POWER_CONN_LIST = {
@@ -60,8 +58,6 @@ SHADE_POWER_CONN_LIST = {
     2: "Battery Wand",
     3: "Rechargeable Battery",
 }
-
-SHADE_SIGNAL_STRENGTH = "signalStrength"
 
 STATE_ATTRIBUTE_ROOM_NAME = "roomName"
 STATE_ATTRIBUTE_POWER_CONN = "powerConnection"
@@ -94,9 +90,6 @@ DEFAULT_LEGACY_MAINPROCESSOR = {
 }
 
 API_PATH_FWVERSION = "api/fwversion"
-
-UPDATE_INTERVAL_DEFAULT = timedelta(seconds=60)
-UPDATE_INTERVAL_MAINTENANCE = timedelta(minutes=5)
 
 POSKIND_NONE = 0
 POSKIND_PRIMARY = 1
