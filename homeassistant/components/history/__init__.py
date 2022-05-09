@@ -43,8 +43,13 @@ DOMAIN = "history"
 CONF_ORDER = "use_include_order"
 
 GLOB_TO_SQL_CHARS = {
-    42: "%",  # *
-    46: "_",  # .
+    ord("*"): "%",
+    # TODO: remove - matches domain separator & inconsistent with recorder globs
+    ord("."): "_",
+    ord("?"): "_",
+    ord("%"): "\\%",
+    ord("_"): "\\_",
+    ord("\\"): "\\\\",
 }
 
 CONFIG_SCHEMA = vol.Schema(
@@ -392,7 +397,9 @@ class Filters:
 
 def _glob_to_like(glob_str):
     """Translate glob to sql."""
-    return history_models.States.entity_id.like(glob_str.translate(GLOB_TO_SQL_CHARS))
+    return history_models.States.entity_id.like(
+        glob_str.translate(GLOB_TO_SQL_CHARS), escape="\\"
+    )
 
 
 def _entities_may_have_state_changes_after(
