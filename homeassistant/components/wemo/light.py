@@ -138,7 +138,10 @@ class WemoLight(WemoEntity, LightEntity):
     @property
     def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
-        if "colorcontrol" in self.light.capabilities:
+        if (
+            "colorcontrol" in self.light.capabilities
+            and self.light.state.get("color_xy") is not None
+        ):
             return ColorMode.XY
         if "colortemperature" in self.light.capabilities:
             return ColorMode.COLOR_TEMP
