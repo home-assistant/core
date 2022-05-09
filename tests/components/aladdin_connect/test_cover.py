@@ -148,7 +148,7 @@ async def test_setup_component_valueerror(hass: HomeAssistant) -> None:
 
 
 async def test_setup_component_noerror(hass: HomeAssistant) -> None:
-    """Test component setup KeyError."""
+    """Test component setup No Error."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data=YAML_CONFIG,
@@ -191,8 +191,8 @@ async def test_load_and_unload(hass: HomeAssistant) -> None:
     assert config_entry.state == ConfigEntryState.NOT_LOADED
 
 
-async def test_open_cover(hass: HomeAssistant) -> None:
-    """Test component setup KeyError."""
+async def test_cover_operation(hass: HomeAssistant) -> None:
+    """Test component setup open cover, close cover."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data=YAML_CONFIG,
