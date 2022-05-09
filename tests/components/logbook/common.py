@@ -52,7 +52,7 @@ def mock_humanify(hass_, rows):
         context_lookup, entity_name_cache, {}, event_cache
     )
     return list(
-        logbook.humanify(
+        logbook._humanify(
             hass_, rows, entity_name_cache, event_cache, context_augmenter
         ),
     )
