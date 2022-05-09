@@ -74,7 +74,7 @@ async def test_unique_id_migrate(hass, device_registry, entity_registry):
     ):
         await hass.config_entries.async_setup(mock_entry.entry_id)
 
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
     for mock_entity_id, sensor_key in entity_id_sensor_key:
         entity = entity_registry.async_get(mock_entity_id)
