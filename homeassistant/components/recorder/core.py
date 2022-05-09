@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Iterable
+import contextlib
 from datetime import datetime, timedelta
 import logging
 import queue
@@ -41,9 +42,11 @@ from .const import (
     KEEPALIVE_TIME,
     MAX_QUEUE_BACKLOG,
     SQLITE_URL_PREFIX,
+    SupportedDialect,
 )
 from .executor import DBInterruptibleThreadPoolExecutor
 from .models import (
+    SCHEMA_VERSION,
     Base,
     EventData,
     Events,
@@ -161,6 +164,7 @@ class Recorder(threading.Thread):
         self.entity_filter = entity_filter
         self.exclude_t = exclude_t
 
+        self.schema_version = 0
         self._commits_without_expire = 0
         self._old_states: dict[str, States] = {}
         self._state_attributes_ids: LRU = LRU(STATE_ATTRIBUTES_ID_CACHE_SIZE)
@@ -169,7 +173,7 @@ class Recorder(threading.Thread):
         self._pending_event_data: dict[str, EventData] = {}
         self._pending_expunge: list[States] = []
         self.event_session: Session | None = None
-        self.get_session: Callable[[], Session] | None = None
+        self._get_session: Callable[[], Session] | None = None
         self._completed_first_database_setup: bool | None = None
         self.async_migration_event = asyncio.Event()
         self.migration_in_progress = False
@@ -192,6 +196,13 @@ class Recorder(threading.Thread):
         return self._queue.qsize()
 
     @property
+    def dialect_name(self) -> SupportedDialect | None:
+        """Return the dialect the recorder uses."""
+        with contextlib.suppress(ValueError):
+            return SupportedDialect(self.engine.dialect.name) if self.engine else None
+        return None
+
+    @property
     def _using_file_sqlite(self) -> bool:
         """Short version to check if we are using sqlite3 as a file."""
         return self.db_url != SQLITE_URL_PREFIX and self.db_url.startswith(
@@ -202,6 +213,12 @@ class Recorder(threading.Thread):
     def recording(self) -> bool:
         """Return if the recorder is recording."""
         return self._event_listener is not None
+
+    def get_session(self) -> Session:
+        """Get a new sqlalchemy session."""
+        if self._get_session is None:
+            raise RuntimeError("The database connection has not been established")
+        return self._get_session()
 
     def queue_task(self, task: RecorderTask) -> None:
         """Add a task to the recorder queue."""
@@ -229,7 +246,9 @@ class Recorder(threading.Thread):
     def async_initialize(self) -> None:
         """Initialize the recorder."""
         self._event_listener = self.hass.bus.async_listen(
-            MATCH_ALL, self.event_listener, event_filter=self._async_event_filter
+            MATCH_ALL,
+            self.event_listener,
+            run_immediately=True,
         )
         self._queue_watcher = async_track_time_interval(
             self.hass, self._async_check_queue, timedelta(minutes=10)
@@ -450,20 +469,15 @@ class Recorder(threading.Thread):
         self.queue_task(ExternalStatisticsTask(metadata, stats))
 
     @callback
-    def using_sqlite(self) -> bool:
-        """Return if recorder uses sqlite as the engine."""
-        return bool(self.engine and self.engine.dialect.name == "sqlite")
-
-    @callback
     def _async_setup_periodic_tasks(self) -> None:
         """Prepare periodic tasks."""
-        if self.hass.is_stopping or not self.get_session:
+        if self.hass.is_stopping or not self._get_session:
             # Home Assistant is shutting down
             return
 
         # If the db is using a socket connection, we need to keep alive
         # to prevent errors from unexpected disconnects
-        if not self.using_sqlite():
+        if self.dialect_name != SupportedDialect.SQLITE:
             self._keep_alive_listener = async_track_time_interval(
                 self.hass, self._async_keep_alive, timedelta(seconds=KEEPALIVE_TIME)
             )
@@ -502,6 +516,8 @@ class Recorder(threading.Thread):
             self.hass.add_job(self.async_connection_failed)
             return
 
+        self.schema_version = current_version
+
         schema_is_current = migration.schema_is_current(current_version)
         if schema_is_current:
             self._setup_run()
@@ -523,6 +539,7 @@ class Recorder(threading.Thread):
         # with startup which is also cpu intensive
         if not schema_is_current:
             if self._migrate_schema_and_setup_run(current_version):
+                self.schema_version = SCHEMA_VERSION
                 if not self._event_listener:
                     # If the schema migration takes so long that the end
                     # queue watcher safety kicks in because MAX_QUEUE_BACKLOG
@@ -586,7 +603,7 @@ class Recorder(threading.Thread):
         while tries <= self.db_max_retries:
             try:
                 self._setup_connection()
-                return migration.get_schema_version(self)
+                return migration.get_schema_version(self.get_session)
             except Exception as err:  # pylint: disable=broad-except
                 _LOGGER.exception(
                     "Error during connection setup: %s (retrying in %s seconds)",
@@ -614,7 +631,9 @@ class Recorder(threading.Thread):
         self.hass.add_job(self._async_migration_started)
 
         try:
-            migration.migrate_schema(self, current_version)
+            migration.migrate_schema(
+                self.hass, self.engine, self.get_session, current_version
+            )
         except exc.DatabaseError as err:
             if self._handle_database_error(err):
                 return True
@@ -891,7 +910,6 @@ class Recorder(threading.Thread):
 
     def _open_event_session(self) -> None:
         """Open the event session."""
-        assert self.get_session is not None
         self.event_session = self.get_session()
         self.event_session.expire_on_commit = False
 
@@ -904,7 +922,8 @@ class Recorder(threading.Thread):
     @callback
     def event_listener(self, event: Event) -> None:
         """Listen for new events and put them in the process queue."""
-        self.queue_task(EventTask(event))
+        if self._async_event_filter(event):
+            self.queue_task(EventTask(event))
 
     def block_till_done(self) -> None:
         """Block till all events processed.
@@ -924,7 +943,7 @@ class Recorder(threading.Thread):
 
     async def lock_database(self) -> bool:
         """Lock database so it can be backed up safely."""
-        if not self.using_sqlite():
+        if self.dialect_name != SupportedDialect.SQLITE:
             _LOGGER.debug(
                 "Not a SQLite database or not connected, locking not necessary"
             )
@@ -953,7 +972,7 @@ class Recorder(threading.Thread):
 
         Returns true if database lock has been held throughout the process.
         """
-        if not self.using_sqlite():
+        if self.dialect_name != SupportedDialect.SQLITE:
             _LOGGER.debug(
                 "Not a SQLite database or not connected, unlocking not necessary"
             )
@@ -1006,7 +1025,7 @@ class Recorder(threading.Thread):
         sqlalchemy_event.listen(self.engine, "connect", setup_recorder_connection)
 
         Base.metadata.create_all(self.engine)
-        self.get_session = scoped_session(sessionmaker(bind=self.engine, future=True))
+        self._get_session = scoped_session(sessionmaker(bind=self.engine, future=True))
         _LOGGER.debug("Connected to recorder database")
 
     def _close_connection(self) -> None:
@@ -1014,11 +1033,10 @@ class Recorder(threading.Thread):
         assert self.engine is not None
         self.engine.dispose()
         self.engine = None
-        self.get_session = None
+        self._get_session = None
 
     def _setup_run(self) -> None:
         """Log the start of the current run and schedule any needed jobs."""
-        assert self.get_session is not None
         with session_scope(session=self.get_session()) as session:
             end_incomplete_runs(session, self.run_history.recording_start)
             self.run_history.start(session)
