@@ -422,6 +422,14 @@ class PowerViewShadeTDBU(PowerViewShade):
         """Return the current position of cover."""
         return hd_position_to_hass(self._current_hd_cover_secondary)
 
+    async def async_open_cover(self, **kwargs):
+        """Close the cover."""
+        current_hass_pos1 = self.current_cover_position
+        current_hass_pos2 = self.current_cover_position_secondary
+        steps_to_move = 100 - (current_hass_pos1 + current_hass_pos2)
+        self._async_schedule_update_for_transition(steps_to_move)
+        self._async_update_from_command(await self._shade.open())
+
     async def async_close_cover(self, **kwargs):
         """Close the cover."""
         current_hass_pos1 = self.current_cover_position
@@ -521,6 +529,23 @@ class PowerViewShadeTDBUTop(PowerViewShadeTDBU):
         """Return if the cover is closed."""
         # treat anything below 75% of 1% of total position as closed due to conversion of powerview to hass
         return self._current_hd_cover_secondary <= CLOSED_POSITION
+
+    async def async_open_cover(self, **kwargs):
+        """Open the cover."""
+        current_hass_pos1 = self.current_cover_position
+        current_hass_pos2 = self.current_cover_position_secondary
+        steps_to_move = 100 - (current_hass_pos1 + current_hass_pos2)
+        self._async_schedule_update_for_transition(steps_to_move)
+        self._async_update_from_command(
+            await self._shade.move(
+                {
+                    ATTR_POSITION1: MIN_POSITION,
+                    ATTR_POSITION2: MAX_POSITION,
+                    ATTR_POSKIND1: POSKIND_PRIMARY,
+                    ATTR_POSKIND2: POSKIND_SECONDARY,
+                }
+            )
+        )
 
     @property
     def current_cover_position(self):
