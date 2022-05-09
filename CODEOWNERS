@@ -455,8 +455,8 @@ build.json @home-assistant/supervisor
 /tests/components/huisbaasje/ @dennisschroer
 /homeassistant/components/humidifier/ @home-assistant/core @Shulyaka
 /tests/components/humidifier/ @home-assistant/core @Shulyaka
-/homeassistant/components/hunterdouglas_powerview/ @bdraco
-/tests/components/hunterdouglas_powerview/ @bdraco
+/homeassistant/components/hunterdouglas_powerview/ @bdraco @trullock
+/tests/components/hunterdouglas_powerview/ @bdraco @trullock
 /homeassistant/components/hvv_departures/ @vigonotion
 /tests/components/hvv_departures/ @vigonotion
 /homeassistant/components/hydrawise/ @ptcryan
