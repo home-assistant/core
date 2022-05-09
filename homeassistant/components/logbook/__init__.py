@@ -114,6 +114,7 @@ ALL_EVENT_TYPES = [
 
 
 EVENT_COLUMNS = [
+    Events.event_id.label("event_id"),
     Events.event_type.label("event_type"),
     Events.event_data.label("event_data"),
     Events.time_fired.label("time_fired"),
@@ -123,6 +124,7 @@ EVENT_COLUMNS = [
 ]
 
 STATE_COLUMNS = [
+    States.state_id.label("state_id"),
     States.state.label("state"),
     States.entity_id.label("entity_id"),
     States.attributes.label("attributes"),
@@ -130,6 +132,7 @@ STATE_COLUMNS = [
 ]
 
 EMPTY_STATE_COLUMNS = [
+    literal(value=None, type_=sqlalchemy.Numeric).label("state_id"),
     literal(value=None, type_=sqlalchemy.String).label("state"),
     literal(value=None, type_=sqlalchemy.String).label("entity_id"),
     literal(value=None, type_=sqlalchemy.Text).label("attributes"),
@@ -437,8 +440,9 @@ def _get_events(
         """Yield Events that are not filtered away."""
         for row in query.yield_per(1000):
             context_lookup.setdefault(row.context_id, row)
-            if row.event_type != EVENT_CALL_SERVICE and (
-                row.event_type == EVENT_STATE_CHANGED
+            event_type = row.event_type
+            if event_type != EVENT_CALL_SERVICE and (
+                event_type == EVENT_STATE_CHANGED
                 or _keep_row(hass, row, entities_filter)
             ):
                 yield row
@@ -508,6 +512,7 @@ def _get_events(
 
 def _generate_events_query_without_data(session: Session) -> Query:
     return session.query(
+        literal(value=None, type_=sqlalchemy.Numeric).label("event_id"),
         literal(value=EVENT_STATE_CHANGED, type_=sqlalchemy.String).label("event_type"),
         literal(value=None, type_=sqlalchemy.Text).label("event_data"),
         States.last_changed.label("time_fired"),
@@ -530,10 +535,7 @@ def _generate_legacy_events_context_id_query(
     legacy_context_id_query = session.query(
         *EVENT_COLUMNS,
         literal(value=None, type_=sqlalchemy.String).label("shared_data"),
-        States.state,
-        States.entity_id,
-        States.attributes,
-        StateAttributes.shared_attrs,
+        *STATE_COLUMNS,
     )
     legacy_context_id_query = _apply_event_time_filter(
         legacy_context_id_query, start_day, end_day
@@ -777,12 +779,15 @@ def _is_sensor_continuous(
 
 
 def _rows_match(row: Row, other_row: Row) -> bool:
-    """Check of rows match by using the same method as Events __hash__."""
-    return bool(
-        row.event_type == other_row.event_type
-        and row.context_id == other_row.context_id
-        and row.time_fired == other_row.time_fired
-    )
+    """Match on the database unique id."""
+    if (
+        (state_id := row.state_id) is not None
+        and state_id == other_row.state_id
+        or (event_id := row.event_id) is not None
+        and event_id == other_row.event_id
+    ):
+        return True
+    return False
 
 
 def _row_event_data_extract(row: Row, extractor: re.Pattern) -> str | None:
