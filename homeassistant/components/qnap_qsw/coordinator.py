@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import Any, cast
 
 from aioqsw.exceptions import QswError
 from aioqsw.localapi import QnapQswApi
@@ -18,7 +19,7 @@ SCAN_INTERVAL = timedelta(seconds=60)
 _LOGGER = logging.getLogger(__name__)
 
 
-class QswUpdateCoordinator(DataUpdateCoordinator):
+class QswUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching data from the QNAP QSW device."""
 
     qsw: QnapQswApi
@@ -32,13 +33,14 @@ class QswUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
+            update_method=self._async_update,
         )
 
-    async def _async_update_data(self):
+    async def _async_update(self) -> dict[str, Any]:
         """Update data via library."""
         async with async_timeout.timeout(QSW_TIMEOUT_SEC):
             try:
                 await self.qsw.update()
             except QswError as error:
                 raise UpdateFailed(error) from error
-            return self.qsw.data()
+            return cast(dict[str, Any], self.qsw.data())
