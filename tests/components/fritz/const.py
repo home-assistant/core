@@ -34,7 +34,7 @@ MOCK_FIRMWARE_RELEASE_URL = (
     "http://download.avm.de/fritzbox/fritzbox-7530-ax/deutschland/fritz.os/info_de.txt"
 )
 MOCK_SERIAL_NUMBER = "fake_serial_number"
-MOCK_FIRMWARE_INFO = [True, "1.1.1"]
+MOCK_FIRMWARE_INFO = [True, "1.1.1", "some-release-url"]
 MOCK_MESH_SSID = "TestSSID"
 MOCK_MESH_MASTER_MAC = "1C:ED:6F:12:34:11"
 MOCK_MESH_MASTER_WIFI1_MAC = "1C:ED:6F:12:34:12"

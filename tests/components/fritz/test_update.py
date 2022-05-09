@@ -86,7 +86,7 @@ async def test_available_update_can_be_installed(
 
     with patch(
         "homeassistant.components.fritz.common.FritzBoxTools._update_device_info",
-        return_value=(True, MOCK_FIRMWARE_AVAILABLE),
+        return_value=(True, MOCK_FIRMWARE_AVAILABLE, MOCK_FIRMWARE_RELEASE_URL),
     ), patch(
         "homeassistant.components.fritz.common.FritzBoxTools.async_trigger_firmware_update",
         return_value=True,
