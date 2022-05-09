@@ -649,7 +649,8 @@ def _sorted_states_to_dict(
             filters=filters,
             no_attributes=no_attributes,
         ):
-            state.last_updated = state.last_changed = start_time
+            state.last_updated = start_time
+            state.last_changed = start_time
             result[state.entity_id].append(state)
 
     if _LOGGER.isEnabledFor(logging.DEBUG):
