@@ -65,8 +65,10 @@ async def async_setup_entry(
                 coordinator, device_info, room_name, shade, name_before_refresh
             )
         )
-    async_add_entities(battery_entities)
-    async_add_entities(signal_entities)
+    if battery_entities:
+        async_add_entities(battery_entities)
+    if signal_entities:
+        async_add_entities(signal_entities)
 
 
 class PowerViewShadeBatterySensor(ShadeEntity, SensorEntity):
