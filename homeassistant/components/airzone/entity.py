@@ -61,8 +61,7 @@ class AirzoneSystemEntity(AirzoneEntity):
     def get_airzone_value(self, key) -> Any:
         """Return system value by key."""
         value = None
-        if self.system_id in self.coordinator.data[AZD_SYSTEMS]:
-            system = self.coordinator.data[AZD_SYSTEMS][self.system_id]
+        if system := self.coordinator.data[AZD_SYSTEMS].get(self.system_id):
             if key in system:
                 value = system[key]
         return value
@@ -100,8 +99,7 @@ class AirzoneZoneEntity(AirzoneEntity):
     def get_airzone_value(self, key) -> Any:
         """Return zone value by key."""
         value = None
-        if self.system_zone_id in self.coordinator.data[AZD_ZONES]:
-            zone = self.coordinator.data[AZD_ZONES][self.system_zone_id]
+        if zone := self.coordinator.data[AZD_ZONES].get(self.system_zone_id):
             if key in zone:
                 value = zone[key]
         return value
