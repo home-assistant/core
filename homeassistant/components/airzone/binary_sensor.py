@@ -12,6 +12,7 @@ from aioairzone.const import (
     AZD_FLOOR_DEMAND,
     AZD_NAME,
     AZD_PROBLEMS,
+    AZD_SYSTEMS,
     AZD_ZONES,
 )
 
@@ -25,9 +26,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AirzoneEntity, AirzoneZoneEntity
 from .const import DOMAIN
 from .coordinator import AirzoneUpdateCoordinator
+from .entity import AirzoneEntity, AirzoneSystemEntity, AirzoneZoneEntity
 
 
 @dataclass
@@ -36,6 +37,18 @@ class AirzoneBinarySensorEntityDescription(BinarySensorEntityDescription):
 
     attributes: dict[str, str] | None = None
 
+
+SYSTEM_BINARY_SENSOR_TYPES: Final[tuple[AirzoneBinarySensorEntityDescription, ...]] = (
+    AirzoneBinarySensorEntityDescription(
+        attributes={
+            "errors": AZD_ERRORS,
+        },
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        key=AZD_PROBLEMS,
+        name="Problem",
+    ),
+)
 
 ZONE_BINARY_SENSOR_TYPES: Final[tuple[AirzoneBinarySensorEntityDescription, ...]] = (
     AirzoneBinarySensorEntityDescription(
@@ -72,6 +85,20 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
     binary_sensors: list[AirzoneBinarySensor] = []
+
+    for system_id, system_data in coordinator.data[AZD_SYSTEMS].items():
+        for description in SYSTEM_BINARY_SENSOR_TYPES:
+            if description.key in system_data:
+                binary_sensors.append(
+                    AirzoneSystemBinarySensor(
+                        coordinator,
+                        description,
+                        entry,
+                        system_id,
+                        system_data,
+                    )
+                )
+
     for system_zone_id, zone_data in coordinator.data[AZD_ZONES].items():
         for description in ZONE_BINARY_SENSOR_TYPES:
             if description.key in zone_data:
@@ -107,6 +134,24 @@ class AirzoneBinarySensor(AirzoneEntity, BinarySensorEntity):
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self.get_airzone_value(self.entity_description.key)
+
+
+class AirzoneSystemBinarySensor(AirzoneSystemEntity, AirzoneBinarySensor):
+    """Define an Airzone System binary sensor."""
+
+    def __init__(
+        self,
+        coordinator: AirzoneUpdateCoordinator,
+        description: AirzoneBinarySensorEntityDescription,
+        entry: ConfigEntry,
+        system_id: str,
+        system_data: dict[str, Any],
+    ) -> None:
+        """Initialize."""
+        super().__init__(coordinator, entry, system_data)
+        self._attr_name = f"System {system_id} {description.name}"
+        self._attr_unique_id = f"{self._attr_unique_id}_{system_id}_{description.key}"
+        self.entity_description = description
 
 
 class AirzoneZoneBinarySensor(AirzoneZoneEntity, AirzoneBinarySensor):

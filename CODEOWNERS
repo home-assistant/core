@@ -32,6 +32,8 @@ build.json @home-assistant/supervisor
 /tests/components/adguard/ @frenck
 /homeassistant/components/advantage_air/ @Bre77
 /tests/components/advantage_air/ @Bre77
+/homeassistant/components/aemet/ @Noltari
+/tests/components/aemet/ @Noltari
 /homeassistant/components/agent_dvr/ @ispysoftware
 /tests/components/agent_dvr/ @ispysoftware
 /homeassistant/components/air_quality/ @home-assistant/core
@@ -453,8 +455,8 @@ build.json @home-assistant/supervisor
 /tests/components/huisbaasje/ @dennisschroer
 /homeassistant/components/humidifier/ @home-assistant/core @Shulyaka
 /tests/components/humidifier/ @home-assistant/core @Shulyaka
-/homeassistant/components/hunterdouglas_powerview/ @bdraco
-/tests/components/hunterdouglas_powerview/ @bdraco
+/homeassistant/components/hunterdouglas_powerview/ @bdraco @trullock
+/tests/components/hunterdouglas_powerview/ @bdraco @trullock
 /homeassistant/components/hvv_departures/ @vigonotion
 /tests/components/hvv_departures/ @vigonotion
 /homeassistant/components/hydrawise/ @ptcryan
@@ -1172,6 +1174,8 @@ build.json @home-assistant/supervisor
 /tests/components/workday/ @fabaff
 /homeassistant/components/worldclock/ @fabaff
 /tests/components/worldclock/ @fabaff
+/homeassistant/components/ws66i/ @ssaenger
+/tests/components/ws66i/ @ssaenger
 /homeassistant/components/xbox/ @hunterjm
 /tests/components/xbox/ @hunterjm
 /homeassistant/components/xbox_live/ @MartinHjelmare

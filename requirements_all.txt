@@ -957,7 +957,7 @@ lmnotify==0.0.4
 locationsharinglib==4.1.5
 
 # homeassistant.components.logi_circle
-logi_circle==0.2.2
+logi_circle==0.2.3
 
 # homeassistant.components.london_underground
 london-tube-status==0.2
@@ -1210,9 +1210,6 @@ pexpect==4.6.0
 # homeassistant.components.modem_callerid
 phone_modem==0.1.1
 
-# homeassistant.components.onewire
-pi1wire==0.1.0
-
 # homeassistant.components.remote_rpi_gpio
 pigpio==1.78
 
@@ -1402,7 +1399,7 @@ pycfdns==1.2.2
 pychannels==1.0.0
 
 # homeassistant.components.cast
-pychromecast==12.1.1
+pychromecast==12.1.2
 
 # homeassistant.components.pocketcasts
 pycketcasts==1.0.0
@@ -1480,7 +1477,7 @@ pyeverlights==0.1.0
 pyevilgenius==2.0.0
 
 # homeassistant.components.ezviz
-pyezviz==0.2.0.6
+pyezviz==0.2.0.8
 
 # homeassistant.components.fido
 pyfido==2.1.1
@@ -1984,7 +1981,7 @@ pytrafikverket==0.2.0.1
 pyudev==0.22.0
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==3.4.0
+pyunifiprotect==3.4.1
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
@@ -2021,6 +2018,9 @@ pywilight==0.0.70
 
 # homeassistant.components.wiz
 pywizlight==0.5.13
+
+# homeassistant.components.ws66i
+pyws66i==1.1
 
 # homeassistant.components.xeoma
 pyxeoma==1.4.1
@@ -2156,7 +2156,7 @@ simplehound==0.3
 simplepush==1.1.4
 
 # homeassistant.components.simplisafe
-simplisafe-python==2022.05.0
+simplisafe-python==2022.05.1
 
 # homeassistant.components.sisyphus
 sisyphus-control==3.1.2
