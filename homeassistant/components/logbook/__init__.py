@@ -323,7 +323,7 @@ class LogbookView(HomeAssistantView):
         )
 
 
-def humanify(
+def _humanify(
     hass: HomeAssistant,
     rows: Generator[Row, None, None],
     entity_name_cache: EntityNameCache,
@@ -496,7 +496,7 @@ def _get_events(
         query = query.order_by(Events.time_fired)
 
         return list(
-            humanify(
+            _humanify(
                 hass,
                 yield_rows(query),
                 entity_name_cache,
