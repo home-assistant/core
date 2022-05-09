@@ -165,7 +165,17 @@ def get_zeroconf_info_mock_am(am):
 
 async def test_setup(hass, mock_async_zeroconf):
     """Test configured options for a device are loaded via config entry."""
-    with patch.object(
+    mock_zc = {
+        "_http._tcp.local.": [
+            {
+                "domain": "shelly",
+                "name": "shelly*",
+                "properties": {"macaddress": "ffaadd*"},
+            }
+        ],
+        "_Volumio._tcp.local.": [{"domain": "volumio"}],
+    }
+    with patch.dict(zc_gen.ZEROCONF, mock_zc, clear=True,), patch.object(
         hass.config_entries.flow, "async_init"
     ) as mock_config_flow, patch.object(
         zeroconf, "HaAsyncServiceBrowser", side_effect=service_update_mock
@@ -179,7 +189,7 @@ async def test_setup(hass, mock_async_zeroconf):
 
     assert len(mock_service_browser.mock_calls) == 1
     expected_flow_calls = 0
-    for matching_components in zc_gen.ZEROCONF.values():
+    for matching_components in mock_zc.values():
         domains = set()
         for component in matching_components:
             if len(component) == 1:
