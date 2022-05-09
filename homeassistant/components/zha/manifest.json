@@ -63,7 +63,7 @@
       "description": "*zigate*",
       "known_devices": ["ZiGate+"]
     },
-     {
+    {
       "vid": "10C4",
       "pid": "EA60",
       "description": "*zigate*",
