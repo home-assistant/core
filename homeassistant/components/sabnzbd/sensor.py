@@ -103,7 +103,19 @@ SENSOR_TYPES: tuple[SabnzbdSensorEntityDescription, ...] = (
     ),
 )
 
-SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
+OLD_SENSOR_KEYS = [
+    "current_status",
+    "speed",
+    "queue_size",
+    "queue_remaining",
+    "disk_size",
+    "disk_free",
+    "queue_count",
+    "day_size",
+    "week_size",
+    "month_size",
+    "total_size",
+]
 
 
 async def async_setup_entry(
