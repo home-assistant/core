@@ -8,10 +8,6 @@ from homeassistant.const import (
     STATE_ALARM_TRIGGERED,
 )
 
-DEFAULT_PORT = 18034
-
-DEFAULT_HOST = "47.91.74.102"
-
 DOMAIN = "ialarmxr"
 
 IALARMXR_TO_HASS = {
