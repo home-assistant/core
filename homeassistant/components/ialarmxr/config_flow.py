@@ -55,7 +55,7 @@ class IAlarmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except ConnectionError:
             errors["base"] = "cannot_connect"
         except IAlarmXRGenericException as ialarmxr_exception:
-            _LOGGER.error(
+            _LOGGER.debug(
                 "IAlarmXRGenericException with message: [ %s ]",
                 ialarmxr_exception.message,
             )
