@@ -83,18 +83,16 @@ class TwitterNotificationService(BaseNotificationService):
                 return
 
         if target:
-            self.user = target
+            callback = partial(self.send_message_callback, message, target)
         else:
-            self.user = self.default_user
-
-        callback = partial(self.send_message_callback, message)
+            callback = partial(self.send_message_callback, message, self.default_user)
 
         self.upload_media_then_callback(callback, media)
 
-    def send_message_callback(self, message, media_id=None):
+    def send_message_callback(self, message, user, media_id=None):
         """Tweet a message, optionally with media."""
-        if self.user:
-            user_resp = self.api.request("users/lookup", {"screen_name": self.user})
+        if user:
+            user_resp = self.api.request("users/lookup", {"screen_name": user})
             user_id = user_resp.json()[0]["id"]
             if user_resp.status_code != HTTPStatus.OK:
                 self.log_error_resp(user_resp)
