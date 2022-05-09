@@ -45,6 +45,7 @@ from .const import (
     DUAL_MODE_LIGHT_MODELS,
     ENTRY_RELOAD_COOLDOWN,
     EVENT_SHELLY_CLICK,
+    FW_PROVISIONING_ISSUE_MSG,
     INPUTS_EVENTS_DICT,
     LOGGER,
     MODELS_SUPPORTING_LIGHT_EFFECTS,
@@ -710,7 +711,10 @@ class RpcDeviceWrapper(update_coordinator.DataUpdateCoordinator):
     @property
     def model(self) -> str:
         """Model of the device."""
-        return cast(str, self.entry.data["model"])
+        try:
+            return cast(str, self.entry.data["model"])
+        except KeyError as err:
+            raise ConnectionError(FW_PROVISIONING_ISSUE_MSG) from err
 
     @property
     def mac(self) -> str:

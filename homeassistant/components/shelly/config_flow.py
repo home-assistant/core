@@ -119,6 +119,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     )
                 except HTTP_CONNECT_ERRORS:
                     errors["base"] = "cannot_connect"
+                except KeyError:
+                    errors["base"] = "firmware_not_fully_provisioned"
                 except Exception:  # pylint: disable=broad-except
                     LOGGER.exception("Unexpected exception")
                     errors["base"] = "unknown"
