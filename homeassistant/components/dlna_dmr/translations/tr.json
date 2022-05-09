@@ -47,6 +47,7 @@
         "step": {
             "init": {
                 "data": {
+                    "browse_unfiltered": "Tarama s\u0131ras\u0131nda uyumsuz medyay\u0131 g\u00f6ster",
                     "callback_url_override": "Olay dinleyici geri \u00e7a\u011f\u0131rma URL'si",
                     "listen_port": "Olay dinleyici ba\u011flant\u0131 noktas\u0131 (ayarlanmam\u0131\u015fsa rastgele)",
                     "poll_availability": "Cihaz kullan\u0131labilirli\u011fi i\u00e7in anket"

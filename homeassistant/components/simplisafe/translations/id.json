@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Akun SimpliSafe ini sudah digunakan.",
+            "email_2fa_timed_out": "Tenggang waktu habis ketika menunggu autentikasi dua faktor berbasis email.",
             "reauth_successful": "Autentikasi ulang berhasil",
             "wrong_account": "Kredensial pengguna yang diberikan tidak cocok dengan akun SimpliSafe ini."
         },
@@ -11,6 +12,9 @@
             "invalid_auth": "Autentikasi tidak valid",
             "still_awaiting_mfa": "Masih menunggu pengeklikan dari email MFA",
             "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "progress": {
+            "email_2fa": "Periksa email Anda untuk tautan verifikasi dari Simplisafe."
         },
         "step": {
             "mfa": {

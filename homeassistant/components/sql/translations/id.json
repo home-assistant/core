@@ -13,6 +13,7 @@
                 "data": {
                     "column": "Kolom",
                     "db_url": "URL Database",
+                    "name": "Nama",
                     "query": "Kueri Select",
                     "unit_of_measurement": "Satuan Ukuran",
                     "value_template": "Templat Nilai"
@@ -20,6 +21,7 @@
                 "data_description": {
                     "column": "Kolom pada kueri yang dikembalikan untuk ditampilkan sebagai status",
                     "db_url": "URL database, kosongkan untuk menggunakan database HA default",
+                    "name": "Nama yang akan digunakan untuk Entri Konfigurasi dan juga Sensor",
                     "query": "Kueri untuk dijalankan, perlu dimulai dengan 'SELECT'",
                     "unit_of_measurement": "Satuan Ukuran (opsional)",
                     "value_template": "Template Nilai (opsional)"
@@ -38,6 +40,7 @@
                 "data": {
                     "column": "Kolom",
                     "db_url": "URL Database",
+                    "name": "Nama",
                     "query": "Kueri Select",
                     "unit_of_measurement": "Satuan Ukuran",
                     "value_template": "Templat Nilai"
@@ -45,6 +48,7 @@
                 "data_description": {
                     "column": "Kolom pada kueri yang dikembalikan untuk ditampilkan sebagai status",
                     "db_url": "URL database, kosongkan untuk menggunakan database HA default",
+                    "name": "Nama yang akan digunakan untuk Entri Konfigurasi dan juga Sensor",
                     "query": "Kueri untuk dijalankan, perlu dimulai dengan 'SELECT'",
                     "unit_of_measurement": "Satuan Ukuran (opsional)",
                     "value_template": "Template Nilai (opsional)"
