@@ -9,6 +9,13 @@ from homeassistant.components.recorder.const import DB_WORKER_PREFIX
 from homeassistant.components.recorder.pool import RecorderPool
 
 
+async def test_recorder_pool_called_from_event_loop():
+    """Test we raise an exception when calling from the event loop."""
+    engine = create_engine("sqlite://", poolclass=RecorderPool)
+    with pytest.raises(RuntimeError):
+        sessionmaker(bind=engine)().connection()
+
+
 def test_recorder_pool(caplog):
     """Test RecorderPool gives the same connection in the creating thread."""
 
@@ -28,9 +35,6 @@ def test_recorder_pool(caplog):
         session = get_session()
         connections.append(session.connection().connection.connection)
         session.close()
-
-    with pytest.raises(RuntimeError):
-        _get_connection_twice()
 
     caplog.clear()
     new_thread = threading.Thread(target=_get_connection_twice)

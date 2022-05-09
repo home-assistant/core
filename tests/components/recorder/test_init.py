@@ -951,8 +951,7 @@ def test_statistics_runs_initiated(hass_recorder):
             ) - timedelta(minutes=5)
 
 
-@patch("homeassistant.components.recorder.pool._raise_if_main_thread")
-def test_compile_missing_statistics(mock_main_thread, tmpdir):
+def test_compile_missing_statistics(tmpdir):
     """Test missing statistics are compiled on startup."""
     now = dt_util.utcnow().replace(minute=0, second=0, microsecond=0)
     test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
@@ -1169,8 +1168,7 @@ def test_service_disable_states_not_recording(hass, hass_recorder):
         assert db_states[0].to_native() == _state_with_context(hass, "test.two")
 
 
-@patch("homeassistant.components.recorder.pool._raise_if_main_thread")
-def test_service_disable_run_information_recorded(mock_main_thread, tmpdir):
+def test_service_disable_run_information_recorded(tmpdir):
     """Test that runs are still recorded when recorder is disabled."""
     test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
     dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
@@ -1320,9 +1318,7 @@ def test_entity_id_filter(hass_recorder):
             assert len(db_events) == idx + 1, data
 
 
-@patch("homeassistant.components.recorder.pool._raise_if_main_thread")
 async def test_database_lock_and_unlock(
-    mock_main_thread,
     hass: HomeAssistant,
     async_setup_recorder_instance: SetupRecorderInstanceT,
     tmp_path,
@@ -1335,6 +1331,10 @@ async def test_database_lock_and_unlock(
     }
     await async_setup_recorder_instance(hass, config)
     await hass.async_block_till_done()
+
+    def _get_db_events():
+        with session_scope(hass=hass) as session:
+            return list(session.query(Events).filter_by(event_type=event_type))
 
     instance: Recorder = hass.data[DATA_INSTANCE]
 
@@ -1350,22 +1350,17 @@ async def test_database_lock_and_unlock(
     # Recording can't be finished while lock is held
     with pytest.raises(asyncio.TimeoutError):
         await asyncio.wait_for(asyncio.shield(task), timeout=1)
-
-    with session_scope(hass=hass) as session:
-        db_events = list(session.query(Events).filter_by(event_type=event_type))
+        db_events = await hass.async_add_executor_job(_get_db_events)
         assert len(db_events) == 0
 
     assert instance.unlock_database()
 
     await task
-    with session_scope(hass=hass) as session:
-        db_events = list(session.query(Events).filter_by(event_type=event_type))
-        assert len(db_events) == 1
+    db_events = await hass.async_add_executor_job(_get_db_events)
+    assert len(db_events) == 1
 
 
-@patch("homeassistant.components.recorder.pool._raise_if_main_thread")
 async def test_database_lock_and_overflow(
-    mock_main_thread,
     hass: HomeAssistant,
     async_setup_recorder_instance: SetupRecorderInstanceT,
     tmp_path,
@@ -1378,6 +1373,10 @@ async def test_database_lock_and_overflow(
     }
     await async_setup_recorder_instance(hass, config)
     await hass.async_block_till_done()
+
+    def _get_db_events():
+        with session_scope(hass=hass) as session:
+            return list(session.query(Events).filter_by(event_type=event_type))
 
     instance: Recorder = hass.data[DATA_INSTANCE]
 
@@ -1394,9 +1393,8 @@ async def test_database_lock_and_overflow(
         # even before unlocking.
         await async_wait_recording_done(hass)
 
-        with session_scope(hass=hass) as session:
-            db_events = list(session.query(Events).filter_by(event_type=event_type))
-            assert len(db_events) == 1
+        db_events = await hass.async_add_executor_job(_get_db_events)
+        assert len(db_events) == 1
 
         assert not instance.unlock_database()
 

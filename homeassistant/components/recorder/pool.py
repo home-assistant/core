@@ -8,6 +8,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.pool import NullPool, SingletonThreadPool, StaticPool
 
 from homeassistant.helpers.frame import report
+from homeassistant.util.async_ import check_loop
 
 from .const import DB_WORKER_PREFIX
 
@@ -19,15 +20,9 @@ DEBUG_MUTEX_POOL_TRACE = False
 
 POOL_SIZE = 5
 
-
-def _raise_if_main_thread() -> None:
-    """Raise an exception if we are running in the main thread."""
-    if threading.current_thread() == threading.main_thread():
-        raise RuntimeError(
-            "Detected database access from the event loop; This is causing stability issues; "
-            "Use homeassistant.components.recorder.get_instance(hass).async_add_executor_job() "
-            "for database operations"
-        )
+EVENT_LOOP_ADVISE_MSG = (
+    "Use homeassistant.components.recorder.get_instance(hass).async_add_executor_job()"
+)
 
 
 class RecorderPool(SingletonThreadPool, NullPool):  # type: ignore[misc]
@@ -72,10 +67,17 @@ class RecorderPool(SingletonThreadPool, NullPool):  # type: ignore[misc]
     def _do_get(self) -> Any:
         if self.recorder_or_dbworker:
             return super()._do_get()
-        _raise_if_main_thread()
+        check_loop(
+            self._do_get_db_connection_protected,
+            strict=True,
+            advise_msg=EVENT_LOOP_ADVISE_MSG,
+        )
+        return self._do_get_db_connection_protected()
+
+    def _do_get_db_connection_protected(self) -> Any:
         report(
             "accesses the database without the database executor; "
-            "Use homeassistant.components.recorder.get_instance(hass).async_add_executor_job() "
+            f"{EVENT_LOOP_ADVISE_MSG} "
             "for faster database operations",
             exclude_integrations={"recorder"},
             error_if_core=False,
