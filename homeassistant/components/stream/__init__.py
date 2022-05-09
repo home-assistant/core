@@ -80,7 +80,7 @@ def create_stream(
     """Create a stream with the specified identfier based on the source url.
 
     The stream_source is typically an rtsp url (though any url accepted by ffmpeg is fine) and
-    options are converted and passed into pyav / ffmpeg as options.
+    options (see STREAM_OPTIONS_SCHEMA) are converted and passed into pyav / ffmpeg.
 
     The stream_label is a string used as an additional message in logging.
     """
