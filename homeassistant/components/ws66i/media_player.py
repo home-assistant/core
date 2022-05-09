@@ -1,17 +1,11 @@
 """Support for interfacing with WS66i 6 zone home audio controller."""
 from copy import deepcopy
-import logging
 
 from pyws66i import WS66i, ZoneStatus
 
-from homeassistant.components.media_player import MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
+from homeassistant.components.media_player import (
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
@@ -28,18 +22,7 @@ from .const import DOMAIN, SERVICE_RESTORE, SERVICE_SNAPSHOT
 from .coordinator import Ws66iDataUpdateCoordinator
 from .models import Ws66iData
 
-_LOGGER = logging.getLogger(__name__)
-
 PARALLEL_UPDATES = 1
-
-SUPPORT_WS66I = (
-    SUPPORT_VOLUME_MUTE
-    | SUPPORT_VOLUME_SET
-    | SUPPORT_VOLUME_STEP
-    | SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-    | SUPPORT_SELECT_SOURCE
-)
 
 MAX_VOL = 38
 
@@ -105,7 +88,14 @@ class Ws66iZone(CoordinatorEntity, MediaPlayerEntity):
         self._attr_source_list = ws66i_data.sources.name_list
         self._attr_unique_id = f"{entry_id}_{self._zone_id}"
         self._attr_name = f"Zone {self._zone_id}"
-        self._attr_supported_features = SUPPORT_WS66I
+        self._attr_supported_features = (
+            MediaPlayerEntityFeature.VOLUME_MUTE
+            | MediaPlayerEntityFeature.VOLUME_SET
+            | MediaPlayerEntityFeature.VOLUME_STEP
+            | MediaPlayerEntityFeature.TURN_ON
+            | MediaPlayerEntityFeature.TURN_OFF
+            | MediaPlayerEntityFeature.SELECT_SOURCE
+        )
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, str(self.unique_id))},
             name=self.name,
