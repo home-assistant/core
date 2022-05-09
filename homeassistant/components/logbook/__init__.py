@@ -391,15 +391,10 @@ def humanify(
                     "state": row.state,
                     "entity_id": entity_id,
                 }
-
                 if icon := _row_attributes_extract(row, ICON_JSON_EXTRACT):
                     data["icon"] = icon
 
-                if row.context_user_id:
-                    data["context_user_id"] = row.context_user_id
-
                 context_augmenter.augment(data, entity_id, row)
-
                 yield data
 
             elif row.event_type in external_events:
@@ -407,9 +402,6 @@ def humanify(
                 data = describe_event(event_cache.get(row))
                 data["when"] = _row_time_fired_isoformat(row)
                 data["domain"] = domain
-                if row.context_user_id:
-                    data["context_user_id"] = row.context_user_id
-
                 entity_id = data.get(ATTR_ENTITY_ID)
                 context_augmenter.augment(data, entity_id, row)
                 yield data
@@ -417,6 +409,7 @@ def humanify(
             elif row.event_type == EVENT_HOMEASSISTANT_START:
                 if start_stop_events.get(row.time_fired.minute) == 2:
                     continue
+
                 yield {
                     "when": _row_time_fired_isoformat(row),
                     "name": "Home Assistant",
@@ -453,10 +446,6 @@ def humanify(
                     "domain": domain,
                     "entity_id": entity_id,
                 }
-
-                if row.context_user_id:
-                    data["context_user_id"] = row.context_user_id
-
                 context_augmenter.augment(data, entity_id, row)
                 yield data
 
@@ -746,6 +735,9 @@ class ContextAugmenter:
 
     def augment(self, data: dict[str, Any], entity_id: str | None, row: Row) -> None:
         """Augment data from the row and cache."""
+        if context_user_id := row.context_user_id:
+            data["context_user_id"] = context_user_id
+
         if not (context_row := self.context_lookup.get(row.context_id)):
             return
 
