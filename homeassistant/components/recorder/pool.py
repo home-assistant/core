@@ -20,7 +20,7 @@ DEBUG_MUTEX_POOL_TRACE = False
 
 POOL_SIZE = 5
 
-EVENT_LOOP_ADVISE_MSG = (
+ADVISE_MSG = (
     "Use homeassistant.components.recorder.get_instance(hass).async_add_executor_job()"
 )
 
@@ -70,14 +70,14 @@ class RecorderPool(SingletonThreadPool, NullPool):  # type: ignore[misc]
         check_loop(
             self._do_get_db_connection_protected,
             strict=True,
-            advise_msg=EVENT_LOOP_ADVISE_MSG,
+            advise_msg=ADVISE_MSG,
         )
         return self._do_get_db_connection_protected()
 
     def _do_get_db_connection_protected(self) -> Any:
         report(
             "accesses the database without the database executor; "
-            f"{EVENT_LOOP_ADVISE_MSG} "
+            f"{ADVISE_MSG} "
             "for faster database operations",
             exclude_integrations={"recorder"},
             error_if_core=False,
