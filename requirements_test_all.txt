@@ -812,9 +812,6 @@ pexpect==4.6.0
 # homeassistant.components.modem_callerid
 phone_modem==0.1.1
 
-# homeassistant.components.onewire
-pi1wire==0.1.0
-
 # homeassistant.components.pilight
 pilight==0.1.1
 
