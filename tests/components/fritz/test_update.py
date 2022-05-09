@@ -10,7 +10,12 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from .const import MOCK_FIRMWARE, MOCK_FIRMWARE_AVAILABLE, MOCK_USER_DATA
+from .const import (
+    MOCK_FIRMWARE,
+    MOCK_FIRMWARE_AVAILABLE,
+    MOCK_FIRMWARE_RELEASE_URL,
+    MOCK_USER_DATA,
+)
 
 from tests.common import MockConfigEntry
 
@@ -38,7 +43,7 @@ async def test_update_available(
 
     with patch(
         "homeassistant.components.fritz.common.FritzBoxTools._update_device_info",
-        return_value=(True, MOCK_FIRMWARE_AVAILABLE),
+        return_value=(True, MOCK_FIRMWARE_AVAILABLE, MOCK_FIRMWARE_RELEASE_URL),
     ):
         entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
         entry.add_to_hass(hass)
@@ -52,6 +57,7 @@ async def test_update_available(
         assert update.state == "on"
         assert update.attributes.get("installed_version") == MOCK_FIRMWARE
         assert update.attributes.get("latest_version") == MOCK_FIRMWARE_AVAILABLE
+        assert update.attributes.get("release_url") == MOCK_FIRMWARE_RELEASE_URL
 
 
 async def test_no_update_available(
@@ -80,7 +86,7 @@ async def test_available_update_can_be_installed(
 
     with patch(
         "homeassistant.components.fritz.common.FritzBoxTools._update_device_info",
-        return_value=(True, MOCK_FIRMWARE_AVAILABLE),
+        return_value=(True, MOCK_FIRMWARE_AVAILABLE, MOCK_FIRMWARE_RELEASE_URL),
     ), patch(
         "homeassistant.components.fritz.common.FritzBoxTools.async_trigger_firmware_update",
         return_value=True,

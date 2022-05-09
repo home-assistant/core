@@ -210,11 +210,8 @@ async def test_filter_sensor(hass_: ha.HomeAssistant, hass_client):
     _assert_entry(entries[2], name="ble", entity_id=entity_id4, state="10")
 
 
-def test_home_assistant_start_stop_grouped(hass_):
-    """Test if HA start and stop events are grouped.
-
-    Events that are occurring in the same minute.
-    """
+def test_home_assistant_start_stop_not_grouped(hass_):
+    """Test if HA start and stop events are no longer grouped."""
     entries = mock_humanify(
         hass_,
         (
@@ -223,10 +220,9 @@ def test_home_assistant_start_stop_grouped(hass_):
         ),
     )
 
-    assert len(entries) == 1
-    assert_entry(
-        entries[0], name="Home Assistant", message="restarted", domain=ha.DOMAIN
-    )
+    assert len(entries) == 2
+    assert_entry(entries[0], name="Home Assistant", message="stopped", domain=ha.DOMAIN)
+    assert_entry(entries[1], name="Home Assistant", message="started", domain=ha.DOMAIN)
 
 
 def test_home_assistant_start(hass_):
@@ -1004,6 +1000,68 @@ async def test_logbook_entity_context_id(hass, recorder_mock, hass_client):
     assert json_dict[7]["context_domain"] == "light"
     assert json_dict[7]["context_service"] == "turn_off"
     assert json_dict[7]["context_user_id"] == "9400facee45711eaa9308bfd3d19e474"
+
+
+async def test_logbook_context_id_automation_script_started_manually(
+    hass, recorder_mock, hass_client
+):
+    """Test the logbook populates context_ids for scripts and automations started manually."""
+    await async_setup_component(hass, "logbook", {})
+    await async_setup_component(hass, "automation", {})
+    await async_setup_component(hass, "script", {})
+
+    await async_recorder_block_till_done(hass)
+
+    # An Automation
+    automation_entity_id_test = "automation.alarm"
+    automation_context = ha.Context(
+        id="fc5bd62de45711eaaeb351041eec8dd9",
+        user_id="f400facee45711eaa9308bfd3d19e474",
+    )
+    hass.bus.async_fire(
+        EVENT_AUTOMATION_TRIGGERED,
+        {ATTR_NAME: "Mock automation", ATTR_ENTITY_ID: automation_entity_id_test},
+        context=automation_context,
+    )
+    script_context = ha.Context(
+        id="ac5bd62de45711eaaeb351041eec8dd9",
+        user_id="b400facee45711eaa9308bfd3d19e474",
+    )
+    hass.bus.async_fire(
+        EVENT_SCRIPT_STARTED,
+        {ATTR_NAME: "Mock script", ATTR_ENTITY_ID: "script.mock_script"},
+        context=script_context,
+    )
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+    await async_wait_recording_done(hass)
+
+    client = await hass_client()
+
+    # Today time 00:00:00
+    start = dt_util.utcnow().date()
+    start_date = datetime(start.year, start.month, start.day)
+
+    # Test today entries with filter by end_time
+    end_time = start + timedelta(hours=24)
+    response = await client.get(
+        f"/api/logbook/{start_date.isoformat()}?end_time={end_time}"
+    )
+    assert response.status == HTTPStatus.OK
+    json_dict = await response.json()
+
+    assert json_dict[0]["entity_id"] == "automation.alarm"
+    assert "context_entity_id" not in json_dict[0]
+    assert json_dict[0]["context_user_id"] == "f400facee45711eaa9308bfd3d19e474"
+    assert json_dict[0]["context_id"] == "fc5bd62de45711eaaeb351041eec8dd9"
+
+    assert json_dict[1]["entity_id"] == "script.mock_script"
+    assert "context_entity_id" not in json_dict[1]
+    assert json_dict[1]["context_user_id"] == "b400facee45711eaa9308bfd3d19e474"
+    assert json_dict[1]["context_id"] == "ac5bd62de45711eaaeb351041eec8dd9"
+
+    assert json_dict[2]["domain"] == "homeassistant"
 
 
 async def test_logbook_entity_context_parent_id(hass, hass_client, recorder_mock):
