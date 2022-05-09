@@ -1,5 +1,6 @@
 """The sensor tests for the Airzone platform."""
 
+from homeassistant.components.airzone.sensor import WEBSERVER_SENSOR_TYPES
 from homeassistant.core import HomeAssistant
 
 from .util import async_init_integration
@@ -7,6 +8,9 @@ from .util import async_init_integration
 
 async def test_airzone_create_sensors(hass: HomeAssistant) -> None:
     """Test creation of sensors."""
+
+    for sensor in WEBSERVER_SENSOR_TYPES:
+        sensor.entity_registry_enabled_default = True
 
     await async_init_integration(hass)
 
