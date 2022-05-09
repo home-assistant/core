@@ -5,7 +5,6 @@ from collections.abc import Callable, Generator, Iterable
 from contextlib import suppress
 from datetime import datetime as dt, timedelta
 from http import HTTPStatus
-from itertools import groupby
 import json
 import re
 from typing import Any, cast
@@ -338,127 +337,76 @@ def _humanify(
     """
     external_events = hass.data.get(DOMAIN, {})
     # Continuous sensors, will be excluded from the logbook
-    continuous_sensors = {}
+    continuous_sensors: dict[str, bool] = {}
 
-    # Group events in batches of GROUP_BY_MINUTES
-    for _, g_rows in groupby(
-        rows, lambda row: row.time_fired.minute // GROUP_BY_MINUTES  # type: ignore[no-any-return]
-    ):
+    # Process events
+    for row in rows:
+        event_type = row.event_type
+        if event_type == EVENT_STATE_CHANGED:
+            entity_id = row.entity_id
+            assert entity_id is not None
+            # Skip continuous sensors
+            if (
+                is_continuous := continuous_sensors.get(entity_id)
+            ) is None and split_entity_id(entity_id)[0] == SENSOR_DOMAIN:
+                is_continuous = _is_sensor_continuous(hass, entity_id)
+                continuous_sensors[entity_id] = is_continuous
+            if is_continuous:
+                continue
 
-        rows_batch = list(g_rows)
+            data = {
+                "when": _row_time_fired_isoformat(row),
+                "name": entity_name_cache.get(entity_id, row),
+                "state": row.state,
+                "entity_id": entity_id,
+            }
+            if icon := _row_attributes_extract(row, ICON_JSON_EXTRACT):
+                data["icon"] = icon
 
-        # Group HA start/stop events
-        # Maps minute of event to 1: stop, 2: stop + start
-        start_stop_events = {}
+            context_augmenter.augment(data, entity_id, row)
+            yield data
 
-        # Process events
-        for row in rows_batch:
-            if row.event_type == EVENT_STATE_CHANGED:
-                entity_id = row.entity_id
-                if (
-                    entity_id in continuous_sensors
-                    or split_entity_id(entity_id)[0] != SENSOR_DOMAIN
-                ):
-                    continue
-                assert entity_id is not None
-                continuous_sensors[entity_id] = _is_sensor_continuous(hass, entity_id)
+        elif event_type in external_events:
+            domain, describe_event = external_events[event_type]
+            data = describe_event(event_cache.get(row))
+            data["when"] = _row_time_fired_isoformat(row)
+            data["domain"] = domain
+            context_augmenter.augment(data, data.get(ATTR_ENTITY_ID), row)
+            yield data
 
-            elif row.event_type == EVENT_HOMEASSISTANT_STOP:
-                if row.time_fired.minute in start_stop_events:
-                    continue
+        elif event_type == EVENT_HOMEASSISTANT_START:
+            yield {
+                "when": _row_time_fired_isoformat(row),
+                "name": "Home Assistant",
+                "message": "started",
+                "domain": HA_DOMAIN,
+            }
+        elif event_type == EVENT_HOMEASSISTANT_STOP:
+            yield {
+                "when": _row_time_fired_isoformat(row),
+                "name": "Home Assistant",
+                "message": "stopped",
+                "domain": HA_DOMAIN,
+            }
 
-                start_stop_events[row.time_fired.minute] = 1
+        elif event_type == EVENT_LOGBOOK_ENTRY:
+            event = event_cache.get(row)
+            event_data = event.data
+            domain = event_data.get(ATTR_DOMAIN)
+            entity_id = event_data.get(ATTR_ENTITY_ID)
+            if domain is None and entity_id is not None:
+                with suppress(IndexError):
+                    domain = split_entity_id(str(entity_id))[0]
 
-            elif row.event_type == EVENT_HOMEASSISTANT_START:
-                if row.time_fired.minute not in start_stop_events:
-                    continue
-
-                start_stop_events[row.time_fired.minute] = 2
-
-        # Yield entries
-        for row in rows_batch:
-            if row.event_type == EVENT_STATE_CHANGED:
-                entity_id = row.entity_id
-                assert entity_id is not None
-
-                if continuous_sensors.get(entity_id):
-                    # Skip continuous sensors
-                    continue
-
-                data = {
-                    "when": _row_time_fired_isoformat(row),
-                    "name": entity_name_cache.get(entity_id, row),
-                    "state": row.state,
-                    "entity_id": entity_id,
-                }
-
-                if icon := _row_attributes_extract(row, ICON_JSON_EXTRACT):
-                    data["icon"] = icon
-
-                if row.context_user_id:
-                    data["context_user_id"] = row.context_user_id
-
-                context_augmenter.augment(data, entity_id, row)
-
-                yield data
-
-            elif row.event_type in external_events:
-                domain, describe_event = external_events[row.event_type]
-                data = describe_event(event_cache.get(row))
-                data["when"] = _row_time_fired_isoformat(row)
-                data["domain"] = domain
-                if row.context_user_id:
-                    data["context_user_id"] = row.context_user_id
-
-                entity_id = data.get(ATTR_ENTITY_ID)
-                context_augmenter.augment(data, entity_id, row)
-                yield data
-
-            elif row.event_type == EVENT_HOMEASSISTANT_START:
-                if start_stop_events.get(row.time_fired.minute) == 2:
-                    continue
-                yield {
-                    "when": _row_time_fired_isoformat(row),
-                    "name": "Home Assistant",
-                    "message": "started",
-                    "domain": HA_DOMAIN,
-                }
-
-            elif row.event_type == EVENT_HOMEASSISTANT_STOP:
-                if start_stop_events.get(row.time_fired.minute) == 2:
-                    action = "restarted"
-                else:
-                    action = "stopped"
-
-                yield {
-                    "when": _row_time_fired_isoformat(row),
-                    "name": "Home Assistant",
-                    "message": action,
-                    "domain": HA_DOMAIN,
-                }
-
-            elif row.event_type == EVENT_LOGBOOK_ENTRY:
-                event = event_cache.get(row)
-                event_data = event.data
-                domain = event_data.get(ATTR_DOMAIN)
-                entity_id = event_data.get(ATTR_ENTITY_ID)
-                if domain is None and entity_id is not None:
-                    with suppress(IndexError):
-                        domain = split_entity_id(str(entity_id))[0]
-
-                data = {
-                    "when": _row_time_fired_isoformat(row),
-                    "name": event_data.get(ATTR_NAME),
-                    "message": event_data.get(ATTR_MESSAGE),
-                    "domain": domain,
-                    "entity_id": entity_id,
-                }
-
-                if row.context_user_id:
-                    data["context_user_id"] = row.context_user_id
-
-                context_augmenter.augment(data, entity_id, row)
-                yield data
+            data = {
+                "when": _row_time_fired_isoformat(row),
+                "name": event_data.get(ATTR_NAME),
+                "message": event_data.get(ATTR_MESSAGE),
+                "domain": domain,
+                "entity_id": entity_id,
+            }
+            context_augmenter.augment(data, entity_id, row)
+            yield data
 
 
 def _get_events(
@@ -746,6 +694,9 @@ class ContextAugmenter:
 
     def augment(self, data: dict[str, Any], entity_id: str | None, row: Row) -> None:
         """Augment data from the row and cache."""
+        if context_user_id := row.context_user_id:
+            data["context_user_id"] = context_user_id
+
         if not (context_row := self.context_lookup.get(row.context_id)):
             return
 
