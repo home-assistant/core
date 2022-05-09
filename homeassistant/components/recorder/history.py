@@ -686,31 +686,32 @@ def _sorted_states_to_dict(
                 continue
             ent_results.append(LazyState(first_state, attr_cache))
 
-        prev_state = ent_results[-1]
-        assert isinstance(prev_state, LazyState)
+        assert isinstance(ent_results[-1], State)
+        prev_state: Column | str = ent_results[-1].state
         initial_state_count = len(ent_results)
 
+        db_state = None
         for db_state in group:
             # With minimal response we do not care about attribute
             # changes so we can filter out duplicate states
-            if db_state.state == prev_state.state:
+            if (state := db_state.state) == prev_state:
                 continue
 
             ent_results.append(
                 {
-                    STATE_KEY: db_state.state,
+                    STATE_KEY: state,
                     LAST_CHANGED_KEY: _process_timestamp_to_utc_isoformat(
                         db_state.last_changed
                     ),
                 }
             )
-            prev_state = db_state
+            prev_state = state
 
-        if prev_state and len(ent_results) != initial_state_count:
+        if db_state and len(ent_results) != initial_state_count:
             # There was at least one state change
             # replace the last minimal state with
             # a full state
-            ent_results[-1] = LazyState(prev_state, attr_cache)
+            ent_results[-1] = LazyState(db_state, attr_cache)
 
     # Filter out the empty lists if some states had 0 results.
     return {key: val for key, val in result.items() if val}
