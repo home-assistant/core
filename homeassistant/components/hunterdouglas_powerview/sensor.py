@@ -63,15 +63,15 @@ class PowerViewShadeBatterySensor(ShadeEntity, SensorEntity):
     _attr_device_class = SensorDeviceClass.BATTERY
     _attr_state_class = SensorStateClass.MEASUREMENT
 
+    def __init__(self, coordinator, device_info, room_name, shade, name):
+        """Initialize the shade."""
+        super().__init__(coordinator, device_info, room_name, shade, name)
+        self._attr_unique_id = f"{self._attr_unique_id}_charge"
+
     @property
     def name(self):
         """Name of the shade battery."""
         return f"{self._shade_name} Battery"
-
-    @property
-    def unique_id(self):
-        """Shade battery Uniqueid."""
-        return f"{self._unique_id}_charge"
 
     @property
     def native_value(self):

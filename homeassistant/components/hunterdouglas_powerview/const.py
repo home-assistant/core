@@ -50,17 +50,8 @@ ROOM_ID = "id"
 SHADE_RESPONSE = "shade"
 SHADE_BATTERY_LEVEL = "batteryStrength"
 SHADE_BATTERY_LEVEL_MAX = 200
-SHADE_BATTERY_KIND = "batteryKind"
-
-SHADE_POWER_CONN_LIST = {
-    0: "Unassigned",
-    1: "Hardwired Power Supply",
-    2: "Battery Wand",
-    3: "Rechargeable Battery",
-}
 
 STATE_ATTRIBUTE_ROOM_NAME = "roomName"
-STATE_ATTRIBUTE_POWER_CONN = "powerConnection"
 
 PV_API = "pv_api"
 PV_HUB = "pv_hub"
@@ -91,8 +82,8 @@ DEFAULT_LEGACY_MAINPROCESSOR = {
 
 API_PATH_FWVERSION = "api/fwversion"
 
-POSKIND_NONE = 0
-POSKIND_PRIMARY = 1
-POSKIND_SECONDARY = 2
-POSKIND_VANE = 3
-POSKIND_ERROR = 4
+POS_KIND_NONE = 0
+POS_KIND_PRIMARY = 1
+POS_KIND_SECONDARY = 2
+POS_KIND_VANE = 3
+POS_KIND_ERROR = 4
