@@ -367,7 +367,7 @@ def humanify(
             yield data
 
         elif event_type in external_events:
-            domain, describe_event = external_events[row.event_type]
+            domain, describe_event = external_events[event_type]
             data = describe_event(event_cache.get(row))
             data["when"] = _row_time_fired_isoformat(row)
             data["domain"] = domain
