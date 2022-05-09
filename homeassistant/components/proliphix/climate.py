@@ -4,19 +4,11 @@ from __future__ import annotations
 import proliphix
 import voluptuous as vol
 
-from homeassistant.components.climate import (
-    PLATFORM_SCHEMA,
-    ClimateEntity,
-    ClimateEntityFeature,
-)
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
-    CURRENT_HVAC_COOL,
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
-    CURRENT_HVAC_OFF,
-    HVAC_MODE_COOL,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
@@ -114,28 +106,28 @@ class ProliphixThermostat(ClimateEntity):
         return self._pdp.setback
 
     @property
-    def hvac_action(self):
+    def hvac_action(self) -> HVACAction:
         """Return the current state of the thermostat."""
         state = self._pdp.hvac_state
         if state == 1:
-            return CURRENT_HVAC_OFF
+            return HVACAction.OFF
         if state in (3, 4, 5):
-            return CURRENT_HVAC_HEAT
+            return HVACAction.HEATING
         if state in (6, 7):
-            return CURRENT_HVAC_COOL
-        return CURRENT_HVAC_IDLE
+            return HVACAction.COOLING
+        return HVACAction.IDLE
 
     @property
-    def hvac_mode(self):
+    def hvac_mode(self) -> HVACMode:
         """Return the current state of the thermostat."""
         if self._pdp.is_heating:
-            return HVAC_MODE_HEAT
+            return HVACMode.HEAT
         if self._pdp.is_cooling:
-            return HVAC_MODE_COOL
-        return HVAC_MODE_OFF
+            return HVACMode.COOL
+        return HVACMode.OFF
 
     @property
-    def hvac_modes(self):
+    def hvac_modes(self) -> list[HVACMode]:
         """Return available HVAC modes."""
         return []
 

@@ -9,6 +9,7 @@
             "updated_instance": "Instance deCONZ mise \u00e0 jour avec la nouvelle adresse d'h\u00f4te"
         },
         "error": {
+            "linking_not_possible": "Impossible d'\u00e9tablir une liaison avec la passerelle",
             "no_key": "Impossible d'obtenir une cl\u00e9 d'API"
         },
         "flow_title": "{host}",

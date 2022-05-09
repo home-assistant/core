@@ -38,7 +38,7 @@ import homeassistant.util.temperature as temperature_util
 from homeassistant.util.unit_system import UnitSystem
 import homeassistant.util.volume as volume_util
 
-from .const import DATA_INSTANCE, DOMAIN, MAX_ROWS_TO_PURGE
+from .const import DATA_INSTANCE, DOMAIN, MAX_ROWS_TO_PURGE, SupportedDialect
 from .models import (
     StatisticData,
     StatisticMetaData,
@@ -155,6 +155,14 @@ DISPLAY_UNIT_TO_STATISTIC_UNIT_CONVERSIONS: dict[
 }
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclasses.dataclass
+class PlatformCompiledStatistics:
+    """Compiled Statistics from a platform."""
+
+    platform_stats: list[StatisticResult]
+    current_metadata: dict[str, tuple[int, StatisticMetaData]]
 
 
 def split_statistic_id(entity_id: str) -> list[str]:
@@ -369,7 +377,7 @@ def _delete_duplicates_from_table(
     return (total_deleted_rows, all_non_identical_duplicates)
 
 
-def delete_duplicates(instance: Recorder, session: Session) -> None:
+def delete_duplicates(hass: HomeAssistant, session: Session) -> None:
     """Identify and delete duplicated statistics.
 
     A backup will be made of duplicated statistics before it is deleted.
@@ -383,7 +391,7 @@ def delete_duplicates(instance: Recorder, session: Session) -> None:
     if non_identical_duplicates:
         isotime = dt_util.utcnow().isoformat()
         backup_file_name = f"deleted_statistics.{isotime}.json"
-        backup_path = instance.hass.config.path(STORAGE_DIR, backup_file_name)
+        backup_path = hass.config.path(STORAGE_DIR, backup_file_name)
 
         os.makedirs(os.path.dirname(backup_path), exist_ok=True)
         with open(backup_path, "w", encoding="utf8") as backup_file:
@@ -543,35 +551,39 @@ def compile_statistics(instance: Recorder, start: datetime) -> bool:
     end = start + timedelta(minutes=5)
 
     # Return if we already have 5-minute statistics for the requested period
-    with session_scope(session=instance.get_session()) as session:  # type: ignore[misc]
+    with session_scope(session=instance.get_session()) as session:
         if session.query(StatisticsRuns).filter_by(start=start).first():
             _LOGGER.debug("Statistics already compiled for %s-%s", start, end)
             return True
 
     _LOGGER.debug("Compiling statistics for %s-%s", start, end)
     platform_stats: list[StatisticResult] = []
+    current_metadata: dict[str, tuple[int, StatisticMetaData]] = {}
     # Collect statistics from all platforms implementing support
     for domain, platform in instance.hass.data[DOMAIN].items():
         if not hasattr(platform, "compile_statistics"):
             continue
-        platform_stat = platform.compile_statistics(instance.hass, start, end)
-        _LOGGER.debug(
-            "Statistics for %s during %s-%s: %s", domain, start, end, platform_stat
+        compiled: PlatformCompiledStatistics = platform.compile_statistics(
+            instance.hass, start, end
         )
-        platform_stats.extend(platform_stat)
+        _LOGGER.debug(
+            "Statistics for %s during %s-%s: %s",
+            domain,
+            start,
+            end,
+            compiled.platform_stats,
+        )
+        platform_stats.extend(compiled.platform_stats)
+        current_metadata.update(compiled.current_metadata)
 
     # Insert collected statistics in the database
     with session_scope(
-        session=instance.get_session(),  # type: ignore[misc]
+        session=instance.get_session(),
         exception_filter=_filter_unique_constraint_integrity_error(instance),
     ) as session:
-        statistic_ids = [stats["meta"]["statistic_id"] for stats in platform_stats]
-        old_metadata_dict = get_metadata_with_session(
-            instance.hass, session, statistic_ids=statistic_ids
-        )
         for stats in platform_stats:
             metadata_id = _update_or_add_metadata(
-                session, stats["meta"], old_metadata_dict
+                session, stats["meta"], current_metadata
             )
             _insert_statistics(
                 session,
@@ -756,7 +768,7 @@ def _configured_unit(unit: str | None, units: UnitSystem) -> str | None:
 
 def clear_statistics(instance: Recorder, statistic_ids: list[str]) -> None:
     """Clear statistics for a list of statistic_ids."""
-    with session_scope(session=instance.get_session()) as session:  # type: ignore[misc]
+    with session_scope(session=instance.get_session()) as session:
         session.query(StatisticsMeta).filter(
             StatisticsMeta.statistic_id.in_(statistic_ids)
         ).delete(synchronize_session=False)
@@ -766,7 +778,7 @@ def update_statistics_metadata(
     instance: Recorder, statistic_id: str, unit_of_measurement: str | None
 ) -> None:
     """Update statistics metadata for a statistic_id."""
-    with session_scope(session=instance.get_session()) as session:  # type: ignore[misc]
+    with session_scope(session=instance.get_session()) as session:
         session.query(StatisticsMeta).filter(
             StatisticsMeta.statistic_id == statistic_id
         ).update({StatisticsMeta.unit_of_measurement: unit_of_measurement})
@@ -1102,14 +1114,19 @@ def get_last_short_term_statistics(
 
 
 def get_latest_short_term_statistics(
-    hass: HomeAssistant, statistic_ids: list[str]
+    hass: HomeAssistant,
+    statistic_ids: list[str],
+    metadata: dict[str, tuple[int, StatisticMetaData]] | None = None,
 ) -> dict[str, list[dict]]:
     """Return the latest short term statistics for a list of statistic_ids."""
     # This function doesn't use a baked query, we instead rely on the
     # "Transparent SQL Compilation Caching" feature introduced in SQLAlchemy 1.4
     with session_scope(hass=hass) as session:
         # Fetch metadata for the given statistic_ids
-        metadata = get_metadata_with_session(hass, session, statistic_ids=statistic_ids)
+        if not metadata:
+            metadata = get_metadata_with_session(
+                hass, session, statistic_ids=statistic_ids
+            )
         if not metadata:
             return {}
         metadata_ids = [
@@ -1119,16 +1136,20 @@ def get_latest_short_term_statistics(
         ]
         most_recent_statistic_row = (
             session.query(
-                StatisticsShortTerm.id,
-                func.max(StatisticsShortTerm.start),
+                StatisticsShortTerm.metadata_id,
+                func.max(StatisticsShortTerm.start).label("start_max"),
             )
+            .filter(StatisticsShortTerm.metadata_id.in_(metadata_ids))
             .group_by(StatisticsShortTerm.metadata_id)
-            .having(StatisticsShortTerm.metadata_id.in_(metadata_ids))
         ).subquery()
         stats = execute(
             session.query(*QUERY_STATISTICS_SHORT_TERM).join(
                 most_recent_statistic_row,
-                StatisticsShortTerm.id == most_recent_statistic_row.c.id,
+                (
+                    StatisticsShortTerm.metadata_id  # pylint: disable=comparison-with-callable
+                    == most_recent_statistic_row.c.metadata_id
+                )
+                & (StatisticsShortTerm.start == most_recent_statistic_row.c.start_max),
             )
         )
         if not stats:
@@ -1321,10 +1342,13 @@ def _filter_unique_constraint_integrity_error(
         dialect_name = instance.engine.dialect.name
 
         ignore = False
-        if dialect_name == "sqlite" and "UNIQUE constraint failed" in str(err):
+        if (
+            dialect_name == SupportedDialect.SQLITE
+            and "UNIQUE constraint failed" in str(err)
+        ):
             ignore = True
         if (
-            dialect_name == "postgresql"
+            dialect_name == SupportedDialect.POSTGRESQL
             and hasattr(err.orig, "pgcode")
             and err.orig.pgcode == "23505"
         ):
@@ -1355,7 +1379,7 @@ def add_external_statistics(
     """Process an add_external_statistics job."""
 
     with session_scope(
-        session=instance.get_session(),  # type: ignore[misc]
+        session=instance.get_session(),
         exception_filter=_filter_unique_constraint_integrity_error(instance),
     ) as session:
         old_metadata_dict = get_metadata_with_session(
@@ -1382,7 +1406,7 @@ def adjust_statistics(
 ) -> bool:
     """Process an add_statistics job."""
 
-    with session_scope(session=instance.get_session()) as session:  # type: ignore[misc]
+    with session_scope(session=instance.get_session()) as session:
         metadata = get_metadata_with_session(
             instance.hass, session, statistic_ids=(statistic_id,)
         )

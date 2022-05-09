@@ -290,7 +290,7 @@ class EntityRegistry:
         if len(domain) > MAX_LENGTH_STATE_DOMAIN:
             raise MaxLengthExceeded(domain, "domain", MAX_LENGTH_STATE_DOMAIN)
 
-        test_string = preferred_string
+        test_string = preferred_string[:MAX_LENGTH_STATE_ENTITY_ID]
         if not known_object_ids:
             known_object_ids = {}
 
@@ -301,11 +301,9 @@ class EntityRegistry:
             or not self.hass.states.async_available(test_string)
         ):
             tries += 1
-            test_string = f"{preferred_string}_{tries}"
-
-        if len(test_string) > MAX_LENGTH_STATE_ENTITY_ID:
-            raise MaxLengthExceeded(
-                test_string, "generated_entity_id", MAX_LENGTH_STATE_ENTITY_ID
+            len_suffix = len(str(tries)) + 1
+            test_string = (
+                f"{preferred_string[:MAX_LENGTH_STATE_ENTITY_ID-len_suffix]}_{tries}"
             )
 
         return test_string
@@ -712,6 +710,10 @@ class EntityRegistry:
                 # Can be removed in Jan 2021
                 if not valid_entity_id(entity["entity_id"]):
                     continue
+
+                # We removed this in 2022.5. Remove this check in 2023.1.
+                if entity["entity_category"] == "system":
+                    entity["entity_category"] = None
 
                 entities[entity["entity_id"]] = RegistryEntry(
                     area_id=entity["area_id"],

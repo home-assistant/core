@@ -16,7 +16,6 @@ from homeassistant.components.websocket_api.const import JSON_DUMP
 from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.helpers.entityfilter import convert_include_exclude_filter
 from homeassistant.helpers.json import JSONEncoder
-from homeassistant.util import dt as dt_util
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 # mypy: no-warn-return-any
@@ -225,57 +224,6 @@ async def state_changed_event_filter_helper(hass):
 
 
 @benchmark
-async def logbook_filtering_state(hass):
-    """Filter state changes."""
-    return await _logbook_filtering(hass, 1, 1)
-
-
-@benchmark
-async def logbook_filtering_attributes(hass):
-    """Filter attribute changes."""
-    return await _logbook_filtering(hass, 1, 2)
-
-
-@benchmark
-async def _logbook_filtering(hass, last_changed, last_updated):
-    # pylint: disable=import-outside-toplevel
-    from homeassistant.components import logbook
-
-    entity_id = "test.entity"
-
-    old_state = {"entity_id": entity_id, "state": "off"}
-
-    new_state = {
-        "entity_id": entity_id,
-        "state": "on",
-        "last_updated": last_updated,
-        "last_changed": last_changed,
-    }
-
-    event = _create_state_changed_event_from_old_new(
-        entity_id, dt_util.utcnow(), old_state, new_state
-    )
-
-    entity_attr_cache = logbook.EntityAttributeCache(hass)
-
-    entities_filter = convert_include_exclude_filter(
-        logbook.INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA({})
-    )
-
-    def yield_events(event):
-        for _ in range(10**5):
-            # pylint: disable=protected-access
-            if logbook._keep_event(hass, event, entities_filter):
-                yield event
-
-    start = timer()
-
-    list(logbook.humanify(hass, yield_events(event), entity_attr_cache, {}))
-
-    return timer() - start
-
-
-@benchmark
 async def filtering_entity_id(hass):
     """Run a 100k state changes through entity filter."""
     config = {
@@ -404,4 +352,4 @@ def _create_state_changed_event_from_old_new(
     # pylint: disable=import-outside-toplevel
     from homeassistant.components import logbook
 
-    return logbook.LazyEventPartialState(row)
+    return logbook.LazyEventPartialState(row, {})

@@ -417,7 +417,7 @@ class Template:
 
         return self._parse_result(render_result)
 
-    def _parse_result(self, render_result: str) -> Any:  # pylint: disable=no-self-use
+    def _parse_result(self, render_result: str) -> Any:
         """Parse the result."""
         try:
             result = literal_eval(render_result)
@@ -828,7 +828,6 @@ class TemplateState(TemplateStateBase):
     __slots__ = ("_state",)
 
     # Inheritance is done so functions that check against State keep working
-    # pylint: disable=super-init-not-called
     def __init__(self, hass: HomeAssistant, state: State, collect: bool = True) -> None:
         """Initialize template state."""
         super().__init__(hass, collect, state.entity_id)
@@ -851,7 +850,8 @@ class TemplateStateFromEntityId(TemplateStateBase):
     @property
     def _state(self) -> State:  # type: ignore[override] # mypy issue 4125
         state = self._hass.states.get(self._entity_id)
-        assert state
+        if not state:
+            state = State(self._entity_id, STATE_UNKNOWN)
         return state
 
     def __repr__(self) -> str:
@@ -1332,7 +1332,7 @@ def warn_no_default(function, value, default):
         (
             "Template warning: '%s' got invalid input '%s' when %s template '%s' "
             "but no default was specified. Currently '%s' will return '%s', however this template will fail "
-            "to render in Home Assistant core 2022.1"
+            "to render in Home Assistant core 2022.6"
         ),
         function,
         value,
