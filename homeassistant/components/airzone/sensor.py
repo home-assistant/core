@@ -25,7 +25,7 @@ from homeassistant.const import (
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     TEMP_CELSIUS,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -102,10 +102,10 @@ async def async_setup_entry(
 class AirzoneSensor(AirzoneEntity, SensorEntity):
     """Define an Airzone sensor."""
 
-    @property
-    def native_value(self):
-        """Return the state."""
-        return self.get_airzone_value(self.entity_description.key)
+    @callback
+    def _async_update_attrs(self) -> None:
+        """Update sensor attributes."""
+        self._attr_native_value = self.get_airzone_value(self.entity_description.key)
 
 
 class AirzoneWebServerSensor(AirzoneWebServerEntity, AirzoneSensor):
@@ -122,6 +122,7 @@ class AirzoneWebServerSensor(AirzoneWebServerEntity, AirzoneSensor):
         self._attr_name = f"WebServer {description.name}"
         self._attr_unique_id = f"{self._attr_unique_id}_ws_{description.key}"
         self.entity_description = description
+        self._async_update_attrs()
 
 
 class AirzoneZoneSensor(AirzoneZoneEntity, AirzoneSensor):
@@ -148,3 +149,5 @@ class AirzoneZoneSensor(AirzoneZoneEntity, AirzoneSensor):
             self._attr_native_unit_of_measurement = TEMP_UNIT_LIB_TO_HASS.get(
                 self.get_airzone_value(AZD_TEMP_UNIT)
             )
+
+        self._async_update_attrs()
