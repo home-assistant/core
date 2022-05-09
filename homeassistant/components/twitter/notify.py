@@ -73,7 +73,7 @@ class TwitterNotificationService(BaseNotificationService):
     def send_message(self, message="", **kwargs):
         """Tweet a message, optionally with media."""
         data = kwargs.get(ATTR_DATA)
-        target = kwargs.get(ATTR_TARGET)
+        targets = kwargs.get(ATTR_TARGET)
 
         media = None
         if data:
@@ -81,13 +81,14 @@ class TwitterNotificationService(BaseNotificationService):
             if not self.hass.config.is_allowed_path(media):
                 _LOGGER.warning("'%s' is not a whitelisted directory", media)
                 return
-
-        if target:
-            callback = partial(self.send_message_callback, message, target)
+        
+        if targets:
+            for target in targets:
+                callback = partial(self.send_message_callback, message, target)
+                self.upload_media_then_callback(callback, media)
         else:
             callback = partial(self.send_message_callback, message, self.default_user)
-
-        self.upload_media_then_callback(callback, media)
+            self.upload_media_then_callback(callback, media)
 
     def send_message_callback(self, message, user, media_id=None):
         """Tweet a message, optionally with media."""
