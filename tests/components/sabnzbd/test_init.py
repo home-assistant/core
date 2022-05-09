@@ -3,7 +3,11 @@ from unittest.mock import patch
 
 import pytest
 
+<<<<<<< HEAD
 from homeassistant.components.sabnzbd import DEFAULT_NAME, DOMAIN, OLD_SENSOR_KEYS
+=======
+from homeassistant.components.sabnzbd import DEFAULT_NAME, DOMAIN, SENSOR_KEYS
+>>>>>>> b213f221b5 (Migrate sabnzbd sensors unique ids (#71455))
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_URL
 from homeassistant.helpers.device_registry import DeviceEntryType
@@ -54,7 +58,11 @@ async def test_unique_id_migrate(hass, device_registry, entity_registry):
 
     entity_id_sensor_key = []
 
+<<<<<<< HEAD
     for sensor_key in OLD_SENSOR_KEYS:
+=======
+    for sensor_key in SENSOR_KEYS:
+>>>>>>> b213f221b5 (Migrate sabnzbd sensors unique ids (#71455))
         mock_entity_id = f"{SENSOR_DOMAIN}.{DOMAIN}_{sensor_key}"
         entity_registry.async_get_or_create(
             SENSOR_DOMAIN,
