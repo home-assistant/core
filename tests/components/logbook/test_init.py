@@ -4,6 +4,7 @@ import collections
 from datetime import datetime, timedelta
 from http import HTTPStatus
 import json
+from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
@@ -40,6 +41,8 @@ from homeassistant.helpers.entityfilter import CONF_ENTITY_GLOBS
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
+
+from .common import mock_humanify
 
 from tests.common import async_capture_events, mock_platform
 from tests.components.recorder.common import (
@@ -212,16 +215,11 @@ def test_home_assistant_start_stop_grouped(hass_):
 
     Events that are occurring in the same minute.
     """
-    entity_attr_cache = logbook.EntityAttributeCache(hass_)
-    entries = list(
-        logbook.humanify(
-            hass_,
-            (
-                MockLazyEventPartialState(EVENT_HOMEASSISTANT_STOP),
-                MockLazyEventPartialState(EVENT_HOMEASSISTANT_START),
-            ),
-            entity_attr_cache,
-            {},
+    entries = mock_humanify(
+        hass_,
+        (
+            MockRow(EVENT_HOMEASSISTANT_STOP),
+            MockRow(EVENT_HOMEASSISTANT_START),
         ),
     )
 
@@ -231,30 +229,17 @@ def test_home_assistant_start_stop_grouped(hass_):
     )
 
 
-def test_unsupported_attributes_in_cache_throws(hass):
-    """Test unsupported attributes in cache."""
-    entity_attr_cache = logbook.EntityAttributeCache(hass)
-    event = MockLazyEventPartialState(EVENT_STATE_CHANGED)
-    with pytest.raises(ValueError):
-        entity_attr_cache.get("sensor.xyz", "not_supported", event)
-
-
 def test_home_assistant_start(hass_):
     """Test if HA start is not filtered or converted into a restart."""
     entity_id = "switch.bla"
     pointA = dt_util.utcnow()
-    entity_attr_cache = logbook.EntityAttributeCache(hass_)
 
-    entries = list(
-        logbook.humanify(
-            hass_,
-            (
-                MockLazyEventPartialState(EVENT_HOMEASSISTANT_START),
-                create_state_changed_event(pointA, entity_id, 10),
-            ),
-            entity_attr_cache,
-            {},
-        )
+    entries = mock_humanify(
+        hass_,
+        (
+            MockRow(EVENT_HOMEASSISTANT_START),
+            create_state_changed_event(pointA, entity_id, 10).row,
+        ),
     )
 
     assert len(entries) == 2
@@ -267,24 +252,19 @@ def test_process_custom_logbook_entries(hass_):
     name = "Nice name"
     message = "has a custom entry"
     entity_id = "sun.sun"
-    entity_attr_cache = logbook.EntityAttributeCache(hass_)
 
-    entries = list(
-        logbook.humanify(
-            hass_,
-            (
-                MockLazyEventPartialState(
-                    logbook.EVENT_LOGBOOK_ENTRY,
-                    {
-                        logbook.ATTR_NAME: name,
-                        logbook.ATTR_MESSAGE: message,
-                        logbook.ATTR_ENTITY_ID: entity_id,
-                    },
-                ),
+    entries = mock_humanify(
+        hass_,
+        (
+            MockRow(
+                logbook.EVENT_LOGBOOK_ENTRY,
+                {
+                    logbook.ATTR_NAME: name,
+                    logbook.ATTR_MESSAGE: message,
+                    logbook.ATTR_ENTITY_ID: entity_id,
+                },
             ),
-            entity_attr_cache,
-            {},
-        )
+        ),
     )
 
     assert len(entries) == 1
@@ -343,11 +323,13 @@ def create_state_changed_event_from_old_new(
             "state_id",
             "old_state_id",
             "shared_attrs",
+            "shared_data",
         ],
     )
 
     row.event_type = EVENT_STATE_CHANGED
     row.event_data = "{}"
+    row.shared_data = "{}"
     row.attributes = attributes_json
     row.shared_attrs = attributes_json
     row.time_fired = event_time_fired
@@ -1987,33 +1969,25 @@ def _assert_entry(
         assert state == entry["state"]
 
 
-class MockLazyEventPartialState(ha.Event):
-    """Minimal mock of a Lazy event."""
+class MockRow:
+    """Minimal row mock."""
 
-    @property
-    def data_entity_id(self):
-        """Lookup entity id."""
-        return self.data.get(ATTR_ENTITY_ID)
-
-    @property
-    def data_domain(self):
-        """Lookup domain."""
-        return self.data.get(ATTR_DOMAIN)
+    def __init__(self, event_type: str, data: dict[str, Any] = None):
+        """Init the fake row."""
+        self.event_type = event_type
+        self.shared_data = json.dumps(data, cls=JSONEncoder)
+        self.data = data
+        self.time_fired = dt_util.utcnow()
+        self.context_parent_id = None
+        self.context_user_id = None
+        self.context_id = None
+        self.state = None
+        self.entity_id = None
 
     @property
     def time_fired_minute(self):
         """Minute the event was fired."""
         return self.time_fired.minute
-
-    @property
-    def context_user_id(self):
-        """Context user id of event."""
-        return self.context.user_id
-
-    @property
-    def context_id(self):
-        """Context id of event."""
-        return self.context.id
 
     @property
     def time_fired_isoformat(self):
