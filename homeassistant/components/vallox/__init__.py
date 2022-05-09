@@ -19,7 +19,7 @@ from vallox_websocket_api.vallox import (
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import ATTR_CONFIGURATION_URL, CONF_HOST, CONF_NAME, Platform
+from homeassistant.const import CONF_HOST, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
@@ -121,7 +121,8 @@ class ValloxState:
 
         return value
 
-    def get_model(self) -> str | None:
+    @property
+    def model(self) -> str | None:
         """Return the model, if any."""
         model = cast(str, _api_get_model(self.metric_cache))
 
@@ -130,11 +131,13 @@ class ValloxState:
 
         return model
 
-    def get_sw_version(self) -> str:
+    @property
+    def sw_version(self) -> str:
         """Return the SW version."""
         return cast(str, _api_get_sw_version(self.metric_cache))
 
-    def get_uuid(self) -> UUID | None:
+    @property
+    def uuid(self) -> UUID | None:
         """Return cached UUID value."""
         uuid = _api_get_uuid(self.metric_cache)
         if not isinstance(uuid, UUID):
@@ -320,17 +323,13 @@ class ValloxEntity(CoordinatorEntity[ValloxDataUpdateCoordinator]):
         """Initialize a Vallox entity."""
         super().__init__(coordinator)
 
-        self._device_uuid = self.coordinator.data.get_uuid()
-
+        self._device_uuid = self.coordinator.data.uuid
+        assert self.coordinator.config_entry is not None
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, str(self._device_uuid))},
             manufacturer=DEFAULT_NAME,
-            model=self.coordinator.data.get_model(),
+            model=self.coordinator.data.model,
             name=name,
-            sw_version=self.coordinator.data.get_sw_version(),
+            sw_version=self.coordinator.data.sw_version,
+            configuration_url=f"http://{self.coordinator.config_entry.data[CONF_HOST]}",
         )
-
-        if self.coordinator.config_entry is not None:
-            self._attr_device_info[
-                ATTR_CONFIGURATION_URL
-            ] = f"http://{self.coordinator.config_entry.data[CONF_HOST]}"
