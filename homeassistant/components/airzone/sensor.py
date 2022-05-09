@@ -13,12 +13,12 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AirzoneEntity, AirzoneZoneEntity
 from .const import DOMAIN, TEMP_UNIT_LIB_TO_HASS
 from .coordinator import AirzoneUpdateCoordinator
+from .entity import AirzoneEntity, AirzoneZoneEntity
 
 ZONE_SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
     SensorEntityDescription(
@@ -64,10 +64,10 @@ async def async_setup_entry(
 class AirzoneSensor(AirzoneEntity, SensorEntity):
     """Define an Airzone sensor."""
 
-    @property
-    def native_value(self):
-        """Return the state."""
-        return self.get_airzone_value(self.entity_description.key)
+    @callback
+    def _async_update_attrs(self) -> None:
+        """Update sensor attributes."""
+        self._attr_native_value = self.get_airzone_value(self.entity_description.key)
 
 
 class AirzoneZoneSensor(AirzoneZoneEntity, AirzoneSensor):
@@ -94,3 +94,5 @@ class AirzoneZoneSensor(AirzoneZoneEntity, AirzoneSensor):
             self._attr_native_unit_of_measurement = TEMP_UNIT_LIB_TO_HASS.get(
                 self.get_airzone_value(AZD_TEMP_UNIT)
             )
+
+        self._async_update_attrs()
