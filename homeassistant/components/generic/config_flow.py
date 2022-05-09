@@ -81,12 +81,6 @@ def build_schema(
             description={"suggested_value": user_input.get(CONF_RTSP_TRANSPORT)},
         ): vol.In(RTSP_TRANSPORTS),
         vol.Optional(
-            CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
-            description={
-                "suggested_value": user_input.get(CONF_USE_WALLCLOCK_AS_TIMESTAMPS)
-            },
-        ): bool,
-        vol.Optional(
             CONF_AUTHENTICATION,
             description={"suggested_value": user_input.get(CONF_AUTHENTICATION)},
         ): vol.In([HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]),
@@ -111,6 +105,12 @@ def build_schema(
             vol.Required(
                 CONF_LIMIT_REFETCH_TO_URL_CHANGE,
                 default=user_input.get(CONF_LIMIT_REFETCH_TO_URL_CHANGE, False),
+            )
+        ] = bool
+        spec[
+            vol.Required(
+                CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
+                default=user_input.get(CONF_USE_WALLCLOCK_AS_TIMESTAMPS, False),
             )
         ] = bool
     return vol.Schema(spec)

@@ -29,7 +29,6 @@
           "authentication": "Authentication",
           "limit_refetch_to_url_change": "Limit refetch to url change",
           "password": "[%key:common::config_flow::data::password%]",
-          "use_wallclock_as_timestamps": "Rewrite timestamps",
           "username": "[%key:common::config_flow::data::username%]",
           "framerate": "Frame Rate (Hz)",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
