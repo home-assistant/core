@@ -16,6 +16,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, IALARMXR_TO_HASS
@@ -38,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             mac = await hass.async_add_executor_job(ialarmxr.get_mac)
     except (asyncio.TimeoutError, ConnectionError) as ex:
         _LOGGER.error("IAlarmXR error on connect: %s", ex)
-        return False
+        raise ConfigEntryNotReady from ex
 
     coordinator = IAlarmXRDataUpdateCoordinator(hass, ialarmxr, mac)
     await coordinator.async_config_entry_first_refresh()
