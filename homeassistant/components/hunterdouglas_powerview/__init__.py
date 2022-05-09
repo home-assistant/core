@@ -100,8 +100,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Fetch data from shade endpoint."""
 
         if coordinator.update_interval == UPDATE_INTERVAL_MAINTENANCE:
-            coordinator.update_interval = UPDATE_INTERVAL_DEFAULT
             _LOGGER.debug("Polling returned to %s", UPDATE_INTERVAL_DEFAULT)
+            coordinator.update_interval = UPDATE_INTERVAL_DEFAULT
 
         try:
             async with async_timeout.timeout(10):

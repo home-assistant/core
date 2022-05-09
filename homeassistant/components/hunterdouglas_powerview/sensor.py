@@ -8,7 +8,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DEVICE_CLASS_SIGNAL_STRENGTH, PERCENTAGE
+from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -23,9 +23,9 @@ from .const import (
     ROOM_ID_IN_SHADE,
     ROOM_NAME_UNICODE,
     SHADE_BATTERY_KIND,
-    SHADE_BATTERY_KIND_EXCLUDE,
     SHADE_BATTERY_LEVEL,
     SHADE_BATTERY_LEVEL_MAX,
+    SHADE_BATTERY_SENSOR_EXCLUDE,
     SHADE_SIGNAL_STRENGTH,
 )
 from .entity import ShadeEntity
@@ -58,7 +58,7 @@ async def async_setup_entry(
         if SHADE_BATTERY_LEVEL not in shade.raw_data:
             continue
         # skip hardwired blinds
-        if shade.raw_data[SHADE_BATTERY_KIND] in SHADE_BATTERY_KIND_EXCLUDE:
+        if shade.raw_data[SHADE_BATTERY_KIND] in SHADE_BATTERY_SENSOR_EXCLUDE:
             continue
         battery_entities.append(
             PowerViewShadeBatterySensor(
@@ -115,7 +115,7 @@ class PowerViewShadeSignalSensor(ShadeEntity, SensorEntity):
 
     _attr_entity_registry_enabled_default = False
     _attr_native_unit_of_measurement = PERCENTAGE
-    _attr_device_class = DEVICE_CLASS_SIGNAL_STRENGTH
+    _attr_device_class = SensorDeviceClass.SIGNAL_STRENGTH
 
     @property
     def name(self):
