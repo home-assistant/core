@@ -78,7 +78,7 @@ async def test_unique_id_migrate(hass, device_registry, entity_registry):
 
     for es_item in entity_id_sensor_key:
         entity = entity_registry.async_get(es_item[0])
-        assert entity.unique_id == f"{MOCK_ENTRY_ID}_{es_item[1]}"
+        assert entity.unique_id == f"{MOCK_ENTRY_ID}_{sensor_key}"
 
     assert device_registry.async_get(mock_d_entry.id).identifiers == {
         (DOMAIN, MOCK_ENTRY_ID)
