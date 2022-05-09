@@ -210,11 +210,8 @@ async def test_filter_sensor(hass_: ha.HomeAssistant, hass_client):
     _assert_entry(entries[2], name="ble", entity_id=entity_id4, state="10")
 
 
-def test_home_assistant_start_stop_grouped(hass_):
-    """Test if HA start and stop events are grouped.
-
-    Events that are occurring in the same minute.
-    """
+def test_home_assistant_start_stop_not_grouped(hass_):
+    """Test if HA start and stop events are no longer grouped."""
     entries = mock_humanify(
         hass_,
         (
@@ -223,10 +220,9 @@ def test_home_assistant_start_stop_grouped(hass_):
         ),
     )
 
-    assert len(entries) == 1
-    assert_entry(
-        entries[0], name="Home Assistant", message="restarted", domain=ha.DOMAIN
-    )
+    assert len(entries) == 2
+    assert_entry(entries[0], name="Home Assistant", message="stopped", domain=ha.DOMAIN)
+    assert_entry(entries[1], name="Home Assistant", message="started", domain=ha.DOMAIN)
 
 
 def test_home_assistant_start(hass_):
