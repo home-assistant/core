@@ -2,8 +2,8 @@
     "system_health": {
         "info": {
             "current_recorder_run": "Current Run Start Time",
-            "oldest_recorder_run": "Oldest Run Start Time",
-            "estimated_db_size": "Estimated Database Size"
+            "estimated_db_size": "Estimated Database Size (MiB)",
+            "oldest_recorder_run": "Oldest Run Start Time"
         }
     }
 }
