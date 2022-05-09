@@ -1,7 +1,6 @@
 """Support for the Airzone sensors."""
 from __future__ import annotations
 
-from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any, Final
 
@@ -22,7 +21,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -120,20 +119,15 @@ class AirzoneBinarySensor(AirzoneEntity, BinarySensorEntity):
 
     entity_description: AirzoneBinarySensorEntityDescription
 
-    @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
-        """Return state attributes."""
-        if not self.entity_description.attributes:
-            return None
-        return {
-            key: self.get_airzone_value(val)
-            for key, val in self.entity_description.attributes.items()
-        }
-
-    @property
-    def is_on(self) -> bool | None:
-        """Return true if the binary sensor is on."""
-        return self.get_airzone_value(self.entity_description.key)
+    @callback
+    def _async_update_attrs(self) -> None:
+        """Update binary sensor attributes."""
+        self._attr_is_on = self.get_airzone_value(self.entity_description.key)
+        if self.entity_description.attributes:
+            self._attr_extra_state_attributes = {
+                key: self.get_airzone_value(val)
+                for key, val in self.entity_description.attributes.items()
+            }
 
 
 class AirzoneSystemBinarySensor(AirzoneSystemEntity, AirzoneBinarySensor):
@@ -152,6 +146,7 @@ class AirzoneSystemBinarySensor(AirzoneSystemEntity, AirzoneBinarySensor):
         self._attr_name = f"System {system_id} {description.name}"
         self._attr_unique_id = f"{self._attr_unique_id}_{system_id}_{description.key}"
         self.entity_description = description
+        self._async_update_attrs()
 
 
 class AirzoneZoneBinarySensor(AirzoneZoneEntity, AirzoneBinarySensor):
@@ -173,3 +168,4 @@ class AirzoneZoneBinarySensor(AirzoneZoneEntity, AirzoneBinarySensor):
             f"{self._attr_unique_id}_{system_zone_id}_{description.key}"
         )
         self.entity_description = description
+        self._async_update_attrs()
