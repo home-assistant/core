@@ -64,12 +64,16 @@ async def setup_application_credentials_integration(
 ) -> None:
     """Set up a fake application_credentials integration."""
     hass.config.components.add(domain)
+    mock_platform_impl = Mock(
+        async_get_authorization_server=AsyncMock(return_value=authorization_server),
+    )
+    del (
+        mock_platform_impl.async_get_auth_implementation
+    )  # Ensure it returns false on hasattr check
     mock_platform(
         hass,
         f"{domain}.application_credentials",
-        Mock(
-            async_get_authorization_server=AsyncMock(return_value=authorization_server),
-        ),
+        mock_platform_impl,
     )
 
 
@@ -585,6 +589,7 @@ async def test_websocket_without_authorization_server(
     # Platform does not implemenent async_get_authorization_server
     platform = Mock()
     del platform.async_get_authorization_server
+    del platform.async_get_auth_implementation
     mock_platform(
         hass,
         f"{TEST_DOMAIN}.application_credentials",

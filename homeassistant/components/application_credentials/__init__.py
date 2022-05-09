@@ -73,7 +73,7 @@ class ApplicationCredentialsStorageCollection(collection.StorageCollection):
         """Validate the config is valid."""
         result = self.CREATE_SCHEMA(data)
         domain = result[CONF_DOMAIN]
-        if not await _get_platform(self.hass, domain):
+        if not await _get_platform_auth_provider(self.hass, domain):
             raise ValueError(f"No application_credentials platform for {domain}")
         return result
 
@@ -151,7 +151,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 async def async_import_client_credential(
-    hass: HomeAssistant, domain: str, credential: ClientCredential
+    hass: HomeAssistant,
+    domain: str,
+    credential: ClientCredential,
+    auth_domain: str = None,
 ) -> None:
     """Import an existing credential from configuration.yaml."""
     if DOMAIN not in hass.data:
@@ -161,13 +164,30 @@ async def async_import_client_credential(
         CONF_DOMAIN: domain,
         CONF_CLIENT_ID: credential.client_id,
         CONF_CLIENT_SECRET: credential.client_secret,
-        CONF_AUTH_DOMAIN: domain,
+        CONF_AUTH_DOMAIN: auth_domain if auth_domain else domain,
     }
     await storage_collection.async_import_item(item)
 
 
 class AuthImplementation(config_entry_oauth2_flow.LocalOAuth2Implementation):
     """Application Credentials local oauth2 implementation."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        auth_domain: str,
+        credential: ClientCredential,
+        authorization_server: AuthorizationServer,
+    ) -> None:
+        """Initialize AuthImplementation."""
+        super().__init__(
+            hass,
+            auth_domain,
+            credential.client_id,
+            credential.client_secret,
+            authorization_server.authorize_url,
+            authorization_server.token_url,
+        )
 
     @property
     def name(self) -> str:
@@ -180,38 +200,55 @@ async def _async_provide_implementation(
 ) -> list[config_entry_oauth2_flow.AbstractOAuth2Implementation]:
     """Return registered OAuth implementations."""
 
-    platform = await _get_platform(hass, domain)
-    if not platform:
+    provider = await _get_platform_auth_provider(hass, domain)
+    if not provider:
         return []
 
-    authorization_server = await platform.async_get_authorization_server(hass)
     storage_collection = hass.data[DOMAIN][DATA_STORAGE]
     credentials = storage_collection.async_client_credentials(domain)
     return [
-        AuthImplementation(
-            hass,
-            auth_domain,
-            credential.client_id,
-            credential.client_secret,
-            authorization_server.authorize_url,
-            authorization_server.token_url,
-        )
+        await provider.async_get_auth_implementation(hass, auth_domain, credential)
         for auth_domain, credential in credentials.items()
     ]
 
 
-class ApplicationCredentialsProtocol(Protocol):
-    """Define the format that application_credentials platforms can have."""
+class AuthImplementationProvider(Protocol):
+    """Define the auth implementation protocol that application_credentials platforms may have."""
+
+    async def async_get_auth_implementation(
+        self, hass: HomeAssistant, auth_domain: str, credential: ClientCredential
+    ) -> config_entry_oauth2_flow.AbstractOAuth2Implementation:
+        """Return auth implementation for a custom auth implementation."""
+
+
+class AuthorizationServerProvider(Protocol):
+    """Define the auth server protocol that application_credentials platforms may have."""
 
     async def async_get_authorization_server(
         self, hass: HomeAssistant
     ) -> AuthorizationServer:
-        """Return authorization server."""
+        """Return authorization server, for the default auth implementation."""
 
 
-async def _get_platform(
+class DefaultAuthImplementationProvider(AuthImplementationProvider):
+    """Default implementation of AuthImplementationProvider using platform AuthorizationServer."""
+
+    def __init__(self, auth_server_provider: AuthorizationServerProvider) -> None:
+        self._auth_server_provider = auth_server_provider
+
+    async def async_get_auth_implementation(
+        self, hass: HomeAssistant, auth_domain: str, credential: ClientCredential
+    ) -> config_entry_oauth2_flow.AbstractOAuth2Implementation:
+        """Return the default auth implementation for an application_credentials platform."""
+        authorization_server = (
+            await self._auth_server_provider.async_get_authorization_server(hass)
+        )
+        return AuthImplementation(hass, auth_domain, credential, authorization_server)
+
+
+async def _get_platform_auth_provider(
     hass: HomeAssistant, integration_domain: str
-) -> ApplicationCredentialsProtocol | None:
+) -> AuthImplementationProvider | None:
     """Register an application_credentials platform."""
     try:
         integration = await async_get_integration(hass, integration_domain)
@@ -227,11 +264,13 @@ async def _get_platform(
             err,
         )
         return None
+    if hasattr(platform, "async_get_auth_implementation"):
+        return platform
     if not hasattr(platform, "async_get_authorization_server"):
         raise ValueError(
-            f"Integration '{integration_domain}' platform application_credentials did not implement 'async_get_authorization_server'"
+            f"Integration '{integration_domain}' platform application_credentials did not implement 'async_get_authorization_server' or 'async_get_auth_implementation'"
         )
-    return platform
+    return DefaultAuthImplementationProvider(platform)
 
 
 @websocket_api.websocket_command(

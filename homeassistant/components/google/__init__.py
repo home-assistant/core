@@ -17,6 +17,10 @@ from voluptuous.error import Error as VoluptuousError
 import yaml
 
 from homeassistant import config_entries
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_CLIENT_ID,
@@ -45,6 +49,7 @@ from .const import (
     CONF_CALENDAR_ACCESS,
     DATA_CONFIG,
     DATA_SERVICE,
+    DEVICE_AUTH_IMPL,
     DISCOVER_CALENDAR,
     DOMAIN,
     FeatureAccess,
@@ -97,8 +102,8 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
-                vol.Required(CONF_CLIENT_ID): cv.string,
-                vol.Required(CONF_CLIENT_SECRET): cv.string,
+                vol.Optional(CONF_CLIENT_ID): cv.string,
+                vol.Optional(CONF_CLIENT_SECRET): cv.string,
                 vol.Optional(CONF_TRACK_NEW, default=True): cv.boolean,
                 vol.Optional(CONF_CALENDAR_ACCESS, default="read_write"): cv.enum(
                     FeatureAccess
@@ -159,14 +164,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Google component."""
     conf = config.get(DOMAIN, {})
     hass.data[DOMAIN] = {DATA_CONFIG: conf}
-    config_flow.OAuth2FlowHandler.async_register_implementation(
-        hass,
-        DeviceAuth(
+
+    if CONF_CLIENT_ID in conf and CONF_CLIENT_SECRET in conf:
+        await async_import_client_credential(
             hass,
-            conf[CONF_CLIENT_ID],
-            conf[CONF_CLIENT_SECRET],
-        ),
-    )
+            DOMAIN,
+            ClientCredential(
+                conf[CONF_CLIENT_ID],
+                conf[CONF_CLIENT_SECRET],
+            ),
+            DEVICE_AUTH_IMPL,
+        )
 
     # Import credentials from the old token file into the new way as
     # a ConfigEntry managed by home assistant.
