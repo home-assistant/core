@@ -92,7 +92,7 @@ def config_entry_fixture(hass):
         unique_id="abc123",
         data={},
         options={
-            "still_image_url": "http://joebloggs:letmein1@example.com",
+            "still_image_url": "http://joebloggs:letmein1@example.com/secret1/file.jpg?pw=qwerty",
             "stream_source": "http://janebloggs:letmein2@example.com/stream",
             "username": "johnbloggs",
             "password": "letmein123",
