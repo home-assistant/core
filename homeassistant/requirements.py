@@ -162,12 +162,8 @@ async def async_process_requirements(
     """
     if (pip_lock := hass.data.get(DATA_PIP_LOCK)) is None:
         pip_lock = hass.data[DATA_PIP_LOCK] = asyncio.Lock()
-    install_failure_history = hass.data.get(DATA_INSTALL_FAILURE_HISTORY)
-    if install_failure_history is None:
-        install_failure_history = hass.data[DATA_INSTALL_FAILURE_HISTORY] = set()
-    is_installed_cache = hass.data.get(DATA_IS_INSTALLED_CACHE)
-    if is_installed_cache is None:
-        is_installed_cache = hass.data[DATA_IS_INSTALLED_CACHE] = set()
+    install_failure_history = hass.data.setdefault(DATA_INSTALL_FAILURE_HISTORY, set())
+    is_installed_cache = hass.data.setdefault(DATA_IS_INSTALLED_CACHE, set())
     missing = [req for req in requirements if req not in is_installed_cache]
     if not missing:
         return
