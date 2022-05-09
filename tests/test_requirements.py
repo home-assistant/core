@@ -213,16 +213,9 @@ async def test_get_integration_with_requirements_pip_install_fails_two_passes(ha
         assert integration
         assert integration.domain == "test_component"
 
-    assert len(mock_is_installed.mock_calls) == 1
-    assert sorted(mock_call[1][0] for mock_call in mock_is_installed.mock_calls) == [
-        "test-comp==1.0.0",
-    ]
-
+    assert len(mock_is_installed.mock_calls) == 0
     # On another attempt we remember failures and don't try again
-    assert len(mock_inst.mock_calls) == 1
-    assert sorted(mock_call[1][0] for mock_call in mock_inst.mock_calls) == [
-        "test-comp==1.0.0"
-    ]
+    assert len(mock_inst.mock_calls) == 0
 
     # Now clear the history and so we try again
     async_clear_install_history(hass)
@@ -239,14 +232,13 @@ async def test_get_integration_with_requirements_pip_install_fails_two_passes(ha
         assert integration
         assert integration.domain == "test_component"
 
-    assert len(mock_is_installed.mock_calls) == 3
+    assert len(mock_is_installed.mock_calls) == 2
     assert sorted(mock_call[1][0] for mock_call in mock_is_installed.mock_calls) == [
         "test-comp-after-dep==1.0.0",
         "test-comp-dep==1.0.0",
-        "test-comp==1.0.0",
     ]
 
-    assert len(mock_inst.mock_calls) == 7
+    assert len(mock_inst.mock_calls) == 6
     assert sorted(mock_call[1][0] for mock_call in mock_inst.mock_calls) == [
         "test-comp-after-dep==1.0.0",
         "test-comp-after-dep==1.0.0",
@@ -254,7 +246,6 @@ async def test_get_integration_with_requirements_pip_install_fails_two_passes(ha
         "test-comp-dep==1.0.0",
         "test-comp-dep==1.0.0",
         "test-comp-dep==1.0.0",
-        "test-comp==1.0.0",
     ]
 
     # Now clear the history and mock success
@@ -272,18 +263,16 @@ async def test_get_integration_with_requirements_pip_install_fails_two_passes(ha
         assert integration
         assert integration.domain == "test_component"
 
-    assert len(mock_is_installed.mock_calls) == 3
+    assert len(mock_is_installed.mock_calls) == 2
     assert sorted(mock_call[1][0] for mock_call in mock_is_installed.mock_calls) == [
         "test-comp-after-dep==1.0.0",
         "test-comp-dep==1.0.0",
-        "test-comp==1.0.0",
     ]
 
-    assert len(mock_inst.mock_calls) == 3
+    assert len(mock_inst.mock_calls) == 2
     assert sorted(mock_call[1][0] for mock_call in mock_inst.mock_calls) == [
         "test-comp-after-dep==1.0.0",
         "test-comp-dep==1.0.0",
-        "test-comp==1.0.0",
     ]
 
 

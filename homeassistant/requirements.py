@@ -19,6 +19,7 @@ DATA_PIP_LOCK = "pip_lock"
 DATA_PKG_CACHE = "pkg_cache"
 DATA_INTEGRATIONS_WITH_REQS = "integrations_with_reqs"
 DATA_INSTALL_FAILURE_HISTORY = "install_failure_history"
+DATA_IS_INSTALLED_CACHE = "is_installed_cache"
 CONSTRAINT_FILE = "package_constraints.txt"
 DISCOVERY_INTEGRATIONS: dict[str, Iterable[str]] = {
     "dhcp": ("dhcp",),
@@ -141,6 +142,16 @@ def async_clear_install_history(hass: HomeAssistant) -> None:
         install_failure_history.clear()
 
 
+def _install_if_missing(req: str, kwargs: dict[str, Any]) -> bool:
+    """Install requirement if missing."""
+    if pkg_util.is_installed(req):
+        return True
+    for _ in range(MAX_INSTALL_FAILURES):
+        if pkg_util.install_package(req, **kwargs):
+            return True
+    return False
+
+
 async def async_process_requirements(
     hass: HomeAssistant, name: str, requirements: list[str]
 ) -> None:
@@ -154,44 +165,45 @@ async def async_process_requirements(
     install_failure_history = hass.data.get(DATA_INSTALL_FAILURE_HISTORY)
     if install_failure_history is None:
         install_failure_history = hass.data[DATA_INSTALL_FAILURE_HISTORY] = set()
-
-    kwargs = pip_kwargs(hass.config.config_dir)
+    is_installed_cache = hass.data.get(DATA_IS_INSTALLED_CACHE)
+    if is_installed_cache is None:
+        is_installed_cache = hass.data[DATA_IS_INSTALLED_CACHE] = set()
+    missing = [req for req in requirements if req not in is_installed_cache]
+    if not missing:
+        return
+    for req in missing:
+        if req in install_failure_history:
+            _LOGGER.info(
+                "Multiple attempts to install %s failed, install will be retried after next configuration check or restart",
+                req,
+            )
+            raise RequirementsNotFound(name, [req])
 
     async with pip_lock:
-        for req in requirements:
-            await _async_process_requirements(
-                hass, name, req, install_failure_history, kwargs
-            )
+        await _async_process_requirements(
+            hass,
+            name,
+            missing,
+            is_installed_cache,
+            install_failure_history,
+        )
 
 
 async def _async_process_requirements(
     hass: HomeAssistant,
     name: str,
-    req: str,
+    requirements: list[str],
+    is_installed_cache: set[str],
     install_failure_history: set[str],
-    kwargs: Any,
 ) -> None:
     """Install a requirement and save failures."""
-    if req in install_failure_history:
-        _LOGGER.info(
-            "Multiple attempts to install %s failed, install will be retried after next configuration check or restart",
-            req,
-        )
+    kwargs = pip_kwargs(hass.config.config_dir)
+    for req in requirements:
+        if await hass.async_add_executor_job(_install_if_missing, req, kwargs):
+            is_installed_cache.add(req)
+            continue
+        install_failure_history.add(req)
         raise RequirementsNotFound(name, [req])
-
-    if pkg_util.is_installed(req):
-        return
-
-    def _install(req: str, kwargs: dict[str, Any]) -> bool:
-        """Install requirement."""
-        return pkg_util.install_package(req, **kwargs)
-
-    for _ in range(MAX_INSTALL_FAILURES):
-        if await hass.async_add_executor_job(_install, req, kwargs):
-            return
-
-    install_failure_history.add(req)
-    raise RequirementsNotFound(name, [req])
 
 
 def pip_kwargs(config_dir: str | None) -> dict[str, Any]:
