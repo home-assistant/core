@@ -27,7 +27,7 @@ from .coordinator import AirzoneUpdateCoordinator
 class AirzoneEntity(CoordinatorEntity[AirzoneUpdateCoordinator]):
     """Define an Airzone entity."""
 
-    def get_airzone_value(self, key) -> Any:
+    def get_airzone_value(self, key: str) -> Any:
         """Return Airzone entity value by key."""
         raise NotImplementedError()
 
@@ -58,7 +58,7 @@ class AirzoneSystemEntity(AirzoneEntity):
             entry.entry_id if entry.unique_id is None else entry.unique_id
         )
 
-    def get_airzone_value(self, key) -> Any:
+    def get_airzone_value(self, key: str) -> Any:
         """Return system value by key."""
         value = None
         if system := self.coordinator.data[AZD_SYSTEMS].get(self.system_id):
@@ -96,7 +96,7 @@ class AirzoneZoneEntity(AirzoneEntity):
             entry.entry_id if entry.unique_id is None else entry.unique_id
         )
 
-    def get_airzone_value(self, key) -> Any:
+    def get_airzone_value(self, key: str) -> Any:
         """Return zone value by key."""
         value = None
         if zone := self.coordinator.data[AZD_ZONES].get(self.system_zone_id):
