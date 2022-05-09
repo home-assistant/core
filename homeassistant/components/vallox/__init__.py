@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from datetime import date
 import ipaddress
 import logging
-from typing import Any, NamedTuple
+from typing import Any, NamedTuple, cast
 from uuid import UUID
 
 from vallox_websocket_api import PROFILE as VALLOX_PROFILE, Vallox
@@ -19,7 +19,7 @@ from vallox_websocket_api.vallox import (
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_NAME, Platform
+from homeassistant.const import ATTR_CONFIGURATION_URL, CONF_HOST, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
@@ -123,21 +123,16 @@ class ValloxState:
 
     def get_model(self) -> str | None:
         """Return the model, if any."""
-        model = _api_get_model(self.metric_cache)
+        model = cast(str, _api_get_model(self.metric_cache))
 
-        if not isinstance(model, str) or model == "Unknown":
+        if model == "Unknown":
             return None
 
         return model
 
-    def get_sw_version(self) -> str | None:
+    def get_sw_version(self) -> str:
         """Return the SW version."""
-        sw_version = _api_get_sw_version(self.metric_cache)
-
-        if not isinstance(sw_version, str):
-            return None
-
-        return sw_version
+        return cast(str, _api_get_sw_version(self.metric_cache))
 
     def get_uuid(self) -> UUID | None:
         """Return cached UUID value."""
@@ -337,5 +332,5 @@ class ValloxEntity(CoordinatorEntity[ValloxDataUpdateCoordinator]):
 
         if self.coordinator.config_entry is not None:
             self._attr_device_info[
-                "configuration_url"
+                ATTR_CONFIGURATION_URL
             ] = f"http://{self.coordinator.config_entry.data[CONF_HOST]}"
