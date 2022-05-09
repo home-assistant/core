@@ -39,9 +39,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AirzoneZoneEntity
 from .const import API_TEMPERATURE_STEP, DOMAIN, TEMP_UNIT_LIB_TO_HASS
 from .coordinator import AirzoneUpdateCoordinator
+from .entity import AirzoneZoneEntity
 
 _LOGGER = logging.getLogger(__name__)
 

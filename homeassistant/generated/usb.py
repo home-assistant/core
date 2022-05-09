@@ -79,6 +79,18 @@ USB = [
     },
     {
         "domain": "zha",
+        "vid": "0403",
+        "pid": "6015",
+        "description": "*zigate*"
+    },
+    {
+        "domain": "zha",
+        "vid": "10C4",
+        "pid": "EA60",
+        "description": "*zigate*"
+    },
+    {
+        "domain": "zha",
         "vid": "10C4",
         "pid": "8B34",
         "description": "*bv 2010/10*"
