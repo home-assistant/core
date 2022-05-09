@@ -42,7 +42,7 @@ _QUERY_SCHEME = vol.Schema(
         vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_QUERY): cv.string,
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        vol.Optional(CONF_VALUE_TEMPLATE): cv.string,
     }
 )
 

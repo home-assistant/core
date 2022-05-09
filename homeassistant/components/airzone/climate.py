@@ -99,8 +99,9 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
     ) -> None:
         """Initialize Airzone climate entity."""
         super().__init__(coordinator, entry, system_zone_id, zone_data)
+
         self._attr_name = f"{zone_data[AZD_NAME]}"
-        self._attr_unique_id = f"{entry.entry_id}_{system_zone_id}"
+        self._attr_unique_id = f"{self._attr_unique_id}_{system_zone_id}"
         self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
         self._attr_target_temperature_step = API_TEMPERATURE_STEP
         self._attr_max_temp = self.get_airzone_value(AZD_TEMP_MAX)
@@ -122,7 +123,7 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
         }
         _LOGGER.debug("update_hvac_params=%s", _params)
         try:
-            await self.coordinator.airzone.put_hvac(_params)
+            await self.coordinator.airzone.set_hvac_parameters(_params)
         except AirzoneError as error:
             raise HomeAssistantError(
                 f"Failed to set zone {self.name}: {error}"

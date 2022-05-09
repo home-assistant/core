@@ -44,8 +44,6 @@ from .const import (
     DEFAULT_SSL,
     DOMAIN,
     HOLD_MODE_TEMPERATURE,
-    VALID_FAN_STATES,
-    VALID_THERMOSTAT_MODES,
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -106,7 +104,8 @@ async def async_setup_platform(
 class VenstarThermostat(VenstarEntity, ClimateEntity):
     """Representation of a Venstar thermostat."""
 
-    _attr_hvac_modes = VALID_THERMOSTAT_MODES
+    _attr_fan_modes = [FAN_ON, FAN_AUTO]
+    _attr_hvac_modes = [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF, HVACMode.AUTO]
 
     def __init__(
         self,
@@ -155,11 +154,6 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
         if self._client.tempunits == self._client.TEMPUNITS_F:
             return TEMP_FAHRENHEIT
         return TEMP_CELSIUS
-
-    @property
-    def fan_modes(self):
-        """Return the list of available fan modes."""
-        return VALID_FAN_STATES
 
     @property
     def current_temperature(self):

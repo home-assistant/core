@@ -38,6 +38,7 @@ from .const import (
     CONF_CA_CERTS,
     CONF_CERTFILE,
     CONF_KEYFILE,
+    CONFIG_URL,
     DOMAIN,
     LUTRON_CASETA_BUTTON_EVENT,
     MANUFACTURER,
@@ -294,6 +295,8 @@ async def async_unload_entry(
 class LutronCasetaDevice(Entity):
     """Common base class for all Lutron Caseta devices."""
 
+    _attr_should_poll = False
+
     def __init__(self, device, bridge, bridge_device):
         """Set up the base class.
 
@@ -304,6 +307,20 @@ class LutronCasetaDevice(Entity):
         self._device = device
         self._smartbridge = bridge
         self._bridge_device = bridge_device
+        if "serial" not in self._device:
+            return
+        info = DeviceInfo(
+            identifiers={(DOMAIN, self.serial)},
+            manufacturer=MANUFACTURER,
+            model=f"{device['model']} ({device['type']})",
+            name=self.name,
+            via_device=(DOMAIN, self._bridge_device["serial"]),
+            configuration_url=CONFIG_URL,
+        )
+        area, _ = _area_and_name_from_name(device["name"])
+        if area != UNASSIGNED_AREA:
+            info[ATTR_SUGGESTED_AREA] = area
+        self._attr_device_info = info
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -330,27 +347,6 @@ class LutronCasetaDevice(Entity):
         return str(self.serial)
 
     @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        device = self._device
-        info = DeviceInfo(
-            identifiers={(DOMAIN, self.serial)},
-            manufacturer=MANUFACTURER,
-            model=f"{device['model']} ({device['type']})",
-            name=self.name,
-            via_device=(DOMAIN, self._bridge_device["serial"]),
-            configuration_url="https://device-login.lutron.com",
-        )
-        area, _ = _area_and_name_from_name(device["name"])
-        if area != UNASSIGNED_AREA:
-            info[ATTR_SUGGESTED_AREA] = area
-
-    @property
     def extra_state_attributes(self):
         """Return the state attributes."""
         return {"device_id": self.device_id, "zone_id": self._device["zone"]}
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False

@@ -5,18 +5,21 @@
                 "data": {
                     "all": "Wszystkie encje",
                     "entities": "Encje",
+                    "hide_members": "Ukryj encje",
                     "name": "Nazwa"
                 },
-                "description": "Je\u015bli \u201ewszystkie encje\u201d jest w\u0142\u0105czone, stan grupy jest w\u0142\u0105czony tylko wtedy, gdy wszystkie encje s\u0105 w\u0142\u0105czone. Je\u015bli \u201ewszystkie encje\u201d s\u0105 wy\u0142\u0105czone, stan grupy jest w\u0142\u0105czony, je\u015bli kt\u00f3rakolwiek encja jest w\u0142\u0105czona.",
-                "title": "Nowa grupa"
+                "description": "Je\u015bli \u201ewszystkie encje\u201d jest w\u0142\u0105czone, stan grupy jest w\u0142\u0105czony tylko wtedy, gdy wszystkie encje s\u0105 w\u0142\u0105czone. Je\u015bli \u201ewszystkie encje\u201d jest wy\u0142\u0105czone, stan grupy jest w\u0142\u0105czony, je\u015bli kt\u00f3rakolwiek encja jest w\u0142\u0105czona.",
+                "title": "Dodaj grup\u0119"
             },
             "cover": {
                 "data": {
                     "entities": "Encje",
+                    "hide_members": "Ukryj encje",
                     "name": "Nazwa",
-                    "title": "Nowa grupa"
+                    "title": "Dodaj grup\u0119"
                 },
-                "description": "Wybierz opcje grupy"
+                "description": "Wybierz opcje grupy",
+                "title": "Dodaj grup\u0119"
             },
             "cover_options": {
                 "data": {
@@ -27,10 +30,12 @@
             "fan": {
                 "data": {
                     "entities": "Encje",
+                    "hide_members": "Ukryj encje",
                     "name": "Nazwa",
-                    "title": "Nowa grupa"
+                    "title": "Dodaj grup\u0119"
                 },
-                "description": "Wybierz opcje grupy"
+                "description": "Wybierz opcje grupy",
+                "title": "Dodaj grup\u0119"
             },
             "fan_options": {
                 "data": {
@@ -46,11 +51,14 @@
             },
             "light": {
                 "data": {
+                    "all": "Wszystkie encje",
                     "entities": "Encje",
+                    "hide_members": "Ukryj encje",
                     "name": "Nazwa",
-                    "title": "Nowa grupa"
+                    "title": "Dodaj grup\u0119"
                 },
-                "description": "Wybierz opcje grupy"
+                "description": "Je\u015bli \u201ewszystkie encje\u201d jest w\u0142\u0105czone, stan grupy jest w\u0142\u0105czony tylko wtedy, gdy wszystkie encje s\u0105 w\u0142\u0105czone. Je\u015bli \u201ewszystkie encje\u201d jest wy\u0142\u0105czone, stan grupy jest w\u0142\u0105czony, je\u015bli kt\u00f3rakolwiek encja jest w\u0142\u0105czona.",
+                "title": "Dodaj grup\u0119"
             },
             "light_options": {
                 "data": {
@@ -58,13 +66,23 @@
                 },
                 "description": "Wybierz opcje grupy"
             },
+            "lock": {
+                "data": {
+                    "entities": "Encje",
+                    "hide_members": "Ukryj encje",
+                    "name": "Nazwa"
+                },
+                "title": "Dodaj grup\u0119"
+            },
             "media_player": {
                 "data": {
                     "entities": "Encje",
+                    "hide_members": "Ukryj encje",
                     "name": "Nazwa",
-                    "title": "Nowa grupa"
+                    "title": "Dodaj grup\u0119"
                 },
-                "description": "Wybierz opcje grupy"
+                "description": "Wybierz opcje grupy",
+                "title": "Dodaj grup\u0119"
             },
             "media_player_options": {
                 "data": {
@@ -72,20 +90,52 @@
                 },
                 "description": "Wybierz opcje grupy"
             },
+            "switch": {
+                "data": {
+                    "entities": "Encje",
+                    "hide_members": "Ukryj encje",
+                    "name": "Nazwa"
+                },
+                "title": "Dodaj grup\u0119"
+            },
             "user": {
                 "data": {
                     "group_type": "Rodzaj grupy"
                 },
-                "title": "Nowa grupa"
+                "description": "Grupy umo\u017cliwiaj\u0105 tworzenie nowej encji, kt\u00f3ra reprezentuje wiele encji tego samego typu.",
+                "menu_options": {
+                    "binary_sensor": "Grupa sensor\u00f3w binarnych",
+                    "cover": "Grupa rolet",
+                    "fan": "Grupa wentylator\u00f3w",
+                    "light": "Grupa \u015bwiate\u0142",
+                    "lock": "Grupa zamk\u00f3w",
+                    "media_player": "Grupa odtwarzaczy multimedialnych",
+                    "switch": "Grupa prze\u0142\u0105cznik\u00f3w"
+                },
+                "title": "Dodaj grup\u0119"
             }
         }
     },
     "options": {
         "step": {
+            "binary_sensor": {
+                "data": {
+                    "all": "Wszystkie encje",
+                    "entities": "Encje",
+                    "hide_members": "Ukryj encje"
+                },
+                "description": "Je\u015bli \u201ewszystkie encje\u201d jest w\u0142\u0105czone, stan grupy jest w\u0142\u0105czony tylko wtedy, gdy wszystkie encje s\u0105 w\u0142\u0105czone. Je\u015bli \u201ewszystkie encje\u201d jest wy\u0142\u0105czone, stan grupy jest w\u0142\u0105czony, je\u015bli kt\u00f3rakolwiek encja jest w\u0142\u0105czona."
+            },
             "binary_sensor_options": {
                 "data": {
                     "all": "Wszystkie encje",
                     "entities": "Encje"
+                }
+            },
+            "cover": {
+                "data": {
+                    "entities": "Encje",
+                    "hide_members": "Ukryj encje"
                 }
             },
             "cover_options": {
@@ -93,20 +143,55 @@
                     "entities": "Encje"
                 }
             },
+            "fan": {
+                "data": {
+                    "entities": "Encje",
+                    "hide_members": "Ukryj encje"
+                }
+            },
             "fan_options": {
                 "data": {
                     "entities": "Encje"
                 }
             },
+            "light": {
+                "data": {
+                    "all": "Wszystkie encje",
+                    "entities": "Encje",
+                    "hide_members": "Ukryj encje"
+                },
+                "description": "Je\u015bli \u201ewszystkie encje\u201d jest w\u0142\u0105czone, stan grupy jest w\u0142\u0105czony tylko wtedy, gdy wszystkie encje s\u0105 w\u0142\u0105czone. Je\u015bli \u201ewszystkie encje\u201d jest wy\u0142\u0105czone, stan grupy jest w\u0142\u0105czony, je\u015bli kt\u00f3rakolwiek encja jest w\u0142\u0105czona."
+            },
             "light_options": {
                 "data": {
+                    "all": "Wszystkie encje",
                     "entities": "Encje"
+                }
+            },
+            "lock": {
+                "data": {
+                    "entities": "Encje",
+                    "hide_members": "Ukryj encje"
+                }
+            },
+            "media_player": {
+                "data": {
+                    "entities": "Encje",
+                    "hide_members": "Ukryj encje"
                 }
             },
             "media_player_options": {
                 "data": {
                     "entities": "Encje"
                 }
+            },
+            "switch": {
+                "data": {
+                    "all": "Wszystkie encje",
+                    "entities": "Encje",
+                    "hide_members": "Ukryj encje"
+                },
+                "description": "Je\u015bli \u201ewszystkie encje\u201d jest w\u0142\u0105czone, stan grupy jest w\u0142\u0105czony tylko wtedy, gdy wszystkie encje s\u0105 w\u0142\u0105czone. Je\u015bli \u201ewszystkie encje\u201d jest wy\u0142\u0105czone, stan grupy jest w\u0142\u0105czony, je\u015bli kt\u00f3rakolwiek encja jest w\u0142\u0105czona."
             }
         }
     },

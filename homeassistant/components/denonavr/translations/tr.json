@@ -27,6 +27,9 @@
                 "data": {
                     "host": "IP Adresi"
                 },
+                "data_description": {
+                    "host": "Otomatik bulmay\u0131 kullanmak i\u00e7in bo\u015f b\u0131rak\u0131n"
+                },
                 "description": "Al\u0131c\u0131n\u0131za ba\u011flan\u0131n, IP adresi ayarlanmazsa otomatik bulma kullan\u0131l\u0131r",
                 "title": "Denon AVR A\u011f Al\u0131c\u0131lar\u0131"
             }

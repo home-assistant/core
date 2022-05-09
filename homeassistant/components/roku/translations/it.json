@@ -12,16 +12,16 @@
         "step": {
             "discovery_confirm": {
                 "data": {
-                    "one": "Pi\u00f9",
-                    "other": "Altri"
+                    "one": "Vuoto",
+                    "other": "Vuoti"
                 },
                 "description": "Vuoi configurare {name}?",
                 "title": "Roku"
             },
             "ssdp_confirm": {
                 "data": {
-                    "one": "Pi\u00f9",
-                    "other": "Altri"
+                    "one": "Vuoto",
+                    "other": "Vuoti"
                 },
                 "description": "Vuoi impostare {name}?",
                 "title": "Roku"

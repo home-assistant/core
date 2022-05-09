@@ -9,7 +9,7 @@ from sqlalchemy import text
 from sqlalchemy.sql.elements import TextClause
 
 from homeassistant.components import recorder
-from homeassistant.components.recorder import run_information_with_session, util
+from homeassistant.components.recorder import util
 from homeassistant.components.recorder.const import DATA_INSTANCE, SQLITE_URL_PREFIX
 from homeassistant.components.recorder.models import RecorderRuns
 from homeassistant.components.recorder.util import (
@@ -21,7 +21,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from .common import corrupt_db_file
+from .common import corrupt_db_file, run_information_with_session
 
 from tests.common import SetupRecorderInstanceT, async_test_home_assistant
 
@@ -45,7 +45,7 @@ def test_recorder_bad_commit(hass_recorder):
         session.execute(text("select * from notthere"))
 
     with patch(
-        "homeassistant.components.recorder.time.sleep"
+        "homeassistant.components.recorder.core.time.sleep"
     ) as e_mock, util.session_scope(hass=hass) as session:
         res = util.commit(session, work)
     assert res is False
@@ -66,7 +66,7 @@ def test_recorder_bad_execute(hass_recorder):
     mck1.to_native = to_native
 
     with pytest.raises(SQLAlchemyError), patch(
-        "homeassistant.components.recorder.time.sleep"
+        "homeassistant.components.recorder.core.time.sleep"
     ) as e_mock:
         util.execute((mck1,), to_native=True)
 
@@ -148,7 +148,7 @@ async def test_last_run_was_recently_clean(
         "homeassistant.components.recorder.util.last_run_was_recently_clean",
         wraps=_last_run_was_recently_clean,
     ) as last_run_was_recently_clean_mock, patch(
-        "homeassistant.components.recorder.dt_util.utcnow",
+        "homeassistant.components.recorder.core.dt_util.utcnow",
         return_value=thirty_min_future_time,
     ):
         hass = await async_test_home_assistant(None)

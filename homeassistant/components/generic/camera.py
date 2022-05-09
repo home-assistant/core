@@ -109,7 +109,7 @@ async def async_setup_entry(
     """Set up a generic IP Camera."""
 
     async_add_entities(
-        [GenericCamera(hass, entry.options, entry.unique_id, entry.title)]
+        [GenericCamera(hass, entry.options, entry.entry_id, entry.title)]
     )
 
 

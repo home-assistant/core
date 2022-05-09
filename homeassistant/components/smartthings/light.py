@@ -14,8 +14,8 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
-    SUPPORT_TRANSITION,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -86,7 +86,7 @@ class SmartThingsLight(SmartThingsEntity, LightEntity):
         features = 0
         # Brightness and transition
         if Capability.switch_level in self._device.capabilities:
-            features |= SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
+            features |= SUPPORT_BRIGHTNESS | LightEntityFeature.TRANSITION
         # Color Temperature
         if Capability.color_temperature in self._device.capabilities:
             features |= SUPPORT_COLOR_TEMP
@@ -124,7 +124,10 @@ class SmartThingsLight(SmartThingsEntity, LightEntity):
     async def async_turn_off(self, **kwargs) -> None:
         """Turn the light off."""
         # Switch/transition
-        if self._supported_features & SUPPORT_TRANSITION and ATTR_TRANSITION in kwargs:
+        if (
+            self._supported_features & LightEntityFeature.TRANSITION
+            and ATTR_TRANSITION in kwargs
+        ):
             await self.async_set_level(0, int(kwargs[ATTR_TRANSITION]))
         else:
             await self._device.switch_off(set_status=True)

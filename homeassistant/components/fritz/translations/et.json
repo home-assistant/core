@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
             "already_in_progress": "H\u00e4\u00e4lestamine on k\u00e4imas",
+            "ignore_ip6_link_local": "IPv6 lingi kohalikku aadressi ei toetata.",
             "reauth_successful": "Taastuvastamine \u00f5nnestus"
         },
         "error": {
