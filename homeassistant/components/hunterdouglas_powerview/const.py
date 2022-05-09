@@ -50,8 +50,8 @@ ROOM_ID = "id"
 SHADE_RESPONSE = "shade"
 SHADE_BATTERY_LEVEL = "batteryStrength"
 SHADE_BATTERY_LEVEL_MAX = 200
+SHADE_BATTERY_KIND = "batteryKind"
 
-SHADE_BATTERY_SENSOR_EXCLUDE = [1]
 SHADE_POWER_CONN_LIST = {
     0: "Unassigned",
     1: "Hardwired Power Supply",
