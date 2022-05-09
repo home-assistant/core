@@ -98,16 +98,13 @@ async def test_hassio_system_health_with_issues(hass, aioclient_mock):
 
     assert info["healthy"] == {
         "error": "Unhealthy",
-        "more_info": "/hassio/system",
         "type": "failed",
     }
     assert info["supported"] == {
         "error": "Unsupported",
-        "more_info": "/hassio/system",
         "type": "failed",
     }
     assert info["version_api"] == {
         "error": "unreachable",
-        "more_info": "/hassio/system",
         "type": "failed",
     }

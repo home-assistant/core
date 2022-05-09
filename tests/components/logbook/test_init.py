@@ -14,12 +14,14 @@ from homeassistant.components.alexa.smart_home import EVENT_ALEXA_SMART_HOME
 from homeassistant.components.automation import EVENT_AUTOMATION_TRIGGERED
 from homeassistant.components.recorder.models import process_timestamp_to_utc_isoformat
 from homeassistant.components.script import EVENT_SCRIPT_STARTED
+from homeassistant.components.sensor import SensorStateClass
 from homeassistant.const import (
     ATTR_DOMAIN,
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     ATTR_NAME,
     ATTR_SERVICE,
+    ATTR_UNIT_OF_MEASUREMENT,
     CONF_DOMAINS,
     CONF_ENTITIES,
     CONF_EXCLUDE,
@@ -33,6 +35,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 import homeassistant.core as ha
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entityfilter import CONF_ENTITY_GLOBS
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import async_setup_component
@@ -113,6 +116,35 @@ async def test_service_call_create_logbook_entry(hass_):
     assert last_call.data.get(logbook.ATTR_DOMAIN) == "logbook"
 
 
+async def test_service_call_create_logbook_entry_invalid_entity_id(hass, recorder_mock):
+    """Test if service call create log book entry with an invalid entity id."""
+    await async_setup_component(hass, "logbook", {})
+    await hass.async_block_till_done()
+    hass.bus.async_fire(
+        logbook.EVENT_LOGBOOK_ENTRY,
+        {
+            logbook.ATTR_NAME: "Alarm",
+            logbook.ATTR_MESSAGE: "is triggered",
+            logbook.ATTR_DOMAIN: "switch",
+            logbook.ATTR_ENTITY_ID: 1234,
+        },
+    )
+    await async_wait_recording_done(hass)
+
+    events = list(
+        logbook._get_events(
+            hass,
+            dt_util.utcnow() - timedelta(hours=1),
+            dt_util.utcnow() + timedelta(hours=1),
+        )
+    )
+    assert len(events) == 1
+    assert events[0][logbook.ATTR_DOMAIN] == "switch"
+    assert events[0][logbook.ATTR_NAME] == "Alarm"
+    assert events[0][logbook.ATTR_ENTITY_ID] == 1234
+    assert events[0][logbook.ATTR_MESSAGE] == "is triggered"
+
+
 async def test_service_call_create_log_book_entry_no_message(hass_):
     """Test if service call create log book entry without message."""
     calls = async_capture_events(hass_, logbook.EVENT_LOGBOOK_ENTRY)
@@ -128,27 +160,51 @@ async def test_service_call_create_log_book_entry_no_message(hass_):
     assert len(calls) == 0
 
 
-def test_humanify_filter_sensor(hass_):
-    """Test humanify filter too frequent sensor values."""
-    entity_id = "sensor.bla"
+async def test_filter_sensor(hass_: ha.HomeAssistant, hass_client):
+    """Test numeric sensors are filtered."""
 
-    pointA = dt_util.utcnow().replace(minute=2)
-    pointB = pointA.replace(minute=5)
-    pointC = pointA + timedelta(minutes=logbook.GROUP_BY_MINUTES)
-    entity_attr_cache = logbook.EntityAttributeCache(hass_)
+    registry = er.async_get(hass_)
 
-    eventA = create_state_changed_event(pointA, entity_id, 10)
-    eventB = create_state_changed_event(pointB, entity_id, 20)
-    eventC = create_state_changed_event(pointC, entity_id, 30)
+    # Unregistered sensor without a unit of measurement - should be in logbook
+    entity_id1 = "sensor.bla"
+    attributes_1 = None
+    # Unregistered sensor with a unit of measurement - should be excluded from logbook
+    entity_id2 = "sensor.blu"
+    attributes_2 = {ATTR_UNIT_OF_MEASUREMENT: "cats"}
+    # Registered sensor with state class - should be excluded from logbook
+    entity_id3 = registry.async_get_or_create(
+        "sensor",
+        "test",
+        "unique_3",
+        suggested_object_id="bli",
+        capabilities={"state_class": SensorStateClass.MEASUREMENT},
+    ).entity_id
+    attributes_3 = None
+    # Registered sensor without state class or unit - should be in logbook
+    entity_id4 = registry.async_get_or_create(
+        "sensor", "test", "unique_4", suggested_object_id="ble"
+    ).entity_id
+    attributes_4 = None
 
-    entries = list(
-        logbook.humanify(hass_, (eventA, eventB, eventC), entity_attr_cache, {})
-    )
+    hass_.states.async_set(entity_id1, None, attributes_1)  # Excluded
+    hass_.states.async_set(entity_id1, 10, attributes_1)  # Included
+    hass_.states.async_set(entity_id2, None, attributes_2)  # Excluded
+    hass_.states.async_set(entity_id2, 10, attributes_2)  # Excluded
+    hass_.states.async_set(entity_id3, None, attributes_3)  # Excluded
+    hass_.states.async_set(entity_id3, 10, attributes_3)  # Excluded
+    hass_.states.async_set(entity_id1, 20, attributes_1)  # Included
+    hass_.states.async_set(entity_id2, 20, attributes_2)  # Excluded
+    hass_.states.async_set(entity_id4, None, attributes_4)  # Excluded
+    hass_.states.async_set(entity_id4, 10, attributes_4)  # Included
 
-    assert len(entries) == 2
-    assert_entry(entries[0], pointB, "bla", entity_id=entity_id)
+    await async_wait_recording_done(hass_)
+    client = await hass_client()
+    entries = await _async_fetch_logbook(client)
 
-    assert_entry(entries[1], pointC, "bla", entity_id=entity_id)
+    assert len(entries) == 3
+    _assert_entry(entries[0], name="bla", entity_id=entity_id1, state="10")
+    _assert_entry(entries[1], name="bla", entity_id=entity_id1, state="20")
+    _assert_entry(entries[2], name="ble", entity_id=entity_id4, state="10")
 
 
 def test_home_assistant_start_stop_grouped(hass_):
@@ -173,6 +229,14 @@ def test_home_assistant_start_stop_grouped(hass_):
     assert_entry(
         entries[0], name="Home Assistant", message="restarted", domain=ha.DOMAIN
     )
+
+
+def test_unsupported_attributes_in_cache_throws(hass):
+    """Test unsupported attributes in cache."""
+    entity_attr_cache = logbook.EntityAttributeCache(hass)
+    event = MockLazyEventPartialState(EVENT_STATE_CHANGED)
+    with pytest.raises(ValueError):
+        entity_attr_cache.get("sensor.xyz", "not_supported", event)
 
 
 def test_home_assistant_start(hass_):
@@ -295,7 +359,7 @@ def create_state_changed_event_from_old_new(
     row.context_parent_id = None
     row.old_state_id = old_state and 1
     row.state_id = new_state and 1
-    return logbook.LazyEventPartialState(row)
+    return logbook.LazyEventPartialState(row, {})
 
 
 async def test_logbook_view(hass, hass_client, recorder_mock):
@@ -305,6 +369,26 @@ async def test_logbook_view(hass, hass_client, recorder_mock):
     client = await hass_client()
     response = await client.get(f"/api/logbook/{dt_util.utcnow().isoformat()}")
     assert response.status == HTTPStatus.OK
+
+
+async def test_logbook_view_invalid_start_date_time(hass, hass_client, recorder_mock):
+    """Test the logbook view with an invalid date time."""
+    await async_setup_component(hass, "logbook", {})
+    await async_recorder_block_till_done(hass)
+    client = await hass_client()
+    response = await client.get("/api/logbook/INVALID")
+    assert response.status == HTTPStatus.BAD_REQUEST
+
+
+async def test_logbook_view_invalid_end_date_time(hass, hass_client, recorder_mock):
+    """Test the logbook view."""
+    await async_setup_component(hass, "logbook", {})
+    await async_recorder_block_till_done(hass)
+    client = await hass_client()
+    response = await client.get(
+        f"/api/logbook/{dt_util.utcnow().isoformat()}?end_time=INVALID"
+    )
+    assert response.status == HTTPStatus.BAD_REQUEST
 
 
 async def test_logbook_view_period_entity(hass, hass_client, recorder_mock, set_utc):
@@ -1437,6 +1521,34 @@ async def test_icon_and_state(hass, hass_client, recorder_mock):
     assert response_json[2]["state"] == STATE_OFF
 
 
+async def test_fire_logbook_entries(hass, hass_client, recorder_mock):
+    """Test many logbook entry calls."""
+    await async_setup_component(hass, "logbook", {})
+    await async_recorder_block_till_done(hass)
+
+    for _ in range(10):
+        hass.bus.async_fire(
+            logbook.EVENT_LOGBOOK_ENTRY,
+            {
+                logbook.ATTR_NAME: "Alarm",
+                logbook.ATTR_MESSAGE: "is triggered",
+                logbook.ATTR_DOMAIN: "switch",
+                logbook.ATTR_ENTITY_ID: "sensor.xyz",
+            },
+        )
+        hass.bus.async_fire(
+            logbook.EVENT_LOGBOOK_ENTRY,
+            {},
+        )
+    await async_wait_recording_done(hass)
+
+    client = await hass_client()
+    response_json = await _async_fetch_logbook(client)
+
+    # The empty events should be skipped
+    assert len(response_json) == 10
+
+
 async def test_exclude_events_domain(hass, hass_client, recorder_mock):
     """Test if events are filtered if domain is excluded in config."""
     entity_id = "switch.bla"
@@ -1705,12 +1817,13 @@ async def test_include_exclude_events(hass, hass_client, recorder_mock):
     client = await hass_client()
     entries = await _async_fetch_logbook(client)
 
-    assert len(entries) == 3
+    assert len(entries) == 4
     _assert_entry(
         entries[0], name="Home Assistant", message="started", domain=ha.DOMAIN
     )
-    _assert_entry(entries[1], name="blu", entity_id=entity_id2)
-    _assert_entry(entries[2], name="keep", entity_id=entity_id4)
+    _assert_entry(entries[1], name="blu", entity_id=entity_id2, state="10")
+    _assert_entry(entries[2], name="blu", entity_id=entity_id2, state="20")
+    _assert_entry(entries[3], name="keep", entity_id=entity_id4, state="10")
 
 
 async def test_include_exclude_events_with_glob_filters(
@@ -1764,12 +1877,13 @@ async def test_include_exclude_events_with_glob_filters(
     client = await hass_client()
     entries = await _async_fetch_logbook(client)
 
-    assert len(entries) == 3
+    assert len(entries) == 4
     _assert_entry(
         entries[0], name="Home Assistant", message="started", domain=ha.DOMAIN
     )
-    _assert_entry(entries[1], name="blu", entity_id=entity_id2)
-    _assert_entry(entries[2], name="included", entity_id=entity_id4)
+    _assert_entry(entries[1], name="blu", entity_id=entity_id2, state="10")
+    _assert_entry(entries[2], name="blu", entity_id=entity_id2, state="20")
+    _assert_entry(entries[3], name="included", entity_id=entity_id4, state="30")
 
 
 async def test_empty_config(hass, hass_client, recorder_mock):
@@ -1854,22 +1968,22 @@ def _assert_entry(
     entry, when=None, name=None, message=None, domain=None, entity_id=None, state=None
 ):
     """Assert an entry is what is expected."""
-    if when:
+    if when is not None:
         assert when.isoformat() == entry["when"]
 
-    if name:
+    if name is not None:
         assert name == entry["name"]
 
-    if message:
+    if message is not None:
         assert message == entry["message"]
 
-    if domain:
+    if domain is not None:
         assert domain == entry["domain"]
 
-    if entity_id:
+    if entity_id is not None:
         assert entity_id == entry["entity_id"]
 
-    if state:
+    if state is not None:
         assert state == entry["state"]
 
 

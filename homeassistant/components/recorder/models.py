@@ -17,6 +17,7 @@ from sqlalchemy import (
     Identity,
     Index,
     Integer,
+    SmallInteger,
     String,
     Text,
     distinct,
@@ -35,7 +36,6 @@ from homeassistant.const import (
     MAX_LENGTH_STATE_STATE,
 )
 from homeassistant.core import Context, Event, EventOrigin, State, split_entity_id
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 import homeassistant.util.dt as dt_util
 
 from .const import ALL_DOMAIN_EXCLUDE_ATTRS, JSON_DUMP
@@ -44,13 +44,14 @@ from .const import ALL_DOMAIN_EXCLUDE_ATTRS, JSON_DUMP
 # pylint: disable=invalid-name
 Base = declarative_base()
 
-SCHEMA_VERSION = 26
+SCHEMA_VERSION = 28
 
 _LOGGER = logging.getLogger(__name__)
 
 DB_TIMEZONE = "+00:00"
 
 TABLE_EVENTS = "events"
+TABLE_EVENT_DATA = "event_data"
 TABLE_STATES = "states"
 TABLE_STATE_ATTRIBUTES = "state_attributes"
 TABLE_RECORDER_RUNS = "recorder_runs"
@@ -62,7 +63,9 @@ TABLE_STATISTICS_SHORT_TERM = "statistics_short_term"
 
 ALL_TABLES = [
     TABLE_STATES,
+    TABLE_STATE_ATTRIBUTES,
     TABLE_EVENTS,
+    TABLE_EVENT_DATA,
     TABLE_RECORDER_RUNS,
     TABLE_SCHEMA_CHANGES,
     TABLE_STATISTICS,
@@ -70,6 +73,14 @@ ALL_TABLES = [
     TABLE_STATISTICS_RUNS,
     TABLE_STATISTICS_SHORT_TERM,
 ]
+
+TABLES_TO_CHECK = [
+    TABLE_STATES,
+    TABLE_EVENTS,
+    TABLE_RECORDER_RUNS,
+    TABLE_SCHEMA_CHANGES,
+]
+
 
 EMPTY_JSON_OBJECT = "{}"
 
@@ -83,6 +94,8 @@ DOUBLE_TYPE = (
     .with_variant(oracle.DOUBLE_PRECISION(), "oracle")
     .with_variant(postgresql.DOUBLE_PRECISION(), "postgresql")
 )
+EVENT_ORIGIN_ORDER = [EventOrigin.local, EventOrigin.remote]
+EVENT_ORIGIN_TO_IDX = {origin: idx for idx, origin in enumerate(EVENT_ORIGIN_ORDER)}
 
 
 class Events(Base):  # type: ignore[misc,valid-type]
@@ -95,33 +108,34 @@ class Events(Base):  # type: ignore[misc,valid-type]
         {"mysql_default_charset": "utf8mb4", "mysql_collate": "utf8mb4_unicode_ci"},
     )
     __tablename__ = TABLE_EVENTS
-    event_id = Column(Integer, Identity(), primary_key=True)
+    event_id = Column(Integer, Identity(), primary_key=True)  # no longer used
     event_type = Column(String(MAX_LENGTH_EVENT_EVENT_TYPE))
     event_data = Column(Text().with_variant(mysql.LONGTEXT, "mysql"))
-    origin = Column(String(MAX_LENGTH_EVENT_ORIGIN))
+    origin = Column(String(MAX_LENGTH_EVENT_ORIGIN))  # no longer used
+    origin_idx = Column(SmallInteger)
     time_fired = Column(DATETIME_TYPE, index=True)
     context_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
-    context_user_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
-    context_parent_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
+    context_user_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID))
+    context_parent_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID))
+    data_id = Column(Integer, ForeignKey("event_data.data_id"), index=True)
+    event_data_rel = relationship("EventData")
 
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
         return (
             f"<recorder.Events("
-            f"id={self.event_id}, type='{self.event_type}', data='{self.event_data}', "
-            f"origin='{self.origin}', time_fired='{self.time_fired}'"
-            f")>"
+            f"id={self.event_id}, type='{self.event_type}', "
+            f"origin_idx='{self.origin_idx}', time_fired='{self.time_fired}'"
+            f", data_id={self.data_id})>"
         )
 
     @staticmethod
-    def from_event(
-        event: Event, event_data: UndefinedType | None = UNDEFINED
-    ) -> Events:
+    def from_event(event: Event) -> Events:
         """Create an event database object from a native event."""
         return Events(
             event_type=event.event_type,
-            event_data=JSON_DUMP(event.data) if event_data is UNDEFINED else event_data,
-            origin=str(event.origin.value),
+            event_data=None,
+            origin_idx=EVENT_ORIGIN_TO_IDX.get(event.origin),
             time_fired=event.time_fired,
             context_id=event.context.id,
             context_user_id=event.context.user_id,
@@ -138,8 +152,10 @@ class Events(Base):  # type: ignore[misc,valid-type]
         try:
             return Event(
                 self.event_type,
-                json.loads(self.event_data),
-                EventOrigin(self.origin),
+                json.loads(self.event_data) if self.event_data else {},
+                EventOrigin(self.origin)
+                if self.origin
+                else EVENT_ORIGIN_ORDER[self.origin_idx],
                 process_timestamp(self.time_fired),
                 context=context,
             )
@@ -147,6 +163,53 @@ class Events(Base):  # type: ignore[misc,valid-type]
             # When json.loads fails
             _LOGGER.exception("Error converting to event: %s", self)
             return None
+
+
+class EventData(Base):  # type: ignore[misc,valid-type]
+    """Event data history."""
+
+    __table_args__ = (
+        {"mysql_default_charset": "utf8mb4", "mysql_collate": "utf8mb4_unicode_ci"},
+    )
+    __tablename__ = TABLE_EVENT_DATA
+    data_id = Column(Integer, Identity(), primary_key=True)
+    hash = Column(BigInteger, index=True)
+    # Note that this is not named attributes to avoid confusion with the states table
+    shared_data = Column(Text().with_variant(mysql.LONGTEXT, "mysql"))
+
+    def __repr__(self) -> str:
+        """Return string representation of instance for debugging."""
+        return (
+            f"<recorder.EventData("
+            f"id={self.data_id}, hash='{self.hash}', data='{self.shared_data}'"
+            f")>"
+        )
+
+    @staticmethod
+    def from_event(event: Event) -> EventData:
+        """Create object from an event."""
+        shared_data = JSON_DUMP(event.data)
+        return EventData(
+            shared_data=shared_data, hash=EventData.hash_shared_data(shared_data)
+        )
+
+    @staticmethod
+    def shared_data_from_event(event: Event) -> str:
+        """Create shared_attrs from an event."""
+        return JSON_DUMP(event.data)
+
+    @staticmethod
+    def hash_shared_data(shared_data: str) -> int:
+        """Return the hash of json encoded shared data."""
+        return cast(int, fnv1a_32(shared_data.encode("utf-8")))
+
+    def to_native(self) -> dict[str, Any]:
+        """Convert to an HA state object."""
+        try:
+            return cast(dict[str, Any], json.loads(self.shared_data))
+        except ValueError:
+            _LOGGER.exception("Error converting row to event data: %s", self)
+            return {}
 
 
 class States(Base):  # type: ignore[misc,valid-type]
@@ -172,7 +235,10 @@ class States(Base):  # type: ignore[misc,valid-type]
     attributes_id = Column(
         Integer, ForeignKey("state_attributes.attributes_id"), index=True
     )
-    event = relationship("Events", uselist=False)
+    context_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
+    context_user_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID))
+    context_parent_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID))
+    origin_idx = Column(SmallInteger)  # 0 is local, 1 is remote
     old_state = relationship("States", remote_side=[state_id])
     state_attributes = relationship("StateAttributes")
 
@@ -192,7 +258,14 @@ class States(Base):  # type: ignore[misc,valid-type]
         """Create object from a state_changed event."""
         entity_id = event.data["entity_id"]
         state: State | None = event.data.get("new_state")
-        dbstate = States(entity_id=entity_id, attributes=None)
+        dbstate = States(
+            entity_id=entity_id,
+            attributes=None,
+            context_id=event.context.id,
+            context_user_id=event.context.user_id,
+            context_parent_id=event.context.parent_id,
+            origin_idx=EVENT_ORIGIN_TO_IDX.get(event.origin),
+        )
 
         # None state means the state was removed from the state machine
         if state is None:
@@ -208,6 +281,11 @@ class States(Base):  # type: ignore[misc,valid-type]
 
     def to_native(self, validate_entity_id: bool = True) -> State | None:
         """Convert to an HA state object."""
+        context = Context(
+            id=self.context_id,
+            user_id=self.context_user_id,
+            parent_id=self.context_parent_id,
+        )
         try:
             return State(
                 self.entity_id,
@@ -217,9 +295,7 @@ class States(Base):  # type: ignore[misc,valid-type]
                 json.loads(self.attributes) if self.attributes else {},
                 process_timestamp(self.last_changed),
                 process_timestamp(self.last_updated),
-                # Join the events table on event_id to get the context instead
-                # as it will always be there for state_changed events
-                context=Context(id=None),  # type: ignore[arg-type]
+                context=context,
                 validate_entity_id=validate_entity_id,
             )
         except ValueError:

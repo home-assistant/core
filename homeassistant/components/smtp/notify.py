@@ -235,7 +235,7 @@ def _attach_file(atch_name, content_id):
         attachment = MIMEImage(file_bytes)
     except TypeError:
         _LOGGER.warning(
-            "Attachment %s has an unknown MIME type. " "Falling back to file",
+            "Attachment %s has an unknown MIME type. Falling back to file",
             atch_name,
         )
         attachment = MIMEApplication(file_bytes, Name=atch_name)

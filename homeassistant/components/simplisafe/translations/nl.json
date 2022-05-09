@@ -14,7 +14,7 @@
             "unknown": "Onverwachte fout"
         },
         "progress": {
-            "email_2fa": "Voer de twee-factor authenticatie code in\ndie u per e-mail is toegezonden."
+            "email_2fa": "Controleer uw e-mail voor een verificatielink van Simplisafe."
         },
         "step": {
             "mfa": {

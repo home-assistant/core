@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Situs Jaringan UniFi sudah dikonfigurasi",
-            "configuration_updated": "Konfigurasi diperbarui.",
+            "configuration_updated": "Konfigurasi diperbarui",
             "reauth_successful": "Autentikasi ulang berhasil"
         },
         "error": {
@@ -26,6 +26,9 @@
         }
     },
     "options": {
+        "abort": {
+            "integration_not_setup": "Integrasi UniFi tidak disiapkan"
+        },
         "step": {
             "client_control": {
                 "data": {
