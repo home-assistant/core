@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Awaitable, Callable, Iterable
+from contextvars import ContextVar
 import dataclasses
 from functools import partial, wraps
 import logging
@@ -61,6 +62,9 @@ CONF_SERVICE_DATA_TEMPLATE = "data_template"
 _LOGGER = logging.getLogger(__name__)
 
 SERVICE_DESCRIPTION_CACHE = "service_description_cache"
+
+
+current_entity: ContextVar[str | None] = ContextVar("current_entity", default=None)
 
 
 class ServiceParams(TypedDict):
@@ -706,6 +710,7 @@ async def _handle_entity_call(
 ) -> None:
     """Handle calling service method."""
     entity.async_set_context(context)
+    current_entity.set(entity.entity_id)
 
     if isinstance(func, str):
         result = hass.async_run_job(partial(getattr(entity, func), **data))  # type: ignore[arg-type]
