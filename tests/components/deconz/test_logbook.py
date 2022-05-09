@@ -2,7 +2,6 @@
 
 from unittest.mock import patch
 
-from homeassistant.components import logbook
 from homeassistant.components.deconz.const import CONF_GESTURE, DOMAIN as DECONZ_DOMAIN
 from homeassistant.components.deconz.deconz_event import (
     CONF_DECONZ_ALARM_EVENT,
@@ -21,7 +20,7 @@ from homeassistant.util import slugify
 
 from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
 
-from tests.components.logbook.test_init import MockLazyEventPartialState
+from tests.components.logbook.common import MockRow, mock_humanify
 
 
 async def test_humanifying_deconz_alarm_event(hass, aioclient_mock):
@@ -67,26 +66,21 @@ async def test_humanifying_deconz_alarm_event(hass, aioclient_mock):
 
     hass.config.components.add("recorder")
     assert await async_setup_component(hass, "logbook", {})
-    entity_attr_cache = logbook.EntityAttributeCache(hass)
 
-    events = list(
-        logbook.humanify(
-            hass,
-            [
-                MockLazyEventPartialState(
-                    CONF_DECONZ_ALARM_EVENT,
-                    {
-                        CONF_CODE: 1234,
-                        CONF_DEVICE_ID: keypad_entry.id,
-                        CONF_EVENT: STATE_ALARM_ARMED_AWAY,
-                        CONF_ID: keypad_event_id,
-                        CONF_UNIQUE_ID: keypad_serial,
-                    },
-                ),
-            ],
-            entity_attr_cache,
-            {},
-        )
+    events = mock_humanify(
+        hass,
+        [
+            MockRow(
+                CONF_DECONZ_ALARM_EVENT,
+                {
+                    CONF_CODE: 1234,
+                    CONF_DEVICE_ID: keypad_entry.id,
+                    CONF_EVENT: STATE_ALARM_ARMED_AWAY,
+                    CONF_ID: keypad_event_id,
+                    CONF_UNIQUE_ID: keypad_serial,
+                },
+            ),
+        ],
     )
 
     assert events[0]["name"] == "Keypad"
@@ -161,66 +155,61 @@ async def test_humanifying_deconz_event(hass, aioclient_mock):
 
     hass.config.components.add("recorder")
     assert await async_setup_component(hass, "logbook", {})
-    entity_attr_cache = logbook.EntityAttributeCache(hass)
 
-    events = list(
-        logbook.humanify(
-            hass,
-            [
-                # Event without matching device trigger
-                MockLazyEventPartialState(
-                    CONF_DECONZ_EVENT,
-                    {
-                        CONF_DEVICE_ID: switch_entry.id,
-                        CONF_EVENT: 2000,
-                        CONF_ID: switch_event_id,
-                        CONF_UNIQUE_ID: switch_serial,
-                    },
-                ),
-                # Event with matching device trigger
-                MockLazyEventPartialState(
-                    CONF_DECONZ_EVENT,
-                    {
-                        CONF_DEVICE_ID: hue_remote_entry.id,
-                        CONF_EVENT: 2001,
-                        CONF_ID: hue_remote_event_id,
-                        CONF_UNIQUE_ID: hue_remote_serial,
-                    },
-                ),
-                # Gesture with matching device trigger
-                MockLazyEventPartialState(
-                    CONF_DECONZ_EVENT,
-                    {
-                        CONF_DEVICE_ID: xiaomi_cube_entry.id,
-                        CONF_GESTURE: 1,
-                        CONF_ID: xiaomi_cube_event_id,
-                        CONF_UNIQUE_ID: xiaomi_cube_serial,
-                    },
-                ),
-                # Unsupported device trigger
-                MockLazyEventPartialState(
-                    CONF_DECONZ_EVENT,
-                    {
-                        CONF_DEVICE_ID: xiaomi_cube_entry.id,
-                        CONF_GESTURE: "unsupported_gesture",
-                        CONF_ID: xiaomi_cube_event_id,
-                        CONF_UNIQUE_ID: xiaomi_cube_serial,
-                    },
-                ),
-                # Unknown event
-                MockLazyEventPartialState(
-                    CONF_DECONZ_EVENT,
-                    {
-                        CONF_DEVICE_ID: faulty_entry.id,
-                        "unknown_event": None,
-                        CONF_ID: faulty_event_id,
-                        CONF_UNIQUE_ID: faulty_serial,
-                    },
-                ),
-            ],
-            entity_attr_cache,
-            {},
-        )
+    events = mock_humanify(
+        hass,
+        [
+            # Event without matching device trigger
+            MockRow(
+                CONF_DECONZ_EVENT,
+                {
+                    CONF_DEVICE_ID: switch_entry.id,
+                    CONF_EVENT: 2000,
+                    CONF_ID: switch_event_id,
+                    CONF_UNIQUE_ID: switch_serial,
+                },
+            ),
+            # Event with matching device trigger
+            MockRow(
+                CONF_DECONZ_EVENT,
+                {
+                    CONF_DEVICE_ID: hue_remote_entry.id,
+                    CONF_EVENT: 2001,
+                    CONF_ID: hue_remote_event_id,
+                    CONF_UNIQUE_ID: hue_remote_serial,
+                },
+            ),
+            # Gesture with matching device trigger
+            MockRow(
+                CONF_DECONZ_EVENT,
+                {
+                    CONF_DEVICE_ID: xiaomi_cube_entry.id,
+                    CONF_GESTURE: 1,
+                    CONF_ID: xiaomi_cube_event_id,
+                    CONF_UNIQUE_ID: xiaomi_cube_serial,
+                },
+            ),
+            # Unsupported device trigger
+            MockRow(
+                CONF_DECONZ_EVENT,
+                {
+                    CONF_DEVICE_ID: xiaomi_cube_entry.id,
+                    CONF_GESTURE: "unsupported_gesture",
+                    CONF_ID: xiaomi_cube_event_id,
+                    CONF_UNIQUE_ID: xiaomi_cube_serial,
+                },
+            ),
+            # Unknown event
+            MockRow(
+                CONF_DECONZ_EVENT,
+                {
+                    CONF_DEVICE_ID: faulty_entry.id,
+                    "unknown_event": None,
+                    CONF_ID: faulty_event_id,
+                    CONF_UNIQUE_ID: faulty_serial,
+                },
+            ),
+        ],
     )
 
     assert events[0]["name"] == "Switch 1"

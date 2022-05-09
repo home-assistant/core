@@ -2,8 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Device is already configured",
-            "reauth_successful": "Re-authentication was successful",
-            "not_ipv4_address": "Only IPv4 addresess are supported"
+            "reauth_successful": "Re-authentication was successful"
         },
         "error": {
             "cannot_connect": "Failed to connect",

@@ -23,17 +23,14 @@ _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_DB_URL): selector.TextSelector(selector.TextSelectorConfig()),
-        vol.Required(CONF_COLUMN_NAME): selector.TextSelector(
-            selector.TextSelectorConfig()
+        vol.Required(CONF_NAME, default="Select SQL Query"): selector.TextSelector(),
+        vol.Optional(CONF_DB_URL): selector.TextSelector(),
+        vol.Required(CONF_COLUMN_NAME): selector.TextSelector(),
+        vol.Required(CONF_QUERY): selector.TextSelector(
+            selector.TextSelectorConfig(multiline=True)
         ),
-        vol.Required(CONF_QUERY): selector.TextSelector(selector.TextSelectorConfig()),
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT): selector.TextSelector(
-            selector.TextSelectorConfig()
-        ),
-        vol.Optional(CONF_VALUE_TEMPLATE): selector.TemplateSelector(
-            selector.TemplateSelectorConfig()
-        ),
+        vol.Optional(CONF_UNIT_OF_MEASUREMENT): selector.TextSelector(),
+        vol.Optional(CONF_VALUE_TEMPLATE): selector.TemplateSelector(),
     }
 )
 
@@ -109,8 +106,7 @@ class SQLConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             column = user_input[CONF_COLUMN_NAME]
             uom = user_input.get(CONF_UNIT_OF_MEASUREMENT)
             value_template = user_input.get(CONF_VALUE_TEMPLATE)
-
-            name = f"Select {column} SQL query"
+            name = user_input[CONF_NAME]
 
             try:
                 validate_sql_select(query)
@@ -171,7 +167,14 @@ class SQLOptionsFlowHandler(config_entries.OptionsFlow):
             except ValueError:
                 errors["query"] = "query_invalid"
             else:
-                return self.async_create_entry(title="", data=user_input)
+                return self.async_create_entry(
+                    title="",
+                    data={
+                        CONF_NAME: self.entry.title,
+                        **self.entry.options,
+                        **user_input,
+                    },
+                )
 
         return self.async_show_form(
             step_id="init",
@@ -182,17 +185,19 @@ class SQLOptionsFlowHandler(config_entries.OptionsFlow):
                         description={
                             "suggested_value": self.entry.options[CONF_DB_URL]
                         },
-                    ): selector.selector({"text": {}}),
+                    ): selector.TextSelector(),
                     vol.Required(
                         CONF_QUERY,
                         description={"suggested_value": self.entry.options[CONF_QUERY]},
-                    ): selector.selector({"text": {}}),
+                    ): selector.TextSelector(
+                        selector.TextSelectorConfig(multiline=True)
+                    ),
                     vol.Required(
                         CONF_COLUMN_NAME,
                         description={
                             "suggested_value": self.entry.options[CONF_COLUMN_NAME]
                         },
-                    ): selector.selector({"text": {}}),
+                    ): selector.TextSelector(),
                     vol.Optional(
                         CONF_UNIT_OF_MEASUREMENT,
                         description={
@@ -200,7 +205,7 @@ class SQLOptionsFlowHandler(config_entries.OptionsFlow):
                                 CONF_UNIT_OF_MEASUREMENT
                             )
                         },
-                    ): selector.selector({"text": {}}),
+                    ): selector.TextSelector(),
                     vol.Optional(
                         CONF_VALUE_TEMPLATE,
                         description={
@@ -208,7 +213,7 @@ class SQLOptionsFlowHandler(config_entries.OptionsFlow):
                                 CONF_VALUE_TEMPLATE
                             )
                         },
-                    ): selector.selector({"text": {}}),
+                    ): selector.TemplateSelector(),
                 }
             ),
             errors=errors,

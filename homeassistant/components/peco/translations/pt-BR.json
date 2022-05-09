@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "O servi\u00e7o j\u00e1 est\u00e1 configurado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "county": "Munic\u00edpio"
+                },
+                "description": "Por favor, escolha seu munic\u00edpio abaixo.",
+                "title": "Contador de Interrup\u00e7\u00e3o PECO"
+            }
+        }
+    }
+}

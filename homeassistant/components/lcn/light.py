@@ -9,9 +9,9 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_TRANSITION,
     DOMAIN as DOMAIN_LIGHT,
-    SUPPORT_TRANSITION,
     ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_DOMAIN, CONF_ENTITIES
@@ -64,7 +64,7 @@ async def async_setup_entry(
 class LcnOutputLight(LcnEntity, LightEntity):
     """Representation of a LCN light for output ports."""
 
-    _attr_supported_features = SUPPORT_TRANSITION
+    _attr_supported_features = LightEntityFeature.TRANSITION
 
     def __init__(
         self, config: ConfigType, entry_id: str, device_connection: DeviceConnectionType

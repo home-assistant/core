@@ -32,44 +32,45 @@ from .const import (
     CHARGER_STATUS_ID_KEY,
     CONF_STATION,
     DOMAIN,
+    ChargerStatus,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.SENSOR, Platform.NUMBER, Platform.LOCK]
+PLATFORMS = [Platform.SENSOR, Platform.NUMBER, Platform.LOCK, Platform.SWITCH]
 UPDATE_INTERVAL = 30
 
 # Translation of StatusId based on Wallbox portal code:
 # https://my.wallbox.com/src/utilities/charger/chargerStatuses.js
-CHARGER_STATUS: dict[int, str] = {
-    0: "Disconnected",
-    14: "Error",
-    15: "Error",
-    161: "Ready",
-    162: "Ready",
-    163: "Disconnected",
-    164: "Waiting",
-    165: "Locked",
-    166: "Updating",
-    177: "Scheduled",
-    178: "Paused",
-    179: "Scheduled",
-    180: "Waiting for car demand",
-    181: "Waiting for car demand",
-    182: "Paused",
-    183: "Waiting in queue by Power Sharing",
-    184: "Waiting in queue by Power Sharing",
-    185: "Waiting in queue by Power Boost",
-    186: "Waiting in queue by Power Boost",
-    187: "Waiting MID failed",
-    188: "Waiting MID safety margin exceeded",
-    189: "Waiting in queue by Eco-Smart",
-    193: "Charging",
-    194: "Charging",
-    195: "Charging",
-    196: "Discharging",
-    209: "Locked",
-    210: "Locked",
+CHARGER_STATUS: dict[int, ChargerStatus] = {
+    0: ChargerStatus.DISCONNECTED,
+    14: ChargerStatus.ERROR,
+    15: ChargerStatus.ERROR,
+    161: ChargerStatus.READY,
+    162: ChargerStatus.READY,
+    163: ChargerStatus.DISCONNECTED,
+    164: ChargerStatus.WAITING,
+    165: ChargerStatus.LOCKED,
+    166: ChargerStatus.UPDATING,
+    177: ChargerStatus.SCHEDULED,
+    178: ChargerStatus.PAUSED,
+    179: ChargerStatus.SCHEDULED,
+    180: ChargerStatus.WAITING_FOR_CAR,
+    181: ChargerStatus.WAITING_FOR_CAR,
+    182: ChargerStatus.PAUSED,
+    183: ChargerStatus.WAITING_IN_QUEUE_POWER_SHARING,
+    184: ChargerStatus.WAITING_IN_QUEUE_POWER_SHARING,
+    185: ChargerStatus.WAITING_IN_QUEUE_POWER_BOOST,
+    186: ChargerStatus.WAITING_IN_QUEUE_POWER_BOOST,
+    187: ChargerStatus.WAITING_MID_FAILED,
+    188: ChargerStatus.WAITING_MID_SAFETY,
+    189: ChargerStatus.WAITING_IN_QUEUE_ECO_SMART,
+    193: ChargerStatus.CHARGING,
+    194: ChargerStatus.CHARGING,
+    195: ChargerStatus.CHARGING,
+    196: ChargerStatus.DISCHARGING,
+    209: ChargerStatus.LOCKED,
+    210: ChargerStatus.LOCKED,
 }
 
 
@@ -122,7 +123,7 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 CHARGER_LOCKED_UNLOCKED_KEY
             ]
             data[CHARGER_STATUS_DESCRIPTION_KEY] = CHARGER_STATUS.get(
-                data[CHARGER_STATUS_ID_KEY], "Unknown"
+                data[CHARGER_STATUS_ID_KEY], ChargerStatus.UNKNOWN
             )
 
             return data
@@ -167,6 +168,24 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def async_set_lock_unlock(self, lock: bool) -> None:
         """Set wallbox to locked or unlocked."""
         await self.hass.async_add_executor_job(self._set_lock_unlock, lock)
+        await self.async_request_refresh()
+
+    def _pause_charger(self, pause: bool) -> None:
+        """Set wallbox to pause or resume."""
+        try:
+            self._authenticate()
+            if pause:
+                self._wallbox.pauseChargingSession(self._station)
+            else:
+                self._wallbox.resumeChargingSession(self._station)
+        except requests.exceptions.HTTPError as wallbox_connection_error:
+            if wallbox_connection_error.response.status_code == 403:
+                raise InvalidAuth from wallbox_connection_error
+            raise ConnectionError from wallbox_connection_error
+
+    async def async_pause_charger(self, pause: bool) -> None:
+        """Set wallbox to pause or resume."""
+        await self.hass.async_add_executor_job(self._pause_charger, pause)
         await self.async_request_refresh()
 
 

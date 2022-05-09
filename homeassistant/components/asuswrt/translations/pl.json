@@ -1,6 +1,9 @@
 {
     "config": {
         "abort": {
+            "invalid_unique_id": "Nie mo\u017cna okre\u015bli\u0107 prawid\u0142owego unikalnego identyfikatora urz\u0105dzenia",
+            "no_unique_id": "Urz\u0105dzenie bez prawid\u0142owego unikalnego identyfikatora jest ju\u017c skonfigurowane. Konfiguracja wielu instancji nie jest mo\u017cliwa.",
+            "not_unique_id_exist": "Urz\u0105dzenie bez prawid\u0142owego unikalnego identyfikatora jest ju\u017c skonfigurowane. Konfiguracja wielu instancji nie jest mo\u017cliwa.",
             "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
         },
         "error": {
@@ -18,7 +21,7 @@
                     "mode": "Tryb",
                     "name": "Nazwa",
                     "password": "Has\u0142o",
-                    "port": "Port",
+                    "port": "Port (pozostaw puste dla domy\u015blnego protoko\u0142u)",
                     "protocol": "Wybierz protok\u00f3\u0142 komunikacyjny",
                     "ssh_key": "\u015acie\u017cka do pliku z kluczem SSH (zamiast has\u0142a)",
                     "username": "Nazwa u\u017cytkownika"

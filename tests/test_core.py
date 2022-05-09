@@ -442,6 +442,24 @@ async def test_eventbus_filtered_listener(hass):
     unsub()
 
 
+async def test_eventbus_run_immediately(hass):
+    """Test we can call events immediately."""
+    calls = []
+
+    @ha.callback
+    def listener(event):
+        """Mock listener."""
+        calls.append(event)
+
+    unsub = hass.bus.async_listen("test", listener, run_immediately=True)
+
+    hass.bus.async_fire("test", {"event": True})
+    # No async_block_till_done here
+    assert len(calls) == 1
+
+    unsub()
+
+
 async def test_eventbus_unsubscribe_listener(hass):
     """Test unsubscribe listener from returned function."""
     calls = []

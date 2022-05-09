@@ -297,6 +297,12 @@ async def test_loading_extra_values(hass, hass_storage):
                     "unique_id": "invalid-hass",
                     "disabled_by": er.RegistryEntryDisabler.HASS,
                 },
+                {
+                    "entity_id": "test.system_entity",
+                    "platform": "super_platform",
+                    "unique_id": "system-entity",
+                    "entity_category": "system",
+                },
             ]
         },
     }
@@ -304,7 +310,7 @@ async def test_loading_extra_values(hass, hass_storage):
     await er.async_load(hass)
     registry = er.async_get(hass)
 
-    assert len(registry.entities) == 4
+    assert len(registry.entities) == 5
 
     entry_with_name = registry.async_get_or_create(
         "test", "super_platform", "with-name"
@@ -326,6 +332,11 @@ async def test_loading_extra_values(hass, hass_storage):
     assert entry_disabled_hass.disabled_by is er.RegistryEntryDisabler.HASS
     assert entry_disabled_user.disabled
     assert entry_disabled_user.disabled_by is er.RegistryEntryDisabler.USER
+
+    entry_system_category = registry.async_get_or_create(
+        "test", "system_entity", "system-entity"
+    )
+    assert entry_system_category.entity_category is None
 
 
 def test_async_get_entity_id(registry):

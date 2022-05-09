@@ -16,6 +16,7 @@ from homeassistant.components.light import (
     color_supported,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -53,7 +54,9 @@ async def async_setup_entry(
     async_add_entities(
         [
             FibaroLight(device)
-            for device in hass.data[DOMAIN][entry.entry_id][FIBARO_DEVICES]["light"]
+            for device in hass.data[DOMAIN][entry.entry_id][FIBARO_DEVICES][
+                Platform.LIGHT
+            ]
         ],
         True,
     )
@@ -182,6 +185,6 @@ class FibaroLight(FibaroDevice, LightEntity):
             rgbw_list = [int(i) for i in rgbw_s.split(",")][:4]
 
             if self._attr_color_mode == ColorMode.RGB:
-                self._attr_rgb_color = tuple(*rgbw_list[:3])
+                self._attr_rgb_color = tuple(rgbw_list[:3])
             else:
                 self._attr_rgbw_color = tuple(rgbw_list)

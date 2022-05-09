@@ -14,7 +14,7 @@
                     "longitude": "Hossz\u00fas\u00e1g",
                     "name": "Az integr\u00e1ci\u00f3 neve"
                 },
-                "description": "\u00c1ll\u00edtsa be az AEMET OpenData integr\u00e1ci\u00f3t. Az API-kulcs el\u0151\u00e1ll\u00edt\u00e1s\u00e1hoz keresse fel a https://opendata.aemet.es/centrodedescargas/altaUsuario webhelyet.",
+                "description": "Az API-kulcs l\u00e9trehoz\u00e1s\u00e1hoz keresse fel a https://opendata.aemet.es/centrodedescargas/altaUsuario webhelyet",
                 "title": "AEMET OpenData"
             }
         }

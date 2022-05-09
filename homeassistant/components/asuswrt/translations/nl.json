@@ -1,6 +1,9 @@
 {
     "config": {
         "abort": {
+            "invalid_unique_id": "Onmogelijk om een geldige unieke id voor het apparaat te bepalen",
+            "no_unique_id": "Een apparaat zonder geldige unieke id is al geconfigureerd. Configuratie van meerdere instanties is niet mogelijk",
+            "not_unique_id_exist": "Een apparaat zonder geldige unieke id is al geconfigureerd. Configuratie van meerdere instanties is niet mogelijk",
             "single_instance_allowed": "Al geconfigureerd. Slechts een enkele configuratie mogelijk."
         },
         "error": {
@@ -18,7 +21,7 @@
                     "mode": "Mode",
                     "name": "Naam",
                     "password": "Wachtwoord",
-                    "port": "Poort",
+                    "port": "Poort (leeg laten voor protocol standaard)",
                     "protocol": "Te gebruiken communicatieprotocol",
                     "ssh_key": "Pad naar uw SSH-sleutelbestand (in plaats van wachtwoord)",
                     "username": "Gebruikersnaam"
