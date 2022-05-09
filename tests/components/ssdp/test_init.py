@@ -118,17 +118,6 @@ async def test_ssdp_flow_dispatched_on_manufacturer_url(
     assert mock_call_data.x_homeassistant_matching_domains == {"mock-domain"}
     assert mock_call_data.upnp == {ssdp.ATTR_UPNP_UDN: "uuid:mock-udn"}
     assert "Failed to fetch ssdp data" not in caplog.text
-    # Compatibility with old dict access (to be removed after 2022.6)
-    assert mock_call_data[ssdp.ATTR_SSDP_ST] == "mock-st"
-    assert mock_call_data[ssdp.ATTR_SSDP_LOCATION] == "http://1.1.1.1"
-    assert mock_call_data[ssdp.ATTR_SSDP_USN] == "uuid:mock-udn::mock-st"
-    assert mock_call_data[ssdp.ATTR_SSDP_SERVER] == "mock-server"
-    assert mock_call_data[ssdp.ATTR_SSDP_EXT] == ""
-    assert mock_call_data[ssdp.ATTR_UPNP_UDN] == "uuid:mock-udn"
-    assert mock_call_data[ssdp.ATTR_SSDP_UDN] == ANY
-    assert mock_call_data["_timestamp"] == ANY
-    assert mock_call_data[ssdp.ATTR_HA_MATCHING_DOMAINS] == {"mock-domain"}
-    # End compatibility checks
 
 
 @pytest.mark.usefixtures("mock_get_source_ip")
