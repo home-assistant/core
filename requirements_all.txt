@@ -957,7 +957,7 @@ lmnotify==0.0.4
 locationsharinglib==4.1.5
 
 # homeassistant.components.logi_circle
-logi_circle==0.2.2
+logi_circle==0.2.3
 
 # homeassistant.components.london_underground
 london-tube-status==0.2
