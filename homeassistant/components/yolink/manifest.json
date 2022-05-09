@@ -3,7 +3,7 @@
   "name": "YoLink",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/yolink",
-  "requirements": ["yolink-api==0.0.4"],
+  "requirements": ["yolink-api==0.0.5"],
   "dependencies": ["auth"],
   "codeowners": ["@YoSmart-Inc"],
   "iot_class": "cloud_push"
