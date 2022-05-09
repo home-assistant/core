@@ -174,6 +174,7 @@ homeassistant.components.powerwall.*
 homeassistant.components.proximity.*
 homeassistant.components.pvoutput.*
 homeassistant.components.pure_energie.*
+homeassistant.components.qnap_qsw.*
 homeassistant.components.rainmachine.*
 homeassistant.components.rdw.*
 homeassistant.components.recollect_waste.*
