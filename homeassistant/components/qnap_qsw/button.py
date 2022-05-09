@@ -3,9 +3,8 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Final
+from typing import Final, cast
 
-from aioqsw.const import QSD_PRODUCT, QSD_SYSTEM_BOARD
 from aioqsw.localapi import QnapQswApi
 
 from homeassistant.components.button import (
@@ -41,7 +40,7 @@ BUTTON_TYPES: Final[tuple[QswButtonDescription, ...]] = (
         entity_category=EntityCategory.CONFIG,
         key=QSW_REBOOT,
         name="Reboot",
-        press_action=lambda qsw: qsw.reboot(),
+        press_action=lambda qsw: cast(Awaitable[bool], qsw.reboot()),
     ),
 )
 
@@ -69,9 +68,7 @@ class QswButton(QswEntity, ButtonEntity):
     ) -> None:
         """Initialize."""
         super().__init__(coordinator, entry)
-        self._attr_name = (
-            f"{self.get_device_value(QSD_SYSTEM_BOARD, QSD_PRODUCT)} {description.name}"
-        )
+        self._attr_name = f"{self.product} {description.name}"
         self._attr_unique_id = f"{entry.unique_id}_{description.key}"
         self.entity_description = description
 
