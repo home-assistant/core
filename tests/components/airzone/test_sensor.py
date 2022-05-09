@@ -1,12 +1,16 @@
 """The sensor tests for the Airzone platform."""
 
+from unittest.mock import AsyncMock
+
 from homeassistant.components.airzone.sensor import WEBSERVER_SENSOR_TYPES
 from homeassistant.core import HomeAssistant
 
 from .util import async_init_integration
 
 
-async def test_airzone_create_sensors(hass: HomeAssistant) -> None:
+async def test_airzone_create_sensors(
+    hass: HomeAssistant, entity_registry_enabled_by_default: AsyncMock
+) -> None:
     """Test creation of sensors."""
 
     for sensor in WEBSERVER_SENSOR_TYPES:
