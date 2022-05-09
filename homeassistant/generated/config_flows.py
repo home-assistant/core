@@ -79,6 +79,7 @@ FLOWS = {
         "dnsip",
         "doorbird",
         "dsmr",
+        "dsmr_reader",
         "dunehd",
         "dynalite",
         "eafm",
