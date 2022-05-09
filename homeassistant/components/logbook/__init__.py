@@ -402,8 +402,7 @@ def humanify(
                 data = describe_event(event_cache.get(row))
                 data["when"] = _row_time_fired_isoformat(row)
                 data["domain"] = domain
-                entity_id = data.get(ATTR_ENTITY_ID)
-                context_augmenter.augment(data, entity_id, row)
+                context_augmenter.augment(data, data.get(ATTR_ENTITY_ID), row)
                 yield data
 
             elif row.event_type == EVENT_HOMEASSISTANT_START:
