@@ -658,7 +658,7 @@ librouteros==3.2.0
 libsoundtouch==0.8
 
 # homeassistant.components.logi_circle
-logi_circle==0.2.2
+logi_circle==0.2.3
 
 # homeassistant.components.recorder
 lru-dict==1.1.7
@@ -815,9 +815,6 @@ pexpect==4.6.0
 # homeassistant.components.modem_callerid
 phone_modem==0.1.1
 
-# homeassistant.components.onewire
-pi1wire==0.1.0
-
 # homeassistant.components.pilight
 pilight==0.1.1
 
@@ -944,7 +941,7 @@ pybotvac==0.0.23
 pycfdns==1.2.2
 
 # homeassistant.components.cast
-pychromecast==12.1.1
+pychromecast==12.1.2
 
 # homeassistant.components.climacell
 pyclimacell==0.18.2

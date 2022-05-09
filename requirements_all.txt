@@ -960,7 +960,7 @@ lmnotify==0.0.4
 locationsharinglib==4.1.5
 
 # homeassistant.components.logi_circle
-logi_circle==0.2.2
+logi_circle==0.2.3
 
 # homeassistant.components.london_underground
 london-tube-status==0.2
@@ -1213,9 +1213,6 @@ pexpect==4.6.0
 # homeassistant.components.modem_callerid
 phone_modem==0.1.1
 
-# homeassistant.components.onewire
-pi1wire==0.1.0
-
 # homeassistant.components.remote_rpi_gpio
 pigpio==1.78
 
@@ -1405,7 +1402,7 @@ pycfdns==1.2.2
 pychannels==1.0.0
 
 # homeassistant.components.cast
-pychromecast==12.1.1
+pychromecast==12.1.2
 
 # homeassistant.components.pocketcasts
 pycketcasts==1.0.0

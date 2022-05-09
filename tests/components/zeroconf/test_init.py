@@ -3,7 +3,6 @@ from ipaddress import ip_address
 from typing import Any
 from unittest.mock import call, patch
 
-import pytest
 from zeroconf import InterfaceChoice, IPVersion, ServiceStateChange
 from zeroconf.asyncio import AsyncServiceInfo
 
@@ -1167,33 +1166,3 @@ async def test_no_name(hass, mock_async_zeroconf):
     register_call = mock_async_zeroconf.async_register_service.mock_calls[-1]
     info = register_call.args[0]
     assert info.name == "Home._home-assistant._tcp.local."
-
-
-@pytest.mark.usefixtures("mock_integration_frame")
-async def test_service_info_compatibility(hass, caplog):
-    """Test compatibility with old-style dict.
-
-    To be removed in 2022.6
-    """
-    discovery_info = zeroconf.ZeroconfServiceInfo(
-        host="mock_host",
-        addresses=["mock_host"],
-        port=None,
-        hostname="mock_hostname",
-        type="mock_type",
-        name="mock_name",
-        properties={},
-    )
-
-    with patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set()):
-        assert discovery_info["host"] == "mock_host"
-    assert "Detected integration that accessed discovery_info['host']" in caplog.text
-
-    with patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set()):
-        assert discovery_info.get("host") == "mock_host"
-    assert (
-        "Detected integration that accessed discovery_info.get('host')" in caplog.text
-    )
-
-    assert discovery_info.get("host", "fallback_host") == "mock_host"
-    assert discovery_info.get("invalid_key", "fallback_host") == "fallback_host"
