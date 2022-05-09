@@ -31,6 +31,7 @@ from typing import (
     NamedTuple,
     Optional,
     TypeVar,
+    Union,
     cast,
     overload,
 )
@@ -132,9 +133,12 @@ SOURCE_YAML = ConfigSource.YAML.value
 # How long to wait until things that run on startup have to finish.
 TIMEOUT_EVENT_START = 15
 
+MAX_EXPECTED_ENTITY_IDS = 16384
+
 _LOGGER = logging.getLogger(__name__)
 
 
+@functools.lru_cache(MAX_EXPECTED_ENTITY_IDS)
 def split_entity_id(entity_id: str) -> tuple[str, str]:
     """Split a state entity ID into domain and object ID."""
     domain, _, object_id = entity_id.partition(".")
@@ -191,18 +195,15 @@ class HassJob(Generic[_R_co]):
 
     def __init__(self, target: Callable[..., _R_co]) -> None:
         """Create a job object."""
-        if asyncio.iscoroutine(target):
-            raise ValueError("Coroutine not allowed to be passed to HassJob")
-
         self.target = target
-        self.job_type = _get_callable_job_type(target)
+        self.job_type = _get_hassjob_callable_job_type(target)
 
     def __repr__(self) -> str:
         """Return the job."""
         return f"<Job {self.job_type} {self.target}>"
 
 
-def _get_callable_job_type(target: Callable[..., Any]) -> HassJobType:
+def _get_hassjob_callable_job_type(target: Callable[..., Any]) -> HassJobType:
     """Determine the job type from the callable."""
     # Check for partials to properly determine if coroutine function
     check_target = target
@@ -213,6 +214,8 @@ def _get_callable_job_type(target: Callable[..., Any]) -> HassJobType:
         return HassJobType.Coroutinefunction
     if is_callback(check_target):
         return HassJobType.Callback
+    if asyncio.iscoroutine(check_target):
+        raise ValueError("Coroutine not allowed to be passed to HassJob")
     return HassJobType.Executor
 
 
@@ -363,14 +366,14 @@ class HomeAssistant:
     @overload
     @callback
     def async_add_job(
-        self, target: Callable[..., Awaitable[_R]], *args: Any
+        self, target: Callable[..., Coroutine[Any, Any, _R]], *args: Any
     ) -> asyncio.Future[_R] | None:
         ...
 
     @overload
     @callback
     def async_add_job(
-        self, target: Callable[..., Awaitable[_R] | _R], *args: Any
+        self, target: Callable[..., Coroutine[Any, Any, _R] | _R], *args: Any
     ) -> asyncio.Future[_R] | None:
         ...
 
@@ -384,7 +387,7 @@ class HomeAssistant:
     @callback
     def async_add_job(
         self,
-        target: Callable[..., Awaitable[_R] | _R] | Coroutine[Any, Any, _R],
+        target: Callable[..., Coroutine[Any, Any, _R] | _R] | Coroutine[Any, Any, _R],
         *args: Any,
     ) -> asyncio.Future[_R] | None:
         """Add a job to be executed by the event loop or by an executor.
@@ -403,26 +406,26 @@ class HomeAssistant:
         if asyncio.iscoroutine(target):
             return self.async_create_task(target)
 
-        target = cast(Callable[..., _R], target)
+        target = cast(Callable[..., Union[Coroutine[Any, Any, _R], _R]], target)
         return self.async_add_hass_job(HassJob(target), *args)
 
     @overload
     @callback
     def async_add_hass_job(
-        self, hassjob: HassJob[Awaitable[_R]], *args: Any
+        self, hassjob: HassJob[Coroutine[Any, Any, _R]], *args: Any
     ) -> asyncio.Future[_R] | None:
         ...
 
     @overload
     @callback
     def async_add_hass_job(
-        self, hassjob: HassJob[Awaitable[_R] | _R], *args: Any
+        self, hassjob: HassJob[Coroutine[Any, Any, _R] | _R], *args: Any
     ) -> asyncio.Future[_R] | None:
         ...
 
     @callback
     def async_add_hass_job(
-        self, hassjob: HassJob[Awaitable[_R] | _R], *args: Any
+        self, hassjob: HassJob[Coroutine[Any, Any, _R] | _R], *args: Any
     ) -> asyncio.Future[_R] | None:
         """Add a HassJob from within the event loop.
 
@@ -433,10 +436,10 @@ class HomeAssistant:
         task: asyncio.Future[_R]
         if hassjob.job_type == HassJobType.Coroutinefunction:
             task = self.loop.create_task(
-                cast(Callable[..., Awaitable[_R]], hassjob.target)(*args)
+                cast(Callable[..., Coroutine[Any, Any, _R]], hassjob.target)(*args)
             )
         elif hassjob.job_type == HassJobType.Callback:
-            self.loop.call_soon(hassjob.target, *args)
+            self.loop.call_soon(cast(Callable[..., _R], hassjob.target), *args)
             return None
         else:
             task = self.loop.run_in_executor(
@@ -449,7 +452,7 @@ class HomeAssistant:
 
         return task
 
-    def create_task(self, target: Awaitable[Any]) -> None:
+    def create_task(self, target: Coroutine[Any, Any, Any]) -> None:
         """Add task to the executor pool.
 
         target: target to call.
@@ -457,7 +460,7 @@ class HomeAssistant:
         self.loop.call_soon_threadsafe(self.async_create_task, target)
 
     @callback
-    def async_create_task(self, target: Awaitable[_R]) -> asyncio.Task[_R]:
+    def async_create_task(self, target: Coroutine[Any, Any, _R]) -> asyncio.Task[_R]:
         """Create a task from within the eventloop.
 
         This method must be run in the event loop.
@@ -497,20 +500,20 @@ class HomeAssistant:
     @overload
     @callback
     def async_run_hass_job(
-        self, hassjob: HassJob[Awaitable[_R]], *args: Any
+        self, hassjob: HassJob[Coroutine[Any, Any, _R]], *args: Any
     ) -> asyncio.Future[_R] | None:
         ...
 
     @overload
     @callback
     def async_run_hass_job(
-        self, hassjob: HassJob[Awaitable[_R] | _R], *args: Any
+        self, hassjob: HassJob[Coroutine[Any, Any, _R] | _R], *args: Any
     ) -> asyncio.Future[_R] | None:
         ...
 
     @callback
     def async_run_hass_job(
-        self, hassjob: HassJob[Awaitable[_R] | _R], *args: Any
+        self, hassjob: HassJob[Coroutine[Any, Any, _R] | _R], *args: Any
     ) -> asyncio.Future[_R] | None:
         """Run a HassJob from within the event loop.
 
@@ -528,14 +531,14 @@ class HomeAssistant:
     @overload
     @callback
     def async_run_job(
-        self, target: Callable[..., Awaitable[_R]], *args: Any
+        self, target: Callable[..., Coroutine[Any, Any, _R]], *args: Any
     ) -> asyncio.Future[_R] | None:
         ...
 
     @overload
     @callback
     def async_run_job(
-        self, target: Callable[..., Awaitable[_R] | _R], *args: Any
+        self, target: Callable[..., Coroutine[Any, Any, _R] | _R], *args: Any
     ) -> asyncio.Future[_R] | None:
         ...
 
@@ -549,7 +552,7 @@ class HomeAssistant:
     @callback
     def async_run_job(
         self,
-        target: Callable[..., Awaitable[_R] | _R] | Coroutine[Any, Any, _R],
+        target: Callable[..., Coroutine[Any, Any, _R] | _R] | Coroutine[Any, Any, _R],
         *args: Any,
     ) -> asyncio.Future[_R] | None:
         """Run a job from within the event loop.
@@ -562,7 +565,7 @@ class HomeAssistant:
         if asyncio.iscoroutine(target):
             return self.async_create_task(target)
 
-        target = cast(Callable[..., _R], target)
+        target = cast(Callable[..., Union[Coroutine[Any, Any, _R], _R]], target)
         return self.async_run_hass_job(HassJob(target), *args)
 
     def block_till_done(self) -> None:
@@ -695,7 +698,7 @@ class Context:
 
     user_id: str | None = attr.ib(default=None)
     parent_id: str | None = attr.ib(default=None)
-    id: str = attr.ib(factory=ulid_util.ulid_hex)
+    id: str = attr.ib(factory=ulid_util.ulid)
 
     def as_dict(self) -> dict[str, str | None]:
         """Return a dictionary representation of the context."""
@@ -775,6 +778,7 @@ class _FilterableJob(NamedTuple):
 
     job: HassJob[None | Awaitable[None]]
     event_filter: Callable[[Event], bool] | None
+    run_immediately: bool
 
 
 class EventBus:
@@ -842,7 +846,7 @@ class EventBus:
         if not listeners:
             return
 
-        for job, event_filter in listeners:
+        for job, event_filter, run_immediately in listeners:
             if event_filter is not None:
                 try:
                     if not event_filter(event):
@@ -850,7 +854,13 @@ class EventBus:
                 except Exception:  # pylint: disable=broad-except
                     _LOGGER.exception("Error in event filter")
                     continue
-            self._hass.async_add_hass_job(job, event)
+            if run_immediately:
+                try:
+                    job.target(event)
+                except Exception:  # pylint: disable=broad-except
+                    _LOGGER.exception("Error running job: %s", job)
+            else:
+                self._hass.async_add_hass_job(job, event)
 
     def listen(
         self,
@@ -878,6 +888,7 @@ class EventBus:
         event_type: str,
         listener: Callable[[Event], None | Awaitable[None]],
         event_filter: Callable[[Event], bool] | None = None,
+        run_immediately: bool = False,
     ) -> CALLBACK_TYPE:
         """Listen for all events or events of a specific type.
 
@@ -888,12 +899,18 @@ class EventBus:
         @callback that returns a boolean value, determines if the
         listener callable should run.
 
+        If run_immediately is passed, the callback will be run
+        right away instead of using call_soon. Only use this if
+        the callback results in scheduling another task.
+
         This method must be run in the event loop.
         """
         if event_filter is not None and not is_callback(event_filter):
             raise HomeAssistantError(f"Event filter {event_filter} is not a callback")
+        if run_immediately and not is_callback(listener):
+            raise HomeAssistantError(f"Event listener {listener} is not a callback")
         return self._async_listen_filterable_job(
-            event_type, _FilterableJob(HassJob(listener), event_filter)
+            event_type, _FilterableJob(HassJob(listener), event_filter, run_immediately)
         )
 
     @callback
@@ -963,7 +980,7 @@ class EventBus:
             _onetime_listener, listener, ("__name__", "__qualname__", "__module__"), []
         )
 
-        filterable_job = _FilterableJob(HassJob(_onetime_listener), None)
+        filterable_job = _FilterableJob(HassJob(_onetime_listener), None, False)
 
         return self._async_listen_filterable_job(event_type, filterable_job)
 

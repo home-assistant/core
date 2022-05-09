@@ -23,6 +23,7 @@ from .models import (
     RecorderRuns,
     StateAttributes,
     States,
+    process_timestamp,
     process_timestamp_to_utc_isoformat,
 )
 from .util import execute, session_scope
@@ -115,7 +116,7 @@ def query_and_join_attributes(
     # If we in the process of migrating schema we do
     # not want to join the state_attributes table as we
     # do not know if it will be there yet
-    if recorder.get_instance(hass).migration_in_progress:
+    if recorder.get_instance(hass).schema_version < 25:
         return QUERY_STATES_PRE_SCHEMA_25, False
     # Finally if no migration is in progress and no_attributes
     # was not requested, we query both attributes columns and
@@ -145,7 +146,7 @@ def bake_query_and_join_attributes(
     # If we in the process of migrating schema we do
     # not want to join the state_attributes table as we
     # do not know if it will be there yet
-    if recorder.get_instance(hass).migration_in_progress:
+    if recorder.get_instance(hass).schema_version < 25:
         if include_last_updated:
             return (
                 bakery(lambda session: session.query(*QUERY_STATES_PRE_SCHEMA_25)),
@@ -469,29 +470,6 @@ def get_last_state_changes(
         )
 
 
-def get_states(
-    hass: HomeAssistant,
-    utc_point_in_time: datetime,
-    entity_ids: list[str] | None = None,
-    run: RecorderRuns | None = None,
-    filters: Any = None,
-    no_attributes: bool = False,
-) -> list[State]:
-    """Return the states at a specific point in time."""
-    if (
-        run is None
-        and (run := (recorder.run_information_from_instance(hass, utc_point_in_time)))
-        is None
-    ):
-        # History did not run before utc_point_in_time
-        return []
-
-    with session_scope(hass=hass) as session:
-        return _get_states_with_session(
-            hass, session, utc_point_in_time, entity_ids, run, filters, no_attributes
-        )
-
-
 def _get_states_with_session(
     hass: HomeAssistant,
     session: Session,
@@ -507,11 +485,10 @@ def _get_states_with_session(
             hass, session, utc_point_in_time, entity_ids[0], no_attributes
         )
 
-    if (
-        run is None
-        and (run := (recorder.run_information_with_session(session, utc_point_in_time)))
-        is None
-    ):
+    if run is None:
+        run = recorder.get_instance(hass).run_history.get(utc_point_in_time)
+
+    if run is None or process_timestamp(run.start) > utc_point_in_time:
         # History did not run before utc_point_in_time
         return []
 
@@ -649,13 +626,11 @@ def _sorted_states_to_dict(
     # Get the states at the start time
     timer_start = time.perf_counter()
     if include_start_time_state:
-        run = recorder.run_information_from_instance(hass, start_time)
         for state in _get_states_with_session(
             hass,
             session,
             start_time,
             entity_ids,
-            run=run,
             filters=filters,
             no_attributes=no_attributes,
         ):
@@ -724,15 +699,3 @@ def _sorted_states_to_dict(
 
     # Filter out the empty lists if some states had 0 results.
     return {key: val for key, val in result.items() if val}
-
-
-def get_state(
-    hass: HomeAssistant,
-    utc_point_in_time: datetime,
-    entity_id: str,
-    run: RecorderRuns | None = None,
-    no_attributes: bool = False,
-) -> State | None:
-    """Return a state at a specific point in time."""
-    states = get_states(hass, utc_point_in_time, [entity_id], run, None, no_attributes)
-    return states[0] if states else None

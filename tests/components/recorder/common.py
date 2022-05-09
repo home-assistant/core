@@ -1,10 +1,17 @@
 """Common test utils for working with recorder."""
-from datetime import timedelta
+from __future__ import annotations
+
+from datetime import datetime, timedelta
+from typing import Any, cast
 
 from sqlalchemy import create_engine
+from sqlalchemy.orm.session import Session
 
 from homeassistant import core as ha
 from homeassistant.components import recorder
+from homeassistant.components.recorder import get_instance, statistics
+from homeassistant.components.recorder.models import RecorderRuns
+from homeassistant.components.recorder.tasks import StatisticsTask
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
@@ -12,6 +19,13 @@ from tests.common import async_fire_time_changed, fire_time_changed
 from tests.components.recorder import models_schema_0
 
 DEFAULT_PURGE_TASKS = 3
+
+
+def do_adhoc_statistics(hass: HomeAssistant, **kwargs: Any) -> None:
+    """Trigger an adhoc statistics run."""
+    if not (start := kwargs.get("start")):
+        start = statistics.get_start_time()
+    get_instance(hass).queue_task(StatisticsTask(start))
 
 
 def wait_recording_done(hass: HomeAssistant) -> None:
@@ -55,7 +69,7 @@ async def async_wait_purge_done(hass: HomeAssistant, max: int = None) -> None:
 
 @ha.callback
 def async_trigger_db_commit(hass: HomeAssistant) -> None:
-    """Fore the recorder to commit. Async friendly."""
+    """Force the recorder to commit. Async friendly."""
     for _ in range(recorder.DEFAULT_COMMIT_INTERVAL):
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
 
@@ -81,3 +95,21 @@ def create_engine_test(*args, **kwargs):
     engine = create_engine(*args, **kwargs)
     models_schema_0.Base.metadata.create_all(engine)
     return engine
+
+
+def run_information_with_session(
+    session: Session, point_in_time: datetime | None = None
+) -> RecorderRuns | None:
+    """Return information about current run from the database."""
+    recorder_runs = RecorderRuns
+
+    query = session.query(recorder_runs)
+    if point_in_time:
+        query = query.filter(
+            (recorder_runs.start < point_in_time) & (recorder_runs.end > point_in_time)
+        )
+
+    if (res := query.first()) is not None:
+        session.expunge(res)
+        return cast(RecorderRuns, res)
+    return res

@@ -28,6 +28,7 @@ from homeassistant.components.androidtv.const import (
     CONF_TURN_ON_COMMAND,
     DEFAULT_ADB_SERVER_PORT,
     DEFAULT_PORT,
+    DEVICE_ANDROIDTV,
     DOMAIN,
     PROP_ETHMAC,
     PROP_WIFIMAC,
@@ -35,8 +36,9 @@ from homeassistant.components.androidtv.const import (
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_HOST, CONF_PORT
 
+from .patchers import PATCH_ACCESS, PATCH_ISFILE, PATCH_SETUP_ENTRY
+
 from tests.common import MockConfigEntry
-from tests.components.androidtv.patchers import isfile
 
 ADBKEY = "adbkey"
 ETH_MAC = "a1:b1:c1:d1:e1:f1"
@@ -49,30 +51,20 @@ VALID_DETECT_RULE = [{"paused": {"media_session_state": 3}}]
 CONFIG_PYTHON_ADB = {
     CONF_HOST: HOST,
     CONF_PORT: DEFAULT_PORT,
-    CONF_DEVICE_CLASS: "androidtv",
+    CONF_DEVICE_CLASS: DEVICE_ANDROIDTV,
 }
 
 # Android TV device with ADB server
 CONFIG_ADB_SERVER = {
     CONF_HOST: HOST,
     CONF_PORT: DEFAULT_PORT,
-    CONF_DEVICE_CLASS: "androidtv",
+    CONF_DEVICE_CLASS: DEVICE_ANDROIDTV,
     CONF_ADB_SERVER_IP: "127.0.0.1",
     CONF_ADB_SERVER_PORT: DEFAULT_ADB_SERVER_PORT,
 }
 
 CONNECT_METHOD = (
     "homeassistant.components.androidtv.config_flow.async_connect_androidtv"
-)
-PATCH_ACCESS = patch(
-    "homeassistant.components.androidtv.config_flow.os.access", return_value=True
-)
-PATCH_ISFILE = patch(
-    "homeassistant.components.androidtv.config_flow.os.path.isfile", isfile
-)
-PATCH_SETUP_ENTRY = patch(
-    "homeassistant.components.androidtv.async_setup_entry",
-    return_value=True,
 )
 
 
@@ -133,7 +125,7 @@ async def test_user_adbkey(hass):
     with patch(
         CONNECT_METHOD,
         return_value=(MockConfigDevice(), None),
-    ), PATCH_SETUP_ENTRY as mock_setup_entry, PATCH_ISFILE, PATCH_ACCESS:
+    ), PATCH_ISFILE, PATCH_ACCESS, PATCH_SETUP_ENTRY as mock_setup_entry:
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

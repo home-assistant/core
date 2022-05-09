@@ -52,7 +52,7 @@ async def test_import_query(hass: HomeAssistant) -> None:
 
     assert hass.config_entries.async_entries(DOMAIN)
     options = hass.config_entries.async_entries(DOMAIN)[0].options
-    assert options[CONF_NAME] == "Select value SQL query"
+    assert options[CONF_NAME] == "count_tables"
 
 
 async def test_query_value_template(hass: HomeAssistant) -> None:

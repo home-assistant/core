@@ -14,9 +14,14 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from .common import async_wait_recording_done, create_engine_test, trigger_db_commit
+from .common import (
+    async_recorder_block_till_done,
+    async_wait_recording_done,
+    create_engine_test,
+    do_adhoc_statistics,
+)
 
-from tests.common import async_fire_time_changed, init_recorder_component
+from tests.common import async_fire_time_changed
 
 POWER_SENSOR_ATTRIBUTES = {
     "device_class": "power",
@@ -74,17 +79,14 @@ async def test_clear_statistics(hass, hass_ws_client, recorder_mock):
     hass.config.units = units
     await async_setup_component(hass, "history", {})
     await async_setup_component(hass, "sensor", {})
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await async_recorder_block_till_done(hass)
     hass.states.async_set("sensor.test1", state, attributes=attributes)
     hass.states.async_set("sensor.test2", state * 2, attributes=attributes)
     hass.states.async_set("sensor.test3", state * 3, attributes=attributes)
-    await hass.async_block_till_done()
+    await async_wait_recording_done(hass)
 
-    await hass.async_add_executor_job(trigger_db_commit, hass)
-    await hass.async_block_till_done()
-
-    hass.data[DATA_INSTANCE].do_adhoc_statistics(start=now)
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    do_adhoc_statistics(hass, start=now)
+    await async_recorder_block_till_done(hass)
 
     client = await hass_ws_client()
     await client.send_json(
@@ -149,7 +151,7 @@ async def test_clear_statistics(hass, hass_ws_client, recorder_mock):
     )
     response = await client.receive_json()
     assert response["success"]
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await async_recorder_block_till_done(hass)
 
     client = await hass_ws_client()
     await client.send_json(
@@ -173,7 +175,7 @@ async def test_clear_statistics(hass, hass_ws_client, recorder_mock):
     )
     response = await client.receive_json()
     assert response["success"]
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await async_recorder_block_till_done(hass)
 
     client = await hass_ws_client()
     await client.send_json(
@@ -203,15 +205,12 @@ async def test_update_statistics_metadata(
     hass.config.units = units
     await async_setup_component(hass, "history", {})
     await async_setup_component(hass, "sensor", {})
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await async_recorder_block_till_done(hass)
     hass.states.async_set("sensor.test", state, attributes=attributes)
-    await hass.async_block_till_done()
+    await async_wait_recording_done(hass)
 
-    await hass.async_add_executor_job(trigger_db_commit, hass)
-    await hass.async_block_till_done()
-
-    hass.data[DATA_INSTANCE].do_adhoc_statistics(period="hourly", start=now)
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    do_adhoc_statistics(hass, period="hourly", start=now)
+    await async_recorder_block_till_done(hass)
 
     client = await hass_ws_client()
 
@@ -239,7 +238,7 @@ async def test_update_statistics_metadata(
     )
     response = await client.receive_json()
     assert response["success"]
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await async_recorder_block_till_done(hass)
 
     await client.send_json({"id": 3, "type": "history/list_statistic_ids"})
     response = await client.receive_json()
@@ -325,9 +324,10 @@ async def test_recorder_info_migration_queue_exhausted(hass, hass_ws_client):
     with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True), patch(
         "homeassistant.components.recorder.Recorder.async_periodic_statistics"
     ), patch(
-        "homeassistant.components.recorder.create_engine", new=create_engine_test
+        "homeassistant.components.recorder.core.create_engine",
+        new=create_engine_test,
     ), patch.object(
-        recorder, "MAX_QUEUE_BACKLOG", 1
+        recorder.core, "MAX_QUEUE_BACKLOG", 1
     ), patch(
         "homeassistant.components.recorder.migration.migrate_schema",
         wraps=stalled_migration,
@@ -386,7 +386,7 @@ async def test_backup_start_timeout(
     # Ensure there are no queued events
     await async_wait_recording_done(hass)
 
-    with patch.object(recorder, "DB_LOCK_TIMEOUT", 0):
+    with patch.object(recorder.core, "DB_LOCK_TIMEOUT", 0):
         try:
             await client.send_json({"id": 1, "type": "backup/start"})
             response = await client.receive_json()
@@ -443,10 +443,9 @@ async def test_get_statistics_metadata(
     now = dt_util.utcnow()
 
     hass.config.units = units
-    await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(hass, "history", {"history": {}})
     await async_setup_component(hass, "sensor", {})
-    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    await async_recorder_block_till_done(hass)
 
     client = await hass_ws_client()
     await client.send_json({"id": 1, "type": "recorder/get_statistics_metadata"})
@@ -498,16 +497,10 @@ async def test_get_statistics_metadata(
     )
 
     hass.states.async_set("sensor.test", 10, attributes=attributes)
-    await hass.async_block_till_done()
-
-    await hass.async_add_executor_job(trigger_db_commit, hass)
-    await hass.async_block_till_done()
+    await async_wait_recording_done(hass)
 
     hass.states.async_set("sensor.test2", 10, attributes=attributes)
-    await hass.async_block_till_done()
-
-    await hass.async_add_executor_job(trigger_db_commit, hass)
-    await hass.async_block_till_done()
+    await async_wait_recording_done(hass)
 
     await client.send_json(
         {
@@ -529,8 +522,8 @@ async def test_get_statistics_metadata(
         }
     ]
 
-    hass.data[recorder.DATA_INSTANCE].do_adhoc_statistics(start=now)
-    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    do_adhoc_statistics(hass, start=now)
+    await async_recorder_block_till_done(hass)
     # Remove the state, statistics will now be fetched from the database
     hass.states.async_remove("sensor.test")
     await hass.async_block_till_done()

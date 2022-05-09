@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
             "already_in_progress": "La configuration est d\u00e9j\u00e0 en cours",
+            "ignore_ip6_link_local": "Les adresses IPv6 de liaison locale ne sont pas prises en charge.",
             "reauth_successful": "La r\u00e9-authentification a r\u00e9ussi"
         },
         "error": {

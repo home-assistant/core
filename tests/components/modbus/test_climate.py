@@ -2,7 +2,7 @@
 import pytest
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
-from homeassistant.components.climate.const import HVAC_MODE_AUTO
+from homeassistant.components.climate.const import HVACMode
 from homeassistant.components.modbus.const import (
     CONF_CLIMATES,
     CONF_DATA_TYPE,
@@ -223,7 +223,7 @@ test_value.attributes = {ATTR_TEMPERATURE: 37}
 async def test_restore_state_climate(hass, mock_test_state, mock_modbus):
     """Run test for sensor restore state."""
     state = hass.states.get(ENTITY_ID)
-    assert state.state == HVAC_MODE_AUTO
+    assert state.state == HVACMode.AUTO
     assert state.attributes[ATTR_TEMPERATURE] == 37
 
 
