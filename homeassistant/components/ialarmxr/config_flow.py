@@ -68,15 +68,8 @@ class IAlarmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 
-            if errors:
-                return self.async_show_form(
-                    step_id="user", data_schema=DATA_SCHEMA, errors=errors
-                )
-
-            await self.async_set_unique_id(mac)
-            self._abort_if_unique_id_configured()
-
-            return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
-
-        _LOGGER.info("No user input data form")
-        return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA)
+            if not errors:
+                await self.async_set_unique_id(mac)
+                self._abort_if_unique_id_configured()          
+                return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
+        return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA, errors=errors)
