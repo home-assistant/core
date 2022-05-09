@@ -3,14 +3,13 @@ from __future__ import annotations
 
 from homeassistant.components import mqtt
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import slugify
 
 from .definitions import SENSORS, DSMRReaderSensorEntityDescription
-
-DOMAIN = "dsmr_reader"
 
 
 async def async_setup_platform(
@@ -20,6 +19,15 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up DSMR Reader sensors."""
+    async_add_entities(DSMRSensor(description) for description in SENSORS)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up DSMR Reader sensors from config entry."""
     async_add_entities(DSMRSensor(description) for description in SENSORS)
 
 

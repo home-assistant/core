@@ -1,0 +1,13 @@
+{
+    "config": {
+        "error": {
+            "mqtt_missing": "The MQTT service is required for this integration.",
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
+        },
+        "step": {
+            "user": {
+                "description": "This integration relies on the MQTT connection in DSMR Reader and uses the 'split topic' data sources to create sensors."
+            }
+        }
+    }
+}
