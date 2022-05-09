@@ -37,6 +37,7 @@ class QswEntity(CoordinatorEntity[QswUpdateCoordinator]):
         """Initialize."""
         super().__init__(coordinator)
 
+        self.product = self.get_device_value(QSD_SYSTEM_BOARD, QSD_PRODUCT)
         self._attr_device_info = DeviceInfo(
             configuration_url=entry.data[CONF_URL],
             connections={
@@ -46,8 +47,8 @@ class QswEntity(CoordinatorEntity[QswUpdateCoordinator]):
                 )
             },
             manufacturer=MANUFACTURER,
-            model=self.get_device_value(QSD_SYSTEM_BOARD, QSD_PRODUCT),
-            name=self.get_device_value(QSD_SYSTEM_BOARD, QSD_PRODUCT),
+            model=self.product,
+            name=self.product,
             sw_version=self.get_device_value(QSD_FIRMWARE_INFO, QSD_FIRMWARE),
         )
 

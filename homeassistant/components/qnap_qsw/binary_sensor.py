@@ -4,13 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Final
 
-from aioqsw.const import (
-    QSD_ANOMALY,
-    QSD_FIRMWARE_CONDITION,
-    QSD_MESSAGE,
-    QSD_PRODUCT,
-    QSD_SYSTEM_BOARD,
-)
+from aioqsw.const import QSD_ANOMALY, QSD_FIRMWARE_CONDITION, QSD_MESSAGE
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -77,9 +71,7 @@ class QswBinarySensor(QswEntity, BinarySensorEntity):
     ) -> None:
         """Initialize."""
         super().__init__(coordinator, entry)
-        self._attr_name = (
-            f"{self.get_device_value(QSD_SYSTEM_BOARD, QSD_PRODUCT)} {description.name}"
-        )
+        self._attr_name = f"{self.product} {description.name}"
         self._attr_unique_id = (
             f"{entry.unique_id}_{description.key}_{description.subkey}"
         )

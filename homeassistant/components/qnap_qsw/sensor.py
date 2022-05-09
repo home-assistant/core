@@ -7,8 +7,6 @@ from typing import Final
 from aioqsw.const import (
     QSD_FAN1_SPEED,
     QSD_FAN2_SPEED,
-    QSD_PRODUCT,
-    QSD_SYSTEM_BOARD,
     QSD_SYSTEM_SENSOR,
     QSD_SYSTEM_TIME,
     QSD_TEMP,
@@ -109,9 +107,7 @@ class QswSensor(QswEntity, SensorEntity):
     ) -> None:
         """Initialize."""
         super().__init__(coordinator, entry)
-        self._attr_name = (
-            f"{self.get_device_value(QSD_SYSTEM_BOARD, QSD_PRODUCT)} {description.name}"
-        )
+        self._attr_name = f"{self.product} {description.name}"
         self._attr_unique_id = (
             f"{entry.unique_id}_{description.key}_{description.subkey}"
         )
