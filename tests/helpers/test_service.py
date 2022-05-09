@@ -1211,7 +1211,7 @@ async def test_current_entity_context(hass, mock_entities):
     """Test we set the current entity context var."""
 
     async def mock_service(entity, call):
-        assert entity.entity_id == service.current_entity.get()
+        assert entity.entity_id == service.async_get_current_entity()
 
     await service.entity_service_call(
         hass,

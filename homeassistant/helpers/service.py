@@ -64,7 +64,13 @@ _LOGGER = logging.getLogger(__name__)
 SERVICE_DESCRIPTION_CACHE = "service_description_cache"
 
 
-current_entity: ContextVar[str | None] = ContextVar("current_entity", default=None)
+_current_entity: ContextVar[str | None] = ContextVar("current_entity", default=None)
+
+
+@callback
+def async_get_current_entity() -> str | None:
+    """Get the current entity on which the service is called."""
+    return _current_entity.get()
 
 
 class ServiceParams(TypedDict):
@@ -710,7 +716,7 @@ async def _handle_entity_call(
 ) -> None:
     """Handle calling service method."""
     entity.async_set_context(context)
-    current_entity.set(entity.entity_id)
+    _current_entity.set(entity.entity_id)
 
     if isinstance(func, str):
         result = hass.async_run_job(partial(getattr(entity, func), **data))  # type: ignore[arg-type]
