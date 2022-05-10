@@ -13,7 +13,6 @@ from aiohttp import web
 import sqlalchemy
 from sqlalchemy import lambda_stmt, select
 from sqlalchemy.engine.row import Row
-from sqlalchemy.ext import baked
 from sqlalchemy.orm import aliased
 from sqlalchemy.orm.query import Query
 from sqlalchemy.sql.expression import literal
@@ -86,8 +85,6 @@ CONTINUOUS_DOMAINS = {PROXIMITY_DOMAIN, SENSOR_DOMAIN}
 CONTINUOUS_ENTITY_ID_LIKE = [f"{domain}.%" for domain in CONTINUOUS_DOMAINS]
 
 DOMAIN = "logbook"
-
-LOGBOOK_BAKERY = "logbook_bakery"
 
 EMPTY_JSON_OBJECT = "{}"
 UNIT_OF_MEASUREMENT_JSON = '"unit_of_measurement":'
@@ -186,7 +183,6 @@ def async_log_entry(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Logbook setup."""
     hass.data[DOMAIN] = {}
-    hass.data[LOGBOOK_BAKERY] = baked.bakery()
 
     @callback
     def log_message(service: ServiceCall) -> None:
