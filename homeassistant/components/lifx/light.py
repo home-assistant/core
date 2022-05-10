@@ -406,7 +406,7 @@ class LIFXManager:
             self.hass.async_create_task(self.register_bulb(bulb))
         else:
             _LOGGER.warning(
-                "Duplicate LIFX discovery response from %s (%s) detected.",
+                "Duplicate LIFX discovery response from %s (%s) detected",
                 bulb.mac_addr,
                 bulb.ip_addr,
             )

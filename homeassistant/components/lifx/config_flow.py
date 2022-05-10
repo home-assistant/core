@@ -95,7 +95,9 @@ class LifxConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
-        return self.async_create_entry(title=self._title, options=self._default_options)
+        return self.async_create_entry(
+            title=self._title, options=self._default_options, data={}
+        )
 
     async def async_step_discovery(
         self, discovery_info: DiscoveryInfoType
@@ -125,7 +127,7 @@ class LifxOptionsFlowHandler(config_entries.OptionsFlow):
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize the LIFX options flow."""
         self.config_entry = config_entry
-        self.updated_config: dict[str, Any] = {}
+        self.updated_options: dict[str, Any] = {}
 
     async def async_step_init(self, user_input=None):
         """Handle configuration initiated by a user."""
