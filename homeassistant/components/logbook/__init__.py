@@ -117,28 +117,34 @@ ALL_EVENT_TYPES = [
 ]
 
 
-EVENT_COLUMNS = [
+EVENT_COLUMNS = (
     Events.event_type.label("event_type"),
     Events.event_data.label("event_data"),
     Events.time_fired.label("time_fired"),
     Events.context_id.label("context_id"),
     Events.context_user_id.label("context_user_id"),
     Events.context_parent_id.label("context_parent_id"),
-]
+)
 
-STATE_COLUMNS = [
+STATE_COLUMNS = (
     States.state.label("state"),
     States.entity_id.label("entity_id"),
     States.attributes.label("attributes"),
     StateAttributes.shared_attrs.label("shared_attrs"),
-]
+)
 
-EMPTY_STATE_COLUMNS = [
+EMPTY_STATE_COLUMNS = (
     literal(value=None, type_=sqlalchemy.String).label("state"),
     literal(value=None, type_=sqlalchemy.String).label("entity_id"),
     literal(value=None, type_=sqlalchemy.Text).label("attributes"),
     literal(value=None, type_=sqlalchemy.Text).label("shared_attrs"),
-]
+)
+
+EVENT_ROWS_NO_STATES = (
+    *EVENT_COLUMNS,
+    EventData.shared_data.label("shared_data"),
+    *EMPTY_STATE_COLUMNS,
+)
 
 SCRIPT_AUTOMATION_EVENTS = {EVENT_AUTOMATION_TRIGGERED, EVENT_SCRIPT_STARTED}
 
@@ -299,7 +305,6 @@ class LogbookView(HomeAssistantView):
 
         hass = request.app["hass"]
 
-        entity_matches_only = "entity_matches_only" in request.query
         context_id = request.query.get("context_id")
 
         if entity_ids and context_id:
@@ -317,7 +322,6 @@ class LogbookView(HomeAssistantView):
                     entity_ids,
                     self.filters,
                     self.entities_filter,
-                    entity_matches_only,
                     context_id,
                 )
             )
@@ -420,7 +424,6 @@ def _get_events(
     entity_ids: list[str] | None = None,
     filters: Filters | None = None,
     entities_filter: EntityFilter | Callable[[str], bool] | None = None,
-    entity_matches_only: bool = False,
     context_id: str | None = None,
 ) -> list[dict[str, Any]]:
     """Get events for a period of time."""
@@ -494,6 +497,28 @@ def _get_events(
         )
 
 
+def _generate_entities_context_ids_sub_query(
+    start_day: dt,
+    end_day: dt,
+    event_types: list[str],
+    entity_ids: list[str],
+) -> Select:
+    """Generate a subquery to find context ids for entities."""
+    return (
+        select(Events.context_id)
+        .where((Events.time_fired > start_day) & (Events.time_fired < end_day))
+        .where(Events.event_type.in_(event_types))
+        .where(_apply_event_entity_id_matchers(entity_ids))
+        .outerjoin(EventData, (Events.data_id == EventData.data_id))
+        .union_all(
+            select(States.context_id)
+            .filter((States.last_updated > start_day) & (States.last_updated < end_day))
+            .where(States.entity_id.in_(entity_ids))
+        )
+        .subquery()
+    )
+
+
 def _generate_logbook_entities_query(
     start_day: dt,
     end_day: dt,
@@ -517,30 +542,15 @@ def _generate_logbook_entities_query(
             _generate_states_query()
             .filter((States.last_updated > start_day) & (States.last_updated < end_day))
             .where(States.entity_id.in_(entity_ids)),
-            select(
-                *EVENT_COLUMNS,
-                EventData.shared_data.label("shared_data"),
-                *EMPTY_STATE_COLUMNS,
-                literal("1").label("context_only"),
-            )
+            select(*EVENT_ROWS_NO_STATES, literal("1").label("context_only"))
             .where(
                 Events.context_id.in_(
-                    select(Events.context_id)
-                    .where(
-                        (Events.time_fired > start_day) & (Events.time_fired < end_day)
+                    _generate_entities_context_ids_sub_query(
+                        start_day,
+                        end_day,
+                        event_types,
+                        entity_ids,
                     )
-                    .where(Events.event_type.in_(event_types))
-                    .where(_apply_event_entity_id_matchers(entity_ids))
-                    .outerjoin(EventData, (Events.data_id == EventData.data_id))
-                    .union_all(
-                        select(States.context_id)
-                        .filter(
-                            (States.last_updated > start_day)
-                            & (States.last_updated < end_day)
-                        )
-                        .where(States.entity_id.in_(entity_ids))
-                    )
-                    .subquery(),
                 )
             )
             .outerjoin(EventData, (Events.data_id == EventData.data_id)),
@@ -632,9 +642,7 @@ def _generate_legacy_events_context_id_query() -> Select:
 
 def _generate_events_query_without_states() -> Select:
     return select(
-        *EVENT_COLUMNS,
-        EventData.shared_data.label("shared_data"),
-        *EMPTY_STATE_COLUMNS,
+        *EVENT_ROWS_NO_STATES,
         literal(None).label("context_only"),
     )
 
