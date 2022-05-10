@@ -31,10 +31,9 @@ class AirzoneUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             _LOGGER,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
-            update_method=self._async_update,
         )
 
-    async def _async_update(self) -> dict[str, Any]:
+    async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
         async with async_timeout.timeout(AIOAIRZONE_DEVICE_TIMEOUT_SEC):
             try:
