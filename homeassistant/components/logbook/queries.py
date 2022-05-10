@@ -71,28 +71,17 @@ def generate_statement_for_request(
     context_id: str | None = None,
 ) -> StatementLambdaElement:
     """Generate the logbook statement for a logbook request."""
-    if entity_ids:
-        if len(entity_ids) == 1:
-            return _generate_logbook_single_entity_query(
-                start_day,
-                end_day,
-                event_types,
-                entity_ids[0],
-                ENTITY_ID_JSON_TEMPLATE.format(entity_ids[0]),
-            )
-        return _generate_logbook_entities_query(
-            start_day,
-            end_day,
-            event_types,
-            entity_ids,
+    if not entity_ids:
+        entity_filter = filters.entity_filter() if filters else None  # type: ignore[no-untyped-call]
+        return _generate_query(
+            start_day, end_day, event_types, entity_filter, context_id
         )
-    entity_filter = filters.entity_filter() if filters else None  # type: ignore[no-untyped-call]
-    return _generate_logbook_query(
-        start_day,
-        end_day,
-        event_types,
-        entity_filter,
-        context_id,
+    if len(entity_ids) > 1:
+        return _generate_entities_query(start_day, end_day, event_types, entity_ids)
+    entity_id = entity_ids[0]
+    entity_like = ENTITY_ID_JSON_TEMPLATE.format(entity_id)
+    return _generate_single_entity_query(
+        start_day, end_day, event_types, entity_id, entity_like
     )
 
 
@@ -102,7 +91,7 @@ def _generate_entities_context_ids_sub_query(
     event_types: tuple[str, ...],
     entity_ids: list[str],
 ) -> Select:
-    """Generate a subquery to find context ids for entities."""
+    """Generate a subquery to find context ids for multiple entities."""
     return (
         select(Events.context_id)
         .where((Events.time_fired > start_day) & (Events.time_fired < end_day))
@@ -118,7 +107,7 @@ def _generate_entities_context_ids_sub_query(
     )
 
 
-def _generate_logbook_entities_query(
+def _generate_entities_query(
     start_day: dt,
     end_day: dt,
     event_types: tuple[str, ...],
@@ -162,7 +151,7 @@ def _generate_entity_context_ids_sub_query(
     entity_id: str,
     entity_id_like: str,
 ) -> Select:
-    """Generate a subquery to find context ids for entities."""
+    """Generate a subquery to find context ids for a single entity."""
     return (
         select(Events.context_id)
         .where((Events.time_fired > start_day) & (Events.time_fired < end_day))
@@ -181,7 +170,7 @@ def _generate_entity_context_ids_sub_query(
     )
 
 
-def _generate_logbook_single_entity_query(
+def _generate_single_entity_query(
     start_day: dt,
     end_day: dt,
     event_types: tuple[str, ...],
@@ -217,14 +206,14 @@ def _generate_logbook_single_entity_query(
     return stmt
 
 
-def _generate_logbook_query(
+def _generate_query(
     start_day: dt,
     end_day: dt,
     event_types: tuple[str, ...],
     entity_filter: Any | None = None,
     context_id: str | None = None,
 ) -> StatementLambdaElement:
-    """Generate a logbook query lambda_stmt."""
+    """Generate a logbook query for all entities."""
     stmt = lambda_stmt(
         lambda: _generate_events_query_without_states()
         .where((Events.time_fired > start_day) & (Events.time_fired < end_day))
