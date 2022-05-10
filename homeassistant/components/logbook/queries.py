@@ -126,10 +126,7 @@ def _generate_entities_query(
 ) -> StatementLambdaElement:
     """Generate a logbook query for multiple entities."""
     stmt = lambda_stmt(
-        lambda: _generate_events_query_without_states()
-        .where((Events.time_fired > start_day) & (Events.time_fired < end_day))
-        .where(Events.event_type.in_(event_types))
-        .outerjoin(EventData, (Events.data_id == EventData.data_id))
+        lambda: _generate_events_query_without_states(start_day, end_day, event_types)
     )
     stmt = stmt.add_criteria(
         lambda s: s.where(_apply_event_entity_id_matchers(entity_ids)).union_all(
@@ -187,10 +184,7 @@ def _generate_single_entity_query(
 ) -> StatementLambdaElement:
     """Generate a logbook query for a single entity."""
     stmt = lambda_stmt(
-        lambda: _generate_events_query_without_states()
-        .where((Events.time_fired > start_day) & (Events.time_fired < end_day))
-        .where(Events.event_type.in_(event_types))
-        .outerjoin(EventData, (Events.data_id == EventData.data_id))
+        lambda: _generate_events_query_without_states(start_day, end_day, event_types)
         .where(
             Events.event_data.like(entity_id_like)
             | EventData.shared_data.like(entity_id_like)
@@ -223,10 +217,7 @@ def _generate_all_query(
 ) -> StatementLambdaElement:
     """Generate a logbook query for all entities."""
     stmt = lambda_stmt(
-        lambda: _generate_events_query_without_states()
-        .where((Events.time_fired > start_day) & (Events.time_fired < end_day))
-        .where(Events.event_type.in_(event_types))
-        .outerjoin(EventData, (Events.data_id == EventData.data_id))
+        lambda: _generate_events_query_without_states(start_day, end_day, event_types)
     )
     if context_id is not None:
         # Once all the old `state_changed` events
@@ -288,10 +279,17 @@ def _generate_legacy_events_context_id_query(
     )
 
 
-def _generate_events_query_without_states() -> Select:
-    return select(
-        *EVENT_ROWS_NO_STATES,
-        literal(None).label("context_only"),
+def _generate_events_query_without_states(
+    start_day: dt, end_day: dt, event_types: tuple[str, ...]
+) -> Select:
+    return (
+        select(
+            *EVENT_ROWS_NO_STATES,
+            literal(None).label("context_only"),
+        )
+        .where((Events.time_fired > start_day) & (Events.time_fired < end_day))
+        .where(Events.event_type.in_(event_types))
+        .outerjoin(EventData, (Events.data_id == EventData.data_id))
     )
 
 
