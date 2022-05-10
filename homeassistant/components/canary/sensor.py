@@ -151,7 +151,10 @@ class CanarySensor(CoordinatorEntity[CanaryDataUpdateCoordinator], SensorEntity)
     @property
     def reading(self) -> float | None:
         """Return the device sensor reading."""
-        readings = self.coordinator.data["readings"][self._device_id]
+        try:
+            readings = self.coordinator.data["readings"][self._device_id]
+        except KeyError:
+            return None
 
         value = next(
             (
