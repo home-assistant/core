@@ -644,11 +644,8 @@ def _not_uom_attributes_matcher() -> Any:
     ) | ~States.attributes.like(UNIT_OF_MEASUREMENT_JSON_LIKE)
 
 
-def _apply_event_entity_id_matchers(entity_ids: Iterable[str]) -> Query:
-    """Create matchers for the entity_id in the event_data.
-
-    This function generates another lambda to ensure its not cached.
-    """
+def _apply_event_entity_id_matchers(entity_ids: Iterable[str]) -> sqlalchemy.or_:
+    """Create matchers for the entity_id in the event_data."""
     ors = []
     for entity_id in entity_ids:
         like = ENTITY_ID_JSON_TEMPLATE.format(entity_id)
