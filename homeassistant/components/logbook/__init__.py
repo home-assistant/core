@@ -11,12 +11,13 @@ from typing import Any, cast
 
 from aiohttp import web
 import sqlalchemy
-from sqlalchemy import bindparam
+from sqlalchemy import lambda_stmt, select
 from sqlalchemy.engine.row import Row
 from sqlalchemy.ext import baked
 from sqlalchemy.orm import aliased
 from sqlalchemy.orm.query import Query
 from sqlalchemy.sql.expression import literal
+from sqlalchemy.sql.lambdas import StatementLambdaElement
 import voluptuous as vol
 
 from homeassistant.components import frontend
@@ -411,10 +412,6 @@ def _humanify(
             yield data
 
 
-def _join_event_data(query: Query) -> Query:
-    return query.outerjoin(EventData, (Events.data_id == EventData.data_id))
-
-
 def _get_events(
     hass: HomeAssistant,
     start_day: dt,
@@ -452,89 +449,24 @@ def _get_events(
     if entity_ids is not None:
         entities_filter = generate_filter([], entity_ids, [], [])
 
-    bakery: baked.bakery = hass.data[LOGBOOK_BAKERY]
-    can_cache = True
-    params = {
-        "start_day": start_day,
-        "end_day": end_day,
-        "event_types": [
-            *ALL_EVENT_TYPES_EXCEPT_STATE_CHANGED,
-            *hass.data.get(DOMAIN, {}),
-        ],
-    }
+    event_types = [
+        *ALL_EVENT_TYPES_EXCEPT_STATE_CHANGED,
+        *hass.data.get(DOMAIN, {}),
+    ]
+    stmt = _generate_logbook_query(
+        start_day,
+        end_day,
+        event_types,
+        entity_ids,
+        filters,
+        entity_matches_only,
+        context_id,
+    )
     with session_scope(hass=hass) as session:
-        baked_query: baked.BakedQuery = bakery(
-            lambda s: s.query(
-                *EVENT_COLUMNS,
-                EventData.shared_data.label("shared_data"),
-                *EMPTY_STATE_COLUMNS,
-            )
-            .filter(
-                (Events.time_fired > bindparam("start_day"))
-                & (Events.time_fired < bindparam("end_day"))
-            )
-            .filter(Events.event_type.in_(bindparam("event_types", expanding=True)))
-        )
-        if entity_ids is not None:
-            params["entity_ids"] = entity_ids
-            if entity_matches_only:
-                # When entity_matches_only is provided, contexts and events that do not
-                # contain the entity_ids are not included in the logbook response.
-                if len(entity_ids) == 0:
-                    params["event_data_like"] = ENTITY_ID_JSON_TEMPLATE.format(
-                        entity_ids[0]
-                    )
-                    baked_query += lambda q: q.filter(
-                        sqlalchemy.or_(
-                            Events.event_data.like(bindparam("event_data_like")),
-                            EventData.shared_data.like(bindparam("event_data_like")),
-                        )
-                    )
-                else:
-                    can_cache = False
-                    baked_query += _apply_event_entity_id_matchers(entity_ids)
-            baked_query += _join_event_data
-            baked_query += lambda q: q.union_all(
-                _generate_states_query(q).filter(
-                    States.entity_id.in_(bindparam("entity_ids", expanding=True))
-                )
-            )
-        else:
-            if context_id is not None:
-                params["context_id"] = context_id
-                baked_query += lambda q: q.filter(
-                    Events.context_id == bindparam("context_id")
-                )
-            baked_query += _join_event_data
-            if context_id is not None:
-                # Once all the old `state_changed` events
-                # are gone from the database remove the
-                # _generate_legacy_events_context_id_query
-                baked_query += lambda q: q.union_all(
-                    _generate_legacy_events_context_id_query(q),
-                    _generate_states_query(q)
-                    .outerjoin(Events, (States.event_id == Events.event_id))
-                    .filter(States.context_id == bindparam("context_id")),
-                )
-            elif filters:
-                baked_query += lambda q: q.union_all(
-                    _generate_states_query(q).filter(filters.entity_filter())  # type: ignore[no-untyped-call]
-                )
-            else:
-                baked_query += lambda q: q.union_all(_generate_states_query(q))
-
-        baked_query += lambda q: q.order_by(Events.time_fired)
-        if can_cache:
-            # There currently isn't a way to cache when there
-            # are multiple entities.
-            query_with_params = baked_query(session).params(**params)
-        else:
-            query_with_params = baked_query.to_query(session).params(**params)
-
         return list(
             _humanify(
                 hass,
-                yield_rows(query_with_params),
+                yield_rows(session.execute(stmt)),
                 entity_name_cache,
                 event_cache,
                 context_augmenter,
@@ -542,8 +474,75 @@ def _get_events(
         )
 
 
-def _generate_events_query_without_data(query: Query) -> Query:
-    return query.session.query(
+def _generate_logbook_query(
+    start_day: dt,
+    end_day: dt,
+    event_types: list[str],
+    entity_ids: list[str] | None = None,
+    filters: Filters | None = None,
+    entity_matches_only: bool = False,
+    context_id: str | None = None,
+) -> StatementLambdaElement:
+    stmt = lambda_stmt(
+        lambda: select(
+            *EVENT_COLUMNS,
+            EventData.shared_data.label("shared_data"),
+            *EMPTY_STATE_COLUMNS,
+        )
+        .where((Events.time_fired > start_day) & (Events.time_fired < end_day))
+        .where(Events.event_type.in_(event_types))
+    )
+    if entity_ids is not None:
+        if entity_matches_only:
+            # When entity_matches_only is provided, contexts and events that do not
+            # contain the entity_ids are not included in the logbook response.
+            stmt.add_criteria(
+                _apply_event_entity_id_matchers(entity_ids), track_on=entity_ids
+            )
+        stmt += lambda s: s.outerjoin(EventData, (Events.data_id == EventData.data_id))
+        stmt += lambda s: s.union_all(
+            _generate_states_query().where(States.entity_id.in_(entity_ids))
+        )
+    else:
+        if context_id is not None:
+            stmt += lambda s: s.where(Events.context_id == context_id)
+        stmt += lambda s: s.outerjoin(EventData, (Events.data_id == EventData.data_id))
+        if context_id is not None:
+            # Once all the old `state_changed` events
+            # are gone from the database remove the
+            # _generate_legacy_events_context_id_query
+            stmt += lambda s: s.union_all(
+                _generate_legacy_events_context_id_query()
+                .where((Events.time_fired > start_day) & (Events.time_fired < end_day))
+                .where(Events.context_id == context_id),
+                _generate_states_query()
+                .where(
+                    (States.last_updated > start_day) & (States.last_updated < end_day)
+                )
+                .outerjoin(Events, (States.event_id == Events.event_id))
+                .where(States.context_id == context_id),
+            )
+        elif filters:
+            stmt += lambda s: s.union_all(
+                _generate_states_query()
+                .where(
+                    (States.last_updated > start_day) & (States.last_updated < end_day)
+                )
+                .where(filters.entity_filter())  # type: ignore[no-untyped-call]
+            )
+        else:
+            stmt += lambda s: s.union_all(
+                _generate_states_query().where(
+                    (States.last_updated > start_day) & (States.last_updated < end_day)
+                )
+            )
+
+    stmt += lambda s: s.order_by(Events.time_fired)
+    return stmt
+
+
+def _generate_events_query_without_data() -> Query:
+    return select(
         literal(value=EVENT_STATE_CHANGED, type_=sqlalchemy.String).label("event_type"),
         literal(value=None, type_=sqlalchemy.Text).label("event_data"),
         States.last_changed.label("time_fired"),
@@ -555,11 +554,11 @@ def _generate_events_query_without_data(query: Query) -> Query:
     )
 
 
-def _generate_legacy_events_context_id_query(query: Query) -> Query:
+def _generate_legacy_events_context_id_query() -> Query:
     """Generate a legacy events context id query that also joins states."""
     # This can be removed once we no longer have event_ids in the states table
     return (
-        query.session.query(
+        select(
             *EVENT_COLUMNS,
             literal(value=None, type_=sqlalchemy.String).label("shared_data"),
             States.state,
@@ -567,32 +566,23 @@ def _generate_legacy_events_context_id_query(query: Query) -> Query:
             States.attributes,
             StateAttributes.shared_attrs,
         )
-        .filter(
-            (Events.time_fired > bindparam("start_day"))
-            & (Events.time_fired < bindparam("end_day"))
-        )
-        .filter(Events.context_id == bindparam("context_id"))
         .outerjoin(States, (Events.event_id == States.event_id))
-        .filter(States.last_updated == States.last_changed)
-        .filter(_not_continuous_entity_matcher())
+        .where(States.last_updated == States.last_changed)
+        .fiwherelter(_not_continuous_entity_matcher())
         .outerjoin(
             StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
         )
     )
 
 
-def _generate_states_query(query: Query) -> Query:
+def _generate_states_query() -> Query:
     old_state = aliased(States, name="old_state")
     return (
-        _generate_events_query_without_data(query)
+        _generate_events_query_without_data()
         .outerjoin(old_state, (States.old_state_id == old_state.state_id))
-        .filter(_missing_state_matcher(old_state))
-        .filter(_not_continuous_entity_matcher())
-        .filter(
-            (States.last_updated > bindparam("start_day"))
-            & (States.last_updated < bindparam("end_day"))
-        )
-        .filter(States.last_updated == States.last_changed)
+        .where(_missing_state_matcher(old_state))
+        .where(_not_continuous_entity_matcher())
+        .where(States.last_updated == States.last_changed)
         .outerjoin(
             StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
         )
@@ -657,7 +647,7 @@ def _apply_event_entity_id_matchers(entity_ids: Iterable[str]) -> Query:
         like = ENTITY_ID_JSON_TEMPLATE.format(entity_id)
         ors.append(Events.event_data.like(like))
         ors.append(EventData.shared_data.like(like))
-    return lambda q: q.filter(sqlalchemy.or_(*ors))
+    return sqlalchemy.or_(*ors)
 
 
 def _keep_row(
