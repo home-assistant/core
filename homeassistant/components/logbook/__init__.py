@@ -441,7 +441,7 @@ def _get_events(
 
     def yield_rows(query: Query) -> Generator[Row, None, None]:
         """Yield Events that are not filtered away."""
-        for row in query.yield_per(1000):
+        for row in query.all():
             context_lookup.setdefault(row.context_id, row)
             if row.event_type != EVENT_CALL_SERVICE and (
                 row.event_type == EVENT_STATE_CHANGED
@@ -505,7 +505,7 @@ def _get_events(
                 baked_query += lambda q: q.union_all(_generate_states_query(q))
 
         baked_query += lambda q: q.order_by(Events.time_fired)
-        query_with_params = baked_query.to_query(session).params(
+        query_with_params = baked_query(session).params(
             entity_ids=entity_ids,
             event_types=all_event_types,
             context_id=context_id,
