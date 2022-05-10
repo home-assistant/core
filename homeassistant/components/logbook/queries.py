@@ -235,9 +235,9 @@ def _generate_all_query(
         # are gone from the database remove the
         # _generate_legacy_events_context_id_query()
         stmt += lambda s: s.where(Events.context_id == context_id).union_all(
-            _generate_states_query(start_day, end_day)
-            .outerjoin(Events, (States.event_id == Events.event_id))
-            .where(States.context_id == context_id),
+            _generate_states_query(start_day, end_day).where(
+                States.context_id == context_id
+            ),
             _generate_legacy_events_context_id_query(start_day, end_day, context_id),
         )
     elif entity_filter is not None:
