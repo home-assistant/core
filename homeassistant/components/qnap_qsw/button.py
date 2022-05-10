@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Final, cast
+from typing import Final
 
 from aioqsw.localapi import QnapQswApi
 
@@ -40,7 +40,7 @@ BUTTON_TYPES: Final[tuple[QswButtonDescription, ...]] = (
         entity_category=EntityCategory.CONFIG,
         key=QSW_REBOOT,
         name="Reboot",
-        press_action=lambda qsw: cast(Awaitable[bool], qsw.reboot()),
+        press_action=lambda qsw: qsw.reboot(),
     ),
 )
 
