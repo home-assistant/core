@@ -1,9 +1,10 @@
 """Support for Canary sensors."""
 from __future__ import annotations
 
-from typing import Final
+from datetime import datetime
+from typing import Final, cast
 
-from canary.api import Device, Location, SensorType
+from canary.model import Device, Location, SensorType
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -42,9 +43,23 @@ SENSOR_TYPES: Final[list[SensorTypeItem]] = [
         SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         None,
         SensorDeviceClass.SIGNAL_STRENGTH,
-        [CANARY_FLEX],
+        [CANARY_PRO, CANARY_FLEX],
     ),
     ("battery", PERCENTAGE, None, SensorDeviceClass.BATTERY, [CANARY_FLEX]),
+    (
+        "last_entry_date",
+        None,
+        "mdi:run-fast",
+        SensorDeviceClass.TIMESTAMP,
+        [CANARY_PRO, CANARY_FLEX],
+    ),
+    (
+        "entries_captured_today",
+        None,
+        "mdi:file-video",
+        None,
+        [CANARY_PRO, CANARY_FLEX],
+    ),
 ]
 
 STATE_AIR_QUALITY_NORMAL: Final = "normal"
@@ -96,18 +111,31 @@ class CanarySensor(CoordinatorEntity[CanaryDataUpdateCoordinator], SensorEntity)
         self._attr_name = f"{location.name} {device.name} {sensor_type_name}"
 
         canary_sensor_type = None
+        canary_data_type = None
         if self._sensor_type[0] == "air_quality":
             canary_sensor_type = SensorType.AIR_QUALITY
+            canary_data_type = "reading"
         elif self._sensor_type[0] == "temperature":
             canary_sensor_type = SensorType.TEMPERATURE
+            canary_data_type = "reading"
         elif self._sensor_type[0] == "humidity":
             canary_sensor_type = SensorType.HUMIDITY
+            canary_data_type = "reading"
         elif self._sensor_type[0] == "wifi":
             canary_sensor_type = SensorType.WIFI
+            canary_data_type = "reading"
         elif self._sensor_type[0] == "battery":
             canary_sensor_type = SensorType.BATTERY
+            canary_data_type = "reading"
+        elif self._sensor_type[0] == "last_entry_date":
+            canary_sensor_type = SensorType.DATE_LAST_ENTRY
+            canary_data_type = "entry"
+        elif self._sensor_type[0] == "entries_captured_today":
+            canary_sensor_type = SensorType.ENTRIES_CAPTURED_TODAY
+            canary_data_type = "entry"
 
         self._canary_type = canary_sensor_type
+        self._canary_data_type = canary_data_type
         self._attr_unique_id = f"{device.device_id}_{sensor_type[0]}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, str(device.device_id))},
@@ -139,9 +167,20 @@ class CanarySensor(CoordinatorEntity[CanaryDataUpdateCoordinator], SensorEntity)
         return None
 
     @property
-    def native_value(self) -> float | None:
+    def native_value(self) -> float | str | datetime | int | None:
         """Return the state of the sensor."""
-        return self.reading
+        if self._canary_data_type == "reading":
+            return self.reading
+        if self._canary_data_type == "entry":
+            entry = self.coordinator.data["entries"][self._device_id]
+
+            if entry is not None:
+                if self._sensor_type[0] == "entries_captured_today":
+                    return len(entry)
+                if self._sensor_type[0] == "last_entry_date":
+                    return cast(datetime, entry[0].start_time)
+
+        return None
 
     @property
     def extra_state_attributes(self) -> dict[str, str] | None:

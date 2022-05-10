@@ -6,7 +6,8 @@ from datetime import timedelta
 import logging
 
 from async_timeout import timeout
-from canary.api import Api, Location
+from canary.api import Api
+from canary.model import Entry, Location
 from requests.exceptions import ConnectTimeout, HTTPError
 
 from homeassistant.core import HomeAssistant
@@ -37,6 +38,7 @@ class CanaryDataUpdateCoordinator(DataUpdateCoordinator):
         """Fetch data from Canary via sync functions."""
         locations_by_id: dict[str, Location] = {}
         readings_by_device_id: dict[str, ValuesView] = {}
+        entries_by_device_id: dict[str, list[Entry]] = {}
 
         for location in self.canary.get_locations():
             location_id = location.location_id
@@ -48,10 +50,28 @@ class CanaryDataUpdateCoordinator(DataUpdateCoordinator):
                         device.device_id
                     ] = self.canary.get_latest_readings(device.device_id)
 
+            entries_by_device_id = self._group_entries_by_device(location, location_id)
+
         return {
             "locations": locations_by_id,
             "readings": readings_by_device_id,
+            "entries": entries_by_device_id,
         }
+
+    def _group_entries_by_device(
+        self, location: Location, location_id: int
+    ) -> dict[str, list[Entry]]:
+        entries_by_device_id: dict[str, list[Entry]] = {}
+
+        for entry in self.canary.get_entries(location_id=location_id):
+            for device in location.devices:
+                for device_uuid in entry.device_uuids:
+                    if device.uuid == device_uuid:
+                        if device.device_id not in entries_by_device_id:
+                            entries_by_device_id[device.device_id] = [entry]
+                        else:
+                            entries_by_device_id[device.device_id].append(entry)
+        return entries_by_device_id
 
     async def _async_update_data(self) -> CanaryData:
         """Fetch data from Canary."""
