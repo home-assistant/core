@@ -143,12 +143,20 @@ async def test_reauthentication(
         hass,
         DOMAIN,
         {
-            DOMAIN: {CONF_CLIENT_ID: CLIENT_ID, CONF_CLIENT_SECRET: CLIENT_SECRET},
-            "http": {"base_url": "https://example.com"},
+            DOMAIN: {
+                CONF_CLIENT_ID: CLIENT_ID,
+                CONF_CLIENT_SECRET: CLIENT_SECRET,
+            },
+            DOMAIN_HTTP: {CONF_BASE_URL: "https://example.com"},
         },
     )
 
-    old_entry = MockConfigEntry(domain=DOMAIN, unique_id=DOMAIN, version=1)
+    old_entry = MockConfigEntry(
+        entry_id="yl_entry",
+        domain=DOMAIN,
+        unique_id=DOMAIN,
+        version=1,
+    )
     old_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -192,6 +200,11 @@ async def test_reauthentication(
             "homeassistant.components.yolink.async_setup_entry", return_value=True
         ) as mock_setup:
             result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    token_data = hass.config_entries.async_get_entry("yl_entry").data["token"]
+    assert token_data["access_token"] == "mock-access-token"
+    assert token_data["refresh_token"] == "mock-refresh-token"
+    assert token_data["type"] == "Bearer"
+    assert token_data["expires_in"] == 60
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "reauth_successful"
     assert len(mock_setup.mock_calls) == 1
