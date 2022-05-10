@@ -91,10 +91,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await _async_migrate_entries(hass, entry)
 
     try:
-        # await client.login()
-        await client.login(
-            register_event_listener=False
-        )  # TODO swap when event listener is fixed
+        await client.login()
 
         setup, scenarios = await asyncio.gather(
             *[
