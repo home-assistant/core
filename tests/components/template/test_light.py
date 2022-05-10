@@ -1183,7 +1183,7 @@ async def test_entity_picture_template(hass, start_ha):
 @pytest.mark.parametrize("count,domain", [(1, light.DOMAIN)])
 @pytest.mark.parametrize(
     "supported_features,supported_color_modes, expected_color_mode",
-    [(SUPPORT_COLOR, [ColorMode.HS], ColorMode.UNKNOWN)],
+    [(SUPPORT_COLOR, [ColorMode.HS], ColorMode.HS)],
 )
 @pytest.mark.parametrize(
     "config",
@@ -1253,8 +1253,8 @@ async def test_color_action_no_template(
 
     state = hass.states.get("light.test_template_light")
     assert state.state == STATE_ON
-    assert state.attributes["color_mode"] == expected_color_mode  # hs_color is None
-    assert "hs_color" not in state.attributes
+    assert state.attributes["color_mode"] == expected_color_mode
+    assert state.attributes.get("hs_color") == (40, 50)
     assert state.attributes["supported_color_modes"] == supported_color_modes
     assert state.attributes["supported_features"] == supported_features
 
