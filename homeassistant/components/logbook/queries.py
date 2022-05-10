@@ -301,6 +301,7 @@ def _generate_events_query_without_states(
 
 
 def _generate_states_query(start_day: dt, end_day: dt) -> Select:
+    """Generate a states query that formats the states table as event rows."""
     old_state = aliased(States, name="old_state")
     return (
         select(
