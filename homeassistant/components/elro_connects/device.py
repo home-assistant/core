@@ -29,6 +29,8 @@ from .const import CONF_CONNECTOR_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+MAX_RETRIES = 3
+
 DEVICE_MODELS = {
     ALARM_CO: "CO alarm",
     ALARM_FIRE: "Fire alarm",
@@ -50,6 +52,9 @@ class ElroConnectsK1(K1):
         self._coordinator = coordinator
         self._data: dict[int, dict] = {}
         self._connector_id = entry.data[CONF_CONNECTOR_ID]
+        self._retry_count = 0
+        self._connected = False
+
         K1.__init__(
             self,
             entry.data[CONF_HOST],
@@ -59,11 +64,23 @@ class ElroConnectsK1(K1):
 
     async def async_update(self) -> None:
         """Synchronize with the K1 connector."""
-        await self.async_connect()
-        update_status = await self.async_process_command(GET_ALL_EQUIPMENT_STATUS)
-        self._data = update_status
-        update_names = await self.async_process_command(GET_DEVICE_NAMES)
-        update_state_data(self._data, update_names)
+        new_data: dict[int, dict] = {}
+        try:
+            self._retry_count += 1
+            # Only connect the first time or if there were recent issues
+            if not self._connected:
+                await self.async_connect()
+            self._connected = True
+            update_status = await self.async_process_command(GET_ALL_EQUIPMENT_STATUS)
+            new_data = update_status
+            update_names = await self.async_process_command(GET_DEVICE_NAMES)
+            update_state_data(new_data, update_names)
+            self._retry_count = 0
+            self._data = new_data
+        except K1.K1ConnectionError as err:
+            self._connected = False
+            if not self._data or self._retry_count >= MAX_RETRIES:
+                raise K1.K1ConnectionError(err) from err
 
     async def async_update_settings(
         self, hass: HomeAssistant, entry: ConfigEntry
