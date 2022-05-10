@@ -499,8 +499,13 @@ def _generate_logbook_query(
         if entity_matches_only:
             # When entity_matches_only is provided, contexts and events that do not
             # contain the entity_ids are not included in the logbook response.
+            ors = []
+            for entity_id in entity_ids:
+                like = ENTITY_ID_JSON_TEMPLATE.format(entity_id)
+                ors.append(Events.event_data.like(like))
+                ors.append(EventData.shared_data.like(like))
             stmt.add_criteria(
-                _apply_event_entity_id_matchers(entity_ids), track_on=entity_ids
+                lambda s: s.where(sqlalchemy.or_(*ors)), track_on=entity_ids
             )
         stmt += lambda s: s.outerjoin(EventData, (Events.data_id == EventData.data_id))
         stmt += lambda s: s.union_all(
