@@ -1,0 +1,28 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "description": "Set up the Ukraine Alarm integration. To generate an API key go to {api_url}",
+                "title": "Ukraine Alarm"
+            },
+            "state": {
+                "data": {
+                    "region": "Region"
+                },
+                "description": "Choose state to monitor"
+            },
+            "district": {
+                "data": {
+                    "region": "Region"
+                },
+                "description": "If you want to monitor not only state, choose its specific district"
+            },
+            "community": {
+                "data": {
+                    "region": "Region"
+                },
+                "description": "If you want to monitor not only state and district, choose its specific community"
+            }
+        }
+    }
+}
