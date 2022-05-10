@@ -443,7 +443,7 @@ def _get_events(
             event_type = row.event_type
             if event_type != EVENT_CALL_SERVICE and (
                 event_type == EVENT_STATE_CHANGED
-                or _keep_row(hass, row, entities_filter)
+                or _keep_row(hass, event_type, row, entities_filter)
             ):
                 yield row
 
@@ -659,10 +659,10 @@ def _apply_event_entity_id_matchers(entity_ids: Iterable[str]) -> Query:
 
 def _keep_row(
     hass: HomeAssistant,
+    event_type: str,
     row: Row,
     entities_filter: EntityFilter | Callable[[str], bool] | None = None,
 ) -> bool:
-    event_type = row.event_type
     if event_type in HOMEASSISTANT_EVENTS:
         return entities_filter is None or entities_filter(HA_DOMAIN_ENTITY_ID)
 
