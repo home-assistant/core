@@ -438,7 +438,7 @@ def _get_events(
 
     def yield_rows(query: Query) -> Generator[Row, None, None]:
         """Yield Events that are not filtered away."""
-        for row in query.all():
+        for row in query.yield_per(1000):
             context_lookup.setdefault(row.context_id, row)
             if row.event_type != EVENT_CALL_SERVICE and (
                 row.event_type == EVENT_STATE_CHANGED
@@ -486,6 +486,7 @@ def _generate_logbook_query(
     entity_matches_only: bool = False,
     context_id: str | None = None,
 ) -> StatementLambdaElement:
+    """Generate a logbook query lambda_stmt."""
     stmt = lambda_stmt(
         lambda: _generate_events_query_without_states()
         .where((Events.time_fired > start_day) & (Events.time_fired < end_day))
