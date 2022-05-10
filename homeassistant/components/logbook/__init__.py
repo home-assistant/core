@@ -490,6 +490,7 @@ def _generate_logbook_query(
         lambda: _generate_events_query_without_states()
         .where((Events.time_fired > start_day) & (Events.time_fired < end_day))
         .where(Events.event_type.in_(event_types))
+        .outerjoin(EventData, (Events.data_id == EventData.data_id))
     )
     if entity_ids is not None:
         if entity_matches_only:
@@ -499,22 +500,17 @@ def _generate_logbook_query(
                 lambda s: s.where(_apply_event_entity_id_matchers(entity_ids)),
                 track_on=entity_ids,
             )
-        stmt += lambda s: s.outerjoin(
-            EventData, (Events.data_id == EventData.data_id)
-        ).union_all(
+        stmt += lambda s: s.union_all(
             _generate_states_query()
             .filter((States.last_updated > start_day) & (States.last_updated < end_day))
             .where(States.entity_id.in_(entity_ids))
         )
     else:
         if context_id is not None:
-            stmt += lambda s: s.where(Events.context_id == context_id)
-        stmt += lambda s: s.outerjoin(EventData, (Events.data_id == EventData.data_id))
-        if context_id is not None:
             # Once all the old `state_changed` events
             # are gone from the database remove the
-            # _generate_legacy_events_context_id_query
-            stmt += lambda s: s.union_all(
+            # union_all(_generate_legacy_events_context_id_query()....)
+            stmt += lambda s: s.where(Events.context_id == context_id).union_all(
                 _generate_legacy_events_context_id_query()
                 .where((Events.time_fired > start_day) & (Events.time_fired < end_day))
                 .where(Events.context_id == context_id),
