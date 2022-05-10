@@ -499,10 +499,9 @@ def _generate_logbook_query(
                 lambda s: s.where(_apply_event_entity_id_matchers(entity_ids)),
                 track_on=entity_ids,
             )
-        stmt += lambda s: s.outerjoin(EventData, (Events.data_id == EventData.data_id))
-        stmt += lambda s: s.union_all(
-            _generate_states_query().where(States.entity_id.in_(entity_ids))
-        )
+        stmt += lambda s: s.outerjoin(
+            EventData, (Events.data_id == EventData.data_id)
+        ).union_all(_generate_states_query().where(States.entity_id.in_(entity_ids)))
     else:
         if context_id is not None:
             stmt += lambda s: s.where(Events.context_id == context_id)
