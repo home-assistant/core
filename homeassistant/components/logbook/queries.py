@@ -233,12 +233,7 @@ def _generate_all_query(
         # are gone from the database remove the
         # .union_all(_generate_legacy_events_context_id_query()....)
         stmt += lambda s: s.where(Events.context_id == context_id).union_all(
-            _generate_legacy_events_context_id_query()
-            .where((Events.time_fired > start_day) & (Events.time_fired < end_day))
-            .where(Events.context_id == context_id),
-            _generate_states_query(start_day, end_day)
-            .outerjoin(Events, (States.event_id == Events.event_id))
-            .where(States.context_id == context_id),
+            _generate_legacy_events_context_id_query(start_day, end_day, context_id)
         )
     elif entity_filter is not None:
         stmt += lambda s: s.union_all(
@@ -264,7 +259,9 @@ def _generate_events_query_without_data() -> Select:
     )
 
 
-def _generate_legacy_events_context_id_query() -> Select:
+def _generate_legacy_events_context_id_query(
+    start_day: dt, end_day: dt, context_id: str
+) -> Select:
     """Generate a legacy events context id query that also joins states."""
     # This can be removed once we no longer have event_ids in the states table
     return (
@@ -283,6 +280,11 @@ def _generate_legacy_events_context_id_query() -> Select:
         .outerjoin(
             StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
         )
+        .where((Events.time_fired > start_day) & (Events.time_fired < end_day))
+        .where(Events.context_id == context_id),
+        _generate_states_query(start_day, end_day)
+        .outerjoin(Events, (States.event_id == Events.event_id))
+        .where(States.context_id == context_id),
     )
 
 
