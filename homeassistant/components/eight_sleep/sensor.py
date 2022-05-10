@@ -68,24 +68,19 @@ async def async_setup_platform(
     heat_coordinator: DataUpdateCoordinator = hass.data[DOMAIN][DATA_HEAT]
     user_coordinator: DataUpdateCoordinator = hass.data[DOMAIN][DATA_USER]
 
-    if hass.config.units.is_metric:
-        units = "si"
-    else:
-        units = "us"
-
     all_sensors: list[SensorEntity] = []
 
     for obj in eight.users.values():
         for sensor in EIGHT_USER_SENSORS:
             all_sensors.append(
-                EightUserSensor(user_coordinator, eight, obj.userid, sensor, units)
+                EightUserSensor(user_coordinator, eight, obj.userid, sensor)
             )
         for sensor in EIGHT_HEAT_SENSORS:
             all_sensors.append(
                 EightHeatSensor(heat_coordinator, eight, obj.userid, sensor)
             )
     for sensor in EIGHT_ROOM_SENSORS:
-        all_sensors.append(EightRoomSensor(user_coordinator, eight, sensor, units))
+        all_sensors.append(EightRoomSensor(user_coordinator, eight, sensor))
 
     async_add_entities(all_sensors)
 
@@ -156,10 +151,9 @@ class EightUserSensor(EightSleepBaseEntity, SensorEntity):
         eight: EightSleep,
         user_id: str,
         sensor: str,
-        units: str,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator, eight, user_id, sensor, units)
+        super().__init__(coordinator, eight, user_id, sensor)
         assert self._user_obj
 
         if self._sensor == "bed_temperature":
@@ -269,18 +263,11 @@ class EightRoomSensor(EightSleepBaseEntity, SensorEntity):
         coordinator: DataUpdateCoordinator,
         eight: EightSleep,
         sensor: str,
-        units: str,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator, eight, None, sensor, units)
+        super().__init__(coordinator, eight, None, sensor)
 
     @property
     def native_value(self) -> int | float | None:
         """Return the state of the sensor."""
-        temp = self._eight.room_temperature()
-        try:
-            if self._units == "si":
-                return round(temp, 2)
-            return round((temp * 1.8) + 32, 2)
-        except TypeError:
-            return None
+        return self._eight.room_temperature()
