@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any, cast
+from typing import Any
 
 from aioqsw.exceptions import QswError
 from aioqsw.localapi import QnapQswApi
@@ -40,4 +40,4 @@ class QswUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 await self.qsw.update()
             except QswError as error:
                 raise UpdateFailed(error) from error
-            return cast(dict[str, Any], self.qsw.data())
+            return self.qsw.data()
