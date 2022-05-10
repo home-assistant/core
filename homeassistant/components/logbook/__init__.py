@@ -526,6 +526,7 @@ def _generate_logbook_entities_query(
     entity_ids: list[str],
 ) -> StatementLambdaElement:
     sorted_entities = ",".join(sorted(entity_ids))
+    sorted_event_types = ",".join(sorted(event_types))
 
     stmt = lambda_stmt(
         lambda: _generate_events_query_without_states()
@@ -555,7 +556,7 @@ def _generate_logbook_entities_query(
             )
             .outerjoin(EventData, (Events.data_id == EventData.data_id)),
         ),
-        track_on=(sorted_entities, start_day, end_day, ",".join(sorted(event_types))),
+        track_on=(sorted_entities, start_day, end_day, sorted_event_types),
     )
     stmt += lambda s: s.order_by(Events.time_fired)
     return stmt
