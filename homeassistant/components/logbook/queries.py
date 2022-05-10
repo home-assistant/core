@@ -231,7 +231,7 @@ def _generate_all_query(
     if context_id is not None:
         # Once all the old `state_changed` events
         # are gone from the database remove the
-        # union_all(_generate_legacy_events_context_id_query()....)
+        # .union_all(_generate_legacy_events_context_id_query()....)
         stmt += lambda s: s.where(Events.context_id == context_id).union_all(
             _generate_legacy_events_context_id_query()
             .where((Events.time_fired > start_day) & (Events.time_fired < end_day))
