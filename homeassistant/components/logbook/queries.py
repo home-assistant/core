@@ -259,10 +259,7 @@ def _generate_legacy_events_context_id_query(
         select(
             *EVENT_COLUMNS,
             literal(value=None, type_=sqlalchemy.String).label("shared_data"),
-            States.state,
-            States.entity_id,
-            States.attributes,
-            StateAttributes.shared_attrs,
+            *STATE_COLUMNS,
             literal(None).label("context_only"),
         )
         .outerjoin(States, (Events.event_id == States.event_id))
