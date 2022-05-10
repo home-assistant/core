@@ -1308,8 +1308,8 @@ async def test_measure_from_end_going_backwards(hass, recorder_mock):
     assert hass.states.get("sensor.sensor4").state == "83.3"
 
 
-async def test_measure_cet(hass, recorder_mock):
-    """Test the history statistics sensor measure with a non-UTC timezone."""
+async def test_end_time_with_microseconds_zeroed(hass, recorder_mock):
+    """Test the history statistics sensor that has the end time microseconds zeroed out."""
     hass.config.set_time_zone("Europe/Berlin")
     start_time = dt_util.utcnow() - timedelta(minutes=60)
     t0 = start_time + timedelta(minutes=20)
@@ -1329,61 +1329,29 @@ async def test_measure_cet(hass, recorder_mock):
             ]
         }
 
-    await async_setup_component(
-        hass,
-        "sensor",
-        {
-            "sensor": [
-                {
-                    "platform": "history_stats",
-                    "entity_id": "binary_sensor.test_id",
-                    "name": "sensor1",
-                    "state": "on",
-                    "start": "{{ as_timestamp(now()) - 3600 }}",
-                    "end": "{{ now() }}",
-                    "type": "time",
-                },
-                {
-                    "platform": "history_stats",
-                    "entity_id": "binary_sensor.test_id",
-                    "name": "sensor2",
-                    "state": "on",
-                    "start": "{{ as_timestamp(now()) - 3600 }}",
-                    "end": "{{ now() }}",
-                    "type": "time",
-                },
-                {
-                    "platform": "history_stats",
-                    "entity_id": "binary_sensor.test_id",
-                    "name": "sensor3",
-                    "state": "on",
-                    "start": "{{ as_timestamp(now()) - 3600 }}",
-                    "end": "{{ now() }}",
-                    "type": "count",
-                },
-                {
-                    "platform": "history_stats",
-                    "entity_id": "binary_sensor.test_id",
-                    "name": "sensor4",
-                    "state": "on",
-                    "start": "{{ as_timestamp(now()) - 3600 }}",
-                    "end": "{{ now() }}",
-                    "type": "ratio",
-                },
-            ]
-        },
-    )
-    await hass.async_block_till_done()
-
     with patch(
         "homeassistant.components.recorder.history.state_changes_during_period",
         _fake_states,
     ):
-        for i in range(1, 5):
-            await async_update_entity(hass, f"sensor.sensor{i}")
+        await async_setup_component(
+            hass,
+            "sensor",
+            {
+                "sensor": [
+                    {
+                        "platform": "history_stats",
+                        "entity_id": "binary_sensor.heatpump_compressor_state",
+                        "name": "heatpump_compressor_today",
+                        "state": "on",
+                        "start": "{{ now().replace(hour=0, minute=0, second=0, microsecond=0) }}",
+                        "end": "{{ now().replace(microsecond=0) }}",
+                        "type": "time",
+                    },
+                ]
+            },
+        )
+        await hass.async_block_till_done()
+        await async_update_entity(hass, "sensor.heatpump_compressor_today")
         await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.sensor1").state == "0.83"
-    assert hass.states.get("sensor.sensor2").state == "0.83"
-    assert hass.states.get("sensor.sensor3").state == "1"
-    assert hass.states.get("sensor.sensor4").state == "83.3"
+    assert hass.states.get("sensor.heatpump_compressor_today").state == "0.83"
