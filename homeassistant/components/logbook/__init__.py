@@ -453,10 +453,15 @@ def _get_events(
         entities_filter = generate_filter([], entity_ids, [], [])
 
     bakery: baked.bakery = hass.data[LOGBOOK_BAKERY]
-    all_event_types = [
-        *ALL_EVENT_TYPES_EXCEPT_STATE_CHANGED,
-        *hass.data.get(DOMAIN, {}),
-    ]
+    can_cache = True
+    params = {
+        "start_day": start_day,
+        "end_day": end_day,
+        "event_types": [
+            *ALL_EVENT_TYPES_EXCEPT_STATE_CHANGED,
+            *hass.data.get(DOMAIN, {}),
+        ],
+    }
     with session_scope(hass=hass) as session:
         baked_query: baked.BakedQuery = bakery(
             lambda s: s.query(
@@ -471,10 +476,23 @@ def _get_events(
             .filter(Events.event_type.in_(bindparam("event_types", expanding=True)))
         )
         if entity_ids is not None:
+            params["entity_ids"] = entity_ids
             if entity_matches_only:
                 # When entity_matches_only is provided, contexts and events that do not
                 # contain the entity_ids are not included in the logbook response.
-                baked_query += _apply_event_entity_id_matchers(entity_ids)
+                if len(entity_ids) == 0:
+                    params["event_data_like"] = ENTITY_ID_JSON_TEMPLATE.format(
+                        entity_ids[0]
+                    )
+                    baked_query += lambda q: q.filter(
+                        sqlalchemy.or_(
+                            Events.event_data.like(bindparam("event_data_like")),
+                            EventData.shared_data.like(bindparam("event_data_like")),
+                        )
+                    )
+                else:
+                    can_cache = False
+                    baked_query += _apply_event_entity_id_matchers(entity_ids)
             baked_query += _join_event_data
             baked_query += lambda q: q.union_all(
                 _generate_states_query(q).filter(
@@ -483,6 +501,7 @@ def _get_events(
             )
         else:
             if context_id is not None:
+                params["context_id"] = context_id
                 baked_query += lambda q: q.filter(
                     Events.context_id == bindparam("context_id")
                 )
@@ -505,13 +524,13 @@ def _get_events(
                 baked_query += lambda q: q.union_all(_generate_states_query(q))
 
         baked_query += lambda q: q.order_by(Events.time_fired)
-        query_with_params = baked_query(session).params(
-            entity_ids=entity_ids,
-            event_types=all_event_types,
-            context_id=context_id,
-            start_day=start_day,
-            end_day=end_day,
-        )
+        if can_cache:
+            # There currently isn't a way to cache when there
+            # are multiple entities.
+            query_with_params = baked_query(session).params(**params)
+        else:
+            query_with_params = baked_query.to_query(session).params(**params)
+
         return list(
             _humanify(
                 hass,
