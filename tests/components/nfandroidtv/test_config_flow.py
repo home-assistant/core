@@ -139,13 +139,13 @@ async def test_dhcp_discovery_already_configured(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=CONF_CONFIG_FLOW,
-        unique_id="1.1.1.1",
+        unique_id="1.2.3.4",
     )
 
     entry.add_to_hass(hass)
-    assert entry.unique_id == "1.1.1.1"
+    assert entry.unique_id == "1.2.3.4"
 
-    with _patch_config_flow_tv(await _create_mocked_tv()):
+    with _patch_config_flow_tv(await _create_mocked_tv()), _patch_test_port():
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
@@ -173,8 +173,8 @@ async def test_dhcp_discovery_fire_tv(hass: HomeAssistant) -> None:
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["data"] == {
-            CONF_HOST: "1.1.1.1",
-            CONF_NAME: "Fire TV 1.1.1.1",
+            CONF_HOST: "1.2.3.4",
+            CONF_NAME: "Fire TV 1.2.3.4",
         }
         assert result["result"].unique_id == "aa:bb:cc:dd:ee:ff"
 

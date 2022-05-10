@@ -20,7 +20,7 @@ CONF_CONFIG_FLOW = {
 }
 
 CONF_DHCP_FLOW_FIRE_TV = DhcpServiceInfo(
-    ip="1.1.1.1",
+    ip="1.2.3.4",
     hostname="amazon-fffffffff",
     macaddress=format_mac("AA:BB:CC:DD:EE:FF"),
 )

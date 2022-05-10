@@ -35,9 +35,10 @@ class NFAndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         mac = format_mac(discovery_info.macaddress)
 
         # Host unique_id has been deprecated in 2022.6
-        if existing_entry := await self.async_set_unique_id(discovery_info.ip):
-            self.hass.config_entries.async_update_entry(existing_entry, unique_id=mac)
-            return self.async_abort(reason="already_configured")
+        for entry in self._async_current_entries():
+            if entry.data[CONF_HOST] == discovery_info.ip and entry.unique_id != mac:
+                self.hass.config_entries.async_update_entry(entry, unique_id=mac)
+                return self.async_abort(reason="already_configured")
         await self.async_set_unique_id(mac)
         self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
         if "amazon-" in discovery_info.hostname:
