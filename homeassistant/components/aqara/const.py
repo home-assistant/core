@@ -6,38 +6,6 @@ from dataclasses import dataclass, field
 from enum import Enum
 import logging
 
-# from aqara_iot import AqaraCloudOpenAPIEndpoint
-
-# from homeassistant.components.sensor import SensorDeviceClass
-# from homeassistant.const import (
-#     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-#     CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
-#     CONCENTRATION_PARTS_PER_BILLION,
-#     CONCENTRATION_PARTS_PER_MILLION,
-#     ELECTRIC_CURRENT_AMPERE,
-#     ELECTRIC_CURRENT_MILLIAMPERE,
-#     ELECTRIC_POTENTIAL_MILLIVOLT,
-#     ELECTRIC_POTENTIAL_VOLT,
-#     ENERGY_KILO_WATT_HOUR,
-#     ENERGY_WATT_HOUR,
-#     LIGHT_LUX,
-#     PERCENTAGE,
-#     POWER_KILO_WATT,
-#     POWER_WATT,
-#     PRESSURE_BAR,
-#     PRESSURE_HPA,
-#     PRESSURE_INHG,
-#     PRESSURE_MBAR,
-#     PRESSURE_PA,
-#     PRESSURE_PSI,
-#     SIGNAL_STRENGTH_DECIBELS,
-#     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-#     TEMP_CELSIUS,
-#     TEMP_FAHRENHEIT,
-#     VOLUME_CUBIC_FEET,
-#     VOLUME_CUBIC_METERS,
-# )
-
 DOMAIN = "aqara"
 LOGGER = logging.getLogger(__package__)
 
@@ -82,16 +50,16 @@ PLATFORMS = [
     "binary_sensor",
     "button",
     # "camera",
-    "climate",
-    "cover",
+    # "climate",
+    # "cover",
     # "fan",
     # "humidifier",
     "light",
     "number",
-    "scene",
-    "select",
+    # "scene",
+    # "select",
     "sensor",
-    "siren",
+    # "siren",
     "switch",
     # "vacuum",
     # "lock",

@@ -8,22 +8,9 @@ omit =
 
     # omit pieces of code that rely on external devices being present
 
-    homeassistant/components/aqara/select.py
     homeassistant/components/aqara/binary_sensor.py
     homeassistant/components/aqara/button.py
-    homeassistant/components/aqara/camera.py
-    homeassistant/components/aqara/climate.py
-    homeassistant/components/aqara/cover.py
-    homeassistant/components/aqara/fan.py
-    homeassistant/components/aqara/humidifier.py
-    homeassistant/components/aqara/light.py
-    homeassistant/components/aqara/number.py
-    homeassistant/components/aqara/scene.py
-    homeassistant/components/aqara/select.py
     homeassistant/components/aqara/sensor.py
-    homeassistant/components/aqara/siren.py
-    homeassistant/components/aqara/switch.py
-    homeassistant/components/aqara/vacuum.py
     homeassistant/components/aqara/device_trigger.py
     homeassistant/components/aqara/base.py
     homeassistant/components/aqara/__init__.py
