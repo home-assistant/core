@@ -498,9 +498,11 @@ def _get_events(
                 baked_query += lambda q: q.union_all(
                     _generate_states_query(q).filter(filters.entity_filter())  # type: ignore[no-untyped-call]
                 )
+            else:
+                baked_query += lambda q: q.union_all(_generate_states_query(q))
 
         baked_query += lambda q: q.order_by(Events.time_fired)
-        query = baked_query.to_query(session).params(
+        query_with_params = baked_query.to_query(session).params(
             entity_ids=entity_ids,
             event_types=all_event_types,
             context_id=context_id,
@@ -510,7 +512,7 @@ def _get_events(
         return list(
             _humanify(
                 hass,
-                yield_rows(query),
+                yield_rows(query_with_params),
                 entity_name_cache,
                 event_cache,
                 context_augmenter,
@@ -635,16 +637,16 @@ def _apply_event_types_filter(query: Query) -> Query:
 
 
 def _apply_event_entity_id_matchers(entity_ids: Iterable[str]) -> Query:
-    for _ in range(1):
-        # We use a loop variable here to ensure we generate
-        # a unique lambda each time otherwise it will get
-        # cached
-        ors = []
-        for entity_id in entity_ids:
-            like = ENTITY_ID_JSON_TEMPLATE.format(entity_id)
-            ors.append(Events.event_data.like(like))
-            ors.append(EventData.shared_data.like(like))
-        return lambda q: q.filter(sqlalchemy.or_(*ors))
+    """Create matchers for the entity_id in the event_data.
+
+    This function generates another lambda to ensure its not cached.
+    """
+    ors = []
+    for entity_id in entity_ids:
+        like = ENTITY_ID_JSON_TEMPLATE.format(entity_id)
+        ors.append(Events.event_data.like(like))
+        ors.append(EventData.shared_data.like(like))
+    return lambda q: q.filter(sqlalchemy.or_(*ors))
 
 
 def _keep_row(
