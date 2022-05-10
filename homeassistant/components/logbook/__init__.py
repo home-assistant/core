@@ -441,7 +441,7 @@ def _get_events(
 
     def yield_rows(query: Query) -> Generator[Row, None, None]:
         """Yield Events that are not filtered away."""
-        for row in query.all():  # yield_per(1000):
+        for row in query.yield_per(1000):
             context_lookup.setdefault(row.context_id, row)
             if row.event_type != EVENT_CALL_SERVICE and (
                 row.event_type == EVENT_STATE_CHANGED
@@ -469,10 +469,10 @@ def _get_events(
         baked_query += _apply_event_time_filter
         baked_query += _apply_event_types_filter
         if entity_ids is not None:
-            # if entity_matches_only:
-            # When entity_matches_only is provided, contexts and events that do not
-            # contain the entity_ids are not included in the logbook response.
-            # baked_query += _apply_event_entity_id_matchers(query, entity_ids)
+            if entity_matches_only:
+                # When entity_matches_only is provided, contexts and events that do not
+                # contain the entity_ids are not included in the logbook response.
+                baked_query += _apply_event_entity_id_matchers(entity_ids)
             baked_query += _join_event_data
             baked_query += lambda q: q.union_all(
                 _generate_states_query(q).filter(
@@ -501,19 +501,17 @@ def _get_events(
                 )
 
         baked_query += lambda q: q.order_by(Events.time_fired)
-
+        query = baked_query.to_query(session).params(
+            entity_ids=entity_ids,
+            event_types=all_event_types,
+            context_id=context_id,
+            start_day=start_day,
+            end_day=end_day,
+        )
         return list(
             _humanify(
                 hass,
-                yield_rows(
-                    baked_query(session).params(
-                        entity_ids=entity_ids,
-                        event_types=all_event_types,
-                        context_id=context_id,
-                        start_day=start_day,
-                        end_day=end_day,
-                    )
-                ),
+                yield_rows(query),
                 entity_name_cache,
                 event_cache,
                 context_augmenter,
@@ -637,15 +635,17 @@ def _apply_event_types_filter(query: Query) -> Query:
     return query.filter(Events.event_type.in_(bindparam("event_types", expanding=True)))
 
 
-def _apply_event_entity_id_matchers(
-    events_query: Query, entity_ids: Iterable[str]
-) -> Query:
-    ors = []
-    for entity_id in entity_ids:
-        like = ENTITY_ID_JSON_TEMPLATE.format(entity_id)
-        ors.append(Events.event_data.like(like))
-        ors.append(EventData.shared_data.like(like))
-    return events_query.filter(sqlalchemy.or_(*ors))
+def _apply_event_entity_id_matchers(entity_ids: Iterable[str]) -> Query:
+    for _ in range(1):
+        # We use a loop variable here to ensure we generate
+        # a unique lambda each time otherwise it will get
+        # cached
+        ors = []
+        for entity_id in entity_ids:
+            like = ENTITY_ID_JSON_TEMPLATE.format(entity_id)
+            ors.append(Events.event_data.like(like))
+            ors.append(EventData.shared_data.like(like))
+        return lambda q: q.filter(sqlalchemy.or_(*ors))
 
 
 def _keep_row(
