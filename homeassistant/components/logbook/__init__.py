@@ -441,6 +441,8 @@ def _get_events(
             rows = query.yield_per(1000)
         for row in rows:
             context_lookup.setdefault(row.context_id, row)
+            if row.context_only:
+                continue
             event_type = row.event_type
             if event_type != EVENT_CALL_SERVICE and (
                 event_type == EVENT_STATE_CHANGED
@@ -471,10 +473,6 @@ def _get_events(
             entity_filter,
             context_id,
         )
-    import pprint
-
-    pprint.pprint(["the_statement"])
-    print(stmt.compile(compile_kwargs={"literal_binds": True}))
     with session_scope(hass=hass) as session:
         return list(
             _humanify(
@@ -493,17 +491,7 @@ def _generate_logbook_entities_query(
     event_types: list[str],
     entity_ids: list[str],
 ) -> StatementLambdaElement:
-    import pprint
-
-    pprint.pprint(
-        [
-            "_generate_logbook_entities_query",
-            start_day,
-            end_day,
-            event_types,
-            entity_ids,
-        ]
-    )
+    entities_cache_key = (",".join(sorted(entity_ids)),)
     stmt = lambda_stmt(
         lambda: _generate_events_query_without_states()
         .where((Events.time_fired > start_day) & (Events.time_fired < end_day))
@@ -512,7 +500,7 @@ def _generate_logbook_entities_query(
     )
     stmt = stmt.add_criteria(
         lambda s: s.where(_apply_event_entity_id_matchers(entity_ids)),
-        track_on=entity_ids,
+        track_on=entities_cache_key,
     )
     stmt = stmt.add_criteria(
         lambda s: s.union_all(
@@ -523,6 +511,7 @@ def _generate_logbook_entities_query(
                 *EVENT_COLUMNS,
                 EventData.shared_data.label("shared_data"),
                 *EMPTY_STATE_COLUMNS,
+                literal(True).label("context_only"),
             ).where(
                 Events.context_id.in_(
                     select(Events.context_id)
@@ -543,7 +532,7 @@ def _generate_logbook_entities_query(
                 )
             ),
         ),
-        track_on=entity_ids,
+        track_on=entities_cache_key,
     )
     stmt += lambda s: s.order_by(Events.time_fired)
     return stmt
@@ -602,6 +591,7 @@ def _generate_events_query_without_data() -> Select:
         States.context_parent_id.label("context_parent_id"),
         literal(value=None, type_=sqlalchemy.Text).label("shared_data"),
         *STATE_COLUMNS,
+        literal(False).label("context_only"),
     )
 
 
@@ -616,6 +606,7 @@ def _generate_legacy_events_context_id_query() -> Select:
             States.entity_id,
             States.attributes,
             StateAttributes.shared_attrs,
+            literal(False).label("context_only"),
         )
         .outerjoin(States, (Events.event_id == States.event_id))
         .where(States.last_updated == States.last_changed)
@@ -631,6 +622,7 @@ def _generate_events_query_without_states() -> Select:
         *EVENT_COLUMNS,
         EventData.shared_data.label("shared_data"),
         *EMPTY_STATE_COLUMNS,
+        literal(False).label("context_only"),
     )
 
 
