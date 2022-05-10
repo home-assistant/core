@@ -525,7 +525,7 @@ def _generate_logbook_query(
                 .outerjoin(Events, (States.event_id == Events.event_id))
                 .where(States.context_id == context_id),
             )
-        elif entity_filter:
+        elif entity_filter is not None:
             stmt += lambda s: s.union_all(
                 _generate_states_query()
                 .where(
