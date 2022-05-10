@@ -723,7 +723,7 @@ gios==2.1.0
 gitterpy==0.1.7
 
 # homeassistant.components.glances
-glances_api==0.3.4
+glances_api==0.3.5
 
 # homeassistant.components.goalzero
 goalzero==0.2.1
@@ -1291,7 +1291,7 @@ pushover_complete==1.1.1
 pvo==0.2.2
 
 # homeassistant.components.canary
-py-canary==0.5.1
+py-canary==0.5.2
 
 # homeassistant.components.cpuspeed
 py-cpuinfo==8.0.0
@@ -2320,7 +2320,7 @@ tololib==0.1.0b3
 toonapi==0.2.1
 
 # homeassistant.components.totalconnect
-total_connect_client==2022.3
+total_connect_client==2022.5
 
 # homeassistant.components.tplink_lte
 tp-connected==0.0.4
@@ -2345,6 +2345,9 @@ twitchAPI==2.5.2
 
 # homeassistant.components.rainforest_eagle
 uEagle==0.0.2
+
+# homeassistant.components.ukraine_alarm
+ukrainealarm==0.0.1
 
 # homeassistant.components.unifiprotect
 unifi-discovery==1.1.2
