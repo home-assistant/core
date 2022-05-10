@@ -11,7 +11,7 @@ from typing import Any, cast
 
 from aiohttp import web
 import sqlalchemy
-from sqlalchemy import lambda_stmt, select, union_all
+from sqlalchemy import lambda_stmt, select
 from sqlalchemy.engine.row import Row
 from sqlalchemy.orm import aliased
 from sqlalchemy.orm.query import Query
@@ -471,6 +471,10 @@ def _get_events(
             entity_filter,
             context_id,
         )
+    import pprint
+
+    pprint.pprint(["the_statement"])
+    print(stmt.compile(compile_kwargs={"literal_binds": True}))
     with session_scope(hass=hass) as session:
         return list(
             _humanify(
@@ -489,34 +493,49 @@ def _generate_logbook_entities_query(
     event_types: list[str],
     entity_ids: list[str],
 ) -> StatementLambdaElement:
+    import pprint
+
+    pprint.pprint(
+        [
+            "_generate_logbook_entities_query",
+            start_day,
+            end_day,
+            event_types,
+            entity_ids,
+        ]
+    )
     stmt = lambda_stmt(
         lambda: _generate_events_query_without_states()
         .where((Events.time_fired > start_day) & (Events.time_fired < end_day))
         .where(Events.event_type.in_(event_types))
         .outerjoin(EventData, (Events.data_id == EventData.data_id))
     )
-    stmt.add_criteria(
-        lambda s: s.where(_apply_event_entity_id_matchers(entity_ids)).union_all(
+    stmt = stmt.add_criteria(
+        lambda s: s.where(_apply_event_entity_id_matchers(entity_ids)),
+        track_on=entity_ids,
+    )
+    stmt = stmt.add_criteria(
+        lambda s: s.union_all(
             _generate_states_query()
             .filter((States.last_updated > start_day) & (States.last_updated < end_day))
             .where(States.entity_id.in_(entity_ids)),
             _generate_events_query_without_states().where(
                 Events.context_id.in_(
-                    union_all(
-                        select(Events.context_id)
-                        .where(
-                            (Events.time_fired > start_day)
-                            & (Events.time_fired < end_day)
-                        )
-                        .where(Events.event_type.in_(event_types))
-                        .where(_apply_event_entity_id_matchers(entity_ids)),
+                    select(Events.context_id)
+                    .where(
+                        (Events.time_fired > start_day) & (Events.time_fired < end_day)
+                    )
+                    .where(Events.event_type.in_(event_types))
+                    .where(_apply_event_entity_id_matchers(entity_ids))
+                    .union_all(
                         select(States.context_id)
                         .filter(
                             (States.last_updated > start_day)
                             & (States.last_updated < end_day)
                         )
-                        .where(States.entity_id.in_(entity_ids)),
+                        .where(States.entity_id.in_(entity_ids))
                     )
+                    .subquery(),
                 )
             ),
         ),
