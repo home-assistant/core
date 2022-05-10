@@ -85,6 +85,20 @@ def generate_statement_for_request(
     )
 
 
+def _select_events_context_id_subquery(
+    start_day: dt,
+    end_day: dt,
+    event_types: tuple[str, ...],
+) -> Select:
+    """Generate the select for a context_id subquery."""
+    return (
+        select(Events.context_id)
+        .where((Events.time_fired > start_day) & (Events.time_fired < end_day))
+        .where(Events.event_type.in_(event_types))
+        .outerjoin(EventData, (Events.data_id == EventData.data_id))
+    )
+
+
 def _generate_entities_context_ids_sub_query(
     start_day: dt,
     end_day: dt,
@@ -93,11 +107,8 @@ def _generate_entities_context_ids_sub_query(
 ) -> Select:
     """Generate a subquery to find context ids for multiple entities."""
     return (
-        select(Events.context_id)
-        .where((Events.time_fired > start_day) & (Events.time_fired < end_day))
-        .where(Events.event_type.in_(event_types))
+        _select_events_context_id_subquery(start_day, end_day, event_types)
         .where(_apply_event_entity_id_matchers(entity_ids))
-        .outerjoin(EventData, (Events.data_id == EventData.data_id))
         .union_all(
             select(States.context_id)
             .filter((States.last_updated > start_day) & (States.last_updated < end_day))
@@ -122,9 +133,9 @@ def _generate_entities_query(
     )
     stmt = stmt.add_criteria(
         lambda s: s.where(_apply_event_entity_id_matchers(entity_ids)).union_all(
-            _generate_states_query()
-            .filter((States.last_updated > start_day) & (States.last_updated < end_day))
-            .where(States.entity_id.in_(entity_ids)),
+            _generate_states_query(start_day, end_day).where(
+                States.entity_id.in_(entity_ids)
+            ),
             select(*EVENT_ROWS_NO_STATES, literal("1").label("context_only"))
             .where(
                 Events.context_id.in_(
@@ -153,14 +164,11 @@ def _generate_entity_context_ids_sub_query(
 ) -> Select:
     """Generate a subquery to find context ids for a single entity."""
     return (
-        select(Events.context_id)
-        .where((Events.time_fired > start_day) & (Events.time_fired < end_day))
-        .where(Events.event_type.in_(event_types))
+        _select_events_context_id_subquery(start_day, end_day, event_types)
         .where(
             Events.event_data.like(entity_id_like)
             | EventData.shared_data.like(entity_id_like)
         )
-        .outerjoin(EventData, (Events.data_id == EventData.data_id))
         .union_all(
             select(States.context_id)
             .filter((States.last_updated > start_day) & (States.last_updated < end_day))
@@ -188,9 +196,9 @@ def _generate_single_entity_query(
             | EventData.shared_data.like(entity_id_like)
         )
         .union_all(
-            _generate_states_query()
-            .filter((States.last_updated > start_day) & (States.last_updated < end_day))
-            .where(States.entity_id == entity_id),
+            _generate_states_query(start_day, end_day).where(
+                States.entity_id == entity_id
+            ),
             select(*EVENT_ROWS_NO_STATES, literal("1").label("context_only"))
             .where(
                 Events.context_id.in_(
@@ -228,23 +236,16 @@ def _generate_query(
             _generate_legacy_events_context_id_query()
             .where((Events.time_fired > start_day) & (Events.time_fired < end_day))
             .where(Events.context_id == context_id),
-            _generate_states_query()
-            .where((States.last_updated > start_day) & (States.last_updated < end_day))
+            _generate_states_query(start_day, end_day)
             .outerjoin(Events, (States.event_id == Events.event_id))
             .where(States.context_id == context_id),
         )
     elif entity_filter is not None:
         stmt += lambda s: s.union_all(
-            _generate_states_query()
-            .where((States.last_updated > start_day) & (States.last_updated < end_day))
-            .where(entity_filter)
+            _generate_states_query(start_day, end_day).where(entity_filter)
         )
     else:
-        stmt += lambda s: s.union_all(
-            _generate_states_query().where(
-                (States.last_updated > start_day) & (States.last_updated < end_day)
-            )
-        )
+        stmt += lambda s: s.union_all(_generate_states_query(start_day, end_day))
     stmt += lambda s: s.order_by(Events.time_fired)
     return stmt
 
@@ -292,10 +293,11 @@ def _generate_events_query_without_states() -> Select:
     )
 
 
-def _generate_states_query() -> Select:
+def _generate_states_query(start_day: dt, end_day: dt) -> Select:
     old_state = aliased(States, name="old_state")
     return (
         _generate_events_query_without_data()
+        .filter((States.last_updated > start_day) & (States.last_updated < end_day))
         .outerjoin(old_state, (States.old_state_id == old_state.state_id))
         .where(_missing_state_matcher(old_state))
         .where(_not_continuous_entity_matcher())
