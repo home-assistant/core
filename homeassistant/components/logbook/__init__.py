@@ -531,6 +531,7 @@ def _generate_logbook_entities_query(
                     )
                     .where(Events.event_type.in_(event_types))
                     .where(_apply_event_entity_id_matchers(entity_ids))
+                    .outerjoin(EventData, (Events.data_id == EventData.data_id))
                     .union_all(
                         select(States.context_id)
                         .filter(
