@@ -292,6 +292,7 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
         self._live_stream_session = self.coordinator.canary.get_live_stream_session(
             self._device
         )
+        self._live_stream_session.start_renew_session()
 
         _LOGGER.debug(
             "Live Stream URL for %s is %s",
