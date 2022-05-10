@@ -63,7 +63,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 import homeassistant.util.dt as dt_util
 
-from .queries import generate_statement_for_request
+from .queries import statement_for_request
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -407,7 +407,7 @@ def _get_events(
     if entity_ids is not None:
         entities_filter = generate_filter([], entity_ids, [], [])
 
-    stmt = generate_statement_for_request(
+    stmt = statement_for_request(
         start_day, end_day, event_types, entity_ids, filters, context_id
     )
     if _LOGGER.isEnabledFor(logging.DEBUG):
