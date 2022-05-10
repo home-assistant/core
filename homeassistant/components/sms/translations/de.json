@@ -11,6 +11,7 @@
         "step": {
             "user": {
                 "data": {
+                    "baud_speed": "Baud-Geschwindigkeit",
                     "device": "Ger\u00e4t"
                 },
                 "title": "Verbinden mit dem Modem"

@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from typing import Any
 
+from aiohttp import ClientConnectionError
 from plugwise.exceptions import InvalidAuthentication, PlugwiseException
 from plugwise.smile import Smile
 
@@ -44,7 +45,7 @@ async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except InvalidAuthentication:
         LOGGER.error("Invalid username or Smile ID")
         return False
-    except PlugwiseException as err:
+    except (ClientConnectionError, PlugwiseException) as err:
         raise ConfigEntryNotReady(
             f"Error while communicating to device {api.smile_name}"
         ) from err
