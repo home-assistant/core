@@ -2,6 +2,8 @@
 import logging
 from typing import Any
 
+from ring_doorbell.const import CHIME_TEST_SOUND_KINDS
+
 from homeassistant.components.siren import ATTR_TONE, SirenEntity, SirenEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -37,7 +39,7 @@ class RingChimeSiren(RingEntityMixin, SirenEntity):
         # Entity class attributes
         self._attr_name = f"{self._device.name} Siren"
         self._attr_unique_id = f"{self._device.id}-siren"
-        self._attr_available_tones = ["ding", "motion"]
+        self._attr_available_tones = CHIME_TEST_SOUND_KINDS
         self._attr_supported_features = (
             SirenEntityFeature.TURN_ON | SirenEntityFeature.TONES
         )
@@ -46,5 +48,4 @@ class RingChimeSiren(RingEntityMixin, SirenEntity):
         """Play the test sound on a Ring Chime device."""
         tone = kwargs.get(ATTR_TONE) or "ding"
 
-        if not self._device.test_sound(kind=tone):
-            _LOGGER.error("Failed to ring chime sound on %s", self.name)
+        self._device.test_sound(kind=tone)
