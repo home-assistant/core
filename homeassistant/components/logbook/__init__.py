@@ -17,6 +17,7 @@ from sqlalchemy.orm import aliased
 from sqlalchemy.orm.query import Query
 from sqlalchemy.sql.expression import literal
 from sqlalchemy.sql.lambdas import StatementLambdaElement
+from sqlalchemy.sql.selectable import Select
 import voluptuous as vol
 
 from homeassistant.components import frontend
@@ -542,7 +543,7 @@ def _generate_logbook_query(
     return stmt
 
 
-def _generate_events_query_without_data() -> Query:
+def _generate_events_query_without_data() -> Select:
     return select(
         literal(value=EVENT_STATE_CHANGED, type_=sqlalchemy.String).label("event_type"),
         literal(value=None, type_=sqlalchemy.Text).label("event_data"),
@@ -555,7 +556,7 @@ def _generate_events_query_without_data() -> Query:
     )
 
 
-def _generate_legacy_events_context_id_query() -> Query:
+def _generate_legacy_events_context_id_query() -> Select:
     """Generate a legacy events context id query that also joins states."""
     # This can be removed once we no longer have event_ids in the states table
     return (
@@ -576,13 +577,13 @@ def _generate_legacy_events_context_id_query() -> Query:
     )
 
 
-def _generate_events_query_without_states() -> Query:
+def _generate_events_query_without_states() -> Select:
     return select(
         *EVENT_COLUMNS, EventData.shared_data.label("shared_data"), *EMPTY_STATE_COLUMNS
     )
 
 
-def _generate_states_query() -> Query:
+def _generate_states_query() -> Select:
     old_state = aliased(States, name="old_state")
     return (
         _generate_events_query_without_data()
@@ -596,7 +597,7 @@ def _generate_states_query() -> Query:
     )
 
 
-def _missing_state_matcher(old_state: States) -> Any:
+def _missing_state_matcher(old_state: States) -> sqlalchemy.and_:
     # The below removes state change events that do not have
     # and old_state or the old_state is missing (newly added entities)
     # or the new_state is missing (removed entities)
@@ -607,7 +608,7 @@ def _missing_state_matcher(old_state: States) -> Any:
     )
 
 
-def _not_continuous_entity_matcher() -> Any:
+def _not_continuous_entity_matcher() -> sqlalchemy.or_:
     """Match non continuous entities."""
     return sqlalchemy.or_(
         _not_continuous_domain_matcher(),
@@ -617,7 +618,7 @@ def _not_continuous_entity_matcher() -> Any:
     )
 
 
-def _not_continuous_domain_matcher() -> Any:
+def _not_continuous_domain_matcher() -> sqlalchemy.and_:
     """Match not continuous domains."""
     return sqlalchemy.and_(
         *[
@@ -627,7 +628,7 @@ def _not_continuous_domain_matcher() -> Any:
     ).self_group()
 
 
-def _continuous_domain_matcher() -> Any:
+def _continuous_domain_matcher() -> sqlalchemy.or_:
     """Match continuous domains."""
     return sqlalchemy.or_(
         *[
