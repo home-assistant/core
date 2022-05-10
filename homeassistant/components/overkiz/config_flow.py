@@ -26,7 +26,7 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-from .const import CONF_HUB, DEFAULT_HUB, DOMAIN, LOGGER
+from .const import CONF_HUB, DEFAULT_HOST, DEFAULT_HUB, DOMAIN, LOGGER
 
 LOCAL = "local"
 LOCAL_HUB = {
@@ -56,9 +56,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._config_entry = None
         self._default_user = None
         self._default_hub = DEFAULT_HUB
-        self._default_host = "gateway-xxxx-xxxx-xxxx.local:8443"
+        self._default_host = DEFAULT_HOST
 
-    async def async_validate_input(self, user_input: dict[str, Any]) -> None:
+    async def async_validate_input(self, user_input: dict[str, Any]) -> dict[str, Any]:
         """Validate user credentials."""
         username = user_input[CONF_USERNAME]
         password = user_input[CONF_PASSWORD]
@@ -324,7 +324,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if discovery_info.type == "_kizbox._tcp.local.":
             return await self.async_step_cloud()
-        elif discovery_info.type == "_kizboxdev._tcp.local.":
+        if discovery_info.type == "_kizboxdev._tcp.local.":
             return await self.async_step_local()
 
     async def _process_discovery(self, gateway_id: str) -> FlowResult:

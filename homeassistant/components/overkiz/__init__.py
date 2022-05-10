@@ -55,12 +55,11 @@ class HomeAssistantOverkizData:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Overkiz from a config entry."""
 
-    print(entry.data)
     client = None
 
     # Local API vs Cloud API
     if entry.data.get(CONF_HOST):
-        LOGGER.debug("CONFIGURING LOCAL INTEGRATION")
+        LOGGER.debug("Integration is using local API")
         host = entry.data[CONF_HOST]
         token = entry.data[CONF_TOKEN]
         session = async_create_clientsession(hass, verify_ssl=False)
@@ -72,7 +71,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             session=session,
             server=OverkizServer(
                 name="Somfy TaHoma Developer Mode (local API)",
-                endpoint=f"https://{host}:8443/enduser-mobile-web/1/enduserAPI/",
+                endpoint=f"https://{host}/enduser-mobile-web/1/enduserAPI/",
                 manufacturer="Somfy",
                 configuration_url=None,
             ),

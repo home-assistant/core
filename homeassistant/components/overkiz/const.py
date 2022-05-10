@@ -33,6 +33,7 @@ LOGGER: logging.Logger = logging.getLogger(__package__)
 
 CONF_HUB: Final = "hub"
 DEFAULT_HUB: Final = "somfy_europe"
+DEFAULT_HOST: Final = "gateway-xxxx-xxxx-xxxx.local:8443"
 
 UPDATE_INTERVAL: Final = timedelta(seconds=30)
 UPDATE_INTERVAL_ALL_ASSUMED_STATE: Final = timedelta(minutes=60)
