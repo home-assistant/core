@@ -26,11 +26,12 @@ SENSOR_VALUE_PRECISION: Final = 2
 ATTR_AIR_QUALITY: Final = "air_quality"
 
 # Define variables to store the device names, as referred to by the Canary API.
-# Note: If Canary change the name of any of their devices (which they have done),
+# Note: If Canary change's a name of a device (which they have done),
 # then these variables will need updating, otherwise the sensors will stop working
 # and disappear in Home Assistant.
 CANARY_PRO: Final = "Canary Pro"
 CANARY_FLEX: Final = "Canary Flex"
+CANARY_VIEW: Final = "Canary View"
 
 # Sensor types are defined like so:
 # sensor type name, unit_of_measurement, icon, device class, products supported
@@ -43,7 +44,7 @@ SENSOR_TYPES: Final[list[SensorTypeItem]] = [
         SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         None,
         SensorDeviceClass.SIGNAL_STRENGTH,
-        [CANARY_PRO, CANARY_FLEX],
+        [CANARY_PRO, CANARY_FLEX, CANARY_VIEW],
     ),
     ("battery", PERCENTAGE, None, SensorDeviceClass.BATTERY, [CANARY_FLEX]),
     (
@@ -58,7 +59,7 @@ SENSOR_TYPES: Final[list[SensorTypeItem]] = [
         None,
         "mdi:file-video",
         None,
-        [CANARY_PRO, CANARY_FLEX],
+        [CANARY_PRO, CANARY_FLEX, CANARY_VIEW],
     ),
 ]
 
