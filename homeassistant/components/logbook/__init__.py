@@ -501,7 +501,11 @@ def _generate_logbook_query(
             )
         stmt += lambda s: s.outerjoin(
             EventData, (Events.data_id == EventData.data_id)
-        ).union_all(_generate_states_query().where(States.entity_id.in_(entity_ids)))
+        ).union_all(
+            _generate_states_query()
+            .filter((States.last_updated > start_day) & (States.last_updated < end_day))
+            .where(States.entity_id.in_(entity_ids))
+        )
     else:
         if context_id is not None:
             stmt += lambda s: s.where(Events.context_id == context_id)
