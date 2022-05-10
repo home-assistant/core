@@ -61,6 +61,11 @@ EVENT_ROWS_NO_STATES = (
     *EMPTY_STATE_COLUMNS,
 )
 
+# Virtual column to tell logbook if it should avoid processing
+# the event as its only used to link contexts
+CONTEXT_ONLY = literal("1").label("context_only")
+NOT_CONTEXT_ONLY = literal(None).label("context_only")
+
 
 def generate_statement_for_request(
     start_day: dt,
@@ -135,7 +140,7 @@ def _generate_events_query_for_context_only() -> Select:
     By marking them as context_only we know they are only for
     linking context ids and we can avoid processing them.
     """
-    return select(*EVENT_ROWS_NO_STATES, literal("1").label("context_only")).outerjoin(
+    return select(*EVENT_ROWS_NO_STATES, CONTEXT_ONLY).outerjoin(
         EventData, (Events.data_id == EventData.data_id)
     )
 
@@ -271,7 +276,7 @@ def _generate_legacy_events_context_id_query(
             *EVENT_COLUMNS,
             literal(value=None, type_=sqlalchemy.String).label("shared_data"),
             *STATE_COLUMNS,
-            literal(None).label("context_only"),
+            NOT_CONTEXT_ONLY,
         )
         .outerjoin(States, (Events.event_id == States.event_id))
         .where(States.last_updated == States.last_changed)
@@ -288,10 +293,7 @@ def _generate_events_query_without_states(
     start_day: dt, end_day: dt, event_types: tuple[str, ...]
 ) -> Select:
     return (
-        select(
-            *EVENT_ROWS_NO_STATES,
-            literal(None).label("context_only"),
-        )
+        select(*EVENT_ROWS_NO_STATES, NOT_CONTEXT_ONLY)
         .where((Events.time_fired > start_day) & (Events.time_fired < end_day))
         .where(Events.event_type.in_(event_types))
         .outerjoin(EventData, (Events.data_id == EventData.data_id))
@@ -312,7 +314,7 @@ def _generate_states_query(start_day: dt, end_day: dt) -> Select:
             States.context_parent_id.label("context_parent_id"),
             literal(value=None, type_=sqlalchemy.Text).label("shared_data"),
             *STATE_COLUMNS,
-            literal(None).label("context_only"),
+            NOT_CONTEXT_ONLY,
         )
         .filter((States.last_updated > start_day) & (States.last_updated < end_day))
         .outerjoin(old_state, (States.old_state_id == old_state.state_id))
