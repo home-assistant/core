@@ -208,18 +208,10 @@ class ValidationIssue:
 def async_setup(hass: HomeAssistant) -> None:
     """Set up the history hooks."""
 
-    def _entity_id_changed(event: Event) -> None:
-        """Handle entity_id changed."""
-        old_entity_id = event.data["old_entity_id"]
-        entity_id = event.data["entity_id"]
-        with session_scope(hass=hass) as session:
-            session.query(StatisticsMeta).filter(
-                (StatisticsMeta.statistic_id == old_entity_id)
-                & (StatisticsMeta.source == DOMAIN)
-            ).update({StatisticsMeta.statistic_id: entity_id})
-
     async def _async_entity_id_changed(event: Event) -> None:
-        await hass.data[DATA_INSTANCE].async_add_executor_job(_entity_id_changed, event)
+        await async_migrate_statistics(
+            hass, event.data["old_entity_id"], event.data["entity_id"]
+        )
 
     @callback
     def entity_registry_changed_filter(event: Event) -> bool:
@@ -380,7 +372,7 @@ def _delete_duplicates_from_table(
     return (total_deleted_rows, all_non_identical_duplicates)
 
 
-def delete_duplicates(hass: HomeAssistant, session: Session) -> None:
+def delete_statistics_duplicates(hass: HomeAssistant, session: Session) -> None:
     """Identify and delete duplicated statistics.
 
     A backup will be made of duplicated statistics before it is deleted.
@@ -420,6 +412,69 @@ def delete_duplicates(hass: HomeAssistant, session: Session) -> None:
         _LOGGER.warning(
             "Deleted duplicated short term statistic rows, please report at %s",
             "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+recorder%22",
+        )
+
+
+def _find_statistics_meta_duplicates(session: Session) -> list[int]:
+    """Find duplicated statistics_meta."""
+    subquery = (
+        session.query(
+            StatisticsMeta.statistic_id,
+            literal_column("1").label("is_duplicate"),
+        )
+        .group_by(StatisticsMeta.statistic_id)
+        .having(func.count() > 1)
+        .subquery()
+    )
+    query = (
+        session.query(StatisticsMeta)
+        .outerjoin(
+            subquery,
+            (subquery.c.statistic_id == StatisticsMeta.statistic_id),
+        )
+        .filter(subquery.c.is_duplicate == 1)
+        .order_by(StatisticsMeta.statistic_id, StatisticsMeta.id.desc())
+        .limit(1000 * MAX_ROWS_TO_PURGE)
+    )
+    duplicates = execute(query)
+    statistic_id = None
+    duplicate_ids: list[int] = []
+
+    if not duplicates:
+        return duplicate_ids
+
+    for duplicate in duplicates:
+        if statistic_id != duplicate.statistic_id:
+            statistic_id = duplicate.statistic_id
+            continue
+        duplicate_ids.append(duplicate.id)
+
+    return duplicate_ids
+
+
+def _delete_statistics_meta_duplicates(session: Session) -> int:
+    """Identify and delete duplicated statistics from a specified table."""
+    total_deleted_rows = 0
+    while True:
+        duplicate_ids = _find_statistics_meta_duplicates(session)
+        if not duplicate_ids:
+            break
+        for i in range(0, len(duplicate_ids), MAX_ROWS_TO_PURGE):
+            deleted_rows = (
+                session.query(StatisticsMeta)
+                .filter(StatisticsMeta.id.in_(duplicate_ids[i : i + MAX_ROWS_TO_PURGE]))
+                .delete(synchronize_session=False)
+            )
+            total_deleted_rows += deleted_rows
+    return total_deleted_rows
+
+
+def delete_statistics_meta_duplicates(session: Session) -> None:
+    """Identify and delete duplicated statistics_meta."""
+    deleted_statistics_rows = _delete_statistics_meta_duplicates(session)
+    if deleted_statistics_rows:
+        _LOGGER.info(
+            "Deleted %s duplicated statistics_meta rows", deleted_statistics_rows
         )
 
 
@@ -1335,6 +1390,29 @@ def async_add_external_statistics(
 
     # Insert job in recorder's queue
     hass.data[DATA_INSTANCE].async_external_statistics(metadata, statistics)
+
+
+async def async_migrate_statistics(
+    hass: HomeAssistant, old_statistic_id: str, new_statistic_id: str
+) -> None:
+    """Migrate statistics when statistics_id changes."""
+
+    def migrate_statistics(old_statistic_id: str, new_statistic_id: str) -> None:
+        """Migrate statistics when statistics_id changes."""
+        with session_scope(
+            hass=hass,
+            exception_filter=_filter_unique_constraint_integrity_error(
+                hass.data[DATA_INSTANCE]
+            ),
+        ) as session:
+            session.query(StatisticsMeta).filter(
+                (StatisticsMeta.statistic_id == old_statistic_id)
+                & (StatisticsMeta.source == DOMAIN)
+            ).update({StatisticsMeta.statistic_id: new_statistic_id})
+
+    await hass.data[DATA_INSTANCE].async_add_executor_job(
+        migrate_statistics, old_statistic_id, new_statistic_id
+    )
 
 
 def _filter_unique_constraint_integrity_error(
