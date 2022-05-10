@@ -568,7 +568,7 @@ def _generate_legacy_events_context_id_query() -> Query:
         )
         .outerjoin(States, (Events.event_id == States.event_id))
         .where(States.last_updated == States.last_changed)
-        .fiwherelter(_not_continuous_entity_matcher())
+        .where(_not_continuous_entity_matcher())
         .outerjoin(
             StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
         )
