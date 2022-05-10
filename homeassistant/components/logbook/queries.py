@@ -81,7 +81,7 @@ def statement_for_request(
     # limited by the context_id and the yaml configured filter
     if not entity_ids:
         entity_filter = filters.entity_filter() if filters else None  # type: ignore[no-untyped-call]
-        return _all_query(start_day, end_day, event_types, entity_filter, context_id)
+        return _all_stmt(start_day, end_day, event_types, entity_filter, context_id)
 
     # Multiple entities: logbook sends everything for the timeframe for the entities
     #
@@ -89,12 +89,12 @@ def statement_for_request(
     # like matching which means part of the query has to be built each
     # time when the entity_ids are not in the cache
     if len(entity_ids) > 1:
-        return _entities_query(start_day, end_day, event_types, entity_ids)
+        return _entities_stmt(start_day, end_day, event_types, entity_ids)
 
     # Single entity: logbook sends everything for the timeframe for the entity
     entity_id = entity_ids[0]
     entity_like = ENTITY_ID_JSON_TEMPLATE.format(entity_id)
-    return _single_entity_query(start_day, end_day, event_types, entity_id, entity_like)
+    return _single_entity_stmt(start_day, end_day, event_types, entity_id, entity_like)
 
 
 def _select_events_context_id_subquery(
@@ -141,7 +141,7 @@ def _select_events_context_only() -> Select:
     )
 
 
-def _entities_query(
+def _entities_stmt(
     start_day: dt,
     end_day: dt,
     event_types: tuple[str, ...],
@@ -198,7 +198,7 @@ def _select_entity_context_ids_sub_query(
     )
 
 
-def _single_entity_query(
+def _single_entity_stmt(
     start_day: dt,
     end_day: dt,
     event_types: tuple[str, ...],
@@ -227,7 +227,7 @@ def _single_entity_query(
     return stmt
 
 
-def _all_query(
+def _all_stmt(
     start_day: dt,
     end_day: dt,
     event_types: tuple[str, ...],
