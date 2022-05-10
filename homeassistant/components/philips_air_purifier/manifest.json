@@ -3,7 +3,7 @@
   "name": "Philips Air Purifier",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/philips_air_purifier",
-  "requirements": ["phipsair==0.4.1"],
+  "requirements": ["phipsair==0.5.0"],
   "codeowners": ["@mfrister"],
   "iot_class": "local_push"
 }
