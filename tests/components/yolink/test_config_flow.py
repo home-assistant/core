@@ -146,16 +146,18 @@ async def test_reauthentication(
             DOMAIN: {
                 CONF_CLIENT_ID: CLIENT_ID,
                 CONF_CLIENT_SECRET: CLIENT_SECRET,
-            },
-            DOMAIN_HTTP: {CONF_BASE_URL: "https://example.com"},
+            }
         },
     )
 
     old_entry = MockConfigEntry(
-        entry_id="yl_entry",
         domain=DOMAIN,
         unique_id=DOMAIN,
         version=1,
+        data={
+            "refresh_token": "outdated_fresh_token",
+            "access_token": "outdated_access_token",
+        },
     )
     old_entry.add_to_hass(hass)
 
@@ -200,7 +202,7 @@ async def test_reauthentication(
             "homeassistant.components.yolink.async_setup_entry", return_value=True
         ) as mock_setup:
             result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    token_data = hass.config_entries.async_get_entry("yl_entry").data["token"]
+    token_data = old_entry.data["token"]
     assert token_data["access_token"] == "mock-access-token"
     assert token_data["refresh_token"] == "mock-refresh-token"
     assert token_data["type"] == "Bearer"
