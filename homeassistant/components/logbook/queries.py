@@ -118,6 +118,17 @@ def _generate_entities_context_ids_sub_query(
     )
 
 
+def _generate_events_query_for_context_only() -> Select:
+    """Generate an events query that mark them as for context_only.
+
+    By marking them as context_only we know they are only for
+    linking context ids and we can avoid processing them.
+    """
+    return select(*EVENT_ROWS_NO_STATES, literal("1").label("context_only")).outerjoin(
+        EventData, (Events.data_id == EventData.data_id)
+    )
+
+
 def _generate_entities_query(
     start_day: dt,
     end_day: dt,
@@ -133,8 +144,7 @@ def _generate_entities_query(
             _generate_states_query(start_day, end_day).where(
                 States.entity_id.in_(entity_ids)
             ),
-            select(*EVENT_ROWS_NO_STATES, literal("1").label("context_only"))
-            .where(
+            _generate_events_query_for_context_only().where(
                 Events.context_id.in_(
                     _generate_entities_context_ids_sub_query(
                         start_day,
@@ -143,8 +153,7 @@ def _generate_entities_query(
                         entity_ids,
                     )
                 )
-            )
-            .outerjoin(EventData, (Events.data_id == EventData.data_id)),
+            ),
         ),
         track_on=(str(entity_ids),),
     )
@@ -193,15 +202,13 @@ def _generate_single_entity_query(
             _generate_states_query(start_day, end_day).where(
                 States.entity_id == entity_id
             ),
-            select(*EVENT_ROWS_NO_STATES, literal("1").label("context_only"))
-            .where(
+            _generate_events_query_for_context_only().where(
                 Events.context_id.in_(
                     _generate_entity_context_ids_sub_query(
                         start_day, end_day, event_types, entity_id, entity_id_like
                     )
                 )
-            )
-            .outerjoin(EventData, (Events.data_id == EventData.data_id)),
+            ),
         )
         .order_by(Events.time_fired)
     )
