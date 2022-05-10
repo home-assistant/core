@@ -6,6 +6,7 @@ from contextlib import suppress
 from datetime import datetime as dt, timedelta
 from http import HTTPStatus
 import json
+import logging
 import re
 from typing import Any, cast
 
@@ -74,6 +75,9 @@ from homeassistant.helpers.integration_platform import (
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 import homeassistant.util.dt as dt_util
+
+_LOGGER = logging.getLogger(__name__)
+
 
 ENTITY_ID_JSON_TEMPLATE = '%"entity_id":"{}"%'
 FRIENDLY_NAME_JSON_EXTRACT = re.compile('"friendly_name": ?"([^"]+)"')
@@ -473,6 +477,9 @@ def _get_events(
             entity_filter,
             context_id,
         )
+    _LOGGER.debug(
+        "Literal statement: %s", stmt.compile(compile_kwargs={"literal_binds": True})
+    )
     with session_scope(hass=hass) as session:
         return list(
             _humanify(
@@ -492,6 +499,7 @@ def _generate_logbook_entities_query(
     entity_ids: list[str],
 ) -> StatementLambdaElement:
     entities_cache_key = (",".join(sorted(entity_ids)),)
+
     stmt = lambda_stmt(
         lambda: _generate_events_query_without_states()
         .where((Events.time_fired > start_day) & (Events.time_fired < end_day))
