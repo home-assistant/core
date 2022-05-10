@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass
 from datetime import timedelta
 from typing import Final
 
@@ -18,16 +19,12 @@ from .const import CONF_COUNTY, DOMAIN, LOGGER, SCAN_INTERVAL
 PLATFORMS: Final = [Platform.SENSOR]
 
 
+@dataclass
 class PECOCoordinatorData:
     """Something to hold the data for PECO."""
 
     outages: OutageResults
     alerts: AlertResults
-
-    def __init__(self, outages: OutageResults, alerts: AlertResults) -> None:
-        """Initialize the data holder for PECO."""
-        self.outages = outages
-        self.alerts = alerts
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

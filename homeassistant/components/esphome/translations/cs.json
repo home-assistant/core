@@ -11,7 +11,7 @@
             "invalid_psk": "Transportn\u00ed \u0161ifrovac\u00ed kl\u00ed\u010d je neplatn\u00fd. Ujist\u011bte se, \u017ee odpov\u00edd\u00e1 tomu, co m\u00e1te ve sv\u00e9 konfiguraci",
             "resolve_error": "Nelze naj\u00edt IP adresu uzlu ESP. Pokud tato chyba p\u0159etrv\u00e1v\u00e1, nastavte statickou adresu IP: https://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips"
         },
-        "flow_title": "ESPHome: {name}",
+        "flow_title": "{name}",
         "step": {
             "authenticate": {
                 "data": {

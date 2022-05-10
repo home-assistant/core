@@ -446,7 +446,7 @@ class ElkEntity(Entity):
         self._mac = elk_data["mac"]
         self._prefix = elk_data["prefix"]
         self._name_prefix = f"{self._prefix} " if self._prefix else ""
-        self._temperature_unit = elk_data["config"]["temperature_unit"]
+        self._temperature_unit: str = elk_data["config"]["temperature_unit"]
         # unique_id starts with elkm1_ iff there is no prefix
         # it starts with elkm1m_{prefix} iff there is a prefix
         # this is to avoid a conflict between
@@ -486,7 +486,7 @@ class ElkEntity(Entity):
         """Is the entity available to be updated."""
         return self._elk.is_connected()
 
-    def initial_attrs(self) -> dict[str, int]:
+    def initial_attrs(self) -> dict[str, Any]:
         """Return the underlying element's attributes as a dict."""
         attrs = {}
         attrs["index"] = self._element.index + 1

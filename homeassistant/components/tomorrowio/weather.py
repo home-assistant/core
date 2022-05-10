@@ -33,7 +33,6 @@ from homeassistant.util import dt as dt_util
 
 from . import TomorrowioDataUpdateCoordinator, TomorrowioEntity
 from .const import (
-    ATTR_FORECAST_HUMIDITY,
     CLEAR_CONDITIONS,
     CONDITIONS,
     CONF_TIMESTEP,
@@ -101,7 +100,6 @@ class TomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
         forecast_dt: datetime,
         use_datetime: bool,
         condition: int,
-        humidity: float | None,
         precipitation: float | None,
         precipitation_probability: float | None,
         temp: float | None,
@@ -120,7 +118,6 @@ class TomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
         data = {
             ATTR_FORECAST_TIME: forecast_dt.isoformat(),
             ATTR_FORECAST_CONDITION: translated_condition,
-            ATTR_FORECAST_HUMIDITY: humidity,
             ATTR_FORECAST_PRECIPITATION: precipitation,
             ATTR_FORECAST_PRECIPITATION_PROBABILITY: precipitation_probability,
             ATTR_FORECAST_TEMP: temp,
@@ -214,7 +211,6 @@ class TomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
             use_datetime = True
 
             condition = values.get(TMRW_ATTR_CONDITION)
-            humidity = values.get(TMRW_ATTR_HUMIDITY)
             precipitation = values.get(TMRW_ATTR_PRECIPITATION)
             precipitation_probability = values.get(TMRW_ATTR_PRECIPITATION_PROBABILITY)
 
@@ -241,7 +237,6 @@ class TomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
                     forecast_dt,
                     use_datetime,
                     condition,
-                    None if self.forecast_type == DAILY else humidity,
                     precipitation,
                     precipitation_probability,
                     temp,

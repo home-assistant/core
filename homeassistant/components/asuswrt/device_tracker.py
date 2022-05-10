@@ -22,7 +22,7 @@ async def async_setup_entry(
     tracked: set = set()
 
     @callback
-    def update_router():
+    def update_router() -> None:
         """Update the values of the router."""
         add_entities(router, async_add_entities, tracked)
 
@@ -74,7 +74,7 @@ class AsusWrtDevice(ScannerEntity):
         return SOURCE_TYPE_ROUTER
 
     @property
-    def hostname(self) -> str:
+    def hostname(self) -> str | None:
         """Return the hostname of device."""
         return self._device.name
 
@@ -84,7 +84,7 @@ class AsusWrtDevice(ScannerEntity):
         return "mdi:lan-connect" if self._device.is_connected else "mdi:lan-disconnect"
 
     @property
-    def ip_address(self) -> str:
+    def ip_address(self) -> str | None:
         """Return the primary ip address of the device."""
         return self._device.ip_address
 

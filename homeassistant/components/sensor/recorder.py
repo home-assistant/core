@@ -387,14 +387,14 @@ def _last_reset_as_utc_isoformat(last_reset_s: Any, entity_id: str) -> str | Non
 
 def compile_statistics(
     hass: HomeAssistant, start: datetime.datetime, end: datetime.datetime
-) -> list[StatisticResult]:
+) -> statistics.PlatformCompiledStatistics:
     """Compile statistics for all entities during start-end.
 
     Note: This will query the database and must not be run in the event loop
     """
     with recorder_util.session_scope(hass=hass) as session:
-        result = _compile_statistics(hass, session, start, end)
-    return result
+        compiled = _compile_statistics(hass, session, start, end)
+    return compiled
 
 
 def _compile_statistics(  # noqa: C901
@@ -402,7 +402,7 @@ def _compile_statistics(  # noqa: C901
     session: Session,
     start: datetime.datetime,
     end: datetime.datetime,
-) -> list[StatisticResult]:
+) -> statistics.PlatformCompiledStatistics:
     """Compile statistics for all entities during start-end."""
     result: list[StatisticResult] = []
 
@@ -473,7 +473,9 @@ def _compile_statistics(  # noqa: C901
         if "sum" in wanted_statistics[entity_id]:
             to_query.append(entity_id)
 
-    last_stats = statistics.get_latest_short_term_statistics(hass, to_query)
+    last_stats = statistics.get_latest_short_term_statistics(
+        hass, to_query, metadata=old_metadatas
+    )
     for (  # pylint: disable=too-many-nested-blocks
         entity_id,
         unit,
@@ -609,7 +611,7 @@ def _compile_statistics(  # noqa: C901
 
         result.append({"meta": meta, "stat": stat})
 
-    return result
+    return statistics.PlatformCompiledStatistics(result, old_metadatas)
 
 
 def list_statistic_ids(

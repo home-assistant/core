@@ -56,10 +56,35 @@ DEVICE_DIAGNOSTIC_DATA = {
 }
 
 
+CAMERA_API_DATA = {
+    "name": NEST_DEVICE_ID,
+    "type": "sdm.devices.types.CAMERA",
+    "traits": {
+        "sdm.devices.traits.CameraLiveStream": {
+            "videoCodecs": "H264",
+            "supportedProtocols": ["RTSP"],
+        },
+    },
+}
+
+CAMERA_DIAGNOSTIC_DATA = {
+    "data": {
+        "name": "**REDACTED**",
+        "traits": {
+            "sdm.devices.traits.CameraLiveStream": {
+                "videoCodecs": "H264",
+                "supportedProtocols": ["RTSP"],
+            },
+        },
+        "type": "sdm.devices.types.CAMERA",
+    },
+}
+
+
 @pytest.fixture
 def platforms() -> list[str]:
     """Fixture to specify platforms to test."""
-    return ["sensor"]
+    return ["sensor", "camera"]
 
 
 async def test_entry_diagnostics(
@@ -152,3 +177,18 @@ async def test_legacy_config_entry_diagnostics(
         await setup_base_platform()
 
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {}
+
+
+async def test_camera_diagnostics(
+    hass, hass_client, create_device, setup_platform, config_entry
+):
+    """Test config entry diagnostics."""
+    create_device.create(raw_data=CAMERA_API_DATA)
+    await setup_platform()
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    # Test that only non identifiable device information is returned
+    assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
+        "devices": [CAMERA_DIAGNOSTIC_DATA],
+        "camera": {"camera.camera": {}},
+    }

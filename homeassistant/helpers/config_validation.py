@@ -1334,6 +1334,7 @@ DEVICE_CONDITION_BASE_SCHEMA = vol.Schema(
         vol.Required(CONF_CONDITION): "device",
         vol.Required(CONF_DEVICE_ID): str,
         vol.Required(CONF_DOMAIN): str,
+        vol.Remove("metadata"): dict,
     }
 )
 
@@ -1465,6 +1466,7 @@ DEVICE_ACTION_BASE_SCHEMA = vol.Schema(
         **SCRIPT_ACTION_BASE_SCHEMA,
         vol.Required(CONF_DEVICE_ID): string,
         vol.Required(CONF_DOMAIN): str,
+        vol.Remove("metadata"): dict,
     }
 )
 
@@ -1544,16 +1546,9 @@ _SCRIPT_STOP_SCHEMA = vol.Schema(
     {
         **SCRIPT_ACTION_BASE_SCHEMA,
         vol.Required(CONF_STOP): vol.Any(None, string),
+        vol.Optional(CONF_ERROR, default=False): boolean,
     }
 )
-
-_SCRIPT_ERROR_SCHEMA = vol.Schema(
-    {
-        **SCRIPT_ACTION_BASE_SCHEMA,
-        vol.Optional(CONF_ERROR): vol.Any(None, string),
-    }
-)
-
 
 _SCRIPT_PARALLEL_SEQUENCE = vol.Schema(
     {
@@ -1592,7 +1587,6 @@ SCRIPT_ACTION_CHOOSE = "choose"
 SCRIPT_ACTION_WAIT_FOR_TRIGGER = "wait_for_trigger"
 SCRIPT_ACTION_VARIABLES = "variables"
 SCRIPT_ACTION_STOP = "stop"
-SCRIPT_ACTION_ERROR = "error"
 SCRIPT_ACTION_IF = "if"
 SCRIPT_ACTION_PARALLEL = "parallel"
 
@@ -1605,7 +1599,7 @@ def determine_script_action(action: dict[str, Any]) -> str:
     if CONF_WAIT_TEMPLATE in action:
         return SCRIPT_ACTION_WAIT_TEMPLATE
 
-    if CONF_CONDITION in action:
+    if any(key in action for key in (CONF_CONDITION, "and", "or", "not")):
         return SCRIPT_ACTION_CHECK_CONDITION
 
     if CONF_EVENT in action:
@@ -1638,9 +1632,6 @@ def determine_script_action(action: dict[str, Any]) -> str:
     if CONF_STOP in action:
         return SCRIPT_ACTION_STOP
 
-    if CONF_ERROR in action:
-        return SCRIPT_ACTION_ERROR
-
     if CONF_PARALLEL in action:
         return SCRIPT_ACTION_PARALLEL
 
@@ -1660,7 +1651,6 @@ ACTION_TYPE_SCHEMAS: dict[str, Callable[[Any], dict]] = {
     SCRIPT_ACTION_WAIT_FOR_TRIGGER: _SCRIPT_WAIT_FOR_TRIGGER_SCHEMA,
     SCRIPT_ACTION_VARIABLES: _SCRIPT_SET_SCHEMA,
     SCRIPT_ACTION_STOP: _SCRIPT_STOP_SCHEMA,
-    SCRIPT_ACTION_ERROR: _SCRIPT_ERROR_SCHEMA,
     SCRIPT_ACTION_IF: _SCRIPT_IF_SCHEMA,
     SCRIPT_ACTION_PARALLEL: _SCRIPT_PARALLEL_SCHEMA,
 }

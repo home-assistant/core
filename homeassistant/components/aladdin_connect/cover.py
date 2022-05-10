@@ -58,7 +58,7 @@ def setup_platform(
         _LOGGER.error("%s", ex)
         persistent_notification.create(
             hass,
-            "Error: {ex}<br />You will need to restart hass after fixing.",
+            f"Error: {ex}<br />You will need to restart hass after fixing.",
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID,
         )

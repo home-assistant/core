@@ -1,9 +1,13 @@
 {
     "config": {
         "step": {
-            "init": {
+            "config": {
+                "user": {
+                    "entity_id": "Kontakt-entitet"
+                }
+            },
+            "user": {
                 "data": {
-                    "entity_id": "Kontakt-entitet",
                     "target_domain": "Typ"
                 },
                 "title": "G\u00f6r en kontakt till ..."

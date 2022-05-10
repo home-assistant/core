@@ -7,8 +7,7 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
-    COLOR_MODE_COLOR_TEMP,
-    COLOR_MODE_HS,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -25,7 +24,7 @@ from .const import (
 )
 from .coordinator import FritzboxDataUpdateCoordinator
 
-SUPPORTED_COLOR_MODES = {COLOR_MODE_COLOR_TEMP, COLOR_MODE_HS}
+SUPPORTED_COLOR_MODES = {ColorMode.COLOR_TEMP, ColorMode.HS}
 
 
 async def async_setup_entry(
@@ -119,7 +118,14 @@ class FritzboxLight(FritzBoxEntity, LightEntity):
         return color.color_temperature_kelvin_to_mired(kelvin)
 
     @property
-    def supported_color_modes(self) -> set:
+    def color_mode(self) -> ColorMode:
+        """Return the color mode of the light."""
+        if self.device.color_mode == COLOR_MODE:
+            return ColorMode.HS
+        return ColorMode.COLOR_TEMP
+
+    @property
+    def supported_color_modes(self) -> set[ColorMode]:
         """Flag supported color modes."""
         return SUPPORTED_COLOR_MODES
 

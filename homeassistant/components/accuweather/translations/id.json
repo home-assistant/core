@@ -3,6 +3,9 @@
         "abort": {
             "single_instance_allowed": "Sudah dikonfigurasi. Hanya satu konfigurasi yang diizinkan."
         },
+        "create_entry": {
+            "default": "Beberapa sensor tidak diaktifkan secara default. Anda dapat mengaktifkannya di registri entitas setelah konfigurasi integrasi.\nPrakiraan cuaca tidak diaktifkan secara default. Anda dapat mengaktifkannya di opsi integrasi."
+        },
         "error": {
             "cannot_connect": "Gagal terhubung",
             "invalid_api_key": "Kunci API tidak valid",

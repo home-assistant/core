@@ -159,7 +159,7 @@ def encrypt_message(secret, topic, message):
 
     if key is None:
         _LOGGER.warning(
-            "Unable to encrypt payload because no decryption key known " "for topic %s",
+            "Unable to encrypt payload because no decryption key known for topic %s",
             topic,
         )
         return None

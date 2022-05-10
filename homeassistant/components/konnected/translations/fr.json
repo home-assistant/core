@@ -97,7 +97,7 @@
             "options_switch": {
                 "data": {
                     "activation": "Sortie lorsque activ\u00e9",
-                    "momentary": "Dur\u00e9e de l'impulsion (ms) (facultatif)",
+                    "momentary": "Dur\u00e9e de l'impulsion (en millisecondes, facultatif)",
                     "more_states": "Configurer des \u00e9tats suppl\u00e9mentaires pour cette zone",
                     "name": "Nom (facultatif)",
                     "pause": "Pause entre les impulsions (ms) (facultatif)",

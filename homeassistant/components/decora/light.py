@@ -1,20 +1,23 @@
 """Support for Decora dimmers."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import copy
 from functools import wraps
 import logging
 import time
+from typing import TypeVar
 
 from bluepy.btle import BTLEException  # pylint: disable=import-error
 import decora  # pylint: disable=import-error
+from typing_extensions import Concatenate, ParamSpec
 import voluptuous as vol
 
 from homeassistant import util
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    COLOR_MODE_BRIGHTNESS,
     PLATFORM_SCHEMA,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.const import CONF_API_KEY, CONF_DEVICES, CONF_NAME
@@ -22,6 +25,10 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+_DecoraLightT = TypeVar("_DecoraLightT", bound="DecoraLight")
+_R = TypeVar("_R")
+_P = ParamSpec("_P")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,11 +57,15 @@ PLATFORM_SCHEMA = vol.Schema(
 )
 
 
-def retry(method):
+def retry(
+    method: Callable[Concatenate[_DecoraLightT, _P], _R]
+) -> Callable[Concatenate[_DecoraLightT, _P], _R | None]:
     """Retry bluetooth commands."""
 
     @wraps(method)
-    def wrapper_retry(device, *args, **kwargs):
+    def wrapper_retry(
+        device: _DecoraLightT, *args: _P.args, **kwargs: _P.kwargs
+    ) -> _R | None:
         """Try send command and retry on error."""
 
         initial = time.monotonic()
@@ -96,8 +107,8 @@ def setup_platform(
 class DecoraLight(LightEntity):
     """Representation of an Decora light."""
 
-    _attr_color_mode = COLOR_MODE_BRIGHTNESS
-    _attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
+    _attr_color_mode = ColorMode.BRIGHTNESS
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
     def __init__(self, device):
         """Initialize the light."""

@@ -36,7 +36,8 @@
                 "data": {
                     "account_balance_currencies": "Soldes du portefeuille \u00e0 d\u00e9clarer.",
                     "exchange_base": "Devise de base pour les capteurs de taux de change.",
-                    "exchange_rate_currencies": "Taux de change \u00e0 d\u00e9clarer."
+                    "exchange_rate_currencies": "Taux de change \u00e0 d\u00e9clarer.",
+                    "exchnage_rate_precision": "Nombre de d\u00e9cimales pour les taux de change."
                 },
                 "description": "Ajuster les options de Coinbase"
             }
