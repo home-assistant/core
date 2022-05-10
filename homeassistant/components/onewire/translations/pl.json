@@ -17,9 +17,11 @@
             },
             "user": {
                 "data": {
+                    "host": "Nazwa hosta lub adres IP",
+                    "port": "Port",
                     "type": "Rodzaj po\u0142\u0105czenia"
                 },
-                "title": "Konfiguracja 1-Wire"
+                "title": "Konfiguracja serwera"
             }
         }
     },

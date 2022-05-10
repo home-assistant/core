@@ -5,7 +5,7 @@
 AEMET-OpenData==0.2.1
 
 # homeassistant.components.adax
-Adax-local==0.1.3
+Adax-local==0.1.4
 
 # homeassistant.components.homekit
 HAP-python==4.4.0
@@ -542,7 +542,7 @@ denonavr==0.10.11
 devolo-home-control-api==0.18.1
 
 # homeassistant.components.devolo_home_network
-devolo-plc-api==0.7.1
+devolo-plc-api==0.8.0
 
 # homeassistant.components.directv
 directv==0.4.0
@@ -1068,7 +1068,7 @@ netdisco==3.0.0
 netmap==0.7.0.2
 
 # homeassistant.components.nam
-nettigo-air-monitor==1.2.3
+nettigo-air-monitor==1.2.4
 
 # homeassistant.components.neurio_energy
 neurio==0.3.1
@@ -1432,7 +1432,7 @@ pydaikin==2.7.0
 pydanfossair==0.1.0
 
 # homeassistant.components.deconz
-pydeconz==91
+pydeconz==92
 
 # homeassistant.components.delijn
 pydelijn==1.0.0
