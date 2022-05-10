@@ -222,9 +222,12 @@ def _generate_all_query(
     if context_id is not None:
         # Once all the old `state_changed` events
         # are gone from the database remove the
-        # .union_all(_generate_legacy_events_context_id_query()....)
+        # _generate_legacy_events_context_id_query()
         stmt += lambda s: s.where(Events.context_id == context_id).union_all(
-            _generate_legacy_events_context_id_query(start_day, end_day, context_id)
+            _generate_states_query(start_day, end_day)
+            .outerjoin(Events, (States.event_id == Events.event_id))
+            .where(States.context_id == context_id),
+            _generate_legacy_events_context_id_query(start_day, end_day, context_id),
         )
     elif entity_filter is not None:
         stmt += lambda s: s.union_all(
@@ -234,20 +237,6 @@ def _generate_all_query(
         stmt += lambda s: s.union_all(_generate_states_query(start_day, end_day))
     stmt += lambda s: s.order_by(Events.time_fired)
     return stmt
-
-
-def _generate_events_query_without_data() -> Select:
-    return select(
-        literal(value=EVENT_STATE_CHANGED, type_=sqlalchemy.String).label("event_type"),
-        literal(value=None, type_=sqlalchemy.Text).label("event_data"),
-        States.last_changed.label("time_fired"),
-        States.context_id.label("context_id"),
-        States.context_user_id.label("context_user_id"),
-        States.context_parent_id.label("context_parent_id"),
-        literal(value=None, type_=sqlalchemy.Text).label("shared_data"),
-        *STATE_COLUMNS,
-        literal(None).label("context_only"),
-    )
 
 
 def _generate_legacy_events_context_id_query(
@@ -272,10 +261,7 @@ def _generate_legacy_events_context_id_query(
             StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
         )
         .where((Events.time_fired > start_day) & (Events.time_fired < end_day))
-        .where(Events.context_id == context_id),
-        _generate_states_query(start_day, end_day)
-        .outerjoin(Events, (States.event_id == Events.event_id))
-        .where(States.context_id == context_id),
+        .where(Events.context_id == context_id)
     )
 
 
@@ -296,7 +282,19 @@ def _generate_events_query_without_states(
 def _generate_states_query(start_day: dt, end_day: dt) -> Select:
     old_state = aliased(States, name="old_state")
     return (
-        _generate_events_query_without_data()
+        select(
+            literal(value=EVENT_STATE_CHANGED, type_=sqlalchemy.String).label(
+                "event_type"
+            ),
+            literal(value=None, type_=sqlalchemy.Text).label("event_data"),
+            States.last_changed.label("time_fired"),
+            States.context_id.label("context_id"),
+            States.context_user_id.label("context_user_id"),
+            States.context_parent_id.label("context_parent_id"),
+            literal(value=None, type_=sqlalchemy.Text).label("shared_data"),
+            *STATE_COLUMNS,
+            literal(None).label("context_only"),
+        )
         .filter((States.last_updated > start_day) & (States.last_updated < end_day))
         .outerjoin(old_state, (States.old_state_id == old_state.state_id))
         .where(_missing_state_matcher(old_state))
