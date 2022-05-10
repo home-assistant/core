@@ -2,7 +2,7 @@
 import logging
 from typing import Any
 
-from ring_doorbell.const import CHIME_TEST_SOUND_KINDS
+from ring_doorbell.const import CHIME_TEST_SOUND_KINDS, KIND_DING
 
 from homeassistant.components.siren import ATTR_TONE, SirenEntity, SirenEntityFeature
 from homeassistant.config_entries import ConfigEntry
@@ -46,6 +46,6 @@ class RingChimeSiren(RingEntityMixin, SirenEntity):
 
     def turn_on(self, **kwargs: Any) -> None:
         """Play the test sound on a Ring Chime device."""
-        tone = kwargs.get(ATTR_TONE) or "ding"
+        tone = kwargs.get(ATTR_TONE) or KIND_DING
 
         self._device.test_sound(kind=tone)
