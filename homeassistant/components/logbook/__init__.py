@@ -519,7 +519,11 @@ def _generate_logbook_entities_query(
             _generate_states_query()
             .filter((States.last_updated > start_day) & (States.last_updated < end_day))
             .where(States.entity_id.in_(entity_ids)),
-            _generate_events_query_without_states().where(
+            select(
+                *EVENT_COLUMNS,
+                EventData.shared_data.label("shared_data"),
+                *EMPTY_STATE_COLUMNS,
+            ).where(
                 Events.context_id.in_(
                     select(Events.context_id)
                     .where(
@@ -624,7 +628,9 @@ def _generate_legacy_events_context_id_query() -> Select:
 
 def _generate_events_query_without_states() -> Select:
     return select(
-        *EVENT_COLUMNS, EventData.shared_data.label("shared_data"), *EMPTY_STATE_COLUMNS
+        *EVENT_COLUMNS,
+        EventData.shared_data.label("shared_data"),
+        *EMPTY_STATE_COLUMNS,
     )
 
 
@@ -698,6 +704,16 @@ def _apply_event_entity_id_matchers(entity_ids: Iterable[str]) -> sqlalchemy.or_
         ors.append(Events.event_data.like(like))
         ors.append(EventData.shared_data.like(like))
     return sqlalchemy.or_(*ors)
+
+
+def _apply_not_event_entity_id_matchers(entity_ids: Iterable[str]) -> sqlalchemy.not_:
+    """Create matchers for the entity_id in the event_data."""
+    ors = []
+    for entity_id in entity_ids:
+        like = ENTITY_ID_JSON_TEMPLATE.format(entity_id)
+        ors.append(Events.event_data.like(like))
+        ors.append(EventData.shared_data.like(like))
+    return sqlalchemy.not_(sqlalchemy.or_(*ors))
 
 
 def _keep_row(
