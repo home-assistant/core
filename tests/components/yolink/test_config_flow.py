@@ -148,12 +148,7 @@ async def test_reauthentication(
         },
     )
 
-    old_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=123,
-        version=1,
-        data={"id": "frenck", "auth_implementation": DOMAIN},
-    )
+    old_entry = MockConfigEntry(domain=DOMAIN, unique_id=DOMAIN, version=1)
     old_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
