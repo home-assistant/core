@@ -11,7 +11,7 @@ from typing import Any, cast
 
 from aiohttp import web
 import sqlalchemy
-from sqlalchemy import lambda_stmt, select
+from sqlalchemy import lambda_stmt, select, union_all
 from sqlalchemy.engine.row import Row
 from sqlalchemy.orm import aliased
 from sqlalchemy.orm.query import Query
@@ -455,18 +455,22 @@ def _get_events(
         *ALL_EVENT_TYPES_EXCEPT_STATE_CHANGED,
         *hass.data.get(DOMAIN, {}),
     ]
-    entity_filter = None
-    if entity_ids is None and filters:
-        entity_filter = filters.entity_filter()  # type: ignore[no-untyped-call]
-    stmt = _generate_logbook_query(
-        start_day,
-        end_day,
-        event_types,
-        entity_ids,
-        entity_filter,
-        entity_matches_only,
-        context_id,
-    )
+    if entity_ids:
+        stmt = _generate_logbook_entities_query(
+            start_day,
+            end_day,
+            event_types,
+            entity_ids,
+        )
+    else:
+        entity_filter = filters.entity_filter() if filters else None  # type: ignore[no-untyped-call]
+        stmt = _generate_logbook_query(
+            start_day,
+            end_day,
+            event_types,
+            entity_filter,
+            context_id,
+        )
     with session_scope(hass=hass) as session:
         return list(
             _humanify(
@@ -479,13 +483,54 @@ def _get_events(
         )
 
 
+def _generate_logbook_entities_query(
+    start_day: dt,
+    end_day: dt,
+    event_types: list[str],
+    entity_ids: list[str],
+) -> StatementLambdaElement:
+    stmt = lambda_stmt(
+        lambda: _generate_events_query_without_states()
+        .where((Events.time_fired > start_day) & (Events.time_fired < end_day))
+        .where(Events.event_type.in_(event_types))
+        .outerjoin(EventData, (Events.data_id == EventData.data_id))
+    )
+    stmt.add_criteria(
+        lambda s: s.where(_apply_event_entity_id_matchers(entity_ids)).union_all(
+            _generate_states_query()
+            .filter((States.last_updated > start_day) & (States.last_updated < end_day))
+            .where(States.entity_id.in_(entity_ids)),
+            _generate_events_query_without_states().where(
+                Events.context_id.in_(
+                    union_all(
+                        select(Events.context_id)
+                        .where(
+                            (Events.time_fired > start_day)
+                            & (Events.time_fired < end_day)
+                        )
+                        .where(Events.event_type.in_(event_types))
+                        .where(_apply_event_entity_id_matchers(entity_ids)),
+                        select(States.context_id)
+                        .filter(
+                            (States.last_updated > start_day)
+                            & (States.last_updated < end_day)
+                        )
+                        .where(States.entity_id.in_(entity_ids)),
+                    )
+                )
+            ),
+        ),
+        track_on=entity_ids,
+    )
+    stmt += lambda s: s.order_by(Events.time_fired)
+    return stmt
+
+
 def _generate_logbook_query(
     start_day: dt,
     end_day: dt,
     event_types: list[str],
-    entity_ids: list[str] | None = None,
     entity_filter: Any | None = None,
-    entity_matches_only: bool = False,
     context_id: str | None = None,
 ) -> StatementLambdaElement:
     """Generate a logbook query lambda_stmt."""
@@ -495,50 +540,31 @@ def _generate_logbook_query(
         .where(Events.event_type.in_(event_types))
         .outerjoin(EventData, (Events.data_id == EventData.data_id))
     )
-    if entity_ids is not None:
-        if entity_matches_only:
-            # When entity_matches_only is provided, contexts and events that do not
-            # contain the entity_ids are not included in the logbook response.
-            stmt.add_criteria(
-                lambda s: s.where(_apply_event_entity_id_matchers(entity_ids)),
-                track_on=entity_ids,
-            )
+    if context_id is not None:
+        # Once all the old `state_changed` events
+        # are gone from the database remove the
+        # union_all(_generate_legacy_events_context_id_query()....)
+        stmt += lambda s: s.where(Events.context_id == context_id).union_all(
+            _generate_legacy_events_context_id_query()
+            .where((Events.time_fired > start_day) & (Events.time_fired < end_day))
+            .where(Events.context_id == context_id),
+            _generate_states_query()
+            .where((States.last_updated > start_day) & (States.last_updated < end_day))
+            .outerjoin(Events, (States.event_id == Events.event_id))
+            .where(States.context_id == context_id),
+        )
+    elif entity_filter is not None:
         stmt += lambda s: s.union_all(
             _generate_states_query()
-            .filter((States.last_updated > start_day) & (States.last_updated < end_day))
-            .where(States.entity_id.in_(entity_ids))
+            .where((States.last_updated > start_day) & (States.last_updated < end_day))
+            .where(entity_filter)
         )
     else:
-        if context_id is not None:
-            # Once all the old `state_changed` events
-            # are gone from the database remove the
-            # union_all(_generate_legacy_events_context_id_query()....)
-            stmt += lambda s: s.where(Events.context_id == context_id).union_all(
-                _generate_legacy_events_context_id_query()
-                .where((Events.time_fired > start_day) & (Events.time_fired < end_day))
-                .where(Events.context_id == context_id),
-                _generate_states_query()
-                .where(
-                    (States.last_updated > start_day) & (States.last_updated < end_day)
-                )
-                .outerjoin(Events, (States.event_id == Events.event_id))
-                .where(States.context_id == context_id),
+        stmt += lambda s: s.union_all(
+            _generate_states_query().where(
+                (States.last_updated > start_day) & (States.last_updated < end_day)
             )
-        elif entity_filter is not None:
-            stmt += lambda s: s.union_all(
-                _generate_states_query()
-                .where(
-                    (States.last_updated > start_day) & (States.last_updated < end_day)
-                )
-                .where(entity_filter)
-            )
-        else:
-            stmt += lambda s: s.union_all(
-                _generate_states_query().where(
-                    (States.last_updated > start_day) & (States.last_updated < end_day)
-                )
-            )
-
+        )
     stmt += lambda s: s.order_by(Events.time_fired)
     return stmt
 
