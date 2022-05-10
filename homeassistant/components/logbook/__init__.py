@@ -487,11 +487,7 @@ def _generate_logbook_query(
     context_id: str | None = None,
 ) -> StatementLambdaElement:
     stmt = lambda_stmt(
-        lambda: select(
-            *EVENT_COLUMNS,
-            EventData.shared_data.label("shared_data"),
-            *EMPTY_STATE_COLUMNS,
-        )
+        lambda: _generate_events_query_without_states()
         .where((Events.time_fired > start_day) & (Events.time_fired < end_day))
         .where(Events.event_type.in_(event_types))
     )
@@ -576,6 +572,12 @@ def _generate_legacy_events_context_id_query() -> Query:
         .outerjoin(
             StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
         )
+    )
+
+
+def _generate_events_query_without_states() -> Query:
+    return select(
+        *EVENT_COLUMNS, EventData.shared_data.label("shared_data"), *EMPTY_STATE_COLUMNS
     )
 
 
