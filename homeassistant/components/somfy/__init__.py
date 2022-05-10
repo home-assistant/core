@@ -77,6 +77,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Somfy from a config entry."""
+
+    _LOGGER.warning(
+        "The Somfy Open API has been deprecated and will shutdown after June 21st 2022, "
+        "migrate to the Overkiz integration to control your Somfy devices"
+    )
+
     # Backwards compat
     if "auth_implementation" not in entry.data:
         hass.config_entries.async_update_entry(
