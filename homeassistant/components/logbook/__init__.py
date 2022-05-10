@@ -521,7 +521,7 @@ def _generate_logbook_entities_query(
                 *EVENT_COLUMNS,
                 EventData.shared_data.label("shared_data"),
                 *EMPTY_STATE_COLUMNS,
-                literal(True).label("context_only"),
+                literal("1").label("context_only"),
             ).where(
                 Events.context_id.in_(
                     select(Events.context_id)
@@ -601,7 +601,7 @@ def _generate_events_query_without_data() -> Select:
         States.context_parent_id.label("context_parent_id"),
         literal(value=None, type_=sqlalchemy.Text).label("shared_data"),
         *STATE_COLUMNS,
-        literal(False).label("context_only"),
+        literal(None).label("context_only"),
     )
 
 
@@ -616,7 +616,7 @@ def _generate_legacy_events_context_id_query() -> Select:
             States.entity_id,
             States.attributes,
             StateAttributes.shared_attrs,
-            literal(False).label("context_only"),
+            literal(None).label("context_only"),
         )
         .outerjoin(States, (Events.event_id == States.event_id))
         .where(States.last_updated == States.last_changed)
@@ -632,7 +632,7 @@ def _generate_events_query_without_states() -> Select:
         *EVENT_COLUMNS,
         EventData.shared_data.label("shared_data"),
         *EMPTY_STATE_COLUMNS,
-        literal(False).label("context_only"),
+        literal(None).label("context_only"),
     )
 
 
