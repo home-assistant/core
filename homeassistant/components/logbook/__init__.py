@@ -458,8 +458,7 @@ def _get_events(
         *hass.data.get(DOMAIN, {}),
     ]
     with session_scope(hass=hass) as session:
-        baked_query: baked.BakedQuery
-        baked_query = bakery(
+        baked_query: baked.BakedQuery = bakery(
             lambda s: s.query(
                 *EVENT_COLUMNS,
                 EventData.shared_data.label("shared_data"),
