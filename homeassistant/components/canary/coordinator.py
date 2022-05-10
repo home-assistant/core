@@ -63,14 +63,14 @@ class CanaryDataUpdateCoordinator(DataUpdateCoordinator):
     ) -> dict[str, list[Entry]]:
         entries_by_device_id: dict[str, list[Entry]] = {}
 
-        for entry in self.canary.get_entries(location_id=location_id):
-            for device in location.devices:
-                for device_uuid in entry.device_uuids:
-                    if device.uuid == device_uuid:
-                        if device.device_id not in entries_by_device_id:
-                            entries_by_device_id[device.device_id] = [entry]
-                        else:
-                            entries_by_device_id[device.device_id].append(entry)
+        entries = self.canary.get_entries(location_id=location_id)
+        for device in location.devices:
+            entries_by_device_id[device.device_id] = [
+                entry
+                for entry in entries
+                for device_uuid in entry.device_uuids
+                if device.uuid == device_uuid
+            ]
         return entries_by_device_id
 
     async def _async_update_data(self) -> CanaryData:
