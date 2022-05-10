@@ -36,7 +36,7 @@ class OAuth2FlowHandler(
         """Dialog that informs the user that reauth is required."""
         if user_input is None:
             return self.async_show_form(step_id="reauth_confirm")
-        return await self.async_step_user()
+        return await self.async_step_user(user_input={"reauth": True})
 
     async def async_oauth_create_entry(self, data: dict) -> FlowResult:
         """Create an oauth config entry or update existing entry for reauth."""
@@ -52,8 +52,11 @@ class OAuth2FlowHandler(
     ) -> FlowResult:
         """Handle a flow start."""
         await self.async_set_unique_id(DOMAIN)
-
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
+        if user_input is None:
+            if self._async_current_entries():
+                return self.async_abort(reason="single_instance_allowed")
+        if user_input is not None and user_input.get("reauth"):
+            user_input.pop("reauth")
+            if not bool(user_input):
+                user_input = None
         return await super().async_step_user(user_input)
