@@ -16,7 +16,6 @@ from sqlalchemy.engine.row import Row
 from sqlalchemy.ext import baked
 from sqlalchemy.orm import aliased
 from sqlalchemy.orm.query import Query
-from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.expression import literal
 import voluptuous as vol
 
@@ -442,7 +441,7 @@ def _get_events(
 
     def yield_rows(query: Query) -> Generator[Row, None, None]:
         """Yield Events that are not filtered away."""
-        for row in query.yield_per(1000):
+        for row in query.all():  # yield_per(1000):
             context_lookup.setdefault(row.context_id, row)
             if row.event_type != EVENT_CALL_SERVICE and (
                 row.event_type == EVENT_STATE_CHANGED
@@ -460,7 +459,13 @@ def _get_events(
     ]
     with session_scope(hass=hass) as session:
         baked_query: baked.BakedQuery
-        baked_query = _generate_events_query_without_states(bakery)
+        baked_query = bakery(
+            lambda s: s.query(
+                *EVENT_COLUMNS,
+                EventData.shared_data.label("shared_data"),
+                *EMPTY_STATE_COLUMNS,
+            )
+        )
         baked_query += _apply_event_time_filter
         baked_query += _apply_event_types_filter
         if entity_ids is not None:
@@ -555,15 +560,9 @@ def _generate_legacy_events_context_id_query(query: Query) -> Query:
     )
 
 
-def _generate_events_query_without_states(session: Session) -> Query:
-    return session.query(
-        *EVENT_COLUMNS, EventData.shared_data.label("shared_data"), *EMPTY_STATE_COLUMNS
-    )
-
-
 def _generate_states_query(query: Query) -> Query:
     old_state = aliased(States, name="old_state")
-    query = (
+    return (
         _generate_events_query_without_data(query)
         .outerjoin(old_state, (States.old_state_id == old_state.state_id))
         .filter(_missing_state_matcher(old_state))
