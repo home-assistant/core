@@ -73,7 +73,7 @@ def generate_statement_for_request(
     """Generate the logbook statement for a logbook request."""
     if not entity_ids:
         entity_filter = filters.entity_filter() if filters else None  # type: ignore[no-untyped-call]
-        return _generate_query(
+        return _generate_all_query(
             start_day, end_day, event_types, entity_filter, context_id
         )
     if len(entity_ids) > 1:
@@ -214,7 +214,7 @@ def _generate_single_entity_query(
     return stmt
 
 
-def _generate_query(
+def _generate_all_query(
     start_day: dt,
     end_day: dt,
     event_types: tuple[str, ...],
