@@ -6,8 +6,8 @@ from typing import Any
 
 from pyeight.eight import EightSleep
 
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import PERCENTAGE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -139,6 +139,13 @@ def _get_breakdown_percent(
         return 0
 
 
+def _get_rounded_value(attr: dict[str, Any], key: str) -> int | float | None:
+    """Get rounded value for given key."""
+    if (val := attr.get(key)) is None:
+        return None
+    return round(val, 2)
+
+
 class EightUserSensor(EightSleepBaseEntity, SensorEntity):
     """Representation of an eight sleep user-based sensor."""
 
@@ -156,6 +163,10 @@ class EightUserSensor(EightSleepBaseEntity, SensorEntity):
 
         if self._sensor == "bed_temperature":
             self._attr_icon = "mdi:thermometer"
+            self._attr_device_class = SensorDeviceClass.TEMPERATURE
+            self._attr_native_unit_of_measurement = TEMP_CELSIUS
+        elif self._sensor in ("current_sleep", "last_sleep", "current_sleep_fitness"):
+            self._attr_native_unit_of_measurement = "Score"
 
         _LOGGER.debug(
             "User Sensor: %s, Side: %s, User: %s",
@@ -179,40 +190,12 @@ class EightUserSensor(EightSleepBaseEntity, SensorEntity):
             return self._user_obj.last_sleep_score
 
         if self._sensor == "bed_temperature":
-            temp = self._user_obj.current_values["bed_temp"]
-            try:
-                if self._units == "si":
-                    return round(temp, 2)
-                return round((temp * 1.8) + 32, 2)
-            except TypeError:
-                return None
+            return self._user_obj.current_values["bed_temp"]
 
         if self._sensor == "sleep_stage":
             return self._user_obj.current_values["stage"]
 
         return None
-
-    @property
-    def native_unit_of_measurement(self) -> str | None:
-        """Return the unit the value is expressed in."""
-        if self._sensor in ("current_sleep", "last_sleep", "current_sleep_fitness"):
-            return "Score"
-        if self._sensor == "bed_temperature":
-            if self._units == "si":
-                return TEMP_CELSIUS
-            return TEMP_FAHRENHEIT
-        return None
-
-    def _get_rounded_value(
-        self, attr: dict[str, Any], key: str, use_units: bool = True
-    ) -> int | float | None:
-        """Get rounded value based on units for given key."""
-        try:
-            if self._units == "si" or not use_units:
-                return round(attr["room_temp"], 2)
-            return round((attr["room_temp"] * 1.8) + 32, 2)
-        except TypeError:
-            return None
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
@@ -255,26 +238,18 @@ class EightUserSensor(EightSleepBaseEntity, SensorEntity):
             )
             state_attr[ATTR_REM_PERC] = _get_breakdown_percent(attr, "rem", sleep_time)
 
-        room_temp = self._get_rounded_value(attr, "room_temp")
-        bed_temp = self._get_rounded_value(attr, "bed_temp")
+        room_temp = _get_rounded_value(attr, "room_temp")
+        bed_temp = _get_rounded_value(attr, "bed_temp")
 
         if "current" in self._sensor:
-            state_attr[ATTR_RESP_RATE] = self._get_rounded_value(
-                attr, "resp_rate", False
-            )
-            state_attr[ATTR_HEART_RATE] = self._get_rounded_value(
-                attr, "heart_rate", False
-            )
+            state_attr[ATTR_RESP_RATE] = _get_rounded_value(attr, "resp_rate")
+            state_attr[ATTR_HEART_RATE] = _get_rounded_value(attr, "heart_rate")
             state_attr[ATTR_SLEEP_STAGE] = attr["stage"]
             state_attr[ATTR_ROOM_TEMP] = room_temp
             state_attr[ATTR_BED_TEMP] = bed_temp
         elif "last" in self._sensor:
-            state_attr[ATTR_AVG_RESP_RATE] = self._get_rounded_value(
-                attr, "resp_rate", False
-            )
-            state_attr[ATTR_AVG_HEART_RATE] = self._get_rounded_value(
-                attr, "heart_rate", False
-            )
+            state_attr[ATTR_AVG_RESP_RATE] = _get_rounded_value(attr, "resp_rate")
+            state_attr[ATTR_AVG_HEART_RATE] = _get_rounded_value(attr, "heart_rate")
             state_attr[ATTR_AVG_ROOM_TEMP] = room_temp
             state_attr[ATTR_AVG_BED_TEMP] = bed_temp
 
@@ -295,9 +270,8 @@ class EightRoomSensor(EightSleepBaseEntity, SensorEntity):
         super().__init__(coordinator, eight, None, sensor, units)
 
         self._attr_icon = "mdi:thermometer"
-        self._attr_native_unit_of_measurement: str = (
-            TEMP_CELSIUS if self._units == "si" else TEMP_FAHRENHEIT
-        )
+        self._attr_device_class = SensorDeviceClass.TEMPERATURE
+        self._attr_native_unit_of_measurement = TEMP_CELSIUS
 
     @property
     def native_value(self) -> int | float | None:
