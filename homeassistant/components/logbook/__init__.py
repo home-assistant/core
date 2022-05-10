@@ -440,8 +440,9 @@ def _get_events(
             rows = query.yield_per(1000)
         for row in rows:
             context_lookup.setdefault(row.context_id, row)
-            if row.event_type != EVENT_CALL_SERVICE and (
-                row.event_type == EVENT_STATE_CHANGED
+            event_type = row.event_type
+            if event_type != EVENT_CALL_SERVICE and (
+                event_type == EVENT_STATE_CHANGED
                 or _keep_row(hass, row, entities_filter)
             ):
                 yield row
