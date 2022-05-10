@@ -178,24 +178,22 @@ def async_get_node_from_device_id(
     # Use device config entry ID's to validate that this is a valid zwave_js device
     # and to get the client
     config_entry_ids = device_entry.config_entries
-    config_entry_id = next(
+    entry = next(
         (
-            config_entry_id
-            for config_entry_id in config_entry_ids
-            if cast(
-                ConfigEntry,
-                hass.config_entries.async_get_entry(config_entry_id),
-            ).domain
-            == DOMAIN
+            entry
+            for entry in hass.config_entries.async_entries(DOMAIN)
+            if entry.entry_id in config_entry_ids
         ),
         None,
     )
-    if config_entry_id is None or config_entry_id not in hass.data[DOMAIN]:
+    if entry and entry.state != ConfigEntryState.LOADED:
+        raise ValueError(f"Device {device_id} config entry is not loaded")
+    if entry is None or entry.entry_id not in hass.data[DOMAIN]:
         raise ValueError(
             f"Device {device_id} is not from an existing zwave_js config entry"
         )
 
-    client = hass.data[DOMAIN][config_entry_id][DATA_CLIENT]
+    client = hass.data[DOMAIN][entry.entry_id][DATA_CLIENT]
 
     # Get node ID from device identifier, perform some validation, and then get the
     # node
@@ -399,6 +397,7 @@ def async_is_device_config_entry_not_loaded(
         raise ValueError(f"Device {device_id} not found")
     return any(
         (entry := hass.config_entries.async_get_entry(entry_id))
+        and entry.domain == DOMAIN
         and entry.state != ConfigEntryState.LOADED
         for entry_id in device.config_entries
     )
