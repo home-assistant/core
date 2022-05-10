@@ -188,7 +188,11 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
             except KeyError:
                 return
         else:
-            last_event = self.coordinator.data["entries"][self._device.device_id]
+            try:
+                last_event = self.coordinator.data["entries"][self._device.device_id]
+            except KeyError:
+                return
+
             if self._last_event.entry_id != last_event[0].entry_id:
                 self._last_event = last_event[0]
         if self._last_event is not None:

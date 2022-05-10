@@ -172,7 +172,10 @@ class CanarySensor(CoordinatorEntity[CanaryDataUpdateCoordinator], SensorEntity)
         if self._canary_data_type == "reading":
             return self.reading
         if self._canary_data_type == "entry":
-            entry = self.coordinator.data["entries"][self._device_id]
+            try:
+                entry = self.coordinator.data["entries"][self._device_id]
+            except KeyError:
+                return None
 
             if entry is not None:
                 if self._sensor_type[0] == "entries_captured_today":
