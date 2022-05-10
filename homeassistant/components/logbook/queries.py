@@ -71,13 +71,24 @@ def generate_statement_for_request(
     context_id: str | None = None,
 ) -> StatementLambdaElement:
     """Generate the logbook statement for a logbook request."""
+
+    # No entities: logbook sends everything for the timeframe
+    # limited by the context_id and the yaml configured filter
     if not entity_ids:
         entity_filter = filters.entity_filter() if filters else None  # type: ignore[no-untyped-call]
         return _generate_all_query(
             start_day, end_day, event_types, entity_filter, context_id
         )
+
+    # Multiple entities: logbook sends everything for the timeframe for the entities
+    #
+    # This is the least efficient query because we use
+    # like matching which means part of the query has to be built each
+    # time when the entity_ids are not in the cache
     if len(entity_ids) > 1:
         return _generate_entities_query(start_day, end_day, event_types, entity_ids)
+
+    # Single entity: logbook sends everything for the timeframe for the entity
     entity_id = entity_ids[0]
     entity_like = ENTITY_ID_JSON_TEMPLATE.format(entity_id)
     return _generate_single_entity_query(
