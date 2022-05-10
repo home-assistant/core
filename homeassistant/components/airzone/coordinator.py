@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any, cast
+from typing import Any
 
 from aioairzone.exceptions import AirzoneError
 from aioairzone.localapi import AirzoneLocalApi
@@ -40,4 +40,4 @@ class AirzoneUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 await self.airzone.update()
             except AirzoneError as error:
                 raise UpdateFailed(error) from error
-            return cast(dict[str, Any], self.airzone.data())
+            return self.airzone.data()
