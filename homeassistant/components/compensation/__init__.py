@@ -49,14 +49,14 @@ COMPENSATION_SCHEMA = vol.Schema(
             vol.ExactSequence([vol.Coerce(float), vol.Coerce(float)])
         ],
         vol.Optional(CONF_UNIQUE_ID): cv.string,
-        vol.Exclusive(CONF_ATTRIBUTE, "attr_hide"): cv.string,
+        vol.Optional(CONF_ATTRIBUTE): cv.string,
         vol.Optional(CONF_PRECISION, default=DEFAULT_PRECISION): cv.positive_int,
         vol.Optional(CONF_DEGREE, default=DEFAULT_DEGREE): vol.All(
             vol.Coerce(int),
             vol.Range(min=1, max=7),
         ),
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-        vol.Exclusive(CONF_HIDE_SOURCE, "attr_hide"): cv.boolean,
+        vol.Optional(CONF_HIDE_SOURCE): cv.boolean,
     }
 )
 
