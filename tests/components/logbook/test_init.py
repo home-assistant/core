@@ -1480,7 +1480,7 @@ async def test_custom_log_entry_discoverable_via_entity_matches_only(
     assert json_dict[0]["entity_id"] == "switch.test_switch"
 
 
-async def test_logbook_entity_matches_only_multiple(hass, hass_client, recorder_mock):
+async def test_logbook_entity_matches_only_multiple_x(hass, hass_client, recorder_mock):
     """Test the logbook view with a multiple entities and entity_matches_only."""
     await async_setup_component(hass, "logbook", {})
     assert await async_setup_component(

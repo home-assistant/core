@@ -94,7 +94,7 @@ aio_geojson_nsw_rfs_incidents==0.4
 aio_georss_gdacs==0.7
 
 # homeassistant.components.airzone
-aioairzone==0.4.3
+aioairzone==0.4.4
 
 # homeassistant.components.ambient_station
 aioambient==2021.11.0
@@ -195,7 +195,7 @@ aiopvpc==3.0.0
 aiopyarr==22.2.2
 
 # homeassistant.components.qnap_qsw
-aioqsw==0.0.7
+aioqsw==0.0.8
 
 # homeassistant.components.recollect_waste
 aiorecollect==1.0.8
@@ -400,7 +400,7 @@ denonavr==0.10.11
 devolo-home-control-api==0.18.1
 
 # homeassistant.components.devolo_home_network
-devolo-plc-api==0.7.1
+devolo-plc-api==0.8.0
 
 # homeassistant.components.directv
 directv==0.4.0
