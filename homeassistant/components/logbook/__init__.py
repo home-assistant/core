@@ -453,6 +453,9 @@ def _get_events(
         *ALL_EVENT_TYPES_EXCEPT_STATE_CHANGED,
         *hass.data.get(DOMAIN, {}),
     ]
+    import pprint
+
+    pprint.pprint(event_types)
     entity_filter = None
     if entity_ids is None and filters:
         entity_filter = filters.entity_filter()  # type: ignore[no-untyped-call]
