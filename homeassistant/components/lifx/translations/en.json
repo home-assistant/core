@@ -6,7 +6,21 @@
         },
         "step": {
             "confirm": {
-                "description": "Do you want to set up LIFX?"
+                "title": "Do you want to set up LIFX?"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "discovery_options": {
+                "data": {
+                    "discovery_interval": "How long (in seconds) between scans for new and previously disconnected devices?",
+                    "duplicate_discovery": "Allow duplicate discovery of devices?",
+                    "grace_period": "How long (seconds) since the last message before taking a bulb offline?",
+                    "message_timeout": "How long (in second) to wait for a reply from the bulb?",
+                    "retry_count": "How many attempts should be made per bulb?"
+                },
+                "title": "Discovery options"
             }
         }
     }

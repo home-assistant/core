@@ -2,12 +2,26 @@
   "config": {
     "step": {
       "confirm": {
-        "description": "Do you want to set up LIFX?"
+        "title": "Do you want to set up LIFX?"
       }
     },
     "abort": {
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+    }
+  },
+  "options": {
+    "step": {
+      "discovery_options": {
+        "title": "Discovery options",
+        "data": {
+          "discovery_interval": "How long (in seconds) between scans for new and previously disconnected devices?",
+          "duplicate_discovery": "Allow duplicate discovery of devices?",
+          "retry_count": "How many attempts should be made per bulb?",
+          "message_timeout": "How long (in second) to wait for a reply from the bulb?",
+          "grace_period": "How long (seconds) since the last message before taking a bulb offline?"
+        }
+      }
     }
   }
 }

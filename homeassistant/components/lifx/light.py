@@ -42,6 +42,7 @@ from homeassistant.const import (
     ATTR_MODE,
     ATTR_MODEL,
     ATTR_SW_VERSION,
+    CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -55,22 +56,26 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.color as color_util
 
-from . import (
+from .const import (
     CONF_BROADCAST,
-    CONF_PORT,
+    CONF_DISCOVERY_INTERVAL,
+    CONF_DUPLICATE_DISCOVERY,
+    CONF_GRACE_PERIOD,
+    CONF_MESSAGE_TIMEOUT,
+    CONF_RETRY_COUNT,
     CONF_SERVER,
     DATA_LIFX_MANAGER,
+    DEFAULT_DISCOVERY_INTERVAL,
+    DEFAULT_DUPLICATE_DISCOVERY,
+    DEFAULT_GRACE_PERIOD,
+    DEFAULT_MESSAGE_TIMEOUT,
+    DEFAULT_RETRY_COUNT,
     DOMAIN as LIFX_DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=10)
-
-DISCOVERY_INTERVAL = 60
-MESSAGE_TIMEOUT = 1
-MESSAGE_RETRIES = 3
-UNAVAILABLE_GRACE = 90
 
 FIX_MAC_FW = AwesomeVersion("3.70")
 SWITCH_PRODUCT_IDS = [70, 71, 89]
@@ -272,13 +277,28 @@ class LIFXManager:
         self.entity_registry_updated_unsub = self.hass.bus.async_listen(
             er.EVENT_ENTITY_REGISTRY_UPDATED, self.entity_registry_updated
         )
+        self._discovery_interval = config_entry.options.get(
+            CONF_DISCOVERY_INTERVAL, DEFAULT_DISCOVERY_INTERVAL
+        )
+        self._duplicate_discovery = config_entry.options.get(
+            CONF_DUPLICATE_DISCOVERY, DEFAULT_DUPLICATE_DISCOVERY
+        )
+        self._grace_period = config_entry.options.get(
+            CONF_GRACE_PERIOD, DEFAULT_GRACE_PERIOD
+        )
+        self._message_timeout = config_entry.options.get(
+            CONF_MESSAGE_TIMEOUT, DEFAULT_MESSAGE_TIMEOUT
+        )
+        self._retry_count = config_entry.options.get(
+            CONF_RETRY_COUNT, DEFAULT_RETRY_COUNT
+        )
 
         self.register_set_state()
         self.register_effects()
 
     def start_discovery(self, interface):
         """Start discovery on a network interface."""
-        kwargs = {"discovery_interval": DISCOVERY_INTERVAL}
+        kwargs = {"discovery_interval": self._discovery_interval}
         if broadcast_ip := interface.get(CONF_BROADCAST):
             kwargs["broadcast_ip"] = broadcast_ip
         lifx_discovery = aiolifx().LifxDiscovery(self.hass.loop, self, **kwargs)
@@ -385,7 +405,13 @@ class LIFXManager:
             _LOGGER.debug("Discovered %s (%s)", bulb.ip_addr, bulb.mac_addr)
             self.hass.async_create_task(self.register_bulb(bulb))
         else:
-            _LOGGER.warning("Duplicate LIFX discovery response ignored")
+            _LOGGER.warning(
+                "Duplicate LIFX discovery response from %s (%s) detected.",
+                bulb.mac_addr,
+                bulb.ip_addr,
+            )
+            if self._duplicate_discovery is True:
+                self.hass.async_create_task(self.register_bulb(bulb))
 
     async def register_bulb(self, bulb):
         """Handle LIFX bulb registration lifecycle."""
@@ -417,9 +443,9 @@ class LIFXManager:
                 _LOGGER.error("Failed to connect to %s", bulb.ip_addr)
                 bulb.registered = False
             else:
-                bulb.timeout = MESSAGE_TIMEOUT
-                bulb.retry_count = MESSAGE_RETRIES
-                bulb.unregister_timeout = UNAVAILABLE_GRACE
+                bulb.timeout = self._message_timeout
+                bulb.retry_count = self._retry_count
+                bulb.unregister_timeout = self._grace_period
 
                 if lifx_features(bulb)["multizone"]:
                     entity = LIFXStrip(bulb, self.effects_conductor)
@@ -436,6 +462,9 @@ class LIFXManager:
     @callback
     def unregister(self, bulb):
         """Disconnect and unregister non-responsive bulbs."""
+        if bulb.mac_addr in self.discoveries_inflight:
+            self.discoveries_inflight.pop(bulb.mac_addr)
+
         if bulb.mac_addr in self.entities:
             entity = self.entities[bulb.mac_addr]
             _LOGGER.debug("Disconnected from %s", entity.who)
