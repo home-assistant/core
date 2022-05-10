@@ -121,7 +121,7 @@ async def test_template_state_text(
     await hass.async_block_till_done()
     state = hass.states.get("light.test_template_light")
     assert state.state == set_state
-    assert state.attributes["color_mode"] == ColorMode.UNKNOWN  # Brightness is unknown
+    assert state.attributes["color_mode"] == ColorMode.UNKNOWN  # Brightness is None
     assert state.attributes["supported_color_modes"] == supported_color_modes
     assert state.attributes["supported_features"] == supported_features
 
@@ -480,7 +480,7 @@ async def test_on_action_optimistic(
     state = hass.states.get("light.test_template_light")
     assert len(calls) == 1
     assert state.state == STATE_ON
-    assert state.attributes["color_mode"] == ColorMode.UNKNOWN
+    assert state.attributes["color_mode"] == ColorMode.UNKNOWN  # Brightness is None
     assert state.attributes["supported_color_modes"] == supported_color_modes
     assert state.attributes["supported_features"] == supported_features
 
@@ -542,7 +542,7 @@ async def test_off_action(
 
     state = hass.states.get("light.test_template_light")
     assert state.state == STATE_ON
-    assert state.attributes["color_mode"] == ColorMode.UNKNOWN
+    assert state.attributes["color_mode"] == ColorMode.UNKNOWN  # Brightness is None
     assert state.attributes["supported_color_modes"] == supported_color_modes
     assert state.attributes["supported_features"] == supported_features
 
@@ -555,7 +555,7 @@ async def test_off_action(
 
     assert len(calls) == 1
     assert state.state == STATE_ON
-    assert state.attributes["color_mode"] == ColorMode.UNKNOWN
+    assert state.attributes["color_mode"] == ColorMode.UNKNOWN  # Brightness is None
     assert state.attributes["supported_color_modes"] == supported_color_modes
     assert state.attributes["supported_features"] == supported_features
 
@@ -608,7 +608,7 @@ async def test_off_action_with_transition(
 
     state = hass.states.get("light.test_template_light")
     assert state.state == STATE_ON
-    assert state.attributes["color_mode"] == ColorMode.UNKNOWN
+    assert state.attributes["color_mode"] == ColorMode.UNKNOWN  # Brightness is None
     assert state.attributes["supported_color_modes"] == supported_color_modes
     assert state.attributes["supported_features"] == supported_features
 
@@ -622,7 +622,7 @@ async def test_off_action_with_transition(
     assert len(calls) == 1
     assert calls[0].data["transition"] == 2
     assert state.state == STATE_ON
-    assert state.attributes["color_mode"] == ColorMode.UNKNOWN
+    assert state.attributes["color_mode"] == ColorMode.UNKNOWN  # Brightness is None
     assert state.attributes["supported_color_modes"] == supported_color_modes
     assert state.attributes["supported_features"] == supported_features
 
@@ -743,7 +743,7 @@ async def test_white_value_action_no_template(
     state = hass.states.get("light.test_template_light")
     assert state.attributes.get("white_value") == 124
     assert state.state == STATE_ON
-    assert state.attributes["color_mode"] == expected_color_mode
+    assert state.attributes["color_mode"] == expected_color_mode  # hs_color is None
     assert state.attributes["supported_color_modes"] == supported_color_modes
     assert state.attributes["supported_features"] == supported_features
 
@@ -792,7 +792,7 @@ async def test_white_value_template(
     assert state is not None
     assert state.attributes.get("white_value") == expected_white_value
     assert state.state == STATE_ON
-    assert state.attributes["color_mode"] == expected_color_mode
+    assert state.attributes["color_mode"] == expected_color_mode  # hs_color is None
     assert state.attributes["supported_color_modes"] == supported_color_modes
     assert state.attributes["supported_features"] == supported_features
 
@@ -1253,7 +1253,7 @@ async def test_color_action_no_template(
 
     state = hass.states.get("light.test_template_light")
     assert state.state == STATE_ON
-    assert state.attributes["color_mode"] == expected_color_mode
+    assert state.attributes["color_mode"] == expected_color_mode  # hs_color is None
     assert "hs_color" not in state.attributes
     assert state.attributes["supported_color_modes"] == supported_color_modes
     assert state.attributes["supported_features"] == supported_features
