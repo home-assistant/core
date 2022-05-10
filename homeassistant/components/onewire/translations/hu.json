@@ -17,6 +17,8 @@
             },
             "user": {
                 "data": {
+                    "host": "C\u00edm",
+                    "port": "Port",
                     "type": "Kapcsolat t\u00edpusa"
                 },
                 "title": "A 1-Wire be\u00e1ll\u00edt\u00e1sa"
