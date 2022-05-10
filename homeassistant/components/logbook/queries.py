@@ -67,7 +67,7 @@ CONTEXT_ONLY = literal("1").label("context_only")
 NOT_CONTEXT_ONLY = literal(None).label("context_only")
 
 
-def generate_statement_for_request(
+def statement_for_request(
     start_day: dt,
     end_day: dt,
     event_types: tuple[str, ...],
@@ -81,9 +81,7 @@ def generate_statement_for_request(
     # limited by the context_id and the yaml configured filter
     if not entity_ids:
         entity_filter = filters.entity_filter() if filters else None  # type: ignore[no-untyped-call]
-        return _generate_all_query(
-            start_day, end_day, event_types, entity_filter, context_id
-        )
+        return _all_query(start_day, end_day, event_types, entity_filter, context_id)
 
     # Multiple entities: logbook sends everything for the timeframe for the entities
     #
@@ -91,14 +89,12 @@ def generate_statement_for_request(
     # like matching which means part of the query has to be built each
     # time when the entity_ids are not in the cache
     if len(entity_ids) > 1:
-        return _generate_entities_query(start_day, end_day, event_types, entity_ids)
+        return _entities_query(start_day, end_day, event_types, entity_ids)
 
     # Single entity: logbook sends everything for the timeframe for the entity
     entity_id = entity_ids[0]
     entity_like = ENTITY_ID_JSON_TEMPLATE.format(entity_id)
-    return _generate_single_entity_query(
-        start_day, end_day, event_types, entity_id, entity_like
-    )
+    return _single_entity_query(start_day, end_day, event_types, entity_id, entity_like)
 
 
 def _select_events_context_id_subquery(
@@ -115,7 +111,7 @@ def _select_events_context_id_subquery(
     )
 
 
-def _generate_entities_context_ids_sub_query(
+def _select_entities_context_ids_sub_query(
     start_day: dt,
     end_day: dt,
     event_types: tuple[str, ...],
@@ -134,7 +130,7 @@ def _generate_entities_context_ids_sub_query(
     )
 
 
-def _generate_events_query_for_context_only() -> Select:
+def _select_events_context_only() -> Select:
     """Generate an events query that mark them as for context_only.
 
     By marking them as context_only we know they are only for
@@ -145,7 +141,7 @@ def _generate_events_query_for_context_only() -> Select:
     )
 
 
-def _generate_entities_query(
+def _entities_query(
     start_day: dt,
     end_day: dt,
     event_types: tuple[str, ...],
@@ -153,16 +149,14 @@ def _generate_entities_query(
 ) -> StatementLambdaElement:
     """Generate a logbook query for multiple entities."""
     stmt = lambda_stmt(
-        lambda: _generate_events_query_without_states(start_day, end_day, event_types)
+        lambda: _select_events_without_states(start_day, end_day, event_types)
     )
     stmt = stmt.add_criteria(
         lambda s: s.where(_apply_event_entity_id_matchers(entity_ids)).union_all(
-            _generate_states_query(start_day, end_day).where(
-                States.entity_id.in_(entity_ids)
-            ),
-            _generate_events_query_for_context_only().where(
+            _select_states(start_day, end_day).where(States.entity_id.in_(entity_ids)),
+            _select_events_context_only().where(
                 Events.context_id.in_(
-                    _generate_entities_context_ids_sub_query(
+                    _select_entities_context_ids_sub_query(
                         start_day,
                         end_day,
                         event_types,
@@ -181,7 +175,7 @@ def _generate_entities_query(
     return stmt
 
 
-def _generate_entity_context_ids_sub_query(
+def _select_entity_context_ids_sub_query(
     start_day: dt,
     end_day: dt,
     event_types: tuple[str, ...],
@@ -204,7 +198,7 @@ def _generate_entity_context_ids_sub_query(
     )
 
 
-def _generate_single_entity_query(
+def _single_entity_query(
     start_day: dt,
     end_day: dt,
     event_types: tuple[str, ...],
@@ -213,18 +207,16 @@ def _generate_single_entity_query(
 ) -> StatementLambdaElement:
     """Generate a logbook query for a single entity."""
     stmt = lambda_stmt(
-        lambda: _generate_events_query_without_states(start_day, end_day, event_types)
+        lambda: _select_events_without_states(start_day, end_day, event_types)
         .where(
             Events.event_data.like(entity_id_like)
             | EventData.shared_data.like(entity_id_like)
         )
         .union_all(
-            _generate_states_query(start_day, end_day).where(
-                States.entity_id == entity_id
-            ),
-            _generate_events_query_for_context_only().where(
+            _select_states(start_day, end_day).where(States.entity_id == entity_id),
+            _select_events_context_only().where(
                 Events.context_id.in_(
-                    _generate_entity_context_ids_sub_query(
+                    _select_entity_context_ids_sub_query(
                         start_day, end_day, event_types, entity_id, entity_id_like
                     )
                 )
@@ -235,7 +227,7 @@ def _generate_single_entity_query(
     return stmt
 
 
-def _generate_all_query(
+def _all_query(
     start_day: dt,
     end_day: dt,
     event_types: tuple[str, ...],
@@ -244,32 +236,30 @@ def _generate_all_query(
 ) -> StatementLambdaElement:
     """Generate a logbook query for all entities."""
     stmt = lambda_stmt(
-        lambda: _generate_events_query_without_states(start_day, end_day, event_types)
+        lambda: _select_events_without_states(start_day, end_day, event_types)
     )
     if context_id is not None:
         # Once all the old `state_changed` events
         # are gone from the database remove the
-        # _generate_legacy_events_context_id_query()
+        # _legacy_select_events_context_id()
         stmt += lambda s: s.where(Events.context_id == context_id).union_all(
-            _generate_states_query(start_day, end_day).where(
-                States.context_id == context_id
-            ),
-            _generate_legacy_events_context_id_query(start_day, end_day, context_id),
+            _select_states(start_day, end_day).where(States.context_id == context_id),
+            _legacy_select_events_context_id(start_day, end_day, context_id),
         )
     elif entity_filter is not None:
         stmt += lambda s: s.union_all(
-            _generate_states_query(start_day, end_day).where(entity_filter)
+            _select_states(start_day, end_day).where(entity_filter)
         )
     else:
-        stmt += lambda s: s.union_all(_generate_states_query(start_day, end_day))
+        stmt += lambda s: s.union_all(_select_states(start_day, end_day))
     stmt += lambda s: s.order_by(Events.time_fired)
     return stmt
 
 
-def _generate_legacy_events_context_id_query(
+def _legacy_select_events_context_id(
     start_day: dt, end_day: dt, context_id: str
 ) -> Select:
-    """Generate a legacy events context id query that also joins states."""
+    """Generate a legacy events context id select that also joins states."""
     # This can be removed once we no longer have event_ids in the states table
     return (
         select(
@@ -289,9 +279,10 @@ def _generate_legacy_events_context_id_query(
     )
 
 
-def _generate_events_query_without_states(
+def _select_events_without_states(
     start_day: dt, end_day: dt, event_types: tuple[str, ...]
 ) -> Select:
+    """Generate an events select that does not join states."""
     return (
         select(*EVENT_ROWS_NO_STATES, NOT_CONTEXT_ONLY)
         .where((Events.time_fired > start_day) & (Events.time_fired < end_day))
@@ -300,8 +291,8 @@ def _generate_events_query_without_states(
     )
 
 
-def _generate_states_query(start_day: dt, end_day: dt) -> Select:
-    """Generate a states query that formats the states table as event rows."""
+def _select_states(start_day: dt, end_day: dt) -> Select:
+    """Generate a states select that formats the states table as event rows."""
     old_state = aliased(States, name="old_state")
     return (
         select(
