@@ -3,12 +3,7 @@ from __future__ import annotations
 
 import logging
 
-from afsapi import (
-    AFSAPI,
-    ConnectionError as FSConnectionError,
-    FSApiException,
-    PlayState,
-)
+from afsapi import AFSAPI, ConnectionError as FSConnectionError, PlayState
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
@@ -113,8 +108,6 @@ class AFSAPIDevice(MediaPlayerEntity):
             identifiers={(DOMAIN, afsapi.webfsapi_endpoint)},
             name=name,
         )
-        self._attr_available = True
-        self._attr_unique_id = None
 
         self._state = None
 
@@ -215,12 +208,6 @@ class AFSAPIDevice(MediaPlayerEntity):
                 self._attr_available = True
             if not self._name:
                 self._name = await afsapi.get_friendly_name()
-
-            if not self._attr_unique_id:
-                try:
-                    self._attr_unique_id = await afsapi.get_radio_id()
-                except FSApiException:
-                    self._attr_unique_id = self._attr_name
 
             if not self._source_list:
                 self.__modes_by_label = {
