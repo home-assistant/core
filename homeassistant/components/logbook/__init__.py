@@ -453,12 +453,15 @@ def _get_events(
         *ALL_EVENT_TYPES_EXCEPT_STATE_CHANGED,
         *hass.data.get(DOMAIN, {}),
     ]
+    entity_filter = None
+    if entity_ids is None and filters:
+        entity_filter = filters.entity_filter()  # type: ignore[no-untyped-call]
     stmt = _generate_logbook_query(
         start_day,
         end_day,
         event_types,
         entity_ids,
-        filters,
+        entity_filter,
         entity_matches_only,
         context_id,
     )
@@ -479,7 +482,7 @@ def _generate_logbook_query(
     end_day: dt,
     event_types: list[str],
     entity_ids: list[str] | None = None,
-    filters: Filters | None = None,
+    entity_filter: Any | None = None,
     entity_matches_only: bool = False,
     context_id: str | None = None,
 ) -> StatementLambdaElement:
@@ -522,13 +525,13 @@ def _generate_logbook_query(
                 .outerjoin(Events, (States.event_id == Events.event_id))
                 .where(States.context_id == context_id),
             )
-        elif filters:
+        elif entity_filter:
             stmt += lambda s: s.union_all(
                 _generate_states_query()
                 .where(
                     (States.last_updated > start_day) & (States.last_updated < end_day)
                 )
-                .where(filters.entity_filter())  # type: ignore[no-untyped-call]
+                .where(entity_filter)
             )
         else:
             stmt += lambda s: s.union_all(
