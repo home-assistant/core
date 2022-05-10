@@ -33,6 +33,7 @@ from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .const import (
     CONF_HUB,
+    CONF_TOKEN_UUID,
     DOMAIN,
     LOGGER,
     OVERKIZ_DEVICE_TO_PLATFORM,
@@ -178,7 +179,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
 
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        # TODO Delete local auth token if local server
+        # Delete local auth token if local server is unloaded
+        if token_uuid := entry.data.get(CONF_TOKEN_UUID):
+            data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
+            data.coordinator.client.delete_local_token(token_uuid)
+
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok

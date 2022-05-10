@@ -22,11 +22,11 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import dhcp, zeroconf
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-from .const import CONF_HUB, DEFAULT_HOST, DEFAULT_HUB, DOMAIN, LOGGER
+from .const import CONF_HUB, CONF_TOKEN_UUID, DEFAULT_HOST, DEFAULT_HUB, DOMAIN, LOGGER
 
 LOCAL = "local"
 LOCAL_HUB = {
@@ -76,15 +76,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             for gateway in gateways:
                 # Generate tokens
-                # TODO check if gateway is in the right format
+                # TODO check if gateway is in the right format (thermostat not supported)
                 token = await client.generate_local_token(gateway.id)
                 uuid = await client.activate_local_token(
                     gateway_id=gateway.id, token=token, label="Home Assistant/local"
                 )
 
             host = user_input[CONF_HOST]
-            user_input["token"] = token
-            user_input["token_uuid"] = uuid
+            user_input[CONF_TOKEN] = token
+            user_input[CONF_TOKEN_UUID] = uuid
 
             session = async_create_clientsession(self.hass, verify_ssl=False)
 
@@ -326,6 +326,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_cloud()
         if discovery_info.type == "_kizboxdev._tcp.local.":
             return await self.async_step_local()
+
+        return await self.async_step_cloud()
 
     async def _process_discovery(self, gateway_id: str) -> FlowResult:
         """Handle discovery of a gateway."""

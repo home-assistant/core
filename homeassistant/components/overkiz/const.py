@@ -32,6 +32,7 @@ DOMAIN: Final = "overkiz"
 LOGGER: logging.Logger = logging.getLogger(__package__)
 
 CONF_HUB: Final = "hub"
+CONF_TOKEN_UUID = "token_uuid"
 DEFAULT_HUB: Final = "somfy_europe"
 DEFAULT_HOST: Final = "gateway-xxxx-xxxx-xxxx.local:8443"
 
