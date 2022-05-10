@@ -93,6 +93,8 @@ async def async_setup_platform(
 class EightHeatSensor(EightSleepBaseEntity, SensorEntity):
     """Representation of an eight sleep heat-based sensor."""
 
+    _attr_native_unit_of_measurement = PERCENTAGE
+
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
@@ -102,7 +104,6 @@ class EightHeatSensor(EightSleepBaseEntity, SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, eight, user_id, sensor)
-        self._attr_native_unit_of_measurement = PERCENTAGE
         assert self._user_obj
 
         _LOGGER.debug(
@@ -259,6 +260,10 @@ class EightUserSensor(EightSleepBaseEntity, SensorEntity):
 class EightRoomSensor(EightSleepBaseEntity, SensorEntity):
     """Representation of an eight sleep room sensor."""
 
+    _attr_icon = "mdi:thermometer"
+    _attr_device_class = SensorDeviceClass.TEMPERATURE
+    _attr_native_unit_of_measurement = TEMP_CELSIUS
+
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
@@ -268,10 +273,6 @@ class EightRoomSensor(EightSleepBaseEntity, SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, eight, None, sensor, units)
-
-        self._attr_icon = "mdi:thermometer"
-        self._attr_device_class = SensorDeviceClass.TEMPERATURE
-        self._attr_native_unit_of_measurement = TEMP_CELSIUS
 
     @property
     def native_value(self) -> int | float | None:
