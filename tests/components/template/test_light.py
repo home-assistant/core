@@ -11,6 +11,9 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
     ATTR_WHITE_VALUE,
+    SUPPORT_COLOR,
+    SUPPORT_COLOR_TEMP,
+    ColorMode,
     LightEntityFeature,
 )
 from homeassistant.const import (
@@ -1050,6 +1053,133 @@ async def test_color_template(hass, expected_hs, start_ha):
     state = hass.states.get("light.test_template_light")
     assert state is not None
     assert state.attributes.get("hs_color") == expected_hs
+
+
+@pytest.mark.parametrize("count,domain", [(1, light.DOMAIN)])
+@pytest.mark.parametrize(
+    "supported_features,supported_color_modes",
+    [(SUPPORT_COLOR | SUPPORT_COLOR_TEMP, [ColorMode.COLOR_TEMP, ColorMode.HS])],
+)
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "light": {
+                "platform": "template",
+                "lights": {
+                    "test_template_light": {
+                        "value_template": "{{1 == 1}}",
+                        "turn_on": {
+                            "service": "light.turn_on",
+                            "entity_id": "light.test_state",
+                        },
+                        "turn_off": {
+                            "service": "light.turn_off",
+                            "entity_id": "light.test_state",
+                        },
+                        "set_color": [
+                            {
+                                "service": "test.automation",
+                                "data_template": {
+                                    "entity_id": "test.test_state",
+                                    "h": "{{h}}",
+                                    "s": "{{s}}",
+                                },
+                            },
+                        ],
+                        "set_temperature": {
+                            "service": "test.automation",
+                            "data_template": {
+                                "entity_id": "test.test_state",
+                                "color_temp": "{{color_temp}}",
+                            },
+                        },
+                    }
+                },
+            }
+        },
+    ],
+)
+async def test_color_and_temperature_actions_no_template(
+    hass, start_ha, calls, supported_features, supported_color_modes
+):
+    """Test setting color and color temperature with optimistic template."""
+    state = hass.states.get("light.test_template_light")
+    assert state.attributes.get("hs_color") is None
+
+    # Optimistically set color, light should be in hs_color mode
+    await hass.services.async_call(
+        light.DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "light.test_template_light", ATTR_HS_COLOR: (40, 50)},
+        blocking=True,
+    )
+
+    assert len(calls) == 1
+    assert calls[-1].data["h"] == 40
+    assert calls[-1].data["s"] == 50
+
+    state = hass.states.get("light.test_template_light")
+    assert state.attributes["color_mode"] == ColorMode.HS
+    assert "color_temp" not in state.attributes
+    assert state.attributes["hs_color"] == (40, 50)
+    assert state.attributes["supported_color_modes"] == supported_color_modes
+    assert state.attributes["supported_features"] == supported_features
+
+    # Optimistically set color temp, light should be in color temp mode
+    await hass.services.async_call(
+        light.DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "light.test_template_light", ATTR_COLOR_TEMP: 123},
+        blocking=True,
+    )
+
+    assert len(calls) == 2
+    assert calls[-1].data["color_temp"] == 123
+
+    state = hass.states.get("light.test_template_light")
+    assert state.attributes["color_mode"] == ColorMode.COLOR_TEMP
+    assert state.attributes["color_temp"] == 123
+    assert "hs_color" in state.attributes  # Color temp represented as hs_color
+    assert state.attributes["supported_color_modes"] == supported_color_modes
+    assert state.attributes["supported_features"] == supported_features
+
+    # Optimistically set color, light should again be in hs_color mode
+    await hass.services.async_call(
+        light.DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "light.test_template_light", ATTR_HS_COLOR: (10, 20)},
+        blocking=True,
+    )
+
+    assert len(calls) == 3
+    assert calls[-1].data["h"] == 10
+    assert calls[-1].data["s"] == 20
+
+    state = hass.states.get("light.test_template_light")
+    assert state.attributes["color_mode"] == ColorMode.HS
+    assert "color_temp" not in state.attributes
+    assert state.attributes["hs_color"] == (10, 20)
+    assert state.attributes["supported_color_modes"] == supported_color_modes
+    assert state.attributes["supported_features"] == supported_features
+
+    # Optimistically set color temp, light should again be in color temp mode
+    await hass.services.async_call(
+        light.DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "light.test_template_light", ATTR_COLOR_TEMP: 234},
+        blocking=True,
+    )
+
+    assert len(calls) == 4
+    assert calls[-1].data["color_temp"] == 234
+
+    state = hass.states.get("light.test_template_light")
+    assert state.attributes["color_mode"] == ColorMode.COLOR_TEMP
+    assert state.attributes["color_temp"] == 234
+    assert "hs_color" in state.attributes  # Color temp represented as hs_color
+    assert state.attributes["supported_color_modes"] == supported_color_modes
+    assert state.attributes["supported_features"] == supported_features
 
 
 @pytest.mark.parametrize("count,domain", [(1, light.DOMAIN)])
