@@ -434,7 +434,11 @@ def _get_events(
 
     def yield_rows(query: Query) -> Generator[Row, None, None]:
         """Yield Events that are not filtered away."""
-        for row in query.yield_per(1000):
+        if entity_ids or context_id:
+            rows = query.all()
+        else:
+            rows = query.yield_per(1000)
+        for row in rows:
             context_lookup.setdefault(row.context_id, row)
             if row.event_type != EVENT_CALL_SERVICE and (
                 row.event_type == EVENT_STATE_CHANGED
