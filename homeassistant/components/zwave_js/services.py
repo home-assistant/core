@@ -135,7 +135,9 @@ class ZWaveServices:
         @callback
         def validate_entities(val: dict[str, Any]) -> dict[str, Any]:
             """Validate entities exist and are from the zwave_js platform."""
-            val[ATTR_ENTITY_ID] = expand_entity_ids(self._hass, val[ATTR_ENTITY_ID])
+            val[ATTR_ENTITY_ID] = expand_entity_ids(
+                self._hass, val[ATTR_ENTITY_ID], include_group_entities=True
+            )
             invalid_entities = []
             for entity_id in val[ATTR_ENTITY_ID]:
                 entry = self._ent_reg.async_get(entity_id)

@@ -29,7 +29,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback, split_entity_id
 from homeassistant.helpers import config_validation as cv, entity_registry as er, start
-from homeassistant.helpers.entity import Entity, async_generate_entity_id
+from homeassistant.helpers.entity import (
+    Entity,
+    async_generate_entity_id,
+    entity_sources,
+)
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.integration_platform import (
@@ -142,7 +146,9 @@ def is_on(hass, entity_id):
 
 
 @bind_hass
-def expand_entity_ids(hass: HomeAssistant, entity_ids: Iterable[Any]) -> list[str]:
+def expand_entity_ids(
+    hass: HomeAssistant, entity_ids: Iterable[Any], include_group_entities: bool = False
+) -> list[str]:
     """Return entity_ids with group entity ids replaced by their members.
 
     Async friendly.
@@ -161,7 +167,11 @@ def expand_entity_ids(hass: HomeAssistant, entity_ids: Iterable[Any]) -> list[st
             # If entity_id points at a group, expand it
             domain, _ = ha.split_entity_id(entity_id)
 
-            if domain == DOMAIN:
+            if domain == DOMAIN or (
+                include_group_entities
+                and (source := entity_sources(hass).get(entity_id))
+                and source["domain"] == DOMAIN
+            ):
                 child_entities = get_entity_ids(hass, entity_id)
                 if entity_id in child_entities:
                     child_entities = list(child_entities)

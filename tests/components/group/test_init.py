@@ -185,8 +185,30 @@ async def test_expand_entity_ids(hass):
         hass, "init_group", ["light.Bowl", "light.Ceiling"], False
     )
 
-    assert sorted(["light.ceiling", "light.bowl"]) == sorted(
-        group.expand_entity_ids(hass, [test_group.entity_id])
+    # With group entities
+    hass.states.async_set("light.first", "on")
+    hass.states.async_set("light.second", "off")
+
+    assert await async_setup_component(
+        hass,
+        "light",
+        {
+            "light": {
+                "platform": "group",
+                "name": "Grouped",
+                "entities": ["light.first", "light.second"],
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert sorted(
+        ["light.ceiling", "light.bowl", "light.first", "light.second"]
+    ) == sorted(
+        group.expand_entity_ids(hass, [test_group.entity_id, "light.grouped"], True)
+    )
+    assert sorted(["light.ceiling", "light.bowl", "light.grouped"]) == sorted(
+        group.expand_entity_ids(hass, [test_group.entity_id, "light.grouped"])
     )
 
 
