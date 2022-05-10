@@ -464,9 +464,12 @@ def _get_events(
                 EventData.shared_data.label("shared_data"),
                 *EMPTY_STATE_COLUMNS,
             )
+            .filter(
+                (Events.time_fired > bindparam("start_day"))
+                & (Events.time_fired < bindparam("end_day"))
+            )
+            .filter(Events.event_type.in_(bindparam("event_types", expanding=True)))
         )
-        baked_query += _apply_event_time_filter
-        baked_query += _apply_event_types_filter
         if entity_ids is not None:
             if entity_matches_only:
                 # When entity_matches_only is provided, contexts and events that do not
@@ -623,17 +626,6 @@ def _not_uom_attributes_matcher() -> Any:
     return ~StateAttributes.shared_attrs.like(
         UNIT_OF_MEASUREMENT_JSON_LIKE
     ) | ~States.attributes.like(UNIT_OF_MEASUREMENT_JSON_LIKE)
-
-
-def _apply_event_time_filter(query: Query) -> Query:
-    return query.filter(
-        (Events.time_fired > bindparam("start_day"))
-        & (Events.time_fired < bindparam("end_day"))
-    )
-
-
-def _apply_event_types_filter(query: Query) -> Query:
-    return query.filter(Events.event_type.in_(bindparam("event_types", expanding=True)))
 
 
 def _apply_event_entity_id_matchers(entity_ids: Iterable[str]) -> Query:
