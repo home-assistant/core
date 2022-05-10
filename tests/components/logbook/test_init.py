@@ -1390,6 +1390,59 @@ async def test_logbook_entity_matches_only(hass, hass_client, recorder_mock):
     assert json_dict[1]["context_user_id"] == "9400facee45711eaa9308bfd3d19e474"
 
 
+async def test_logbook_entity_matches_only_multiple_calls(
+    hass, hass_client, recorder_mock
+):
+    """Test the logbook view with a single entity and entity_matches_only called multiple times."""
+    await async_setup_component(hass, "logbook", {})
+    await async_setup_component(hass, "automation", {})
+
+    await async_recorder_block_till_done(hass)
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    for automation_id in range(5):
+        hass.bus.async_fire(
+            EVENT_AUTOMATION_TRIGGERED,
+            {
+                ATTR_NAME: f"Mock automation {automation_id}",
+                ATTR_ENTITY_ID: f"automation.mock_{automation_id}_automation",
+            },
+        )
+    await async_wait_recording_done(hass)
+    client = await hass_client()
+
+    # Today time 00:00:00
+    start = dt_util.utcnow().date()
+    start_date = datetime(start.year, start.month, start.day)
+    end_time = start + timedelta(hours=24)
+
+    for automation_id in range(5):
+        # Test today entries with filter by end_time
+        response = await client.get(
+            f"/api/logbook/{start_date.isoformat()}?end_time={end_time}&entity=automation.mock_{automation_id}_automation&entity_matches_only"
+        )
+        assert response.status == HTTPStatus.OK
+        json_dict = await response.json()
+
+        assert len(json_dict) == 1
+        assert (
+            json_dict[0]["entity_id"] == f"automation.mock_{automation_id}_automation"
+        )
+
+    response = await client.get(
+        f"/api/logbook/{start_date.isoformat()}?end_time={end_time}&entity=automation.mock_0_automation,automation.mock_1_automation,automation.mock_2_automation&entity_matches_only"
+    )
+    assert response.status == HTTPStatus.OK
+    json_dict = await response.json()
+
+    assert len(json_dict) == 3
+    assert json_dict[0]["entity_id"] == "automation.mock_0_automation"
+    assert json_dict[1]["entity_id"] == "automation.mock_1_automation"
+    assert json_dict[2]["entity_id"] == "automation.mock_2_automation"
+
+
 async def test_custom_log_entry_discoverable_via_entity_matches_only(
     hass, hass_client, recorder_mock
 ):
