@@ -54,13 +54,13 @@ async def async_setup_platform(
     if attribute is not None:
         name = f"{name} {attribute}"
 
-    registry = entity_registry.async_get(hass)
-    source_entity = registry.async_get(source)
-    hide_source = bool(conf.get(CONF_HIDE_SOURCE))
-    if source_entity and source_entity.hidden != hide_source:
-        registry.async_update_entity(
-            source, hidden_by=RegistryEntryHider.INTEGRATION if hide_source else None
-        )
+    if conf.get(CONF_HIDE_SOURCE):
+        registry = entity_registry.async_get(hass)
+        source_entity = registry.async_get(source)
+        if source_entity and not source_entity.hidden:
+            registry.async_update_entity(
+                source, hidden_by=RegistryEntryHider.INTEGRATION
+            )
 
     async_add_entities(
         [
