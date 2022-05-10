@@ -522,7 +522,8 @@ def _generate_logbook_entities_query(
                 EventData.shared_data.label("shared_data"),
                 *EMPTY_STATE_COLUMNS,
                 literal("1").label("context_only"),
-            ).where(
+            )
+            .where(
                 Events.context_id.in_(
                     select(Events.context_id)
                     .where(
@@ -540,7 +541,8 @@ def _generate_logbook_entities_query(
                     )
                     .subquery(),
                 )
-            ),
+            )
+            .outerjoin(EventData, (Events.data_id == EventData.data_id)),
         ),
         track_on=entities_cache_key,
     )
