@@ -868,7 +868,7 @@ pushbullet.py==0.11.0
 pvo==0.2.2
 
 # homeassistant.components.canary
-py-canary==0.5.3b1
+py-canary==0.5.3b2
 
 # homeassistant.components.cpuspeed
 py-cpuinfo==8.0.0
