@@ -31,13 +31,12 @@ async def test_abort_if_no_configuration(hass):
 
 async def test_abort_if_existing_entry(hass: HomeAssistant):
     """Check flow abort when an entry already exist."""
-    MockConfigEntry(domain=DOMAIN).add_to_hass(hass)
-
+    MockConfigEntry(domain=DOMAIN, unique_id=DOMAIN).add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "single_instance_allowed"
+    assert result["reason"] == "already_configured"
 
 
 async def test_full_flow(
@@ -136,32 +135,35 @@ async def test_abort_if_authorization_timeout(hass, current_request_with_host):
     assert result["reason"] == "authorize_url_timeout"
 
 
-async def test_reauthentication_flow(
-    hass: HomeAssistant, hass_client_no_auth, aioclient_mock, current_request_with_host
+async def test_reauthentication(
+    hass, hass_client_no_auth, aioclient_mock, current_request_with_host
 ):
-    """Test reauthentication flow."""
+    """Test yolink reauthentication."""
     await setup.async_setup_component(
         hass,
         DOMAIN,
         {
-            DOMAIN: {
-                CONF_CLIENT_ID: CLIENT_ID,
-                CONF_CLIENT_SECRET: CLIENT_SECRET,
-            },
-            DOMAIN_HTTP: {CONF_BASE_URL: "https://example.com"},
+            DOMAIN: {CONF_CLIENT_ID: CLIENT_ID, CONF_CLIENT_SECRET: CLIENT_SECRET},
+            "http": {"base_url": "https://example.com"},
         },
     )
 
     old_entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id=DOMAIN,
+        unique_id=123,
         version=1,
-        data={"id": "yolink", "auth_implementation": DOMAIN},
+        data={"id": "frenck", "auth_implementation": DOMAIN},
     )
     old_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_REAUTH}, data=old_entry.data
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "unique_id": old_entry.unique_id,
+            "entry_id": old_entry.entry_id,
+        },
+        data=old_entry.data,
     )
 
     flows = hass.config_entries.flow.async_progress()
@@ -195,8 +197,6 @@ async def test_reauthentication_flow(
             "homeassistant.components.yolink.async_setup_entry", return_value=True
         ) as mock_setup:
             result = await hass.config_entries.flow.async_configure(result["flow_id"])
-
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "reauth_successful"
-
     assert len(mock_setup.mock_calls) == 1
