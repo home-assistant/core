@@ -155,6 +155,10 @@ def _generate_entities_query(
                 )
             ),
         ),
+        # Since _apply_event_entity_id_matchers generates multiple
+        # like statements we need to use the entity_ids in the
+        # the cache key since the sql can change based on the
+        # likes.
         track_on=(str(entity_ids),),
     )
     stmt += lambda s: s.order_by(Events.time_fired)
