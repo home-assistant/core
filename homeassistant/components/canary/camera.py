@@ -212,6 +212,9 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
         if not self._live_stream_url:
             return None
 
+        _LOGGER.info(
+            "Starting connection to %s at %s", self._attr_name, self._live_stream_url
+        )
         stream = CameraMjpeg(self._ffmpeg.binary)
         await stream.open_camera(
             self._live_stream_url, extra_cmd=self._ffmpeg_arguments
@@ -237,3 +240,6 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
         self._live_stream_session.start_renew_session()
 
         self._live_stream_url = self._live_stream_session.live_stream_url
+        _LOGGER.info(
+            "Live stream URL set on %s to %s", self._attr_name, self._live_stream_url
+        )
