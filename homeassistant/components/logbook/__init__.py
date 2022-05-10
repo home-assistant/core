@@ -477,9 +477,11 @@ def _get_events(
             entity_filter,
             context_id,
         )
-    _LOGGER.debug(
-        "Literal statement: %s", stmt.compile(compile_kwargs={"literal_binds": True})
-    )
+    if _LOGGER.isEnabledFor(logging.DEBUG):
+        _LOGGER.debug(
+            "Literal statement: %s",
+            stmt.compile(compile_kwargs={"literal_binds": True}),
+        )
     with session_scope(hass=hass) as session:
         return list(
             _humanify(
