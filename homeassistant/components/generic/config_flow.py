@@ -365,9 +365,9 @@ class GenericOptionsFlowHandler(OptionsFlow):
                     ],
                     CONF_FRAMERATE: user_input[CONF_FRAMERATE],
                     CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
-                    CONF_USE_WALLCLOCK_AS_TIMESTAMPS: user_input.get(
+                    CONF_USE_WALLCLOCK_AS_TIMESTAMPS: user_input[
                         CONF_USE_WALLCLOCK_AS_TIMESTAMPS
-                    ),
+                    ],
                 }
                 return self.async_create_entry(
                     title=title,
