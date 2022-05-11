@@ -40,6 +40,8 @@ EXTRA_HEATER_ATTR = {
     "profile": "profile",
     "volume": "volume",
     "v40_min": "v40_min",
+    "v40_level_min": "v40_level_min",
+    "v40_level_max": "v40_level_max",
 }
 HEATER_MIN_TEMP = 10
 HEATER_MAX_TEMP = 80

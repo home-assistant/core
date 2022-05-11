@@ -3,7 +3,7 @@
   "name": "OSO Energy",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/osoenergy",
-  "requirements": ["pyosoenergyapi==1.0.1"],
+  "requirements": ["pyosoenergyapi==1.0.2"],
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},
