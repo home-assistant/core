@@ -30,12 +30,11 @@ def async_describe_events(
         data = event.data
         device_type = data[ATTR_TYPE]
         leap_button_number = data[ATTR_LEAP_BUTTON_NUMBER]
-        action = data[ATTR_ACTION]
         button_map = LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP[device_type]
         button_description = button_map[leap_button_number]
         return {
             "name": f"{data[ATTR_AREA_NAME]} {data[ATTR_DEVICE_NAME]}",
-            "message": f"{action} {button_description}",
+            "message": f"{data[ATTR_ACTION]} {button_description}",
         }
 
     async_describe_event(
