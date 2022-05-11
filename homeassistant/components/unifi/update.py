@@ -70,6 +70,8 @@ class UniFiDeviceUpdateEntity(UniFiBase, UpdateEntity):
 
     DOMAIN = DOMAIN
     TYPE = DEVICE_UPDATE
+    _attr_device_class = UpdateDeviceClass.FIRMWARE
+    _attr_supported_features = UpdateEntityFeature.PROGRESS
 
     def __init__(self, device, controller):
         """Set up tracked device."""
@@ -86,11 +88,6 @@ class UniFiDeviceUpdateEntity(UniFiBase, UpdateEntity):
     def unique_id(self) -> str:
         """Return a unique identifier for this device."""
         return f"{self.TYPE}-{self.device.mac}"
-
-    @property
-    def device_class(self) -> UpdateDeviceClass | str | None:
-        """Return the class of this entity."""
-        return UpdateDeviceClass.FIRMWARE
 
     @property
     def available(self) -> bool:
@@ -111,11 +108,6 @@ class UniFiDeviceUpdateEntity(UniFiBase, UpdateEntity):
     def latest_version(self) -> str | None:
         """Latest version available for install."""
         return self.device.upgrade_to_firmware or self.device.version
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return UpdateEntityFeature.PROGRESS
 
     @property
     def device_info(self) -> DeviceInfo:

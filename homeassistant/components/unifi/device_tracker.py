@@ -432,12 +432,12 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
     @property
     def ip_address(self) -> str:
         """Return the primary ip address of the device."""
-        return self.device.raw.get("ip")
+        return self.device.ip
 
     @property
     def mac_address(self) -> str:
         """Return the mac address of the device."""
-        return self.device.raw.get("mac")
+        return self.device.mac
 
     async def options_updated(self) -> None:
         """Config entry options are updated, remove entity if option is disabled."""

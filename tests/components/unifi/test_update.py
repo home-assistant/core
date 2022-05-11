@@ -1,4 +1,4 @@
-"""The tests for the UniFi Network device tracker platform."""
+"""The tests for the UniFi Network update platform."""
 
 from aiounifi.controller import MESSAGE_DEVICE
 from aiounifi.websocket import STATE_DISCONNECTED, STATE_RUNNING
