@@ -167,3 +167,4 @@ class HistoryStatsSensor(HistoryStatsSensorBase):
             self._attr_native_value = pretty_ratio(state.hours_matched, state.period)
         elif self._type == CONF_TYPE_COUNT:
             self._attr_native_value = state.changes_to_match_state
+        self._attr_extra_state_attributes = {"period": self.coordinator._history_stats._period}
