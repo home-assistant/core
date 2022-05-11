@@ -583,6 +583,17 @@ class ContextAugmenter:
             data["context_event_type"] = event_type
             return
 
+        if event_type in self.external_events:
+            domain, describe_event = self.external_events[event_type]
+            data["context_event_type"] = event_type
+            data["context_domain"] = domain
+            event = self.event_cache.get(context_row)
+            description = describe_event(event)
+            if name := description.get(ATTR_NAME):
+                data["context_name"] = name
+                if "message" in data:
+                    data["message"] += f" ({name} {description.get('message')})"
+
         if not entity_id:
             return
 
@@ -597,13 +608,6 @@ class ContextAugmenter:
             attr_entity_id, context_row
         )
         data["context_event_type"] = event_type
-
-        if event_type in self.external_events:
-            domain, describe_event = self.external_events[event_type]
-            data["context_domain"] = domain
-            event = self.event_cache.get(context_row)
-            if name := describe_event(event).get(ATTR_NAME):
-                data["context_name"] = name
 
 
 def _is_sensor_continuous(
