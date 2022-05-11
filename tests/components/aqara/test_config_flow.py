@@ -13,10 +13,6 @@ from homeassistant.components.aqara.const import (
 )
 from homeassistant.core import HomeAssistant
 
-# from typing import Any
-# from unittest.mock import MagicMock, patch
-
-
 MOCK_COUNTRY = "China"
 MOCK_USERNAME = "myUsername"
 MOCK_PASSWORD = "myPassword"
