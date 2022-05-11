@@ -771,7 +771,6 @@ def row_to_compressed_state(
     start_time: datetime | None = None,
 ) -> dict[str, Any]:
     """Convert a database row to a compressed state."""
-    _LOGGER.warning("compressing row: %s", row)
     if start_time:
         last_changed = last_updated = start_time.timestamp()
     else:
