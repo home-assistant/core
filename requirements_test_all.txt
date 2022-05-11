@@ -666,6 +666,9 @@ krakenex==2.1.0
 # homeassistant.components.laundrify
 laundrify_aio==1.1.2
 
+# homeassistant.components.lacrosse_view
+lacrosse-view==0.0.3
+
 # homeassistant.components.foscam
 libpyfoscam==1.0
 
