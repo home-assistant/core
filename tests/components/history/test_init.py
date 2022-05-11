@@ -1070,3 +1070,144 @@ async def test_list_statistic_ids(
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == []
+
+
+async def test_history_during_period(hass, hass_ws_client, recorder_mock):
+    """Test history_during_period."""
+    now = dt_util.utcnow()
+
+    await async_setup_component(hass, "history", {})
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("sensor.test", "on", attributes={"any": "attr"})
+    hass.states.async_set("sensor.test", "off", attributes={"any": "attr"})
+    hass.states.async_set("sensor.test", "on", attributes={"any": "attr"})
+    await async_wait_recording_done(hass)
+
+    do_adhoc_statistics(hass, start=now)
+    await async_wait_recording_done(hass)
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "history/history_during_period",
+            "start_time": now.isoformat(),
+            "end_time": now.isoformat(),
+            "entity_ids": ["sensor.test"],
+            "include_start_time_state": True,
+            "significant_changes_only": False,
+            "no_attributes": True,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {}
+
+    await client.send_json(
+        {
+            "id": 2,
+            "type": "history/history_during_period",
+            "start_time": now.isoformat(),
+            "entity_ids": ["sensor.test"],
+            "include_start_time_state": True,
+            "significant_changes_only": False,
+            "no_attributes": True,
+            "minimal_response": True,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["id"] == 2
+
+    sensor_test_history = response["result"]["sensor.test"]
+    assert len(sensor_test_history) == 3
+
+    assert sensor_test_history[0]["s"] == "on"
+    assert sensor_test_history[0]["a"] == {}
+    assert isinstance(sensor_test_history[0]["lu"], float)
+    assert isinstance(sensor_test_history[0]["lc"], float)
+
+    assert "a" not in sensor_test_history[1]
+    assert sensor_test_history[1]["s"] == "off"
+    assert isinstance(sensor_test_history[1]["lc"], float)
+
+    assert sensor_test_history[2]["s"] == "on"
+    assert sensor_test_history[2]["a"] == {}
+
+    await client.send_json(
+        {
+            "id": 3,
+            "type": "history/history_during_period",
+            "start_time": now.isoformat(),
+            "entity_ids": ["sensor.test"],
+            "include_start_time_state": True,
+            "significant_changes_only": False,
+            "no_attributes": False,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["id"] == 3
+    sensor_test_history = response["result"]["sensor.test"]
+
+    assert len(sensor_test_history) == 3
+
+    assert sensor_test_history[0]["s"] == "on"
+    assert sensor_test_history[0]["a"] == {"any": "attr"}
+    assert isinstance(sensor_test_history[0]["lu"], float)
+    assert isinstance(sensor_test_history[0]["lc"], float)
+
+    assert sensor_test_history[1]["s"] == "off"
+    assert isinstance(sensor_test_history[1]["lc"], float)
+    assert sensor_test_history[1]["a"] == {"any": "attr"}
+
+    assert sensor_test_history[2]["s"] == "on"
+    assert sensor_test_history[2]["a"] == {"any": "attr"}
+
+
+async def test_history_during_period_bad_start_time(
+    hass, hass_ws_client, recorder_mock
+):
+    """Test history_during_period bad state time."""
+    await async_setup_component(
+        hass,
+        "history",
+        {"history": {}},
+    )
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "history/history_during_period",
+            "start_time": "cats",
+        }
+    )
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "invalid_start_time"
+
+
+async def test_history_during_period_bad_end_time(hass, hass_ws_client, recorder_mock):
+    """Test history_during_period bad end time."""
+    now = dt_util.utcnow()
+
+    await async_setup_component(
+        hass,
+        "history",
+        {"history": {}},
+    )
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "history/history_during_period",
+            "start_time": now.isoformat(),
+            "end_time": "dogs",
+        }
+    )
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "invalid_end_time"
