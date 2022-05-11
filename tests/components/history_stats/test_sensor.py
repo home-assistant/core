@@ -1461,18 +1461,20 @@ async def test_end_time_with_microseconds_zeroed(time_zone, hass, recorder_mock)
         await hass.async_block_till_done()
         assert hass.states.get("sensor.heatpump_compressor_today").state == "3.83"
 
-    rolled_to_next_day = start_of_today + timedelta(days=1)
+    rolled_to_next_day = start_of_today + timedelta(days=1, microseconds=5)
     assert rolled_to_next_day.hour == 0
     assert rolled_to_next_day.minute == 0
     assert rolled_to_next_day.second == 0
-    assert rolled_to_next_day.microsecond == 0
+    assert rolled_to_next_day.microsecond == 5
 
     with freeze_time(rolled_to_next_day):
         async_fire_time_changed(hass, rolled_to_next_day)
         await hass.async_block_till_done()
         assert hass.states.get("sensor.heatpump_compressor_today").state == "0.0"
 
-    rolled_to_next_day_plus_12 = start_of_today + timedelta(days=1, hours=12)
+    rolled_to_next_day_plus_12 = start_of_today + timedelta(
+        days=1, hours=12, microseconds=5
+    )
 
     with freeze_time(rolled_to_next_day_plus_12):
         async_fire_time_changed(hass, rolled_to_next_day_plus_12)
