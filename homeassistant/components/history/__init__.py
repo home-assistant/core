@@ -1,12 +1,12 @@
 """Provide pre-made queries on top of the recorder component."""
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Iterable, MutableMapping
 from datetime import datetime as dt, timedelta
 from http import HTTPStatus
 import logging
 import time
-from typing import cast
+from typing import Any, cast
 
 from aiohttp import web
 from sqlalchemy import not_, or_
@@ -25,7 +25,7 @@ from homeassistant.components.recorder.statistics import (
 )
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import CONF_DOMAINS, CONF_ENTITIES, CONF_EXCLUDE, CONF_INCLUDE
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.deprecation import deprecated_class, deprecated_function
 from homeassistant.helpers.entityfilter import (
@@ -40,6 +40,7 @@ import homeassistant.util.dt as dt_util
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "history"
+HISTORY_FILTERS = "history_filters"
 CONF_ORDER = "use_include_order"
 
 GLOB_TO_SQL_CHARS = {
@@ -83,7 +84,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the history hooks."""
     conf = config.get(DOMAIN, {})
 
-    filters = sqlalchemy_filter_from_include_exclude_conf(conf)
+    hass.data[HISTORY_FILTERS] = filters = sqlalchemy_filter_from_include_exclude_conf(
+        conf
+    )
 
     use_include_order = conf.get(CONF_ORDER)
 
@@ -161,6 +164,77 @@ async def ws_get_list_statistic_ids(
         msg.get("statistic_type"),
     )
     connection.send_result(msg["id"], statistic_ids)
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "history/statistics_during_period",
+        vol.Required("start_time"): str,
+        vol.Optional("end_time"): str,
+        vol.Optional("entity_ids"): [str],
+        vol.Optional("include_start_time_state"): bool,
+        vol.Optional("significant_changes_only"): bool,
+        vol.Optional("no_attributes"): bool,
+    }
+)
+@websocket_api.async_response
+async def ws_get_history_during_period(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+) -> None:
+    """Handle statistics websocket command."""
+    start_time_str = msg["start_time"]
+    end_time_str = msg.get("end_time")
+
+    if start_time := dt_util.parse_datetime(start_time_str):
+        start_time = dt_util.as_utc(start_time)
+    else:
+        connection.send_error(msg["id"], "invalid_start_time", "Invalid start_time")
+        return
+
+    if end_time_str:
+        if end_time := dt_util.parse_datetime(end_time_str):
+            end_time = dt_util.as_utc(end_time)
+        else:
+            connection.send_error(msg["id"], "invalid_end_time", "Invalid end_time")
+            return
+    else:
+        end_time = None
+
+    if start_time > dt_util.utcnow():
+        connection.send_result(msg["id"], {})
+        return
+
+    entity_ids = msg["entity_ids"]
+    include_start_time_state = msg["include_start_time_state"]
+    significant_changes_only = msg["significant_changes_only"]
+    no_attributes = msg["no_attributes"]
+    minimal_response = True
+    timestamp = True
+
+    if (
+        not include_start_time_state
+        and entity_ids
+        and not _entities_may_have_state_changes_after(hass, entity_ids, start_time)
+    ):
+        connection.send_result(msg["id"], {})
+        return
+
+    history_during_period: MutableMapping[
+        str, list[State | dict[str, Any]]
+    ] = await get_instance(hass).async_add_executor_job(
+        history.get_significant_states,
+        hass,
+        start_time,
+        end_time,
+        entity_ids,
+        hass.data[HISTORY_FILTERS],
+        include_start_time_state,
+        significant_changes_only,
+        minimal_response,
+        no_attributes,
+        timestamp,
+    )
+    connection.send_result(msg["id"], history_during_period)
 
 
 class HistoryPeriodView(HomeAssistantView):

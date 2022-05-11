@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Iterable, Iterator, MutableMapping
+from collections.abc import Callable, Iterable, Iterator, MutableMapping
 from datetime import datetime
 from itertools import groupby
 import logging
@@ -161,6 +161,7 @@ def get_significant_states(
     significant_changes_only: bool = True,
     minimal_response: bool = False,
     no_attributes: bool = False,
+    timestamp: bool = False,
 ) -> MutableMapping[str, list[State | dict[str, Any]]]:
     """Wrap get_significant_states_with_session with an sql session."""
     with session_scope(hass=hass) as session:
@@ -175,6 +176,7 @@ def get_significant_states(
             significant_changes_only,
             minimal_response,
             no_attributes,
+            timestamp,
         )
 
 
@@ -271,6 +273,7 @@ def get_significant_states_with_session(
     significant_changes_only: bool = True,
     minimal_response: bool = False,
     no_attributes: bool = False,
+    timestamp: bool = False,
 ) -> MutableMapping[str, list[State | dict[str, Any]]]:
     """
     Return states changes during UTC period start_time - end_time.
@@ -304,6 +307,7 @@ def get_significant_states_with_session(
         include_start_time_state,
         minimal_response,
         no_attributes,
+        timestamp,
     )
 
 
@@ -610,6 +614,10 @@ def _get_single_entity_states_with_session(
     return [LazyState(row) for row in execute(query)]
 
 
+def _to_timestamp(date_time: datetime) -> float:
+    return date_time.timestamp()
+
+
 def _sorted_states_to_dict(
     hass: HomeAssistant,
     session: Session,
@@ -620,6 +628,7 @@ def _sorted_states_to_dict(
     include_start_time_state: bool = True,
     minimal_response: bool = False,
     no_attributes: bool = False,
+    timestamp: bool = False,
 ) -> MutableMapping[str, list[State | dict[str, Any]]]:
     """Convert SQL results into JSON friendly data structure.
 
@@ -659,7 +668,10 @@ def _sorted_states_to_dict(
 
     # Called in a tight loop so cache the function
     # here
-    _process_timestamp_to_utc_isoformat = process_timestamp_to_utc_isoformat
+    if timestamp:
+        _process_timestamp: Callable[[datetime], float | str] = _to_timestamp
+    else:
+        _process_timestamp = process_timestamp_to_utc_isoformat
 
     if entity_ids and len(entity_ids) == 1:
         states_iter: Iterable[tuple[str | Column, Iterator[States]]] = (
@@ -700,9 +712,7 @@ def _sorted_states_to_dict(
             ent_results.append(
                 {
                     STATE_KEY: state,
-                    LAST_CHANGED_KEY: _process_timestamp_to_utc_isoformat(
-                        db_state.last_changed
-                    ),
+                    LAST_CHANGED_KEY: _process_timestamp(db_state.last_changed),
                 }
             )
             prev_state = state
