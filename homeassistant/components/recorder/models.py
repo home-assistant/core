@@ -28,6 +28,12 @@ from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy.orm.session import Session
 
+from homeassistant.components.websocket_api.const import (
+    COMPRESSED_STATE_ATTRIBUTES,
+    COMPRESSED_STATE_LAST_CHANGED,
+    COMPRESSED_STATE_LAST_UPDATED,
+    COMPRESSED_STATE_STATE,
+)
 from homeassistant.const import (
     MAX_LENGTH_EVENT_CONTEXT_ID,
     MAX_LENGTH_EVENT_EVENT_TYPE,
@@ -96,13 +102,6 @@ DOUBLE_TYPE = (
 )
 EVENT_ORIGIN_ORDER = [EventOrigin.local, EventOrigin.remote]
 EVENT_ORIGIN_TO_IDX = {origin: idx for idx, origin in enumerate(EVENT_ORIGIN_ORDER)}
-
-
-COMPRESSED_STATE_STATE = "s"
-COMPRESSED_STATE_ATTRIBUTES = "a"
-COMPRESSED_STATE_CONTEXT = "c"
-COMPRESSED_STATE_LAST_CHANGED = "lc"
-COMPRESSED_STATE_LAST_UPDATED = "lu"
 
 
 class Events(Base):  # type: ignore[misc,valid-type]
@@ -634,7 +633,7 @@ class LazyState(State):
     def __init__(  # pylint: disable=super-init-not-called
         self,
         row: Row,
-        attr_cache: dict[str, dict[str, Any]] | None = None,
+        attr_cache: dict[str, dict[str, Any]],
         start_time: datetime | None = None,
     ) -> None:
         """Init the lazy state."""
@@ -651,25 +650,7 @@ class LazyState(State):
     def attributes(self) -> dict[str, Any]:  # type: ignore[override]
         """State attributes."""
         if self._attributes is None:
-            source = self._row.shared_attrs or self._row.attributes
-            if self.attr_cache is not None and (
-                attributes := self.attr_cache.get(source)
-            ):
-                self._attributes = attributes
-                return attributes
-            if source == EMPTY_JSON_OBJECT or source is None:
-                self._attributes = {}
-                return self._attributes
-            try:
-                self._attributes = json.loads(source)
-            except ValueError:
-                # When json.loads fails
-                _LOGGER.exception(
-                    "Error converting row to state attributes: %s", self._row
-                )
-                self._attributes = {}
-            if self.attr_cache is not None:
-                self.attr_cache[source] = self._attributes
+            self._attributes = decode_attributes_from_row(self._row, self.attr_cache)
         return self._attributes
 
     @attributes.setter
@@ -760,6 +741,23 @@ class LazyState(State):
         )
 
 
+def decode_attributes_from_row(
+    row: Row, attr_cache: dict[str, dict[str, Any]]
+) -> dict[str, Any]:
+    """Decode attributes from a database row."""
+    source: str = row.shared_attrs or row.attributes
+    if (attributes := attr_cache.get(source)) is not None:
+        return attributes
+    if not source or source == EMPTY_JSON_OBJECT:
+        return {}
+    try:
+        attr_cache[source] = attributes = json.loads(source)
+    except ValueError:
+        _LOGGER.exception("Error converting row to state attributes: %s", source)
+        attr_cache[source] = attributes = {}
+    return attributes
+
+
 def row_to_compressed_state(
     row: Row,
     attr_cache: dict[str, dict[str, Any]],
@@ -776,19 +774,7 @@ def row_to_compressed_state(
         else:
             last_changed = row_changed_changed.timestamp()
             last_updated = row_last_updated.timestamp()
-    source: str = row.shared_attrs or row.attributes
-    if (attributes := attr_cache.get(source)) is None:
-        if source == "{}" or source is None:
-            attributes = {}
-        else:
-            try:
-                attr_cache[source] = attributes = json.loads(source)
-            except ValueError:
-                # When json.loads fails
-                _LOGGER.exception(
-                    "Error converting row to state attributes: %s", source
-                )
-                attributes = {}
+    attributes = decode_attributes_from_row(row, attr_cache)
     return {
         COMPRESSED_STATE_STATE: row.state,
         COMPRESSED_STATE_ATTRIBUTES: attributes,
