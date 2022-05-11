@@ -222,9 +222,12 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
             self._image = None
 
         try:
-            self._image_url = self._last_event.thumbnails[0].image_url
+            last_event = self.coordinator.data["entries"][self._device.device_id][0]
+            return last_event
+        except KeyError:
+            return None
         except IndexError:
-            self._image_url = None
+            return None
 
     async def _set_last_event(self) -> None:
         if self._last_event is None:
