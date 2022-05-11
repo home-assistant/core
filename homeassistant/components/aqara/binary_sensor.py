@@ -51,9 +51,9 @@ class AqaraBinarySensorEntityDescription(BinarySensorEntityDescription):
         return self
 
 
-battery_staus_desc = AqaraBinarySensorEntityDescription(  # 电池电量情况，1低电量，0恢复电量
+battery_staus_desc = AqaraBinarySensorEntityDescription(
     key="8.0.9001",
-    name="电池电量情况",
+    name="status",
     icon="mdi:battery",
     entity_category=EntityCategory.DIAGNOSTIC,
     on_value="1",
@@ -61,39 +61,40 @@ battery_staus_desc = AqaraBinarySensorEntityDescription(  # 电池电量情况�
 )
 
 
-motion_desc = AqaraBinarySensorEntityDescription(  # 1: 有人
+motion_desc = AqaraBinarySensorEntityDescription(
     key="3.1.85",
-    name="有人无人状态",
+    name="motion",
     icon="mdi:account-switch",
     entity_category=EntityCategory.CONFIG,
     on_value="1",
     device_class=BinarySensorDeviceClass.MOTION,
 )
 
-# 人体传感器 属性
-occupancy_desc = AqaraBinarySensorEntityDescription(  # 0: 无人 1: 有人
-    key="3.51.85",
-    name="人体存在状态上报",
-    icon="mdi:account-question",
-    entity_category=EntityCategory.CONFIG,
-    on_value="1",
-    device_class=BinarySensorDeviceClass.OCCUPANCY,
+# motion sensor
+occupancy_desc = (
+    AqaraBinarySensorEntityDescription(  # 1 means motion detected, 0 means no motion
+        key="3.51.85",
+        name="occupancy",
+        icon="mdi:account-question",
+        entity_category=EntityCategory.CONFIG,
+        on_value="1",
+        device_class=BinarySensorDeviceClass.OCCUPANCY,
+    )
 )
 
-# 窗磁传感器 属性
-door_desc = AqaraBinarySensorEntityDescription(  # 0:关 close，1:开  open
+door_desc = AqaraBinarySensorEntityDescription(  # 0: close，1:  open
     key="3.1.85",
-    name="开合状态",
+    name="status",
     icon="mdi:restart",
     entity_category=EntityCategory.CONFIG,
     on_value="1",
     device_class=BinarySensorDeviceClass.DOOR,
 )
 
-# 水浸传感器 属性
-flood_desc = AqaraBinarySensorEntityDescription(  # 0:没漏水,1:漏水
+
+flood_desc = AqaraBinarySensorEntityDescription(
     key="3.1.85",
-    name="漏水状态",
+    name="status",
     icon="mdi:restart",
     entity_category=EntityCategory.CONFIG,
     on_value="1",
@@ -102,35 +103,35 @@ flood_desc = AqaraBinarySensorEntityDescription(  # 0:没漏水,1:漏水
 
 
 BINARY_SENSORS: dict[str, tuple[AqaraBinarySensorEntityDescription, ...]] = {
-    "lumi.motion.jcn001": (motion_desc, battery_staus_desc),  # 京鱼座人体传感器L版
-    "lumi.motion.ac02": (motion_desc, battery_staus_desc),  # 人体传感器 P1
-    "lumi.motion.ac01": (occupancy_desc, battery_staus_desc),  # 人体存在传感器 FP1
-    "lumi.motion.agl04": (motion_desc, battery_staus_desc),  # 高精度人体传感器
-    "lumi.motion.akr01": (motion_desc, battery_staus_desc),  # 人体传感器 T1 韩国版
-    "lumi.motion.agl02": (motion_desc, battery_staus_desc),  # 人体传感器 T1
-    "lumi.sensor_motion.es2": (motion_desc, battery_staus_desc),  # 人体传感器
-    "lumi.sensor_motion.aq2": (motion_desc, battery_staus_desc),  # 人体传感器
-    "lumi.sensor_motion.v2": (motion_desc, battery_staus_desc),  # 人体传感器
-    "lumi.sensor_motion.v1": (motion_desc, battery_staus_desc),  # 人体传感器
+    "lumi.motion.jcn001": (motion_desc, battery_staus_desc),
+    "lumi.motion.ac02": (motion_desc, battery_staus_desc),
+    "lumi.motion.ac01": (occupancy_desc, battery_staus_desc),
+    "lumi.motion.agl04": (motion_desc, battery_staus_desc),
+    "lumi.motion.akr01": (motion_desc, battery_staus_desc),
+    "lumi.motion.agl02": (motion_desc, battery_staus_desc),
+    "lumi.sensor_motion.es2": (motion_desc, battery_staus_desc),
+    "lumi.sensor_motion.aq2": (motion_desc, battery_staus_desc),
+    "lumi.sensor_motion.v2": (motion_desc, battery_staus_desc),
+    "lumi.sensor_motion.v1": (motion_desc, battery_staus_desc),
     #############################################################
-    "lumi.magnet.acn002": (door_desc, battery_staus_desc),  # 门窗传感器 NB-IOT版
-    "lumi.magnet.jcn002": (door_desc, battery_staus_desc),  # 京鱼座门窗传感器L版
-    "lumi.magnet.ac01": (door_desc, battery_staus_desc),  # 门窗传感器 P1
-    "lumi.magnet.akr01": (door_desc, battery_staus_desc),  # 门窗传感器T1 韩国版
-    "lumi.magnet.agl02": (door_desc, battery_staus_desc),  # 门窗传感器T1
-    "lumi.sensor_magnet.v1": (door_desc, battery_staus_desc),  # 门窗传感器
-    "lumi.sensor_magnet.v2": (door_desc, battery_staus_desc),  # 门窗传感器
-    "lumi.sensor_magnet.es2": (door_desc, battery_staus_desc),  # 门窗传感器
-    "lumi.sensor_magnet.aq2": (door_desc, battery_staus_desc),  # 门窗传感器
+    "lumi.magnet.acn002": (door_desc, battery_staus_desc),
+    "lumi.magnet.jcn002": (door_desc, battery_staus_desc),
+    "lumi.magnet.ac01": (door_desc, battery_staus_desc),
+    "lumi.magnet.akr01": (door_desc, battery_staus_desc),
+    "lumi.magnet.agl02": (door_desc, battery_staus_desc),
+    "lumi.sensor_magnet.v1": (door_desc, battery_staus_desc),
+    "lumi.sensor_magnet.v2": (door_desc, battery_staus_desc),
+    "lumi.sensor_magnet.es2": (door_desc, battery_staus_desc),
+    "lumi.sensor_magnet.aq2": (door_desc, battery_staus_desc),
     ##############################################################
-    "lumi.flood.jcn001": (flood_desc, battery_staus_desc),  # 京鱼座水浸传感器L版
-    "lumi.flood.agl02": (flood_desc, battery_staus_desc),  # 水浸传感器T1
-    "lumi.sensor_wleak.v1": (flood_desc, battery_staus_desc),  # 水浸传感器
-    "lumi.sensor_wleak.es1": (flood_desc, battery_staus_desc),  # 水浸传感器
-    "lumi.sensor_wleak.aq1": (flood_desc, battery_staus_desc),  # 水浸传感器
+    "lumi.flood.jcn001": (flood_desc, battery_staus_desc),
+    "lumi.flood.agl02": (flood_desc, battery_staus_desc),
+    "lumi.sensor_wleak.v1": (flood_desc, battery_staus_desc),
+    "lumi.sensor_wleak.es1": (flood_desc, battery_staus_desc),
+    "lumi.sensor_wleak.aq1": (flood_desc, battery_staus_desc),
     #############################################################
     # lock power
-    "aqara.lock.acn008": (battery_staus_desc,),  # 低电压报警 8.0.9001 low_battery_power
+    "aqara.lock.acn008": (battery_staus_desc,),
 }
 
 
@@ -168,7 +169,6 @@ async def async_setup_entry(
         find_aqara_device_points_and_register(
             hass, entry.entry_id, hass_data, device_ids, BINARY_SENSORS, append_entity
         )
-        # print(entities)
         async_add_entities(entities)
 
     async_discover_device([*hass_data.device_manager.device_map])

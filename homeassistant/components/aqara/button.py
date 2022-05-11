@@ -28,16 +28,16 @@ class AqaraButtonEntityDescription(ButtonEntityDescription):
 
 # All descriptions can be found here.
 BUTTONS: dict[str, tuple[AqaraButtonEntityDescription, ...]] = {
-    "aqara.bed.hhcn03": (  # 智能电动床W1
-        AqaraButtonEntityDescription(  # 停止
-            key="4.7.85",  # switch_nostatus
-            name="停止",
+    "aqara.bed.hhcn03": (
+        AqaraButtonEntityDescription(
+            key="4.7.85",  # keyId of aqara iot platform
+            name="stop",
             icon="mdi:stop",
             entity_category=EntityCategory.CONFIG,
             press_value=1,
         ),
-        AqaraButtonEntityDescription(  # 停止
-            key="14.1.85",  # switch_nostatus
+        AqaraButtonEntityDescription(
+            key="14.1.85",
             name="start",
             icon="mdi:stop",
             entity_category=EntityCategory.CONFIG,

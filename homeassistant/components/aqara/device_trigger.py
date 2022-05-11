@@ -30,7 +30,6 @@ EVENT_TRIGGER_AFTER_ONE_MINUTE = "Triggered after one-minute inactivity"
 EVENT_TRIGGER_ROTATE = "Rotate"
 
 
-# 动静贴
 AQARA_EVENTS_MAP = {
     # vibration
     "lumi.vibration.aq1": {
@@ -256,7 +255,6 @@ AQARA_EVENTS_MAP = {
             "3": "button2-long_click_press",
         },
     },
-    # 旋钮开关
     "lumi.remote.rkba01": {
         "13.1.85": {"1": "Single press", "2": "Double press", "16": "Long press"}
     },
@@ -373,7 +371,6 @@ AQARA_EVENTS: dict[str, tuple[str, ...]] = {
         "Drop is detected",
     ),
     "lumi.vibration.agl01": ("Percussion", "is moved"),
-    # 旋钮开关
     "lumi.remote.rkba01": (
         "Single press",
         "Double press",
@@ -382,7 +379,7 @@ AQARA_EVENTS: dict[str, tuple[str, ...]] = {
         "Press and rotate",
     ),
     # wireless SWITCH
-    # 'lumi.switch.rkna01':('Turn on','Turn off','Long press','Rotate','Press and rotate'),#智能旋钮开关 H1（零火版）
+    # 'lumi.switch.rkna01':('Turn on','Turn off','Long press','Rotate','Press and rotate'),
     "lumi.remote.acn007": ("click", "double_click", "long_click_press"),
     "lumi.remote.b1acn02": ("click", "double_click", "long_click_press"),
     "lumi.remote.b186acn03": ("click", "double_click", "long_click_press"),

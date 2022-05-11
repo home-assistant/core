@@ -17,21 +17,6 @@ CONF_PASSWORD = "password"
 CONF_COUNTRY_CODE = "country_code"
 CONF_APP_TYPE = "aqara_app_type"
 
-# DEVICE_CLASS_AQARA_BASIC_ANTI_FLICKR = "aqara__basic_anti_flickr"
-# DEVICE_CLASS_AQARA_BASIC_NIGHTVISION = "aqara__basic_nightvision"
-# DEVICE_CLASS_AQARA_DECIBEL_SENSITIVITY = "aqara__decibel_sensitivity"
-# DEVICE_CLASS_AQARA_IPC_WORK_MODE = "aqara__ipc_work_mode"
-# DEVICE_CLASS_AQARA_LED_TYPE = "aqara__led_type"
-# DEVICE_CLASS_AQARA_LIGHT_MODE = "aqara__light_mode"
-# DEVICE_CLASS_AQARA_MOTION_SENSITIVITY = "aqara__motion_sensitivity"
-# DEVICE_CLASS_AQARA_RECORD_MODE = "aqara__record_mode"
-# DEVICE_CLASS_AQARA_RELAY_STATUS = "aqara__relay_status"
-# DEVICE_CLASS_AQARA_STATUS = "aqara__status"
-# DEVICE_CLASS_AQARA_FINGERBOT_MODE = "aqara__fingerbot_mode"
-# DEVICE_CLASS_AQARA_VACUUM_CISTERN = "aqara__vacuum_cistern"
-# DEVICE_CLASS_AQARA_VACUUM_COLLECTION = "aqara__vacuum_collection"
-# DEVICE_CLASS_AQARA_VACUUM_MODE = "aqara__vacuum_mode"
-
 AQARA_BATTERY_LOW_ENTITY_NEW = "aqara_battery_entity_new"
 AQARA_DISCOVERY_NEW = "aqara_discovery_new"
 AQARA_HA_SIGNAL_UPDATE_ENTITY = "aqara_entry_update"
@@ -49,20 +34,10 @@ EMPTY_UNIT = "  "
 PLATFORMS = [
     "binary_sensor",
     "button",
-    # "camera",
-    # "climate",
-    # "cover",
-    # "fan",
-    # "humidifier",
     "light",
     "number",
-    # "scene",
-    # "select",
     "sensor",
-    # "siren",
     "switch",
-    # "vacuum",
-    # "lock",
 ]
 
 

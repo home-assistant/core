@@ -50,15 +50,10 @@ from .util import string_dot_to_underline
 class AqaraSensorEntityDescription(SensorEntityDescription):
     """Describes Aqara sensor entity."""
 
-    # value_range: dict[str, Any] | None = None
-    # value_range={
-    #     "values": '{"min":0,"max":100,"scale":1,"step":1,"unit":""}',
-    #     "type": "Integer",
-    # },
     scale: float | None = None
     precision: int | None = None
     data_type: str | None = None
-    enum_value_map: dict[str, str] | None = None  # dict[str for hass ui, aqara value]
+    enum_value_map: dict[str, str] | None = None
     # native_unit_of_measurement: str | None = EMPTY_UNIT
 
     def set_key(self, key) -> AqaraSensorEntityDescription:
@@ -80,7 +75,7 @@ class AqaraSensorEntityDescription(SensorEntityDescription):
 
 # Commonly used battery sensors, that are re-used in the sensors down below.
 BATTERY_SENSORS: tuple[AqaraSensorEntityDescription, ...] = (
-    AqaraSensorEntityDescription(  # 电池电量情况，1低电量, 0:正常
+    AqaraSensorEntityDescription(
         key="8.0.9001",
         name="Battery State",
         icon="mdi:battery",
@@ -88,7 +83,7 @@ BATTERY_SENSORS: tuple[AqaraSensorEntityDescription, ...] = (
     ),
     AqaraSensorEntityDescription(
         key="8.0.2008",
-        name="电池电压值",
+        name="voltage",
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         device_class=SensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -98,11 +93,7 @@ BATTERY_SENSORS: tuple[AqaraSensorEntityDescription, ...] = (
     ),
 )
 
-# # Temperature units
-# TEMP_CELSIUS: Final = "°C"
-# TEMP_FAHRENHEIT: Final = "°F"
-# TEMP_KELVIN: Final = "K"
-temp_desc = AqaraSensorEntityDescription(  # 最小值: -4000 最大值: 12500 步长: 1 单位: 62
+temp_desc = AqaraSensorEntityDescription(
     key="0.1.85",
     name="Current Temperature",
     device_class=SensorDeviceClass.TEMPERATURE,
@@ -111,7 +102,7 @@ temp_desc = AqaraSensorEntityDescription(  # 最小值: -4000 最大值: 12500 �
     scale=0.01,
     precision=1,
 )
-humidity_desc = AqaraSensorEntityDescription(  # 最小值: 0 最大值: 10000 步长: 单位: 29
+humidity_desc = AqaraSensorEntityDescription(
     key="0.2.85",
     name="Current humidity",
     device_class=SensorDeviceClass.TEMPERATURE,
@@ -120,42 +111,42 @@ humidity_desc = AqaraSensorEntityDescription(  # 最小值: 0 最大值: 10000 �
     scale=0.01,
     precision=1,
 )
-co2_desc = AqaraSensorEntityDescription(  # 最小值: 0 最大值: 9999 步长: 1 单位: ppm
+co2_desc = AqaraSensorEntityDescription(
     key="0.6.85",
-    name="CO2",  # 室内
+    name="CO2",
     device_class=SensorDeviceClass.CO2,
     state_class=SensorStateClass.MEASUREMENT,
     native_unit_of_measurement=CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
     scale=0.01,
 )
 
-pm25_out_desc = AqaraSensorEntityDescription(  # 最小值: 0 最大值: 999 步长: 1 单位: μg/m³
+pm25_out_desc = AqaraSensorEntityDescription(
     key="0.19.85",
-    name="PM2.5",  # 所在城市室外
+    name="PM2.5",
     device_class=SensorDeviceClass.PM25,
     state_class=SensorStateClass.MEASUREMENT,
     native_unit_of_measurement=CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
 )
 
 
-pm25_desc = AqaraSensorEntityDescription(  # 最小值: 0 最大值: 999 步长: 1 单位: μg/m³
+pm25_desc = AqaraSensorEntityDescription(
     key="0.20.85",
-    name="PM2.5",  # 室内
+    name="PM2.5",
     device_class=SensorDeviceClass.PM25,
     state_class=SensorStateClass.MEASUREMENT,
     native_unit_of_measurement=CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
 )
-pm25_evaluate_desc = AqaraSensorEntityDescription(  # 最小值: 0 最大值: 999 步长: 1 单位: μg/m³
+pm25_evaluate_desc = AqaraSensorEntityDescription(
     key="0.20.85",
-    name="PM2.5",  # 室内
+    name="PM2.5",
     device_class=SensorDeviceClass.PM25,
     state_class=SensorStateClass.MEASUREMENT,
     native_unit_of_measurement=CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
 )
 
-air_pressure_desc = AqaraSensorEntityDescription(  # 最小值: 30000 最大值: 110000
+air_pressure_desc = AqaraSensorEntityDescription(
     key="0.3.85",
-    name="pressure",  # 大气气压
+    name="pressure",
     device_class=SensorDeviceClass.PRESSURE,
     state_class=SensorStateClass.MEASUREMENT,
     native_unit_of_measurement=PRESSURE_KPA,
@@ -163,9 +154,9 @@ air_pressure_desc = AqaraSensorEntityDescription(  # 最小值: 30000 最大值:
     precision=2,
 )
 
-illuminance_desc = AqaraSensorEntityDescription(  # 最小值: 0 最大值: 83000 步长: 单位:
+illuminance_desc = AqaraSensorEntityDescription(
     key="0.3.85",
-    name="illuminance",  # 光照度
+    name="illuminance",
     device_class=SensorDeviceClass.ILLUMINANCE,
     state_class=SensorStateClass.MEASUREMENT,
     native_unit_of_measurement=LIGHT_LUX,
@@ -173,9 +164,9 @@ illuminance_desc = AqaraSensorEntityDescription(  # 最小值: 0 最大值: 8300
     precision=0,
 )
 
-tvoc_desc = AqaraSensorEntityDescription(  # 最小值: 0 最大值: 83000 步长: 单位:
+tvoc_desc = AqaraSensorEntityDescription(
     key="0.3.85",
-    name="TVOC",  # 总挥发性有机物
+    name="TVOC",
     device_class=SensorDeviceClass.GAS,
     state_class=SensorStateClass.MEASUREMENT,
     native_unit_of_measurement=CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
@@ -194,45 +185,23 @@ common_desp = AqaraSensorEntityDescription(
     name="common",
 )
 
-cube_status_desp = AqaraSensorEntityDescription(  # 最小值: 0 最大值: 100 步长: 单位: ,cube_status
-    # rotate: rotate,move: move,swing: swing,flip90: flip90,alert: alert,shake_air: shake_air,
-    # tap_twice: tap_twice,shake_in_plane: shake_in_plane,flip180: flip180
-    # 1、flip90-翻转90° ,
-    # 2、flip180-翻转180°
-    # 3、move-轻推
-    # 4、tap_twice-敲击两下
-    # 5、shake_in_plane-扔一扔（实际没用上）
-    # 6、shake_air-摇一摇
-    # 7、swing-甩一下
-    # 8、rotate-旋转（实际上不使用，直接使用度数）
-    # 9、alert-静止一分钟后被触动
-    # 10，rotate_degree——旋转
-    # 28: 拿起保持
-    # 20: 静止一分钟被触发
-    # 29: 甩一甩
-    # 16: 平面旋转
-    # 0: 翻转90°
-    # 1: 翻转180°
-    # 17: 敲击两下
-    # 3: 摇一摇
-    # 2: 轻推
+cube_status_desp = AqaraSensorEntityDescription(
     key="13.1.85",
-    name="魔方状态",
+    name="cube status",
 )
-cube_rotate_degree_desp = AqaraSensorEntityDescription(  # rotate_degree  # 最小值: -100 最大值: 100 步长: 单位:
-    # 上报的数据是角度对应的百分比，单位1%，取值为实际角度值除以360
+
+cube_rotate_degree_desp = AqaraSensorEntityDescription(
     key="0.3.85",
-    name="Rotating degree",  # 旋转度数
+    name="Rotating degree",
     device_class=SensorDeviceClass.AQI,
     state_class=SensorStateClass.MEASUREMENT,
     native_unit_of_measurement=EMPTY_UNIT,
     scale=1,
     precision=0,
 )
-cube_rotate_side = AqaraSensorEntityDescription(  # rotate_degree  # 最小值: -100 最大值: 100 步长: 单位:
-    # 上面旋转时的朝上面 1: 第2面  0: 第1面 3: 第4面  2: 第3面 5: 第6面 4: 第5面
+cube_rotate_side = AqaraSensorEntityDescription(
     key="13.101.85",
-    name="action surface",  # 动作面
+    name="action surface",
     device_class=SensorDeviceClass.AQI,
     state_class=SensorStateClass.MEASUREMENT,
     native_unit_of_measurement=EMPTY_UNIT,
@@ -240,18 +209,17 @@ cube_rotate_side = AqaraSensorEntityDescription(  # rotate_degree  # 最小值: 
     precision=0,
 )
 cube_rotate_side_status = AqaraSensorEntityDescription(
-    # 1: 第2面 0: 第1面 3: 第4面 2: 第3面 5: 第6面 4: 第5面
     key="13.103.85",
-    name="Top surface",  # 当前朝上面
+    name="Top surface",
     device_class=SensorDeviceClass.AQI,
     state_class=SensorStateClass.MEASUREMENT,
     native_unit_of_measurement=EMPTY_UNIT,
     scale=1,
     precision=0,
 )
-common_cube = (  #
+common_cube = (
     cube_status_desp,
-    cube_rotate_degree_desp,  # 最小值: 0 最大值: 100 步长: 1 单位: %LEL
+    cube_rotate_degree_desp,
     *BATTERY_SENSORS,
 )
 
@@ -268,13 +236,13 @@ switch_ch2_status_desc = AqaraSensorEntityDescription(
     icon="mdi:light-switch",
 )
 
-switch_ch3_status_desc = AqaraSensorEntityDescription(  #
+switch_ch3_status_desc = AqaraSensorEntityDescription(
     key="13.3.85",
     name="button 3",
     icon="mdi:light-switch",
 )
 
-dual_switch_status_desc = AqaraSensorEntityDescription(  #
+dual_switch_status_desc = AqaraSensorEntityDescription(
     key="13.3.85",
     name="button",
     icon="mdi:light-switch",
@@ -283,84 +251,35 @@ dual_switch_status_desc = AqaraSensorEntityDescription(  #
 
 
 SENSORS: dict[str, tuple[AqaraSensorEntityDescription, ...]] = {
-    "lumi.sensor_ht.jcn001": (  # 京鱼座温湿度传感器L版
+    "lumi.sensor_ht.jcn001": (
         temp_desc,
         humidity_desc,
         air_pressure_desc,
         *BATTERY_SENSORS,
     ),
-    "lumi.sensor_ht.agl03": (  # 土壤温湿度传感器
-        temp_desc.set_key("0.1.85").set_name("温度"),
-        humidity_desc.set_key("0.2.85").set_name("湿度"),
-        temp_desc.set_key("0.3.85").set_name("通道3的温度"),
-        temp_desc.set_key("0.4.85").set_name("通道4的温度"),
-        temp_desc.set_key("0.5.85").set_name("通道5的温度"),
-        temp_desc.set_key("0.6.85").set_name("通道6的温度"),
-        temp_desc.set_key("0.7.85").set_name("通道7的温度"),
-        temp_desc.set_key("0.8.85").set_name("通道8的温度"),
-        temp_desc.set_key("0.9.85").set_name("通道9的温度"),
-        temp_desc.set_key("0.10.85").set_name("通道10的温度"),
-        humidity_desc.set_key("0.11.85").set_name("通道1的湿度"),
-        humidity_desc.set_key("0.12.85").set_name("通道2的湿度"),
-        humidity_desc.set_key("0.13.85").set_name("通道3的湿度"),
-        humidity_desc.set_key("0.14.85").set_name("通道4的湿度"),
-        humidity_desc.set_key("0.15.85").set_name("通道5的湿度"),
-        humidity_desc.set_key("0.16.85").set_name("通道6的湿度"),
-        humidity_desc.set_key("0.17.85").set_name("通道7的湿度"),
-        humidity_desc.set_key("0.18.85").set_name("通道8的湿度"),
-        humidity_desc.set_key("0.19.85").set_name("通道9的湿度"),
-        humidity_desc.set_key("0.20.85").set_name("通道10的湿度"),
-        *BATTERY_SENSORS,
-    ),
     "lumi.sen_ill.eicn01": (
         illuminance_desc,
         *BATTERY_SENSORS,
-    ),  # 光照传感器 J1
-    "aqara.adetector.drcn01": (  # 造梦者空气贝贝二代
-        temp_desc.set_key("0.1.85").set_name("温度"),
-        humidity_desc.set_key("0.2.85").set_name("湿度"),
-        co2_desc.set_key("0.6.85").set_name("室内CO2"),
-        co2_desc.set_key("0.19.85").set_name("所在城市室外PM2.5"),
-        pm25_desc.set_key("0.19.85").set_name("所在城市室外PM2.5"),
-        pm25_desc.set_key("0.20.85").set_name("室内PM2.5"),
-        pm25_evaluate_desc.set_key("13.12.85").set_name("室内PM2.5评价"),
-        pm25_desc.set_key("13.8.85").set_name("室内CO2评价"),
+    ),
+    "aqara.adetector.drcn01": (
+        temp_desc.set_key("0.1.85").set_name("temperature"),
+        humidity_desc.set_key("0.2.85").set_name("humidity"),
+        co2_desc.set_key("0.6.85").set_name("co2"),
+        co2_desc.set_key("0.19.85").set_name("co2"),
+        pm25_desc.set_key("0.19.85").set_name("pm25"),
+        pm25_desc.set_key("0.20.85").set_name("pm25"),
+        pm25_evaluate_desc.set_key("13.12.85").set_name("pm25"),
+        pm25_desc.set_key("13.8.85").set_name("pm25"),
         *BATTERY_SENSORS,
     ),
-    "lumi.airmonitor.acn01": (  # TVOC空气健康伴侣
-        temp_desc.set_key("0.1.85").set_name("温度"),
-        humidity_desc.set_key("0.2.85").set_name("湿度"),
-        tvoc_desc.set_key("0.3.85").set_name("总挥发性有机物"),
-        common_desp.set_key("13.1.85").set_name("TVOC等级"),
+    "lumi.airmonitor.acn01": (
+        temp_desc.set_key("0.1.85").set_name("temperature"),
+        humidity_desc.set_key("0.2.85").set_name("humidity"),
+        tvoc_desc.set_key("0.3.85").set_name("tvoc"),
+        common_desp.set_key("13.1.85").set_name("TVOC level"),
         *BATTERY_SENSORS,
     ),
-    "lumi.plantmonitor.agl01": (  # 土壤PH值传感器
-        common_desp.set_key("0.1.85").set_name("通道1的酸碱度"),
-        common_desp.set_key("0.2.85").set_name("通道2的酸碱度"),
-        common_desp.set_key("0.3.85").set_name("通道3的酸碱度"),
-        common_desp.set_key("0.4.85").set_name("通道4的酸碱度"),
-        common_desp.set_key("0.5.85").set_name("通道5的酸碱度"),
-        common_desp.set_key("0.6.85").set_name("通道6的酸碱度"),
-        common_desp.set_key("0.7.85").set_name("通道7的酸碱度"),
-        common_desp.set_key("0.8.85").set_name("通道8的酸碱度"),
-        common_desp.set_key("0.9.85").set_name("通道9的酸碱度"),
-        common_desp.set_key("0.10.85").set_name("通道10的酸碱度"),
-        *BATTERY_SENSORS,
-    ),
-    "lumi.airmonitor.agl02": (  # 二氧化碳传感器  最小值: 0 最大值: 5000  步长: 单位:
-        co2_desc.set_key("0.1.85").set_name("通道1的二氧化碳浓度"),
-        co2_desc.set_key("0.2.85").set_name("通道2的二氧化碳浓度"),
-        co2_desc.set_key("0.3.85").set_name("通道3的二氧化碳浓度"),
-        co2_desc.set_key("0.4.85").set_name("通道4的二氧化碳浓度"),
-        co2_desc.set_key("0.5.85").set_name("通道5的二氧化碳浓度"),
-        co2_desc.set_key("0.6.85").set_name("通道6的二氧化碳浓度"),
-        co2_desc.set_key("0.7.85").set_name("通道7的二氧化碳浓度"),
-        co2_desc.set_key("0.8.85").set_name("通道8的二氧化碳浓度"),
-        co2_desc.set_key("0.9.85").set_name("通道9的二氧化碳浓度"),
-        co2_desc.set_key("0.10.85").set_name("通道10的二氧化碳浓度"),
-        *BATTERY_SENSORS,
-    ),
-    "miot.airmonitor.b1": (  # 小米米家空气检测仪  最小值: 0 最大值: 5000  步长: 单位:
+    "miot.airmonitor.b1": (
         pm25_desc.set_key("13.1.85").set_name("PM2.5 Density"),
         humidity_desc.set_key("13.3.85").set_name("Environment Relative Humidity"),
         temp_desc.set_key("13.4.85").set_name("Environment Temperature"),
@@ -368,92 +287,84 @@ SENSORS: dict[str, tuple[AqaraSensorEntityDescription, ...]] = {
         tvoc_desc.set_key("13.6.85").set_name("Environment TVOC Density"),
         *BATTERY_SENSORS,
     ),
-    "miot.airmonitor.v1": (  # 米家PM2.5(zhimi.airmonitor.v1)
+    "miot.airmonitor.v1": (
         pm25_desc.set_key("13.1.85").set_name("PM2.5 Density"),
         *BATTERY_SENSORS,
     ),
-    "lumi.airm.fhac01": (  # 空气监测面板S1
-        temp_desc.set_key("0.1.85").set_name("当前温度"),
-        humidity_desc.set_key("0.2.85").set_name("湿度"),
-        co2_desc.set_key("0.6.85").set_name("CO2浓度"),
-        pm25_desc.set_key("0.19.85").set_name("PM2.5浓度"),
-        common_desp.set_key("13.11.85").set_name("CO2浓度等级"),
-        common_desp.set_key("13.12.85").set_name("PM2.5浓度等级"),
+    "lumi.airm.fhac01": (
+        temp_desc.set_key("0.1.85").set_name("temperature"),
+        humidity_desc.set_key("0.2.85").set_name("humidity"),
+        co2_desc.set_key("0.6.85").set_name("CO2"),
+        pm25_desc.set_key("0.19.85").set_name("PM2.5"),
+        common_desp.set_key("13.11.85").set_name("CO2"),
+        common_desp.set_key("13.12.85").set_name("PM2.5"),
         *BATTERY_SENSORS,
     ),
-    "lumi.sensor_gas.acn001": (  # Aqara天然气报警器 X1
-        temp_desc.set_key("0.1.85").set_name("当前温度"),
-        tvoc_desc.set_key("0.5.85").set_name(
-            "当前天然气浓度"
-        ),  # 最小值: 0 最大值: 100 步长: 1 单位: %LEL
+    "lumi.sensor_gas.acn001": (
+        temp_desc.set_key("0.1.85").set_name("temperature"),
+        tvoc_desc.set_key("0.5.85").set_name("tvoc"),
         *BATTERY_SENSORS,
     ),
-    "lumi.sensor_gas.jcn001": (  # 京鱼座天然气报警器L版
-        temp_desc.set_key("0.1.85").set_name("当前温度"),
-        tvoc_desc.set_key("0.5.85").set_name(
-            "当前天然气浓度"
-        ),  # 最小值: 0 最大值: 100 步长: 1 单位: %LEL
+    "lumi.sensor_gas.jcn001": (
+        temp_desc.set_key("0.1.85").set_name("temperature"),
+        tvoc_desc.set_key("0.5.85").set_name("tvoc"),
         *BATTERY_SENSORS,
     ),
-    "lumi.sen_gas.hrcn01": (  # 无线燃气表
-        temp_desc.set_key("0.1.85").set_name("当前温度"),
-        tvoc_desc.set_key("0.5.85").set_name("燃气表值"),  # 最小值: 0 最大值: 4294967295 步长: 单位
-        common_desp.set_key("14.1.85").set_name("燃气表阀门状态"),  # 燃气表阀门状态： 1: 开 2: 强制关
+    "lumi.sen_gas.hrcn01": (
+        temp_desc.set_key("0.1.85").set_name("temperature"),
+        tvoc_desc.set_key("0.5.85").set_name("tvoc"),
+        common_desp.set_key("14.1.85").set_name("status"),
         *BATTERY_SENSORS,
     ),
-    "lumi.sensor_gas.acn02": (  # Aqara天然气报警器
-        temp_desc.set_key("0.1.85").set_name("当前温度"),
-        tvoc_desc.set_key("0.5.85").set_name(
-            "当前天然气浓度"
-        ),  # 最小值: 0 最大值: 100 步长: 1 单位: %LEL
-        common_desp.set_key("14.1.85").set_name("燃气表阀门状态"),  # 燃气表阀门状态： 1: 开 2: 强制关
+    "lumi.sensor_gas.acn02": (
+        temp_desc.set_key("0.1.85").set_name("temperature"),
+        tvoc_desc.set_key("0.5.85").set_name("tvoc"),
+        common_desp.set_key("14.1.85").set_name("status"),
         *BATTERY_SENSORS,
     ),
-    "lumi.sensor_natgas.v1": (  # 天然气传感器 # 最小值: 0 最大值: 100 步长: 1 单位: %LEL
-        tvoc_desc.set_key("0.1.85").set_name("天然气浓度上报"),
-        common_desp.set_key("14.1.85").set_name("燃气表阀门状态"),  # 燃气表阀门状态： 1: 开 2: 强制关
+    "lumi.sensor_natgas.v1": (
+        tvoc_desc.set_key("0.1.85").set_name("tvoc"),
+        common_desp.set_key("14.1.85").set_name("status"),
         *BATTERY_SENSORS,
     ),
-    "lumi.sensor_smoke.acn05": (  # Aqara烟雾报警器 X1 # 最小值: 0 最大值: 100 步长: 1 单位: %LEL
-        tvoc_desc.set_key("0.5.85").set_name("当前烟雾浓度"),
+    "lumi.sensor_smoke.acn05": (
+        tvoc_desc.set_key("0.5.85").set_name("tvoc"),
         *BATTERY_SENSORS,
     ),
-    "lumi.sensor_smoke.jcn01": (  # 京鱼座烟雾报警器L版 # 最小值: 0 最大值: 100 步长: 1 单位: %LEL
-        tvoc_desc.set_key("0.5.85").set_name("当前烟雾浓度"),
+    "lumi.sensor_smoke.jcn01": (
+        tvoc_desc.set_key("0.5.85").set_name("tvoc"),
         *BATTERY_SENSORS,
     ),
-    "lumi.sensor_smoke.acn03": (  # Aqara烟雾报警器 # 最小值: 0 最大值: 100 步长: 1 单位: %LEL
-        tvoc_desc.set_key("0.5.85").set_name("当前烟雾浓度"),
+    "lumi.sensor_smoke.acn03": (
+        tvoc_desc.set_key("0.5.85").set_name("tvoc"),
         *BATTERY_SENSORS,
     ),
-    "lumi.sensor_smoke.acn02": (  # 烟雾传感器
-        common_desp.set_key("0.1.85").set_name(
-            "density"
-        ),  # 最小值: 0 最大值: 5 步长: 单位: OBS%/F
-        common_desp.set_key("14.1.111").set_name("报警状态"),
+    "lumi.sensor_smoke.acn02": (
+        common_desp.set_key("0.1.85").set_name("density"),
+        common_desp.set_key("14.1.111").set_name("alarm status"),
         *BATTERY_SENSORS,
     ),
-    "lumi.sensor_smoke.v1": (  # 烟雾传感器
-        common_desp.set_key("0.1.85").set_name(
-            "density"
-        ),  # 最小值: 0 最大值: 5 步长: 单位: OBS%/F
-        common_desp.set_key("14.1.111").set_name("报警状态"),  # 报警状态，0:没报警，
+    "lumi.sensor_smoke.v1": (
+        common_desp.set_key("0.1.85").set_name("density"),
+        common_desp.set_key("14.1.111").set_name("alarm status"),
         *BATTERY_SENSORS,
     ),
-    "aqara.sensor_smoke.eicn01": (  # 独立式光电感烟火灾探测报警器
-        common_desp.set_key("13.1.85").set_name("报警状态"),  # 报警状态，0:没报警，
+    "aqara.sensor_smoke.eicn01": (
+        common_desp.set_key("13.1.85").set_name("alarm status"),
         *BATTERY_SENSORS,
     ),
     # cube###################
-    "lumi.remote.cagl02": (  # 魔方控制器 T1 Pro
+    "lumi.remote.cagl02": (  # wareless switch
         cube_status_desp,
-        cube_rotate_degree_desp.set_key("0.21.85"),  # 最小值: 0 最大值: 100 步长: 1 单位: %LEL
+        cube_rotate_degree_desp.set_key("0.21.85"),
         cube_rotate_side,
         cube_rotate_side_status,
         *BATTERY_SENSORS,
     ),
     # ########################################################
-    "aqara.tow_w.acn001": (temp_desc.set_key("0.1.85").set_name("当前温度"),),
+    "aqara.tow_w.acn001": (
+        temp_desc.set_key("0.1.85").set_name("current temperature"),
+    ),
     # ####################lock################################
     "lumi.vibration.aq1": (
         common_desp.set_key("13.1.85").set_name("vibration"),
@@ -464,45 +375,45 @@ SENSORS: dict[str, tuple[AqaraSensorEntityDescription, ...]] = {
         *BATTERY_SENSORS,
     ),
     # wireless switch######################
-    "lumi.remote.acn009": (  # Aqara无线开关 H1M（贴墙式双键版）
+    "lumi.remote.acn009": (  # # wareless switch
         switch_ch1_status_desc,
         switch_ch2_status_desc,
         dual_switch_status_desc,
         *BATTERY_SENSORS,
     ),
-    "lumi.remote.acn008": (  # Aqara无线开关 H1M（贴墙式单键版）
+    "lumi.remote.acn008": (  # wareless switch
         switch_ch1_status_desc,
         *BATTERY_SENSORS,
     ),
-    "lumi.remote.jcn002": (  # 京鱼座无线开关L版
+    "lumi.remote.jcn002": (  # wareless switch
         switch_ch1_status_desc,
         *BATTERY_SENSORS,
     ),
-    "lumi.remote.acn007": (  # 无线开关 E1
+    "lumi.remote.acn007": (  # wareless switch
         switch_ch1_status_desc,
         *BATTERY_SENSORS,
     ),
-    "lumi.remote.acn003": (  # 无线开关 E1（贴墙式单键版）
+    "lumi.remote.acn003": (  # wareless switch
         switch_ch1_status_desc,
         *BATTERY_SENSORS,
     ),
-    "lumi.remote.acn004": (  # 无线开关 E1（贴墙式双键版）
-        switch_ch1_status_desc,
-        switch_ch2_status_desc,
-        dual_switch_status_desc,
-        *BATTERY_SENSORS,
-    ),
-    "lumi.remote.acn002": (  # Aqara无线开关 X1（贴墙式双键版）
+    "lumi.remote.acn004": (  # wareless switch
         switch_ch1_status_desc,
         switch_ch2_status_desc,
         dual_switch_status_desc,
         *BATTERY_SENSORS,
     ),
-    "lumi.remote.acn001": (  # Aqara无线开关 X1（贴墙式单键版）
+    "lumi.remote.acn002": (  # wareless switch
+        switch_ch1_status_desc,
+        switch_ch2_status_desc,
+        dual_switch_status_desc,
+        *BATTERY_SENSORS,
+    ),
+    "lumi.remote.acn001": (  # wareless switch
         switch_ch1_status_desc,
         *BATTERY_SENSORS,
     ),
-    "lumi.remote.rkba01": (  # 智能旋钮开关 H1（无线版）
+    "lumi.remote.rkba01": (  # wareless switch
         switch_ch1_status_desc,
         cube_rotate_side.set_key("0.21.85").set_name("current rotate angle"),
         cube_rotate_side.set_key("0.22.85").set_name("sum rotate angle"),
@@ -516,7 +427,7 @@ SENSORS: dict[str, tuple[AqaraSensorEntityDescription, ...]] = {
         cube_rotate_side.set_key("0.20.85").set_name("spress_rotate_cumulate_time"),
         *BATTERY_SENSORS,
     ),
-    "lumi.switch.n6eic2": (  # 爱根斯通场景开关6路
+    "lumi.switch.n6eic2": (  # wareless switch
         switch_ch1_status_desc,
         switch_ch2_status_desc,
         switch_ch3_status_desc,
@@ -529,141 +440,139 @@ SENSORS: dict[str, tuple[AqaraSensorEntityDescription, ...]] = {
         ),  # key is 13.7.85
         *BATTERY_SENSORS,
     ),
-    "lumi.switch.n4eic2": (  # 爱根斯通场景开关4路
+    "lumi.switch.n4eic2": (  # wareless switch
         switch_ch1_status_desc,
         switch_ch2_status_desc,
         switch_ch3_status_desc,
         switch_ch1_status_desc.set_key("13.4.85").set_name("button 4"),
         *BATTERY_SENSORS,
     ),
-    "lumi.switch.n3eic2": (  # 爱根斯通场景开关3路
+    "lumi.switch.n3eic2": (  # wareless switch
         switch_ch1_status_desc,
         switch_ch2_status_desc,
         switch_ch3_status_desc,
         *BATTERY_SENSORS,
     ),
-    "lumi.switch.n2eic2": (  # 爱根斯通场景开关2路
+    "lumi.switch.n2eic2": (  # wareless switch
         switch_ch1_status_desc,
         switch_ch2_status_desc,
         *BATTERY_SENSORS,
     ),
-    "lumi.switch.n1eic2": (  # 爱根斯通场景开关2路
+    "lumi.switch.n1eic2": (  # wareless switch
         switch_ch1_status_desc,
         *BATTERY_SENSORS,
     ),
-    "lumi.remote.b1akr1": (  # 无线开关 D1 贴墙式双键版
-        switch_ch1_status_desc,
-        switch_ch2_status_desc,
-        *BATTERY_SENSORS,
-    ),
-    "lumi.remote.b286acn03": (  # 无线开关 T1（贴墙式双键）
+    "lumi.remote.b1akr1": (  # wareless switch
         switch_ch1_status_desc,
         switch_ch2_status_desc,
         *BATTERY_SENSORS,
     ),
-    "lumi.remote.b686opcn01": (  # 无线场景开关（六键版）
+    "lumi.remote.b286acn03": (  # wareless switch
+        switch_ch1_status_desc,
+        switch_ch2_status_desc,
+        *BATTERY_SENSORS,
+    ),
+    "lumi.remote.b686opcn01": (  # wareless switch
         switch_ch1_status_desc,
         switch_ch2_status_desc,
         switch_ch3_status_desc,
         switch_ch1_status_desc.set_key("13.4.85").set_name("button 4"),
-        switch_ch2_status_desc.set_key("13.6.85").set_name(
-            "button 5"
-        ),  # key is 13.6.85 not 13.5.85
+        switch_ch2_status_desc.set_key("13.6.85").set_name("button 5"),
         switch_ch3_status_desc.set_key("13.7.85").set_name(
             "button 6"
         ),  # key is 13.7.85
         *BATTERY_SENSORS,
     ),
-    "lumi.remote.b486opcn01": (  # 无线场景开关（四键版）
+    "lumi.remote.b486opcn01": (  # wareless switch
         switch_ch1_status_desc,
         switch_ch2_status_desc,
         switch_ch3_status_desc,
         switch_ch1_status_desc.set_key("13.4.85").set_name("button 4"),
         *BATTERY_SENSORS,
     ),
-    "lumi.remote.b286opcn01": (  # 无线场景开关（双键版）
+    "lumi.remote.b286opcn01": (  # wareless switch
         switch_ch1_status_desc,
         switch_ch2_status_desc,
         *BATTERY_SENSORS,
     ),
-    "lumi.remote.b186acn03": (  # 无线开关 T1（贴墙式单键）
+    "lumi.remote.b186acn03": (  # wareless switch
         switch_ch1_status_desc,
         *BATTERY_SENSORS,
     ),
-    "lumi.remote.b1acn02": (  # 无线开关T1
+    "lumi.remote.b1acn02": (  # wareless switch
         switch_ch1_status_desc,
         *BATTERY_SENSORS,
     ),
-    "lumi.sensor_switch.aq3": (  # 无线开关（升级版）
+    "lumi.sensor_switch.aq3": (  # wareless switch
         switch_ch1_status_desc,
         *BATTERY_SENSORS,
     ),
-    "lumi.sensor_switch.v1": (  # 无线开关
+    "lumi.sensor_switch.v1": (  # wareless switch
         switch_ch1_status_desc,
         *BATTERY_SENSORS,
     ),
-    "lumi.sensor_switch.es3": (  # 无线开关（升级版
+    "lumi.sensor_switch.es3": (  # wareless switch
         switch_ch1_status_desc,
         *BATTERY_SENSORS,
     ),
-    "lumi.sensor_switch.es2": (  # 无线开关
+    "lumi.sensor_switch.es2": (  # wareless switch
         switch_ch1_status_desc,
         *BATTERY_SENSORS,
     ),
-    "lumi.sensor_switch.v2": (  # 无线开关
+    "lumi.sensor_switch.v2": (  # wareless switch
         switch_ch1_status_desc,
         *BATTERY_SENSORS,
     ),
-    "lumi.sensor_switch.aq2": (  # 无线开关
+    "lumi.sensor_switch.aq2": (  # wareless switch
         switch_ch1_status_desc,
         *BATTERY_SENSORS,
     ),
-    "lumi.sensor_86sw2.v1": (  # 无线开关（贴墙式双键版）
-        switch_ch1_status_desc,
-        switch_ch2_status_desc,
-        *BATTERY_SENSORS,
-    ),
-    "lumi.sensor_86sw2.es1": (  # 无线开关（贴墙式双键版）
+    "lumi.sensor_86sw2.v1": (  # wareless switch
         switch_ch1_status_desc,
         switch_ch2_status_desc,
         *BATTERY_SENSORS,
     ),
-    "lumi.remote.b1acn01": (  # 无线开关
-        switch_ch1_status_desc,
-        *BATTERY_SENSORS,
-    ),
-    "lumi.sensor_86sw1.es1": (  # 无线开关（贴墙式单键版）
-        switch_ch1_status_desc,
-        *BATTERY_SENSORS,
-    ),
-    "lumi.remote.b186acn01": (  # 无线开关（贴墙式单键版）
-        switch_ch1_status_desc,
-        *BATTERY_SENSORS,
-    ),
-    "lumi.sensor_86sw1.aq1": (  # 无线开关（贴墙式单键版）
-        switch_ch1_status_desc,
-        *BATTERY_SENSORS,
-    ),
-    "lumi.sensor_86sw2.aq1": (  # 无线开关（贴墙式双键版）
+    "lumi.sensor_86sw2.es1": (  # wareless switch
         switch_ch1_status_desc,
         switch_ch2_status_desc,
         *BATTERY_SENSORS,
     ),
-    "lumi.remote.b286acn01": (  # 无线开关（贴墙式双键版）
+    "lumi.remote.b1acn01": (  # wareless switch
+        switch_ch1_status_desc,
+        *BATTERY_SENSORS,
+    ),
+    "lumi.sensor_86sw1.es1": (
+        switch_ch1_status_desc,
+        *BATTERY_SENSORS,
+    ),
+    "lumi.remote.b186acn01": (
+        switch_ch1_status_desc,
+        *BATTERY_SENSORS,
+    ),
+    "lumi.sensor_86sw1.aq1": (
+        switch_ch1_status_desc,
+        *BATTERY_SENSORS,
+    ),
+    "lumi.sensor_86sw2.aq1": (
         switch_ch1_status_desc,
         switch_ch2_status_desc,
         *BATTERY_SENSORS,
     ),
-    "lumi.sensor_86sw1.v1": (  # 无线开关（贴墙式单键版）
-        switch_ch1_status_desc,
-        *BATTERY_SENSORS,
-    ),
-    "lumi.remote.b28ac1": (  # 无线开关 H1（贴墙式双键版）
+    "lumi.remote.b286acn01": (  # wareless switch
         switch_ch1_status_desc,
         switch_ch2_status_desc,
         *BATTERY_SENSORS,
     ),
-    "lumi.remote.b18ac1": (  # 线开关 H1（贴墙式单键版）
+    "lumi.sensor_86sw1.v1": (  # wareless switch）
+        switch_ch1_status_desc,
+        *BATTERY_SENSORS,
+    ),
+    "lumi.remote.b28ac1": (  # wareless switch
+        switch_ch1_status_desc,
+        switch_ch2_status_desc,
+        *BATTERY_SENSORS,
+    ),
+    "lumi.remote.b18ac1": (  # wareless switch
         switch_ch1_status_desc,
         *BATTERY_SENSORS,
     ),
@@ -671,32 +580,30 @@ SENSORS: dict[str, tuple[AqaraSensorEntityDescription, ...]] = {
 
 common_temp_sensor = SENSORS["lumi.sensor_ht.jcn001"]
 
-# 温湿度传感器
+
 SENSORS["lumi.sensor_ht.agl02"] = common_temp_sensor
 SENSORS["lumi.weather.es1"] = common_temp_sensor
 SENSORS["lumi.weather.v1"] = common_temp_sensor
 SENSORS["lumi.sensor_ht.v1"] = common_temp_sensor
 SENSORS["lumi.sensor_ht.es1"] = common_temp_sensor
 
-# 照度传感器
+
 common_illumination_sensor = SENSORS["lumi.sen_ill.eicn01"]
 SENSORS["lumi.sen_ill.akr01"] = common_illumination_sensor
 SENSORS["lumi.sen_ill.mgl01"] = common_illumination_sensor
 SENSORS["lumi.sen_ill.agl01"] = common_illumination_sensor
 
-# 魔方传感器
-# 京鱼座魔方控制器L版
 SENSORS["lumi.remote.jcn001"] = common_cube
-# 魔方控制器 J1
+
 SENSORS["lumi.remote.eicn01"] = common_cube
 
-# Aqara魔方控制器T1
+
 SENSORS["lumi.remote.cagl01"] = common_cube
-# 魔方控制器
+
 SENSORS["lumi.sensor_cube.aqgl01"] = common_cube
-# 魔方控制器
+
 SENSORS["lumi.sensor_cube.es1"] = common_cube
-# 魔方控制器
+
 SENSORS["lumi.sensor_cube.v1"] = common_cube
 
 

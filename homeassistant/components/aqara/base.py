@@ -4,8 +4,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 import json
 import logging
-
-# from tkinter.messagebox import NO
 from types import SimpleNamespace
 from typing import Any
 
@@ -115,20 +113,6 @@ class EnumTypeData:
         return cls(**json.loads(data))
 
 
-# @dataclass
-# class ElectricityTypeData:
-#     """Electricity Type Data."""
-
-#     electriccurrent: str | None = None
-#     power: str | None = None
-#     voltage: str | None = None
-
-#     @classmethod
-#     def from_json(cls, data: str) -> ElectricityTypeData:
-#         """Load JSON string and return a ElectricityTypeData object."""
-#         return cls(**json.loads(data.lower()))
-
-
 class AqaraEntity(Entity):
     """Aqara base device."""
 
@@ -227,7 +211,7 @@ def find_aqara_device_points_and_register(
                             (DOMAIN, string_dot_to_underline(aqara_point.did))
                         },
                         manufacturer="Aqara",
-                        name=aqara_point.did,  # ,
+                        name=aqara_point.did,
                         model=device.model,
                         suggested_area=f"{device.position_name}",
                     )

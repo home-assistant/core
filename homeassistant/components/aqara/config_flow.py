@@ -89,9 +89,7 @@ class AqaraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(
                         CONF_COUNTRY_CODE,
-                        default=user_input.get(
-                            CONF_COUNTRY_CODE, "China"
-                        ),  # United States
+                        default=user_input.get(CONF_COUNTRY_CODE, "China"),
                     ): vol.In(
                         # We don't pass a dict {code:name} because country codes can be duplicate.
                         [country.name for country in AQARA_COUNTRIES]

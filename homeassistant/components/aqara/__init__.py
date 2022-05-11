@@ -41,7 +41,7 @@ _LOGGER = logging.getLogger(__name__)
 class HomeAssistantAqaraData(NamedTuple):
     """Aqara data stored in the Home Assistant data object."""
 
-    device_listener: DeviceListener  # AqaraDeviceListener
+    device_listener: DeviceListener
     device_manager: AqaraDeviceManager
     home_manager: AqaraHomeManager
     aqara_mqtt_client: AqaraOpenMQ
@@ -165,7 +165,7 @@ class DeviceListener(AqaraDeviceListener):
                     aqara_point.id
                 ],
             )
-            dispatcher_send(  # 先更新值.
+            dispatcher_send(
                 self.hass,
                 f"{AQARA_HA_SIGNAL_UPDATE_POINT_VALUE}_{string_dot_to_underline(aqara_point.id)}",
                 aqara_point,
