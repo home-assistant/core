@@ -669,6 +669,9 @@ laundrify_aio==1.1.2
 # homeassistant.components.lacrosse_view
 lacrosse-view==0.0.3
 
+# homeassistant.components.lacrosse_view
+lacrosse-view==0.0.3
+
 # homeassistant.components.foscam
 libpyfoscam==1.0
 
