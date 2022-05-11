@@ -30,6 +30,7 @@ from .models import (
     RecorderRuns,
     StateAttributes,
     States,
+    process_datetime_to_timestamp,
     process_timestamp,
     process_timestamp_to_utc_isoformat,
     row_to_compressed_state,
@@ -616,10 +617,6 @@ def _get_single_entity_states_with_session(
     return execute(query)
 
 
-def _to_timestamp(date_time: datetime) -> float:
-    return date_time.timestamp()
-
-
 def _sorted_states_to_dict(
     hass: HomeAssistant,
     session: Session,
@@ -645,7 +642,9 @@ def _sorted_states_to_dict(
     """
     if compressed_state_format:
         state_class = row_to_compressed_state
-        _process_timestamp: Callable[[datetime], float | str] = _to_timestamp
+        _process_timestamp: Callable[
+            [datetime], float | str
+        ] = process_datetime_to_timestamp
         attr_last_changed = COMPRESSED_STATE_LAST_CHANGED
         attr_state = COMPRESSED_STATE_STATE
     else:

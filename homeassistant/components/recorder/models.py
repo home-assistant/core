@@ -618,6 +618,13 @@ def process_timestamp_to_utc_isoformat(ts: datetime | None) -> str | None:
     return ts.astimezone(dt_util.UTC).isoformat()
 
 
+def process_datetime_to_timestamp(ts: datetime) -> float:
+    """Process a timestamp into a unix timestamp."""
+    if ts.tzinfo == dt_util.UTC:
+        return ts.timestamp()
+    return ts.replace(tzinfo=dt_util.UTC).timestamp()
+
+
 class LazyState(State):
     """A lazy version of core State."""
 
@@ -770,10 +777,12 @@ def row_to_compressed_state(
         row_changed_changed: datetime = row.last_changed
         row_last_updated: datetime = row.last_updated or row_changed_changed
         if row_last_updated == row_changed_changed:
-            last_changed = last_updated = row.last_changed.timestamp()
+            last_changed = last_updated = process_datetime_to_timestamp(
+                row_changed_changed
+            )
         else:
-            last_changed = row_changed_changed.timestamp()
-            last_updated = row_last_updated.timestamp()
+            last_changed = process_datetime_to_timestamp(row_changed_changed)
+            last_updated = process_datetime_to_timestamp(row_last_updated)
     attributes = decode_attributes_from_row(row, attr_cache)
     return {
         COMPRESSED_STATE_STATE: row.state,
