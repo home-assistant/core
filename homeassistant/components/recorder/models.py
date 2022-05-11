@@ -748,3 +748,10 @@ class LazyState(State):
             and self.state == other.state
             and self.attributes == other.attributes
         )
+
+
+COMPRESSED_STATE_STATE = "s"
+COMPRESSED_STATE_ATTRIBUTES = "a"
+COMPRESSED_STATE_CONTEXT = "c"
+COMPRESSED_STATE_LAST_CHANGED = "lc"
+COMPRESSED_STATE_LAST_UPDATED = "lu"
