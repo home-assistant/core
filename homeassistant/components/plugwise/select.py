@@ -7,7 +7,6 @@ from typing import Any
 
 from plugwise import Smile
 
-
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON
