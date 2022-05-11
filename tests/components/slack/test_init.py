@@ -1,8 +1,4 @@
 """Test Slack integration."""
-from unittest.mock import patch
-
-from aiohttp.client_exceptions import ClientError
-
 from homeassistant.components.slack.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -41,16 +37,3 @@ async def test_async_setup_entry_invalid_auth(
     )
     await hass.async_block_till_done()
     assert entry.state == ConfigEntryState.SETUP_ERROR
-
-
-async def test_async_setup_entry_client_error(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test client error during setup."""
-    with patch(
-        "homeassistant.components.slack.config_flow.WebClient.auth_test"
-    ) as mock:
-        mock.side_effect = ClientError
-        entry: ConfigEntry = await async_init_integration(hass, aioclient_mock)
-        await hass.async_block_till_done()
-    assert entry.state == ConfigEntryState.LOADED
