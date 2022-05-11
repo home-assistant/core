@@ -1,20 +1,15 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
-    },
-    "error": {
-      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
+      "rate_limit": "Too much requests",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "timeout": "[%key:common::config_flow::error::timeout_connect%]"
     },
     "step": {
       "user": {
-        "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]"
-        },
-        "description": "Set up the Ukraine Alarm integration. To generate an API key go to {api_url}"
+        "description": "Set up the Ukraine Alarm integration"
       },
       "state": {
         "data": {
