@@ -168,6 +168,6 @@ class HistoryStatsSensor(HistoryStatsSensorBase):
         elif self._type == CONF_TYPE_COUNT:
             self._attr_native_value = state.changes_to_match_state
         self._attr_extra_state_attributes = {
-            "period_end": self.coordinator._history_stats._period[1],
-            "period_start": self.coordinator._history_stats._period[0],
+            "period_start": self.coordinator._history_stats._period[0].timestamp(),
+            "period_end": self.coordinator._history_stats._period[1].timestamp(),
         }
