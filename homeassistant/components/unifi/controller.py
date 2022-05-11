@@ -48,7 +48,6 @@ from .const import (
     CONF_ALLOW_UPTIME_SENSORS,
     CONF_BLOCK_CLIENT,
     CONF_DETECTION_TIME,
-    CONF_DEVICE_UPDATES,
     CONF_DPI_RESTRICTIONS,
     CONF_IGNORE_WIRED_BUG,
     CONF_POE_CLIENTS,
@@ -60,7 +59,6 @@ from .const import (
     DEFAULT_ALLOW_BANDWIDTH_SENSORS,
     DEFAULT_ALLOW_UPTIME_SENSORS,
     DEFAULT_DETECTION_TIME,
-    DEFAULT_DEVICE_UPDATES,
     DEFAULT_DPI_RESTRICTIONS,
     DEFAULT_IGNORE_WIRED_BUG,
     DEFAULT_POE_CLIENTS,
@@ -131,10 +129,6 @@ class UniFiController:
         # Config entry option to not track devices.
         self.option_track_devices = options.get(
             CONF_TRACK_DEVICES, DEFAULT_TRACK_DEVICES
-        )
-        # Config entry option to not show device updates.
-        self.option_device_updates = options.get(
-            CONF_DEVICE_UPDATES, DEFAULT_DEVICE_UPDATES
         )
         # Config entry option listing what SSIDs are being used to track clients.
         self.option_ssid_filter = set(options.get(CONF_SSID_FILTER, []))

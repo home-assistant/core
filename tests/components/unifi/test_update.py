@@ -3,7 +3,6 @@
 from aiounifi.controller import MESSAGE_DEVICE
 from aiounifi.websocket import STATE_DISCONNECTED, STATE_RUNNING
 
-from homeassistant.components.unifi.const import CONF_DEVICE_UPDATES
 from homeassistant.components.update import (
     ATTR_IN_PROGRESS,
     ATTR_INSTALLED_VERSION,
@@ -166,88 +165,3 @@ async def test_controller_state_change(
     await hass.async_block_till_done()
 
     assert hass.states.get("update.device").state == STATE_ON
-
-
-async def test_option_device_updates(hass, aioclient_mock, mock_device_registry):
-    """Test showing firmware updates can be turned off."""
-    device = {
-        "board_rev": 3,
-        "device_id": "mock-id",
-        "last_seen": 1562600145,
-        "mac": "00:00:00:00:01:01",
-        "model": "US16P150",
-        "name": "Device",
-        "next_interval": 20,
-        "overheating": True,
-        "state": 1,
-        "type": "usw",
-        "upgradable": True,
-        "version": "4.0.42.10433",
-        "upgrade_to_firmware": "4.3.17.11279",
-    }
-
-    config_entry = await setup_unifi_integration(
-        hass,
-        aioclient_mock,
-        devices_response=[device],
-    )
-
-    assert len(hass.states.async_entity_ids(UPDATE_DOMAIN)) == 1
-    assert hass.states.get("update.device")
-
-    hass.config_entries.async_update_entry(
-        config_entry,
-        options={CONF_DEVICE_UPDATES: False},
-    )
-    await hass.async_block_till_done()
-
-    assert not hass.states.get("update.device")
-
-    hass.config_entries.async_update_entry(
-        config_entry,
-        options={CONF_DEVICE_UPDATES: True},
-    )
-    await hass.async_block_till_done()
-
-    assert hass.states.get("update.device")
-
-
-async def test_device_updates_disabled(hass, aioclient_mock, mock_device_registry):
-    """Test don't track devices config works."""
-    device = {
-        "board_rev": 3,
-        "device_id": "mock-id",
-        "has_fan": True,
-        "fan_level": 0,
-        "ip": "10.0.1.1",
-        "last_seen": 1562600145,
-        "mac": "00:00:00:00:01:01",
-        "model": "US16P150",
-        "name": "Device",
-        "next_interval": 20,
-        "overheating": True,
-        "state": 1,
-        "type": "usw",
-        "upgradable": True,
-        "version": "4.0.42.10433",
-        "upgrade_to_firmware": "4.3.17.11279",
-    }
-
-    config_entry = await setup_unifi_integration(
-        hass,
-        aioclient_mock,
-        options={CONF_DEVICE_UPDATES: False},
-        devices_response=[device],
-    )
-
-    assert len(hass.states.async_entity_ids(UPDATE_DOMAIN)) == 0
-    assert not hass.states.get("update.device")
-
-    hass.config_entries.async_update_entry(
-        config_entry,
-        options={CONF_DEVICE_UPDATES: True},
-    )
-    await hass.async_block_till_done()
-
-    assert len(hass.states.async_entity_ids(UPDATE_DOMAIN)) == 1
-    assert hass.states.get("update.device")

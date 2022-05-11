@@ -38,9 +38,8 @@ async def async_setup_entry(
     def items_added(
         clients: set = controller.api.clients, devices: set = controller.api.devices
     ) -> None:
-        """Add device update entities if enabled."""
-        if controller.option_device_updates:
-            add_device_update_entities(controller, async_add_entities, devices)
+        """Add device update entities."""
+        add_device_update_entities(controller, async_add_entities, devices)
 
     for signal in (controller.signal_update, controller.signal_options_update):
         config_entry.async_on_unload(
@@ -134,6 +133,4 @@ class UniFiDeviceUpdateEntity(UniFiBase, UpdateEntity):
         return info
 
     async def options_updated(self) -> None:
-        """Config entry options are updated, remove entity if option is disabled."""
-        if not self.controller.option_device_updates:
-            await self.remove_item({self.device.mac})
+        """No action needed."""
