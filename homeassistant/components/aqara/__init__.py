@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from typing import NamedTuple
 
-from aqara_iot import (  # AqaraDevice,
+from aqara_iot import (
     AqaraDeviceListener,
     AqaraDeviceManager,
     AqaraHomeManager,
