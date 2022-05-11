@@ -23,7 +23,10 @@ from homeassistant.components.history import (
 )
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.recorder import get_instance
-from homeassistant.components.recorder.models import process_timestamp_to_utc_isoformat
+from homeassistant.components.recorder.models import (
+    process_datetime_to_timestamp,
+    process_timestamp_to_utc_isoformat,
+)
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.components.script import EVENT_SCRIPT_STARTED
 from homeassistant.components.sensor import ATTR_STATE_CLASS, DOMAIN as SENSOR_DOMAIN
@@ -646,13 +649,6 @@ def _row_attributes_extract(row: Row, extractor: re.Pattern) -> str | None:
 def _row_time_fired_isoformat(row: Row) -> str:
     """Convert the row timed_fired to isoformat."""
     return process_timestamp_to_utc_isoformat(row.time_fired or dt_util.utcnow())
-
-
-def process_datetime_to_timestamp(date_time: dt) -> float:
-    """Process a timestamp into a unix timestamp."""
-    if date_time.tzinfo == dt_util.UTC:
-        return date_time.timestamp()
-    return date_time.replace(tzinfo=dt_util.UTC).timestamp()
 
 
 def _row_time_fired_timestamp(row: Row) -> float:
