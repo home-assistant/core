@@ -1748,19 +1748,38 @@ async def test_remove_failed_node(
     client,
     hass_ws_client,
     nortek_thermostat_removed_event,
+    nortek_thermostat_added_event,
 ):
     """Test the remove_failed_node websocket command."""
     entry = integration
     ws_client = await hass_ws_client(hass)
+    device = get_device(hass, nortek_thermostat)
 
     client.async_send_command.return_value = {"success": True}
 
+    # Test FailedZWaveCommand is caught
+    with patch(
+        "zwave_js_server.model.controller.Controller.async_remove_failed_node",
+        side_effect=FailedZWaveCommand("failed_command", 1, "error message"),
+    ):
+        await ws_client.send_json(
+            {
+                ID: 1,
+                TYPE: "zwave_js/remove_failed_node",
+                DEVICE_ID: device.id,
+            }
+        )
+        msg = await ws_client.receive_json()
+
+        assert not msg["success"]
+        assert msg["error"]["code"] == "zwave_error"
+        assert msg["error"]["message"] == "Z-Wave error 1: error message"
+
     await ws_client.send_json(
         {
-            ID: 3,
+            ID: 2,
             TYPE: "zwave_js/remove_failed_node",
-            ENTRY_ID: entry.entry_id,
-            NODE_ID: 67,
+            DEVICE_ID: device.id,
         }
     )
 
@@ -1782,29 +1801,15 @@ async def test_remove_failed_node(
     assert msg["event"]["event"] == "node removed"
 
     # Verify device was removed from device registry
-    device = dev_reg.async_get_device(
-        identifiers={(DOMAIN, "3245146787-67")},
-    )
-    assert device is None
-
-    # Test FailedZWaveCommand is caught
-    with patch(
-        "zwave_js_server.model.controller.Controller.async_remove_failed_node",
-        side_effect=FailedZWaveCommand("failed_command", 1, "error message"),
-    ):
-        await ws_client.send_json(
-            {
-                ID: 4,
-                TYPE: "zwave_js/remove_failed_node",
-                ENTRY_ID: entry.entry_id,
-                NODE_ID: 67,
-            }
+    assert (
+        dev_reg.async_get_device(
+            identifiers={(DOMAIN, "3245146787-67")},
         )
-        msg = await ws_client.receive_json()
+        is None
+    )
 
-        assert not msg["success"]
-        assert msg["error"]["code"] == "zwave_error"
-        assert msg["error"]["message"] == "Z-Wave error 1: error message"
+    # Re-add node so we can test config entry not loaded
+    client.driver.receive_event(nortek_thermostat_added_event)
 
     # Test sending command with not loaded entry fails
     await hass.config_entries.async_unload(entry.entry_id)
@@ -1812,10 +1817,9 @@ async def test_remove_failed_node(
 
     await ws_client.send_json(
         {
-            ID: 5,
+            ID: 3,
             TYPE: "zwave_js/remove_failed_node",
-            ENTRY_ID: entry.entry_id,
-            NODE_ID: 67,
+            DEVICE_ID: device.id,
         }
     )
     msg = await ws_client.receive_json()
@@ -2027,6 +2031,7 @@ async def test_stop_healing_network(
 
 async def test_heal_node(
     hass,
+    multisensor_6,
     integration,
     client,
     hass_ws_client,
@@ -2034,6 +2039,7 @@ async def test_heal_node(
     """Test the heal_node websocket command."""
     entry = integration
     ws_client = await hass_ws_client(hass)
+    device = get_device(hass, multisensor_6)
 
     client.async_send_command.return_value = {"success": True}
 
@@ -2041,8 +2047,7 @@ async def test_heal_node(
         {
             ID: 3,
             TYPE: "zwave_js/heal_node",
-            ENTRY_ID: entry.entry_id,
-            NODE_ID: 67,
+            DEVICE_ID: device.id,
         }
     )
 
@@ -2059,8 +2064,7 @@ async def test_heal_node(
             {
                 ID: 4,
                 TYPE: "zwave_js/heal_node",
-                ENTRY_ID: entry.entry_id,
-                NODE_ID: 67,
+                DEVICE_ID: device.id,
             }
         )
         msg = await ws_client.receive_json()
@@ -2077,8 +2081,7 @@ async def test_heal_node(
         {
             ID: 5,
             TYPE: "zwave_js/heal_node",
-            ENTRY_ID: entry.entry_id,
-            NODE_ID: 67,
+            DEVICE_ID: device.id,
         }
     )
     msg = await ws_client.receive_json()
