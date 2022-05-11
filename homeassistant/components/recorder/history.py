@@ -557,7 +557,7 @@ def _get_rows_with_session(
     run: RecorderRuns | None = None,
     filters: Any | None = None,
     no_attributes: bool = False,
-) -> list[State]:
+) -> list[Row]:
     """Return the states at a specific point in time."""
     if entity_ids and len(entity_ids) == 1:
         return _get_single_entity_states_with_session(
@@ -593,7 +593,7 @@ def _get_single_entity_states_with_session(
     utc_point_in_time: datetime,
     entity_id: str,
     no_attributes: bool = False,
-) -> list[State]:
+) -> list[Row]:
     # Use an entirely different (and extremely fast) query if we only
     # have a single entity id
     baked_query, join_attributes = bake_query_and_join_attributes(hass, no_attributes)
@@ -611,7 +611,7 @@ def _get_single_entity_states_with_session(
         utc_point_in_time=utc_point_in_time, entity_id=entity_id
     )
 
-    return [LazyState(row, {}) for row in execute(query)]
+    return execute(query)
 
 
 def _to_timestamp(date_time: datetime) -> float:
