@@ -3,8 +3,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from bimmer_connected.account import ConnectedDriveAccount
-from bimmer_connected.country_selector import get_region_from_name
+from bimmer_connected.account import MyBMWAccount
+from bimmer_connected.api.regions import get_region_from_name
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
@@ -32,12 +32,12 @@ async def validate_input(
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
     try:
-        await hass.async_add_executor_job(
-            ConnectedDriveAccount,
+        account = MyBMWAccount(
             data[CONF_USERNAME],
             data[CONF_PASSWORD],
             get_region_from_name(data[CONF_REGION]),
         )
+        await account.get_vehicles()
     except OSError as ex:
         raise CannotConnect from ex
 
@@ -45,8 +45,8 @@ async def validate_input(
     return {"title": f"{data[CONF_USERNAME]}{data.get(CONF_SOURCE, '')}"}
 
 
-class BMWConnectedDriveConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for BMW ConnectedDrive."""
+class BMWConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for MyBMW."""
 
     VERSION = 1
 
@@ -78,16 +78,16 @@ class BMWConnectedDriveConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(
         config_entry: config_entries.ConfigEntry,
-    ) -> BMWConnectedDriveOptionsFlow:
-        """Return a BWM ConnectedDrive option flow."""
-        return BMWConnectedDriveOptionsFlow(config_entry)
+    ) -> BMWOptionsFlow:
+        """Return a MyBMW option flow."""
+        return BMWOptionsFlow(config_entry)
 
 
-class BMWConnectedDriveOptionsFlow(config_entries.OptionsFlow):
-    """Handle a option flow for BMW ConnectedDrive."""
+class BMWOptionsFlow(config_entries.OptionsFlow):
+    """Handle a option flow for MyBMW."""
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize BMW ConnectedDrive option flow."""
+        """Initialize MyBMW option flow."""
         self.config_entry = config_entry
         self.options = dict(config_entry.options)
 

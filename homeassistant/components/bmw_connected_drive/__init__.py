@@ -1,25 +1,17 @@
-"""Reads vehicle status from BMW connected drive portal."""
+"""Reads vehicle status from MyBMW portal."""
 from __future__ import annotations
 
 from typing import Any
 
-from bimmer_connected.vehicle import ConnectedDriveVehicle
+from bimmer_connected.vehicle import MyBMWVehicle
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_DEVICE_ID,
-    CONF_ENTITY_ID,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_REGION,
-    CONF_USERNAME,
-    Platform,
-)
+from homeassistant.const import CONF_DEVICE_ID, CONF_ENTITY_ID, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -82,10 +74,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Set up one data coordinator per account/config entry
     coordinator = BMWDataUpdateCoordinator(
         hass,
-        username=entry.data[CONF_USERNAME],
-        password=entry.data[CONF_PASSWORD],
-        region=entry.data[CONF_REGION],
-        read_only=entry.options[CONF_READ_ONLY],
+        entry=entry,
     )
     await coordinator.async_config_entry_first_refresh()
 
@@ -132,15 +121,16 @@ async def async_update_options(hass: HomeAssistant, config_entry: ConfigEntry) -
     await hass.config_entries.async_reload(config_entry.entry_id)
 
 
-class BMWConnectedDriveBaseEntity(CoordinatorEntity[BMWDataUpdateCoordinator], Entity):
+class BMWBaseEntity(CoordinatorEntity[BMWDataUpdateCoordinator]):
     """Common base for BMW entities."""
 
+    coordinator: BMWDataUpdateCoordinator
     _attr_attribution = ATTRIBUTION
 
     def __init__(
         self,
         coordinator: BMWDataUpdateCoordinator,
-        vehicle: ConnectedDriveVehicle,
+        vehicle: MyBMWVehicle,
     ) -> None:
         """Initialize entity."""
         super().__init__(coordinator)
