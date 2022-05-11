@@ -6,9 +6,9 @@ import logging
 
 import voluptuous as vol
 from yolink.client import YoLinkClient
-from yolink.const import OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 from yolink.mqtt_client import MqttClient
 
+from homeassistant.components import application_credentials
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, Platform
 from homeassistant.core import HomeAssistant
@@ -20,7 +20,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from . import api, config_flow
+from . import api
 from .const import ATTR_CLIENT, ATTR_COORDINATOR, ATTR_MQTT_CLIENT, DOMAIN
 from .coordinator import YoLinkCoordinator
 
@@ -48,16 +48,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DOMAIN] = {}
     if DOMAIN not in config:
         return True
-
-    config_flow.OAuth2FlowHandler.async_register_implementation(
+    await application_credentials.async_import_client_credential(
         hass,
-        config_entry_oauth2_flow.LocalOAuth2Implementation(
-            hass,
-            DOMAIN,
-            config[DOMAIN][CONF_CLIENT_ID],
-            config[DOMAIN][CONF_CLIENT_SECRET],
-            OAUTH2_AUTHORIZE,
-            OAUTH2_TOKEN,
+        DOMAIN,
+        application_credentials.ClientCredential(
+            config[DOMAIN][CONF_CLIENT_ID], config[DOMAIN][CONF_CLIENT_SECRET]
         ),
     )
     return True

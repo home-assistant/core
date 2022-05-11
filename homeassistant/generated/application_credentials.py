@@ -9,5 +9,6 @@ APPLICATION_CREDENTIALS = [
     "geocaching",
     "google",
     "spotify",
-    "xbox"
+    "xbox",
+    "yolink"
 ]
