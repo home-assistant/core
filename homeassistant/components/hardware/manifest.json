@@ -1,0 +1,13 @@
+{
+  "domain": "hardware",
+  "name": "Hardware",
+  "config_flow": false,
+  "documentation": "https://www.home-assistant.io/integrations/hardware",
+  "requirements": [],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": ["@core"],
+  "iot_class": "calculated"
+}

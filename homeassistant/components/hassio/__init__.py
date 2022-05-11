@@ -44,6 +44,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.loader import bind_hass
+from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from .addon_panel import async_setup_addon_panel
@@ -202,6 +203,10 @@ MAP_SERVICE_API = {
         None,
         True,
     ),
+}
+
+HARDWARE_INTEGRATIONS = {
+    "rpi": "raspberry_pi",
 }
 
 
@@ -703,6 +708,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 
     # Init add-on ingress panels
     await async_setup_addon_panel(hass, hassio)
+
+    # Setup hardware integration for the detected board type
+    async def _async_setup_hardware_integration(hass):
+        """Set up hardaware integration for the detected board type."""
+        if os_info := get_os_info(hass) is None:
+            return
+        if board := os_info.get("board") is None:
+            return
+        if hw_integration := HARDWARE_INTEGRATIONS.get(board) is None:
+            return
+        await async_setup_component(hass, hw_integration, {})
+
+    await _async_setup_hardware_integration(hass)
 
     hass.async_create_task(
         hass.config_entries.flow.async_init(DOMAIN, context={"source": "system"})

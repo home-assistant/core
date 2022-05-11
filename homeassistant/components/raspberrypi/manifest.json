@@ -1,0 +1,13 @@
+{
+  "domain": "raspberrypi",
+  "name": "Raspberry Pi",
+  "config_flow": false,
+  "documentation": "https://www.home-assistant.io/integrations/raspberrypi",
+  "requirements": [],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": ["hardware"],
+  "codeowners": ["@core"],
+  "iot_class": "calculated"
+}
