@@ -7,6 +7,7 @@ from homeassistant.core import Event, HomeAssistant, callback
 
 from .const import (
     ATTR_ACTION,
+    ATTR_AREA_NAME,
     ATTR_DEVICE_NAME,
     ATTR_LEAP_BUTTON_NUMBER,
     ATTR_TYPE,
@@ -33,7 +34,7 @@ def async_describe_events(
         button_map = LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP[device_type]
         button_description = button_map[leap_button_number]
         return {
-            "name": data[ATTR_DEVICE_NAME],
+            "name": f"{data[ATTR_AREA_NAME]} {data[ATTR_DEVICE_NAME]}",
             "message": f"{action} {button_description}.",
         }
 
