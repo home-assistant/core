@@ -518,10 +518,9 @@ class ZWaveServices:
         # multiple set_values my fail so we will track the entire list
         set_value_failed_nodes_list = []
         for node, success in get_valid_responses_from_results(nodes, results):
-            if success:
-                continue
-            # If we failed to set a value, add node to SetValueFailed exception list
-            set_value_failed_nodes_list.append(node)
+            if success is False:
+                # If we failed to set a value, add node to SetValueFailed exception list
+                set_value_failed_nodes_list.append(node)
 
         # Add the SetValueFailed exception to the results and the nodes to the node
         # list. No-op if there are no SetValueFailed exceptions
