@@ -621,7 +621,7 @@ class LazyState(State):
         "_last_changed",
         "_last_updated",
         "_context",
-        "_attr_cache",
+        "attr_cache",
     ]
 
     def __init__(  # pylint: disable=super-init-not-called
@@ -635,15 +635,15 @@ class LazyState(State):
         self._last_changed: datetime | None = None
         self._last_updated: datetime | None = None
         self._context: Context | None = None
-        self._attr_cache = attr_cache
+        self.attr_cache = attr_cache
 
     @property  # type: ignore[override]
     def attributes(self) -> dict[str, Any]:  # type: ignore[override]
         """State attributes."""
         if self._attributes is None:
             source = self._row.shared_attrs or self._row.attributes
-            if self._attr_cache is not None and (
-                attributes := self._attr_cache.get(source)
+            if self.attr_cache is not None and (
+                attributes := self.attr_cache.get(source)
             ):
                 self._attributes = attributes
                 return attributes
@@ -658,8 +658,8 @@ class LazyState(State):
                     "Error converting row to state attributes: %s", self._row
                 )
                 self._attributes = {}
-            if self._attr_cache is not None:
-                self._attr_cache[source] = self._attributes
+            if self.attr_cache is not None:
+                self.attr_cache[source] = self._attributes
         return self._attributes
 
     @attributes.setter

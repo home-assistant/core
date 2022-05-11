@@ -545,7 +545,7 @@ def _get_states_baked_query_for_all(
     return baked_query
 
 
-def _get_states_with_session(
+def _get_rows_with_session(
     hass: HomeAssistant,
     session: Session,
     utc_point_in_time: datetime,
@@ -574,17 +574,13 @@ def _get_states_with_session(
     else:
         baked_query = _get_states_baked_query_for_all(hass, filters, no_attributes)
 
-    attr_cache: dict[str, dict[str, Any]] = {}
-    return [
-        LazyState(row, attr_cache)
-        for row in execute(
-            baked_query(session).params(
-                run_start=run.start,
-                utc_point_in_time=utc_point_in_time,
-                entity_ids=entity_ids,
-            )
+    return execute(
+        baked_query(session).params(
+            run_start=run.start,
+            utc_point_in_time=utc_point_in_time,
+            entity_ids=entity_ids,
         )
-    ]
+    )
 
 
 def _get_single_entity_states_with_session(
@@ -650,7 +646,7 @@ def _sorted_states_to_dict(
     # Get the states at the start time
     timer_start = time.perf_counter()
     if include_start_time_state:
-        for state in _get_states_with_session(
+        for row in _get_rows_with_session(
             hass,
             session,
             start_time,
@@ -658,6 +654,9 @@ def _sorted_states_to_dict(
             filters=filters,
             no_attributes=no_attributes,
         ):
+            # TODO: support the same format as we do for websocket
+            # with minimal keys
+            state = LazyState(row)
             state.last_updated = start_time
             state.last_changed = start_time
             result[state.entity_id].append(state)
@@ -681,10 +680,14 @@ def _sorted_states_to_dict(
 
     # Append all changes to it
     for ent_id, group in states_iter:
-        ent_results = result[ent_id]
         attr_cache: dict[str, dict[str, Any]] = {}
+        ent_results = result[ent_id]
+        if ent_results:
+            ent_results[0].attr_cache = attr_cache  # type: ignore[union-attr]
 
         if not minimal_response or split_entity_id(ent_id)[0] in NEED_ATTRIBUTE_DOMAINS:
+            # TODO: support the same format as we do for websocket
+            # with minimal keys
             ent_results.extend(LazyState(db_state, attr_cache) for db_state in group)
             continue
 
@@ -695,6 +698,8 @@ def _sorted_states_to_dict(
         if not ent_results:
             if (first_state := next(group, None)) is None:
                 continue
+            # TODO: support the same format as we do for websocket
+            # with minimal keys
             ent_results.append(LazyState(first_state, attr_cache))
 
         assert isinstance(ent_results[-1], State)
@@ -708,6 +713,8 @@ def _sorted_states_to_dict(
             if (state := db_state.state) == prev_state:
                 continue
 
+            # TODO: support the same format as we do for websocket
+            # with minimal keys
             ent_results.append(
                 {
                     STATE_KEY: state,
@@ -720,6 +727,8 @@ def _sorted_states_to_dict(
             # There was at least one state change
             # replace the last minimal state with
             # a full state
+            # TODO: support the same format as we do for websocket
+            # with minimal keys
             ent_results[-1] = LazyState(db_state, attr_cache)
 
     # Filter out the empty lists if some states had 0 results.
