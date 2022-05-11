@@ -197,28 +197,33 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
         return self._image
 
     async def _check_for_new_image(self) -> None:
-        if self._last_event is None:
-            try:
-                self._last_event = self.coordinator.data["entries"][
-                    self._device.device_id
-                ][0]
-            except KeyError:
-                return
-        else:
-            try:
-                last_event = self.coordinator.data["entries"][self._device.device_id]
-            except KeyError:
-                return
+        await self._set_last_event()
 
-            if self._last_event.entry_id != last_event[0].entry_id:
-                self._last_event = last_event[0]
         if self._last_event is not None:
             if self._last_image_id != self._last_event.entry_id:
                 self._image = None
+            try:
+                self._image_url = self._last_event.thumbnails[0].image_url
+            except IndexError:
+                self._image_url = None
+
+    async def _set_last_event(self) -> None:
+        if self._last_event is None:
+            self._last_event = await self._get_latest_entry()
+        else:
+            last_event = await self._get_latest_entry()
+            if last_event is not None:
+                if self._last_event.entry_id != last_event.entry_id:
+                    self._last_event = last_event
+
+    async def _get_latest_entry(self) -> Entry | None:
         try:
-            self._image_url = self._last_event.thumbnails[0].image_url
+            last_event = self.coordinator.data["entries"][self._device.device_id][0]
+            return last_event
+        except KeyError:
+            return None
         except IndexError:
-            self._image_url = None
+            return None
 
     async def handle_async_mjpeg_stream(
         self, request: Request
