@@ -49,6 +49,7 @@ from .debug_info import log_messages
 from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttEntity,
+    async_get_platform_config_from_yaml,
     async_setup_entry_helper,
     async_setup_platform_helper,
 )
@@ -201,7 +202,7 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up MQTT fan through configuration.yaml."""
+    """Set up MQTT fan through configuration.yaml (deprecated)."""
     await async_setup_platform_helper(
         hass, fan.DOMAIN, config, async_add_entities, _async_setup_entity
     )
@@ -212,7 +213,13 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up MQTT fan dynamically through MQTT discovery."""
+    """Set up MQTT fan through configuration.yaml and dynamically through MQTT discovery."""
+    # load and initialize platform config from configuration.yaml
+    for config in await async_get_platform_config_from_yaml(
+        hass, fan.DOMAIN, PLATFORM_SCHEMA
+    ):
+        await _async_setup_entity(hass, async_add_entities, config, config_entry)
+    # setup for discovery
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )

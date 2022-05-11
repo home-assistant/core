@@ -6,11 +6,16 @@ import functools
 import voluptuous as vol
 
 from homeassistant.components import light
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from ..mixins import async_setup_entry_helper, async_setup_platform_helper
+from ..mixins import (
+    async_get_platform_config_from_yaml,
+    async_setup_entry_helper,
+    async_setup_platform_helper,
+)
 from .schema import CONF_SCHEMA, MQTT_LIGHT_SCHEMA_SCHEMA
 from .schema_basic import (
     DISCOVERY_SCHEMA_BASIC,
@@ -66,14 +71,24 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up MQTT light through configuration.yaml."""
+    """Set up MQTT light through configuration.yaml (deprecated)."""
     await async_setup_platform_helper(
         hass, light.DOMAIN, config, async_add_entities, _async_setup_entity
     )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up MQTT light dynamically through MQTT discovery."""
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up MQTT light through configuration.yaml and dynamically through MQTT discovery."""
+    # load and initialize platform config from configuration.yaml
+    for config in await async_get_platform_config_from_yaml(
+        hass, light.DOMAIN, PLATFORM_SCHEMA
+    ):
+        await _async_setup_entity(hass, async_add_entities, config, config_entry)
+    # setup for discovery
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )

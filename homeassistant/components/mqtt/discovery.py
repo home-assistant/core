@@ -27,6 +27,8 @@ from .const import (
     ATTR_DISCOVERY_TOPIC,
     CONF_AVAILABILITY,
     CONF_TOPIC,
+    CONFIG_ENTRY_IS_SETUP,
+    DATA_CONFIG_ENTRY_LOCK,
     DOMAIN,
 )
 
@@ -62,8 +64,6 @@ SUPPORTED_COMPONENTS = [
 
 ALREADY_DISCOVERED = "mqtt_discovered_components"
 PENDING_DISCOVERED = "mqtt_pending_components"
-CONFIG_ENTRY_IS_SETUP = "mqtt_config_entry_is_setup"
-DATA_CONFIG_ENTRY_LOCK = "mqtt_config_entry_lock"
 DATA_CONFIG_FLOW_LOCK = "mqtt_discovery_config_flow_lock"
 DISCOVERY_UNSUBSCRIBE = "mqtt_discovery_unsubscribe"
 INTEGRATION_UNSUBSCRIBE = "mqtt_integration_discovery_unsubscribe"
@@ -236,16 +236,20 @@ async def async_start(  # noqa: C901
                         # pylint: disable-next=import-outside-toplevel
                         from . import device_automation
 
-                        await device_automation.async_setup_entry(hass, config_entry)
+                        hass.async_add_job(
+                            device_automation.async_setup_entry(hass, config_entry)
+                        )
                     elif component == "tag":
                         # Local import to avoid circular dependencies
                         # pylint: disable-next=import-outside-toplevel
                         from . import tag
 
-                        await tag.async_setup_entry(hass, config_entry)
+                        hass.async_add_job(tag.async_setup_entry(hass, config_entry))
                     else:
-                        await hass.config_entries.async_forward_entry_setup(
-                            config_entry, component
+                        hass.async_add_job(
+                            hass.config_entries.async_forward_entry_setup(
+                                config_entry, component
+                            )
                         )
                     hass.data[CONFIG_ENTRY_IS_SETUP].add(config_entries_key)
 
@@ -258,9 +262,7 @@ async def async_start(  # noqa: C901
                 hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
             )
 
-    hass.data[DATA_CONFIG_ENTRY_LOCK] = asyncio.Lock()
     hass.data[DATA_CONFIG_FLOW_LOCK] = asyncio.Lock()
-    hass.data[CONFIG_ENTRY_IS_SETUP] = set()
 
     hass.data[ALREADY_DISCOVERED] = {}
     hass.data[PENDING_DISCOVERED] = {}

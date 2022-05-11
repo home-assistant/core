@@ -23,6 +23,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import websocket_api
+from homeassistant.config import async_hass_config_yaml
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -81,6 +82,8 @@ from .const import (
     CONF_TLS_VERSION,
     CONF_TOPIC,
     CONF_WILL_MESSAGE,
+    CONFIG_ENTRY_IS_SETUP,
+    DATA_CONFIG_ENTRY_LOCK,
     DATA_MQTT_CONFIG,
     DATA_MQTT_RELOAD_NEEDED,
     DEFAULT_BIRTH,
@@ -171,6 +174,10 @@ PLATFORMS = [
     Platform.VACUUM,
 ]
 
+PLATFORMS_YAML_SETUP: list[Platform] = [
+    Platform.FAN,
+    Platform.LIGHT,
+]
 
 CLIENT_KEY_AUTH_MSG = (
     "client_key and client_cert must both be present in "
@@ -187,7 +194,14 @@ MQTT_WILL_BIRTH_SCHEMA = vol.Schema(
     required=True,
 )
 
-CONFIG_SCHEMA_BASE = vol.Schema(
+PLATFORM_CONFIG_SCHEMA_BASE = vol.Schema(
+    {
+        vol.Optional(component.value): vol.Coerce(list)
+        for component in PLATFORMS_YAML_SETUP
+    }
+)
+
+CONFIG_SCHEMA_BASE = PLATFORM_CONFIG_SCHEMA_BASE.extend(
     {
         vol.Optional(CONF_CLIENT_ID): cv.string,
         vol.Optional(CONF_KEEPALIVE, default=DEFAULT_KEEPALIVE): vol.All(
@@ -643,6 +657,24 @@ def _merge_extended_config(entry, conf):
     return {**conf, **entry.data}
 
 
+async def async_get_platform_components(
+    hass: HomeAssistant,
+    available_platforms: list[Platform] | list[str],
+) -> list[Platform]:
+    """Return a list of platforms with config from configuration.yaml."""
+    config_yaml = await async_hass_config_yaml(hass)
+    if (integration_config := config_yaml.get(DOMAIN)) is None:
+        return []
+    available_components: list[str] = [
+        Platform(platform).value for platform in available_platforms
+    ]
+    return [
+        Platform(component)
+        for component in integration_config
+        if component in available_components
+    ]
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Load a config entry."""
     # Merge basic configuration, and add missing defaults for basic options
@@ -773,6 +805,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             }
         ),
     )
+
+    # setup platforms and discovery
+    hass.data[DATA_CONFIG_ENTRY_LOCK] = asyncio.Lock()
+    hass.data[CONFIG_ENTRY_IS_SETUP] = set()
+
+    yaml_platforms = await async_get_platform_components(hass, PLATFORMS_YAML_SETUP)
+    async with hass.data[DATA_CONFIG_ENTRY_LOCK]:
+        for component in yaml_platforms:
+            config_entries_key = f"{component}.mqtt"
+            if config_entries_key not in hass.data[CONFIG_ENTRY_IS_SETUP]:
+                hass.data[CONFIG_ENTRY_IS_SETUP].add(config_entries_key)
+                hass.async_add_job(
+                    hass.config_entries.async_forward_entry_setup(entry, component)
+                )
 
     if conf.get(CONF_DISCOVERY):
         await _async_setup_discovery(hass, conf, entry)

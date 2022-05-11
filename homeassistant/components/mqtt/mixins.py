@@ -9,6 +9,7 @@ from typing import Any, Protocol, cast, final
 
 import voluptuous as vol
 
+from homeassistant.config import async_hass_config_yaml
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CONFIGURATION_URL,
@@ -23,6 +24,7 @@ from homeassistant.const import (
     CONF_ICON,
     CONF_MODEL,
     CONF_NAME,
+    CONF_PLATFORM,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
 )
@@ -235,6 +237,35 @@ class SetupEntity(Protocol):
         discovery_data: dict[str, Any] | None = None,
     ) -> None:
         """Define setup_entities type."""
+
+
+async def async_get_platform_config_from_yaml(
+    hass: HomeAssistant, domain: str, schema: vol.Schema
+) -> list[ConfigType]:
+    """Return a list of validated configurations for the platform read from configuration.yaml."""
+
+    def check_schema(config: dict, schema: vol.Schema) -> ConfigType:
+        """Update the platform for schema compatibility and check the schema."""
+        if CONF_PLATFORM in config:
+            error_string = f"Invalid keyword 'platform' found, please remove it from your configuration: {json.dumps(config)}"
+            raise ValueError(error_string)
+        config[CONF_PLATFORM] = DOMAIN
+        return schema(config)
+
+    config_yaml = await async_hass_config_yaml(hass)
+    if not (integration_config := config_yaml.get(DOMAIN)) or not (
+        platform_configs := integration_config.get(domain)
+    ):
+        return []
+    errors = []
+    try:
+        config = [check_schema(config, schema) for config in platform_configs]
+    except (ValueError, vol.MultipleInvalid) as exc:
+        errors.append(exc)
+    if errors:
+        raise vol.MultipleInvalid(errors)
+
+    return config
 
 
 async def async_setup_entry_helper(hass, domain, async_setup, schema):
