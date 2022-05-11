@@ -1319,7 +1319,9 @@ def test_entity_id_filter(hass_recorder):
 
 
 async def test_database_lock_and_unlock(
-    hass: HomeAssistant, async_setup_recorder_instance: SetupRecorderInstanceT, tmp_path
+    hass: HomeAssistant,
+    async_setup_recorder_instance: SetupRecorderInstanceT,
+    tmp_path,
 ):
     """Test writing events during lock getting written after unlocking."""
     # Use file DB, in memory DB cannot do write locks.
@@ -1329,6 +1331,10 @@ async def test_database_lock_and_unlock(
     }
     await async_setup_recorder_instance(hass, config)
     await hass.async_block_till_done()
+
+    def _get_db_events():
+        with session_scope(hass=hass) as session:
+            return list(session.query(Events).filter_by(event_type=event_type))
 
     instance: Recorder = hass.data[DATA_INSTANCE]
 
@@ -1344,21 +1350,20 @@ async def test_database_lock_and_unlock(
     # Recording can't be finished while lock is held
     with pytest.raises(asyncio.TimeoutError):
         await asyncio.wait_for(asyncio.shield(task), timeout=1)
-
-    with session_scope(hass=hass) as session:
-        db_events = list(session.query(Events).filter_by(event_type=event_type))
+        db_events = await hass.async_add_executor_job(_get_db_events)
         assert len(db_events) == 0
 
     assert instance.unlock_database()
 
     await task
-    with session_scope(hass=hass) as session:
-        db_events = list(session.query(Events).filter_by(event_type=event_type))
-        assert len(db_events) == 1
+    db_events = await hass.async_add_executor_job(_get_db_events)
+    assert len(db_events) == 1
 
 
 async def test_database_lock_and_overflow(
-    hass: HomeAssistant, async_setup_recorder_instance: SetupRecorderInstanceT, tmp_path
+    hass: HomeAssistant,
+    async_setup_recorder_instance: SetupRecorderInstanceT,
+    tmp_path,
 ):
     """Test writing events during lock leading to overflow the queue causes the database to unlock."""
     # Use file DB, in memory DB cannot do write locks.
@@ -1368,6 +1373,10 @@ async def test_database_lock_and_overflow(
     }
     await async_setup_recorder_instance(hass, config)
     await hass.async_block_till_done()
+
+    def _get_db_events():
+        with session_scope(hass=hass) as session:
+            return list(session.query(Events).filter_by(event_type=event_type))
 
     instance: Recorder = hass.data[DATA_INSTANCE]
 
@@ -1384,9 +1393,8 @@ async def test_database_lock_and_overflow(
         # even before unlocking.
         await async_wait_recording_done(hass)
 
-        with session_scope(hass=hass) as session:
-            db_events = list(session.query(Events).filter_by(event_type=event_type))
-            assert len(db_events) == 1
+        db_events = await hass.async_add_executor_job(_get_db_events)
+        assert len(db_events) == 1
 
         assert not instance.unlock_database()
 
@@ -1440,9 +1448,7 @@ async def test_database_connection_keep_alive(
     caplog: pytest.LogCaptureFixture,
 ):
     """Test we keep alive socket based dialects."""
-    with patch(
-        "homeassistant.components.recorder.Recorder.using_sqlite", return_value=False
-    ):
+    with patch("homeassistant.components.recorder.Recorder.dialect_name"):
         instance = await async_setup_recorder_instance(hass)
         # We have to mock this since we don't have a mock
         # MySQL server available in tests.

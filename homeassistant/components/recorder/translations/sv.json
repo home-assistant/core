@@ -1,0 +1,8 @@
+{
+    "system_health": {
+        "info": {
+            "current_recorder_run": "Aktuell starttid",
+            "oldest_recorder_run": "\u00c4ldsta starttid"
+        }
+    }
+}

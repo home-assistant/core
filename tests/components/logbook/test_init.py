@@ -4,6 +4,7 @@ import collections
 from datetime import datetime, timedelta
 from http import HTTPStatus
 import json
+from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
@@ -14,12 +15,14 @@ from homeassistant.components.alexa.smart_home import EVENT_ALEXA_SMART_HOME
 from homeassistant.components.automation import EVENT_AUTOMATION_TRIGGERED
 from homeassistant.components.recorder.models import process_timestamp_to_utc_isoformat
 from homeassistant.components.script import EVENT_SCRIPT_STARTED
+from homeassistant.components.sensor import SensorStateClass
 from homeassistant.const import (
     ATTR_DOMAIN,
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     ATTR_NAME,
     ATTR_SERVICE,
+    ATTR_UNIT_OF_MEASUREMENT,
     CONF_DOMAINS,
     CONF_ENTITIES,
     CONF_EXCLUDE,
@@ -33,10 +36,13 @@ from homeassistant.const import (
     STATE_ON,
 )
 import homeassistant.core as ha
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entityfilter import CONF_ENTITY_GLOBS
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
+
+from .common import mock_humanify
 
 from tests.common import async_capture_events, mock_platform
 from tests.components.recorder.common import (
@@ -157,77 +163,79 @@ async def test_service_call_create_log_book_entry_no_message(hass_):
     assert len(calls) == 0
 
 
-def test_humanify_filter_sensor(hass_):
-    """Test humanify filter too frequent sensor values."""
-    entity_id = "sensor.bla"
+async def test_filter_sensor(hass_: ha.HomeAssistant, hass_client):
+    """Test numeric sensors are filtered."""
 
-    pointA = dt_util.utcnow().replace(minute=2)
-    pointB = pointA.replace(minute=5)
-    pointC = pointA + timedelta(minutes=logbook.GROUP_BY_MINUTES)
-    entity_attr_cache = logbook.EntityAttributeCache(hass_)
+    registry = er.async_get(hass_)
 
-    eventA = create_state_changed_event(pointA, entity_id, 10)
-    eventB = create_state_changed_event(pointB, entity_id, 20)
-    eventC = create_state_changed_event(pointC, entity_id, 30)
+    # Unregistered sensor without a unit of measurement - should be in logbook
+    entity_id1 = "sensor.bla"
+    attributes_1 = None
+    # Unregistered sensor with a unit of measurement - should be excluded from logbook
+    entity_id2 = "sensor.blu"
+    attributes_2 = {ATTR_UNIT_OF_MEASUREMENT: "cats"}
+    # Registered sensor with state class - should be excluded from logbook
+    entity_id3 = registry.async_get_or_create(
+        "sensor",
+        "test",
+        "unique_3",
+        suggested_object_id="bli",
+        capabilities={"state_class": SensorStateClass.MEASUREMENT},
+    ).entity_id
+    attributes_3 = None
+    # Registered sensor without state class or unit - should be in logbook
+    entity_id4 = registry.async_get_or_create(
+        "sensor", "test", "unique_4", suggested_object_id="ble"
+    ).entity_id
+    attributes_4 = None
 
-    entries = list(
-        logbook.humanify(hass_, (eventA, eventB, eventC), entity_attr_cache, {})
-    )
+    hass_.states.async_set(entity_id1, None, attributes_1)  # Excluded
+    hass_.states.async_set(entity_id1, 10, attributes_1)  # Included
+    hass_.states.async_set(entity_id2, None, attributes_2)  # Excluded
+    hass_.states.async_set(entity_id2, 10, attributes_2)  # Excluded
+    hass_.states.async_set(entity_id3, None, attributes_3)  # Excluded
+    hass_.states.async_set(entity_id3, 10, attributes_3)  # Excluded
+    hass_.states.async_set(entity_id1, 20, attributes_1)  # Included
+    hass_.states.async_set(entity_id2, 20, attributes_2)  # Excluded
+    hass_.states.async_set(entity_id4, None, attributes_4)  # Excluded
+    hass_.states.async_set(entity_id4, 10, attributes_4)  # Included
 
-    assert len(entries) == 2
-    assert_entry(entries[0], pointB, "bla", entity_id=entity_id)
+    await async_wait_recording_done(hass_)
+    client = await hass_client()
+    entries = await _async_fetch_logbook(client)
 
-    assert_entry(entries[1], pointC, "bla", entity_id=entity_id)
+    assert len(entries) == 3
+    _assert_entry(entries[0], name="bla", entity_id=entity_id1, state="10")
+    _assert_entry(entries[1], name="bla", entity_id=entity_id1, state="20")
+    _assert_entry(entries[2], name="ble", entity_id=entity_id4, state="10")
 
 
-def test_home_assistant_start_stop_grouped(hass_):
-    """Test if HA start and stop events are grouped.
-
-    Events that are occurring in the same minute.
-    """
-    entity_attr_cache = logbook.EntityAttributeCache(hass_)
-    entries = list(
-        logbook.humanify(
-            hass_,
-            (
-                MockLazyEventPartialState(EVENT_HOMEASSISTANT_STOP),
-                MockLazyEventPartialState(EVENT_HOMEASSISTANT_START),
-            ),
-            entity_attr_cache,
-            {},
+def test_home_assistant_start_stop_not_grouped(hass_):
+    """Test if HA start and stop events are no longer grouped."""
+    entries = mock_humanify(
+        hass_,
+        (
+            MockRow(EVENT_HOMEASSISTANT_STOP),
+            MockRow(EVENT_HOMEASSISTANT_START),
         ),
     )
 
-    assert len(entries) == 1
-    assert_entry(
-        entries[0], name="Home Assistant", message="restarted", domain=ha.DOMAIN
-    )
-
-
-def test_unsupported_attributes_in_cache_throws(hass):
-    """Test unsupported attributes in cache."""
-    entity_attr_cache = logbook.EntityAttributeCache(hass)
-    event = MockLazyEventPartialState(EVENT_STATE_CHANGED)
-    with pytest.raises(ValueError):
-        entity_attr_cache.get("sensor.xyz", "not_supported", event)
+    assert len(entries) == 2
+    assert_entry(entries[0], name="Home Assistant", message="stopped", domain=ha.DOMAIN)
+    assert_entry(entries[1], name="Home Assistant", message="started", domain=ha.DOMAIN)
 
 
 def test_home_assistant_start(hass_):
     """Test if HA start is not filtered or converted into a restart."""
     entity_id = "switch.bla"
     pointA = dt_util.utcnow()
-    entity_attr_cache = logbook.EntityAttributeCache(hass_)
 
-    entries = list(
-        logbook.humanify(
-            hass_,
-            (
-                MockLazyEventPartialState(EVENT_HOMEASSISTANT_START),
-                create_state_changed_event(pointA, entity_id, 10),
-            ),
-            entity_attr_cache,
-            {},
-        )
+    entries = mock_humanify(
+        hass_,
+        (
+            MockRow(EVENT_HOMEASSISTANT_START),
+            create_state_changed_event(pointA, entity_id, 10).row,
+        ),
     )
 
     assert len(entries) == 2
@@ -240,24 +248,19 @@ def test_process_custom_logbook_entries(hass_):
     name = "Nice name"
     message = "has a custom entry"
     entity_id = "sun.sun"
-    entity_attr_cache = logbook.EntityAttributeCache(hass_)
 
-    entries = list(
-        logbook.humanify(
-            hass_,
-            (
-                MockLazyEventPartialState(
-                    logbook.EVENT_LOGBOOK_ENTRY,
-                    {
-                        logbook.ATTR_NAME: name,
-                        logbook.ATTR_MESSAGE: message,
-                        logbook.ATTR_ENTITY_ID: entity_id,
-                    },
-                ),
+    entries = mock_humanify(
+        hass_,
+        (
+            MockRow(
+                logbook.EVENT_LOGBOOK_ENTRY,
+                {
+                    logbook.ATTR_NAME: name,
+                    logbook.ATTR_MESSAGE: message,
+                    logbook.ATTR_ENTITY_ID: entity_id,
+                },
             ),
-            entity_attr_cache,
-            {},
-        )
+        ),
     )
 
     assert len(entries) == 1
@@ -316,11 +319,13 @@ def create_state_changed_event_from_old_new(
             "state_id",
             "old_state_id",
             "shared_attrs",
+            "shared_data",
         ],
     )
 
     row.event_type = EVENT_STATE_CHANGED
     row.event_data = "{}"
+    row.shared_data = "{}"
     row.attributes = attributes_json
     row.shared_attrs = attributes_json
     row.time_fired = event_time_fired
@@ -997,6 +1002,68 @@ async def test_logbook_entity_context_id(hass, recorder_mock, hass_client):
     assert json_dict[7]["context_user_id"] == "9400facee45711eaa9308bfd3d19e474"
 
 
+async def test_logbook_context_id_automation_script_started_manually(
+    hass, recorder_mock, hass_client
+):
+    """Test the logbook populates context_ids for scripts and automations started manually."""
+    await async_setup_component(hass, "logbook", {})
+    await async_setup_component(hass, "automation", {})
+    await async_setup_component(hass, "script", {})
+
+    await async_recorder_block_till_done(hass)
+
+    # An Automation
+    automation_entity_id_test = "automation.alarm"
+    automation_context = ha.Context(
+        id="fc5bd62de45711eaaeb351041eec8dd9",
+        user_id="f400facee45711eaa9308bfd3d19e474",
+    )
+    hass.bus.async_fire(
+        EVENT_AUTOMATION_TRIGGERED,
+        {ATTR_NAME: "Mock automation", ATTR_ENTITY_ID: automation_entity_id_test},
+        context=automation_context,
+    )
+    script_context = ha.Context(
+        id="ac5bd62de45711eaaeb351041eec8dd9",
+        user_id="b400facee45711eaa9308bfd3d19e474",
+    )
+    hass.bus.async_fire(
+        EVENT_SCRIPT_STARTED,
+        {ATTR_NAME: "Mock script", ATTR_ENTITY_ID: "script.mock_script"},
+        context=script_context,
+    )
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+    await async_wait_recording_done(hass)
+
+    client = await hass_client()
+
+    # Today time 00:00:00
+    start = dt_util.utcnow().date()
+    start_date = datetime(start.year, start.month, start.day)
+
+    # Test today entries with filter by end_time
+    end_time = start + timedelta(hours=24)
+    response = await client.get(
+        f"/api/logbook/{start_date.isoformat()}?end_time={end_time}"
+    )
+    assert response.status == HTTPStatus.OK
+    json_dict = await response.json()
+
+    assert json_dict[0]["entity_id"] == "automation.alarm"
+    assert "context_entity_id" not in json_dict[0]
+    assert json_dict[0]["context_user_id"] == "f400facee45711eaa9308bfd3d19e474"
+    assert json_dict[0]["context_id"] == "fc5bd62de45711eaaeb351041eec8dd9"
+
+    assert json_dict[1]["entity_id"] == "script.mock_script"
+    assert "context_entity_id" not in json_dict[1]
+    assert json_dict[1]["context_user_id"] == "b400facee45711eaa9308bfd3d19e474"
+    assert json_dict[1]["context_id"] == "ac5bd62de45711eaaeb351041eec8dd9"
+
+    assert json_dict[2]["domain"] == "homeassistant"
+
+
 async def test_logbook_entity_context_parent_id(hass, hass_client, recorder_mock):
     """Test the logbook view links events via context parent_id."""
     await async_setup_component(hass, "logbook", {})
@@ -1321,6 +1388,59 @@ async def test_logbook_entity_matches_only(hass, hass_client, recorder_mock):
 
     assert json_dict[1]["entity_id"] == "switch.test_state"
     assert json_dict[1]["context_user_id"] == "9400facee45711eaa9308bfd3d19e474"
+
+
+async def test_logbook_entity_matches_only_multiple_calls(
+    hass, hass_client, recorder_mock
+):
+    """Test the logbook view with a single entity and entity_matches_only called multiple times."""
+    await async_setup_component(hass, "logbook", {})
+    await async_setup_component(hass, "automation", {})
+
+    await async_recorder_block_till_done(hass)
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    for automation_id in range(5):
+        hass.bus.async_fire(
+            EVENT_AUTOMATION_TRIGGERED,
+            {
+                ATTR_NAME: f"Mock automation {automation_id}",
+                ATTR_ENTITY_ID: f"automation.mock_{automation_id}_automation",
+            },
+        )
+    await async_wait_recording_done(hass)
+    client = await hass_client()
+
+    # Today time 00:00:00
+    start = dt_util.utcnow().date()
+    start_date = datetime(start.year, start.month, start.day)
+    end_time = start + timedelta(hours=24)
+
+    for automation_id in range(5):
+        # Test today entries with filter by end_time
+        response = await client.get(
+            f"/api/logbook/{start_date.isoformat()}?end_time={end_time}&entity=automation.mock_{automation_id}_automation&entity_matches_only"
+        )
+        assert response.status == HTTPStatus.OK
+        json_dict = await response.json()
+
+        assert len(json_dict) == 1
+        assert (
+            json_dict[0]["entity_id"] == f"automation.mock_{automation_id}_automation"
+        )
+
+    response = await client.get(
+        f"/api/logbook/{start_date.isoformat()}?end_time={end_time}&entity=automation.mock_0_automation,automation.mock_1_automation,automation.mock_2_automation&entity_matches_only"
+    )
+    assert response.status == HTTPStatus.OK
+    json_dict = await response.json()
+
+    assert len(json_dict) == 3
+    assert json_dict[0]["entity_id"] == "automation.mock_0_automation"
+    assert json_dict[1]["entity_id"] == "automation.mock_1_automation"
+    assert json_dict[2]["entity_id"] == "automation.mock_2_automation"
 
 
 async def test_custom_log_entry_discoverable_via_entity_matches_only(
@@ -1790,12 +1910,13 @@ async def test_include_exclude_events(hass, hass_client, recorder_mock):
     client = await hass_client()
     entries = await _async_fetch_logbook(client)
 
-    assert len(entries) == 3
+    assert len(entries) == 4
     _assert_entry(
         entries[0], name="Home Assistant", message="started", domain=ha.DOMAIN
     )
-    _assert_entry(entries[1], name="blu", entity_id=entity_id2)
-    _assert_entry(entries[2], name="keep", entity_id=entity_id4)
+    _assert_entry(entries[1], name="blu", entity_id=entity_id2, state="10")
+    _assert_entry(entries[2], name="blu", entity_id=entity_id2, state="20")
+    _assert_entry(entries[3], name="keep", entity_id=entity_id4, state="10")
 
 
 async def test_include_exclude_events_with_glob_filters(
@@ -1849,12 +1970,13 @@ async def test_include_exclude_events_with_glob_filters(
     client = await hass_client()
     entries = await _async_fetch_logbook(client)
 
-    assert len(entries) == 3
+    assert len(entries) == 4
     _assert_entry(
         entries[0], name="Home Assistant", message="started", domain=ha.DOMAIN
     )
-    _assert_entry(entries[1], name="blu", entity_id=entity_id2)
-    _assert_entry(entries[2], name="included", entity_id=entity_id4)
+    _assert_entry(entries[1], name="blu", entity_id=entity_id2, state="10")
+    _assert_entry(entries[2], name="blu", entity_id=entity_id2, state="20")
+    _assert_entry(entries[3], name="included", entity_id=entity_id4, state="30")
 
 
 async def test_empty_config(hass, hass_client, recorder_mock):
@@ -1939,52 +2061,44 @@ def _assert_entry(
     entry, when=None, name=None, message=None, domain=None, entity_id=None, state=None
 ):
     """Assert an entry is what is expected."""
-    if when:
+    if when is not None:
         assert when.isoformat() == entry["when"]
 
-    if name:
+    if name is not None:
         assert name == entry["name"]
 
-    if message:
+    if message is not None:
         assert message == entry["message"]
 
-    if domain:
+    if domain is not None:
         assert domain == entry["domain"]
 
-    if entity_id:
+    if entity_id is not None:
         assert entity_id == entry["entity_id"]
 
-    if state:
+    if state is not None:
         assert state == entry["state"]
 
 
-class MockLazyEventPartialState(ha.Event):
-    """Minimal mock of a Lazy event."""
+class MockRow:
+    """Minimal row mock."""
 
-    @property
-    def data_entity_id(self):
-        """Lookup entity id."""
-        return self.data.get(ATTR_ENTITY_ID)
-
-    @property
-    def data_domain(self):
-        """Lookup domain."""
-        return self.data.get(ATTR_DOMAIN)
+    def __init__(self, event_type: str, data: dict[str, Any] = None):
+        """Init the fake row."""
+        self.event_type = event_type
+        self.shared_data = json.dumps(data, cls=JSONEncoder)
+        self.data = data
+        self.time_fired = dt_util.utcnow()
+        self.context_parent_id = None
+        self.context_user_id = None
+        self.context_id = None
+        self.state = None
+        self.entity_id = None
 
     @property
     def time_fired_minute(self):
         """Minute the event was fired."""
         return self.time_fired.minute
-
-    @property
-    def context_user_id(self):
-        """Context user id of event."""
-        return self.context.user_id
-
-    @property
-    def context_id(self):
-        """Context id of event."""
-        return self.context.id
 
     @property
     def time_fired_isoformat(self):

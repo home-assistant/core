@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Iterable
+import contextlib
 from datetime import datetime, timedelta
 import logging
 import queue
@@ -41,6 +42,7 @@ from .const import (
     KEEPALIVE_TIME,
     MAX_QUEUE_BACKLOG,
     SQLITE_URL_PREFIX,
+    SupportedDialect,
 )
 from .executor import DBInterruptibleThreadPoolExecutor
 from .models import (
@@ -194,6 +196,13 @@ class Recorder(threading.Thread):
         return self._queue.qsize()
 
     @property
+    def dialect_name(self) -> SupportedDialect | None:
+        """Return the dialect the recorder uses."""
+        with contextlib.suppress(ValueError):
+            return SupportedDialect(self.engine.dialect.name) if self.engine else None
+        return None
+
+    @property
     def _using_file_sqlite(self) -> bool:
         """Short version to check if we are using sqlite3 as a file."""
         return self.db_url != SQLITE_URL_PREFIX and self.db_url.startswith(
@@ -237,7 +246,9 @@ class Recorder(threading.Thread):
     def async_initialize(self) -> None:
         """Initialize the recorder."""
         self._event_listener = self.hass.bus.async_listen(
-            MATCH_ALL, self.event_listener, event_filter=self._async_event_filter
+            MATCH_ALL,
+            self.event_listener,
+            run_immediately=True,
         )
         self._queue_watcher = async_track_time_interval(
             self.hass, self._async_check_queue, timedelta(minutes=10)
@@ -458,11 +469,6 @@ class Recorder(threading.Thread):
         self.queue_task(ExternalStatisticsTask(metadata, stats))
 
     @callback
-    def using_sqlite(self) -> bool:
-        """Return if recorder uses sqlite as the engine."""
-        return bool(self.engine and self.engine.dialect.name == "sqlite")
-
-    @callback
     def _async_setup_periodic_tasks(self) -> None:
         """Prepare periodic tasks."""
         if self.hass.is_stopping or not self._get_session:
@@ -471,7 +477,7 @@ class Recorder(threading.Thread):
 
         # If the db is using a socket connection, we need to keep alive
         # to prevent errors from unexpected disconnects
-        if not self.using_sqlite():
+        if self.dialect_name != SupportedDialect.SQLITE:
             self._keep_alive_listener = async_track_time_interval(
                 self.hass, self._async_keep_alive, timedelta(seconds=KEEPALIVE_TIME)
             )
@@ -916,7 +922,8 @@ class Recorder(threading.Thread):
     @callback
     def event_listener(self, event: Event) -> None:
         """Listen for new events and put them in the process queue."""
-        self.queue_task(EventTask(event))
+        if self._async_event_filter(event):
+            self.queue_task(EventTask(event))
 
     def block_till_done(self) -> None:
         """Block till all events processed.
@@ -936,7 +943,7 @@ class Recorder(threading.Thread):
 
     async def lock_database(self) -> bool:
         """Lock database so it can be backed up safely."""
-        if not self.using_sqlite():
+        if self.dialect_name != SupportedDialect.SQLITE:
             _LOGGER.debug(
                 "Not a SQLite database or not connected, locking not necessary"
             )
@@ -965,7 +972,7 @@ class Recorder(threading.Thread):
 
         Returns true if database lock has been held throughout the process.
         """
-        if not self.using_sqlite():
+        if self.dialect_name != SupportedDialect.SQLITE:
             _LOGGER.debug(
                 "Not a SQLite database or not connected, unlocking not necessary"
             )

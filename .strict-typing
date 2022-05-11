@@ -43,6 +43,7 @@ homeassistant.components.aftership.*
 homeassistant.components.air_quality.*
 homeassistant.components.airly.*
 homeassistant.components.airvisual.*
+homeassistant.components.airzone.*
 homeassistant.components.aladdin_connect.*
 homeassistant.components.alarm_control_panel.*
 homeassistant.components.amazon_polly.*
@@ -174,6 +175,7 @@ homeassistant.components.powerwall.*
 homeassistant.components.proximity.*
 homeassistant.components.pvoutput.*
 homeassistant.components.pure_energie.*
+homeassistant.components.qnap_qsw.*
 homeassistant.components.rabbitair.*
 homeassistant.components.rainmachine.*
 homeassistant.components.rdw.*

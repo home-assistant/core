@@ -37,6 +37,13 @@
                 },
                 "description": "\u30e2\u30d0\u30a4\u30eb\u30a2\u30d7\u30ea\u767b\u9332\u30da\u30fc\u30b8\u3092\u4f7f\u7528\u3057\u3066\u3001Vulcan\u30a2\u30ab\u30a6\u30f3\u30c8\u306b\u30ed\u30b0\u30a4\u30f3\u3057\u307e\u3059\u3002"
             },
+            "reauth_confirm": {
+                "data": {
+                    "pin": "\u30d4\u30f3",
+                    "region": "\u30b7\u30f3\u30dc\u30eb",
+                    "token": "\u30c8\u30fc\u30af\u30f3"
+                }
+            },
             "select_saved_credentials": {
                 "data": {
                     "credentials": "\u30ed\u30b0\u30a4\u30f3"

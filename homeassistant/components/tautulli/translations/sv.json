@@ -1,0 +1,9 @@
+{
+    "config": {
+        "step": {
+            "reauth_confirm": {
+                "description": "F\u00f6r att hitta din API-nyckel, \u00f6ppna Tautullis webbsida och navigera till Inst\u00e4llningar och sedan till webbgr\u00e4nssnitt. API-nyckeln finns l\u00e4ngst ner p\u00e5 sidan."
+            }
+        }
+    }
+}
