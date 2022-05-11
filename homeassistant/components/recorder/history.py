@@ -18,12 +18,14 @@ from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.expression import literal
 
 from homeassistant.components import recorder
+from homeassistant.components.websocket_api.const import (
+    COMPRESSED_STATE_LAST_CHANGED,
+    COMPRESSED_STATE_STATE,
+)
 from homeassistant.core import HomeAssistant, State, split_entity_id
 import homeassistant.util.dt as dt_util
 
 from .models import (
-    COMPRESSED_STATE_LAST_CHANGED,
-    COMPRESSED_STATE_STATE,
     LazyState,
     RecorderRuns,
     StateAttributes,
