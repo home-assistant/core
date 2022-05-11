@@ -1164,3 +1164,50 @@ async def test_history_during_period(hass, hass_ws_client, recorder_mock):
 
     assert sensor_test_history[2]["s"] == "on"
     assert sensor_test_history[2]["a"] == {"any": "attr"}
+
+
+async def test_history_during_period_bad_start_time(
+    hass, hass_ws_client, recorder_mock
+):
+    """Test history_during_period bad state time."""
+    await async_setup_component(
+        hass,
+        "history",
+        {"history": {}},
+    )
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "history/history_during_period",
+            "start_time": "cats",
+        }
+    )
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "invalid_start_time"
+
+
+async def test_history_during_period_bad_end_time(hass, hass_ws_client, recorder_mock):
+    """Test history_during_period bad end time."""
+    now = dt_util.utcnow()
+
+    await async_setup_component(
+        hass,
+        "history",
+        {"history": {}},
+    )
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "history/history_during_period",
+            "start_time": now.isoformat(),
+            "end_time": "dogs",
+        }
+    )
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "invalid_end_time"
