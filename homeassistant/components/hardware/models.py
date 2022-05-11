@@ -6,11 +6,12 @@ from typing import Protocol, TypedDict
 from homeassistant.core import callback
 
 
-class BoardInfo(TypedDict):
+class HardwareInfo(TypedDict):
     """Board info type."""
 
     image: str | None
     name: str | None
+    type: str
     url: str | None
 
 
@@ -18,5 +19,5 @@ class HardwareProtocol(Protocol):
     """Define the format of hardware platforms."""
 
     @callback
-    def async_board_info(self) -> BoardInfo:
-        """Return board info."""
+    def async_info(self) -> HardwareInfo:
+        """Return info."""

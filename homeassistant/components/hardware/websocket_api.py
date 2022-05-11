@@ -26,16 +26,13 @@ def ws_info(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """Return hardware info."""
-    boards = []
+    hardware_info = []
 
     hardware_platform: dict[str, HardwareProtocol] = hass.data[DOMAIN][
         "hardware_platform"
     ]
     for platform in hardware_platform.values():
-        if hasattr(platform, "async_board_info"):
-            boards.append(platform.async_board_info())
+        if hasattr(platform, "async_info"):
+            hardware_info.append(platform.async_info())
 
-    hardware_info = {
-        "boards": boards,
-    }
     connection.send_result(msg["id"], hardware_info)

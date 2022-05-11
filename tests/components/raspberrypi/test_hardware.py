@@ -15,12 +15,11 @@ async def test_board_info(hass: HomeAssistant, hass_ws_client) -> None:
 
     assert msg["id"] == 1
     assert msg["success"]
-    assert msg["result"] == {
-        "boards": [
-            {
-                "image": "https://images.pexels.com/photos/45201/kitty-cat-kitten-pet-45201.jpeg",
-                "name": "Raspberry Pi",
-                "url": "https://theuselessweb.com/",
-            }
-        ]
-    }
+    assert msg["result"] == [
+        {
+            "image": "https://images.pexels.com/photos/45201/kitty-cat-kitten-pet-45201.jpeg",
+            "name": "Raspberry Pi",
+            "type": "board",
+            "url": "https://theuselessweb.com/",
+        }
+    ]

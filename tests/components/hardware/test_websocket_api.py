@@ -15,4 +15,4 @@ async def test_board_info(hass: HomeAssistant, hass_ws_client) -> None:
 
     assert msg["id"] == 1
     assert msg["success"]
-    assert msg["result"] == {"boards": []}
+    assert msg["result"] == []

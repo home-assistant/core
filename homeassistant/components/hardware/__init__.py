@@ -27,6 +27,6 @@ async def _register_hardware_platform(
     hass: HomeAssistant, integration_domain: str, platform: HardwareProtocol
 ):
     """Register a hardware platform."""
-    if not hasattr(platform, "async_board_info"):
+    if not hasattr(platform, "async_info"):
         raise HomeAssistantError(f"Invalid hardware platform {platform}")
     hass.data[DOMAIN]["hardware_platform"][integration_domain] = platform
