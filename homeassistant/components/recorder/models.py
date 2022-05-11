@@ -775,8 +775,9 @@ def row_to_compressed_state(
         last_changed = last_updated = start_time.timestamp()
     else:
         row_changed_changed: datetime = row.last_changed
-        if (row_last_updated := row.last_updated) and (
-            row_last_updated is None or row_last_updated == row_changed_changed
+        if (
+            not (row_last_updated := row.last_updated)
+            or row_last_updated == row_changed_changed
         ):
             last_changed = last_updated = process_datetime_to_timestamp(
                 row_changed_changed
@@ -784,10 +785,9 @@ def row_to_compressed_state(
         else:
             last_changed = process_datetime_to_timestamp(row_changed_changed)
             last_updated = process_datetime_to_timestamp(row_last_updated)
-    attributes = decode_attributes_from_row(row, attr_cache)
     return {
         COMPRESSED_STATE_STATE: row.state,
-        COMPRESSED_STATE_ATTRIBUTES: attributes,
+        COMPRESSED_STATE_ATTRIBUTES: decode_attributes_from_row(row, attr_cache),
         COMPRESSED_STATE_LAST_CHANGED: last_changed,
         COMPRESSED_STATE_LAST_UPDATED: last_updated,
     }
