@@ -1264,10 +1264,14 @@ async def test_history_during_period_impossible_conditions(
     assert response["result"] == {}
 
 
+@pytest.mark.parametrize(
+    "time_zone", ["UTC", "Europe/Berlin", "America/Chicago", "US/Hawaii"]
+)
 async def test_history_during_period_significant_domain(
-    hass, hass_ws_client, recorder_mock
+    time_zone, hass, hass_ws_client, recorder_mock
 ):
     """Test history_during_period with climate domain."""
+    hass.config.set_time_zone(time_zone)
     now = dt_util.utcnow()
 
     await async_setup_component(hass, "history", {})
