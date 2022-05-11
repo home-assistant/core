@@ -4,6 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 from unittest.mock import patch
 
+from pysensibo.model import SensiboData
 import pytest
 
 from homeassistant.components.climate.const import (
@@ -24,12 +25,12 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt
 
-from .response import DATA_FROM_API
-
 from tests.common import async_fire_time_changed
 
 
-async def test_entity(hass: HomeAssistant, load_int: ConfigEntry) -> None:
+async def test_entity(
+    hass: HomeAssistant, load_int: ConfigEntry, get_data: SensiboData
+) -> None:
     """Test the Sensibo climate."""
 
     state1 = hass.states.get("climate.hallway")
@@ -55,7 +56,10 @@ async def test_entity(hass: HomeAssistant, load_int: ConfigEntry) -> None:
 
 @pytest.mark.parametrize("p_error", SENSIBO_ERRORS)
 async def test_entity_send_command(
-    hass: HomeAssistant, p_error: Exception, load_int: ConfigEntry
+    hass: HomeAssistant,
+    p_error: Exception,
+    load_int: ConfigEntry,
+    get_data: SensiboData,
 ) -> None:
     """Test the Sensibo send command with error."""
 
@@ -94,7 +98,7 @@ async def test_entity_send_command(
 
 
 async def test_entity_send_command_calibration(
-    hass: HomeAssistant, load_int: ConfigEntry
+    hass: HomeAssistant, load_int: ConfigEntry, get_data: SensiboData
 ) -> None:
     """Test the Sensibo send command for calibration."""
 
@@ -106,7 +110,7 @@ async def test_entity_send_command_calibration(
 
     with patch(
         "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
-        return_value=DATA_FROM_API,
+        return_value=get_data,
     ):
         async_fire_time_changed(
             hass,
