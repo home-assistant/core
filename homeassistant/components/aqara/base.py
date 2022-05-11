@@ -28,8 +28,6 @@ from .const import (
 )
 from .util import remap_value, string_dot_to_underline, string_underline_to_dot
 
-#
-
 _LOGGER = logging.getLogger(__name__)
 
 
