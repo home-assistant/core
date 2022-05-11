@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.const import ATTR_NAME, ATTR_VIA_DEVICE, CONF_HOST
+from homeassistant.const import ATTR_NAME, ATTR_VIA_DEVICE, CONF_HOST, CONF_MODEL
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     CONNECTION_ZIGBEE,
@@ -11,7 +11,7 @@ from homeassistant.helpers.device_registry import (
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import CONF_VENDOR, DOMAIN
 from .coordinator import PlugwiseDataUpdateCoordinator
 
 
@@ -42,17 +42,17 @@ class PlugwiseEntity(CoordinatorEntity[PlugwiseDataUpdateCoordinator]):
             configuration_url=configuration_url,
             identifiers={(DOMAIN, device_id)},
             connections=connections,
-            manufacturer=data.get("vendor"),
-            model=data.get("model"),
+            manufacturer=data.get(CONF_VENDOR),
+            model=data.get(CONF_MODEL),
             name=f"Smile {coordinator.data.gateway['smile_name']}",
-            sw_version=data.get("fw"),
-            hw_version=data.get("hw"),
+            sw_version=data.get("firmware"),
+            hw_version=data.get("hardware"),
         )
 
         if device_id != coordinator.data.gateway["gateway_id"]:
             self._attr_device_info.update(
                 {
-                    ATTR_NAME: data.get("name"),
+                    ATTR_NAME: data.get(ATTR_NAME),
                     ATTR_VIA_DEVICE: (
                         DOMAIN,
                         str(self.coordinator.data.gateway["gateway_id"]),
