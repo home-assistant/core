@@ -13,7 +13,8 @@
             "reauth_confirm": {
                 "data": {
                     "api_key": "API\u30ad\u30fc"
-                }
+                },
+                "title": "Tautulli\u3092\u518d\u8a8d\u8a3c\u3057\u307e\u3059"
             },
             "user": {
                 "data": {

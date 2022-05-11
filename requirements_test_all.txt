@@ -306,7 +306,7 @@ base36==0.1.1
 beautifulsoup4==4.11.1
 
 # homeassistant.components.zha
-bellows==0.29.0
+bellows==0.30.0
 
 # homeassistant.components.bmw_connected_drive
 bimmer_connected==0.8.12

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Iterable, Iterator, MutableMapping
+from collections.abc import Callable, Iterable, Iterator, MutableMapping
 from datetime import datetime
 from itertools import groupby
 import logging
@@ -10,6 +10,7 @@ import time
 from typing import Any, cast
 
 from sqlalchemy import Column, Text, and_, bindparam, func, or_
+from sqlalchemy.engine.row import Row
 from sqlalchemy.ext import baked
 from sqlalchemy.ext.baked import BakedQuery
 from sqlalchemy.orm.query import Query
@@ -21,12 +22,15 @@ from homeassistant.core import HomeAssistant, State, split_entity_id
 import homeassistant.util.dt as dt_util
 
 from .models import (
+    COMPRESSED_STATE_LAST_CHANGED,
+    COMPRESSED_STATE_STATE,
     LazyState,
     RecorderRuns,
     StateAttributes,
     States,
     process_timestamp,
     process_timestamp_to_utc_isoformat,
+    row_to_compressed_state,
 )
 from .util import execute, session_scope
 
@@ -161,6 +165,7 @@ def get_significant_states(
     significant_changes_only: bool = True,
     minimal_response: bool = False,
     no_attributes: bool = False,
+    compressed_state_format: bool = False,
 ) -> MutableMapping[str, list[State | dict[str, Any]]]:
     """Wrap get_significant_states_with_session with an sql session."""
     with session_scope(hass=hass) as session:
@@ -175,6 +180,7 @@ def get_significant_states(
             significant_changes_only,
             minimal_response,
             no_attributes,
+            compressed_state_format,
         )
 
 
@@ -199,7 +205,7 @@ def _query_significant_states_with_session(
     filters: Any = None,
     significant_changes_only: bool = True,
     no_attributes: bool = False,
-) -> list[States]:
+) -> list[Row]:
     """Query the database for significant state changes."""
     if _LOGGER.isEnabledFor(logging.DEBUG):
         timer_start = time.perf_counter()
@@ -271,6 +277,7 @@ def get_significant_states_with_session(
     significant_changes_only: bool = True,
     minimal_response: bool = False,
     no_attributes: bool = False,
+    compressed_state_format: bool = False,
 ) -> MutableMapping[str, list[State | dict[str, Any]]]:
     """
     Return states changes during UTC period start_time - end_time.
@@ -304,6 +311,7 @@ def get_significant_states_with_session(
         include_start_time_state,
         minimal_response,
         no_attributes,
+        compressed_state_format,
     )
 
 
@@ -541,7 +549,7 @@ def _get_states_baked_query_for_all(
     return baked_query
 
 
-def _get_states_with_session(
+def _get_rows_with_session(
     hass: HomeAssistant,
     session: Session,
     utc_point_in_time: datetime,
@@ -570,17 +578,13 @@ def _get_states_with_session(
     else:
         baked_query = _get_states_baked_query_for_all(hass, filters, no_attributes)
 
-    attr_cache: dict[str, dict[str, Any]] = {}
-    return [
-        LazyState(row, attr_cache)
-        for row in execute(
-            baked_query(session).params(
-                run_start=run.start,
-                utc_point_in_time=utc_point_in_time,
-                entity_ids=entity_ids,
-            )
+    return execute(
+        baked_query(session).params(
+            run_start=run.start,
+            utc_point_in_time=utc_point_in_time,
+            entity_ids=entity_ids,
         )
-    ]
+    )
 
 
 def _get_single_entity_states_with_session(
@@ -607,19 +611,24 @@ def _get_single_entity_states_with_session(
         utc_point_in_time=utc_point_in_time, entity_id=entity_id
     )
 
-    return [LazyState(row) for row in execute(query)]
+    return [LazyState(row, {}) for row in execute(query)]
+
+
+def _to_timestamp(date_time: datetime) -> float:
+    return date_time.timestamp()
 
 
 def _sorted_states_to_dict(
     hass: HomeAssistant,
     session: Session,
-    states: Iterable[States],
+    states: Iterable[Row],
     start_time: datetime,
     entity_ids: list[str] | None,
     filters: Any = None,
     include_start_time_state: bool = True,
     minimal_response: bool = False,
     no_attributes: bool = False,
+    compressed_state_format: bool = False,
 ) -> MutableMapping[str, list[State | dict[str, Any]]]:
     """Convert SQL results into JSON friendly data structure.
 
@@ -632,6 +641,17 @@ def _sorted_states_to_dict(
     each list of states, otherwise our graphs won't start on the Y
     axis correctly.
     """
+    if compressed_state_format:
+        state_class = row_to_compressed_state
+        _process_timestamp: Callable[[datetime], float | str] = _to_timestamp
+        attr_last_changed = COMPRESSED_STATE_LAST_CHANGED
+        attr_state = COMPRESSED_STATE_STATE
+    else:
+        state_class = LazyState  # type: ignore[assignment]
+        _process_timestamp = process_timestamp_to_utc_isoformat
+        attr_last_changed = LAST_CHANGED_KEY
+        attr_state = STATE_KEY
+
     result: dict[str, list[State | dict[str, Any]]] = defaultdict(list)
     # Set all entity IDs to empty lists in result set to maintain the order
     if entity_ids is not None:
@@ -640,26 +660,23 @@ def _sorted_states_to_dict(
 
     # Get the states at the start time
     timer_start = time.perf_counter()
+    initial_states: dict[str, Row] = {}
     if include_start_time_state:
-        for state in _get_states_with_session(
-            hass,
-            session,
-            start_time,
-            entity_ids,
-            filters=filters,
-            no_attributes=no_attributes,
-        ):
-            state.last_updated = start_time
-            state.last_changed = start_time
-            result[state.entity_id].append(state)
+        initial_states = {
+            row.entity_id: row
+            for row in _get_rows_with_session(
+                hass,
+                session,
+                start_time,
+                entity_ids,
+                filters=filters,
+                no_attributes=no_attributes,
+            )
+        }
 
     if _LOGGER.isEnabledFor(logging.DEBUG):
         elapsed = time.perf_counter() - timer_start
         _LOGGER.debug("getting %d first datapoints took %fs", len(result), elapsed)
-
-    # Called in a tight loop so cache the function
-    # here
-    _process_timestamp_to_utc_isoformat = process_timestamp_to_utc_isoformat
 
     if entity_ids and len(entity_ids) == 1:
         states_iter: Iterable[tuple[str | Column, Iterator[States]]] = (
@@ -670,11 +687,15 @@ def _sorted_states_to_dict(
 
     # Append all changes to it
     for ent_id, group in states_iter:
-        ent_results = result[ent_id]
         attr_cache: dict[str, dict[str, Any]] = {}
+        prev_state: Column | str
+        ent_results = result[ent_id]
+        if row := initial_states.pop(ent_id, None):
+            prev_state = row.state
+            ent_results.append(state_class(row, attr_cache, start_time))
 
         if not minimal_response or split_entity_id(ent_id)[0] in NEED_ATTRIBUTE_DOMAINS:
-            ent_results.extend(LazyState(db_state, attr_cache) for db_state in group)
+            ent_results.extend(state_class(db_state, attr_cache) for db_state in group)
             continue
 
         # With minimal response we only provide a native
@@ -684,34 +705,35 @@ def _sorted_states_to_dict(
         if not ent_results:
             if (first_state := next(group, None)) is None:
                 continue
-            ent_results.append(LazyState(first_state, attr_cache))
+            prev_state = first_state.state
+            ent_results.append(state_class(first_state, attr_cache))
 
-        assert isinstance(ent_results[-1], State)
-        prev_state: Column | str = ent_results[-1].state
         initial_state_count = len(ent_results)
-
-        db_state = None
-        for db_state in group:
+        row = None
+        for row in group:
             # With minimal response we do not care about attribute
             # changes so we can filter out duplicate states
-            if (state := db_state.state) == prev_state:
+            if (state := row.state) == prev_state:
                 continue
 
             ent_results.append(
                 {
-                    STATE_KEY: state,
-                    LAST_CHANGED_KEY: _process_timestamp_to_utc_isoformat(
-                        db_state.last_changed
-                    ),
+                    attr_state: state,
+                    attr_last_changed: _process_timestamp(row.last_changed),
                 }
             )
             prev_state = state
 
-        if db_state and len(ent_results) != initial_state_count:
+        if row and len(ent_results) != initial_state_count:
             # There was at least one state change
             # replace the last minimal state with
             # a full state
-            ent_results[-1] = LazyState(db_state, attr_cache)
+            ent_results[-1] = state_class(row, attr_cache)
+
+    # If there are no states beyond the initial state,
+    # the state a was never popped from initial_states
+    for ent_id, row in initial_states.items():
+        result[ent_id].append(state_class(row, {}, start_time))
 
     # Filter out the empty lists if some states had 0 results.
     return {key: val for key, val in result.items() if val}
