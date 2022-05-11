@@ -6,6 +6,11 @@
             "unknown_auth_error": "\u4e88\u671f\u3057\u306a\u3044\u30a8\u30e9\u30fc"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "\u30d1\u30b9\u30ef\u30fc\u30c9"
+                }
+            },
             "user": {
                 "data": {
                     "password": "\u30d1\u30b9\u30ef\u30fc\u30c9",

@@ -1,6 +1,7 @@
 {
     "device_automation": {
         "action_type": {
+            "toggle": "Basculer {entity_name}",
             "turn_off": "\u00c9teindre {entity_name}",
             "turn_on": "Allumer {entity_name}"
         },
