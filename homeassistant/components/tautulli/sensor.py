@@ -138,6 +138,15 @@ class TautulliSensor(TautulliEntity, SensorEntity):
             if not _attributes.get(session.username) or "null" in session.state:
                 continue
 
-            _attributes[session.username]["Activity"] = session.state
+            _attributes[session.username] = {
+                "Activity": session.state,
+                "friendly_name": session.friendly_name,
+                "full_title": session.full_title,
+                "progress_percent": session.progress_percent,
+                "stream_video_resolution": session.stream_video_resolution,
+                "transcode_decision": session.transcode_decision,
+                "user_thumb": session.user_thumb,
+                "video_resolution": session.video_resolution,
+            }
 
         return _attributes
