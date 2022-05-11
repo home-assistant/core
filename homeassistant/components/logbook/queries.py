@@ -6,7 +6,7 @@ from datetime import datetime as dt
 from typing import Any
 
 import sqlalchemy
-from sqlalchemy import lambda_stmt, select, union_all
+from sqlalchemy import lambda_stmt, select
 from sqlalchemy.orm import aliased
 from sqlalchemy.sql.expression import literal
 from sqlalchemy.sql.lambdas import StatementLambdaElement
@@ -118,15 +118,15 @@ def _select_entities_context_ids_sub_query(
     entity_ids: list[str],
 ) -> Select:
     """Generate a subquery to find context ids for multiple entities."""
-    return select(
-        union_all(
-            _select_events_context_id_subquery(start_day, end_day, event_types).where(
-                _apply_event_entity_id_matchers(entity_ids)
-            ),
+    return (
+        _select_events_context_id_subquery(start_day, end_day, event_types)
+        .where(_apply_event_entity_id_matchers(entity_ids))
+        .union_all(
             select(States.context_id)
             .filter((States.last_updated > start_day) & (States.last_updated < end_day))
-            .where(States.entity_id.in_(entity_ids)),
-        ).c.context_id
+            .where(States.entity_id.in_(entity_ids))
+        )
+        .subquery()
     )
 
 
@@ -183,21 +183,18 @@ def _select_entity_context_ids_sub_query(
     entity_id_like: str,
 ) -> Select:
     """Generate a subquery to find context ids for a single entity."""
-    return select(
-        union_all(
-            _select_events_context_id_subquery(start_day, end_day, event_types)
-            .where(
-                Events.event_data.like(entity_id_like)
-                | EventData.shared_data.like(entity_id_like)
-            )
-            .union_all(
-                select(States.context_id)
-                .filter(
-                    (States.last_updated > start_day) & (States.last_updated < end_day)
-                )
-                .where(States.entity_id == entity_id)
-            )
-        ).c.context_id
+    return (
+        _select_events_context_id_subquery(start_day, end_day, event_types)
+        .where(
+            Events.event_data.like(entity_id_like)
+            | EventData.shared_data.like(entity_id_like)
+        )
+        .union_all(
+            select(States.context_id)
+            .filter((States.last_updated > start_day) & (States.last_updated < end_day))
+            .where(States.entity_id == entity_id)
+        )
+        .subquery()
     )
 
 
