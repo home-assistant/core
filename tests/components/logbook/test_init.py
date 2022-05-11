@@ -1321,8 +1321,8 @@ async def test_logbook_context_from_template(hass, hass_client, recorder_mock):
     assert json_dict[5]["context_user_id"] == "9400facee45711eaa9308bfd3d19e474"
 
 
-async def test_logbook_entity_matches_only(hass, hass_client, recorder_mock):
-    """Test the logbook view with a single entity and entity_matches_only."""
+async def test_logbook_(hass, hass_client, recorder_mock):
+    """Test the logbook view with a single entity and ."""
     await async_setup_component(hass, "logbook", {})
     assert await async_setup_component(
         hass,
@@ -1377,7 +1377,7 @@ async def test_logbook_entity_matches_only(hass, hass_client, recorder_mock):
     # Test today entries with filter by end_time
     end_time = start + timedelta(hours=24)
     response = await client.get(
-        f"/api/logbook/{start_date.isoformat()}?end_time={end_time}&entity=switch.test_state&entity_matches_only"
+        f"/api/logbook/{start_date.isoformat()}?end_time={end_time}&entity=switch.test_state"
     )
     assert response.status == HTTPStatus.OK
     json_dict = await response.json()
@@ -1390,10 +1390,8 @@ async def test_logbook_entity_matches_only(hass, hass_client, recorder_mock):
     assert json_dict[1]["context_user_id"] == "9400facee45711eaa9308bfd3d19e474"
 
 
-async def test_logbook_entity_matches_only_multiple_calls(
-    hass, hass_client, recorder_mock
-):
-    """Test the logbook view with a single entity and entity_matches_only called multiple times."""
+async def test_logbook_many_entities_multiple_calls(hass, hass_client, recorder_mock):
+    """Test the logbook view with a many entities called multiple times."""
     await async_setup_component(hass, "logbook", {})
     await async_setup_component(hass, "automation", {})
 
@@ -1421,7 +1419,7 @@ async def test_logbook_entity_matches_only_multiple_calls(
     for automation_id in range(5):
         # Test today entries with filter by end_time
         response = await client.get(
-            f"/api/logbook/{start_date.isoformat()}?end_time={end_time}&entity=automation.mock_{automation_id}_automation&entity_matches_only"
+            f"/api/logbook/{start_date.isoformat()}?end_time={end_time}&entity=automation.mock_{automation_id}_automation"
         )
         assert response.status == HTTPStatus.OK
         json_dict = await response.json()
@@ -1432,7 +1430,7 @@ async def test_logbook_entity_matches_only_multiple_calls(
         )
 
     response = await client.get(
-        f"/api/logbook/{start_date.isoformat()}?end_time={end_time}&entity=automation.mock_0_automation,automation.mock_1_automation,automation.mock_2_automation&entity_matches_only"
+        f"/api/logbook/{start_date.isoformat()}?end_time={end_time}&entity=automation.mock_0_automation,automation.mock_1_automation,automation.mock_2_automation"
     )
     assert response.status == HTTPStatus.OK
     json_dict = await response.json()
@@ -1442,11 +1440,28 @@ async def test_logbook_entity_matches_only_multiple_calls(
     assert json_dict[1]["entity_id"] == "automation.mock_1_automation"
     assert json_dict[2]["entity_id"] == "automation.mock_2_automation"
 
+    response = await client.get(
+        f"/api/logbook/{start_date.isoformat()}?end_time={end_time}&entity=automation.mock_4_automation,automation.mock_2_automation,automation.mock_0_automation,automation.mock_1_automation"
+    )
+    assert response.status == HTTPStatus.OK
+    json_dict = await response.json()
 
-async def test_custom_log_entry_discoverable_via_entity_matches_only(
-    hass, hass_client, recorder_mock
-):
-    """Test if a custom log entry is later discoverable via entity_matches_only."""
+    assert len(json_dict) == 4
+    assert json_dict[0]["entity_id"] == "automation.mock_0_automation"
+    assert json_dict[1]["entity_id"] == "automation.mock_1_automation"
+    assert json_dict[2]["entity_id"] == "automation.mock_2_automation"
+    assert json_dict[3]["entity_id"] == "automation.mock_4_automation"
+
+    response = await client.get(
+        f"/api/logbook/{end_time.isoformat()}?end_time={end_time}&entity=automation.mock_4_automation,automation.mock_2_automation,automation.mock_0_automation,automation.mock_1_automation"
+    )
+    assert response.status == HTTPStatus.OK
+    json_dict = await response.json()
+    assert len(json_dict) == 0
+
+
+async def test_custom_log_entry_discoverable_via_(hass, hass_client, recorder_mock):
+    """Test if a custom log entry is later discoverable via ."""
     await async_setup_component(hass, "logbook", {})
     await async_recorder_block_till_done(hass)
 
@@ -1468,7 +1483,7 @@ async def test_custom_log_entry_discoverable_via_entity_matches_only(
     # Test today entries with filter by end_time
     end_time = start + timedelta(hours=24)
     response = await client.get(
-        f"/api/logbook/{start_date.isoformat()}?end_time={end_time.isoformat()}&entity=switch.test_switch&entity_matches_only"
+        f"/api/logbook/{start_date.isoformat()}?end_time={end_time.isoformat()}&entity=switch.test_switch"
     )
     assert response.status == HTTPStatus.OK
     json_dict = await response.json()
@@ -1480,8 +1495,8 @@ async def test_custom_log_entry_discoverable_via_entity_matches_only(
     assert json_dict[0]["entity_id"] == "switch.test_switch"
 
 
-async def test_logbook_entity_matches_only_multiple(hass, hass_client, recorder_mock):
-    """Test the logbook view with a multiple entities and entity_matches_only."""
+async def test_logbook_multiple_entities(hass, hass_client, recorder_mock):
+    """Test the logbook view with a multiple entities."""
     await async_setup_component(hass, "logbook", {})
     assert await async_setup_component(
         hass,
@@ -1513,12 +1528,14 @@ async def test_logbook_entity_matches_only_multiple(hass, hass_client, recorder_
     # Entity added (should not be logged)
     hass.states.async_set("switch.test_state", STATE_ON)
     hass.states.async_set("light.test_state", STATE_ON)
+    hass.states.async_set("binary_sensor.test_state", STATE_ON)
 
     await hass.async_block_till_done()
 
     # First state change (should be logged)
     hass.states.async_set("switch.test_state", STATE_OFF)
     hass.states.async_set("light.test_state", STATE_OFF)
+    hass.states.async_set("binary_sensor.test_state", STATE_OFF)
 
     await hass.async_block_till_done()
 
@@ -1530,6 +1547,9 @@ async def test_logbook_entity_matches_only_multiple(hass, hass_client, recorder_
         "switch.test_state", STATE_ON, context=switch_turn_off_context
     )
     hass.states.async_set("light.test_state", STATE_ON, context=switch_turn_off_context)
+    hass.states.async_set(
+        "binary_sensor.test_state", STATE_ON, context=switch_turn_off_context
+    )
     await async_wait_recording_done(hass)
 
     client = await hass_client()
@@ -1541,7 +1561,7 @@ async def test_logbook_entity_matches_only_multiple(hass, hass_client, recorder_
     # Test today entries with filter by end_time
     end_time = start + timedelta(hours=24)
     response = await client.get(
-        f"/api/logbook/{start_date.isoformat()}?end_time={end_time}&entity=switch.test_state,light.test_state&entity_matches_only"
+        f"/api/logbook/{start_date.isoformat()}?end_time={end_time}&entity=switch.test_state,light.test_state"
     )
     assert response.status == HTTPStatus.OK
     json_dict = await response.json()
@@ -1558,6 +1578,46 @@ async def test_logbook_entity_matches_only_multiple(hass, hass_client, recorder_
     assert json_dict[3]["entity_id"] == "light.test_state"
     assert json_dict[3]["context_user_id"] == "9400facee45711eaa9308bfd3d19e474"
 
+    # Test today entries with filter by end_time
+    end_time = start + timedelta(hours=24)
+    response = await client.get(
+        f"/api/logbook/{start_date.isoformat()}?end_time={end_time}&entity=binary_sensor.test_state,light.test_state"
+    )
+    assert response.status == HTTPStatus.OK
+    json_dict = await response.json()
+
+    assert len(json_dict) == 4
+
+    assert json_dict[0]["entity_id"] == "light.test_state"
+
+    assert json_dict[1]["entity_id"] == "binary_sensor.test_state"
+
+    assert json_dict[2]["entity_id"] == "light.test_state"
+    assert json_dict[2]["context_user_id"] == "9400facee45711eaa9308bfd3d19e474"
+
+    assert json_dict[3]["entity_id"] == "binary_sensor.test_state"
+    assert json_dict[3]["context_user_id"] == "9400facee45711eaa9308bfd3d19e474"
+
+    # Test today entries with filter by end_time
+    end_time = start + timedelta(hours=24)
+    response = await client.get(
+        f"/api/logbook/{start_date.isoformat()}?end_time={end_time}&entity=light.test_state,binary_sensor.test_state"
+    )
+    assert response.status == HTTPStatus.OK
+    json_dict = await response.json()
+
+    assert len(json_dict) == 4
+
+    assert json_dict[0]["entity_id"] == "light.test_state"
+
+    assert json_dict[1]["entity_id"] == "binary_sensor.test_state"
+
+    assert json_dict[2]["entity_id"] == "light.test_state"
+    assert json_dict[2]["context_user_id"] == "9400facee45711eaa9308bfd3d19e474"
+
+    assert json_dict[3]["entity_id"] == "binary_sensor.test_state"
+    assert json_dict[3]["context_user_id"] == "9400facee45711eaa9308bfd3d19e474"
+
 
 async def test_logbook_invalid_entity(hass, hass_client, recorder_mock):
     """Test the logbook view with requesting an invalid entity."""
@@ -1572,7 +1632,7 @@ async def test_logbook_invalid_entity(hass, hass_client, recorder_mock):
     # Test today entries with filter by end_time
     end_time = start + timedelta(hours=24)
     response = await client.get(
-        f"/api/logbook/{start_date.isoformat()}?end_time={end_time}&entity=invalid&entity_matches_only"
+        f"/api/logbook/{start_date.isoformat()}?end_time={end_time}&entity=invalid"
     )
     assert response.status == HTTPStatus.INTERNAL_SERVER_ERROR
 
