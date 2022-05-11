@@ -236,20 +236,16 @@ async def async_start(  # noqa: C901
                         # pylint: disable-next=import-outside-toplevel
                         from . import device_automation
 
-                        hass.async_add_job(
-                            device_automation.async_setup_entry(hass, config_entry)
-                        )
+                        await device_automation.async_setup_entry(hass, config_entry)
                     elif component == "tag":
                         # Local import to avoid circular dependencies
                         # pylint: disable-next=import-outside-toplevel
                         from . import tag
 
-                        hass.async_add_job(tag.async_setup_entry(hass, config_entry))
+                        await tag.async_setup_entry(hass, config_entry)
                     else:
-                        hass.async_add_job(
-                            hass.config_entries.async_forward_entry_setup(
-                                config_entry, component
-                            )
+                        await hass.config_entries.async_forward_entry_setup(
+                            config_entry, component
                         )
                     hass.data[CONFIG_ENTRY_IS_SETUP].add(config_entries_key)
 
