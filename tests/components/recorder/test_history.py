@@ -14,6 +14,7 @@ from homeassistant.components import recorder
 from homeassistant.components.recorder import history
 from homeassistant.components.recorder.models import (
     Events,
+    LazyState,
     RecorderRuns,
     StateAttributes,
     States,
@@ -40,9 +41,19 @@ async def _async_get_states(
 
     def _get_states_with_session():
         with session_scope(hass=hass) as session:
-            return history._get_states_with_session(
-                hass, session, utc_point_in_time, entity_ids, run, None, no_attributes
-            )
+            attr_cache = {}
+            return [
+                LazyState(row, attr_cache)
+                for row in history._get_rows_with_session(
+                    hass,
+                    session,
+                    utc_point_in_time,
+                    entity_ids,
+                    run,
+                    None,
+                    no_attributes,
+                )
+            ]
 
     return await recorder.get_instance(hass).async_add_executor_job(
         _get_states_with_session
