@@ -206,7 +206,7 @@ MAP_SERVICE_API = {
 }
 
 HARDWARE_INTEGRATIONS = {
-    "rpi": "raspberry_pi",
+    "rpi": "raspberrypi",
 }
 
 
@@ -712,11 +712,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     # Setup hardware integration for the detected board type
     async def _async_setup_hardware_integration(hass):
         """Set up hardaware integration for the detected board type."""
-        if os_info := get_os_info(hass) is None:
+        if (os_info := get_os_info(hass)) is None:
             return
-        if board := os_info.get("board") is None:
+        if (board := os_info.get("board")) is None:
             return
-        if hw_integration := HARDWARE_INTEGRATIONS.get(board) is None:
+        if (hw_integration := HARDWARE_INTEGRATIONS.get(board)) is None:
             return
         await async_setup_component(hass, hw_integration, {})
 
