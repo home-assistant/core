@@ -55,7 +55,7 @@
           "authentication": "[%key:component::generic::config::step::user::data::authentication%]",
           "limit_refetch_to_url_change": "[%key:component::generic::config::step::user::data::limit_refetch_to_url_change%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "use_wallclock_as_timestamps": "Rewrite timestamps",
+          "use_wallclock_as_timestamps": "Advanced: Use wallclock as timestamps (usually not required)",
           "username": "[%key:common::config_flow::data::username%]",
           "framerate": "[%key:component::generic::config::step::user::data::framerate%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
