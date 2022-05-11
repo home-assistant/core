@@ -24,7 +24,7 @@ from .entity import PlugwiseEntity
 class PlugwiseSelectDescriptionMixin:
     """Mixin values for Plugwise Select entities."""
 
-    command: Callable[..., Awaitable[Any]]
+    command: Callable[[Smile, str, str], Awaitable[Any]]
     current_option: str
     options: str
 
