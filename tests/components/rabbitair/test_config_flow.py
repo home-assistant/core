@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Generator
+from collections.abc import Generator
 from unittest.mock import Mock, patch
 
 import pytest
