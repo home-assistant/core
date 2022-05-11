@@ -78,21 +78,18 @@ SENSOR_TYPES: tuple[SabnzbdSensorEntityDescription, ...] = (
         key="day_size",
         name="Daily Total",
         native_unit_of_measurement=DATA_GIGABYTES,
-        entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SabnzbdSensorEntityDescription(
         key="week_size",
         name="Weekly Total",
         native_unit_of_measurement=DATA_GIGABYTES,
-        entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SabnzbdSensorEntityDescription(
         key="month_size",
         name="Monthly Total",
         native_unit_of_measurement=DATA_GIGABYTES,
-        entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SabnzbdSensorEntityDescription(
