@@ -205,7 +205,7 @@ def _query_significant_states_with_session(
     filters: Any = None,
     significant_changes_only: bool = True,
     no_attributes: bool = False,
-) -> list[States]:
+) -> list[Row]:
     """Query the database for significant state changes."""
     if _LOGGER.isEnabledFor(logging.DEBUG):
         timer_start = time.perf_counter()
@@ -621,7 +621,7 @@ def _to_timestamp(date_time: datetime) -> float:
 def _sorted_states_to_dict(
     hass: HomeAssistant,
     session: Session,
-    states: Iterable[States],
+    states: Iterable[Row],
     start_time: datetime,
     entity_ids: list[str] | None,
     filters: Any = None,
@@ -729,6 +729,11 @@ def _sorted_states_to_dict(
             # replace the last minimal state with
             # a full state
             ent_results[-1] = state_class(row, attr_cache)
+
+    # If there are no states beyond the initial state,
+    # the state a was never popped from initial_states
+    for ent_id, row in initial_states.items():
+        result[ent_id].append(state_class(row, {}, start_time))
 
     # Filter out the empty lists if some states had 0 results.
     return {key: val for key, val in result.items() if val}

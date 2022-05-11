@@ -1123,18 +1123,17 @@ async def test_history_during_period(hass, hass_ws_client, recorder_mock):
     sensor_test_history = response["result"]["sensor.test"]
     assert len(sensor_test_history) == 3
 
-    assert sensor_test_history[0]["entity_id"] == "sensor.test"
-    assert sensor_test_history[0]["state"] == "on"
-    assert sensor_test_history[0]["attributes"] == {}
+    assert sensor_test_history[0]["s"] == "on"
+    assert sensor_test_history[0]["a"] == {}
+    assert isinstance(sensor_test_history[0]["lu"], float)
+    assert isinstance(sensor_test_history[0]["lc"], float)
 
-    assert "entity_id" not in sensor_test_history[1]
-    assert "attributes" not in sensor_test_history[1]
-    assert sensor_test_history[1]["state"] == "off"
-    assert isinstance(sensor_test_history[1]["last_changed"], float)
+    assert "a" not in sensor_test_history[1]
+    assert sensor_test_history[1]["s"] == "off"
+    assert isinstance(sensor_test_history[1]["lc"], float)
 
-    assert sensor_test_history[2]["entity_id"] == "sensor.test"
-    assert sensor_test_history[2]["state"] == "on"
-    assert sensor_test_history[2]["attributes"] == {}
+    assert sensor_test_history[2]["s"] == "on"
+    assert sensor_test_history[2]["a"] == {}
 
     await client.send_json(
         {
@@ -1154,15 +1153,14 @@ async def test_history_during_period(hass, hass_ws_client, recorder_mock):
 
     assert len(sensor_test_history) == 3
 
-    assert sensor_test_history[0]["entity_id"] == "sensor.test"
-    assert sensor_test_history[0]["state"] == "on"
-    assert sensor_test_history[0]["attributes"] == {"any": "attr"}
+    assert sensor_test_history[0]["s"] == "on"
+    assert sensor_test_history[0]["a"] == {"any": "attr"}
+    assert isinstance(sensor_test_history[0]["lu"], float)
+    assert isinstance(sensor_test_history[0]["lc"], float)
 
-    assert sensor_test_history[1]["entity_id"] == "sensor.test"
-    assert sensor_test_history[1]["state"] == "off"
-    assert isinstance(sensor_test_history[1]["last_changed"], str)
-    assert sensor_test_history[1]["attributes"] == {"any": "attr"}
+    assert sensor_test_history[1]["s"] == "off"
+    assert isinstance(sensor_test_history[1]["lc"], float)
+    assert sensor_test_history[1]["a"] == {"any": "attr"}
 
-    assert sensor_test_history[2]["entity_id"] == "sensor.test"
-    assert sensor_test_history[2]["state"] == "on"
-    assert sensor_test_history[2]["attributes"] == {"any": "attr"}
+    assert sensor_test_history[2]["s"] == "on"
+    assert sensor_test_history[2]["a"] == {"any": "attr"}
