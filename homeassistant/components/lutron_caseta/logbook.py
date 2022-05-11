@@ -35,7 +35,7 @@ def async_describe_events(
         button_description = button_map[leap_button_number]
         return {
             "name": f"{data[ATTR_AREA_NAME]} {data[ATTR_DEVICE_NAME]}",
-            "message": f"{action} {button_description}.",
+            "message": f"{action} {button_description}",
         }
 
     async_describe_event(
