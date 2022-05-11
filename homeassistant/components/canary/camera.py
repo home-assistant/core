@@ -199,13 +199,14 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
     async def _check_for_new_image(self) -> None:
         await self._set_last_event()
 
-        if self._last_event is not None:
-            if self._last_image_id != self._last_event.entry_id:
-                self._image = None
-            try:
-                self._image_url = self._last_event.thumbnails[0].image_url
-            except IndexError:
-                self._image_url = None
+        if self._last_event is None:
+            return
+        if self._last_image_id != self._last_event.entry_id:
+            self._image = None
+        try:
+            self._image_url = self._last_event.thumbnails[0].image_url
+        except IndexError:
+            self._image_url = None
 
     async def _set_last_event(self) -> None:
         if self._last_event is None:
