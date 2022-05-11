@@ -25,10 +25,8 @@ from .const import (
     AQARA_HA_SIGNAL_REGISTER_POINT,
     AQARA_HA_SIGNAL_UPDATE_ENTITY,
     AQARA_HA_SIGNAL_UPDATE_POINT_VALUE,
-    CONF_AUTH_TYPE,
     CONF_COUNTRY_CODE,
     CONF_PASSWORD,
-    CONF_PROJECT_TYPE,
     CONF_USERNAME,
     DOMAIN,
     PLATFORMS,
@@ -50,13 +48,6 @@ class HomeAssistantAqaraData(NamedTuple):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Async setup hass config entry."""
     hass.data.setdefault(DOMAIN, {})
-
-    # Project type has been renamed to auth type in the upstream Aqara IoT SDK.
-    # This migrates existing config entries to reflect that name change.
-    if CONF_PROJECT_TYPE in entry.data:
-        data = {**entry.data, CONF_AUTH_TYPE: entry.data[CONF_PROJECT_TYPE]}
-        data.pop(CONF_PROJECT_TYPE)
-        hass.config_entries.async_update_entry(entry, data=data)
 
     api = AqaraOpenAPI(country_code=entry.data[CONF_COUNTRY_CODE])
 

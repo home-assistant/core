@@ -3,8 +3,7 @@
   "name": "Aqara",
   "documentation": "https://www.home-assistant.io/integrations/aqara",
   "requirements": ["aqara-iot-py-sdk==1.0.3"],
-  "dependencies": ["ffmpeg"],
   "codeowners": ["@wumao", "@chenliuyang1989"],
   "config_flow": true,
-  "iot_class": "cloud_push",
+  "iot_class": "cloud_push"
 }

@@ -10,7 +10,6 @@ DOMAIN = "aqara"
 LOGGER = logging.getLogger(__package__)
 
 CONF_AUTH_TYPE = "auth_type"
-CONF_PROJECT_TYPE = "aqara_project_type"
 CONF_ENDPOINT = "endpoint"
 CONF_USERNAME = "username"
 CONF_PASSWORD = "password"
@@ -33,11 +32,6 @@ EMPTY_UNIT = "  "
 
 PLATFORMS = [
     "binary_sensor",
-    "button",
-    "light",
-    "number",
-    "sensor",
-    "switch",
 ]
 
 

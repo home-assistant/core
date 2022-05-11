@@ -9,12 +9,11 @@ omit =
     # omit pieces of code that rely on external devices being present
 
     homeassistant/components/aqara/binary_sensor.py
-    homeassistant/components/aqara/button.py
-    homeassistant/components/aqara/sensor.py
     homeassistant/components/aqara/device_trigger.py
     homeassistant/components/aqara/base.py
     homeassistant/components/aqara/__init__.py
     homeassistant/components/aqara/util.py
+    
     homeassistant/components/acer_projector/*
     homeassistant/components/actiontec/const.py
     homeassistant/components/actiontec/device_tracker.py
