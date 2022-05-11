@@ -206,10 +206,6 @@ async def ws_get_history_during_period(
 
     entity_ids = msg["entity_ids"]
     include_start_time_state = msg["include_start_time_state"]
-    significant_changes_only = msg["significant_changes_only"]
-    no_attributes = msg["no_attributes"]
-    minimal_response = True
-    timestamp = True
 
     if (
         not include_start_time_state
@@ -218,6 +214,11 @@ async def ws_get_history_during_period(
     ):
         connection.send_result(msg["id"], {})
         return
+
+    significant_changes_only = msg["significant_changes_only"]
+    no_attributes = msg["no_attributes"]
+    minimal_response = True
+    timestamp = True
 
     history_during_period: MutableMapping[
         str, list[State | dict[str, Any]]
