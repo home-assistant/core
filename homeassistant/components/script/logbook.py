@@ -17,6 +17,7 @@ def async_describe_events(hass, async_describe_event):
             "name": data.get(ATTR_NAME),
             "message": "started",
             "entity_id": data.get(ATTR_ENTITY_ID),
+            "context_id": event.context_id,
         }
 
     async_describe_event(DOMAIN, EVENT_SCRIPT_STARTED, async_describe_logbook_event)
