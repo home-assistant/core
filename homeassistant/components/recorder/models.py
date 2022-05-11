@@ -98,6 +98,13 @@ EVENT_ORIGIN_ORDER = [EventOrigin.local, EventOrigin.remote]
 EVENT_ORIGIN_TO_IDX = {origin: idx for idx, origin in enumerate(EVENT_ORIGIN_ORDER)}
 
 
+COMPRESSED_STATE_STATE = "s"
+COMPRESSED_STATE_ATTRIBUTES = "a"
+COMPRESSED_STATE_CONTEXT = "c"
+COMPRESSED_STATE_LAST_CHANGED = "lc"
+COMPRESSED_STATE_LAST_UPDATED = "lu"
+
+
 class Events(Base):  # type: ignore[misc,valid-type]
     """Event history data."""
 
@@ -625,15 +632,18 @@ class LazyState(State):
     ]
 
     def __init__(  # pylint: disable=super-init-not-called
-        self, row: Row, attr_cache: dict[str, dict[str, Any]] | None = None
+        self,
+        row: Row,
+        attr_cache: dict[str, dict[str, Any]] | None = None,
+        start_time: datetime | None = None,
     ) -> None:
         """Init the lazy state."""
         self._row = row
         self.entity_id: str = self._row.entity_id
         self.state = self._row.state or ""
         self._attributes: dict[str, Any] | None = None
-        self._last_changed: datetime | None = None
-        self._last_updated: datetime | None = None
+        self._last_changed: datetime | None = start_time
+        self._last_updated: datetime | None = start_time
         self._context: Context | None = None
         self.attr_cache = attr_cache
 
@@ -750,8 +760,38 @@ class LazyState(State):
         )
 
 
-COMPRESSED_STATE_STATE = "s"
-COMPRESSED_STATE_ATTRIBUTES = "a"
-COMPRESSED_STATE_CONTEXT = "c"
-COMPRESSED_STATE_LAST_CHANGED = "lc"
-COMPRESSED_STATE_LAST_UPDATED = "lu"
+def row_to_compressed_state(
+    row: Row,
+    attr_cache: dict[str, dict[str, Any]],
+    start_time: datetime | None = None,
+) -> dict[str, Any]:
+    """Convert a database row to a compressed state."""
+    if start_time:
+        last_changed = last_updated = start_time.timestamp()
+    else:
+        row_changed_changed: datetime = row.last_changed
+        row_last_updated: datetime = row.last_updated
+        if row_last_updated == row_changed_changed:
+            last_changed = last_updated = row.last_changed.timestamp()
+        else:
+            last_changed = row_changed_changed.timestamp()
+            last_updated = row_last_updated.timestamp()
+    source: str = row.shared_attrs or row.attributes
+    if (attributes := attr_cache.get(source)) is None:
+        if source == "{}" or source is None:
+            attributes = {}
+        else:
+            try:
+                attr_cache[source] = attributes = json.loads(source)
+            except ValueError:
+                # When json.loads fails
+                _LOGGER.exception(
+                    "Error converting row to state attributes: %s", source
+                )
+                attributes = {}
+    return {
+        COMPRESSED_STATE_STATE: row.state,
+        COMPRESSED_STATE_ATTRIBUTES: attributes,
+        COMPRESSED_STATE_LAST_CHANGED: last_changed,
+        COMPRESSED_STATE_LAST_UPDATED: last_updated,
+    }
