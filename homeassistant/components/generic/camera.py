@@ -64,7 +64,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         ),
         vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
         vol.Optional(CONF_RTSP_TRANSPORT): vol.In(RTSP_TRANSPORTS.keys()),
-        vol.Optional(CONF_USE_WALLCLOCK_AS_TIMESTAMPS, default=False): cv.boolean,
     }
 )
 
@@ -96,7 +95,6 @@ async def async_setup_platform(
         CONF_CONTENT_TYPE: config.get(CONF_CONTENT_TYPE),
         CONF_FRAMERATE: config.get(CONF_FRAMERATE),
         CONF_VERIFY_SSL: config.get(CONF_VERIFY_SSL),
-        CONF_USE_WALLCLOCK_AS_TIMESTAMPS: config.get(CONF_USE_WALLCLOCK_AS_TIMESTAMPS),
     }
 
     hass.async_create_task(
