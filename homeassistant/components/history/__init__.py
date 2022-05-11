@@ -173,8 +173,8 @@ async def ws_get_list_statistic_ids(
         vol.Required("start_time"): str,
         vol.Optional("end_time"): str,
         vol.Optional("entity_ids"): [str],
-        vol.Optional("include_start_time_state", default=False): bool,
-        vol.Optional("significant_changes_only", default=False): bool,
+        vol.Optional("include_start_time_state", default=True): bool,
+        vol.Optional("significant_changes_only", default=True): bool,
         vol.Optional("minimal_response", default=False): bool,
         vol.Optional("no_attributes", default=False): bool,
     }
