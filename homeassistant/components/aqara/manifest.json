@@ -7,5 +7,4 @@
   "codeowners": ["@wumao", "@chenliuyang1989"],
   "config_flow": true,
   "iot_class": "cloud_push",
-  "dhcp": []
 }
