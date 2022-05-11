@@ -171,8 +171,3 @@ MAX_RPC_KEY_INSTANCES = 4
 ENTRY_RELOAD_COOLDOWN = 60
 
 SHELLY_GAS_MODELS = ["SHGS-1"]
-
-# Firmware not fully provisioned by vendor
-FW_PROVISIONING_ISSUE_MSG = (
-    "Device not fully provisioned. Please contact Shelly support"
-)
