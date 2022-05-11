@@ -28,6 +28,12 @@ from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy.orm.session import Session
 
+from homeassistant.components.websocket_api.const import (
+    COMPRESSED_STATE_ATTRIBUTES,
+    COMPRESSED_STATE_LAST_CHANGED,
+    COMPRESSED_STATE_LAST_UPDATED,
+    COMPRESSED_STATE_STATE,
+)
 from homeassistant.const import (
     MAX_LENGTH_EVENT_CONTEXT_ID,
     MAX_LENGTH_EVENT_EVENT_TYPE,
@@ -612,6 +618,13 @@ def process_timestamp_to_utc_isoformat(ts: datetime | None) -> str | None:
     return ts.astimezone(dt_util.UTC).isoformat()
 
 
+def process_datetime_to_timestamp(ts: datetime) -> float:
+    """Process a timestamp into a unix timestamp."""
+    if ts.tzinfo == dt_util.UTC:
+        return ts.timestamp()
+    return ts.replace(tzinfo=dt_util.UTC).timestamp()
+
+
 class LazyState(State):
     """A lazy version of core State."""
 
@@ -621,45 +634,30 @@ class LazyState(State):
         "_last_changed",
         "_last_updated",
         "_context",
-        "_attr_cache",
+        "attr_cache",
     ]
 
     def __init__(  # pylint: disable=super-init-not-called
-        self, row: Row, attr_cache: dict[str, dict[str, Any]] | None = None
+        self,
+        row: Row,
+        attr_cache: dict[str, dict[str, Any]],
+        start_time: datetime | None = None,
     ) -> None:
         """Init the lazy state."""
         self._row = row
         self.entity_id: str = self._row.entity_id
         self.state = self._row.state or ""
         self._attributes: dict[str, Any] | None = None
-        self._last_changed: datetime | None = None
-        self._last_updated: datetime | None = None
+        self._last_changed: datetime | None = start_time
+        self._last_updated: datetime | None = start_time
         self._context: Context | None = None
-        self._attr_cache = attr_cache
+        self.attr_cache = attr_cache
 
     @property  # type: ignore[override]
     def attributes(self) -> dict[str, Any]:  # type: ignore[override]
         """State attributes."""
         if self._attributes is None:
-            source = self._row.shared_attrs or self._row.attributes
-            if self._attr_cache is not None and (
-                attributes := self._attr_cache.get(source)
-            ):
-                self._attributes = attributes
-                return attributes
-            if source == EMPTY_JSON_OBJECT or source is None:
-                self._attributes = {}
-                return self._attributes
-            try:
-                self._attributes = json.loads(source)
-            except ValueError:
-                # When json.loads fails
-                _LOGGER.exception(
-                    "Error converting row to state attributes: %s", self._row
-                )
-                self._attributes = {}
-            if self._attr_cache is not None:
-                self._attr_cache[source] = self._attributes
+            self._attributes = decode_attributes_from_row(self._row, self.attr_cache)
         return self._attributes
 
     @attributes.setter
@@ -748,3 +746,48 @@ class LazyState(State):
             and self.state == other.state
             and self.attributes == other.attributes
         )
+
+
+def decode_attributes_from_row(
+    row: Row, attr_cache: dict[str, dict[str, Any]]
+) -> dict[str, Any]:
+    """Decode attributes from a database row."""
+    source: str = row.shared_attrs or row.attributes
+    if (attributes := attr_cache.get(source)) is not None:
+        return attributes
+    if not source or source == EMPTY_JSON_OBJECT:
+        return {}
+    try:
+        attr_cache[source] = attributes = json.loads(source)
+    except ValueError:
+        _LOGGER.exception("Error converting row to state attributes: %s", source)
+        attr_cache[source] = attributes = {}
+    return attributes
+
+
+def row_to_compressed_state(
+    row: Row,
+    attr_cache: dict[str, dict[str, Any]],
+    start_time: datetime | None = None,
+) -> dict[str, Any]:
+    """Convert a database row to a compressed state."""
+    if start_time:
+        last_changed = last_updated = start_time.timestamp()
+    else:
+        row_changed_changed: datetime = row.last_changed
+        if (
+            not (row_last_updated := row.last_updated)
+            or row_last_updated == row_changed_changed
+        ):
+            last_changed = last_updated = process_datetime_to_timestamp(
+                row_changed_changed
+            )
+        else:
+            last_changed = process_datetime_to_timestamp(row_changed_changed)
+            last_updated = process_datetime_to_timestamp(row_last_updated)
+    return {
+        COMPRESSED_STATE_STATE: row.state,
+        COMPRESSED_STATE_ATTRIBUTES: decode_attributes_from_row(row, attr_cache),
+        COMPRESSED_STATE_LAST_CHANGED: last_changed,
+        COMPRESSED_STATE_LAST_UPDATED: last_updated,
+    }
