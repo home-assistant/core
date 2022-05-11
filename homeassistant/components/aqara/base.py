@@ -225,7 +225,7 @@ def find_aqara_device_points_and_register(
                         config_entry_id=entry_id,
                         identifiers={
                             (DOMAIN, string_dot_to_underline(aqara_point.did))
-                        },  # hass_device_id
+                        },
                         manufacturer="Aqara",
                         name=aqara_point.did,  # ,
                         model=device.model,
