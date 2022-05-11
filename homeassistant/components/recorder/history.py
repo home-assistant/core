@@ -688,8 +688,10 @@ def _sorted_states_to_dict(
     # Append all changes to it
     for ent_id, group in states_iter:
         attr_cache: dict[str, dict[str, Any]] = {}
+        prev_state: Column | str
         ent_results = result[ent_id]
         if row := initial_states.pop(ent_id, None):
+            prev_state = row.state
             ent_results.append(state_class(row, attr_cache, start_time))
 
         if not minimal_response or split_entity_id(ent_id)[0] in NEED_ATTRIBUTE_DOMAINS:
@@ -703,32 +705,30 @@ def _sorted_states_to_dict(
         if not ent_results:
             if (first_state := next(group, None)) is None:
                 continue
+            prev_state = first_state.state
             ent_results.append(state_class(first_state, attr_cache))
 
-        assert isinstance(ent_results[-1], State)
-        prev_state: Column | str = ent_results[-1].state
         initial_state_count = len(ent_results)
-
-        db_state = None
-        for db_state in group:
+        row = None
+        for row in group:
             # With minimal response we do not care about attribute
             # changes so we can filter out duplicate states
-            if (state := db_state.state) == prev_state:
+            if (state := row.state) == prev_state:
                 continue
 
             ent_results.append(
                 {
                     attr_state: state,
-                    attr_last_changed: _process_timestamp(db_state.last_changed),
+                    attr_last_changed: _process_timestamp(row.last_changed),
                 }
             )
             prev_state = state
 
-        if db_state and len(ent_results) != initial_state_count:
+        if row and len(ent_results) != initial_state_count:
             # There was at least one state change
             # replace the last minimal state with
             # a full state
-            ent_results[-1] = state_class(db_state, attr_cache)
+            ent_results[-1] = state_class(row, attr_cache)
 
     # Filter out the empty lists if some states had 0 results.
     return {key: val for key, val in result.items() if val}
