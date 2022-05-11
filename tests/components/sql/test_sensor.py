@@ -115,7 +115,7 @@ async def test_query_no_value(
     state = hass.states.get("sensor.count_tables")
     assert state.state == STATE_UNKNOWN
 
-    text = "SELECT 5 as value where 1=2 returned no results"
+    text = "SELECT 5 as value where 1=2 LIMIT 1; returned no results"
     assert text in caplog.text
 
 
