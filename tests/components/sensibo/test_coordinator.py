@@ -15,13 +15,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util import dt
 
 from . import ENTRY_CONFIG
-from .response import DATA_FROM_API
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_coordinator(
-    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch, get_data: SensiboData
 ) -> None:
     """Test the Sensibo coordinator with errors."""
     config_entry = MockConfigEntry(
@@ -44,9 +43,9 @@ async def test_coordinator(
         "homeassistant.components.sensibo.util.SensiboClient.async_get_me",
         return_value={"result": {"username": "username"}},
     ):
-        monkeypatch.setattr(DATA_FROM_API.parsed["ABC999111"], "hvac_mode", "heat")
-        monkeypatch.setattr(DATA_FROM_API.parsed["ABC999111"], "device_on", True)
-        mock_data.return_value = DATA_FROM_API
+        monkeypatch.setattr(get_data.parsed["ABC999111"], "hvac_mode", "heat")
+        monkeypatch.setattr(get_data.parsed["ABC999111"], "device_on", True)
+        mock_data.return_value = get_data
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         mock_data.assert_called_once()
@@ -71,10 +70,10 @@ async def test_coordinator(
         assert state.state == STATE_UNAVAILABLE
         mock_data.reset_mock()
 
-        monkeypatch.setattr(DATA_FROM_API.parsed["ABC999111"], "hvac_mode", "heat")
-        monkeypatch.setattr(DATA_FROM_API.parsed["ABC999111"], "device_on", True)
+        monkeypatch.setattr(get_data.parsed["ABC999111"], "hvac_mode", "heat")
+        monkeypatch.setattr(get_data.parsed["ABC999111"], "device_on", True)
 
-        mock_data.return_value = DATA_FROM_API
+        mock_data.return_value = get_data
         mock_data.side_effect = None
         async_fire_time_changed(hass, dt.utcnow() + timedelta(minutes=5))
         await hass.async_block_till_done()
