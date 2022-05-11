@@ -41,9 +41,7 @@ SELECT_TYPES = (
         key="select_schedule",
         name="Thermostat Schedule",
         icon="mdi:calendar-clock",
-        command=lambda coordinator, location, option: coordinator.api.set_schedule_state(
-            location, option, STATE_ON
-        ),
+        command=lambda api, loc, opt: api.set_schedule_state(loc, opt, STATE_ON),
         current_option="selected_schedule",
         options="available_schedules",
     ),
