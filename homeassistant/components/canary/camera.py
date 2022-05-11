@@ -6,6 +6,7 @@ import logging
 from typing import Final
 
 from aiohttp.web import Request, StreamResponse
+from canary.const import HEADER_VALUE_AUTHORIZATION, HEADER_VALUE_USER_AGENT
 from canary.live_stream_api import LiveStreamSession
 from canary.model import Device, Entry, Location
 from haffmpeg.camera import CameraMjpeg
@@ -132,6 +133,21 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
         """Return the camera motion detection status."""
         return not self.location.is_recording
 
+    def _headers_for_ffmpeg(self) -> str:
+        token = (
+            None
+            if self._live_stream_session is None
+            else self._live_stream_session.auth_token
+        )
+        if token:
+            return " ".join(
+                [
+                    f'-user_agent "{HEADER_VALUE_USER_AGENT}"',
+                    f'-headers "{HEADER_VALUE_AUTHORIZATION} {token}"',
+                ]
+            )
+        return ""
+
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -165,11 +181,12 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
             if not self._live_stream_url:
                 return None
 
+            ffmpeg_args = f"{self._ffmpeg_arguments} {self._headers_for_ffmpeg()}"
             if self._image is None and self._live_stream_url:
                 image = await ffmpeg.async_get_image(
                     self.hass,
                     self._live_stream_url,
-                    extra_cmd=self._ffmpeg_arguments,
+                    extra_cmd=ffmpeg_args,
                     width=width,
                     height=height,
                 )
@@ -215,10 +232,10 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
         _LOGGER.info(
             "Starting connection to %s at %s", self._attr_name, self._live_stream_url
         )
+
+        ffmpeg_args = f"{self._ffmpeg_arguments} {self._headers_for_ffmpeg()}"
         stream = CameraMjpeg(self._ffmpeg.binary)
-        await stream.open_camera(
-            self._live_stream_url, extra_cmd=self._ffmpeg_arguments
-        )
+        await stream.open_camera(self._live_stream_url, extra_cmd=ffmpeg_args)
 
         try:
             stream_reader = await stream.get_reader()
