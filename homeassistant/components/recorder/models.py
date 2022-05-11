@@ -776,8 +776,9 @@ def row_to_compressed_state(
         last_changed = last_updated = start_time.timestamp()
     else:
         row_changed_changed: datetime = row.last_changed
-        row_last_updated: datetime = row.last_updated or row_changed_changed
-        if row_last_updated == row_changed_changed:
+        if (row_last_updated := row.last_updated) and (
+            row_last_updated is None or row_last_updated == row_changed_changed
+        ):
             last_changed = last_updated = process_datetime_to_timestamp(
                 row_changed_changed
             )
