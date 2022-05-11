@@ -20,12 +20,12 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up LaCrosse View from a config entry."""
 
-    async def get_data() -> list[Sensor]:
+    async def get_data(start) -> list[Sensor]:
         """Get the data from the LaCrosse View."""
         return await api.get_sensors(
             location=Location(id=entry.data["id"], name=entry.data["name"]),
             tz=hass.config.time_zone,
-            start=int(datetime.timestamp(datetime.utcnow() - timedelta(minutes=30))),
+            start=int(datetime.timestamp(datetime.utcnow() - timedelta(minutes=start))),
             end=int(datetime.timestamp(datetime.utcnow())),
         )
 
@@ -45,7 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         retry_count = 0
         while True:
             try:
-                data: list[Sensor] = await get_data()
+                data: list[Sensor] = await get_data(start)
                 # Test if the data is valid
                 for sensor in data:
                     if not sensor.data:
