@@ -94,6 +94,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     frontend.async_register_built_in_panel(hass, "history", "history", "hass:chart-box")
     websocket_api.async_register_command(hass, ws_get_statistics_during_period)
     websocket_api.async_register_command(hass, ws_get_list_statistic_ids)
+    websocket_api.async_register_command(hass, ws_get_history_during_period)
 
     return True
 
@@ -168,20 +169,21 @@ async def ws_get_list_statistic_ids(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "history/statistics_during_period",
+        vol.Required("type"): "history/history_during_period",
         vol.Required("start_time"): str,
         vol.Optional("end_time"): str,
         vol.Optional("entity_ids"): [str],
-        vol.Optional("include_start_time_state"): bool,
-        vol.Optional("significant_changes_only"): bool,
-        vol.Optional("no_attributes"): bool,
+        vol.Optional("include_start_time_state", default=False): bool,
+        vol.Optional("significant_changes_only", default=False): bool,
+        vol.Optional("minimal_response", default=False): bool,
+        vol.Optional("no_attributes", default=False): bool,
     }
 )
 @websocket_api.async_response
 async def ws_get_history_during_period(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
-    """Handle statistics websocket command."""
+    """Handle history during period websocket command."""
     start_time_str = msg["start_time"]
     end_time_str = msg.get("end_time")
 
@@ -204,7 +206,7 @@ async def ws_get_history_during_period(
         connection.send_result(msg["id"], {})
         return
 
-    entity_ids = msg["entity_ids"]
+    entity_ids = msg.get("entity_ids")
     include_start_time_state = msg["include_start_time_state"]
 
     if (
@@ -217,8 +219,8 @@ async def ws_get_history_during_period(
 
     significant_changes_only = msg["significant_changes_only"]
     no_attributes = msg["no_attributes"]
-    minimal_response = True
-    timestamp = True
+    minimal_response = msg["minimal_response"]
+    minimal_response_timestamp = True
 
     history_during_period: MutableMapping[
         str, list[State | dict[str, Any]]
@@ -233,7 +235,7 @@ async def ws_get_history_during_period(
         significant_changes_only,
         minimal_response,
         no_attributes,
-        timestamp,
+        minimal_response_timestamp,
     )
     connection.send_result(msg["id"], history_during_period)
 

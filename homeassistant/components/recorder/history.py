@@ -161,7 +161,7 @@ def get_significant_states(
     significant_changes_only: bool = True,
     minimal_response: bool = False,
     no_attributes: bool = False,
-    timestamp: bool = False,
+    minimal_response_timestamp: bool = False,
 ) -> MutableMapping[str, list[State | dict[str, Any]]]:
     """Wrap get_significant_states_with_session with an sql session."""
     with session_scope(hass=hass) as session:
@@ -176,7 +176,7 @@ def get_significant_states(
             significant_changes_only,
             minimal_response,
             no_attributes,
-            timestamp,
+            minimal_response_timestamp,
         )
 
 
@@ -273,7 +273,7 @@ def get_significant_states_with_session(
     significant_changes_only: bool = True,
     minimal_response: bool = False,
     no_attributes: bool = False,
-    timestamp: bool = False,
+    minimal_response_timestamp: bool = False,
 ) -> MutableMapping[str, list[State | dict[str, Any]]]:
     """
     Return states changes during UTC period start_time - end_time.
@@ -307,7 +307,7 @@ def get_significant_states_with_session(
         include_start_time_state,
         minimal_response,
         no_attributes,
-        timestamp,
+        minimal_response_timestamp,
     )
 
 
@@ -628,7 +628,7 @@ def _sorted_states_to_dict(
     include_start_time_state: bool = True,
     minimal_response: bool = False,
     no_attributes: bool = False,
-    timestamp: bool = False,
+    minimal_response_timestamp: bool = False,
 ) -> MutableMapping[str, list[State | dict[str, Any]]]:
     """Convert SQL results into JSON friendly data structure.
 
@@ -666,9 +666,8 @@ def _sorted_states_to_dict(
         elapsed = time.perf_counter() - timer_start
         _LOGGER.debug("getting %d first datapoints took %fs", len(result), elapsed)
 
-    # Called in a tight loop so cache the function
-    # here
-    if timestamp:
+    # Called in a tight loop so cache the function here
+    if minimal_response_timestamp:
         _process_timestamp: Callable[[datetime], float | str] = _to_timestamp
     else:
         _process_timestamp = process_timestamp_to_utc_isoformat
