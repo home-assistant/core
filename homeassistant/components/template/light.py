@@ -352,25 +352,37 @@ class LightTemplate(TemplateEntity, LightEntity):
             optimistic_set = True
 
         if self._level_template is None and ATTR_BRIGHTNESS in kwargs:
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Optimistically setting brightness to %s", kwargs[ATTR_BRIGHTNESS]
             )
             self._brightness = kwargs[ATTR_BRIGHTNESS]
             optimistic_set = True
 
         if self._white_value_template is None and ATTR_WHITE_VALUE in kwargs:
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Optimistically setting white value to %s", kwargs[ATTR_WHITE_VALUE]
             )
             self._white_value = kwargs[ATTR_WHITE_VALUE]
             optimistic_set = True
 
         if self._temperature_template is None and ATTR_COLOR_TEMP in kwargs:
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Optimistically setting color temperature to %s",
                 kwargs[ATTR_COLOR_TEMP],
             )
             self._temperature = kwargs[ATTR_COLOR_TEMP]
+            if self._color_template is None:
+                self._color = None
+            optimistic_set = True
+
+        if self._color_template is None and ATTR_HS_COLOR in kwargs:
+            _LOGGER.debug(
+                "Optimistically setting color to %s",
+                kwargs[ATTR_HS_COLOR],
+            )
+            self._color = kwargs[ATTR_HS_COLOR]
+            if self._temperature_template is None:
+                self._temperature = None
             optimistic_set = True
 
         common_params = {}
