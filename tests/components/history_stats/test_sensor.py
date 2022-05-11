@@ -1461,11 +1461,11 @@ async def test_end_time_with_microseconds_zeroed(time_zone, hass, recorder_mock)
         await hass.async_block_till_done()
         assert hass.states.get("sensor.heatpump_compressor_today").state == "3.83"
 
-    rolled_to_next_day = start_of_today + timedelta(days=1, microseconds=5)
+    rolled_to_next_day = start_of_today + timedelta(days=1)
     assert rolled_to_next_day.hour == 0
     assert rolled_to_next_day.minute == 0
     assert rolled_to_next_day.second == 0
-    assert rolled_to_next_day.microsecond == 5
+    assert rolled_to_next_day.microsecond == 0
 
     with freeze_time(rolled_to_next_day):
         async_fire_time_changed(hass, rolled_to_next_day)
@@ -1473,10 +1473,31 @@ async def test_end_time_with_microseconds_zeroed(time_zone, hass, recorder_mock)
         assert hass.states.get("sensor.heatpump_compressor_today").state == "0.0"
 
     rolled_to_next_day_plus_12 = start_of_today + timedelta(
-        days=1, hours=12, microseconds=5
+        days=1, hours=12, microseconds=0
     )
-
     with freeze_time(rolled_to_next_day_plus_12):
         async_fire_time_changed(hass, rolled_to_next_day_plus_12)
         await hass.async_block_till_done()
         assert hass.states.get("sensor.heatpump_compressor_today").state == "12.0"
+
+    rolled_to_next_day_plus_14 = start_of_today + timedelta(
+        days=1, hours=14, microseconds=0
+    )
+    with freeze_time(rolled_to_next_day_plus_14):
+        async_fire_time_changed(hass, rolled_to_next_day_plus_14)
+        await hass.async_block_till_done()
+        assert hass.states.get("sensor.heatpump_compressor_today").state == "14.0"
+
+    rolled_to_next_day_plus_16_860000 = start_of_today + timedelta(
+        days=1, hours=16, microseconds=860000
+    )
+    with freeze_time(rolled_to_next_day_plus_16_860000):
+        hass.states.async_set("binary_sensor.heatpump_compressor_state", "off")
+        async_fire_time_changed(hass, rolled_to_next_day_plus_16_860000)
+        await hass.async_block_till_done()
+
+    rolled_to_next_day_plus_18 = start_of_today + timedelta(days=1, hours=18)
+    with freeze_time(rolled_to_next_day_plus_18):
+        async_fire_time_changed(hass, rolled_to_next_day_plus_18)
+        await hass.async_block_till_done()
+        assert hass.states.get("sensor.heatpump_compressor_today").state == "16.0"
