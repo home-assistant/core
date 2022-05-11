@@ -58,8 +58,9 @@ async def async_setup_platform(
         )
         afsapi = AFSAPI(webfsapi_url, DEFAULT_PIN)
 
+        name = await afsapi.get_friendly_name()
         async_add_entities(
-            [AFSAPIDevice(None, afsapi)],
+            [AFSAPIDevice(name, afsapi)],
             True,
         )
         return
