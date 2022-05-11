@@ -1,6 +1,7 @@
 {
     "device_automation": {
         "action_type": {
+            "toggle": "{entity_name} kapcsol\u00e1sa",
             "turn_off": "{entity_name} kikapcsol\u00e1sa",
             "turn_on": "{entity_name} bekapcsol\u00e1sa"
         },
