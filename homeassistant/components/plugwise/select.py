@@ -50,9 +50,7 @@ SELECT_TYPES = (
         name="Regulation Mode",
         icon="mdi:hvac",
         entity_category=EntityCategory.CONFIG,
-        command=lambda coordinator, dummy, option: coordinator.api.set_regulation_mode(
-            option
-        ),
+        command=lambda api, loc, opt: api.set_regulation_mode(opt),
         current_option="regulation_mode",
         options="regulation_modes",
     ),
