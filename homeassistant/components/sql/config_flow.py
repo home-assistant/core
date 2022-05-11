@@ -52,6 +52,7 @@ def validate_query(db_url: str, query: str, column: str) -> bool:
     try:
         result: Result = sess.execute(sqlalchemy.text(query))
     except SQLAlchemyError as error:
+        _LOGGER.debug("Execution error %s", error)
         if sess:
             sess.close()
         raise ValueError(error) from error
