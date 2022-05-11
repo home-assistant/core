@@ -6,7 +6,7 @@ from datetime import datetime as dt
 from typing import Any
 
 import sqlalchemy
-from sqlalchemy import Column, lambda_stmt, select, union_all
+from sqlalchemy import lambda_stmt, select
 from sqlalchemy.orm import aliased
 from sqlalchemy.sql.expression import literal
 from sqlalchemy.sql.lambdas import StatementLambdaElement
@@ -98,17 +98,16 @@ def statement_for_request(
 
 
 def _select_events_context_id_subquery(
-    column: Column,
     start_day: dt,
     end_day: dt,
     event_types: tuple[str, ...],
 ) -> Select:
     """Generate the select for a context_id subquery."""
     return (
-        select(column.context_id.label("context_id"))
-        .where((column.time_fired > start_day) & (column.time_fired < end_day))
-        .where(column.event_type.in_(event_types))
-        .outerjoin(EventData, (column.data_id == EventData.data_id))
+        select(Events.context_id)
+        .where((Events.time_fired > start_day) & (Events.time_fired < end_day))
+        .where(Events.event_type.in_(event_types))
+        .outerjoin(EventData, (Events.data_id == EventData.data_id))
     )
 
 
@@ -119,19 +118,16 @@ def _select_entities_context_ids_sub_query(
     entity_ids: list[str],
 ) -> Select:
     """Generate a subquery to find context ids for multiple entities."""
-    events_sub = aliased(Events, name="events_sub")
-    states_sub = aliased(States, name="states_sub")
-    contexts = union_all(
-        _select_events_context_id_subquery(
-            events_sub, start_day, end_day, event_types
-        ).where(_apply_event_entity_id_matchers(events_sub, entity_ids)),
-        select(states_sub.context_id.label("context_id"))
-        .filter(
-            (states_sub.last_updated > start_day) & (states_sub.last_updated < end_day)
+    return (
+        _select_events_context_id_subquery(start_day, end_day, event_types)
+        .where(_apply_event_entity_id_matchers(entity_ids))
+        .union_all(
+            select(States.context_id)
+            .filter((States.last_updated > start_day) & (States.last_updated < end_day))
+            .where(States.entity_id.in_(entity_ids))
         )
-        .where(states_sub.entity_id.in_(entity_ids)),
-    ).alias("contexts")
-    return select(contexts.c.context_id)
+        .subquery()
+    )
 
 
 def _select_events_context_only() -> Select:
@@ -156,9 +152,7 @@ def _entities_stmt(
         lambda: _select_events_without_states(start_day, end_day, event_types)
     )
     stmt = stmt.add_criteria(
-        lambda s: s.where(
-            _apply_event_entity_id_matchers(Events, entity_ids)
-        ).union_all(
+        lambda s: s.where(_apply_event_entity_id_matchers(entity_ids)).union_all(
             _select_states(start_day, end_day).where(States.entity_id.in_(entity_ids)),
             _select_events_context_only().where(
                 Events.context_id.in_(
@@ -189,22 +183,19 @@ def _select_entity_context_ids_sub_query(
     entity_id_like: str,
 ) -> Select:
     """Generate a subquery to find context ids for a single entity."""
-    events_sub = aliased(Events, name="events_sub")
-    states_sub = aliased(States, name="states_sub")
-    contexts = union_all(
-        _select_events_context_id_subquery(
-            events_sub, start_day, end_day, event_types
-        ).where(
-            events_sub.event_data.like(entity_id_like)
+    return (
+        _select_events_context_id_subquery(start_day, end_day, event_types)
+        .where(
+            Events.event_data.like(entity_id_like)
             | EventData.shared_data.like(entity_id_like)
-        ),
-        select(states_sub.context_id.label("context_id"))
-        .filter(
-            (states_sub.last_updated > start_day) & (states_sub.last_updated < end_day)
         )
-        .where(states_sub.entity_id == entity_id),
-    ).alias("contexts")
-    return select(contexts.c.context_id)
+        .union_all(
+            select(States.context_id)
+            .filter((States.last_updated > start_day) & (States.last_updated < end_day))
+            .where(States.entity_id == entity_id)
+        )
+        .subquery()
+    )
 
 
 def _single_entity_stmt(
@@ -376,13 +367,11 @@ def _not_uom_attributes_matcher() -> Any:
     ) | ~States.attributes.like(UNIT_OF_MEASUREMENT_JSON_LIKE)
 
 
-def _apply_event_entity_id_matchers(
-    column: Column, entity_ids: Iterable[str]
-) -> sqlalchemy.or_:
+def _apply_event_entity_id_matchers(entity_ids: Iterable[str]) -> sqlalchemy.or_:
     """Create matchers for the entity_id in the event_data."""
     ors = []
     for entity_id in entity_ids:
         like = ENTITY_ID_JSON_TEMPLATE.format(entity_id)
-        ors.append(column.event_data.like(like))
+        ors.append(Events.event_data.like(like))
         ors.append(EventData.shared_data.like(like))
     return sqlalchemy.or_(*ors)
