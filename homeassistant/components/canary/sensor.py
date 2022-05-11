@@ -185,7 +185,11 @@ class CanarySensor(CoordinatorEntity[CanaryDataUpdateCoordinator], SensorEntity)
                 if self._sensor_type[0] == "entries_captured_today":
                     return len(entry)
                 if self._sensor_type[0] == "last_entry_date":
-                    return cast(datetime, entry[0].start_time)
+                    try:
+                        last_entry_date = entry[0].start_time
+                        return cast(datetime, last_entry_date)
+                    except IndexError:
+                        return None
 
         return None
 
