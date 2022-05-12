@@ -54,7 +54,10 @@ SCHEMA_VERSION = 28
 
 _LOGGER = logging.getLogger(__name__)
 
-EPOCHORDINAL = 719163
+# EPOCHORDINAL is not exposed as a constant
+# https://github.com/python/cpython/blob/f4c03484da59049eb62a9bf7777b963e2267d187/Lib/zoneinfo/_zoneinfo.py#L12
+EPOCHORDINAL = datetime(1970, 1, 1).toordinal()
+
 DB_TIMEZONE = "+00:00"
 
 TABLE_EVENTS = "events"
@@ -620,8 +623,22 @@ def process_timestamp_to_utc_isoformat(ts: datetime | None) -> str | None:
 
 
 def process_datetime_to_timestamp(ts: datetime) -> float:
-    """Process a timestamp into a unix timestamp."""
-    if ts.tzinfo is None:
+    """Process a timestamp into a unix timestamp.
+
+    Since the databases store all the times in UTC
+    when sqlalchemy (sqlite case) converts the row
+    to a datetime object it will have no tzinfo.
+
+    Recreating the datetime object with .replace is
+    quite expensive if we are loading 100000s timestamps
+    so we convert it to an ordinal since this happens in
+    native code and add the hours, minutes, seconds,
+    and microseconds which are already expresed in UTC.
+
+    If the tzinfo is present and not UTC, we fallback
+    to converting it using the standard methods.
+    """
+    if ts.tzinfo is None or ts.tzinfo == dt_util.UTC:
         return (
             (((ts.toordinal() - EPOCHORDINAL) * 24 + ts.hour) * 60 + ts.minute) * 60
             + ts.second
