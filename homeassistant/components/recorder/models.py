@@ -638,7 +638,7 @@ def process_datetime_to_timestamp(ts: datetime) -> float:
             + ts.second
             + (ts.microsecond / 1000000)
         )
-    return ts.astimezone(dt_util.UTC).timestamp()
+    return ts.timestamp()
 
 
 class LazyState(State):
