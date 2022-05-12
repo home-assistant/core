@@ -34,10 +34,8 @@ from homeassistant.const import (
     ATTR_DOMAIN,
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
-    ATTR_ICON,
     ATTR_NAME,
     ATTR_SERVICE,
-    ATTR_STATE,
     EVENT_CALL_SERVICE,
     EVENT_LOGBOOK_ENTRY,
     EVENT_STATE_CHANGED,
@@ -81,16 +79,22 @@ CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA}, extra=vol.ALLOW_EXTRA
 )
 
-ATTR_CONTEXT_ENTITY_ID = f"context_{ATTR_ENTITY_ID}"
-ATTR_CONTEXT_ENTITY_ID_NAME = f"context_{ATTR_ENTITY_ID}_{ATTR_NAME}"
-ATTR_CONTEXT_EVENT_TYPE = "context_event_type"
-ATTR_CONTEXT_DOMAIN = f"context_{ATTR_DOMAIN}"
-ATTR_CONTEXT_SERVICE = f"context_{ATTR_SERVICE}"
-ATTR_CONTEXT_NAME = f"context_{ATTR_NAME}"
-ATTR_CONTEXT_MESSAGE = f"context_{ATTR_MESSAGE}"
+CONTEXT_USER_ID = "context_user_id"
+CONTEXT_ENTITY_ID = "context_entity_id"
+CONTEXT_ENTITY_ID_NAME = "context_entity_id_name"
+CONTEXT_EVENT_TYPE = "context_event_type"
+CONTEXT_DOMAIN = "context_domain"
+CONTEXT_SERVICE = "context_service"
+CONTEXT_NAME = "context_name"
+CONTEXT_MESSAGE = "context_message"
 
-ATTR_WHEN = "when"
-
+LOGBOOK_ENTRY_DOMAIN = "domain"
+LOGBOOK_ENTRY_ENTITY_ID = "entity_id"
+LOGBOOK_ENTRY_ICON = "icon"
+LOGBOOK_ENTRY_MESSAGE = "message"
+LOGBOOK_ENTRY_NAME = "name"
+LOGBOOK_ENTRY_STATE = "state"
+LOGBOOK_ENTRY_WHEN = "when"
 
 ALL_EVENT_TYPES_EXCEPT_STATE_CHANGED = {EVENT_LOGBOOK_ENTRY, EVENT_CALL_SERVICE}
 
@@ -134,12 +138,12 @@ def async_log_entry(
     context: Context | None = None,
 ) -> None:
     """Add an entry to the logbook."""
-    data = {ATTR_NAME: name, ATTR_MESSAGE: message}
+    data = {LOGBOOK_ENTRY_NAME: name, LOGBOOK_ENTRY_MESSAGE: message}
 
     if domain is not None:
-        data[ATTR_DOMAIN] = domain
+        data[LOGBOOK_ENTRY_DOMAIN] = domain
     if entity_id is not None:
-        data[ATTR_ENTITY_ID] = entity_id
+        data[LOGBOOK_ENTRY_ENTITY_ID] = entity_id
     hass.bus.async_fire(EVENT_LOGBOOK_ENTRY, data, context=context)
 
 
@@ -376,13 +380,13 @@ def _humanify(
                 continue
 
             data = {
-                ATTR_WHEN: format_time(row),
-                ATTR_NAME: entity_name_cache.get(entity_id, row),
-                ATTR_STATE: row.state,
-                ATTR_ENTITY_ID: entity_id,
+                LOGBOOK_ENTRY_WHEN: format_time(row),
+                LOGBOOK_ENTRY_NAME: entity_name_cache.get(entity_id, row),
+                LOGBOOK_ENTRY_STATE: row.state,
+                LOGBOOK_ENTRY_ENTITY_ID: entity_id,
             }
             if icon := _row_attributes_extract(row, ICON_JSON_EXTRACT):
-                data[ATTR_ICON] = icon
+                data[LOGBOOK_ENTRY_ICON] = icon
 
             context_augmenter.augment(data, entity_id, row)
             yield data
@@ -390,8 +394,8 @@ def _humanify(
         elif event_type in external_events:
             domain, describe_event = external_events[event_type]
             data = describe_event(event_cache.get(row))
-            data[ATTR_WHEN] = format_time(row)
-            data[ATTR_DOMAIN] = domain
+            data[LOGBOOK_ENTRY_WHEN] = format_time(row)
+            data[LOGBOOK_ENTRY_DOMAIN] = domain
             context_augmenter.augment(data, data.get(ATTR_ENTITY_ID), row)
             yield data
 
@@ -405,11 +409,11 @@ def _humanify(
                     domain = split_entity_id(str(entity_id))[0]
 
             data = {
-                ATTR_WHEN: format_time(row),
-                ATTR_NAME: event_data.get(ATTR_NAME),
-                ATTR_MESSAGE: event_data.get(ATTR_MESSAGE),
-                ATTR_DOMAIN: domain,
-                ATTR_ENTITY_ID: entity_id,
+                LOGBOOK_ENTRY_WHEN: format_time(row),
+                LOGBOOK_ENTRY_NAME: event_data.get(ATTR_NAME),
+                LOGBOOK_ENTRY_MESSAGE: event_data.get(ATTR_MESSAGE),
+                LOGBOOK_ENTRY_DOMAIN: domain,
+                LOGBOOK_ENTRY_ENTITY_ID: entity_id,
             }
             context_augmenter.augment(data, entity_id, row)
             yield data
@@ -527,7 +531,7 @@ class ContextAugmenter:
     def augment(self, data: dict[str, Any], entity_id: str | None, row: Row) -> None:
         """Augment data from the row and cache."""
         if context_user_id := row.context_user_id:
-            data["context_user_id"] = context_user_id
+            data[CONTEXT_USER_ID] = context_user_id
 
         if not (context_row := self.context_lookup.get(row.context_id)):
             return
@@ -550,38 +554,38 @@ class ContextAugmenter:
 
         # State change
         if context_entity_id := context_row.entity_id:
-            data[ATTR_CONTEXT_ENTITY_ID] = context_entity_id
-            data[ATTR_CONTEXT_ENTITY_ID_NAME] = self.entity_name_cache.get(
+            data[CONTEXT_ENTITY_ID] = context_entity_id
+            data[CONTEXT_ENTITY_ID_NAME] = self.entity_name_cache.get(
                 context_entity_id, context_row
             )
-            data[ATTR_CONTEXT_EVENT_TYPE] = event_type
+            data[CONTEXT_EVENT_TYPE] = event_type
             return
 
         # Call service
         if event_type == EVENT_CALL_SERVICE:
             event = self.event_cache.get(context_row)
             event_data = event.data
-            data[ATTR_CONTEXT_DOMAIN] = event_data.get(ATTR_DOMAIN)
-            data[ATTR_CONTEXT_SERVICE] = event_data.get(ATTR_SERVICE)
-            data[ATTR_CONTEXT_EVENT_TYPE] = event_type
+            data[CONTEXT_DOMAIN] = event_data.get(ATTR_DOMAIN)
+            data[CONTEXT_SERVICE] = event_data.get(ATTR_SERVICE)
+            data[CONTEXT_EVENT_TYPE] = event_type
             return
 
         if event_type not in self.external_events:
             return
 
         domain, describe_event = self.external_events[event_type]
-        data[ATTR_CONTEXT_EVENT_TYPE] = event_type
-        data[ATTR_CONTEXT_DOMAIN] = domain
+        data[CONTEXT_EVENT_TYPE] = event_type
+        data[CONTEXT_DOMAIN] = domain
         event = self.event_cache.get(context_row)
         described = describe_event(event)
         if name := described.get(ATTR_NAME):
-            data[ATTR_CONTEXT_NAME] = name
+            data[CONTEXT_NAME] = name
         if message := described.get(ATTR_MESSAGE):
-            data[ATTR_CONTEXT_MESSAGE] = message
+            data[CONTEXT_MESSAGE] = message
         if not (attr_entity_id := described.get(ATTR_ENTITY_ID)):
             return
-        data[ATTR_CONTEXT_ENTITY_ID] = attr_entity_id
-        data[ATTR_CONTEXT_ENTITY_ID_NAME] = self.entity_name_cache.get(
+        data[CONTEXT_ENTITY_ID] = attr_entity_id
+        data[CONTEXT_ENTITY_ID_NAME] = self.entity_name_cache.get(
             attr_entity_id, context_row
         )
 
